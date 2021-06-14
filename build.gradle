@@ -95,10 +95,9 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.1.31'
+    compile fileTree(include: ['*.jar'], dir: 'libs')
 
     compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135")
-    //compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:api")
-    //datagenCompile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:datagen")
 
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
