@@ -15,7 +15,7 @@ public class GeneratorMultiblock extends StoneMultiblock {
     {
         super(new ResourceLocation("frostedheart", "multiblocks/generator"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 3, 3),
-                () -> IEBlocks.Multiblocks.cokeOven.getDefaultState());
+                () -> FrostedHeart.generator.getDefaultState());
     }
 
     @Override
