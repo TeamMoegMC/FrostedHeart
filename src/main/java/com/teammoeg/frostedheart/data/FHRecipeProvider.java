@@ -12,10 +12,10 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-public class Recipes extends RecipeProvider {
+public class FHRecipeProvider extends RecipeProvider {
     private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();
 
-    public Recipes(DataGenerator generatorIn) {
+    public FHRecipeProvider(DataGenerator generatorIn) {
         super(generatorIn);
     }
 

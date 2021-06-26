@@ -2,26 +2,20 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
-import blusunrize.immersiveengineering.common.IETileTypes;
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import blusunrize.immersiveengineering.common.blocks.stone.StoneMultiBlock;
 import blusunrize.immersiveengineering.common.crafting.RecipeReloadListener;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorMultiblock;
 import com.teammoeg.frostedheart.common.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.data.FHRecipeProvider;
 import net.minecraft.block.Block;
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.DataPackRegistries;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegistryEvent;
@@ -29,17 +23,11 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.fml.event.lifecycle.*;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.network.IContainerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.HashSet;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(FHMain.MODID)
@@ -54,6 +42,8 @@ public class FHMain {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::gatherData);
+
         MinecraftForge.EVENT_BUS.register(this);
 
         // Register recipe serializing
@@ -77,7 +67,17 @@ public class FHMain {
         ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(MODID, "generator"), GeneratorScreen::new);
 
         // Register recipe types
-        DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
+        DeferredWorkQueue.runLater(FHRecipeTypes::registerRecipeTypes);
+    }
+
+    // data generator event
+    public void gatherData(GatherDataEvent event)
+    {
+        DataGenerator gen = event.getGenerator();
+        if (event.includeServer())
+        {
+            gen.addProvider(new FHRecipeProvider(gen));
+        }
     }
 
     public void addReloadListeners(AddReloadListenerEvent event)
