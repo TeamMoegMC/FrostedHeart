@@ -1,9 +1,8 @@
 package com.teammoeg.frostedheart;
 
-import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import blusunrize.immersiveengineering.common.blocks.stone.CokeOvenTileEntity;
 import com.google.common.collect.ImmutableSet;
+import com.teammoeg.frostedheart.common.GeneratorTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -16,7 +15,7 @@ import java.util.function.Supplier;
 
 public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
-            ForgeRegistries.TILE_ENTITIES, FrostedHeart.MODID);
+            ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
 
     public static final RegistryObject<TileEntityType<GeneratorTileEntity>> GENERATOR = REGISTER.register(
             "generator", makeType(GeneratorTileEntity::new, () -> IEBlocks.Multiblocks.cokeOven)

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.common;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;

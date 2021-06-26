@@ -1,9 +1,11 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.common;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHTileTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -26,8 +28,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileEntity> implements IIEInventory,
-        IEBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds
-{
+        IEBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
@@ -37,7 +38,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     private NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
 
-    protected GeneratorTileEntity() {
+    public GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR.get(), false);
     }
 
@@ -48,22 +49,19 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     }
 
     @Override
-    public boolean receiveClientEvent(int id, int arg)
-    {
-        if(id==0)
-            this.formed = arg==1;
+    public boolean receiveClientEvent(int id, int arg) {
+        if (id == 0)
+            this.formed = arg == 1;
         markDirty();
         this.markContainingBlockForUpdate(null);
         return true;
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket)
-    {
+    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
 
-        if(!descPacket)
-        {
+        if (!descPacket) {
             ItemStackHelper.loadAllItems(nbt, inventory);
             process = nbt.getInt("process");
             processMax = nbt.getInt("processMax");
@@ -71,12 +69,10 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket)
-    {
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
 
-        if(!descPacket)
-        {
+        if (!descPacket) {
             nbt.putInt("process", process);
             nbt.putInt("processMax", processMax);
             ItemStackHelper.saveAllItems(nbt, inventory);
@@ -111,19 +107,17 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     }
 
     @Override
-    public int[] getCurrentProcessesStep()
-    {
+    public int[] getCurrentProcessesStep() {
         GeneratorTileEntity master = master();
-        if(master!=this&&master!=null)
+        if (master != this && master != null)
             return master.getCurrentProcessesStep();
-        return new int[]{processMax-process};
+        return new int[]{processMax - process};
     }
 
     @Override
-    public int[] getCurrentProcessesMax()
-    {
+    public int[] getCurrentProcessesMax() {
         GeneratorTileEntity master = master();
-        if(master!=this&&master!=null)
+        if (master != this && master != null)
             return master.getCurrentProcessesMax();
         return new int[]{processMax};
     }
@@ -131,7 +125,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public NonNullList<ItemStack> getInventory() {
         GeneratorTileEntity master = master();
-        if(master!=null&&master.formed&&formed)
+        if (master != null && master.formed && formed)
             return master.inventory;
         return this.inventory;
     }
@@ -140,7 +134,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public boolean isStackValid(int slot, ItemStack stack) {
         if (stack.isEmpty())
             return false;
-        if (slot==INPUT_SLOT)
+        if (slot == INPUT_SLOT)
             return stack.getItem().getTags().contains(Tags.Items.ORES_COAL.getName());
         return false;
     }
@@ -162,41 +156,34 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
 
     @Nonnull
     @Override
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing)
-    {
-        if(capability== CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
-        {
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             GeneratorTileEntity master = master();
-            if(master!=null)
+            if (master != null)
                 return master.invHandler.cast();
         }
         return super.getCapability(capability, facing);
     }
 
-    public class GeneratorData implements IIntArray
-    {
+    public class GeneratorData implements IIntArray {
         public static final int MAX_BURN_TIME = 0;
         public static final int BURN_TIME = 1;
 
         @Override
-        public int get(int index)
-        {
-            switch(index)
-            {
+        public int get(int index) {
+            switch (index) {
                 case MAX_BURN_TIME:
                     return processMax;
                 case BURN_TIME:
                     return process;
                 default:
-                    throw new IllegalArgumentException("Unknown index "+index);
+                    throw new IllegalArgumentException("Unknown index " + index);
             }
         }
 
         @Override
-        public void set(int index, int value)
-        {
-            switch(index)
-            {
+        public void set(int index, int value) {
+            switch (index) {
                 case MAX_BURN_TIME:
                     processMax = value;
                     break;
@@ -204,19 +191,19 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                     process = value;
                     break;
                 default:
-                    throw new IllegalArgumentException("Unknown index "+index);
+                    throw new IllegalArgumentException("Unknown index " + index);
             }
         }
 
         @Override
-        public int size()
-        {
+        public int size() {
             return 2;
         }
     }
 
     @Override
     public void tick() {
+        checkForNeedlessTicking();
 
     }
 }
