@@ -272,8 +272,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                         for (int z = 0; z < 3; ++z) {
                             BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
                             TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                            if (te instanceof CokeOvenTileEntity)
-                                ((CokeOvenTileEntity) te).setActive(activeAfterTick);
+                            if (te instanceof GeneratorTileEntity)
+                                ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
             }
         }

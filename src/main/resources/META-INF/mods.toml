@@ -21,7 +21,7 @@ modId = "frostedheart" #mandatory
 # see the associated build.gradle script for how to populate this completely automatically during a build
 version = "${file.jarVersion}" #mandatory
 # A display name for the mod
-displayName = "FrostedHeart" #mandatory
+displayName = "Frosted Heart" #mandatory
 # A URL to query for updates for this mod. See the JSON update specification <here>
 #updateJSONURL="http://myurl.me/" #optional
 # A URL for the "homepage" for this mod, displayed in the mod UI
@@ -34,7 +34,7 @@ displayName = "FrostedHeart" #mandatory
 authors = "YueSha" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description = '''
-Core mod for modpack Frosted Heart
+Some heat in the cold...
 '''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.frostedheart]] #optional
