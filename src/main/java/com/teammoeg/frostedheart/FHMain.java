@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.client.ClientProxy;
 import blusunrize.immersiveengineering.common.blocks.BlockItemIE;
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlock;
@@ -76,6 +77,7 @@ public class FHMain {
 
         // Init multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();
+        MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
 
         // Register tile types
         FHTileTypes.REGISTER.register(FMLJavaModLoadingContext.get().getModEventBus());

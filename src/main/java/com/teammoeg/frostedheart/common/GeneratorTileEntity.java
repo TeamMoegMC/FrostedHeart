@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.common;
 
+import blusunrize.immersiveengineering.api.crafting.CokeOvenRecipe;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -135,7 +136,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         if (stack.isEmpty())
             return false;
         if (slot == INPUT_SLOT)
-            return stack.getItem().getTags().contains(Tags.Items.ORES_COAL.getName());
+            return GeneratorRecipe.findRecipe(stack)!=null;
         return false;
     }
 
@@ -204,6 +205,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void tick() {
         checkForNeedlessTicking();
-
+        //todo: add tick logic
     }
 }

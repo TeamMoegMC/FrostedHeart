@@ -6,7 +6,9 @@ import com.teammoeg.frostedheart.common.GeneratorRecipeBuilder;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.Tags;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -27,8 +29,8 @@ public class FHRecipeProvider extends RecipeProvider {
     private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out)
     {
         GeneratorRecipeBuilder.builder(IETags.slag, 1)
-                .addInput(IETags.coalCoke)
-                .setTime(1800)
+                .addInput(ItemTags.COALS)
+                .setTime(100)
                 .build(out, toRL("generator/slag"));
     }
 
