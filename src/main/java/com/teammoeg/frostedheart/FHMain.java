@@ -2,21 +2,28 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
+import blusunrize.immersiveengineering.common.blocks.BlockItemIE;
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlock;
 import blusunrize.immersiveengineering.common.blocks.stone.StoneMultiBlock;
 import blusunrize.immersiveengineering.common.crafting.RecipeReloadListener;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorMultiblock;
-import com.teammoeg.frostedheart.common.GeneratorScreen;
+import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
+import com.teammoeg.frostedheart.common.block.BlockItemFH;
+import com.teammoeg.frostedheart.common.block.FHBaseBlock;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.data.FHRecipeProvider;
 import net.minecraft.block.Block;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -52,7 +59,20 @@ public class FHMain {
         FHRecipeSerializers.RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
 
         // Init block
-        FHBlocks.generator = new StoneMultiBlock<>("generator", FHTileTypes.GENERATOR);
+        FHBlocks.generator = new StoneMultiBlock<GeneratorTileEntity>("generator", FHTileTypes.GENERATOR) {
+            @Override
+            public ResourceLocation createRegistryName() {
+                return new ResourceLocation(FHMain.MODID, name);
+            }
+        };
+
+        Block.Properties stoneDecoProps = Block.Properties.create(Material.ROCK)
+                .sound(SoundType.STONE)
+                .setRequiresTool()
+                .harvestTool(ToolType.PICKAXE)
+                .hardnessAndResistance(2, 10);
+
+        FHBlocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, BlockItemFH::new);
 
         // Init multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();
@@ -92,7 +112,7 @@ public class FHMain {
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-        MinecraftForge.EVENT_BUS.register(new RecipeReloadListener(null));
+        MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {

@@ -1,7 +1,8 @@
-package com.teammoeg.frostedheart.common;
+package com.teammoeg.frostedheart.client;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.common.GeneratorContainer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.text.ITextComponent;
 
@@ -12,6 +13,6 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
 
     @Override
     protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
-
+        //todo: make screen
     }
 }

@@ -38,6 +38,9 @@ minecraft {
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
@@ -54,6 +57,9 @@ minecraft {
         }
 
         server {
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
             workingDirectory project.file('run')
 
             // Recommended logging data for a userdev environment
