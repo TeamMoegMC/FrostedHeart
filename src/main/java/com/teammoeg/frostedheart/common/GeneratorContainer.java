@@ -6,7 +6,6 @@ import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
 
 public class GeneratorContainer extends IEBaseContainer<GeneratorTileEntity> {
     public GeneratorTileEntity.GeneratorData data;

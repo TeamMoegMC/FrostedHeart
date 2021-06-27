@@ -3,14 +3,11 @@ package com.teammoeg.frostedheart;
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.client.ClientProxy;
-import blusunrize.immersiveengineering.common.blocks.BlockItemIE;
-import blusunrize.immersiveengineering.common.blocks.IEBaseBlock;
 import blusunrize.immersiveengineering.common.blocks.stone.StoneMultiBlock;
-import blusunrize.immersiveengineering.common.crafting.RecipeReloadListener;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorMultiblock;
-import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
 import com.teammoeg.frostedheart.common.block.BlockItemFH;
 import com.teammoeg.frostedheart.common.block.FHBaseBlock;
@@ -93,23 +90,19 @@ public class FHMain {
     }
 
     // data generator event
-    public void gatherData(GatherDataEvent event)
-    {
+    public void gatherData(GatherDataEvent event) {
         DataGenerator gen = event.getGenerator();
-        if (event.includeServer())
-        {
+        if (event.includeServer()) {
             gen.addProvider(new FHRecipeProvider(gen));
         }
     }
 
-    public void addReloadListeners(AddReloadListenerEvent event)
-    {
+    public void addReloadListeners(AddReloadListenerEvent event) {
         DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
         event.addListener(new FHRecipeReloadListener(dataPackRegistries));
     }
 
-    public void addReloadListenersLowest(AddReloadListenerEvent event)
-    {
+    public void addReloadListenersLowest(AddReloadListenerEvent event) {
         event.addListener(new FHRecipeCachingReloadListener(event.getDataPackRegistries()));
     }
 

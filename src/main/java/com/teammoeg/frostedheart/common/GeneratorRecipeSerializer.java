@@ -11,17 +11,14 @@ import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
 
-public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecipe>
-{
+public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecipe> {
     @Override
-    public ItemStack getIcon()
-    {
+    public ItemStack getIcon() {
         return new ItemStack(FHBlocks.generator);
     }
 
     @Override
-    public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json)
-    {
+    public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
         ItemStack output = readOutput(json.get("result"));
         IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
         int time = JSONUtils.getInt(json, "time");
@@ -30,8 +27,7 @@ public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecip
 
     @Nullable
     @Override
-    public GeneratorRecipe read(ResourceLocation recipeId, PacketBuffer buffer)
-    {
+    public GeneratorRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
         ItemStack output = buffer.readItemStack();
         IngredientWithSize input = IngredientWithSize.read(buffer);
         int time = buffer.readInt();
@@ -39,8 +35,7 @@ public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecip
     }
 
     @Override
-    public void write(PacketBuffer buffer, GeneratorRecipe recipe)
-    {
+    public void write(PacketBuffer buffer, GeneratorRecipe recipe) {
         buffer.writeItemStack(recipe.output);
         recipe.input.write(buffer);
         buffer.writeInt(recipe.time);

@@ -29,25 +29,21 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FHRecipeReloadListener  implements IResourceManagerReloadListener {
+public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     private final DataPackRegistries dataPackRegistries;
 
-    public FHRecipeReloadListener(DataPackRegistries dataPackRegistries)
-    {
+    public FHRecipeReloadListener(DataPackRegistries dataPackRegistries) {
         this.dataPackRegistries = dataPackRegistries;
     }
 
     @Override
-    public void onResourceManagerReload(@Nonnull IResourceManager resourceManager)
-    {
-        if(dataPackRegistries!=null)
-        {
+    public void onResourceManagerReload(@Nonnull IResourceManager resourceManager) {
+        if (dataPackRegistries != null) {
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-            if(server!=null)
-            {
+            if (server != null) {
                 Iterator<ServerWorld> it = server.getWorlds().iterator();
                 // Should only be false when no players are loaded, so the data will be synced on login
-                if(it.hasNext())
+                if (it.hasNext())
                     ApiUtils.addFutureServerTask(it.next(),
                             () -> StaticTemplateManager.syncMultiblockTemplates(PacketDistributor.ALL.noArg(), true)
                     );
@@ -58,32 +54,28 @@ public class FHRecipeReloadListener  implements IResourceManagerReloadListener {
     RecipeManager clientRecipeManager;
 
     @SubscribeEvent
-    public void onTagsUpdated(TagsUpdatedEvent event)
-    {
-        if(clientRecipeManager!=null)
+    public void onTagsUpdated(TagsUpdatedEvent event) {
+        if (clientRecipeManager != null)
             TagUtils.setTagCollectionGetters(ItemTags::getCollection, BlockTags::getCollection);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)
-    public void onRecipesUpdated(RecipesUpdatedEvent event)
-    {
+    public void onRecipesUpdated(RecipesUpdatedEvent event) {
         clientRecipeManager = event.getRecipeManager();
-        if(!Minecraft.getInstance().isSingleplayer())
+        if (!Minecraft.getInstance().isSingleplayer())
             buildRecipeLists(clientRecipeManager);
     }
 
-    public static void buildRecipeLists(RecipeManager recipeManager)
-    {
+    public static void buildRecipeLists(RecipeManager recipeManager) {
         Collection<IRecipe<?>> recipes = recipeManager.getRecipes();
-        if(recipes.size()==0)
+        if (recipes.size() == 0)
             return;
         GeneratorRecipe.recipeList = filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
     }
 
-    static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType)
-    {
+    static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {
         return recipes.stream()
-                .filter(iRecipe -> iRecipe.getType()==recipeType)
+                .filter(iRecipe -> iRecipe.getType() == recipeType)
                 .map(recipeClass::cast)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }

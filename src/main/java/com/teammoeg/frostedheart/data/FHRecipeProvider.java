@@ -8,7 +8,6 @@ import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.Tags;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -26,23 +25,20 @@ public class FHRecipeProvider extends RecipeProvider {
         recipesGenerator(out);
     }
 
-    private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out)
-    {
+    private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out) {
         GeneratorRecipeBuilder.builder(IETags.slag, 1)
                 .addInput(ItemTags.COALS)
                 .setTime(100)
                 .build(out, toRL("generator/slag"));
     }
 
-    private ResourceLocation toRL(String s)
-    {
-        if(!s.contains("/"))
-            s = "crafting/"+s;
-        if(PATH_COUNT.containsKey(s))
-        {
-            int count = PATH_COUNT.get(s)+1;
+    private ResourceLocation toRL(String s) {
+        if (!s.contains("/"))
+            s = "crafting/" + s;
+        if (PATH_COUNT.containsKey(s)) {
+            int count = PATH_COUNT.get(s) + 1;
             PATH_COUNT.put(s, count);
-            return new ResourceLocation(FHMain.MODID, s+count);
+            return new ResourceLocation(FHMain.MODID, s + count);
         }
         PATH_COUNT.put(s, 1);
         return new ResourceLocation(FHMain.MODID, s);

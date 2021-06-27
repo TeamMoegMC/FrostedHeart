@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.common.block;
 
-import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.common.blocks.IEBaseBlock;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.block.Block;
@@ -15,8 +14,7 @@ public class FHBaseBlock extends IEBaseBlock {
     }
 
     @Override
-    public ResourceLocation createRegistryName()
-    {
+    public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
 }

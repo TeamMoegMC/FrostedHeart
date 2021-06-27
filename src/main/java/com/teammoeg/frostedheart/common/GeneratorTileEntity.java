@@ -1,8 +1,9 @@
 package com.teammoeg.frostedheart.common;
 
-import blusunrize.immersiveengineering.api.crafting.CokeOvenRecipe;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.common.blocks.stone.CokeOvenTileEntity;
+import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
@@ -11,13 +12,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -136,7 +138,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         if (stack.isEmpty())
             return false;
         if (slot == INPUT_SLOT)
-            return GeneratorRecipe.findRecipe(stack)!=null;
+            return GeneratorRecipe.findRecipe(stack) != null;
         return false;
     }
 
@@ -202,9 +204,79 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         }
     }
 
+    @Nullable
+    public GeneratorRecipe getRecipe() {
+        if (inventory.get(INPUT_SLOT).isEmpty())
+            return null;
+        GeneratorRecipe recipe = GeneratorRecipe.findRecipe(inventory.get(INPUT_SLOT));
+        if (recipe == null)
+            return null;
+        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output) &&
+                inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT)))
+            return recipe;
+        return null;
+    }
+
     @Override
     public void tick() {
         checkForNeedlessTicking();
-        //todo: add tick logic
+        if (!world.isRemote && formed && !isDummy()) {
+            final boolean activeBeforeTick = getIsActive();
+            // just finished process or during process
+            if (process > 0) {
+                if (inventory.get(INPUT_SLOT).isEmpty()) {
+                    process = 0;
+                    processMax = 0;
+                }
+                // during process
+                else {
+                    GeneratorRecipe recipe = getRecipe();
+                    if (recipe == null || recipe.time != processMax) {
+                        process = 0;
+                        processMax = 0;
+                        setActive(false);
+                    } else
+                        process--;
+                }
+                this.markContainingBlockForUpdate(null);
+            }
+            // process not started yet
+            else {
+                if (activeBeforeTick) {
+                    GeneratorRecipe recipe = getRecipe();
+                    if (recipe != null) {
+                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -recipe.input.getCount());
+                        if (!inventory.get(OUTPUT_SLOT).isEmpty())
+                            inventory.get(OUTPUT_SLOT).grow(recipe.output.copy().getCount());
+                        else if (inventory.get(OUTPUT_SLOT).isEmpty())
+                            inventory.set(OUTPUT_SLOT, recipe.output.copy());
+                    }
+                    processMax = 0;
+                    setActive(false);
+                }
+                GeneratorRecipe recipe = getRecipe();
+                if (recipe != null) {
+                    this.process = recipe.time;
+                    this.processMax = process;
+                    setActive(true);
+                }
+            }
+
+            // set activity status
+            final boolean activeAfterTick = getIsActive();
+            if (activeBeforeTick != activeAfterTick) {
+                this.markDirty();
+                // scan 3x3x3
+                for (int x = 0; x < 3; ++x)
+                    for (int y = 0; y < 3; ++y)
+                        for (int z = 0; z < 3; ++z) {
+                            BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+                            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                            if (te instanceof CokeOvenTileEntity)
+                                ((CokeOvenTileEntity) te).setActive(activeAfterTick);
+                        }
+            }
+        }
+
     }
 }
