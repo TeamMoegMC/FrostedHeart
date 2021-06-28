@@ -18,7 +18,7 @@ public class FHTileTypes {
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
 
     public static final RegistryObject<TileEntityType<GeneratorTileEntity>> GENERATOR = REGISTER.register(
-            "generator", makeType(GeneratorTileEntity::new, () -> IEBlocks.Multiblocks.cokeOven)
+            "generator", makeType(GeneratorTileEntity::new, () -> FHBlocks.generator)
     );
 
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
