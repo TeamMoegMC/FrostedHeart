@@ -6,15 +6,16 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(BlockTemperatureData.class)
 public interface BlockTemperatureDataAccess {
-    @Accessor("temperatureModifier")
+
+    @Accessor(remap = false)
     void setTemperatureModifier(float newTemperatureModifier);
 
-    @Accessor("range")
+    @Accessor(remap = false)
     void setRange(int newRange);
 
-    @Accessor("usesLitOrActiveProperty")
+    @Accessor(remap = false)
     void setUsesLitOrActiveProperty(boolean newUsesLitOrActiveProperty);
 
-    @Accessor("usesLevelProperty")
+    @Accessor(remap = false)
     void setUsesLevelProperty(boolean newUsesLevelProperty);
 }
