@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.common;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import blusunrize.immersiveengineering.common.blocks.stone.CokeOvenTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
@@ -13,6 +12,7 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
@@ -36,13 +36,41 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
+    public int temperatureLevel = 1; //1: +4 , 2: +5 , 3: +6 , 4: +7
+    public int rangeLevel = 1; //1: 8, 2: 12, 3: 16, 4: 20
+    public boolean rfSupported = false; //todo: future impl
+    public boolean euSupported = false;
     public int process = 0;
     public int processMax = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
 
-    public GeneratorTileEntity() {
-        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR.get(), false);
+    public GeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
+        super(FHMultiblocks.GENERATOR, getSpecificGeneratorType(temperatureLevelIn, rangeLevelIn), false);
+        temperatureLevel = temperatureLevelIn;
+        rangeLevel = rangeLevelIn;
+    }
+
+    private static TileEntityType<GeneratorTileEntity> getSpecificGeneratorType(int tLevel, int rLevel) {
+        if (rLevel == 1) {
+            if (tLevel  == 1) {
+                return FHTileTypes.GENERATOR_T1_R1.get();
+            }
+            if (tLevel == 2) {
+                return FHTileTypes.GENERATOR_T2_R1.get();
+            }
+            if (tLevel == 3) {
+                return FHTileTypes.GENERATOR_T2_R1.get();
+            }
+            if (tLevel == 4) {
+                return FHTileTypes.GENERATOR_T2_R1.get();
+            } else {
+                throw new IllegalArgumentException("Level must be within 1 - 4 integers");
+            }
+        } else {
+            // todo: add rest levels
+            return null;
+        }
     }
 
     @Nonnull

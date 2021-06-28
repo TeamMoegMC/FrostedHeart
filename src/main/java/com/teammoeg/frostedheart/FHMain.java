@@ -5,6 +5,9 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.client.ClientProxy;
 import blusunrize.immersiveengineering.common.blocks.stone.StoneMultiBlock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import com.google.gson.JsonObject;
+import com.stereowalker.survive.Survive;
+import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorMultiblock;
@@ -14,6 +17,7 @@ import com.teammoeg.frostedheart.common.block.FHBaseBlock;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.data.FHRecipeProvider;
+import com.teammoeg.frostedheart.mixin.accessors.BlockTemperatureDataAccess;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -42,6 +46,8 @@ public class FHMain {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String MODID = "frostedheart";
 
+    public static BlockTemperatureData generatorTempData = new BlockTemperatureData(new ResourceLocation(FHMain.MODID, "generator"), new JsonObject());
+
     public FHMain() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
@@ -56,8 +62,17 @@ public class FHMain {
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::addReloadListenersLowest);
         FHRecipeSerializers.RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
 
+        // Register survive modifier temp data
+        BlockTemperatureDataAccess generatorTempDataAccess = (BlockTemperatureDataAccess) generatorTempData;
+        generatorTempDataAccess.setUsesLevelProperty(false);
+        generatorTempDataAccess.setUsesLitOrActiveProperty(true);
+        generatorTempDataAccess.setRange(5);
+        generatorTempDataAccess.setTemperatureModifier(4);
+
+        Survive.registerBlockTemperatures(new ResourceLocation(FHMain.MODID, "survive_modifiers/blocks/generator"), generatorTempData);
+
         // Init block
-        FHBlocks.generator = new StoneMultiBlock<GeneratorTileEntity>("generator", FHTileTypes.GENERATOR) {
+        FHBlocks.generator = new StoneMultiBlock<GeneratorTileEntity>("generator", FHTileTypes.GENERATOR_T1_R1) {
             @Override
             public ResourceLocation createRegistryName() {
                 return new ResourceLocation(FHMain.MODID, name);
