@@ -3,14 +3,16 @@ package com.teammoeg.frostedheart;
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.client.ClientProxy;
+import blusunrize.immersiveengineering.common.blocks.stone.StoneMultiBlock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorMultiblock;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
-import com.teammoeg.frostedheart.common.block.BlockItemFH;
 import com.teammoeg.frostedheart.common.block.FHBaseBlock;
-import com.teammoeg.frostedheart.common.block.StoneMultiBlock;
+import com.teammoeg.frostedheart.common.block.FHBlockItem;
+import com.teammoeg.frostedheart.common.block.FHStoneMultiBlock;
+import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.data.FHRecipeProvider;
@@ -34,15 +36,11 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(FHMain.MODID)
 public class FHMain {
 
-    // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String MODID = "frostedheart";
-
-//    public static BlockTemperatureData generatorTempData = new BlockTemperatureData(new ResourceLocation(FHMain.MODID, "generator"), new JsonObject());
 
     public FHMain() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
@@ -58,22 +56,8 @@ public class FHMain {
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::addReloadListenersLowest);
         FHRecipeSerializers.RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
 
-        // Register survive modifier temp data
-//        BlockTemperatureDataAccess generatorTempDataAccess = (BlockTemperatureDataAccess) generatorTempData;
-//        generatorTempDataAccess.setUsesLevelProperty(false);
-//        generatorTempDataAccess.setUsesLitOrActiveProperty(true);
-//        generatorTempDataAccess.setRange(5);
-//        generatorTempDataAccess.setTemperatureModifier(4);
-//
-//        Survive.registerBlockTemperatures(new ResourceLocation(FHMain.MODID, "survive_modifiers/blocks/generator"), generatorTempData);
-
         // Init block
-        FHBlocks.generator = new StoneMultiBlock<GeneratorTileEntity>("generator", FHTileTypes.GENERATOR_T1_R1) {
-            @Override
-            public ResourceLocation createRegistryName() {
-                return new ResourceLocation(FHMain.MODID, name);
-            }
-        };
+        FHBlocks.generator = new FHStoneMultiBlock<>("generator", FHTileTypes.GENERATOR_T1_R1);
 
         Block.Properties stoneDecoProps = Block.Properties.create(Material.ROCK)
                 .sound(SoundType.STONE)
@@ -81,7 +65,9 @@ public class FHMain {
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10);
 
-        FHBlocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, BlockItemFH::new);
+        FHBlocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
+        FHBlocks.generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
+        FHBlocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
 
         // Init multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();

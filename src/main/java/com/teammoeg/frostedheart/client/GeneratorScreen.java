@@ -36,8 +36,8 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
         font.drawString(transform, "R: " + tile.rangeLevel, guiLeft + 10, guiTop + 20, -1);
         font.drawString(transform, "Modifier: " + Survive.blockTemperatureMap.get(FHMain.rl("generator")).getTemperatureModifier(), guiLeft + 10, guiTop + 30, 0);
         font.drawString(transform, "Range: " + Survive.blockTemperatureMap.get(FHMain.rl("generator")).getRange(), guiLeft + 10, guiTop + 40, 0);
-        BlockState state = tile.getBlockState();
-        font.drawString(transform, "Activity: " + (state.hasProperty(BlockStateProperties.LIT) && state.get(BlockStateProperties.LIT)),guiLeft + 10, guiTop + 50, -1);
+//        BlockState state = tile.getBlockState();
+//        font.drawString(transform, "Activity: " + (state.hasProperty(BlockStateProperties.LIT) && state.get(BlockStateProperties.LIT)),guiLeft + 10, guiTop + 50, -1);
         List<ITextComponent> tooltip = new ArrayList<>();
         if(!tooltip.isEmpty())
             GuiUtils.drawHoveringText(transform, tooltip, mx, my, width, height, -1, font);

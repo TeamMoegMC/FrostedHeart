@@ -7,7 +7,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.common.block.FrostedheartInterfaces;
+import com.teammoeg.frostedheart.common.block.FHBlockInterfaces;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -32,7 +32,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileEntity> implements IIEInventory,
-        FrostedheartInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
+        FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
@@ -297,7 +297,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 this.markDirty();
                 // scan 3x3x3
                 for (int x = 0; x < 3; ++x)
-                    for (int y = 0; y < 3; ++y)
+                    for (int y = 0; y < 4; ++y)
                         for (int z = 0; z < 3; ++z) {
                             BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
                             TileEntity te = Utils.getExistingTileEntity(world, actualPos);
