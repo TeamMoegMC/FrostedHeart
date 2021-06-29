@@ -10,6 +10,7 @@ import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.fml.client.gui.GuiUtils;
@@ -31,18 +32,12 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     @Override
     public void render(MatrixStack transform, int mx, int my, float partial) {
         super.render(transform, mx, my, partial);
-//        font.drawString(transform, "Temperature Level: " + tile.temperatureLevel, guiLeft + 10, guiTop + 10, 0);
-//        font.drawString(transform, "Range Level: " + tile.rangeLevel, guiLeft + 10, guiTop + 20, 0);
-        font.drawString(transform, "Temperature Modifier: " + Survive.blockTemperatureMap.get(FHMain.rl("generator")).getTemperatureModifier(), guiLeft + 10, guiTop + 30, 0);
-        font.drawString(transform, "Effective Range: " + Survive.blockTemperatureMap.get(FHMain.rl("generator")).getRange(), guiLeft + 10, guiTop + 40, 0);
-        font.drawString(transform, "getBlockState: " + tile.getBlockState().hasProperty(UBlockStateProperties.ACTIVE), guiLeft + 10, guiTop + 10, 0);
-        font.drawString(transform, "getOriginalBlock: " + tile.getOriginalBlock().hasProperty(UBlockStateProperties.ACTIVE),guiLeft + 10, guiTop + 20, 0);
-
+        font.drawString(transform, "T:: " + tile.temperatureLevel, guiLeft + 10, guiTop + 10, -1);
+        font.drawString(transform, "R: " + tile.rangeLevel, guiLeft + 10, guiTop + 20, -1);
+        font.drawString(transform, "Modifier: " + Survive.blockTemperatureMap.get(FHMain.rl("generator")).getTemperatureModifier(), guiLeft + 10, guiTop + 30, 0);
+        font.drawString(transform, "Range: " + Survive.blockTemperatureMap.get(FHMain.rl("generator")).getRange(), guiLeft + 10, guiTop + 40, 0);
         BlockState state = tile.getBlockState();
-        font.drawString(transform, "isActive: " + (state.hasProperty(UBlockStateProperties.ACTIVE) && state.get(UBlockStateProperties.ACTIVE)),guiLeft + 10, guiTop + 50, 0);
-        BlockState original = tile.getOriginalBlock();
-        font.drawString(transform, "isActiveOriginal: " + (original.hasProperty(UBlockStateProperties.ACTIVE) && original.get(UBlockStateProperties.ACTIVE)),guiLeft + 10, guiTop + 60, 0);
-
+        font.drawString(transform, "Activity: " + (state.hasProperty(BlockStateProperties.LIT) && state.get(BlockStateProperties.LIT)),guiLeft + 10, guiTop + 50, -1);
         List<ITextComponent> tooltip = new ArrayList<>();
         if(!tooltip.isEmpty())
             GuiUtils.drawHoveringText(transform, tooltip, mx, my, width, height, -1, font);
