@@ -7,6 +7,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.common.block.FrostedheartInterfaces;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -31,7 +32,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileEntity> implements IIEInventory,
-        IEBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
+        FrostedheartInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
