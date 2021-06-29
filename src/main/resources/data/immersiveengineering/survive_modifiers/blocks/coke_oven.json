@@ -1,5 +1,5 @@
 {
-  "temperature_modifier": 100.0,
+  "temperature_modifier": 10.0,
   "uses_lit_or_active_proprty": true,
   "uses_level_property": false,
   "range": 5
