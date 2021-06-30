@@ -7,9 +7,9 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.common.util.FHBlockInterfaces;
-import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -272,7 +272,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             BlockPos blockpos = this.getPos();
             Random random = world.rand;
             if (random.nextFloat() < 0.11F) {
-                for(int i = 0; i < random.nextInt(2) + 2; ++i) {
+                for (int i = 0; i < random.nextInt(2) + 2; ++i) {
                     GeneratorMultiblockBlock.spawnSmokeParticles(world, blockpos);
                 }
             }

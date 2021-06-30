@@ -20,74 +20,63 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
-public abstract class FHTemplateMultiblock extends TemplateMultiblock
-{
+public abstract class FHTemplateMultiblock extends TemplateMultiblock {
     private final Supplier<BlockState> baseState;
 
     public FHTemplateMultiblock(
             ResourceLocation loc, BlockPos masterFromOrigin, BlockPos triggerFromOrigin, BlockPos size,
             Supplier<BlockState> baseState
-    )
-    {
+    ) {
         super(loc, masterFromOrigin, triggerFromOrigin, size, ImmutableMap.of());
         this.baseState = baseState;
     }
 
     @Override
-    protected void replaceStructureBlock(BlockInfo info, World world, BlockPos actualPos, boolean mirrored, Direction clickDirection, Vector3i offsetFromMaster)
-    {
+    protected void replaceStructureBlock(BlockInfo info, World world, BlockPos actualPos, boolean mirrored, Direction clickDirection, Vector3i offsetFromMaster) {
         BlockState state = baseState.get();
-        if(!offsetFromMaster.equals(Vector3i.NULL_VECTOR))
+        if (!offsetFromMaster.equals(Vector3i.NULL_VECTOR))
             state = state.with(IEProperties.MULTIBLOCKSLAVE, true);
         world.setBlockState(actualPos, state);
         TileEntity curr = world.getTileEntity(actualPos);
-        if(curr instanceof MultiblockPartTileEntity)
-        {
-            MultiblockPartTileEntity tile = (MultiblockPartTileEntity)curr;
+        if (curr instanceof MultiblockPartTileEntity) {
+            MultiblockPartTileEntity tile = (MultiblockPartTileEntity) curr;
             tile.formed = true;
             tile.offsetToMaster = new BlockPos(offsetFromMaster);
             tile.posInMultiblock = info.pos;
-            if(state.hasProperty(IEProperties.MIRRORED))
+            if (state.hasProperty(IEProperties.MIRRORED))
                 tile.setMirrored(mirrored);
             tile.setFacing(transformDirection(clickDirection.getOpposite()));
             tile.markDirty();
             world.addBlockEvent(actualPos, world.getBlockState(actualPos).getBlock(), 255, 0);
-        }
-        else
+        } else
             FHLogger.logger.error("Expected MB TE at {} during placement", actualPos);
     }
 
     @Override
-    public void disassemble(World world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation)
-    {
+    public void disassemble(World world, BlockPos origin, boolean mirrored, Direction clickDirectionAtCreation) {
         super.disassemble(world, origin, mirrored, clickDirectionAtCreation);
     }
 
-    public Direction transformDirection(Direction original)
-    {
+    public Direction transformDirection(Direction original) {
         return original;
     }
 
-    public Direction untransformDirection(Direction transformed)
-    {
+    public Direction untransformDirection(Direction transformed) {
         return transformed;
     }
 
-    public BlockPos multiblockToModelPos(BlockPos posInMultiblock)
-    {
+    public BlockPos multiblockToModelPos(BlockPos posInMultiblock) {
         return posInMultiblock.subtract(masterFromOrigin);
     }
 
     @Override
-    public Vector3i getSize(@Nullable World world)
-    {
+    public Vector3i getSize(@Nullable World world) {
         return size;
     }
 
     @Nonnull
     @Override
-    protected Template getTemplate(@Nullable World world)
-    {
+    protected Template getTemplate(@Nullable World world) {
         Template result = super.getTemplate(world);
         Preconditions.checkState(
                 result.getSize().equals(size),
@@ -98,11 +87,10 @@ public abstract class FHTemplateMultiblock extends TemplateMultiblock
     }
 
     @Override
-    protected void prepareBlockForDisassembly(World world, BlockPos pos)
-    {
+    protected void prepareBlockForDisassembly(World world, BlockPos pos) {
         TileEntity te = world.getTileEntity(pos);
-        if(te instanceof MultiblockPartTileEntity)
-            ((MultiblockPartTileEntity)te).formed = false;
+        if (te instanceof MultiblockPartTileEntity)
+            ((MultiblockPartTileEntity) te).formed = false;
         else
             FHLogger.logger.error("Expected multiblock TE at {}", pos);
     }
