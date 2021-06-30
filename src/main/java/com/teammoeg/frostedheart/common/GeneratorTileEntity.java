@@ -21,7 +21,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.math.vector.Vector3i;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -55,7 +54,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
 
     private static TileEntityType<GeneratorTileEntity> getSpecificGeneratorType(int tLevel, int rLevel) {
         if (rLevel == 1) {
-            if (tLevel  == 1) {
+            if (tLevel == 1) {
                 return FHTileTypes.GENERATOR_T1_R1.get();
             }
             if (tLevel == 2) {

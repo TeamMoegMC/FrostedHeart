@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart;
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.client.ClientProxy;
-import blusunrize.immersiveengineering.common.blocks.stone.StoneMultiBlock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
@@ -124,8 +123,7 @@ public class FHMain {
 
     }
 
-    public static ResourceLocation rl(String path)
-    {
+    public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);
     }
 

@@ -6,9 +6,9 @@ import net.minecraft.state.properties.BlockStateProperties;
 
 public class FHBlockInterfaces {
     public FHBlockInterfaces() {
-}
+    }
 
-public interface IActiveState extends IEBlockInterfaces.BlockstateProvider {
+    public interface IActiveState extends IEBlockInterfaces.BlockstateProvider {
         default boolean getIsActive() {
             BlockState state = this.getState();
             return state.hasProperty(BlockStateProperties.LIT) ? (Boolean) state.get(BlockStateProperties.LIT) : false;

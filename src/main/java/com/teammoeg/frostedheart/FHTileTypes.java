@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
 import net.minecraft.block.Block;
