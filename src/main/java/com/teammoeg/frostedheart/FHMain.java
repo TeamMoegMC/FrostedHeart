@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.common.GeneratorTileEntity;
 import com.teammoeg.frostedheart.common.block.*;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.data.FHMultiblockStatesProvider;
 import com.teammoeg.frostedheart.data.FHRecipeProvider;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -20,6 +21,7 @@ import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.ToolType;
+import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -85,8 +87,10 @@ public class FHMain {
     // data generator event
     public void gatherData(GatherDataEvent event) {
         DataGenerator gen = event.getGenerator();
+        ExistingFileHelper exHelper = event.getExistingFileHelper();
         if (event.includeServer()) {
             gen.addProvider(new FHRecipeProvider(gen));
+            gen.addProvider(new FHMultiblockStatesProvider(gen, exHelper));
         }
     }
 

@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
@@ -104,6 +104,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
     compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135")
+    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:datagen")
 
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
