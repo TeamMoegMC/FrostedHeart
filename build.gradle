@@ -105,7 +105,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', 'frostedheart', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', 'frostedheart', '--all', '--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/'), '--existing-mod', 'immersiveengineering'
 
             mods {
                 frostedheart {
@@ -125,7 +125,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
     compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135")
-    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:datagen")
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:datagen")
 
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
