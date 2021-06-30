@@ -21,6 +21,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -126,6 +127,20 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     protected boolean canDrainTankFrom(int iTank, Direction side) {
         return false;
     }
+
+//    @Override
+//    @Nullable
+//    public GeneratorTileEntity master()
+//    {
+//        if(offsetToMaster.equals(Vector3i.NULL_VECTOR))
+//            return this;
+//        // Used to provide tile-dependant drops after disassembly
+//        if(tempMasterTE!=null)
+//            return (GeneratorTileEntity)tempMasterTE;
+//        BlockPos masterPos = getPos().subtract(offsetToMaster);
+//        TileEntity te = Utils.getExistingTileEntity(world, new BlockPos(masterPos.getX(), masterPos.getY() - 1, masterPos.getZ()));
+//        return this.getClass().isInstance(te)?(GeneratorTileEntity)te: null;
+//    }
 
     @Nullable
     @Override

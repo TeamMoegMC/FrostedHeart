@@ -26,6 +26,7 @@ public class FHStoneMultiBlock<T extends MultiblockPartTileEntity<? super T>> ex
         super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid());
         this.type = type;
         this.lightOpacity = 0;
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
     @Override
@@ -37,7 +38,7 @@ public class FHStoneMultiBlock<T extends MultiblockPartTileEntity<? super T>> ex
     @Nullable
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return ((TileEntityType) this.type.get()).create();
+        return type.get().create();
     }
 
     @Override

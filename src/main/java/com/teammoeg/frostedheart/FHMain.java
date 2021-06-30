@@ -57,7 +57,7 @@ public class FHMain {
         FHRecipeSerializers.RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
 
         // Init block
-        FHBlocks.generator = new FHStoneMultiBlock<>("generator", FHTileTypes.GENERATOR_T1_R1);
+        FHBlocks.generator = new FHStoneMultiBlock<GeneratorTileEntity>("generator", FHTileTypes.GENERATOR_T1_R1);
 
         Block.Properties stoneDecoProps = Block.Properties.create(Material.ROCK)
                 .sound(SoundType.STONE)
