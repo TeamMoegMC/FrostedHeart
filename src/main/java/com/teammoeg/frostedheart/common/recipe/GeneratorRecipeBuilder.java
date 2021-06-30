@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common;
+package com.teammoeg.frostedheart.common.recipe;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.crafting.builders.IEFinishedRecipe;

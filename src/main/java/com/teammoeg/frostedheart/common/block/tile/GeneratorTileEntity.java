@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common;
+package com.teammoeg.frostedheart.common.block.tile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
@@ -7,9 +7,9 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.common.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
+import com.teammoeg.frostedheart.common.util.FHBlockInterfaces;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
-import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;

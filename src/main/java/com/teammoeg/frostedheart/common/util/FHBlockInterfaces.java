@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common.block;
+package com.teammoeg.frostedheart.common.util;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import net.minecraft.block.BlockState;

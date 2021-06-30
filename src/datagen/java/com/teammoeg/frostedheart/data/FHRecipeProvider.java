@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.data;
 
 import blusunrize.immersiveengineering.api.IETags;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.common.GeneratorRecipeBuilder;
+import com.teammoeg.frostedheart.common.recipe.GeneratorRecipeBuilder;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;

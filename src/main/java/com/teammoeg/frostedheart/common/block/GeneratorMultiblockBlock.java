@@ -13,7 +13,7 @@ import net.minecraftforge.fml.RegistryObject;
 
 import java.util.Random;
 
-public class GeneratorMultiblockBlock extends FHStoneMultiblockBlock{
+public class GeneratorMultiblockBlock extends FHStoneMultiblockBlock {
     public GeneratorMultiblockBlock(String name, RegistryObject type) {
         super(name, type);
     }

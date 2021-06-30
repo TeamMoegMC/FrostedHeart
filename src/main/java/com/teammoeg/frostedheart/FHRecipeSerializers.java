@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.common.GeneratorRecipe;
-import com.teammoeg.frostedheart.common.GeneratorRecipeSerializer;
+import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
+import com.teammoeg.frostedheart.common.recipe.GeneratorRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;

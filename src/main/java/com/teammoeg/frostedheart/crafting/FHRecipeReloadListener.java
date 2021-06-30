@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.crafting;
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
-import com.teammoeg.frostedheart.common.GeneratorRecipe;
+import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;

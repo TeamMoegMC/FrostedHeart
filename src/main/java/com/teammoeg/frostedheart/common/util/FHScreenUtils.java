@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.client;
+package com.teammoeg.frostedheart.common.util;
 
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.util.ResourceLocation;

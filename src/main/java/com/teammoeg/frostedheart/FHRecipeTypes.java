@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.common.GeneratorRecipe;
+import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 
 public class FHRecipeTypes {

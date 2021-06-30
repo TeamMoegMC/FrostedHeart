@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common;
+package com.teammoeg.frostedheart.common.block.multiblock;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHBlocks;
