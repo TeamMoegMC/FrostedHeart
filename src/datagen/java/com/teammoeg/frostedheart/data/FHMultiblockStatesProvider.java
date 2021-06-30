@@ -49,7 +49,7 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
     @Override
     public String getName()
     {
-        return "Multiblock models/block states";
+        return "FH Multiblock models/block states";
     }
 
     private ModelFile cubeTwo(String name, ResourceLocation top, ResourceLocation bottom,
