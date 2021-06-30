@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.common.block.multiblock;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.common.block.multiblock.FHStoneMultiblock;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
