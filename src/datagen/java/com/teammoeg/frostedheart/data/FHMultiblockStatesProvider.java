@@ -2,8 +2,6 @@ package com.teammoeg.frostedheart.data;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IEMultiblocks;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.FHBlocks;

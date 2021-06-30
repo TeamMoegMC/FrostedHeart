@@ -28,7 +28,7 @@ public class FHRecipeProvider extends RecipeProvider {
     private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out) {
         GeneratorRecipeBuilder.builder(IETags.slag, 1)
                 .addInput(ItemTags.COALS)
-                .setTime(100)
+                .setTime(1000)
                 .build(out, toRL("generator/slag"));
     }
 

@@ -8,27 +8,29 @@ import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorMultiblock;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
-import com.teammoeg.frostedheart.common.block.*;
+import com.teammoeg.frostedheart.common.block.FHBaseBlock;
+import com.teammoeg.frostedheart.common.block.FHBlockItem;
+import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
+import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.data.FHMultiblockStatesProvider;
-import com.teammoeg.frostedheart.data.FHRecipeProvider;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.ToolType;
-import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.*;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +47,6 @@ public class FHMain {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::gatherData);
 
         MinecraftForge.EVENT_BUS.register(this);
 
@@ -82,16 +83,6 @@ public class FHMain {
 
         // Register recipe types
         DeferredWorkQueue.runLater(FHRecipeTypes::registerRecipeTypes);
-    }
-
-    // data generator event
-    public void gatherData(GatherDataEvent event) {
-        DataGenerator gen = event.getGenerator();
-        ExistingFileHelper exHelper = event.getExistingFileHelper();
-        if (event.includeServer()) {
-            gen.addProvider(new FHRecipeProvider(gen));
-            gen.addProvider(new FHMultiblockStatesProvider(gen, exHelper));
-        }
     }
 
     public void addReloadListeners(AddReloadListenerEvent event) {
