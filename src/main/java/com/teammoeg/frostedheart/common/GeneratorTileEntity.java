@@ -8,6 +8,8 @@ import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.common.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -30,6 +32,7 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Random;
 
 public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileEntity> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
@@ -263,6 +266,19 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void tick() {
         checkForNeedlessTicking();
+
+        // spawn smoke particle
+        if (world != null && world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
+            BlockPos blockpos = this.getPos();
+            Random random = world.rand;
+            if (random.nextFloat() < 0.11F) {
+                for(int i = 0; i < random.nextInt(2) + 2; ++i) {
+                    GeneratorMultiblockBlock.spawnSmokeParticles(world, blockpos);
+                }
+            }
+        }
+
+        // logic
         if (!world.isRemote && formed && !isDummy()) {
             final boolean activeBeforeTick = getIsActive();
             // just finished process or during process

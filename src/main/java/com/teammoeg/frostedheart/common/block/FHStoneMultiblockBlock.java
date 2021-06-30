@@ -18,11 +18,11 @@ import net.minecraftforge.fml.RegistryObject;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class FHStoneMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends IEMultiblockBlock {
+public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T>> extends IEMultiblockBlock {
     private RegistryObject<TileEntityType<T>> type;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public FHStoneMultiBlock(String name, RegistryObject<TileEntityType<T>> type) {
+    public FHStoneMultiblockBlock(String name, RegistryObject<TileEntityType<T>> type) {
         super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid());
         this.type = type;
         this.lightOpacity = 0;

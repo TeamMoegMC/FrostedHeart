@@ -8,10 +8,7 @@ import com.teammoeg.frostedheart.client.GeneratorScreen;
 import com.teammoeg.frostedheart.common.GeneratorContainer;
 import com.teammoeg.frostedheart.common.GeneratorMultiblock;
 import com.teammoeg.frostedheart.common.GeneratorTileEntity;
-import com.teammoeg.frostedheart.common.block.FHBaseBlock;
-import com.teammoeg.frostedheart.common.block.FHBlockItem;
-import com.teammoeg.frostedheart.common.block.FHStoneMultiBlock;
-import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
+import com.teammoeg.frostedheart.common.block.*;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.data.FHRecipeProvider;
@@ -56,7 +53,7 @@ public class FHMain {
         FHRecipeSerializers.RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
 
         // Init block
-        FHBlocks.generator = new FHStoneMultiBlock<GeneratorTileEntity>("generator", FHTileTypes.GENERATOR_T1_R1);
+        FHBlocks.generator = new GeneratorMultiblockBlock("generator", FHTileTypes.GENERATOR_T1_R1);
 
         Block.Properties stoneDecoProps = Block.Properties.create(Material.ROCK)
                 .sound(SoundType.STONE)

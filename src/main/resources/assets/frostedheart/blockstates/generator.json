@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "frostedheart:block/multiblocks/generator",
+      "uvlock": true
+    }
+  }
+}
