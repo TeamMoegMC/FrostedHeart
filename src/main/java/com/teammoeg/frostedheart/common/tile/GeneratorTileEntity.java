@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common.block.tile;
+package com.teammoeg.frostedheart.common.tile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
@@ -271,9 +271,10 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         if (world != null && world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
             BlockPos blockpos = this.getPos();
             Random random = world.rand;
-            if (random.nextFloat() < 0.11F) {
+            if (random.nextFloat() < 0.50F) {
                 for (int i = 0; i < random.nextInt(2) + 2; ++i) {
                     GeneratorMultiblockBlock.spawnSmokeParticles(world, blockpos);
+                    GeneratorMultiblockBlock.spawnFireParticles(world, blockpos);
                 }
             }
         }

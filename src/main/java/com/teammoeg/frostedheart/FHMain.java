@@ -10,7 +10,7 @@ import com.teammoeg.frostedheart.common.block.FHBlockItem;
 import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.block.multiblock.GeneratorMultiblock;
-import com.teammoeg.frostedheart.common.block.tile.GeneratorTileEntity;
+import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;

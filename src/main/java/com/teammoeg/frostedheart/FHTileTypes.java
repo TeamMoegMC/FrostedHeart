@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart;
 
 import com.google.common.collect.ImmutableSet;
-import com.teammoeg.frostedheart.common.block.tile.GeneratorTileEntity;
+import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;

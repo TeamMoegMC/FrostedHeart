@@ -5,7 +5,7 @@ import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.stereowalker.survive.Survive;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.common.block.tile.GeneratorTileEntity;
+import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;

@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.common.container;
 import blusunrize.immersiveengineering.api.crafting.CokeOvenRecipe;
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import com.teammoeg.frostedheart.common.block.tile.GeneratorTileEntity;
+import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
