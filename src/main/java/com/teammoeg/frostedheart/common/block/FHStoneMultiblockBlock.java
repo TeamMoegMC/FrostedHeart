@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.common.block;
 import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.common.util.FHBlockUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
@@ -23,7 +24,7 @@ public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FHStoneMultiblockBlock(String name, RegistryObject<TileEntityType<T>> type) {
-        super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid());
+        super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHBlockUtils.getLightValueLit(15)));
         this.type = type;
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));

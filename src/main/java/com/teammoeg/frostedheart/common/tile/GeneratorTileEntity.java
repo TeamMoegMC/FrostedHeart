@@ -58,16 +58,16 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     private static TileEntityType<GeneratorTileEntity> getSpecificGeneratorType(int tLevel, int rLevel) {
         if (rLevel == 1) {
             if (tLevel == 1) {
-                return FHTileTypes.GENERATOR_T1_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             }
             if (tLevel == 2) {
-                return FHTileTypes.GENERATOR_T2_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             }
             if (tLevel == 3) {
-                return FHTileTypes.GENERATOR_T2_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             }
             if (tLevel == 4) {
-                return FHTileTypes.GENERATOR_T2_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             } else {
                 throw new IllegalArgumentException("Level must be within 1 - 4 integers");
             }
@@ -129,20 +129,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     protected boolean canDrainTankFrom(int iTank, Direction side) {
         return false;
     }
-
-//    @Override
-//    @Nullable
-//    public GeneratorTileEntity master()
-//    {
-//        if(offsetToMaster.equals(Vector3i.NULL_VECTOR))
-//            return this;
-//        // Used to provide tile-dependant drops after disassembly
-//        if(tempMasterTE!=null)
-//            return (GeneratorTileEntity)tempMasterTE;
-//        BlockPos masterPos = getPos().subtract(offsetToMaster);
-//        TileEntity te = Utils.getExistingTileEntity(world, new BlockPos(masterPos.getX(), masterPos.getY() - 1, masterPos.getZ()));
-//        return this.getClass().isInstance(te)?(GeneratorTileEntity)te: null;
-//    }
 
     @Nullable
     @Override

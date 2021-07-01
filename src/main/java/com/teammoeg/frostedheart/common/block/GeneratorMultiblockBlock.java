@@ -1,17 +1,22 @@
 package com.teammoeg.frostedheart.common.block;
 
+import blusunrize.immersiveengineering.common.blocks.IEBaseBlock;
+import com.teammoeg.frostedheart.common.util.FHBlockUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.RegistryObject;
 
 import java.util.Random;
+import java.util.function.ToIntFunction;
 
 public class GeneratorMultiblockBlock extends FHStoneMultiblockBlock {
     public GeneratorMultiblockBlock(String name, RegistryObject type) {
