@@ -48,6 +48,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public int processMax = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
+    private boolean isWorking;
+    private boolean isOverdrive;
 
     public GeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
         super(FHMultiblocks.GENERATOR, getSpecificGeneratorType(temperatureLevelIn, rangeLevelIn), false);
@@ -252,7 +254,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void tick() {
         checkForNeedlessTicking();
-
         // spawn smoke particle
         if (world != null && world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
             BlockPos blockpos = this.getPos();
@@ -266,7 +267,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         }
 
         // logic
-        if (!world.isRemote && formed && !isDummy()) {
+        if (!world.isRemote && formed && !isDummy() && isWorking) {
             final boolean activeBeforeTick = getIsActive();
             // just finished process or during process
             if (process > 0) {
@@ -312,7 +313,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             final boolean activeAfterTick = getIsActive();
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
-                // scan 3x3x3
+                // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
                     for (int y = 0; y < 4; ++y)
                         for (int z = 0; z < 3; ++z) {
@@ -324,5 +325,21 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             }
         }
 
+    }
+
+    public void setWorking(boolean working) {
+        isWorking = working;
+    }
+
+    public boolean isWorking() {
+        return isWorking;
+    }
+
+    public boolean isOverdrive() {
+        return isOverdrive;
+    }
+
+    public void setOverdrive(boolean overdrive) {
+        isOverdrive = overdrive;
     }
 }
