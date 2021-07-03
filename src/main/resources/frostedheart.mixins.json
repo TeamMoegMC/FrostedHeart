@@ -4,7 +4,8 @@
   "package": "com.teammoeg.frostedheart.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "accessors.BlockTemperatureDataAccess"
+    "accessors.BlockTemperatureDataAccess",
+    "accessors.ChunkGeneratorAccessor"
   ],
   "client": [
   ],
