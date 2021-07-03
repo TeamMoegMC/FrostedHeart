@@ -41,6 +41,7 @@ public class FHMain {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String MODID = "frostedheart";
+    public static final String MODNAME = "Frosted Heart";
 
     public FHMain() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);

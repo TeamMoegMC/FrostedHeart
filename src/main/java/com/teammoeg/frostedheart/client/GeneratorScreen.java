@@ -1,14 +1,20 @@
 package com.teammoeg.frostedheart.client;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
+import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
+import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.stereowalker.survive.Survive;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
 import com.teammoeg.frostedheart.common.util.FHScreenUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.widget.button.ImageButton;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -26,6 +32,16 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
         super(container, inv, title);
         this.tile = container.tile;
         clearIntArray(tile.guiData);
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        this.addButton(new ImageButton(guiLeft+56, guiTop+35, 19, 10, 232, 1, 12, TEXTURE,
+                btn -> {
+                    tile.setWorking(!tile.isWorking());
+                    fullInit();
+                }));
     }
 
     @Override
@@ -71,29 +87,29 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
             this.blit(transform, guiLeft + 85, guiTop + 35 - h, 179, 1 + 12 - h, 9, h);
         }
 
-        // work button
-        if (tile.isWorking()) {
-            this.blit(transform, guiLeft + 56, guiTop + 35, 232, 1, 19, 10);
-        }
-
-        // overdrive button
-        if (tile.isOverdrive()) {
-            this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
-        }
+//        // work button
+//        if (tile.isWorking()) {
+//            this.blit(transform, guiLeft + 56, guiTop + 35, 232, 1, 19, 10);
+//        }
+//
+//        // overdrive button
+//        if (tile.isOverdrive()) {
+//            this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
+//        }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // buttons
-        boolean f = isMouseIn((int)mouseX, (int)mouseY, 57,36, 19, 10);
-        if (f) {
-            tile.setWorking(!tile.isWorking());
-            return true;
-        }
-        if (isMouseIn((int)mouseX, (int)mouseY, 102,36, 19, 10)) {
-            tile.setOverdrive(!tile.isOverdrive());
-            return true;
-        }
+//        boolean f = isMouseIn((int)mouseX, (int)mouseY, 57,36, 19, 10);
+//        if (f) {
+//            tile.setWorking(!tile.isWorking());
+//            return true;
+//        }
+//        if (isMouseIn((int)mouseX, (int)mouseY, 102,36, 19, 10)) {
+//            tile.setOverdrive(!tile.isOverdrive());
+//            return true;
+//        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
