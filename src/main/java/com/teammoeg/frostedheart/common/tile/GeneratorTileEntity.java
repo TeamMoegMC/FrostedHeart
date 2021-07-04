@@ -10,6 +10,10 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.common.util.FHBlockInterfaces;
+import com.teammoeg.frostedheart.network.ChunkWatchPacket;
+import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.world.chunkdata.LerpFloatLayer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -20,6 +24,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
@@ -27,6 +32,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
@@ -265,9 +271,15 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 }
             }
         }
+        // change chunk temperature
+        if (!world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
+            ChunkPos chunkPos = new ChunkPos(getPos());
+            ChunkData.changeChunkData(world, chunkPos.x, chunkPos.z, new LerpFloatLayer(30));
+            //todo: change back to original temperature when TE shuts down
+        }
 
-        // logic
-        if (!world.isRemote && formed && !isDummy() && isWorking) {
+            // logic
+        if (!world.isRemote && formed && !isDummy()) {
             final boolean activeBeforeTick = getIsActive();
             // just finished process or during process
             if (process > 0) {

@@ -61,6 +61,23 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT>
         return LazyOptional.empty();
     }
 
+    /**
+     * Used on a ServerWorld context to change current ChunkData for both client and server side cache.
+     */
+    public static void changeChunkData(IWorld world, int chunkX, int chunkZ, LerpFloatLayer layer) {
+        ChunkPos pos = new ChunkPos(chunkX, chunkZ);
+        if (world != null && !world.isRemote()) {
+            IChunk chunk = world.chunkExists(chunkX, chunkZ) ? world.getChunk(chunkX, chunkZ) : null;
+            ChunkData data = ChunkData.getCapability(chunk).map(
+                    dataIn -> {
+                        ChunkDataCache.SERVER.update(pos, dataIn);
+                        ChunkDataCache.CLIENT.update(pos, dataIn);
+                        return dataIn;
+                    }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(pos));
+            data.setTemperatureLayer(layer);
+        }
+    }
+
     private final LazyOptional<ChunkData> capability;
     private final ChunkPos pos;
 
@@ -74,6 +91,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT>
         this.capability = LazyOptional.of(() -> this);
 
         reset();
+    }
+
+    public void setTemperatureLayer(LerpFloatLayer temperatureLayer) {
+        this.temperatureLayer = temperatureLayer;
     }
 
     public ChunkPos getPos()
