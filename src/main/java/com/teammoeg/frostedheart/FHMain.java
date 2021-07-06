@@ -1,18 +1,6 @@
 package com.teammoeg.frostedheart;
 
-import blusunrize.immersiveengineering.ImmersiveEngineering;
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.client.ClientProxy;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import com.teammoeg.frostedheart.client.GeneratorScreen;
-import com.teammoeg.frostedheart.common.block.FHBaseBlock;
-import com.teammoeg.frostedheart.common.block.FHBlockItem;
-import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
-import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
-import com.teammoeg.frostedheart.common.block.multiblock.GeneratorMultiblock;
-import com.teammoeg.frostedheart.common.container.GeneratorContainer;
-import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
-import com.teammoeg.frostedheart.common.util.CacheInvalidationListener;
+import com.teammoeg.frostedheart.util.CacheInvalidationListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
@@ -21,10 +9,12 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
@@ -36,13 +26,13 @@ import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.common.Mod;
@@ -58,74 +48,55 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
+import static com.teammoeg.frostedheart.FHContent.*;
 import static net.minecraft.util.text.TextFormatting.*;
 import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod(FHMain.MODID)
 public class FHMain {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger(FHMain.MODNAME);
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
 
+    public static ItemGroup itemGroup = new ItemGroup(MODID)
+    {
+        @Override
+        @Nonnull
+        public ItemStack createIcon()
+        {
+            return new ItemStack(Blocks.generator_core_t1.asItem());
+        }
+    };
+
     public FHMain() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus forgeBus = MinecraftForge.EVENT_BUS;
+        forgeBus.register(this);
 
-        MinecraftForge.EVENT_BUS.register(this);
+        modBus.addListener(this::setup);
+        modBus.addListener(this::doClientStuff);
+        modBus.addListener(this::processIMC);
+        modBus.addListener(this::enqueueIMC);
 
-        // Register recipe serializing
-        MinecraftForge.EVENT_BUS.addListener(this::addReloadListeners);
-        MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, this::addReloadListenersLowest);
-        FHRecipeSerializers.RECIPE_SERIALIZERS.register(FMLJavaModLoadingContext.get().getModEventBus());
-
-        // Init block
-        FHBlocks.generator = new GeneratorMultiblockBlock("generator", FHTileTypes.GENERATOR_T1);
-
-        Block.Properties stoneDecoProps = Block.Properties.create(Material.ROCK)
-                .sound(SoundType.STONE)
-                .setRequiresTool()
-                .harvestTool(ToolType.PICKAXE)
-                .hardnessAndResistance(2, 10);
-
-        FHBlocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
-        FHBlocks.generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
-        FHBlocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
-
-        // Init multiblocks
-        FHMultiblocks.GENERATOR = new GeneratorMultiblock();
-        MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
-
+        // Register recipe serializers
+        FHRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
         // Register tile types
-        FHTileTypes.REGISTER.register(FMLJavaModLoadingContext.get().getModEventBus());
-
-        // Register containers
-        GuiHandler.register(GeneratorTileEntity.class, new ResourceLocation(MODID, "generator"), GeneratorContainer::new);
-
-        // Register screens
-        ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(MODID, "generator"), GeneratorScreen::new);
-
+        FHTileTypes.REGISTER.register(modBus);
         // Register recipe types
         DeferredWorkQueue.runLater(FHRecipeTypes::registerRecipeTypes);
-
-        // Register packets
-        PacketHandler.init();
+        // Register network packets
+        PacketHandler.register();
+        // Populate FH content
+        FHContent.populate();
+        // Register FH content
+        FHContent.registerAll();
     }
 
-    public void addReloadListeners(AddReloadListenerEvent event) {
-        DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
-        event.addListener(new FHRecipeReloadListener(dataPackRegistries));
-    }
-
-    public void addReloadListenersLowest(AddReloadListenerEvent event) {
-        event.addListener(new FHRecipeCachingReloadListener(event.getDataPackRegistries()));
-    }
-
-    private void setup(final FMLCommonSetupEvent event) {
+    public void setup(final FMLCommonSetupEvent event) {
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapability.setup();
     }
@@ -141,7 +112,6 @@ public class FHMain {
 
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
 
@@ -151,17 +121,61 @@ public class FHMain {
         return new ResourceLocation(MODID, path);
     }
 
-
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+    @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static class RegistryEvents {
         @SubscribeEvent
-        public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {
+        public static void registerBlocks(RegistryEvent.Register<Block> event){
+            for(Block block : registeredFHBlocks){
+                try{
+                    event.getRegistry().register(block);
+                }catch(Throwable e){
+                    LOGGER.error("Failed to register a block. ({})", block);
+                    throw e;
+                }
+            }
+        }
 
+        @SubscribeEvent
+        public static void registerItems(RegistryEvent.Register<Item> event){
+            for(Item item : registeredFHItems){
+                try{
+                    event.getRegistry().register(item);
+                }catch(Throwable e){
+                    LOGGER.error("Failed to register an item. ({}, {})", item, item.getRegistryName());
+                    throw e;
+                }
+            }
+        }
+
+        @SubscribeEvent
+        public static void registerFluids(RegistryEvent.Register<Fluid> event){
+            for(Fluid fluid : registeredFHFluids){
+                try{
+                    event.getRegistry().register(fluid);
+                }catch(Throwable e){
+                    LOGGER.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
+                    throw e;
+                }
+            }
         }
     }
 
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
+    @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ForgeEvents {
+        @SubscribeEvent
+        public static void addReloadListeners(AddReloadListenerEvent event) {
+            DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
+            IReloadableResourceManager resourceManager = (IReloadableResourceManager) dataPackRegistries.getResourceManager();
+            event.addListener(new FHRecipeReloadListener(dataPackRegistries));
+            resourceManager.addReloadListener(CacheInvalidationListener.INSTANCE);
+        }
+
+        @SubscribeEvent
+        public static void addReloadListenersLowest(AddReloadListenerEvent event) {
+            DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
+            event.addListener(new FHRecipeCachingReloadListener(dataPackRegistries));
+        }
+
         @SubscribeEvent
         public static void onAttachCapabilitiesChunk(AttachCapabilitiesEvent<Chunk> event) {
             if (!event.getObject().isEmpty()) {
@@ -226,12 +240,6 @@ public class FHMain {
         }
 
         @SubscribeEvent
-        public static void addReloadListeners(AddReloadListenerEvent event) {
-            IReloadableResourceManager resourceManager = (IReloadableResourceManager) event.getDataPackRegistries().getResourceManager();
-            resourceManager.addReloadListener(CacheInvalidationListener.INSTANCE);
-        }
-
-        @SubscribeEvent
         public static void beforeServerStart(FMLServerAboutToStartEvent event) {
             CacheInvalidationListener.INSTANCE.invalidateAll();
         }
@@ -242,7 +250,7 @@ public class FHMain {
         }
     }
 
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ForgeClientEvents {
         @SubscribeEvent
         public static void onRenderGameOverlayText(RenderGameOverlayEvent.Text event) {

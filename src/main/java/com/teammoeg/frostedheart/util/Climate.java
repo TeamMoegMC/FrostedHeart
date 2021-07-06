@@ -4,7 +4,7 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package com.teammoeg.frostedheart.common.util;
+package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.noise.INoise1D;

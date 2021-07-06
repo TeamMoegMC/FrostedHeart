@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.common.block;
 import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.common.util.FHBlockUtils;
+import com.teammoeg.frostedheart.util.FHBlockUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;

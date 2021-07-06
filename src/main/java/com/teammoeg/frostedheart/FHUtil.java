@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.common.util.NoopStorage;
+import com.teammoeg.frostedheart.util.NoopStorage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.CapabilityManager;

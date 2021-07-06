@@ -21,7 +21,7 @@ public class PacketHandler
     }
 
     @SuppressWarnings("UnusedAssignment")
-    public static void init()
+    public static void register()
     {
         int id = 0;
 

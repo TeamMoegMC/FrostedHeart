@@ -1,25 +1,19 @@
 package com.teammoeg.frostedheart.client;
 
-import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
-import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.stereowalker.survive.Survive;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
-import com.teammoeg.frostedheart.common.util.FHScreenUtils;
-import net.minecraft.client.Minecraft;
+import com.teammoeg.frostedheart.util.FHScreenUtils;
 import net.minecraft.client.gui.widget.button.ImageButton;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.client.gui.GuiUtils;
-import org.lwjgl.system.CallbackI;
 
 import java.util.ArrayList;
 import java.util.List;

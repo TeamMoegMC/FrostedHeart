@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common.util;
+package com.teammoeg.frostedheart.util;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.state.properties.BlockStateProperties;

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common.util;
+package com.teammoeg.frostedheart.util;
 
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;

@@ -9,9 +9,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
-import com.teammoeg.frostedheart.common.util.FHBlockInterfaces;
-import com.teammoeg.frostedheart.network.ChunkWatchPacket;
-import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.util.FHBlockInterfaces;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.LerpFloatLayer;
 import net.minecraft.entity.player.PlayerEntity;
@@ -32,7 +30,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 

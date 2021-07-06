@@ -5,7 +5,7 @@
 
 package com.teammoeg.frostedheart.world.noise;
 
-import com.teammoeg.frostedheart.common.util.FloatUnaryFunction;
+import com.teammoeg.frostedheart.util.FloatUnaryFunction;
 import net.minecraft.util.math.MathHelper;
 
 /**
