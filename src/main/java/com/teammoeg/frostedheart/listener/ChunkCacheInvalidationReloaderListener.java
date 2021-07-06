@@ -3,7 +3,7 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.listener;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -16,7 +16,7 @@ import net.minecraft.resources.IResourceManager;
 /**
  * This is a manager for various cache invalidations, either on resource reload or server start/stop
  */
-public enum CacheInvalidationListener implements IFutureReloadListener
+public enum ChunkCacheInvalidationReloaderListener implements IFutureReloadListener
 {
     INSTANCE;
 

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.client;
+package com.teammoeg.frostedheart.client.screen;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;

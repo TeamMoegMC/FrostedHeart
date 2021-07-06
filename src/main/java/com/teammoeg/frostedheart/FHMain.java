@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.util.CacheInvalidationListener;
-import com.teammoeg.frostedheart.crafting.FHRecipeCachingReloadListener;
-import com.teammoeg.frostedheart.crafting.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.listener.ChunkCacheInvalidationReloaderListener;
+import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
+import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
@@ -31,7 +31,6 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
@@ -167,7 +166,7 @@ public class FHMain {
             DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
             IReloadableResourceManager resourceManager = (IReloadableResourceManager) dataPackRegistries.getResourceManager();
             event.addListener(new FHRecipeReloadListener(dataPackRegistries));
-            resourceManager.addReloadListener(CacheInvalidationListener.INSTANCE);
+            resourceManager.addReloadListener(ChunkCacheInvalidationReloaderListener.INSTANCE);
         }
 
         @SubscribeEvent
@@ -241,12 +240,12 @@ public class FHMain {
 
         @SubscribeEvent
         public static void beforeServerStart(FMLServerAboutToStartEvent event) {
-            CacheInvalidationListener.INSTANCE.invalidateAll();
+            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
-            CacheInvalidationListener.INSTANCE.invalidateAll();
+            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
     }
 

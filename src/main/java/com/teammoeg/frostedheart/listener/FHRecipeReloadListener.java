@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.crafting;
+package com.teammoeg.frostedheart.listener;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
