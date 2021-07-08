@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.FHBlockInterfaces;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkMatrix;
 import com.teammoeg.frostedheart.world.chunkdata.LerpFloatLayer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
@@ -270,9 +271,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         }
         // change chunk temperature
         if (!world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
-            ChunkPos chunkPos = new ChunkPos(getPos());
-            ChunkData.changeChunkData(world, chunkPos.x, chunkPos.z, new LerpFloatLayer(30));
-            //todo: change back to original temperature when TE shuts down
+            ChunkData.update(world, getPos(), 5, (byte) 10);
         }
 
             // logic

@@ -5,13 +5,10 @@
 
 package com.teammoeg.frostedheart.network;
 
-import java.util.function.Supplier;
-
-import blusunrize.immersiveengineering.client.ClientUtils;
 import com.teammoeg.frostedheart.FHUtil;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.world.chunkdata.LerpFloatLayer;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkMatrix;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -20,6 +17,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
+import java.util.function.Supplier;
+
 /**
  * Sent from server -> client on chunk watch, partially syncs chunk data and updates the client cache
  */
@@ -27,27 +26,27 @@ public class ChunkWatchPacket
 {
     private final int chunkX;
     private final int chunkZ;
-    private final LerpFloatLayer temperatureLayer;
+    private final ChunkMatrix tempMatrix;
 
-    public ChunkWatchPacket(int chunkX, int chunkZ, LerpFloatLayer temperatureLayer)
+    public ChunkWatchPacket(int chunkX, int chunkZ, ChunkMatrix tempMatrix)
     {
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
-        this.temperatureLayer = temperatureLayer;
+        this.tempMatrix = tempMatrix;
     }
 
     ChunkWatchPacket(PacketBuffer buffer)
     {
         chunkX = buffer.readVarInt();
         chunkZ = buffer.readVarInt();
-        temperatureLayer = new LerpFloatLayer(buffer);
+        tempMatrix = new ChunkMatrix(buffer);
     }
 
     void encode(PacketBuffer buffer)
     {
         buffer.writeVarInt(chunkX);
         buffer.writeVarInt(chunkZ);
-        temperatureLayer.serialize(buffer);
+        tempMatrix.serialize(buffer);
     }
 
     void handle(Supplier<NetworkEvent.Context> context)
@@ -66,7 +65,7 @@ public class ChunkWatchPacket
                         ChunkDataCache.CLIENT.update(pos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.CLIENT.getOrCreate(pos));
-                data.onUpdatePacket(temperatureLayer);
+                data.onUpdatePacket(tempMatrix);
             }
         });
         context.get().setPacketHandled(true);

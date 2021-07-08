@@ -48,7 +48,7 @@ public final class Climate
     public static float getTemperature(IWorld world, BlockPos pos)
     {
         ChunkData data = ChunkData.get(world, pos);
-        return calculateTemperature(pos.getZ(), pos.getY(), data.getAverageTemp(pos));
+        return calculateTemperature(pos.getZ(), pos.getY(), data.getTemperatureAtBlock(pos));
     }
 
     /**

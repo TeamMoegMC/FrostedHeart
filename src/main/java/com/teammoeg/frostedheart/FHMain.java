@@ -262,7 +262,7 @@ public class FHMain {
                     list.add(AQUA + FHMain.MODNAME);
                     ChunkData data = ChunkData.get(mc.world, pos);
                     if (data.getStatus().isAtLeast(ChunkData.Status.CLIENT)) {
-                        list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", data.getAverageTemp(pos))));
+                        list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", data.getTemperatureAtBlock(pos))));
                     }
                 } else {
                     list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));

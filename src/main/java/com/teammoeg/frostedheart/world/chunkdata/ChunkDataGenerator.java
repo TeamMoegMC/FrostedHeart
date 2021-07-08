@@ -64,10 +64,6 @@ public class ChunkDataGenerator implements IChunkDataGenerator
 
     private void generateClimate(ChunkData data, int chunkX, int chunkZ)
     {
-        float tempNW = temperatureNoise.noise(chunkX, chunkZ);
-        float tempNE = temperatureNoise.noise(chunkX + 16, chunkZ);
-        float tempSW = temperatureNoise.noise(chunkX, chunkZ + 16);
-        float tempSE = temperatureNoise.noise(chunkX + 16, chunkZ + 16);
-        data.setAverageTemp(tempNW, tempNE, tempSW, tempSE);
+        data.initChunkMatrix((byte) 10);
     }
 }
