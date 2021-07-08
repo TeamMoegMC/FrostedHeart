@@ -9,8 +9,8 @@ import com.teammoeg.frostedheart.common.block.FHBaseBlock;
 import com.teammoeg.frostedheart.common.block.FHBlockItem;
 import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
-import com.teammoeg.frostedheart.common.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
+import com.teammoeg.frostedheart.common.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -38,6 +38,7 @@ public class FHContent {
         public static Block generator_brick;
         public static Block generator_core_t1;
         public static Block generator_amplifier_r1;
+        public static Block leek_block;
     }
 
     public static class Items {

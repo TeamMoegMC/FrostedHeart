@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.common.block.cropblock;
 
-import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHContent;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -37,7 +37,7 @@ public class LeekBlock extends FHCropBlock {
     }
 
     protected IItemProvider getSeedsItem() {
-        return FHBlocks.leek_block.asItem();
+        return FHContent.Blocks.leek_block.asItem();
     }
 
 
