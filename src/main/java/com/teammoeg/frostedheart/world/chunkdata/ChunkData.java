@@ -85,7 +85,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     private static int getChunkRelativePos(int actualPos) {
-        return actualPos < 0 ? actualPos % 16 + 16 : actualPos % 16;
+        return actualPos < 0 ? actualPos % 16 + 15 : actualPos % 16;
     }
 
     public static void update(IWorld world, BlockPos heatPos, int range, byte tempMod) {

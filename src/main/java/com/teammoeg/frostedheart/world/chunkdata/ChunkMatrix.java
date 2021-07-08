@@ -14,8 +14,8 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
 
     public byte getTemperature(BlockPos pos) {
         int y = pos.getY();
-        int x = pos.getX() < 0 ? 16 + pos.getX() % 16 : pos.getX() % 16;
-        int z = pos.getZ() < 0 ? 16 + pos.getZ() % 16 : pos.getZ() % 16;
+        int x = pos.getX() < 0 ? 15 + pos.getX() % 16 : pos.getX() % 16;
+        int z = pos.getZ() < 0 ? 15 + pos.getZ() % 16 : pos.getZ() % 16;
         if (y >= 0 && y < 256) {
             return matrix[x][z][y];
         } else {

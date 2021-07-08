@@ -269,10 +269,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 }
             }
         }
-        // change chunk temperature
-        if (!world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
-            ChunkData.update(world, getPos(), 5, (byte) 10);
-        }
 
             // logic
         if (!world.isRemote && formed && !isDummy()) {
@@ -321,6 +317,12 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             final boolean activeAfterTick = getIsActive();
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
+                if (activeAfterTick) {
+                    ChunkData.update(world, getPos(), 32, (byte) 10);
+                } else {
+                    // todo: make this a setTemp, not addTemp
+                    ChunkData.update(world, getPos(), 32, (byte) -10);
+                }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
                     for (int y = 0; y < 4; ++y)
