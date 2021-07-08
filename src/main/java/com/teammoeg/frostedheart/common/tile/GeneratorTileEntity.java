@@ -9,7 +9,9 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
-import com.teammoeg.frostedheart.common.util.FHBlockInterfaces;
+import com.teammoeg.frostedheart.util.FHBlockInterfaces;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.world.chunkdata.LerpFloatLayer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -20,6 +22,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
@@ -48,6 +51,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public int processMax = 0;
     private NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
+    private boolean isWorking;
+    private boolean isOverdrive;
 
     public GeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
         super(FHMultiblocks.GENERATOR, getSpecificGeneratorType(temperatureLevelIn, rangeLevelIn), false);
@@ -58,16 +63,16 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     private static TileEntityType<GeneratorTileEntity> getSpecificGeneratorType(int tLevel, int rLevel) {
         if (rLevel == 1) {
             if (tLevel == 1) {
-                return FHTileTypes.GENERATOR_T1_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             }
             if (tLevel == 2) {
-                return FHTileTypes.GENERATOR_T2_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             }
             if (tLevel == 3) {
-                return FHTileTypes.GENERATOR_T2_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             }
             if (tLevel == 4) {
-                return FHTileTypes.GENERATOR_T2_R1.get();
+                return FHTileTypes.GENERATOR_T1.get();
             } else {
                 throw new IllegalArgumentException("Level must be within 1 - 4 integers");
             }
@@ -129,20 +134,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     protected boolean canDrainTankFrom(int iTank, Direction side) {
         return false;
     }
-
-//    @Override
-//    @Nullable
-//    public GeneratorTileEntity master()
-//    {
-//        if(offsetToMaster.equals(Vector3i.NULL_VECTOR))
-//            return this;
-//        // Used to provide tile-dependant drops after disassembly
-//        if(tempMasterTE!=null)
-//            return (GeneratorTileEntity)tempMasterTE;
-//        BlockPos masterPos = getPos().subtract(offsetToMaster);
-//        TileEntity te = Utils.getExistingTileEntity(world, new BlockPos(masterPos.getX(), masterPos.getY() - 1, masterPos.getZ()));
-//        return this.getClass().isInstance(te)?(GeneratorTileEntity)te: null;
-//    }
 
     @Nullable
     @Override
@@ -266,7 +257,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void tick() {
         checkForNeedlessTicking();
-
         // spawn smoke particle
         if (world != null && world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
             BlockPos blockpos = this.getPos();
@@ -278,8 +268,14 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 }
             }
         }
+        // change chunk temperature
+        if (!world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
+            ChunkPos chunkPos = new ChunkPos(getPos());
+            ChunkData.changeChunkData(world, chunkPos.x, chunkPos.z, new LerpFloatLayer(30));
+            //todo: change back to original temperature when TE shuts down
+        }
 
-        // logic
+            // logic
         if (!world.isRemote && formed && !isDummy()) {
             final boolean activeBeforeTick = getIsActive();
             // just finished process or during process
@@ -326,7 +322,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             final boolean activeAfterTick = getIsActive();
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
-                // scan 3x3x3
+                // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
                     for (int y = 0; y < 4; ++y)
                         for (int z = 0; z < 3; ++z) {
@@ -338,5 +334,21 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             }
         }
 
+    }
+
+    public void setWorking(boolean working) {
+        isWorking = working;
+    }
+
+    public boolean isWorking() {
+        return isWorking;
+    }
+
+    public boolean isOverdrive() {
+        return isOverdrive;
+    }
+
+    public void setOverdrive(boolean overdrive) {
+        isOverdrive = overdrive;
     }
 }

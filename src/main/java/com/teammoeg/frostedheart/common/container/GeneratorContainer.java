@@ -14,14 +14,14 @@ public class GeneratorContainer extends IEBaseContainer<GeneratorTileEntity> {
     public GeneratorContainer(int id, PlayerInventory inventoryPlayer, GeneratorTileEntity tile) {
         super(inventoryPlayer, tile, id);
 
-        this.addSlot(new IESlot(this, this.inv, 0, 30, 35) {
+        this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
                 return CokeOvenRecipe.findRecipe(itemStack) != null;
             }
         });
 
-        this.addSlot(new IESlot.Output(this, this.inv, 1, 85, 35));
+        this.addSlot(new IESlot.Output(this, this.inv, 1, 80, 51));
 
         slotCount = 2;
 

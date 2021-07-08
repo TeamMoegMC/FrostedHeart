@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.crafting;
+package com.teammoeg.frostedheart.listener;
 
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IResourceManager;

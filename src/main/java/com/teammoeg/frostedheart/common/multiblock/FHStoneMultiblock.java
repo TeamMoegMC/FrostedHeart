@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common.block.multiblock;
+package com.teammoeg.frostedheart.common.multiblock;
 
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.block.BlockState;

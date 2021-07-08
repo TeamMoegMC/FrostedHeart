@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.common.util;
+package com.teammoeg.frostedheart.util;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;

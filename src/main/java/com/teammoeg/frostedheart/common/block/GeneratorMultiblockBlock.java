@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.common.block;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;

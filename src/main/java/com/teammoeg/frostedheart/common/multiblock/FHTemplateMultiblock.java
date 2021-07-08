@@ -1,11 +1,11 @@
-package com.teammoeg.frostedheart.common.block.multiblock;
+package com.teammoeg.frostedheart.common.multiblock;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.common.util.FHLogger;
+import com.teammoeg.frostedheart.util.FHLogger;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;

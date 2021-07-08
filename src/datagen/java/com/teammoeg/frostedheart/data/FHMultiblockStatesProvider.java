@@ -4,7 +4,7 @@ import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import net.minecraft.block.Block;
 import net.minecraft.data.DataGenerator;
@@ -42,7 +42,7 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
     }
 
     protected void registerStatesAndModels() {
-        createMultiblock(FHBlocks.generator, split(obj("block/multiblocks/generator.obj"), FHMultiblocks.GENERATOR));
+        createMultiblock(FHContent.Multiblocks.generator, split(obj("block/multiblocks/generator.obj"), FHMultiblocks.GENERATOR));
     }
 
     @Nonnull
