@@ -29,6 +29,20 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
     }
 
     public void addTemp(int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
+        if (fromY < 0) {
+            fromY = 0;
+        } else if (fromY > 255) {
+            fromY = 255;
+            toY = 255;
+        }
+
+        if (toY > 255) {
+            toY = 255;
+        } else if (toY < 0) {
+            toY = 0;
+            fromY = 0;
+        }
+
         for (int x = fromX; x < toX; x++)
             for (int z = fromZ; z < toZ; z++)
                 for (int y = fromY; y < toY; y++) {
@@ -37,6 +51,20 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
     }
 
     public void setTemp(int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte newTemp) {
+        if (fromY < 0) {
+            fromY = 0;
+        } else if (fromY > 255) {
+            fromY = 255;
+            toY = 255;
+        }
+
+        if (toY > 255) {
+            toY = 255;
+        } else if (toY < 0) {
+            toY = 0;
+            fromY = 0;
+        }
+
         for (int x = fromX; x < toX; x++)
             for (int z = fromZ; z < toZ; z++)
                 for (int y = fromY; y < toY; y++) {
