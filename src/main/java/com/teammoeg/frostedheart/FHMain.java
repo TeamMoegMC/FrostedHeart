@@ -22,8 +22,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -31,6 +33,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -55,7 +58,6 @@ import java.util.List;
 
 import static com.teammoeg.frostedheart.FHContent.*;
 import static net.minecraft.util.text.TextFormatting.*;
-import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -263,6 +265,14 @@ public class FHMain {
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
 //            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+        }
+
+        @SubscribeEvent
+        public static void addOreGenFeatures(BiomeLoadingEvent event) {
+            if (event.getName() != null)
+                if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
+                    event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, Features.ORE_magnetite);
+                }
         }
     }
 
