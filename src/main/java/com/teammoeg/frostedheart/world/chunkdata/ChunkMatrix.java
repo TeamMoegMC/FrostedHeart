@@ -12,6 +12,11 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
     private byte[][][] matrix = new byte[16][16][256];
     // x, z, y
 
+
+    public byte[][][] getMatrix() {
+        return matrix;
+    }
+
     public byte getTemperature(BlockPos pos) {
         int y = pos.getY();
         int x = pos.getX() < 0 ? 15 + pos.getX() % 16 : pos.getX() % 16;
@@ -23,15 +28,19 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
         }
     }
 
-    public void brushFromOrigin(int toX, int toZ, int fromY, int toY, byte tempMod) {
-        brush(0, fromY, 0, toX, toY, toZ, tempMod);
-    }
-
-    public void brush(int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
+    public void addTemp(int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
         for (int x = fromX; x < toX; x++)
             for (int z = fromZ; z < toZ; z++)
                 for (int y = fromY; y < toY; y++) {
                     matrix[x][z][y] += tempMod;
+                }
+    }
+
+    public void setTemp(int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte newTemp) {
+        for (int x = fromX; x < toX; x++)
+            for (int z = fromZ; z < toZ; z++)
+                for (int y = fromY; y < toY; y++) {
+                    matrix[x][z][y] = newTemp;
                 }
     }
 
@@ -61,7 +70,7 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
     @Override
     public void deserializeNBT(CompoundNBT nbt) {
         for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-            nbt.getByteArray("x"+x+"z"+z);
+            matrix[x][z] = nbt.getByteArray("x"+x+"z"+z);
         }
     }
 

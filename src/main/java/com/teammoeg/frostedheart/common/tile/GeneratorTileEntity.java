@@ -11,8 +11,6 @@ import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.FHBlockInterfaces;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkMatrix;
-import com.teammoeg.frostedheart.world.chunkdata.LerpFloatLayer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -23,7 +21,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
@@ -318,10 +315,9 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
                 if (activeAfterTick) {
-                    ChunkData.update(world, getPos(), 32, (byte) 10);
+                    ChunkData.addTempToCube(world, getPos(), 32, (byte) 10);
                 } else {
-                    // todo: make this a setTemp, not addTemp
-                    ChunkData.update(world, getPos(), 32, (byte) -10);
+                    ChunkData.setTempToCube(world, getPos(), 32, (byte) 10);
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)

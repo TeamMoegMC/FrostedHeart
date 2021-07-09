@@ -82,7 +82,7 @@ public final class ChunkDataCache
     }
 
     private final String name;
-    private final Map<ChunkPos, ChunkData> cache;
+    private Map<ChunkPos, ChunkData> cache;
 
     /**
      * Creates an infinite size cache that must be managed to not create memory leaks
@@ -91,6 +91,14 @@ public final class ChunkDataCache
     {
         this.name = name;
         this.cache = new HashMap<>();
+    }
+
+    public void setCache(Map<ChunkPos, ChunkData> cache) {
+        this.cache = cache;
+    }
+
+    public Map<ChunkPos, ChunkData> getCache() {
+        return cache;
     }
 
     public ChunkData getOrEmpty(BlockPos pos)

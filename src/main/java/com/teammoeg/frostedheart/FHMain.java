@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.world.WorldTemperatureData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
@@ -23,6 +24,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -42,6 +44,7 @@ import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
@@ -240,12 +243,26 @@ public class FHMain {
 
         @SubscribeEvent
         public static void beforeServerStart(FMLServerAboutToStartEvent event) {
-            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+        }
+
+        @SubscribeEvent
+        public static void serverStarting(FMLServerStartingEvent event) {
+            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
+            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
+            ChunkDataCache.SERVER.setCache(worldTemperatureData.getServerCache().getCache());
+        }
+
+        @SubscribeEvent
+        public static void serverStopping(FMLServerStoppingEvent event) {
+            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
+            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
+            worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
         }
 
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
-            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
     }
 

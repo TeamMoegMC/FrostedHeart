@@ -71,7 +71,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         }
     }
 
-    public static void brushChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
+    public static void addTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
@@ -80,7 +80,20 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                         ChunkDataCache.CLIENT.update(chunkPos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.chunkMatrix.brush(fromX, fromY, fromZ, toX, toY, toZ, tempMod);
+            data.chunkMatrix.addTemp(fromX, fromY, fromZ, toX, toY, toZ, tempMod);
+        }
+    }
+
+    public static void setTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte newTemp) {
+        if (world != null && !world.isRemote()) {
+            IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
+            ChunkData data = ChunkData.getCapability(chunk).map(
+                    dataIn -> {
+                        ChunkDataCache.SERVER.update(chunkPos, dataIn);
+                        ChunkDataCache.CLIENT.update(chunkPos, dataIn);
+                        return dataIn;
+                    }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
+            data.chunkMatrix.setTemp(fromX, fromY, fromZ, toX, toY, toZ, newTemp);
         }
     }
 
@@ -88,7 +101,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         return actualPos < 0 ? actualPos % 16 + 15 : actualPos % 16;
     }
 
-    public static void update(IWorld world, BlockPos heatPos, int range, byte tempMod) {
+    public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
         int sourceX = heatPos.getX(), sourceY = heatPos.getY(), sourceZ = heatPos.getZ();
         int sourceRelativeX = getChunkRelativePos(sourceX);
         int sourceRelativeZ = getChunkRelativePos(sourceZ);
@@ -134,53 +147,150 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         if (hasInnerChunks) {
             for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++)
                 for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++)
-                    brushChunk(world, new ChunkPos(x, z), 0, lowerLimit, 0, 16, upperLimit, 16, tempMod);
+                    addTempToChunk(world, new ChunkPos(x, z), 0, lowerLimit, 0, 16, upperLimit, 16, tempMod);
         }
 
         // side chunks
         if (hasNSSide) {
             for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
                 // west side
-                brushChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit,0, 16, upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit,0, 16, upperLimit, 16, tempMod);
                 // east side
-                brushChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit,0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit,0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
             }
         }
         if (hasWESide) {
             for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++) {
                 // north side
-                brushChunk(world, new ChunkPos(x, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(x, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
                 // south side
-                brushChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit,0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit,0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
             }
         }
 
         // corner chunks
         if (hasWECorners && hasNSCorners) {
             // northwest
-            brushChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
             // northeast
-            brushChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
             // southwest
-            brushChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
             // southeast
-            brushChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
         } else {
             if (!hasWECorners && hasNSCorners) {
                 // north (W or E is either Ok here)
-                brushChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
                 // south
-                brushChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
             }
             if (hasWECorners && !hasNSCorners) {
                 // west
-                brushChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
                 // east
-                brushChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
             }
             if (!hasWECorners && !hasNSCorners) {
                 // single (W or E, N or S)
-                brushChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+            }
+        }
+    }
+
+    public static void setTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
+        int sourceX = heatPos.getX(), sourceY = heatPos.getY(), sourceZ = heatPos.getZ();
+        int sourceRelativeX = getChunkRelativePos(sourceX);
+        int sourceRelativeZ = getChunkRelativePos(sourceZ);
+
+        // these are block position offset
+        int offsetN = sourceZ - range;
+        int offsetS = sourceZ + range;
+        int offsetW = sourceX - range;
+        int offsetE = sourceX + range;
+
+        // these are chunk position offset
+        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
+        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
+        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
+        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+
+        boolean hasInnerChunks = true, hasWESide = true, hasNSSide = true, hasNSCorners = true, hasWECorners = true;
+        int innerChunkOffsetW = chunkOffsetW + 1;
+        int innerChunkOffsetE = chunkOffsetE - 1;
+        int innerChunkOffsetN = chunkOffsetN + 1;
+        int innerChunkOffsetS = chunkOffsetS - 1;
+
+        if (innerChunkOffsetW > innerChunkOffsetE) {
+            hasWESide = false;
+            if (chunkOffsetW == chunkOffsetE) {
+                hasWECorners = false;
+            }
+        }
+        if (innerChunkOffsetN > innerChunkOffsetS) {
+            hasNSSide = false;
+            if (chunkOffsetN == chunkOffsetS) {
+                hasNSCorners = false;
+            }
+        }
+        if (!hasWESide && !hasNSSide) {
+            hasInnerChunks = false;
+        }
+
+        int upperLimit = sourceY + range;
+        int lowerLimit = sourceY - range;
+
+        // inner chunks
+        if (hasInnerChunks) {
+            for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++)
+                for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++)
+                    setTempToChunk(world, new ChunkPos(x, z), 0, lowerLimit, 0, 16, upperLimit, 16, tempMod);
+        }
+
+        // side chunks
+        if (hasNSSide) {
+            for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
+                // west side
+                setTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit,0, 16, upperLimit, 16, tempMod);
+                // east side
+                setTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit,0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+            }
+        }
+        if (hasWESide) {
+            for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++) {
+                // north side
+                setTempToChunk(world, new ChunkPos(x, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+                // south side
+                setTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit,0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+            }
+        }
+
+        // corner chunks
+        if (hasWECorners && hasNSCorners) {
+            // northwest
+            setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+            // northeast
+            setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+            // southwest
+            setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+            // southeast
+            setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+        } else {
+            if (!hasWECorners && hasNSCorners) {
+                // north (W or E is either Ok here)
+                setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                // south
+                setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+            }
+            if (hasWECorners && !hasNSCorners) {
+                // west
+                setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                // east
+                setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+            }
+            if (!hasWECorners && !hasNSCorners) {
+                // single (W or E, N or S)
+                setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
             }
         }
     }
@@ -197,6 +307,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         this.capability = LazyOptional.of(() -> this);
 
         reset();
+    }
+
+    public ChunkMatrix getChunkMatrix() {
+        return chunkMatrix;
     }
 
     public void setChunkMatrix(ChunkMatrix chunkMatrix) {
