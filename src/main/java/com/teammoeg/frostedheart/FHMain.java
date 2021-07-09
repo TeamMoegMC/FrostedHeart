@@ -44,10 +44,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
+import net.minecraftforge.fml.event.server.*;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
@@ -250,6 +247,11 @@ public class FHMain {
 
         @SubscribeEvent
         public static void serverStarting(FMLServerStartingEvent event) {
+
+        }
+
+        @SubscribeEvent
+        public static void serverStarted(FMLServerStartedEvent event) {
             ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
             WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
             ChunkDataCache.SERVER.setCache(worldTemperatureData.getServerCache().getCache());
@@ -264,6 +266,7 @@ public class FHMain {
 
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
+
 //            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
