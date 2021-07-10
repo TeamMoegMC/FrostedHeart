@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.WorldTemperatureData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
@@ -26,6 +27,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.gen.GenerationStage;
+import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -149,15 +152,20 @@ public class FHMain {
         }
 
         @SubscribeEvent
-        public static void registerFluids(RegistryEvent.Register<Fluid> event){
-            for(Fluid fluid : registeredFHFluids){
-                try{
+        public static void registerFluids(RegistryEvent.Register<Fluid> event) {
+            for (Fluid fluid : registeredFHFluids) {
+                try {
                     event.getRegistry().register(fluid);
-                }catch(Throwable e){
+                } catch (Throwable e) {
                     LOGGER.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
                     throw e;
                 }
             }
+        }
+
+        @SubscribeEvent
+        public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
+            event.getRegistry().register(FHFeatures.FHORE.setRegistryName("fh", "fh_ore"));
         }
     }
 
@@ -274,7 +282,8 @@ public class FHMain {
         public static void addOreGenFeatures(BiomeLoadingEvent event) {
             if (event.getName() != null)
                 if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
-                    event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, Features.ORE_magnetite);
+                    for (ConfiguredFeature feature : FHFeatures.FH_ORES)
+                        event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
                 }
         }
     }
