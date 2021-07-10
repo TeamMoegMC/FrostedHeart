@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.world.ChunkDataJsonReader;
+import com.teammoeg.frostedheart.world.ChunkDataJsonWriter;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
@@ -39,6 +40,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
@@ -274,10 +276,17 @@ public class FHMain {
 //            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
 //            worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
 //        }
+@SubscribeEvent
+public static void WorldSave(WorldEvent.Save event) {
+//            ServerWorld world = (ServerWorld) event.getWorld();
+//           WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
+//          worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
+    ChunkDataJsonWriter.writeJson();
+}
 
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
-//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
         @SubscribeEvent
