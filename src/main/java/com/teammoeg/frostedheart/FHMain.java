@@ -250,32 +250,31 @@ public class FHMain {
 
         @SubscribeEvent
         public static void beforeServerStart(FMLServerAboutToStartEvent event) {
-//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
-        @SubscribeEvent
-        public static void serverStarting(FMLServerStartingEvent event) {
-
-        }
-
-        @SubscribeEvent
-        public static void serverStarted(FMLServerStartedEvent event) {
-            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
-            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
-            ChunkDataCache.SERVER.setCache(worldTemperatureData.getServerCache().getCache());
-        }
-
-        @SubscribeEvent
-        public static void serverStopping(FMLServerStoppingEvent event) {
-            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
-            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
-            worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
-        }
+//        @SubscribeEvent
+//        public static void serverStarting(FMLServerStartingEvent event) {
+//
+//        }
+//
+//        @SubscribeEvent
+//        public static void serverStarted(FMLServerStartedEvent event) {
+//            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
+//            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
+//            ChunkDataCache.SERVER.setCache(worldTemperatureData.getServerCache().getCache());
+//        }
+//
+//        @SubscribeEvent
+//        public static void serverStopping(FMLServerStoppingEvent event) {
+//            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
+//            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
+//            worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
+//        }
 
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
-
-//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
         @SubscribeEvent
