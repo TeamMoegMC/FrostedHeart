@@ -7,19 +7,14 @@
 package com.teammoeg.frostedheart.world.chunkdata;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHUtil;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.IntNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
-
-import com.teammoeg.frostedheart.FHUtil;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.energy.EnergyStorage;
-import net.minecraftforge.energy.IEnergyStorage;
 
 public final class ChunkDataCapability
 {
@@ -31,6 +26,7 @@ public final class ChunkDataCapability
     {
         CapabilityManager.INSTANCE.register(ChunkData.class, new Capability.IStorage<ChunkData>() {
             public INBT writeNBT(Capability<ChunkData> capability, ChunkData instance, Direction side) {
+                System.out.println("ABDE");
                 return instance.serializeNBT();
             }
 
@@ -38,7 +34,7 @@ public final class ChunkDataCapability
                 instance.deserializeNBT((CompoundNBT) nbt);
             }
         }, () -> {
-            return new ChunkData(new ChunkPos(0, 0));
+            return null;
         });
     }
 

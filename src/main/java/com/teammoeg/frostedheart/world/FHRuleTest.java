@@ -21,7 +21,7 @@ public class FHRuleTest extends RuleTest {
         for (Block block : blocks) {
             return blockState.matchesBlock(block);
         }
-        return false;
+        return true;
     }
 
 

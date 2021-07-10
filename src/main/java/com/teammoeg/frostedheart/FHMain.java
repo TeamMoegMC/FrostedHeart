@@ -5,8 +5,8 @@ import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.world.ChunkDataJsonReader;
 import com.teammoeg.frostedheart.world.FHFeatures;
-import com.teammoeg.frostedheart.world.WorldTemperatureData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
@@ -29,7 +29,7 @@ import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.Feature;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -47,7 +47,9 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fml.event.server.*;
+import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
@@ -253,10 +255,11 @@ public class FHMain {
             ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
-//        @SubscribeEvent
-//        public static void serverStarting(FMLServerStartingEvent event) {
-//
-//        }
+        @SubscribeEvent
+        public static void serverStarting(FMLServerStartingEvent event) {
+            ChunkDataJsonReader.SAVE_ELT_FOLDER_PATH = event.getServer().func_240776_a_(new FolderName("fh")).toFile();
+            ChunkDataJsonReader.readFile();
+        }
 //
 //        @SubscribeEvent
 //        public static void serverStarted(FMLServerStartedEvent event) {

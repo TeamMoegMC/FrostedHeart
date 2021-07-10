@@ -1,9 +1,8 @@
 package com.teammoeg.frostedheart.world;
 
-import com.cannolicatfish.rankine.init.RankineBlocks;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.feature.IFeatureConfig;
 import net.minecraft.world.gen.feature.template.RuleTest;
@@ -29,7 +28,7 @@ public class FHOreFeatureConfig implements IFeatureConfig {
     }
 
     public static final class FillerBlockType {
-        public static final FHRuleTest magnetite = new FHRuleTest(new Block[]{RankineBlocks.DOLOSTONE.get(), RankineBlocks.CHALK.get(), RankineBlocks.BRECCIA.get(), RankineBlocks.TUFA_LIMESTONE.get(), RankineBlocks.CARBONACEOUS_SHALE.get(), RankineBlocks.COMENDITE.get()});
-        public static final FHRuleTest pyrite = new FHRuleTest(new Block[]{RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
+//        public static final FHRuleTest magnetite = new FHRuleTest(new Block[]{RankineBlocks.DOLOSTONE.get(), RankineBlocks.CHALK.get(), RankineBlocks.BRECCIA.get(), RankineBlocks.TUFA_LIMESTONE.get(), RankineBlocks.CARBONACEOUS_SHALE.get(), RankineBlocks.COMENDITE.get()});
+//        public static final FHRuleTest pyrite = new FHRuleTest(new Block[]{RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
     }
 }

@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.world;
 
-import com.cannolicatfish.rankine.blocks.RankineOreBlock;
 import com.mojang.serialization.Codec;
 import net.minecraft.block.Block;
 import net.minecraft.util.ResourceLocation;
@@ -118,181 +117,181 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
                                             Block b = worldIn.getBlockState(blockpos$mutable).getBlock();
                                             ResourceLocation rs = b.getRegistryName();
                                             if (config.target.test(worldIn.getBlockState(blockpos$mutable), random)) {
-                                                if (config.state.getBlock() instanceof RankineOreBlock) {
-                                                    if (rs.getNamespace().equals("rankine")) {
-                                                        switch (rs.getPath()) {
-                                                            case "gray_granite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 11), 2);
-                                                                break;
-                                                            case "granodiorite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 12), 2);
-                                                                break;
-                                                            case "hornblende_andesite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 13), 2);
-                                                                break;
-                                                            case "tholeiitic_basalt":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 14), 2);
-                                                                break;
-                                                            case "pyroxene_gabbro":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 15), 2);
-                                                                break;
-                                                            case "anorthosite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 16), 2);
-                                                                break;
-                                                            case "rhyolite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 17), 2);
-                                                                break;
-                                                            case "comendite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 18), 2);
-                                                                break;
-                                                            case "black_dacite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 19), 2);
-                                                                break;
-                                                            case "red_dacite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 20), 2);
-                                                                break;
-                                                            case "red_porphyry":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 21), 2);
-                                                                break;
-                                                            case "purple_porphyry":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 22), 2);
-                                                                break;
-                                                            case "pegmatite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 23), 2);
-                                                                break;
-                                                            case "peridotite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 24), 2);
-                                                                break;
-                                                            case "troctolite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 25), 2);
-                                                                break;
-                                                            case "kimberlite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 26), 2);
-                                                                break;
-                                                            case "komatiite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 27), 2);
-                                                                break;
-                                                            case "pumice":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 28), 2);
-                                                                break;
-                                                            case "scoria":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 29), 2);
-                                                                break;
-                                                            case "white_marble":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 30), 2);
-                                                                break;
-                                                            case "black_marble":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 31), 2);
-                                                                break;
-                                                            case "gneiss":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 32), 2);
-                                                                break;
-                                                            case "mica_schist":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 33), 2);
-                                                                break;
-                                                            case "phyllite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 34), 2);
-                                                                break;
-                                                            case "slate":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 35), 2);
-                                                                break;
-                                                            case "quartzite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 36), 2);
-                                                                break;
-                                                            case "mariposite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 37), 2);
-                                                                break;
-                                                            case "skarn":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 38), 2);
-                                                                break;
-                                                            case "ringwoodite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 39), 2);
-                                                                break;
-                                                            case "wadsleyite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 40), 2);
-                                                                break;
-                                                            case "bridgmanite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 41), 2);
-                                                                break;
-                                                            case "ferropericlase":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 42), 2);
-                                                                break;
-                                                            case "perovskite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 43), 2);
-                                                                break;
-                                                            case "tufa_limestone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 44), 2);
-                                                                break;
-                                                            case "dolostone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 45), 2);
-                                                                break;
-                                                            case "chalk":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 46), 2);
-                                                                break;
-                                                            case "carbonaceous_shale":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 47), 2);
-                                                                break;
-                                                            case "siltstone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 48), 2);
-                                                                break;
-                                                            case "quartz_sandstone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 49), 2);
-                                                                break;
-                                                            case "arkose_sandstone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 50), 2);
-                                                                break;
-                                                            case "mudstone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 51), 2);
-                                                                break;
-                                                            case "breccia":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 52), 2);
-                                                                break;
-                                                            case "meteorite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 53), 2);
-                                                                break;
-                                                            case "entstatite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 54), 2);
-                                                                break;
-                                                            default:
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 0), 2);
-                                                        }
-                                                        ++i;
-                                                    } else if (rs.getNamespace().equals("minecraft")) {
-                                                        switch (rs.getPath()) {
-                                                            case "granite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 1), 2);
-                                                                break;
-                                                            case "diorite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 2), 2);
-                                                                break;
-                                                            case "andesite":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 3), 2);
-                                                                break;
-                                                            case "sandstone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 4), 2);
-                                                                break;
-                                                            case "red_sandstone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 5), 2);
-                                                                break;
-                                                            case "netherrack":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 6), 2);
-                                                                break;
-                                                            case "blackstone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 7), 2);
-                                                                break;
-                                                            case "basalt":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 8), 2);
-                                                                break;
-                                                            case "end_stone":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 9), 2);
-                                                                break;
-                                                            case "obsidian":
-                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 10), 2);
-                                                                break;
-                                                        }
-                                                        ++i;
-                                                    }
-                                                }
+//                                                if (config.state.getBlock() instanceof RankineOreBlock) {
+//                                                    if (rs.getNamespace().equals("rankine")) {
+//                                                        switch (rs.getPath()) {
+//                                                            case "gray_granite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 11), 2);
+//                                                                break;
+//                                                            case "granodiorite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 12), 2);
+//                                                                break;
+//                                                            case "hornblende_andesite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 13), 2);
+//                                                                break;
+//                                                            case "tholeiitic_basalt":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 14), 2);
+//                                                                break;
+//                                                            case "pyroxene_gabbro":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 15), 2);
+//                                                                break;
+//                                                            case "anorthosite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 16), 2);
+//                                                                break;
+//                                                            case "rhyolite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 17), 2);
+//                                                                break;
+//                                                            case "comendite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 18), 2);
+//                                                                break;
+//                                                            case "black_dacite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 19), 2);
+//                                                                break;
+//                                                            case "red_dacite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 20), 2);
+//                                                                break;
+//                                                            case "red_porphyry":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 21), 2);
+//                                                                break;
+//                                                            case "purple_porphyry":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 22), 2);
+//                                                                break;
+//                                                            case "pegmatite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 23), 2);
+//                                                                break;
+//                                                            case "peridotite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 24), 2);
+//                                                                break;
+//                                                            case "troctolite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 25), 2);
+//                                                                break;
+//                                                            case "kimberlite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 26), 2);
+//                                                                break;
+//                                                            case "komatiite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 27), 2);
+//                                                                break;
+//                                                            case "pumice":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 28), 2);
+//                                                                break;
+//                                                            case "scoria":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 29), 2);
+//                                                                break;
+//                                                            case "white_marble":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 30), 2);
+//                                                                break;
+//                                                            case "black_marble":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 31), 2);
+//                                                                break;
+//                                                            case "gneiss":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 32), 2);
+//                                                                break;
+//                                                            case "mica_schist":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 33), 2);
+//                                                                break;
+//                                                            case "phyllite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 34), 2);
+//                                                                break;
+//                                                            case "slate":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 35), 2);
+//                                                                break;
+//                                                            case "quartzite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 36), 2);
+//                                                                break;
+//                                                            case "mariposite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 37), 2);
+//                                                                break;
+//                                                            case "skarn":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 38), 2);
+//                                                                break;
+//                                                            case "ringwoodite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 39), 2);
+//                                                                break;
+//                                                            case "wadsleyite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 40), 2);
+//                                                                break;
+//                                                            case "bridgmanite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 41), 2);
+//                                                                break;
+//                                                            case "ferropericlase":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 42), 2);
+//                                                                break;
+//                                                            case "perovskite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 43), 2);
+//                                                                break;
+//                                                            case "tufa_limestone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 44), 2);
+//                                                                break;
+//                                                            case "dolostone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 45), 2);
+//                                                                break;
+//                                                            case "chalk":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 46), 2);
+//                                                                break;
+//                                                            case "carbonaceous_shale":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 47), 2);
+//                                                                break;
+//                                                            case "siltstone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 48), 2);
+//                                                                break;
+//                                                            case "quartz_sandstone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 49), 2);
+//                                                                break;
+//                                                            case "arkose_sandstone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 50), 2);
+//                                                                break;
+//                                                            case "mudstone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 51), 2);
+//                                                                break;
+//                                                            case "breccia":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 52), 2);
+//                                                                break;
+//                                                            case "meteorite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 53), 2);
+//                                                                break;
+//                                                            case "entstatite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 54), 2);
+//                                                                break;
+//                                                            default:
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 0), 2);
+//                                                        }
+//                                                        ++i;
+//                                                    } else if (rs.getNamespace().equals("minecraft")) {
+//                                                        switch (rs.getPath()) {
+//                                                            case "granite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 1), 2);
+//                                                                break;
+//                                                            case "diorite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 2), 2);
+//                                                                break;
+//                                                            case "andesite":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 3), 2);
+//                                                                break;
+//                                                            case "sandstone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 4), 2);
+//                                                                break;
+//                                                            case "red_sandstone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 5), 2);
+//                                                                break;
+//                                                            case "netherrack":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 6), 2);
+//                                                                break;
+//                                                            case "blackstone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 7), 2);
+//                                                                break;
+//                                                            case "basalt":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 8), 2);
+//                                                                break;
+//                                                            case "end_stone":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 9), 2);
+//                                                                break;
+//                                                            case "obsidian":
+//                                                                worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 10), 2);
+//                                                                break;
+//                                                        }
+//                                                        ++i;
+//                                                    }
+//                                                }
                                             }
                                         }
                                     }
