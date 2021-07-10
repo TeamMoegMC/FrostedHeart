@@ -34,7 +34,7 @@ public class ChunkDataJsonWriter {
                 .registerTypeAdapter(ChunkData.class, new ChunkDataAdapter())
                 .create();
         try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(ChunkDataJsonReader.SAVE_ELT_FOLDER_PATH,
-                "ResearchProgress.json")), StandardCharsets.UTF_8))) {
+                "temperature.json")), StandardCharsets.UTF_8))) {
 
             //gson.toJson(, out);
 
