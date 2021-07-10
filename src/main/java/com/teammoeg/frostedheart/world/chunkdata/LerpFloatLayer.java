@@ -15,6 +15,7 @@ import net.minecraftforge.common.util.INBTSerializable;
  * This is a simple linearly interpolated float grid.
  * It records the value at the corner, and interpolates the values between on demand.
  */
+@Deprecated
 public class LerpFloatLayer implements INBTSerializable<CompoundNBT>
 {
     private float valueNW, valueNE, valueSW, valueSE;

@@ -19,6 +19,7 @@ import java.util.Random;
  *
  * @see IChunkDataGenerator
  */
+@Deprecated
 public class ChunkDataGenerator implements IChunkDataGenerator
 {
 

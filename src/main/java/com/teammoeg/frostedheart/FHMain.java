@@ -252,7 +252,7 @@ public class FHMain {
 
         @SubscribeEvent
         public static void beforeServerStart(FMLServerAboutToStartEvent event) {
-            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
         @SubscribeEvent
@@ -277,7 +277,7 @@ public class FHMain {
 
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
-            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
         @SubscribeEvent

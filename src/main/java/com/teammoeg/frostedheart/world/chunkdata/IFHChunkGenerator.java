@@ -14,6 +14,7 @@ import net.minecraft.world.gen.ChunkGenerator;
  * Any custom chunk generator wishing to use features from FH MUST implement this and return a valid chunk data provider
  * This is also used in various places (such as spawn position placement) to identify FH world generators
  */
+@Deprecated
 public interface IFHChunkGenerator
 {
     /**
