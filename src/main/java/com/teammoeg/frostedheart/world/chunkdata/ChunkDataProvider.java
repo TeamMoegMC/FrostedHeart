@@ -19,6 +19,7 @@ import net.minecraftforge.fml.server.ServerLifecycleHooks;
  * This acts as a bridge between the {@link ChunkGenerator}, FH's chunk data caches and tracking, and the {@link IChunkDataGenerator}.
  * In order to customize the chunk data generation, see {@link IChunkDataGenerator}
  */
+@Deprecated
 public final class ChunkDataProvider
 {
     /**
