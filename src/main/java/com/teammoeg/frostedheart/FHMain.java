@@ -259,7 +259,7 @@ public class FHMain {
 
         @SubscribeEvent
         public static void serverStarting(FMLServerStartingEvent event) {
-            ChunkDataJsonReader.SAVE_ELT_FOLDER_PATH = event.getServer().func_240776_a_(new FolderName("fh")).toFile();
+            ChunkDataJsonReader.SAVE_ELT_FOLDER_PATH = event.getServer().func_240776_a_(new FolderName(FHMain.MODID)).toFile();
             ChunkDataJsonReader.readFile();
         }
 //
