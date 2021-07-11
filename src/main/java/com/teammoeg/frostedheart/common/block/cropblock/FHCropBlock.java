@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.common.block.cropblock;
 
-import blusunrize.immersiveengineering.ImmersiveEngineering;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.block.Block;
 import net.minecraft.block.CropsBlock;
 import net.minecraft.item.Item;
@@ -18,7 +18,7 @@ public class FHCropBlock extends CropsBlock {
         FHContent.registeredFHBlocks.add(this);
         ResourceLocation registryName = createRegistryName();
         setRegistryName(registryName);
-        Item item = createItemBlock.apply(this, new Item.Properties().group(ImmersiveEngineering.itemGroup));
+        Item item = createItemBlock.apply(this, new Item.Properties().group(FHMain.itemGroup));
         if (item != null) {
             item.setRegistryName(registryName);
             FHContent.registeredFHItems.add(item);
@@ -26,6 +26,6 @@ public class FHCropBlock extends CropsBlock {
     }
 
     public ResourceLocation createRegistryName() {
-        return new ResourceLocation(ImmersiveEngineering.MODID, name);
+        return new ResourceLocation(FHMain.MODID, name);
     }
 }
