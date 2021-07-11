@@ -1,12 +1,10 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.listener.ChunkCacheInvalidationReloaderListener;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.world.FHFeatures;
-import com.teammoeg.frostedheart.world.WorldTemperatureData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
@@ -29,7 +27,6 @@ import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.Feature;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -39,7 +36,6 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
@@ -48,7 +44,9 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fml.event.server.*;
+import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
@@ -177,7 +175,7 @@ public class FHMain {
             DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
             IReloadableResourceManager resourceManager = (IReloadableResourceManager) dataPackRegistries.getResourceManager();
             event.addListener(new FHRecipeReloadListener(dataPackRegistries));
-            resourceManager.addReloadListener(ChunkCacheInvalidationReloaderListener.INSTANCE);
+//            resourceManager.addReloadListener(ChunkCacheInvalidationReloaderListener.INSTANCE);
         }
 
         @SubscribeEvent
@@ -196,14 +194,13 @@ public class FHMain {
                     // Chunk was created on server thread.
                     // 1. If this was due to world gen, it won't have any cap data. This is where we clear the world gen cache and attach it to the chunk
                     // 2. If this was due to chunk loading, the caps will be deserialized from NBT after this event is posted. Attach empty data here
-
-                    // 下面这段代码导致每次attach到Chunk的data都是new出来的默认值，要删了
-                    data = ChunkDataCache.WORLD_GEN.remove(chunkPos);
-                    if (data == null) {
-                        data = new ChunkData(chunkPos);
-                    }
-                    // 下面这段代码，是我自己写的，理论上是从世界数据里获取这个capability
-                    //data = ChunkData.getCapability(world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.asBlockPos()) : null).orElse(ChunkData.EMPTY);
+                    // 下面这段代码导致每次attach到Chunk的data都是new出来的默认值。
+                    // 因为我们没有世界生成阶段的温度生成，所以暂且注掉
+                    // data = ChunkDataCache.WORLD_GEN.remove(chunkPos);
+                    // if (data == null) {
+                    //    data = new ChunkData(chunkPos);
+                    // }
+                    data = ChunkDataCache.SERVER.getOrCreate(chunkPos);
                 } else {
                     // This may happen before or after the chunk is watched and synced to client
                     // Default to using the cache. If later the sync packet arrives it will update the same instance in the chunk capability and cache
@@ -256,33 +253,6 @@ public class FHMain {
         @SubscribeEvent
         public static void beforeServerStart(FMLServerAboutToStartEvent event) {
 //            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
-        }
-
-        @SubscribeEvent
-        public static void serverStarting(FMLServerStartingEvent event) {
-//            ChunkDataJsonReader.FH_SAVE_PATH = event.getServer().func_240776_a_(new FolderName(FHMain.MODID)).toFile();
-//            ChunkDataJsonReader.readFile();
-//            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
-//            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
-//            ChunkDataCache.SERVER.setCache(worldTemperatureData.getServerCache().getCache());
-      }
-
-        @SubscribeEvent
-        public static void serverStarted(FMLServerStartedEvent event) {
-
-        }
-
-        @SubscribeEvent
-        public static void serverStopping(FMLServerStoppingEvent event) {
-
-        }
-
-        @SubscribeEvent
-        public static void WorldSave(WorldEvent.Save event) {
-//            ChunkDataJsonWriter.writeJson();
-//            ServerWorld world = (ServerWorld) event.getWorld();
-//            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
-//            worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
         }
 
         @SubscribeEvent

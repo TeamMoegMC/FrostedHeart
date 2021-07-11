@@ -4,9 +4,11 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package com.teammoeg.frostedheart.world.chunkdata;
+package com.teammoeg.frostedheart.world.unused.gen;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
@@ -61,7 +63,7 @@ public final class ChunkDataProvider
 
     /**
      * Gets the chunk data for a chunk, during world generation.
-     * The default implementation generates chunk data using TFC semantics, and stores generated data in {@link ChunkDataCache#WORLD_GEN}
+     * The default implementation generates chunk data using FH semantics, and stores generated data in {@link ChunkDataCache#WORLD_GEN}
      * Implementors are free to return any form of data.
      *
      * @param pos            The chunk position
@@ -75,7 +77,7 @@ public final class ChunkDataProvider
 
     /**
      * Gets the chunk data for a chunk, during world generation.
-     * The default implementation generates chunk data using TFC semantics, and stores generated data in {@link ChunkDataCache#WORLD_GEN}
+     * The default implementation generates chunk data using FH semantics, and stores generated data in {@link ChunkDataCache#WORLD_GEN}
      * Implementors are free to return any form of data.
      *
      * @param pos            The chunk position

@@ -16,14 +16,13 @@
  *  along with Energy Level Transition.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.world.io;
+package com.teammoeg.frostedheart.world.unused.io;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkMatrix;
 import net.minecraft.util.math.ChunkPos;
 
 import java.io.IOException;

@@ -4,8 +4,9 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package com.teammoeg.frostedheart.world.chunkdata;
+package com.teammoeg.frostedheart.world.unused.gen;
 
+import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.noise.INoise1D;
 import com.teammoeg.frostedheart.world.noise.INoise2D;
 import com.teammoeg.frostedheart.world.noise.OpenSimplex2D;

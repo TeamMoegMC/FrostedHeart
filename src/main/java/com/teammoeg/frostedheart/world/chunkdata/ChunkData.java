@@ -7,6 +7,7 @@
 package com.teammoeg.frostedheart.world.chunkdata;
 
 import com.teammoeg.frostedheart.network.ChunkWatchPacket;
+import com.teammoeg.frostedheart.world.unused.gen.ChunkDataProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;

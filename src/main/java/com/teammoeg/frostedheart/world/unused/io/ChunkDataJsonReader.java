@@ -16,7 +16,7 @@
  *  along with Energy Level Transition.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.world.io;
+package com.teammoeg.frostedheart.world.unused.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

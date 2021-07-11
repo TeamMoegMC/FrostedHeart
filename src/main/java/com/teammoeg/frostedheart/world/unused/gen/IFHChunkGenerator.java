@@ -4,7 +4,7 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package com.teammoeg.frostedheart.world.chunkdata;
+package com.teammoeg.frostedheart.world.unused.gen;
 
 import net.minecraft.world.gen.ChunkGenerator;
 

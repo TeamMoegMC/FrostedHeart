@@ -4,19 +4,7 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package com.teammoeg.frostedheart.world;
-
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataGenerator;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataProvider;
-import com.teammoeg.frostedheart.world.chunkdata.IFHChunkGenerator;
-import net.minecraft.util.SharedSeedRandom;
-import net.minecraft.world.biome.provider.BiomeProvider;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.gen.DimensionSettings;
-
-import java.util.function.Supplier;
+package com.teammoeg.frostedheart.world.unused.gen;
 
 @Deprecated
 public class FHChunkGenerator /*extends ChunkGenerator implements IFHChunkGenerator*/

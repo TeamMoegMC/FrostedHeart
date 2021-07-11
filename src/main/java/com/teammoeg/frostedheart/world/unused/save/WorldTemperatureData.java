@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.world;
+package com.teammoeg.frostedheart.world.unused.save;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
@@ -11,6 +11,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.DimensionSavedDataManager;
 import net.minecraft.world.storage.WorldSavedData;
 
+@Deprecated
 public class WorldTemperatureData extends WorldSavedData {
     public static final String NAME = FHMain.MODID + "_temperature";
     private ChunkDataCache serverCache = ChunkDataCache.SERVER;

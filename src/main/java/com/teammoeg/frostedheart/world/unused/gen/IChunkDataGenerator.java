@@ -4,7 +4,9 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package com.teammoeg.frostedheart.world.chunkdata;
+package com.teammoeg.frostedheart.world.unused.gen;
+
+import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 
 /**
  * This is the object responsible for generating FH chunk data, in parallel with normal chunk generation.
