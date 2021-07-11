@@ -16,7 +16,7 @@
  *  along with Energy Level Transition.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.world;
+package com.teammoeg.frostedheart.world.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,27 +28,32 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
+@Deprecated
 public class ChunkDataJsonReader {
-    public static File SAVE_ELT_FOLDER_PATH;
+    public static File FH_SAVE_PATH;
 
-    public static void readFile() {
-        if (!SAVE_ELT_FOLDER_PATH.exists()) {
+    public static ChunkData readFile() {
+        ChunkData chunkData = null;
+
+        if (!FH_SAVE_PATH.exists()) {
             try {
-                SAVE_ELT_FOLDER_PATH.mkdir();
+                FH_SAVE_PATH.mkdir();
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
+
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(ChunkData.class, new ChunkDataAdapter());
         Gson gson = gsonBuilder.create();
-        try (BufferedReader rd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SAVE_ELT_FOLDER_PATH,
-                "temperature.json")), StandardCharsets.UTF_8))) {
 
-            gson.fromJson(rd, ChunkData.class);
-
+        try (BufferedReader rd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(FH_SAVE_PATH, "temperature.json")), StandardCharsets.UTF_8))) {
+            chunkData = gson.fromJson(rd, ChunkData.class);
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
+
+        return chunkData;
     }
 }
 

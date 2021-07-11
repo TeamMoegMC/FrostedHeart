@@ -16,11 +16,12 @@
  *  along with Energy Level Transition.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.world;
+package com.teammoeg.frostedheart.world.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,20 +29,20 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
+@Deprecated
 public class ChunkDataJsonWriter {
     public static void writeJson() {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(ChunkData.class, new ChunkDataAdapter())
                 .create();
-        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(ChunkDataJsonReader.SAVE_ELT_FOLDER_PATH,
+        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(ChunkDataJsonReader.FH_SAVE_PATH,
                 "temperature.json")), StandardCharsets.UTF_8))) {
 
-            //gson.toJson(, out);
+            gson.toJson(ChunkDataCache.SERVER.getCache().values().toArray(), out);
 
             out.flush();
         } catch (Exception e) {
-
-
+            e.printStackTrace();
         }
     }
 }

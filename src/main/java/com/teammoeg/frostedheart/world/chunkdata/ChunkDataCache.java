@@ -11,6 +11,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorldReader;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -91,6 +92,14 @@ public final class ChunkDataCache
     {
         this.name = name;
         this.cache = new HashMap<>();
+    }
+
+    public void putChunkDataToCache(ChunkPos chunkPos, ChunkData chunkData) {
+        if (this.cache.containsKey(chunkPos)) {
+            this.cache.replace(chunkPos, chunkData);
+        } else {
+            this.cache.put(chunkPos, chunkData);
+        }
     }
 
     public void setCache(Map<ChunkPos, ChunkData> cache) {
