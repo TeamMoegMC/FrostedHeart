@@ -5,7 +5,9 @@ import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.world.WorldTemperatureData;
+import com.teammoeg.frostedheart.world.ChunkDataJsonReader;
+import com.teammoeg.frostedheart.world.ChunkDataJsonWriter;
+import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
@@ -22,17 +24,23 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.gen.GenerationStage;
+import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.ChunkWatchEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
@@ -41,7 +49,9 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fml.event.server.*;
+import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
@@ -52,7 +62,6 @@ import java.util.List;
 
 import static com.teammoeg.frostedheart.FHContent.*;
 import static net.minecraft.util.text.TextFormatting.*;
-import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -147,15 +156,20 @@ public class FHMain {
         }
 
         @SubscribeEvent
-        public static void registerFluids(RegistryEvent.Register<Fluid> event){
-            for(Fluid fluid : registeredFHFluids){
-                try{
+        public static void registerFluids(RegistryEvent.Register<Fluid> event) {
+            for (Fluid fluid : registeredFHFluids) {
+                try {
                     event.getRegistry().register(fluid);
-                }catch(Throwable e){
+                } catch (Throwable e) {
                     LOGGER.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
                     throw e;
                 }
             }
+        }
+
+        @SubscribeEvent
+        public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
+            event.getRegistry().register(FHFeatures.FHORE.setRegistryName("fh", "fh_ore"));
         }
     }
 
@@ -243,10 +257,11 @@ public class FHMain {
 //            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
         }
 
-//        @SubscribeEvent
-//        public static void serverStarting(FMLServerStartingEvent event) {
-//
-//        }
+        @SubscribeEvent
+        public static void serverStarting(FMLServerStartingEvent event) {
+            ChunkDataJsonReader.SAVE_ELT_FOLDER_PATH = event.getServer().func_240776_a_(new FolderName(FHMain.MODID)).toFile();
+            ChunkDataJsonReader.readFile();
+        }
 //
 //        @SubscribeEvent
 //        public static void serverStarted(FMLServerStartedEvent event) {
@@ -261,10 +276,26 @@ public class FHMain {
 //            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
 //            worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
 //        }
+@SubscribeEvent
+public static void WorldSave(WorldEvent.Save event) {
+//            ServerWorld world = (ServerWorld) event.getWorld();
+//           WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
+//          worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
+    ChunkDataJsonWriter.writeJson();
+}
 
         @SubscribeEvent
         public static void onServerStopped(FMLServerStoppedEvent event) {
-//            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+            ChunkCacheInvalidationReloaderListener.INSTANCE.invalidateAll();
+        }
+
+        @SubscribeEvent
+        public static void addOreGenFeatures(BiomeLoadingEvent event) {
+            if (event.getName() != null)
+                if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
+                    for (ConfiguredFeature feature : FHFeatures.FH_ORES)
+                        event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
+                }
         }
     }
 
