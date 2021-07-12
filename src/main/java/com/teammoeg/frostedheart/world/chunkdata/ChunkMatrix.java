@@ -35,8 +35,10 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
         int z = pos.getZ() < 0 ? 15 + pos.getZ() % 16 : pos.getZ() % 16;
         if (y >= 0 && y < 256) {
             return matrix[x][z][y];
+        } else if (y < 0){
+            return matrix[x][z][0];
         } else {
-            return 0;
+            return matrix[x][z][255];
         }
     }
 

@@ -43,9 +43,6 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
         super.render(transform, mouseX, mouseY, partial);
         int tempLevel = tile.temperatureLevel;
         int rangeLevel = tile.rangeLevel;
-        float tempMod = Survive.blockTemperatureMap.get(FHMain.rl("generator")).getTemperatureModifier();
-        int range = Survive.blockTemperatureMap.get(FHMain.rl("generator")).getRange();
-
         List<ITextComponent> tooltip = new ArrayList<>();
 
         if (isMouseIn(mouseX, mouseY, 57,36, 19, 10)) {

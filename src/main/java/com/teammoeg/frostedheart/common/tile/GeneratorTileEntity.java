@@ -7,6 +7,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.FHBlockInterfaces;
@@ -317,7 +318,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 if (activeAfterTick) {
                     ChunkData.addTempToCube(world, getPos(), 32, (byte) 10);
                 } else {
-                    ChunkData.setTempToCube(world, getPos(), 32, (byte) 10);
+                    ChunkData.setTempToCube(world, getPos(), 32, WorldClimate.WORLD_TEMPERATURE);
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)

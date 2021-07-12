@@ -6,6 +6,7 @@
 
 package com.teammoeg.frostedheart.world.chunkdata;
 
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.network.ChunkWatchPacket;
 import com.teammoeg.frostedheart.world.unused.gen.ChunkDataProvider;
 import net.minecraft.nbt.CompoundNBT;
@@ -407,7 +408,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     private void reset ()
     {
-        chunkMatrix = new ChunkMatrix((byte) 10);
+        chunkMatrix = new ChunkMatrix(WorldClimate.WORLD_TEMPERATURE);
         status = Status.EMPTY;
     }
 
