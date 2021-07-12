@@ -188,6 +188,12 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
 
     }
 
+    @Override
+    public void disassemble() {
+        super.disassemble();
+        ChunkData.setTempToCube(world, getPos(), 32, WorldClimate.WORLD_TEMPERATURE);
+    }
+
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
             new IEInventoryHandler(4, this, 0, new boolean[]{true, false, true, false},
                     new boolean[]{false, true, false, true})
@@ -329,6 +335,10 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                             if (te instanceof GeneratorTileEntity)
                                 ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
+            } else if (activeAfterTick) {
+                if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + 10) {
+                    ChunkData.addTempToCube(world, getPos(), 32, (byte) 10);
+                }
             }
         }
 

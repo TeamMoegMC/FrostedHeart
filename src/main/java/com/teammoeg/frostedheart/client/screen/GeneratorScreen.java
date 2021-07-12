@@ -31,7 +31,7 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     @Override
     public void init() {
         super.init();
-        this.addButton(new ImageButton(guiLeft+56, guiTop+35, 19, 10, 232, 1, 12, TEXTURE,
+        this.addButton(new ImageButton(guiLeft+56, guiTop+35, 19, 10, 232, 1, 1, TEXTURE,
                 btn -> {
                     tile.setWorking(!tile.isWorking());
                     fullInit();
