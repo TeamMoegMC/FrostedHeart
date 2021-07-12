@@ -16,15 +16,23 @@ public class GeneratorRecipe extends IESerializableRecipe {
     public static IRecipeType<GeneratorRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
 
-    public final IngredientWithSize input;
-    public final ItemStack output;
-    public final int time;
+    public IngredientWithSize input;
+    public ItemStack output;
+    public int time;
 
     public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
         super(output, TYPE, id);
         this.output = output;
         this.input = input;
         this.time = time;
+    }
+
+    public void setOverdriveMode() {
+        int originalOutput = this.output.getCount();
+        int originalInput = this.input.getCount();
+        this.output.setCount(originalOutput * 2);
+        this.input = this.input.withSize(originalInput * 2);
+        this.time *= 2;
     }
 
     @Override

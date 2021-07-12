@@ -12,10 +12,12 @@ import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.FHBlockInterfaces;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
@@ -194,9 +196,23 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         ChunkData.setTempToCube(world, getPos(), 32, WorldClimate.WORLD_TEMPERATURE);
     }
 
+//    @Override
+//    public boolean getIsActive() {
+//        BlockState state = this.getState();
+//        return (state.hasProperty(BlockStateProperties.LIT) ? state.get(BlockStateProperties.LIT) : false) && isWorking;
+//    }
+//
+//    @Override
+//    public void setActive(boolean active) {
+//        BlockState state = this.getState();
+//        BlockState newState = state.with(BlockStateProperties.LIT, active);
+//        this.setState(newState);
+//        this.setWorking(active);
+//    }
+
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
-            new IEInventoryHandler(4, this, 0, new boolean[]{true, false, true, false},
-                    new boolean[]{false, true, false, true})
+            new IEInventoryHandler(2, this, 0, new boolean[]{true, false},
+                    new boolean[]{false, true})
     );
 
     @Nonnull
@@ -254,8 +270,12 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         if (recipe == null)
             return null;
         if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output) &&
-                inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT)))
+                inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
+            if (isOverdrive) {
+                recipe.setOverdriveMode();
+            }
             return recipe;
+        }
         return null;
     }
 
@@ -263,7 +283,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public void tick() {
         checkForNeedlessTicking();
         // spawn smoke particle
-        if (world != null && world.isRemote && formed && !isDummy() && this.getBlockState().get(GeneratorMultiblockBlock.LIT)) {
+        if (world != null && world.isRemote && formed && !isDummy() && getIsActive()) {
             BlockPos blockpos = this.getPos();
             Random random = world.rand;
             if (random.nextFloat() < 0.50F) {
@@ -274,8 +294,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             }
         }
 
-            // logic
-        if (!world.isRemote && formed && !isDummy()) {
+        // logic
+        if (!world.isRemote && formed && !isDummy() && isWorking) {
             final boolean activeBeforeTick = getIsActive();
             // just finished process or during process
             if (process > 0) {
@@ -358,5 +378,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
 
     public void setOverdrive(boolean overdrive) {
         isOverdrive = overdrive;
+        if (overdrive) temperatureLevel *= 2;
+        else temperatureLevel /= 2;
     }
 }

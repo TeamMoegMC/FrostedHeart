@@ -1,15 +1,21 @@
 package com.teammoeg.frostedheart.client.screen;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
+import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
+import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.stereowalker.survive.Survive;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
+import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHScreenUtils;
+import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.widget.button.ImageButton;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -17,6 +23,7 @@ import net.minecraftforge.fml.client.gui.GuiUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     private static final ResourceLocation TEXTURE = FHScreenUtils.makeTextureLocation("generatornew");
@@ -31,9 +38,22 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     @Override
     public void init() {
         super.init();
-        this.addButton(new ImageButton(guiLeft+56, guiTop+35, 19, 10, 232, 1, 1, TEXTURE,
+        this.buttons.clear();
+        this.addButton(new GuiButtonBoolean(guiLeft+56, guiTop+35, 19, 10, "", tile.isWorking(), TEXTURE, 0, 245, 0,
                 btn -> {
-                    tile.setWorking(!tile.isWorking());
+                    CompoundNBT tag = new CompoundNBT();
+                    tile.setWorking(!btn.getState());
+                    tag.putBoolean("working", tile.isWorking());
+                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                    fullInit();
+                }));
+
+        this.addButton(new GuiButtonBoolean(guiLeft+101, guiTop+35, 19, 10, "", tile.isOverdrive(), TEXTURE, 0, 245, 0,
+                btn -> {
+                    CompoundNBT tag = new CompoundNBT();
+                    tile.setOverdrive(!btn.getState());
+                    tag.putBoolean("overdrive", tile.isOverdrive());
+                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
     }
@@ -41,9 +61,13 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     @Override
     public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
-        int tempLevel = tile.temperatureLevel;
-        int rangeLevel = tile.rangeLevel;
         List<ITextComponent> tooltip = new ArrayList<>();
+
+        boolean work = tile.isWorking();
+        String workText;
+        if (work) workText = "Working";
+        else workText = "Stopped";
+        font.drawString(transform, workText, guiLeft + 10, guiTop + 10, 0);
 
         if (isMouseIn(mouseX, mouseY, 57,36, 19, 10)) {
             if (tile.isWorking()) {
@@ -51,7 +75,6 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
             } else {
                 tooltip.add(new StringTextComponent("Turn On Generator"));
             }
-
         }
 
         if (isMouseIn(mouseX, mouseY, 102,36, 19, 10)) {
@@ -75,33 +98,35 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
         // recipe progress icon
         if (tile.processMax > 0 && tile.process > 0) {
             int h = (int) (12 * (tile.process / (float) tile.processMax));
-            this.blit(transform, guiLeft + 85, guiTop + 35 - h, 179, 1 + 12 - h, 9, h);
+            this.blit(transform, guiLeft + 84, guiTop + 47 - h, 179, 1 + 12 - h, 9, h);
         }
 
-//        // work button
-//        if (tile.isWorking()) {
-//            this.blit(transform, guiLeft + 56, guiTop + 35, 232, 1, 19, 10);
-//        }
-//
-//        // overdrive button
-//        if (tile.isOverdrive()) {
-//            this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
-//        }
-    }
+        // work button
+        if (tile.isWorking()) {
+            this.blit(transform, guiLeft + 56, guiTop + 35, 232, 1, 19, 10);
+        }
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // buttons
-//        boolean f = isMouseIn((int)mouseX, (int)mouseY, 57,36, 19, 10);
-//        if (f) {
-//            tile.setWorking(!tile.isWorking());
-//            return true;
-//        }
-//        if (isMouseIn((int)mouseX, (int)mouseY, 102,36, 19, 10)) {
-//            tile.setOverdrive(!tile.isOverdrive());
-//            return true;
-//        }
-        return super.mouseClicked(mouseX, mouseY, button);
+        // overdrive button
+        if (tile.isOverdrive()) {
+            this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
+        }
+
+        int tempLevel = tile.temperatureLevel;
+        int rangeLevel = tile.rangeLevel;
+
+        // temperature bar (182, 30)
+        if (tile.getIsActive()) {
+            int offset = (4 - tempLevel) * 14;
+            int bar = (tempLevel - 1) * 14;
+            this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
+        }
+
+        // range bar
+        if (tile.getIsActive()) {
+            int offset = (4 - rangeLevel) * 14;
+            int bar = (rangeLevel - 1) * 14;
+            this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
+        }
     }
 
     @Override
