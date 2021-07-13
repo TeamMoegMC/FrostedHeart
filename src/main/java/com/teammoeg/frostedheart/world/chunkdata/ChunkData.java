@@ -403,7 +403,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     @Override
     public String toString ()
     {
-        return "ChunkData{pos=" + pos + ", status=" + status + ", hashCode=" + Integer.toHexString(hashCode()) + '}';
+        return "ChunkData{pos=" + pos + ", status=" + status + ",hashCode=" + Integer.toHexString(hashCode()) + '}';
     }
 
     private void reset ()
