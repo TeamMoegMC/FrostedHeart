@@ -9,9 +9,12 @@ import com.teammoeg.frostedheart.common.block.FHBaseBlock;
 import com.teammoeg.frostedheart.common.block.FHBlockItem;
 import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
+import com.teammoeg.frostedheart.common.block.cropblock.LeekBlock;
+import com.teammoeg.frostedheart.common.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
 import com.teammoeg.frostedheart.common.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -39,6 +42,7 @@ public class FHContent {
         public static Block generator_core_t1;
         public static Block generator_amplifier_r1;
         public static Block leek_block;
+        public static Block rye_block;
     }
 
     public static class Items {
@@ -58,10 +62,14 @@ public class FHContent {
                 .setRequiresTool()
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10);
+        Block.Properties CropProps =
+                AbstractBlock.Properties.create(Material.PLANTS).doesNotBlockMovement().tickRandomly().zeroHardnessAndResistance().sound(SoundType.CROP);
 
         FHContent.Blocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
+        FHContent.Blocks.leek_block = new LeekBlock("leek_block", CropProps, FHBlockItem::new);
+        FHContent.Blocks.rye_block = new RyeBlock("rye_block", CropProps, FHBlockItem::new);
 
         // Init multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();
