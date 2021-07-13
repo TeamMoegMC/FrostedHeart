@@ -1,10 +1,7 @@
 package com.teammoeg.frostedheart;
 
-import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.client.ClientProxy;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.FHBaseBlock;
 import com.teammoeg.frostedheart.common.block.FHBlockItem;
 import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
@@ -83,9 +80,6 @@ public class FHContent {
         MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
         // Register containers
         GuiHandler.register(GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
-        // Register screens
-        ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
-
     }
 
 }
