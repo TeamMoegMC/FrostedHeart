@@ -314,7 +314,9 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             setActive(false);
             process = 0;
             processMax = 0;
-            ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
+            if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE) {
+                ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
+            }
         }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();

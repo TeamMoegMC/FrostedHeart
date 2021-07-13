@@ -110,9 +110,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
         // these are block position offset
         int offsetN = sourceZ - range;
-        int offsetS = sourceZ + range;
+        int offsetS = sourceZ + range + 1;
         int offsetW = sourceX - range;
-        int offsetE = sourceX + range;
+        int offsetE = sourceX + range + 1;
 
         // these are chunk position offset
         int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;

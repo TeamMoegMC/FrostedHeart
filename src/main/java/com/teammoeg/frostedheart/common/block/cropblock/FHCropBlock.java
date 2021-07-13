@@ -46,7 +46,7 @@ public class FHCropBlock extends CropsBlock {
             ChunkData data = ChunkData.get(worldIn, pos);
             float temp = data.getTemperatureAtBlock(pos);
             if (temp < growTemperature) {
-                worldIn.setBlockState(pos, Blocks.DEAD_BUSH.getDefaultState(), 32);
+                worldIn.setBlockState(pos, Blocks.DEAD_BUSH.getDefaultState(), 2);
             } else if (i < this.getMaxAge()) {
                 float f = getGrowthChance(this, worldIn, pos);
                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt((int)(25.0F / f) + 1) == 0)) {

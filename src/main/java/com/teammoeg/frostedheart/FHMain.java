@@ -13,6 +13,7 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.fluid.Fluid;
@@ -75,7 +76,7 @@ public class FHMain {
         @Nonnull
         public ItemStack createIcon()
         {
-            return new ItemStack(Blocks.generator_core_t1.asItem());
+            return new ItemStack(FHContent.Blocks.generator_core_t1.asItem());
         }
     };
 
@@ -267,8 +268,15 @@ public class FHMain {
 
         @SubscribeEvent
         public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
-            if (!(event.getState().getBlock() instanceof FHCropBlock))
+            if (!(event.getState().getBlock() instanceof FHCropBlock)) {
                 event.setResult(Event.Result.DENY);
+                ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
+                float temp = data.getTemperatureAtBlock(event.getPos());
+                if (temp < 20) {
+                    event.getWorld().setBlockState(event.getPos(), Blocks.DEAD_BUSH.getDefaultState(), 2);
+                }
+            }
+
         }
     }
 
