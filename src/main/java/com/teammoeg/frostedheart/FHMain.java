@@ -1,5 +1,8 @@
 package com.teammoeg.frostedheart;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.client.ClientProxy;
+import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
@@ -107,6 +110,8 @@ public class FHMain {
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
+        // Register screens
+        ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
@@ -166,7 +171,12 @@ public class FHMain {
 
         @SubscribeEvent
         public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
-            event.getRegistry().register(FHFeatures.FHORE.setRegistryName("fh", "fh_ore"));
+            try {
+                event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
+            } catch (Throwable e) {
+                LOGGER.error("Failed to register an Feature. ({}, {})");
+                throw e;
+            }
         }
     }
 
