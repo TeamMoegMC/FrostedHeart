@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
@@ -35,10 +36,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.world.BiomeLoadingEvent;
-import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.event.world.ChunkWatchEvent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.world.*;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
@@ -252,26 +251,18 @@ public class FHMain {
         }
 
         @SubscribeEvent
-        public static void serverStarting(FMLServerStartingEvent event) {
-//            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
-//            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
-//            ChunkDataCache.SERVER.setCache(worldTemperatureData.getServerCache().getCache());
-        }
-
-        @SubscribeEvent
-        public static void onServerStopped(FMLServerStoppedEvent event) {
-//            ServerWorld world = event.getServer().getWorld(World.OVERWORLD);
-//            WorldTemperatureData worldTemperatureData = WorldTemperatureData.get(world);
-//            worldTemperatureData.setServerCache(ChunkDataCache.SERVER);
-        }
-
-        @SubscribeEvent
         public static void addOreGenFeatures(BiomeLoadingEvent event) {
             if (event.getName() != null)
                 if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
                     for (ConfiguredFeature feature : FHFeatures.FH_ORES)
                         event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
                 }
+        }
+
+        @SubscribeEvent
+        public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
+            if (!(event.getState().getBlock() instanceof FHCropBlock))
+                event.setResult(Event.Result.DENY);
         }
     }
 

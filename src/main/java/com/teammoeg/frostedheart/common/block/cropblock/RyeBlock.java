@@ -23,8 +23,8 @@ public class RyeBlock extends FHCropBlock {
     public static final IntegerProperty Rye_AGE = BlockStateProperties.AGE_0_7;
     private static final VoxelShape[] SHAPE = new VoxelShape[]{Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D)};
 
-    public RyeBlock(String name, AbstractBlock.Properties properties, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, properties, createItemBlock);
+    public RyeBlock(String name, int growTemp, AbstractBlock.Properties properties, BiFunction<Block, Item.Properties, Item> createItemBlock) {
+        super(name, growTemp, properties, createItemBlock);
     }
 
     public IntegerProperty getAgeProperty() {
@@ -39,12 +39,10 @@ public class RyeBlock extends FHCropBlock {
         return FHContent.Blocks.rye_block.asItem();
     }
 
-
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
         if (random.nextInt(2) != 0) {
             super.randomTick(state, worldIn, pos, random);
         }
-
     }
 
     protected int getBonemealAgeIncrease(World worldIn) {
