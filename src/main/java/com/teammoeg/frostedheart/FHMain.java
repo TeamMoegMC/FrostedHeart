@@ -170,12 +170,7 @@ public class FHMain {
 
         @SubscribeEvent
         public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
-            try {
-                event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
-            } catch (Throwable e) {
-                LOGGER.error("Failed to register an Feature. ({}, {})");
-                throw e;
-            }
+            event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
         }
     }
 
