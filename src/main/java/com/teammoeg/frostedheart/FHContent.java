@@ -6,7 +6,6 @@ import com.teammoeg.frostedheart.common.block.FHBaseBlock;
 import com.teammoeg.frostedheart.common.block.FHBlockItem;
 import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
 import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
-import com.teammoeg.frostedheart.common.block.cropblock.LeekBlock;
 import com.teammoeg.frostedheart.common.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
 import com.teammoeg.frostedheart.common.item.FHBaseItem;
@@ -39,7 +38,6 @@ public class FHContent {
         public static Block generator_brick;
         public static Block generator_core_t1;
         public static Block generator_amplifier_r1;
-        public static Block leek_block;
         public static Block rye_block;
     }
 
@@ -66,8 +64,7 @@ public class FHContent {
         FHContent.Blocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
-        FHContent.Blocks.leek_block = new LeekBlock("leek_block", CropProps, FHBlockItem::new);
-        FHContent.Blocks.rye_block = new RyeBlock("rye_block", CropProps, FHBlockItem::new);
+        FHContent.Blocks.rye_block = new RyeBlock("rye_block", -10, CropProps, FHBlockItem::new);
         FHContent.Items.energy_core = new FHBaseItem("energy_core");
 
 
