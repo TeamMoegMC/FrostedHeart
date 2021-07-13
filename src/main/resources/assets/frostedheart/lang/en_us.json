@@ -1,4 +1,14 @@
 {
+  "block.frostedheart.generator_brick": "Generator Brick",
+  "block.frostedheart.generator_core_t1": "Generator Core",
+  "block.frostedheart.generator_amplifier_r1": "Generator Amplifier",
+
   "frostedheart.tooltip.f3_average_temperature": "Average Temperature: %s°C",
-  "frostedheart.tooltip.f3_invalid_chunk_data": "Invalid Chunk Data"
+  "frostedheart.tooltip.f3_invalid_chunk_data": "Invalid Chunk Data",
+  "frostedheart.gui.generator.temperature.level": "Temperature Increment: ",
+  "frostedheart.gui.generator.range.level": "Range: ",
+  "frostedheart.gui.generator.mode.on": "Turn On Generator",
+  "frostedheart.gui.generator.mode.off": "Turn Off Generator",
+  "frostedheart.gui.generator.overdrive.on": "Turn On Overdrive",
+  "frostedheart.gui.generator.overdrive.off": "Turn Off Overdrive"
 }

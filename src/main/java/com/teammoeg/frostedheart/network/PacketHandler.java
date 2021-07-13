@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.network;
 
+import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -27,5 +28,9 @@ public class PacketHandler
 
         CHANNEL.registerMessage(id++, ChunkWatchPacket.class, ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
         CHANNEL.registerMessage(id++, ChunkUnwatchPacket.class, ChunkUnwatchPacket::encode, ChunkUnwatchPacket::new, ChunkUnwatchPacket::handle);
+        CHANNEL.registerMessage(id++, MessageTileSync.class, MessageTileSync::toBytes, MessageTileSync::new, (t, ctx) -> {
+            t.process(ctx);
+            ctx.get().setPacketHandled(true);
+        });
     }
 }
