@@ -2,9 +2,11 @@ package com.teammoeg.frostedheart.common.tile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import com.google.common.base.Preconditions;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -28,6 +30,7 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
@@ -44,8 +47,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    public int temperatureLevel = 1; //1: +4 , 2: +5 , 3: +6 , 4: +7
-    public int rangeLevel = 1; //1: 8, 2: 12, 3: 16, 4: 20
+    public int temperatureLevel; //1: +10 , 2: +20 , 3: +30 , 4: +40
+    public int rangeLevel; //1: 8, 2: 12, 3: 16, 4: 20
     public boolean rfSupported = false; //todo: future impl
     public boolean euSupported = false;
     public int process = 0;
@@ -59,6 +62,14 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         super(FHMultiblocks.GENERATOR, getSpecificGeneratorType(temperatureLevelIn, rangeLevelIn), false);
         temperatureLevel = temperatureLevelIn;
         rangeLevel = rangeLevelIn;
+    }
+
+    public int getActualRange() {
+        return 8 + (getRangeLevel() - 1) * 4;
+    }
+
+    public int getActualTemp() {
+        return getTemperatureLevel() * 10;
     }
 
     private static TileEntityType<GeneratorTileEntity> getSpecificGeneratorType(int tLevel, int rLevel) {
@@ -99,9 +110,25 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     }
 
     @Override
+    public void receiveMessageFromClient(CompoundNBT message) {
+        super.receiveMessageFromClient(message);
+        if(message.contains("isWorking", Constants.NBT.TAG_BYTE))
+            setWorking(message.getBoolean("isWorking"));
+        if(message.contains("isOverdrive", Constants.NBT.TAG_BYTE))
+            setOverdrive(message.getBoolean("isOverdrive"));
+        if(message.contains("temperatureLevel", Constants.NBT.TAG_INT))
+            setTemperatureLevel(message.getInt("temperatureLevel"));
+        if(message.contains("rangeLevel", Constants.NBT.TAG_INT))
+            setRangeLevel(message.getInt("rangeLevel"));
+    }
+
+    @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-
+        setWorking(nbt.getBoolean("isWorking"));
+        setOverdrive(nbt.getBoolean("isOverdrive"));
+        setTemperatureLevel(nbt.getInt("temperatureLevel"));
+        setRangeLevel(nbt.getInt("rangeLevel"));
         if (!descPacket) {
             ItemStackHelper.loadAllItems(nbt, inventory);
             process = nbt.getInt("process");
@@ -112,7 +139,10 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-
+        nbt.putBoolean("isWorking", isWorking());
+        nbt.putBoolean("isOverdrive", isOverdrive());
+        nbt.putInt("temperatureLevel", getTemperatureLevel());
+        nbt.putInt("rangeLevel", getRangeLevel());
         if (!descPacket) {
             nbt.putInt("process", process);
             nbt.putInt("processMax", processMax);
@@ -193,22 +223,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void disassemble() {
         super.disassemble();
-        ChunkData.setTempToCube(world, getPos(), 32, WorldClimate.WORLD_TEMPERATURE);
+        ChunkData.setTempToCube(world, getPos(), getActualRange(), WorldClimate.WORLD_TEMPERATURE);
     }
-
-//    @Override
-//    public boolean getIsActive() {
-//        BlockState state = this.getState();
-//        return (state.hasProperty(BlockStateProperties.LIT) ? state.get(BlockStateProperties.LIT) : false) && isWorking;
-//    }
-//
-//    @Override
-//    public void setActive(boolean active) {
-//        BlockState state = this.getState();
-//        BlockState newState = state.with(BlockStateProperties.LIT, active);
-//        this.setState(newState);
-//        this.setWorking(active);
-//    }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
             new IEInventoryHandler(2, this, 0, new boolean[]{true, false},
@@ -271,9 +287,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             return null;
         if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output) &&
                 inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
-            if (isOverdrive) {
-                recipe.setOverdriveMode();
-            }
             return recipe;
         }
         return null;
@@ -282,6 +295,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void tick() {
         checkForNeedlessTicking();
+        int actualTemp = getActualTemp();
+        int actualRange = getActualRange();
         // spawn smoke particle
         if (world != null && world.isRemote && formed && !isDummy() && getIsActive()) {
             BlockPos blockpos = this.getPos();
@@ -295,7 +310,13 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         }
 
         // logic
-        if (!world.isRemote && formed && !isDummy() && isWorking) {
+        if (!world.isRemote && formed && !isDummy() && !isWorking()) {
+            setActive(false);
+            process = 0;
+            processMax = 0;
+            ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
+        }
+        if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();
             // just finished process or during process
             if (process > 0) {
@@ -320,7 +341,9 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 if (activeBeforeTick) {
                     GeneratorRecipe recipe = getRecipe();
                     if (recipe != null) {
-                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -recipe.input.getCount());
+                        int overdriveModifier = 1;
+                        if (isOverdrive()) overdriveModifier = 4;
+                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -recipe.input.getCount() * overdriveModifier);
                         if (!inventory.get(OUTPUT_SLOT).isEmpty())
                             inventory.get(OUTPUT_SLOT).grow(recipe.output.copy().getCount());
                         else if (inventory.get(OUTPUT_SLOT).isEmpty())
@@ -342,9 +365,9 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
                 if (activeAfterTick) {
-                    ChunkData.addTempToCube(world, getPos(), 32, (byte) 10);
+                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
                 } else {
-                    ChunkData.setTempToCube(world, getPos(), 32, WorldClimate.WORLD_TEMPERATURE);
+                    ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
@@ -356,8 +379,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                                 ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
             } else if (activeAfterTick) {
-                if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + 10) {
-                    ChunkData.addTempToCube(world, getPos(), 32, (byte) 10);
+                if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + actualTemp) {
+                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
                 }
             }
         }
@@ -365,20 +388,52 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     }
 
     public void setWorking(boolean working) {
-        isWorking = working;
+        if (master() != null)
+            master().isWorking = working;
     }
 
     public boolean isWorking() {
-        return isWorking;
+        if (master() != null)
+            return master().isWorking;
+        else return false;
     }
 
     public boolean isOverdrive() {
-        return isOverdrive;
+        if (master() != null)
+            return master().isOverdrive;
+        else return false;
     }
 
     public void setOverdrive(boolean overdrive) {
-        isOverdrive = overdrive;
-        if (overdrive) temperatureLevel *= 2;
-        else temperatureLevel /= 2;
+        if (master() != null) {
+            master().isOverdrive = overdrive;
+            if (overdrive) {
+                setTemperatureLevel(getTemperatureLevel() * 2);
+            } else {
+                setTemperatureLevel(Math.max(1, getTemperatureLevel() / 2));
+            }
+        }
+    }
+
+    public void setTemperatureLevel(int temperatureLevel) {
+        if (master() != null)
+            master().temperatureLevel = temperatureLevel;
+    }
+
+    public int getTemperatureLevel() {
+        if (master() != null)
+            return master().temperatureLevel;
+        else return 1;
+    }
+
+    public void setRangeLevel(int rangeLevel) {
+        if (master() != null)
+            master().rangeLevel = rangeLevel;
+    }
+
+    public int getRangeLevel() {
+        if (master() != null)
+            return master().rangeLevel;
+        else return 1;
     }
 }

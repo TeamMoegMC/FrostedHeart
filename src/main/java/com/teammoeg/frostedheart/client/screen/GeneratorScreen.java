@@ -19,6 +19,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fml.client.gui.GuiUtils;
 
 import java.util.ArrayList;
@@ -43,17 +44,16 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
                 btn -> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setWorking(!btn.getState());
-                    tag.putBoolean("working", tile.isWorking());
-                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                    tag.putBoolean("isWorking", tile.isWorking());
+                    PacketHandler.get().sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
-
         this.addButton(new GuiButtonBoolean(guiLeft+101, guiTop+35, 19, 10, "", tile.isOverdrive(), TEXTURE, 0, 245, 0,
                 btn -> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setOverdrive(!btn.getState());
-                    tag.putBoolean("overdrive", tile.isOverdrive());
-                    ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                    tag.putBoolean("isOverdrive", tile.isOverdrive());
+                    PacketHandler.get().sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
     }
@@ -63,26 +63,28 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
         super.render(transform, mouseX, mouseY, partial);
         List<ITextComponent> tooltip = new ArrayList<>();
 
-        boolean work = tile.isWorking();
-        String workText;
-        if (work) workText = "Working";
-        else workText = "Stopped";
-        font.drawString(transform, workText, guiLeft + 10, guiTop + 10, 0);
-
         if (isMouseIn(mouseX, mouseY, 57,36, 19, 10)) {
             if (tile.isWorking()) {
-                tooltip.add(new StringTextComponent("Turn Off Generator"));
+                tooltip.add(FHScreenUtils.translateGui("generator.mode.off"));
             } else {
-                tooltip.add(new StringTextComponent("Turn On Generator"));
+                tooltip.add(FHScreenUtils.translateGui("generator.mode.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 102,36, 19, 10)) {
             if (tile.isOverdrive()) {
-                tooltip.add(new StringTextComponent("Turn Off Overdrive"));
+                tooltip.add(FHScreenUtils.translateGui("generator.overdrive.off"));
             } else {
-                tooltip.add(new StringTextComponent("Turn On Overdrive"));
+                tooltip.add(FHScreenUtils.translateGui("generator.overdrive.on"));
             }
+        }
+
+        if (isMouseIn(mouseX, mouseY, 12,13, 2, 54) && tile.getIsActive()) {
+            tooltip.add(FHScreenUtils.translateGui("generator.temperature.level").appendString(Integer.toString(tile.getActualTemp())));
+        }
+
+        if (isMouseIn(mouseX, mouseY, 161,13, 2, 54) && tile.getIsActive()) {
+            tooltip.add(FHScreenUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
 
         if (!tooltip.isEmpty()){
