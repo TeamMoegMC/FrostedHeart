@@ -43,6 +43,7 @@ public class FHContent {
 
     public static class Items {
         public static Item energy_core;
+        public static Item rye;
     }
 
     public static class Fluids {
@@ -65,7 +66,9 @@ public class FHContent {
         FHContent.Blocks.generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.rye_block = new RyeBlock("rye_block", -10, CropProps, FHBlockItem::new);
+
         FHContent.Items.energy_core = new FHBaseItem("energy_core");
+        FHContent.Items.rye = new FHBaseItem("rye");
 
 
         // Init multiblocks

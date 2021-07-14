@@ -15,6 +15,8 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
@@ -299,6 +301,11 @@ public class FHMain {
                     list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
                 }
             }
+        }
+
+        @SubscribeEvent
+        public static void onRenderTypeSetup(FMLClientSetupEvent event) {
+            RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
         }
     }
 
