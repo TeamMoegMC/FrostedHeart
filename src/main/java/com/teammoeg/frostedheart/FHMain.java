@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
@@ -15,10 +16,15 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.IHasContainer;
+import net.minecraft.client.gui.ScreenManager;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -114,7 +120,9 @@ public class FHMain {
 
     private void doClientStuff(final FMLClientSetupEvent event) {
         // Register screens
-        ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
+        registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
+        // Register translucent render type
+        RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
@@ -128,6 +136,12 @@ public class FHMain {
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
 
+    }
+
+    public static <C extends Container, S extends Screen & IHasContainer<C>>
+    void registerScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
+        ContainerType<C> type = (ContainerType<C>)GuiHandler.getContainerType(containerName);
+        ScreenManager.registerFactory(type, factory);
     }
 
     public static ResourceLocation rl(String path) {
@@ -175,12 +189,6 @@ public class FHMain {
         @SubscribeEvent
         public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
             event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
-        }
-
-        @SubscribeEvent
-        @OnlyIn(Dist.CLIENT)
-        public static void onRenderTypeSetup(FMLClientSetupEvent event) {
-            RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
         }
     }
 

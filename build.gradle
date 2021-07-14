@@ -124,8 +124,8 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.1.31'
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
-    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135")
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:datagen")
+    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.2-137.2")
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.2-137.2:datagen")
 
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")

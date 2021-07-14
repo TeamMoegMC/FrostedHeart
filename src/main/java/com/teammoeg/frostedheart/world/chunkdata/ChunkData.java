@@ -75,14 +75,19 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     public static void addTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
         if (world != null && !world.isRemote()) {
+            System.out.println("FH - World Exists");
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
                     dataIn -> {
                         ChunkDataCache.SERVER.update(chunkPos, dataIn);
+                        System.out.println("FH - Server Updated");
                         ChunkDataCache.CLIENT.update(chunkPos, dataIn);
+                        System.out.println("FH - Client Updated");
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
+            System.out.println("FH - Data Updated");
             data.chunkMatrix.addTemp(fromX, fromY, fromZ, toX, toY, toZ, tempMod);
+            System.out.println("FH - Data Added");
         }
     }
 
