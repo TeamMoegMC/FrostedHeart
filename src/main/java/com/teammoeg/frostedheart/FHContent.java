@@ -16,6 +16,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ToolType;
@@ -44,6 +45,7 @@ public class FHContent {
     public static class Items {
         public static Item energy_core;
         public static Item rye;
+        public static Item rye_bread;
     }
 
     public static class Fluids {
@@ -67,8 +69,10 @@ public class FHContent {
         FHContent.Blocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.rye_block = new RyeBlock("rye_block", -10, CropProps, FHBlockItem::new);
 
-        FHContent.Items.energy_core = new FHBaseItem("energy_core");
-        FHContent.Items.rye = new FHBaseItem("rye");
+        Item.Properties properties = new Item.Properties().group(FHMain.itemGroup);
+        FHContent.Items.energy_core = new FHBaseItem("energy_core", properties);
+        FHContent.Items.rye = new FHBaseItem("rye", properties);
+        FHContent.Items.rye_bread = new FHBaseItem("rye_bread", properties.food((new Food.Builder()).hunger(5).saturation(0.6F).build()));
 
 
         // Init multiblocks

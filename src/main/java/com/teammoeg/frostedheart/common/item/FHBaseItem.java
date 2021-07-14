@@ -7,8 +7,8 @@ import net.minecraft.item.Item;
 public class FHBaseItem extends Item {
     public String itemName;
 
-    public FHBaseItem(String name) {
-        super(new Item.Properties().group(FHMain.itemGroup));
+    public FHBaseItem(String name, Properties properties) {
+        super(properties);
         this.itemName = name;
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
