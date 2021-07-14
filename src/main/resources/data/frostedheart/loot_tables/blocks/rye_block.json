@@ -50,7 +50,7 @@
       "conditions": [
         {
           "condition": "minecraft:block_state_property",
-          "block": "frostedheart:rye",
+          "block": "frostedheart:rye_block",
           "properties": {
             "age": "7"
           }

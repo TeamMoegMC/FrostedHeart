@@ -35,6 +35,7 @@ import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.Feature;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -136,11 +137,11 @@ public class FHMain {
     @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static class RegistryEvents {
         @SubscribeEvent
-        public static void registerBlocks(RegistryEvent.Register<Block> event){
-            for(Block block : registeredFHBlocks){
-                try{
+        public static void registerBlocks(RegistryEvent.Register<Block> event) {
+            for (Block block : registeredFHBlocks) {
+                try {
                     event.getRegistry().register(block);
-                }catch(Throwable e){
+                } catch (Throwable e) {
                     LOGGER.error("Failed to register a block. ({})", block);
                     throw e;
                 }
@@ -148,11 +149,11 @@ public class FHMain {
         }
 
         @SubscribeEvent
-        public static void registerItems(RegistryEvent.Register<Item> event){
-            for(Item item : registeredFHItems){
-                try{
+        public static void registerItems(RegistryEvent.Register<Item> event) {
+            for (Item item : registeredFHItems) {
+                try {
                     event.getRegistry().register(item);
-                }catch(Throwable e){
+                } catch (Throwable e) {
                     LOGGER.error("Failed to register an item. ({}, {})", item, item.getRegistryName());
                     throw e;
                 }
@@ -174,6 +175,12 @@ public class FHMain {
         @SubscribeEvent
         public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
             event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
+        }
+
+        @SubscribeEvent
+        @OnlyIn(Dist.CLIENT)
+        public static void onRenderTypeSetup(FMLClientSetupEvent event) {
+            RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
         }
     }
 
@@ -302,11 +309,5 @@ public class FHMain {
                 }
             }
         }
-
-        @SubscribeEvent
-        public static void onRenderTypeSetup(FMLClientSetupEvent event) {
-            RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
-        }
     }
-
 }

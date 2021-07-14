@@ -4,6 +4,7 @@
   "package": "com.teammoeg.frostedheart.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "MixinPortalSize",
     "accessors.BlockTemperatureDataAccess",
     "accessors.ChunkGeneratorAccessor",
     "survive.MixinSurviveEvents"
