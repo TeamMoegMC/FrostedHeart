@@ -135,12 +135,6 @@ public class FHMain {
 
     }
 
-    public <C extends Container, S extends Screen & IHasContainer<C>>
-    void registerScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
-        ContainerType<C> type = (ContainerType<C>)GuiHandler.getContainerType(containerName);
-        ScreenManager.registerFactory(type, factory);
-    }
-
     public static ResourceLocation rl(String path) {
         return new ResourceLocation(MODID, path);
     }
