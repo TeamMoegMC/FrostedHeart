@@ -119,10 +119,7 @@ public class FHMain {
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
-        // Register screens
-        registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
-        // Register translucent render type
-        RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
+
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
@@ -138,7 +135,7 @@ public class FHMain {
 
     }
 
-    public static <C extends Container, S extends Screen & IHasContainer<C>>
+    public <C extends Container, S extends Screen & IHasContainer<C>>
     void registerScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
         ContainerType<C> type = (ContainerType<C>)GuiHandler.getContainerType(containerName);
         ScreenManager.registerFactory(type, factory);
@@ -189,6 +186,15 @@ public class FHMain {
         @SubscribeEvent
         public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
             event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
+        }
+
+        @SubscribeEvent
+        @OnlyIn(Dist.CLIENT)
+        public static void onRenderTypeSetup(FMLClientSetupEvent event) {
+            // Register screens
+            ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
+            // Register translucent render type
+            RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
         }
     }
 
