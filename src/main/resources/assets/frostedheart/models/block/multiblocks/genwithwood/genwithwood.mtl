@@ -1,0 +1,6 @@
+# Made in Blockbench 3.7.5
+newmtl m_0
+map_Kd frostedheart:block/multiblocks/crudegeneratorstone
+newmtl m_1
+map_Kd frostedheart:block/multiblocks/crudegeneratorfuel
+newmtl none

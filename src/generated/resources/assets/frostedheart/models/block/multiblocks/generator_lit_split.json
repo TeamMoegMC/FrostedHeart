@@ -5,7 +5,7 @@
   },
   "loader": "immersiveengineering:basic_split",
   "dynamic": false,
-  "base_model": "frostedheart:block/multiblocks/generator",
+  "base_model": "frostedheart:block/multiblocks/generator_lit",
   "split_parts": [
     [
       -1,

@@ -1,21 +1,40 @@
 {
   "variants": {
-    "facing=north": {
+    "facing=north,lit=false": {
       "model": "frostedheart:block/multiblocks/generator_split",
       "uvlock": true
     },
-    "facing=south": {
+    "facing=south,lit=false": {
       "model": "frostedheart:block/multiblocks/generator_split",
       "y": 180,
       "uvlock": true
     },
-    "facing=west": {
+    "facing=west,lit=false": {
       "model": "frostedheart:block/multiblocks/generator_split",
       "y": 270,
       "uvlock": true
     },
-    "facing=east": {
+    "facing=east,lit=false": {
       "model": "frostedheart:block/multiblocks/generator_split",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=north,lit=true": {
+      "model": "frostedheart:block/multiblocks/generator_lit_split",
+      "uvlock": true
+    },
+    "facing=south,lit=true": {
+      "model": "frostedheart:block/multiblocks/generator_lit_split",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,lit=true": {
+      "model": "frostedheart:block/multiblocks/generator_lit_split",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=east,lit=true": {
+      "model": "frostedheart:block/multiblocks/generator_lit_split",
       "y": 90,
       "uvlock": true
     }

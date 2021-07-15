@@ -1,0 +1,18 @@
+{
+  "itemGroup.frostedheart": "冰冻之心",
+  "block.frostedheart.generator_brick": "能量塔砖",
+  "block.frostedheart.generator_core_t1": "能量塔核心",
+  "block.frostedheart.generator_amplifier_r1": "能量塔增幅器",
+  "block.frostedheart.rye_block": "黑麦",
+  "block.frostedheart.rye": "黑麦穗",
+  "block.frostedheart.rye_bread": "黑麦面包",
+  "item.frostedheart.energy_core": "能量核心",
+  "frostedheart.tooltip.f3_average_temperature": "平均气温: %s°C",
+  "frostedheart.tooltip.f3_invalid_chunk_data": "区块数据不可用",
+  "frostedheart.gui.generator.temperature.level": "温度增幅: ",
+  "frostedheart.gui.generator.range.level": "增温范围: ",
+  "frostedheart.gui.generator.mode.on": "开启能量塔",
+  "frostedheart.gui.generator.mode.off": "关闭能量塔",
+  "frostedheart.gui.generator.overdrive.on": "开启超频",
+  "frostedheart.gui.generator.overdrive.off": "关闭超频"
+}

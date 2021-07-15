@@ -1,11 +1,12 @@
 {
+  "itemGroup.frostedheart": "Frosted Heart",
   "block.frostedheart.generator_brick": "Generator Brick",
   "block.frostedheart.generator_core_t1": "Generator Core",
   "block.frostedheart.generator_amplifier_r1": "Generator Amplifier",
   "block.frostedheart.rye_block": "Rye",
-
+  "block.frostedheart.rye": "Rye Ears",
+  "block.frostedheart.rye_bread": "Rye Bread",
   "item.frostedheart.energy_core": "Energy Core",
-
   "frostedheart.tooltip.f3_average_temperature": "Average Temperature: %s°C",
   "frostedheart.tooltip.f3_invalid_chunk_data": "Invalid Chunk Data",
   "frostedheart.gui.generator.temperature.level": "Temperature Increment: ",
