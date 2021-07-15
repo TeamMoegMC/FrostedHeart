@@ -1,5 +1,5 @@
 /*
- * Original work by AlcatrazEscapee
+ * Based on the original work by AlcatrazEscapee in TFC ChunkData.
  * Work under Copyright. Licensed under the EUPL.
  * See the project README.md and LICENSE.txt for more information.
  */
@@ -8,6 +8,8 @@ package com.teammoeg.frostedheart.world.chunkdata;
 
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.network.ChunkWatchPacket;
+import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.TemperatureChangePacket;
 import com.teammoeg.frostedheart.world.unused.gen.ChunkDataProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -19,6 +21,7 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
@@ -35,7 +38,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * If on client, will query capability, falling back to cache, and send request packets if necessary
      * If on server, will either query capability falling back to cache, or query provider to generate the data.
      *
-     * @see ChunkDataProvider#get(ChunkPos, Status) to directly force chunk generation, or if a world is not available
      * @see ChunkDataCache#get(ChunkPos) to directly access the cache
      */
     public static ChunkData get(IWorld world, ChunkPos pos) {
@@ -58,58 +60,55 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     /**
-     * Used on a ServerWorld context to change current ChunkData for both client and server side cache.
+     * Used on a ServerWorld context to add temperature in certain 3D region in a ChunkData instance
+     * Updates server side cache first. Then send a sync packet to every client.
+     * @see TemperatureChangePacket
      */
-    public static void changeChunkData(IWorld world, ChunkPos chunkPos, ChunkMatrix layer) {
+    private static void addTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
                     dataIn -> {
                         ChunkDataCache.SERVER.update(chunkPos, dataIn);
-                        ChunkDataCache.CLIENT.update(chunkPos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.setChunkMatrix(layer);
-        }
-    }
-
-    public static void addTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
-        if (world != null && !world.isRemote()) {
-            IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
-            LazyOptional<ChunkData> capability = ChunkData.getCapability(chunk);
-            System.out.println("CAP - "+capability);
-            ChunkData data = capability.map(
-                    dataIn -> {
-                        ChunkDataCache.SERVER.update(chunkPos, dataIn);
-                        System.out.println("FH - Server Updated");
-                        ChunkDataCache.CLIENT.update(chunkPos, dataIn);
-                        System.out.println("FH - Client Updated");
-                        return dataIn;
-                    }).orElseGet(() -> {
-                System.out.println("FH - Cap Is Empty");
-                return ChunkDataCache.SERVER.getOrCreate(chunkPos);
-            });
             data.chunkMatrix.addTemp(fromX, fromY, fromZ, toX, toY, toZ, tempMod);
+            PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
-    public static void setTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte newTemp) {
+    /**
+     * Used on a ServerWorld context to set temperature in certain 3D region in a ChunkData instance
+     * Updates server side cache first. Then send a sync packet to every client.
+     * @see TemperatureChangePacket
+     */
+    private static void setTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte newTemp) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
                     dataIn -> {
                         ChunkDataCache.SERVER.update(chunkPos, dataIn);
-                        ChunkDataCache.CLIENT.update(chunkPos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
             data.chunkMatrix.setTemp(fromX, fromY, fromZ, toX, toY, toZ, newTemp);
+            PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
+    /**
+     * Helper method to map actual BlockPos to relative BlockPos in a chunk
+     */
     private static int getChunkRelativePos(int actualPos) {
         return actualPos < 0 ? actualPos % 16 + 15 : actualPos % 16;
     }
 
+    /**
+     * Used on a ServerWorld context to add temperature in a cubic region
+     * @param world must be server side
+     * @param heatPos the position of the heating block, at the center of the cube
+     * @param range the distance from the heatPos to the boundary
+     * @param tempMod the temperature added
+     */
     public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
         int sourceX = heatPos.getX(), sourceY = heatPos.getY(), sourceZ = heatPos.getZ();
         int sourceRelativeX = getChunkRelativePos(sourceX);
@@ -207,6 +206,13 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         }
     }
 
+    /**
+     * Used on a ServerWorld context to set temperature in a cubic region
+     * @param world must be server side
+     * @param heatPos the position of the heating block, at the center of the cube
+     * @param range the distance from the heatPos to the boundary
+     * @param tempMod the new temperature
+     */
     public static void setTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
         int sourceX = heatPos.getX(), sourceY = heatPos.getY(), sourceZ = heatPos.getZ();
         int sourceRelativeX = getChunkRelativePos(sourceX);
@@ -362,6 +368,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public ChunkWatchPacket getUpdatePacket ()
     {
         return new ChunkWatchPacket(pos.x, pos.z, chunkMatrix);
+    }
+
+    public TemperatureChangePacket getTempChangePacket ()
+    {
+        return new TemperatureChangePacket(pos.x, pos.z, chunkMatrix);
     }
 
     /**

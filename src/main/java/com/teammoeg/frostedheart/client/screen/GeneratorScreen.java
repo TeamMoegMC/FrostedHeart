@@ -45,7 +45,7 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setWorking(!btn.getState());
                     tag.putBoolean("isWorking", tile.isWorking());
-                    PacketHandler.get().sendToServer(new MessageTileSync(tile.master(), tag));
+                    PacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
         this.addButton(new GuiButtonBoolean(guiLeft+101, guiTop+35, 19, 10, "", tile.isOverdrive(), TEXTURE, 0, 245, 0,
@@ -53,7 +53,7 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setOverdrive(!btn.getState());
                     tag.putBoolean("isOverdrive", tile.isOverdrive());
-                    PacketHandler.get().sendToServer(new MessageTileSync(tile.master(), tag));
+                    PacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
     }

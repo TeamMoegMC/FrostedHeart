@@ -16,6 +16,11 @@ public class PacketHandler
         CHANNEL.send(target, message);
     }
 
+    public static void sendToServer(Object message)
+    {
+        CHANNEL.sendToServer(message);
+    }
+
     public static SimpleChannel get()
     {
         return CHANNEL;
@@ -32,5 +37,6 @@ public class PacketHandler
             t.process(ctx);
             ctx.get().setPacketHandled(true);
         });
+        CHANNEL.registerMessage(id++, TemperatureChangePacket.class, TemperatureChangePacket::encode, TemperatureChangePacket::new, TemperatureChangePacket::handle);
     }
 }
