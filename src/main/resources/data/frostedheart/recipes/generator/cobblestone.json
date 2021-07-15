@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:generator",
+  "result": {
+    "item": "minecraft:cobblestone"
+  },
+  "input": {
+    "item": "minecraft:charcoal"
+  },
+  "time": 1000
+}

@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:generator",
   "result": {
-    "tag": "forge:slag"
+    "item": "minecraft:stone"
   },
   "input": {
-    "tag": "minecraft:coals"
+    "item": "minecraft:coal"
   },
-  "time": 1000
+  "time": 500
 }

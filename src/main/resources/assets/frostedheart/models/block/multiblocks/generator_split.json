@@ -5,7 +5,7 @@
   },
   "loader": "immersiveengineering:basic_split",
   "dynamic": false,
-  "base_model": "frostedheart:block/multiblocks/generator_lit",
+  "base_model": "frostedheart:block/multiblocks/generator",
   "split_parts": [
     [
       -1,
@@ -100,22 +100,27 @@
     [
       -1,
       1,
-      0
-    ],
-    [
-      0,
-      1,
       -1
     ],
     [
-      0,
+      -1,
       1,
       1
     ],
     [
       1,
       1,
-      0
+      -1
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      -1,
+      2,
+      -1
     ],
     [
       -1,
@@ -123,6 +128,11 @@
       0
     ],
     [
+      -1,
+      2,
+      1
+    ],
+    [
       0,
       2,
       -1
@@ -135,7 +145,17 @@
     [
       1,
       2,
+      -1
+    ],
+    [
+      1,
+      2,
       0
+    ],
+    [
+      1,
+      2,
+      1
     ]
   ]
 }

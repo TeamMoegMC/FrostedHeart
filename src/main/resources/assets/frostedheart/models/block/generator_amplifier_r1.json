@@ -1,6 +1,11 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "all": "frostedheart:block/generator_amplifier_r1"
+    "up": "frostedheart:block/generator_metal_3",
+    "west": "frostedheart:block/generator_metal_2",
+    "south": "frostedheart:block/generator_metal_1",
+    "down": "frostedheart:block/generator_metal_3",
+    "east": "frostedheart:block/generator_metal_2",
+    "north": "frostedheart:block/generator_metal_1"
   }
 }

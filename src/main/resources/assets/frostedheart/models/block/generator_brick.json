@@ -1,6 +1,8 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube_bottom_top",
   "textures": {
-    "all": "frostedheart:block/generator_brick"
+    "bottom": "frostedheart:block/generator_brick_top",
+    "top": "frostedheart:block/generator_brick_top",
+    "side": "frostedheart:block/generator_brick_side"
   }
 }

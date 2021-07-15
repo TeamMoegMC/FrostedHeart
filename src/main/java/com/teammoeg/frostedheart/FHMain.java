@@ -189,6 +189,7 @@ public class FHMain {
             ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
             // Register translucent render type
             RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
+            RenderTypeLookup.setRenderLayer(FHContent.Multiblocks.generator, RenderType.getCutoutMipped());
         }
     }
 

@@ -43,6 +43,7 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 
     protected void registerStatesAndModels() {
         createMultiblock(FHContent.Multiblocks.generator, split(obj("block/multiblocks/generator.obj"), FHMultiblocks.GENERATOR));
+//        createMultiblock(FHContent.Multiblocks.generator, split(obj("block/multiblocks/generator_lit.obj"), FHMultiblocks.GENERATOR));
     }
 
     @Nonnull
