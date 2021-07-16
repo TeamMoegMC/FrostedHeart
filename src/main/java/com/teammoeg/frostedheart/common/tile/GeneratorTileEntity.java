@@ -295,9 +295,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void tick() {
         checkForNeedlessTicking();
-        int actualTemp = getActualTemp();
-        int actualRange = getActualRange();
-        // spawn smoke particle
+        // client side: spawn smoke particle
         if (world != null && world.isRemote && formed && !isDummy() && getIsActive()) {
             BlockPos blockpos = this.getPos();
             Random random = world.rand;
@@ -309,17 +307,20 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             }
         }
 
-        // logic
+        // server side: if we turn off working during process, we must reset everything including temperature and active state
         if (!world.isRemote && formed && !isDummy() && !isWorking()) {
             setActive(false);
             process = 0;
             processMax = 0;
             if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE) {
-                ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
+                ChunkData.setTempToCube(world, getPos(), getActualRange(), WorldClimate.WORLD_TEMPERATURE);
             }
         }
+
+        // server side: if working is turned on, process logic starts
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();
+            final boolean overdriveBeforeTick = isOverdrive();
             // just finished process or during process
             if (process > 0) {
                 if (inventory.get(INPUT_SLOT).isEmpty()) {
@@ -362,14 +363,15 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 }
             }
 
-            // set activity status
+            // server side: process logic ends, now we set activity state and temperature
             final boolean activeAfterTick = getIsActive();
+            final boolean overdriveAfterTick = isOverdrive();
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
                 if (activeAfterTick) {
-                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
+                    ChunkData.addTempToCube(world, getPos(), getActualRange(), (byte) getActualTemp());
                 } else {
-                    ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
+                    ChunkData.setTempToCube(world, getPos(), getActualRange(), WorldClimate.WORLD_TEMPERATURE);
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
@@ -381,12 +383,11 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                                 ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
             } else if (activeAfterTick) {
-                if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + actualTemp) {
-                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
+                if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + getActualTemp()) {
+                    ChunkData.addTempToCube(world, getPos(), getActualRange(), (byte) getActualTemp());
                 }
             }
         }
-
     }
 
     public void setWorking(boolean working) {
