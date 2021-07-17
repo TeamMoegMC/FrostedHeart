@@ -23,23 +23,16 @@ public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecip
     @Override
     public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
         ItemStack output = readOutput(json.get("result"));
-        ItemStack input = readInput(json.get("input"));
+        IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
         int time = JSONUtils.getInt(json, "time");
         return new GeneratorRecipe(recipeId, output, input, time);
-    }
-
-    protected ItemStack readInput(JsonElement inputObject) {
-        if (inputObject.isJsonObject() && inputObject.getAsJsonObject().has("item"))
-            return ShapedRecipe.deserializeItem(inputObject.getAsJsonObject());
-        IngredientWithSize outgredient = IngredientWithSize.deserialize(inputObject);
-        return IEApi.getPreferredStackbyMod(outgredient.getMatchingStacks());
     }
 
     @Nullable
     @Override
     public GeneratorRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
         ItemStack output = buffer.readItemStack();
-        ItemStack input = ItemStack.read(buffer.readCompoundTag());
+        IngredientWithSize input = IngredientWithSize.read(buffer);
         int time = buffer.readInt();
         return new GeneratorRecipe(recipeId, output, input, time);
     }
@@ -47,7 +40,7 @@ public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecip
     @Override
     public void write(PacketBuffer buffer, GeneratorRecipe recipe) {
         buffer.writeItemStack(recipe.output);
-        recipe.input.write(buffer.readCompoundTag());
+        recipe.input.write(buffer);
         buffer.writeInt(recipe.time);
     }
 }

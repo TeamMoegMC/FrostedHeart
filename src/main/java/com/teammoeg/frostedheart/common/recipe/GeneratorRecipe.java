@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.common.recipe;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
@@ -15,11 +16,11 @@ public class GeneratorRecipe extends IESerializableRecipe {
     public static IRecipeType<GeneratorRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
 
-    public final ItemStack input;
+    public final IngredientWithSize input;
     public final ItemStack output;
     public final int time;
 
-    public GeneratorRecipe(ResourceLocation id, ItemStack output, ItemStack input, int time) {
+    public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
         super(output, TYPE, id);
         this.output = output;
         this.input = input;
