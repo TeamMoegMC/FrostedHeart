@@ -16,6 +16,9 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
@@ -340,6 +343,34 @@ public class FHMain {
                     list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
                 }
             }
+        }
+
+        @SubscribeEvent
+        public static void renderGameOverlay(RenderGameOverlayEvent event) {
+            Minecraft mc = Minecraft.getInstance();
+            IngameGui gui = mc.ingameGUI;
+            FontRenderer font = gui.getFontRenderer();
+            ResourceLocation tempBarLocation = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_bar.png");
+
+            mc.getProfiler().startSection("frostedheart_temperature");
+            mc.getTextureManager().bindTexture(tempBarLocation);
+
+            if (Minecraft.isGuiEnabled() && mc.playerController.gameIsSurvivalOrAdventure()) {
+                gui.blit(event.getMatrixStack(), 0, 0, 0, 0, 148, 34);
+                if (mc.world != null) {
+                    BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
+                    if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
+                        ChunkData data = ChunkData.get(mc.world, pos);
+                        if (data.getStatus().isAtLeast(ChunkData.Status.CLIENT)) {
+                            font.drawString(event.getMatrixStack(), String.format("%.1f", data.getTemperatureAtBlock(pos)), 5, 14, 0);
+                            font.drawString(event.getMatrixStack(), I18n.format("gui.frostedheart.temperature.desc"), 33, 8, -1);
+                        }
+                    }
+                }
+            }
+
+            mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+            mc.getProfiler().endSection();
         }
     }
 }
