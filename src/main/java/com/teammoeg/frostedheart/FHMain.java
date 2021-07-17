@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
@@ -16,18 +16,15 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IHasContainer;
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
@@ -47,6 +44,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
@@ -63,6 +61,7 @@ import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,6 +77,7 @@ public class FHMain {
     private static final Logger LOGGER = LogManager.getLogger(FHMain.MODNAME);
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
+    public static String FIRST_NBT = "first";
 
     public static ItemGroup itemGroup = new ItemGroup(MODID)
     {
@@ -295,6 +295,29 @@ public class FHMain {
                 }
             }
 
+        }
+
+        @SubscribeEvent
+        public static void addManualToPlayer(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
+
+
+            CompoundNBT nbt = event.getPlayer().getPersistentData();
+            CompoundNBT persistent;
+
+            if (nbt.contains(PlayerEntity.PERSISTED_NBT_TAG)) {
+                persistent = nbt.getCompound(PlayerEntity.PERSISTED_NBT_TAG);
+            } else {
+                nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
+            }
+            if (!persistent.contains(FIRST_NBT)) {
+                persistent.putBoolean(FIRST_NBT, false);
+
+                event.getPlayer().inventory.addItemStackToInventory(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
+                event.getPlayer().inventory.armorInventory.set(3, new ItemStack(SItems.WOOL_HAT));
+                event.getPlayer().inventory.armorInventory.set(2, new ItemStack(SItems.WOOL_JACKET));
+                event.getPlayer().inventory.armorInventory.set(1, new ItemStack(SItems.WOOL_PANTS));
+                event.getPlayer().inventory.armorInventory.set(0, new ItemStack(SItems.WOOL_BOOTS));
+            }
         }
     }
 
