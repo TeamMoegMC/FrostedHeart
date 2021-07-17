@@ -7,6 +7,7 @@
   "item.frostedheart.rye": "Rye Ears",
   "item.frostedheart.rye_bread": "Rye Bread",
   "item.frostedheart.energy_core": "Energy Core",
+  "item.frostedheart.generator_ash": "Generator Ash",
   "frostedheart.tooltip.f3_average_temperature": "Average Temperature: %s°C",
   "frostedheart.tooltip.f3_invalid_chunk_data": "Invalid Chunk Data",
   "frostedheart.gui.generator.temperature.level": "Temperature Increment: ",
@@ -14,5 +15,6 @@
   "frostedheart.gui.generator.mode.on": "Turn On Generator",
   "frostedheart.gui.generator.mode.off": "Turn Off Generator",
   "frostedheart.gui.generator.overdrive.on": "Turn On Overdrive",
-  "frostedheart.gui.generator.overdrive.off": "Turn Off Overdrive"
+  "frostedheart.gui.generator.overdrive.off": "Turn Off Overdrive",
+  "gui.frostedheart.temperature.desc": "Average Temperature"
 }

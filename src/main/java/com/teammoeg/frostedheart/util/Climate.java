@@ -18,8 +18,7 @@ import java.util.Random;
  * Central class for all FH climate requirements.
  * This is only valid in the overworld!
  */
-public final class Climate
-{
+public final class Climate {
     /**
      * Constants for temperature calculation. Do not reference these directly, they do not have much meaning outside the context they are used in
      */
@@ -45,8 +44,7 @@ public final class Climate
      * Will be valid when used on both logical sides.
      * MUST NOT be used by world generation, it should use {@link Climate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
      */
-    public static float getTemperature(IWorld world, BlockPos pos)
-    {
+    public static float getTemperature(IWorld world, BlockPos pos) {
         ChunkData data = ChunkData.get(world, pos);
         return calculateTemperature(pos.getZ(), pos.getY(), data.getTemperatureAtBlock(pos));
     }
@@ -56,34 +54,29 @@ public final class Climate
      * References: 0.15 ~ 0 C (freezing point of water). Vanilla typically ranges from -0.5 to +1 in the overworld.
      * This scales 0 C -> 0.15, -30 C -> -0.51, +30 C -> 0.801
      */
-    public static float toVanillaTemperature(float actualTemperature)
-    {
+    public static float toVanillaTemperature(float actualTemperature) {
         return actualTemperature * 0.0217f + 0.15f;
     }
 
     /**
      * The reverse of {@link Climate#toVanillaTemperature(float)}
      */
-    public static float toActualTemperature(float vanillaTemperature)
-    {
+    public static float toActualTemperature(float vanillaTemperature) {
         return (vanillaTemperature - 0.15f) / 0.0217f;
     }
 
-    public static float calculateMonthlyTemperature(int z, int y, float averageTemperature, float monthTemperatureModifier)
-    {
+    public static float calculateMonthlyTemperature(int z, int y, float averageTemperature, float monthTemperatureModifier) {
         float temperatureScale = 20000;
         float monthTemperature = monthTemperatureModifier * INoise1D.triangle(LATITUDE_TEMPERATURE_VARIANCE_AMPLITUDE, LATITUDE_TEMPERATURE_VARIANCE_MEAN, 1 / (2 * temperatureScale), 0, z);
         float elevationTemperature = MathHelper.clamp((y - 63) * 0.16225f, 0, 17.822f);
         return averageTemperature + monthTemperature - elevationTemperature;
     }
 
-    public static float calculateTemperature(BlockPos pos, float averageTemperature)
-    {
+    public static float calculateTemperature(BlockPos pos, float averageTemperature) {
         return calculateTemperature(pos.getZ(), pos.getY(), averageTemperature);
     }
 
-    public static float calculateTemperature(int z, int y, float averageTemperature)
-    {
+    public static float calculateTemperature(int z, int y, float averageTemperature) {
         // Finally, add elevation based temperature
         // Internationally accepted average lapse time is 6.49 K / 1000 m, for the first 11 km of the atmosphere. Our temperature is scales the 110 m against 2750 m, so that gives us a change of 1.6225 / 10 blocks.
         float elevationTemperature = MathHelper.clamp((y - 63) * 0.16225f, 0, 17.822f);
@@ -92,5 +85,6 @@ public final class Climate
         return averageTemperature - elevationTemperature;
     }
 
-    private Climate() {}
+    private Climate() {
+    }
 }

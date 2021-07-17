@@ -28,7 +28,7 @@ public class FHBaseBlock extends Block implements IWaterLoggable {
 
         FHContent.registeredFHBlocks.add(this);
         Item item = createItemBlock.apply(this, new Item.Properties().group(FHMain.itemGroup));
-        if(item != null) {
+        if (item != null) {
             item.setRegistryName(registryName);
             FHContent.registeredFHItems.add(item);
         }
@@ -38,27 +38,24 @@ public class FHBaseBlock extends Block implements IWaterLoggable {
         return new ResourceLocation(FHMain.MODID, name);
     }
 
-    protected BlockState getInitDefaultState()
-    {
+    protected BlockState getInitDefaultState() {
         BlockState state = this.stateContainer.getBaseState();
-        if(state.hasProperty(BlockStateProperties.WATERLOGGED))
+        if (state.hasProperty(BlockStateProperties.WATERLOGGED))
             state = state.with(BlockStateProperties.WATERLOGGED, Boolean.FALSE);
         return state;
     }
 
-    public FHBaseBlock setLightOpacity(int opacity)
-    {
+    public FHBaseBlock setLightOpacity(int opacity) {
         lightOpacity = opacity;
         return this;
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos)
-    {
-        if(state.isOpaqueCube(worldIn, pos))
+    public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
+        if (state.isOpaqueCube(worldIn, pos))
             return lightOpacity;
         else
-            return state.propagatesSkylightDown(worldIn, pos) ? 0: 1;
+            return state.propagatesSkylightDown(worldIn, pos) ? 0 : 1;
     }
 }

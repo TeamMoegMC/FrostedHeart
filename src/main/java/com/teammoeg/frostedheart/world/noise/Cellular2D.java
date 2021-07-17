@@ -30,8 +30,7 @@
 
 package com.teammoeg.frostedheart.world.noise;
 
-public class Cellular2D implements INoise2D
-{
+public class Cellular2D implements INoise2D {
     private final int seed;
     private final float jitter;
     private final CellularNoiseType returnType;
@@ -44,37 +43,31 @@ public class Cellular2D implements INoise2D
     // Modifiers
     private float frequency;
 
-    public Cellular2D(long seed)
-    {
+    public Cellular2D(long seed) {
         this(seed, 1.0f, CellularNoiseType.VALUE);
     }
 
-    public Cellular2D(long seed, float jitter, CellularNoiseType returnType)
-    {
+    public Cellular2D(long seed, float jitter, CellularNoiseType returnType) {
         this.seed = (int) seed;
         this.jitter = jitter;
         this.returnType = returnType;
         this.frequency = 1;
     }
 
-    public float getCenterX()
-    {
+    public float getCenterX() {
         return centerX;
     }
 
-    public float getCenterY()
-    {
+    public float getCenterY() {
         return centerY;
     }
 
-    public float get(CellularNoiseType alternateType)
-    {
+    public float get(CellularNoiseType alternateType) {
         return alternateType.calculate(distance0, distance1, closestHash);
     }
 
     @Override
-    public float noise(float x, float y)
-    {
+    public float noise(float x, float y) {
         x *= frequency;
         y *= frequency;
 
@@ -90,12 +83,10 @@ public class Cellular2D implements INoise2D
         int xPrimed = (xr - 1) * NoiseUtil.PRIME_X;
         int yPrimedBase = (yr - 1) * NoiseUtil.PRIME_Y;
 
-        for (int xi = xr - 1; xi <= xr + 1; xi++)
-        {
+        for (int xi = xr - 1; xi <= xr + 1; xi++) {
             int yPrimed = yPrimedBase;
 
-            for (int yi = yr - 1; yi <= yr + 1; yi++)
-            {
+            for (int yi = yr - 1; yi <= yr + 1; yi++) {
                 int hash = NoiseUtil.hashPrimed(seed, xPrimed, yPrimed);
                 int idx = hash & (255 << 1);
 
@@ -108,8 +99,7 @@ public class Cellular2D implements INoise2D
                 float newDistance = vecX * vecX + vecY * vecY;
 
                 distance1 = NoiseUtil.fastMax(NoiseUtil.fastMin(distance1, newDistance), distance0);
-                if (newDistance < distance0)
-                {
+                if (newDistance < distance0) {
                     distance0 = newDistance;
                     closestHash = hash;
                     centerX = cellX;
@@ -127,8 +117,7 @@ public class Cellular2D implements INoise2D
     }
 
     @Override
-    public Cellular2D spread(float scaleFactor)
-    {
+    public Cellular2D spread(float scaleFactor) {
         this.frequency *= scaleFactor;
         return this;
     }

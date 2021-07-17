@@ -33,8 +33,7 @@ package com.teammoeg.frostedheart.world.noise;
 
 import static com.teammoeg.frostedheart.world.noise.NoiseUtil.*;
 
-public class Cellular3D implements INoise3D
-{
+public class Cellular3D implements INoise3D {
     private final int seed;
     private final float jitter;
     private final CellularNoiseType returnType;
@@ -42,37 +41,31 @@ public class Cellular3D implements INoise3D
     private float centerX, centerY, centerZ;
     private float frequency;
 
-    public Cellular3D(long seed)
-    {
+    public Cellular3D(long seed) {
         this(seed, 1.0f, CellularNoiseType.VALUE);
     }
 
-    public Cellular3D(long seed, float jitter, CellularNoiseType returnType)
-    {
+    public Cellular3D(long seed, float jitter, CellularNoiseType returnType) {
         this.seed = (int) seed;
         this.jitter = jitter;
         this.returnType = returnType;
         this.frequency = 1;
     }
 
-    public float getCenterX()
-    {
+    public float getCenterX() {
         return centerX;
     }
 
-    public float getCenterY()
-    {
+    public float getCenterY() {
         return centerY;
     }
 
-    public float getCenterZ()
-    {
+    public float getCenterZ() {
         return centerZ;
     }
 
     @Override
-    public float noise(float x, float y, float z)
-    {
+    public float noise(float x, float y, float z) {
         x *= frequency;
         y *= frequency;
         z *= frequency;
@@ -91,16 +84,13 @@ public class Cellular3D implements INoise3D
         int yPrimedBase = (yr - 1) * PRIME_Y;
         int zPrimedBase = (zr - 1) * PRIME_Z;
 
-        for (int xi = xr - 1; xi <= xr + 1; xi++)
-        {
+        for (int xi = xr - 1; xi <= xr + 1; xi++) {
             int yPrimed = yPrimedBase;
 
-            for (int yi = yr - 1; yi <= yr + 1; yi++)
-            {
+            for (int yi = yr - 1; yi <= yr + 1; yi++) {
                 int zPrimed = zPrimedBase;
 
-                for (int zi = zr - 1; zi <= zr + 1; zi++)
-                {
+                for (int zi = zr - 1; zi <= zr + 1; zi++) {
                     int hash = NoiseUtil.hashPrimed(seed, xPrimed, yPrimed, zPrimed);
                     int idx = hash & (255 << 2);
 
@@ -111,8 +101,7 @@ public class Cellular3D implements INoise3D
                     float newDistance = vecX * vecX + vecY * vecY + vecZ * vecZ;
 
                     distance1 = NoiseUtil.fastMax(NoiseUtil.fastMin(distance1, newDistance), distance0);
-                    if (newDistance < distance0)
-                    {
+                    if (newDistance < distance0) {
                         distance0 = newDistance;
                         closestHash = hash;
                         centerX = vecX + x;
@@ -134,8 +123,7 @@ public class Cellular3D implements INoise3D
     }
 
     @Override
-    public Cellular3D spread(float scaleFactor)
-    {
+    public Cellular3D spread(float scaleFactor) {
         this.frequency *= scaleFactor;
         return this;
     }

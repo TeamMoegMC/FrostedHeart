@@ -46,6 +46,7 @@ public class FHContent {
         public static Item energy_core;
         public static Item rye;
         public static Item rye_bread;
+        public static Item generator_ash;
     }
 
     public static class Fluids {
@@ -73,7 +74,7 @@ public class FHContent {
         FHContent.Items.energy_core = new FHBaseItem("energy_core", properties);
         FHContent.Items.rye = new FHBaseItem("rye", properties);
         FHContent.Items.rye_bread = new FHBaseItem("rye_bread", properties.food((new Food.Builder()).hunger(5).saturation(0.6F).build()));
-
+        Items.generator_ash = new FHBaseItem("generator_ash", properties);
 
         // Init multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();
