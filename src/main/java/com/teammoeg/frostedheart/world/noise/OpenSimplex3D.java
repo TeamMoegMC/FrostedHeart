@@ -30,22 +30,19 @@
 
 package com.teammoeg.frostedheart.world.noise;
 
-public class OpenSimplex3D implements INoise3D
-{
+public class OpenSimplex3D implements INoise3D {
     private static final float SKEW_XY = (float) 0.211324865405187;
     private static final float SKEW_Z = (float) 0.577350269189626;
 
     private final int seed;
 
-    public OpenSimplex3D(long seed)
-    {
+    public OpenSimplex3D(long seed) {
         this.seed = (int) seed;
     }
 
     @Override
     @SuppressWarnings({"UnnecessaryLocalVariable", "NumericOverflow"})
-    public float noise(float x, float y, float z)
-    {
+    public float noise(float x, float y, float z) {
         // ImproveXYPlanes option
         float xy = x + y;
         float s2 = xy * -SKEW_XY;
@@ -93,18 +90,14 @@ public class OpenSimplex3D implements INoise3D
 
         boolean skip5 = false;
         float a2 = xAFlipMask0 + a0;
-        if (a2 > 0)
-        {
+        if (a2 > 0) {
             float x2 = x0 - (xNMask | 1);
             float y2 = y0;
             float z2 = z0;
             value += (a2 * a2) * (a2 * a2) * NoiseUtil.gradientCoord(seed, i + (~xNMask & NoiseUtil.PRIME_X), j + (yNMask & NoiseUtil.PRIME_Y), k + (zNMask & NoiseUtil.PRIME_Z), x2, y2, z2);
-        }
-        else
-        {
+        } else {
             float a3 = yAFlipMask0 + zAFlipMask0 + a0;
-            if (a3 > 0)
-            {
+            if (a3 > 0) {
                 float x3 = x0;
                 float y3 = y0 - (yNMask | 1);
                 float z3 = z0 - (zNMask | 1);
@@ -112,8 +105,7 @@ public class OpenSimplex3D implements INoise3D
             }
 
             float a4 = xAFlipMask1 + a1;
-            if (a4 > 0)
-            {
+            if (a4 > 0) {
                 float x4 = (xNMask | 1) + x1;
                 float y4 = y1;
                 float z4 = z1;
@@ -124,18 +116,14 @@ public class OpenSimplex3D implements INoise3D
 
         boolean skip9 = false;
         float a6 = yAFlipMask0 + a0;
-        if (a6 > 0)
-        {
+        if (a6 > 0) {
             float x6 = x0;
             float y6 = y0 - (yNMask | 1);
             float z6 = z0;
             value += (a6 * a6) * (a6 * a6) * NoiseUtil.gradientCoord(seed, i + (xNMask & NoiseUtil.PRIME_X), j + (~yNMask & NoiseUtil.PRIME_Y), k + (zNMask & NoiseUtil.PRIME_Z), x6, y6, z6);
-        }
-        else
-        {
+        } else {
             float a7 = xAFlipMask0 + zAFlipMask0 + a0;
-            if (a7 > 0)
-            {
+            if (a7 > 0) {
                 float x7 = x0 - (xNMask | 1);
                 float y7 = y0;
                 float z7 = z0 - (zNMask | 1);
@@ -143,8 +131,7 @@ public class OpenSimplex3D implements INoise3D
             }
 
             float a8 = yAFlipMask1 + a1;
-            if (a8 > 0)
-            {
+            if (a8 > 0) {
                 float x8 = x1;
                 float y8 = (yNMask | 1) + y1;
                 float z8 = z1;
@@ -155,29 +142,24 @@ public class OpenSimplex3D implements INoise3D
 
         boolean skipD = false;
         float aA = zAFlipMask0 + a0;
-        if (aA > 0)
-        {
+        if (aA > 0) {
             float xA = x0;
             float yA = y0;
             float zA = z0 - (zNMask | 1);
             value += (aA * aA) * (aA * aA) * NoiseUtil.gradientCoord(seed,
-                i + (xNMask & NoiseUtil.PRIME_X), j + (yNMask & NoiseUtil.PRIME_Y), k + (~zNMask & NoiseUtil.PRIME_Z), xA, yA, zA);
-        }
-        else
-        {
+                    i + (xNMask & NoiseUtil.PRIME_X), j + (yNMask & NoiseUtil.PRIME_Y), k + (~zNMask & NoiseUtil.PRIME_Z), xA, yA, zA);
+        } else {
             float aB = xAFlipMask0 + yAFlipMask0 + a0;
-            if (aB > 0)
-            {
+            if (aB > 0) {
                 float xB = x0 - (xNMask | 1);
                 float yB = y0 - (yNMask | 1);
                 float zB = z0;
                 value += (aB * aB) * (aB * aB) * NoiseUtil.gradientCoord(seed,
-                    i + (~xNMask & NoiseUtil.PRIME_X), j + (~yNMask & NoiseUtil.PRIME_Y), k + (zNMask & NoiseUtil.PRIME_Z), xB, yB, zB);
+                        i + (~xNMask & NoiseUtil.PRIME_X), j + (~yNMask & NoiseUtil.PRIME_Y), k + (zNMask & NoiseUtil.PRIME_Z), xB, yB, zB);
             }
 
             float aC = zAFlipMask1 + a1;
-            if (aC > 0)
-            {
+            if (aC > 0) {
                 float xC = x1;
                 float yC = y1;
                 float zC = (zNMask | 1) + z1;
@@ -186,11 +168,9 @@ public class OpenSimplex3D implements INoise3D
             }
         }
 
-        if (!skip5)
-        {
+        if (!skip5) {
             float a5 = yAFlipMask1 + zAFlipMask1 + a1;
-            if (a5 > 0)
-            {
+            if (a5 > 0) {
                 float x5 = x1;
                 float y5 = (yNMask | 1) + y1;
                 float z5 = (zNMask | 1) + z1;
@@ -198,11 +178,9 @@ public class OpenSimplex3D implements INoise3D
             }
         }
 
-        if (!skip9)
-        {
+        if (!skip9) {
             float a9 = xAFlipMask1 + zAFlipMask1 + a1;
-            if (a9 > 0)
-            {
+            if (a9 > 0) {
                 float x9 = (xNMask | 1) + x1;
                 float y9 = y1;
                 float z9 = (zNMask | 1) + z1;
@@ -210,11 +188,9 @@ public class OpenSimplex3D implements INoise3D
             }
         }
 
-        if (!skipD)
-        {
+        if (!skipD) {
             float aD = xAFlipMask1 + yAFlipMask1 + a1;
-            if (aD > 0)
-            {
+            if (aD > 0) {
                 float xD = (xNMask | 1) + x1;
                 float yD = (yNMask | 1) + y1;
                 float zD = z1;

@@ -2,9 +2,6 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.stereowalker.survive.Survive;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
@@ -18,15 +15,13 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -81,12 +76,10 @@ public class FHMain {
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
 
-    public static ItemGroup itemGroup = new ItemGroup(MODID)
-    {
+    public static ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
         @Nonnull
-        public ItemStack createIcon()
-        {
+        public ItemStack createIcon() {
             return new ItemStack(FHContent.Blocks.generator_core_t1.asItem());
         }
     };

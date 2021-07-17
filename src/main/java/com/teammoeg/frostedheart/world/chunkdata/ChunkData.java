@@ -10,7 +10,6 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.network.ChunkWatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.TemperatureChangePacket;
-import com.teammoeg.frostedheart.world.unused.gen.ChunkDataProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -62,6 +61,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     /**
      * Used on a ServerWorld context to add temperature in certain 3D region in a ChunkData instance
      * Updates server side cache first. Then send a sync packet to every client.
+     *
      * @see TemperatureChangePacket
      */
     private static void addTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
@@ -80,6 +80,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     /**
      * Used on a ServerWorld context to set temperature in certain 3D region in a ChunkData instance
      * Updates server side cache first. Then send a sync packet to every client.
+     *
      * @see TemperatureChangePacket
      */
     private static void setTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte newTemp) {
@@ -104,9 +105,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     /**
      * Used on a ServerWorld context to add temperature in a cubic region
-     * @param world must be server side
+     *
+     * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the cube
-     * @param range the distance from the heatPos to the boundary
+     * @param range   the distance from the heatPos to the boundary
      * @param tempMod the temperature added
      */
     public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
@@ -162,9 +164,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         if (hasNSSide) {
             for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
                 // west side
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit,0, 16, upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, 16, tempMod);
                 // east side
-                addTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit,0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
             }
         }
         if (hasWESide) {
@@ -172,7 +174,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                 // north side
                 addTempToChunk(world, new ChunkPos(x, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
                 // south side
-                addTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit,0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
             }
         }
 
@@ -208,9 +210,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     /**
      * Used on a ServerWorld context to set temperature in a cubic region
-     * @param world must be server side
+     *
+     * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the cube
-     * @param range the distance from the heatPos to the boundary
+     * @param range   the distance from the heatPos to the boundary
      * @param tempMod the new temperature
      */
     public static void setTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
@@ -266,9 +269,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         if (hasNSSide) {
             for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
                 // west side
-                setTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit,0, 16, upperLimit, 16, tempMod);
+                setTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, 16, tempMod);
                 // east side
-                setTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit,0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                setTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
             }
         }
         if (hasWESide) {
@@ -276,7 +279,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                 // north side
                 setTempToChunk(world, new ChunkPos(x, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
                 // south side
-                setTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit,0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                setTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
             }
         }
 
@@ -340,46 +343,40 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         return chunkMatrix.getTemperature(pos);
     }
 
-    public void initChunkMatrix ( byte defaultValue){
+    public void initChunkMatrix(byte defaultValue) {
         chunkMatrix.init(defaultValue);
     }
 
-    public Status getStatus ()
-    {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus (Status status)
-    {
+    public void setStatus(Status status) {
         this.status = status;
     }
 
     /**
      * @return If the current chunk data is empty, then return other
      */
-    public ChunkData ifEmptyGet (Supplier < ChunkData > other)
-    {
+    public ChunkData ifEmptyGet(Supplier<ChunkData> other) {
         return status != Status.EMPTY ? this : other.get();
     }
 
     /**
      * Create an update packet to send to client with necessary information
      */
-    public ChunkWatchPacket getUpdatePacket ()
-    {
+    public ChunkWatchPacket getUpdatePacket() {
         return new ChunkWatchPacket(pos.x, pos.z, chunkMatrix);
     }
 
-    public TemperatureChangePacket getTempChangePacket ()
-    {
+    public TemperatureChangePacket getTempChangePacket() {
         return new TemperatureChangePacket(pos.x, pos.z, chunkMatrix);
     }
 
     /**
      * Called on client, sets to received data
      */
-    public void onUpdatePacket (ChunkMatrix chunkMatrix)
-    {
+    public void onUpdatePacket(ChunkMatrix chunkMatrix) {
         this.chunkMatrix = chunkMatrix;
 
         if (status == Status.CLIENT || status == Status.EMPTY) {
@@ -390,14 +387,12 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     @Override
-    public <T > LazyOptional < T > getCapability(Capability < T > cap, @Nullable Direction side)
-    {
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         return ChunkDataCapability.CAPABILITY.orEmpty(cap, capability);
     }
 
     @Override
-    public CompoundNBT serializeNBT ()
-    {
+    public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
 
         nbt.putByte("status", (byte) status.ordinal());
@@ -408,8 +403,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     @Override
-    public void deserializeNBT (CompoundNBT nbt)
-    {
+    public void deserializeNBT(CompoundNBT nbt) {
         if (nbt != null) {
             status = Status.valueOf(nbt.getByte("status"));
             if (status.isAtLeast(Status.CLIMATE)) {
@@ -419,13 +413,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     @Override
-    public String toString ()
-    {
+    public String toString() {
         return "ChunkData{pos=" + pos + ", status=" + status + ",hashCode=" + Integer.toHexString(hashCode()) + '}';
     }
 
-    private void reset ()
-    {
+    private void reset() {
         chunkMatrix = new ChunkMatrix(WorldClimate.WORLD_TEMPERATURE);
         status = Status.EMPTY;
     }

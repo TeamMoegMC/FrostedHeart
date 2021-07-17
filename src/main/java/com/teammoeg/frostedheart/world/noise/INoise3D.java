@@ -12,12 +12,10 @@ import net.minecraft.util.math.MathHelper;
  * Wrapper for a 3D Noise Layer
  */
 @FunctionalInterface
-public interface INoise3D
-{
+public interface INoise3D {
     float noise(float x, float y, float z);
 
-    default INoise3D octaves(int octaves)
-    {
+    default INoise3D octaves(int octaves) {
         return octaves(octaves, 0.5f);
     }
 
@@ -28,19 +26,16 @@ public interface INoise3D
      * @param persistence The base for each octave's amplitude
      * @return A new noise function
      */
-    default INoise3D octaves(int octaves, float persistence)
-    {
+    default INoise3D octaves(int octaves, float persistence) {
         final float[] frequency = new float[octaves];
         final float[] amplitude = new float[octaves];
-        for (int i = 0; i < octaves; i++)
-        {
+        for (int i = 0; i < octaves; i++) {
             frequency[i] = 1 << i;
             amplitude[i] = (float) Math.pow(persistence, octaves - i);
         }
         return (x, y, z) -> {
             float value = 0;
-            for (int i = 0; i < octaves; i++)
-            {
+            for (int i = 0; i < octaves; i++) {
                 value += INoise3D.this.noise(x / frequency[i], y / frequency[i], z / frequency[i]) * amplitude[i];
             }
             return value;
@@ -52,8 +47,7 @@ public interface INoise3D
      *
      * @return a new noise function
      */
-    default INoise3D ridged()
-    {
+    default INoise3D ridged() {
         return (x, y, z) -> {
             float value = INoise3D.this.noise(x, y, z);
             value = value < 0 ? -value : value;
@@ -66,8 +60,7 @@ public interface INoise3D
      *
      * @return a new noise function
      */
-    default INoise3D abs()
-    {
+    default INoise3D abs() {
         return (x, y, z) -> Math.abs(INoise3D.this.noise(x, y, z));
     }
 
@@ -77,8 +70,7 @@ public interface INoise3D
      * @param levels The number of levels to round to
      * @return a new noise function
      */
-    default INoise3D terraces(int levels)
-    {
+    default INoise3D terraces(int levels) {
         return (x, y, z) -> {
             float value = 0.5f * INoise3D.this.noise(x, y, z) + 0.5f;
             float rounded = (int) (value * levels); // In range [0, levels)
@@ -92,13 +84,11 @@ public interface INoise3D
      * @param scaleFactor The scale for the input params
      * @return a new noise function
      */
-    default INoise3D spread(float scaleFactor)
-    {
+    default INoise3D spread(float scaleFactor) {
         return (x, y, z) -> INoise3D.this.noise(x * scaleFactor, y * scaleFactor, z * scaleFactor);
     }
 
-    default INoise3D scaled(float min, float max)
-    {
+    default INoise3D scaled(float min, float max) {
         return scaled(-1, 1, min, max);
     }
 
@@ -111,8 +101,7 @@ public interface INoise3D
      * @param max    the new maximum value
      * @return a new noise function
      */
-    default INoise3D scaled(float oldMin, float oldMax, float min, float max)
-    {
+    default INoise3D scaled(float oldMin, float oldMax, float min, float max) {
         return (x, y, z) -> {
             float value = INoise3D.this.noise(x, y, z);
             return (value - oldMin) / (oldMax - oldMin) * (max - min) + min;
@@ -126,8 +115,7 @@ public interface INoise3D
      * @param warpY the y warp noise
      * @return a new noise function
      */
-    default INoise3D warped(INoise3D warpX, INoise3D warpY, INoise3D warpZ)
-    {
+    default INoise3D warped(INoise3D warpX, INoise3D warpY, INoise3D warpZ) {
         return (x, y, z) -> {
             float x0 = x + warpX.noise(x, y, z);
             float y0 = y + warpY.noise(x, y, z);
@@ -136,18 +124,15 @@ public interface INoise3D
         };
     }
 
-    default INoise3D flattened(float min, float max)
-    {
+    default INoise3D flattened(float min, float max) {
         return (x, y, z) -> MathHelper.clamp(INoise3D.this.noise(x, y, z), min, max);
     }
 
-    default INoise3D add(INoise3D other)
-    {
+    default INoise3D add(INoise3D other) {
         return (x, y, z) -> INoise3D.this.noise(x, y, z) + other.noise(x, y, z);
     }
 
-    default INoise3D map(FloatUnaryFunction mappingFunction)
-    {
+    default INoise3D map(FloatUnaryFunction mappingFunction) {
         return (x, y, z) -> mappingFunction.applyAsFloat(INoise3D.this.noise(x, y, z));
     }
 }

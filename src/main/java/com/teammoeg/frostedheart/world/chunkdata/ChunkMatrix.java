@@ -35,7 +35,7 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
         int z = pos.getZ() < 0 ? 15 + pos.getZ() % 16 : pos.getZ() % 16;
         if (y >= 0 && y < 256) {
             return matrix[x][z][y];
-        } else if (y < 0){
+        } else if (y < 0) {
             return matrix[x][z][0];
         } else {
             return matrix[x][z][255];
@@ -95,37 +95,42 @@ public class ChunkMatrix implements INBTSerializable<CompoundNBT> {
     }
 
     public void init(byte defaultValue) {
-        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) for (int y = 0; y < 256; y++) {
-            matrix[x][z][y] = defaultValue;
-        }
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++)
+                for (int y = 0; y < 256; y++) {
+                    matrix[x][z][y] = defaultValue;
+                }
     }
 
     @Override
     public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
-        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-            nbt.putByteArray("x"+x+"z"+z, matrix[x][z]);
-        }
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++) {
+                nbt.putByteArray("x" + x + "z" + z, matrix[x][z]);
+            }
         return nbt;
     }
 
     @Override
     public void deserializeNBT(CompoundNBT nbt) {
-        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-            matrix[x][z] = nbt.getByteArray("x"+x+"z"+z);
-        }
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++) {
+                matrix[x][z] = nbt.getByteArray("x" + x + "z" + z);
+            }
     }
 
     public void serialize(PacketBuffer buffer) {
-        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-            buffer.writeByteArray(matrix[x][z]);
-        }
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++) {
+                buffer.writeByteArray(matrix[x][z]);
+            }
     }
 
-    public void deserialize(PacketBuffer buffer)
-    {
-        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-            matrix[x][z] = buffer.readByteArray();
-        }
+    public void deserialize(PacketBuffer buffer) {
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++) {
+                matrix[x][z] = buffer.readByteArray();
+            }
     }
 }

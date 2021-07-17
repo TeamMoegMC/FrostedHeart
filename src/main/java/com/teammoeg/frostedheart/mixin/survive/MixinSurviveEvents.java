@@ -19,7 +19,7 @@ public class MixinSurviveEvents {
     @SubscribeEvent
     public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity)event.getEntityLiving();
+            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             for (SurviveTemperature.TempType type : SurviveTemperature.TempType.values()) {
                 double temperature;
                 if (type.isUsingExact()) {
@@ -27,11 +27,11 @@ public class MixinSurviveEvents {
                 } else {
                     temperature = SurviveTemperature.getAverageTemperature(player.world, player.getPosition(), type, 5, Config.tempMode);
                 }
-                double modifier = (temperature)/type.getReductionAmount();
-                int modInt = (int) (modifier*1000);
+                double modifier = (temperature) / type.getReductionAmount();
+                int modInt = (int) (modifier * 1000);
                 modifier = modInt / 1000.0D;
-                if (player.ticksExisted%type.getTickInterval() == type.getTickInterval()-1) {
-                    TemperatureStats.setTemperatureModifier(player, "survive:"+type.getName(), modifier);
+                if (player.ticksExisted % type.getTickInterval() == type.getTickInterval() - 1) {
+                    TemperatureStats.setTemperatureModifier(player, "survive:" + type.getName(), modifier);
                 }
             }
         }

@@ -2,11 +2,9 @@ package com.teammoeg.frostedheart.common.tile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.google.common.base.Preconditions;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -14,12 +12,10 @@ import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.util.FHBlockInterfaces;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
@@ -112,13 +108,13 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void receiveMessageFromClient(CompoundNBT message) {
         super.receiveMessageFromClient(message);
-        if(message.contains("isWorking", Constants.NBT.TAG_BYTE))
+        if (message.contains("isWorking", Constants.NBT.TAG_BYTE))
             setWorking(message.getBoolean("isWorking"));
-        if(message.contains("isOverdrive", Constants.NBT.TAG_BYTE))
+        if (message.contains("isOverdrive", Constants.NBT.TAG_BYTE))
             setOverdrive(message.getBoolean("isOverdrive"));
-        if(message.contains("temperatureLevel", Constants.NBT.TAG_INT))
+        if (message.contains("temperatureLevel", Constants.NBT.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));
-        if(message.contains("rangeLevel", Constants.NBT.TAG_INT))
+        if (message.contains("rangeLevel", Constants.NBT.TAG_INT))
             setRangeLevel(message.getInt("rangeLevel"));
     }
 

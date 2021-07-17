@@ -11,7 +11,6 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorldReader;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -26,8 +25,7 @@ import java.util.Set;
  * {@link ChunkDataCache#CLIENT} and {@link ChunkDataCache#SERVER} are logical sided caches, used for when chunk data is needed without a world context. Care must be taken to choose the cache for the correct logical side
  * {@link ChunkDataCache#WORLD_GEN} is used for chunk data during world generation, as it's being generated. It is cleared once the chunk is completely generated
  */
-public final class ChunkDataCache
-{
+public final class ChunkDataCache {
     /**
      * This is a cache of client side chunk data, used for when there is no world context available.
      * It is synced on chunk watch / unwatch
@@ -58,8 +56,7 @@ public final class ChunkDataCache
     /**
      * Gets the normal (not world gen) cache of chunk data for the current logical side
      */
-    public static ChunkDataCache get(IWorldReader world)
-    {
+    public static ChunkDataCache get(IWorldReader world) {
         return world.isRemote() ? CLIENT : SERVER;
     }
 
@@ -69,13 +66,11 @@ public final class ChunkDataCache
      * On logical server / clients, this will default to using the server cache
      * DO NOT call this unless absolutely necessary, e.g. returning from a vanilla method which is called from both logical sides
      */
-    public static ChunkDataCache getUnsided()
-    {
+    public static ChunkDataCache getUnsided() {
         return SERVER.cache.isEmpty() ? CLIENT : SERVER;
     }
 
-    public static void clearAll()
-    {
+    public static void clearAll() {
         CLIENT.cache.clear();
         SERVER.cache.clear();
         WORLD_GEN.cache.clear();
@@ -88,8 +83,7 @@ public final class ChunkDataCache
     /**
      * Creates an infinite size cache that must be managed to not create memory leaks
      */
-    private ChunkDataCache(String name)
-    {
+    private ChunkDataCache(String name) {
         this.name = name;
         this.cache = new HashMap<>();
     }
@@ -110,84 +104,67 @@ public final class ChunkDataCache
         return cache;
     }
 
-    public ChunkData getOrEmpty(BlockPos pos)
-    {
+    public ChunkData getOrEmpty(BlockPos pos) {
         return getOrEmpty(new ChunkPos(pos));
     }
 
-    public ChunkData getOrEmpty(ChunkPos pos)
-    {
+    public ChunkData getOrEmpty(ChunkPos pos) {
         return cache.getOrDefault(pos, ChunkData.EMPTY);
     }
 
     @Nullable
-    public ChunkData get(BlockPos pos)
-    {
+    public ChunkData get(BlockPos pos) {
         return get(new ChunkPos(pos));
     }
 
     @Nullable
-    public ChunkData get(ChunkPos pos)
-    {
+    public ChunkData get(ChunkPos pos) {
         return cache.get(pos);
     }
 
     @Nullable
-    public ChunkData remove(ChunkPos pos)
-    {
+    public ChunkData remove(ChunkPos pos) {
         return cache.remove(pos);
     }
 
-    public void update(ChunkPos pos, ChunkData data)
-    {
+    public void update(ChunkPos pos, ChunkData data) {
         cache.put(pos, data);
     }
 
-    public ChunkData getOrCreate(ChunkPos pos)
-    {
+    public ChunkData getOrCreate(ChunkPos pos) {
         return cache.computeIfAbsent(pos, ChunkData::new);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "ChunkDataCache[" + name + ']';
     }
 
-    public static class WatchQueue
-    {
+    public static class WatchQueue {
         private final Map<ChunkPos, Set<ServerPlayerEntity>> queue;
 
-        private WatchQueue()
-        {
+        private WatchQueue() {
             queue = new HashMap<>(256);
         }
 
-        public void enqueueUnloadedChunk(ChunkPos pos, ServerPlayerEntity player)
-        {
+        public void enqueueUnloadedChunk(ChunkPos pos, ServerPlayerEntity player) {
             queue.computeIfAbsent(pos, key -> new HashSet<>()).add(player);
         }
 
-        public void dequeueChunk(ChunkPos pos, ServerPlayerEntity player)
-        {
+        public void dequeueChunk(ChunkPos pos, ServerPlayerEntity player) {
             Set<ServerPlayerEntity> players = queue.get(pos);
-            if (players != null)
-            {
+            if (players != null) {
                 players.remove(player);
-                if (players.isEmpty())
-                {
+                if (players.isEmpty()) {
                     queue.remove(pos);
                 }
             }
         }
 
-        public void dequeueLoadedChunk(ChunkPos pos, ChunkData data)
-        {
-            if (queue.containsKey(pos))
-            {
+        public void dequeueLoadedChunk(ChunkPos pos, ChunkData data) {
+            if (queue.containsKey(pos)) {
                 Set<ServerPlayerEntity> players = queue.remove(pos);
-                for (ServerPlayerEntity player : players)
-                {
+                for (ServerPlayerEntity player : players) {
                     PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), data.getUpdatePacket());
                 }
             }

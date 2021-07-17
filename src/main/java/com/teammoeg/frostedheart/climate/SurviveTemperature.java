@@ -5,10 +5,8 @@ import com.stereowalker.survive.events.SurviveEvents;
 import com.stereowalker.survive.util.TemperatureUtil;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.stereowalker.unionlib.state.properties.UBlockStateProperties;
-import com.stereowalker.unionlib.util.ModHelper;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
@@ -21,15 +19,15 @@ import net.minecraft.world.World;
 public class SurviveTemperature {
 
     public static double getExactTemperature(World world, BlockPos pos, SurviveTemperature.TempType type) {
-        float biomeTemp = (TemperatureUtil.getTemperature(world.getBiome(pos), pos)*2)-2;
+        float biomeTemp = (TemperatureUtil.getTemperature(world.getBiome(pos), pos) * 2) - 2;
         float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
         float gameTime = world.getDayTime() % 24000L;
-        gameTime = gameTime/(200/3);
+        gameTime = gameTime / (200 / 3);
         gameTime = (float) Math.sin(Math.toRadians(gameTime));
 
         switch (type) {
             case SUN:
-                if (skyLight > 5.0F) return gameTime*5.0F;
+                if (skyLight > 5.0F) return gameTime * 5.0F;
                 else return -1.0F * 5.0F;
 
             case BIOME:
@@ -45,36 +43,34 @@ public class SurviveTemperature {
                     for (int y = -rangeInBlocks; y <= rangeInBlocks; y++) {
                         for (int z = -rangeInBlocks; z <= rangeInBlocks; z++) {
 
-                            BlockPos heatSource = new BlockPos(pos.getX()+x, pos.getY()+y, pos.getZ()+z);
+                            BlockPos heatSource = new BlockPos(pos.getX() + x, pos.getY() + y, pos.getZ() + z);
                             float blockLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.BLOCK).getLightFor(heatSource);
                             BlockState heatState = world.getBlockState(heatSource);
                             int sourceRange = Survive.blockTemperatureMap.containsKey(heatState.getBlock().getRegistryName()) ? Survive.blockTemperatureMap.get(heatState.getBlock().getRegistryName()).getRange() : 5;
 
                             if (pos.withinDistance(heatSource, sourceRange)) {
-                                blockTemp += blockLight/500.0F;
+                                blockTemp += blockLight / 500.0F;
                                 if (Survive.blockTemperatureMap.containsKey(heatState.getBlock().getRegistryName())) {
                                     BlockTemperatureData blockTemperatureData = Survive.blockTemperatureMap.get(heatState.getBlock().getRegistryName());
                                     if (blockTemperatureData.usesLitOrActiveProperty()) {
                                         boolean litOrActive = false;
-                                        if (heatState.hasProperty(BlockStateProperties.LIT) && heatState.get(BlockStateProperties.LIT)) litOrActive = true;
-                                        if (heatState.hasProperty(UBlockStateProperties.ACTIVE) && heatState.get(UBlockStateProperties.ACTIVE)) litOrActive = true;
+                                        if (heatState.hasProperty(BlockStateProperties.LIT) && heatState.get(BlockStateProperties.LIT))
+                                            litOrActive = true;
+                                        if (heatState.hasProperty(UBlockStateProperties.ACTIVE) && heatState.get(UBlockStateProperties.ACTIVE))
+                                            litOrActive = true;
                                         if (litOrActive) blockTemp += blockTemperatureData.getTemperatureModifier();
-                                    }
-                                    else
+                                    } else
                                         blockTemp += blockTemperatureData.getTemperatureModifier();
 
                                     if (blockTemperatureData.usesLevelProperty()) {
                                         if (heatState.hasProperty(BlockStateProperties.LEVEL_0_15)) {
-                                            blockTemp*=(heatState.get(BlockStateProperties.LEVEL_0_15)+1)/16;
-                                        }
-                                        else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_8)) {
-                                            blockTemp*=(heatState.get(BlockStateProperties.LEVEL_0_8)+1)/9;
-                                        }
-                                        else if (heatState.hasProperty(BlockStateProperties.LEVEL_1_8)) {
-                                            blockTemp*=(heatState.get(BlockStateProperties.LEVEL_1_8))/8;
-                                        }
-                                        else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_3)) {
-                                            blockTemp*=(heatState.get(BlockStateProperties.LEVEL_0_3)+1)/4;
+                                            blockTemp *= (heatState.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
+                                        } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_8)) {
+                                            blockTemp *= (heatState.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
+                                        } else if (heatState.hasProperty(BlockStateProperties.LEVEL_1_8)) {
+                                            blockTemp *= (heatState.get(BlockStateProperties.LEVEL_1_8)) / 8;
+                                        } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_3)) {
+                                            blockTemp *= (heatState.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
                                         }
                                     }
                                 }
@@ -99,7 +95,7 @@ public class SurviveTemperature {
             float blendRatio1 = 1.0F - blendRatio0; // 0.8 - 0.0 - 1.0
             double temp0 = getExactTemperature(world, blendPos, type);
             double temp1 = getExactTemperature(world, mainPos, type);
-            return ((temp0*blendRatio0)+(temp1*blendRatio1));
+            return ((temp0 * blendRatio0) + (temp1 * blendRatio1));
         } else {
             return getExactTemperature(world, mainPos, type);
         }
@@ -111,13 +107,15 @@ public class SurviveTemperature {
         for (int x = -rangeInBlocks; x <= rangeInBlocks; x++) {
             for (int y = -rangeInBlocks; y <= rangeInBlocks; y++) {
                 for (int z = -rangeInBlocks; z <= rangeInBlocks; z++) {
-                    if (mode == SurviveEvents.TempMode.BLEND)temp+=getBlendedTemperature(world, new BlockPos(pos.getX()+x, pos.getY()+y, pos.getZ()+z), pos, type);
-                    else if (mode == SurviveEvents.TempMode.NORMAL)temp+=getExactTemperature(world, new BlockPos(pos.getX()+x, pos.getY()+y, pos.getZ()+z), type);
+                    if (mode == SurviveEvents.TempMode.BLEND)
+                        temp += getBlendedTemperature(world, new BlockPos(pos.getX() + x, pos.getY() + y, pos.getZ() + z), pos, type);
+                    else if (mode == SurviveEvents.TempMode.NORMAL)
+                        temp += getExactTemperature(world, new BlockPos(pos.getX() + x, pos.getY() + y, pos.getZ() + z), type);
                     tempAmount++;
                 }
             }
         }
-        return temp/((float)tempAmount);
+        return temp / ((float) tempAmount);
     }
 
     public enum TempType {
@@ -127,18 +125,22 @@ public class SurviveTemperature {
         int tickInterval;
         double reductionAmount;
         boolean usingExact;
+
         private TempType(String name, int tickIntervalIn, double reductionAmountIn, boolean usingExactIn) {
             this.tickInterval = tickIntervalIn;
             this.reductionAmount = reductionAmountIn;
             this.usingExact = usingExactIn;
             this.name = name;
         }
+
         public String getName() {
             return name;
         }
+
         public int getTickInterval() {
             return tickInterval;
         }
+
         public double getReductionAmount() {
             return reductionAmount;
         }

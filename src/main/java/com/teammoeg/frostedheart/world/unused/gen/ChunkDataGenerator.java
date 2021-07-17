@@ -21,8 +21,7 @@ import java.util.Random;
  * @see IChunkDataGenerator
  */
 @Deprecated
-public class ChunkDataGenerator implements IChunkDataGenerator
-{
+public class ChunkDataGenerator implements IChunkDataGenerator {
 
     /**
      * Constants for temperature calculation. Do not reference these directly, they do not have much meaning outside the context they are used in
@@ -36,25 +35,22 @@ public class ChunkDataGenerator implements IChunkDataGenerator
 
     private final INoise2D temperatureNoise;
 
-    public ChunkDataGenerator(long worldSeed, Random seedGenerator)
-    {
+    public ChunkDataGenerator(long worldSeed, Random seedGenerator) {
         // Climate
         temperatureNoise = INoise1D.triangle(1, 0, 1f / (2f * 20000), 0)
-            .extendX()
-            .scaled(MINIMUM_TEMPERATURE_SCALE, MAXIMUM_TEMPERATURE_SCALE)
-            .add(new OpenSimplex2D(seedGenerator.nextLong())
-                .octaves(2)
-                .spread(12f / 20000)
-                .scaled(-REGIONAL_TEMPERATURE_SCALE, REGIONAL_TEMPERATURE_SCALE));
+                .extendX()
+                .scaled(MINIMUM_TEMPERATURE_SCALE, MAXIMUM_TEMPERATURE_SCALE)
+                .add(new OpenSimplex2D(seedGenerator.nextLong())
+                        .octaves(2)
+                        .spread(12f / 20000)
+                        .scaled(-REGIONAL_TEMPERATURE_SCALE, REGIONAL_TEMPERATURE_SCALE));
     }
 
     @Override
-    public void generate(ChunkData data, ChunkData.Status status)
-    {
+    public void generate(ChunkData data, ChunkData.Status status) {
         ChunkPos pos = data.getPos();
         int chunkX = pos.getXStart(), chunkZ = pos.getZStart();
-        switch (status)
-        {
+        switch (status) {
             case EMPTY:
             case CLIENT:
                 throw new IllegalStateException("Should not ever generate EMPTY or CLIENT status!");
@@ -64,8 +60,7 @@ public class ChunkDataGenerator implements IChunkDataGenerator
         }
     }
 
-    private void generateClimate(ChunkData data, int chunkX, int chunkZ)
-    {
+    private void generateClimate(ChunkData data, int chunkX, int chunkZ) {
         data.initChunkMatrix((byte) 10);
     }
 }

@@ -36,8 +36,8 @@ public class ChunkDataAdapter extends TypeAdapter<ChunkData> {
             in.beginObject();
             while (in.hasNext()) {
                 String chunkName = in.nextName();
-                int posX = Integer.parseInt(chunkName.substring(chunkName.indexOf('x')+2, chunkName.indexOf('z')-1));
-                int posZ = Integer.parseInt(chunkName.substring(chunkName.indexOf('z')+2));
+                int posX = Integer.parseInt(chunkName.substring(chunkName.indexOf('x') + 2, chunkName.indexOf('z') - 1));
+                int posZ = Integer.parseInt(chunkName.substring(chunkName.indexOf('z') + 2));
                 ChunkPos chunkPos = new ChunkPos(posX, posZ);
                 ChunkData chunkData = new ChunkData(chunkPos);
                 in.beginArray();
@@ -66,10 +66,12 @@ public class ChunkDataAdapter extends TypeAdapter<ChunkData> {
         }
         writer.setIndent(" ");
         writer.beginObject();
-        writer.name("chunk_x="+value.getPos().x+",z="+value.getPos().z).beginArray().beginObject();
-        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) for (int y = 0; y < 256; y++) {
-            writer.name("block_x="+x+",y="+y+",z="+z).value(value.getChunkMatrix().getValue(x, y, z));
-        }
+        writer.name("chunk_x=" + value.getPos().x + ",z=" + value.getPos().z).beginArray().beginObject();
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++)
+                for (int y = 0; y < 256; y++) {
+                    writer.name("block_x=" + x + ",y=" + y + ",z=" + z).value(value.getChunkMatrix().getValue(x, y, z));
+                }
         writer.endObject().endArray();
         writer.endObject();
     }

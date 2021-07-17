@@ -16,22 +16,18 @@ import net.minecraftforge.common.util.INBTSerializable;
  * It records the value at the corner, and interpolates the values between on demand.
  */
 @Deprecated
-public class LerpFloatLayer implements INBTSerializable<CompoundNBT>
-{
+public class LerpFloatLayer implements INBTSerializable<CompoundNBT> {
     private float valueNW, valueNE, valueSW, valueSE;
 
-    public LerpFloatLayer(PacketBuffer buffer)
-    {
+    public LerpFloatLayer(PacketBuffer buffer) {
         deserialize(buffer);
     }
 
-    public LerpFloatLayer(float defaultValue)
-    {
+    public LerpFloatLayer(float defaultValue) {
         init(defaultValue, defaultValue, defaultValue, defaultValue);
     }
 
-    public void init(float valueNW, float valueNE, float valueSW, float valueSE)
-    {
+    public void init(float valueNW, float valueNE, float valueSW, float valueSE) {
         this.valueNW = valueNW;
         this.valueNE = valueNE;
         this.valueSW = valueSW;
@@ -44,14 +40,12 @@ public class LerpFloatLayer implements INBTSerializable<CompoundNBT>
      * @param tNS A distance in the N-S direction. 0 = Full north, 1 = Full south.
      * @param tEW A distance in the E-W direction. 0 = Full east, 1 = Full west.
      */
-    public float getValue(float tNS, float tEW)
-    {
+    public float getValue(float tNS, float tEW) {
         return NoiseUtil.lerpGrid(valueNE, valueNW, valueSE, valueSW, tNS, tEW);
     }
 
     @Override
-    public CompoundNBT serializeNBT()
-    {
+    public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
         nbt.putFloat("nw", valueNW);
         nbt.putFloat("ne", valueNE);
@@ -61,24 +55,21 @@ public class LerpFloatLayer implements INBTSerializable<CompoundNBT>
     }
 
     @Override
-    public void deserializeNBT(CompoundNBT nbt)
-    {
+    public void deserializeNBT(CompoundNBT nbt) {
         valueNW = nbt.getFloat("nw");
         valueNE = nbt.getFloat("ne");
         valueSW = nbt.getFloat("sw");
         valueSE = nbt.getFloat("se");
     }
 
-    public void serialize(PacketBuffer buffer)
-    {
+    public void serialize(PacketBuffer buffer) {
         buffer.writeFloat(valueNW);
         buffer.writeFloat(valueNE);
         buffer.writeFloat(valueSW);
         buffer.writeFloat(valueSE);
     }
 
-    public void deserialize(PacketBuffer buffer)
-    {
+    public void deserialize(PacketBuffer buffer) {
         valueNW = buffer.readFloat();
         valueNE = buffer.readFloat();
         valueSW = buffer.readFloat();

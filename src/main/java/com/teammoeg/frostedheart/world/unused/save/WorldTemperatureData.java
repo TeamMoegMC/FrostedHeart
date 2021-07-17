@@ -38,9 +38,10 @@ public class WorldTemperatureData extends WorldSavedData {
             ChunkData chunkData = serverCache.getOrCreate(chunkPos);
             byte[][][] matrix = chunkData.getChunkMatrix().getMatrix();
             CompoundNBT blocksNBT = nbt.getCompound(chunkName);
-            for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-                blocksNBT.putByteArray("block_x_" + x + ".block_z_" + z, matrix[x][z]);
-            }
+            for (int x = 0; x < 16; x++)
+                for (int z = 0; z < 16; z++) {
+                    blocksNBT.putByteArray("block_x_" + x + ".block_z_" + z, matrix[x][z]);
+                }
         }
     }
 
@@ -51,9 +52,10 @@ public class WorldTemperatureData extends WorldSavedData {
             ChunkMatrix chunkMatrix = chunkData.getChunkMatrix();
             byte[][][] matrix = chunkMatrix.getMatrix();
             CompoundNBT blocks = new CompoundNBT();
-            for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
-                blocks.putByteArray("block_x_" + x + ".block_z_" + z, matrix[x][z]);
-            }
+            for (int x = 0; x < 16; x++)
+                for (int z = 0; z < 16; z++) {
+                    blocks.putByteArray("block_x_" + x + ".block_z_" + z, matrix[x][z]);
+                }
             compound.put("chunk_x_" + chunkPos.x + ".chunk_z_" + chunkPos.z, blocks);
         }
         return compound;

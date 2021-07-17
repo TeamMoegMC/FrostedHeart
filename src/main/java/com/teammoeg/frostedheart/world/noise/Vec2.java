@@ -5,18 +5,15 @@
 
 package com.teammoeg.frostedheart.world.noise;
 
-public final class Vec2
-{
+public final class Vec2 {
     public final float x, y;
 
-    public Vec2(float x, float y)
-    {
+    public Vec2(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
-    public final float dot(float x, float y)
-    {
+    public final float dot(float x, float y) {
         return this.x * x + this.y * y;
     }
 }

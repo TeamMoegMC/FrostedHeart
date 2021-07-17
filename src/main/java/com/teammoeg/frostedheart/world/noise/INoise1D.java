@@ -4,15 +4,12 @@ package com.teammoeg.frostedheart.world.noise;
  * Wrapper for a 1D Noise Layer
  */
 @FunctionalInterface
-public interface INoise1D
-{
-    static INoise1D triangle(float amplitude, float midpoint, float frequency, float phaseShift)
-    {
+public interface INoise1D {
+    static INoise1D triangle(float amplitude, float midpoint, float frequency, float phaseShift) {
         return q -> triangle(amplitude, midpoint, frequency, phaseShift, q);
     }
 
-    static float triangle(float amplitude, float midpoint, float frequency, float phaseShift, float q)
-    {
+    static float triangle(float amplitude, float midpoint, float frequency, float phaseShift, float q) {
         float p = phaseShift + frequency * q;
         return midpoint + amplitude * (Math.abs(2f * p + 1f - 4f * NoiseUtil.fastFloor(p / 2f + 0.75f)) - 1f);
     }
@@ -26,8 +23,7 @@ public interface INoise1D
      * @param transform the input function
      * @return a new noise function
      */
-    default INoise1D transformed(INoise1D transform)
-    {
+    default INoise1D transformed(INoise1D transform) {
         return in -> INoise1D.this.noise(transform.noise(in));
     }
 
@@ -36,8 +32,7 @@ public interface INoise1D
      *
      * @return a new noise function
      */
-    default INoise2D extendX()
-    {
+    default INoise2D extendX() {
         return (x, y) -> noise(y);
     }
 
@@ -46,8 +41,7 @@ public interface INoise1D
      *
      * @return a new noise function
      */
-    default INoise2D extendY()
-    {
+    default INoise2D extendY() {
         return (x, y) -> noise(x);
     }
 }

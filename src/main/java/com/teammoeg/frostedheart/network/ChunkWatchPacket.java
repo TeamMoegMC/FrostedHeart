@@ -22,49 +22,43 @@ import java.util.function.Supplier;
 /**
  * Sent from server -> client on chunk watch, partially syncs chunk data and updates the client cache
  */
-public class ChunkWatchPacket
-{
+public class ChunkWatchPacket {
     private final int chunkX;
     private final int chunkZ;
     private final ChunkMatrix tempMatrix;
 
-    public ChunkWatchPacket(int chunkX, int chunkZ, ChunkMatrix tempMatrix)
-    {
+    public ChunkWatchPacket(int chunkX, int chunkZ, ChunkMatrix tempMatrix) {
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
         this.tempMatrix = tempMatrix;
     }
 
-    ChunkWatchPacket(PacketBuffer buffer)
-    {
+    ChunkWatchPacket(PacketBuffer buffer) {
         chunkX = buffer.readVarInt();
         chunkZ = buffer.readVarInt();
         tempMatrix = new ChunkMatrix(buffer);
     }
 
-    void encode(PacketBuffer buffer)
-    {
+    void encode(PacketBuffer buffer) {
         buffer.writeVarInt(chunkX);
         buffer.writeVarInt(chunkZ);
         tempMatrix.serialize(buffer);
     }
 
-    void handle(Supplier<NetworkEvent.Context> context)
-    {
+    void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             ChunkPos pos = new ChunkPos(chunkX, chunkZ);
             // Update client-side chunk data capability
             World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHUtil::getWorld);
-            if (world != null)
-            {
+            if (world != null) {
                 // First, synchronize the chunk data in the capability and cache.
                 // Then, update the single data instance with the packet data
                 IChunk chunk = world.chunkExists(chunkX, chunkZ) ? world.getChunk(chunkX, chunkZ) : null;
                 ChunkData data = ChunkData.getCapability(chunk)
-                    .map(dataIn -> {
-                        ChunkDataCache.CLIENT.update(pos, dataIn);
-                        return dataIn;
-                    }).orElseGet(() -> ChunkDataCache.CLIENT.getOrCreate(pos));
+                        .map(dataIn -> {
+                            ChunkDataCache.CLIENT.update(pos, dataIn);
+                            return dataIn;
+                        }).orElseGet(() -> ChunkDataCache.CLIENT.getOrCreate(pos));
                 data.onUpdatePacket(tempMatrix);
             }
         });

@@ -33,8 +33,7 @@ package com.teammoeg.frostedheart.world.noise;
 /**
  * Important to note: all distances are concerning square distances!
  */
-public enum CellularNoiseType
-{
+public enum CellularNoiseType {
     VALUE,
     DISTANCE,
     DISTANCE_2,
@@ -44,10 +43,8 @@ public enum CellularNoiseType
     DISTANCE_QUOTIENT,
     OTHER;
 
-    public float calculate(float distance0, float distance1, int closestHash)
-    {
-        switch (this)
-        {
+    public float calculate(float distance0, float distance1, int closestHash) {
+        switch (this) {
             case VALUE:
                 return closestHash * (1 / 2147483648.0f);
             case DISTANCE:

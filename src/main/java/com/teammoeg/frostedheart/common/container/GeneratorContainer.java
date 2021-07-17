@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.common.container;
 
-import blusunrize.immersiveengineering.api.crafting.CokeOvenRecipe;
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;

@@ -28,9 +28,8 @@ public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecip
         return new GeneratorRecipe(recipeId, output, input, time);
     }
 
-    protected ItemStack readInput(JsonElement inputObject)
-    {
-        if(inputObject.isJsonObject()&&inputObject.getAsJsonObject().has("item"))
+    protected ItemStack readInput(JsonElement inputObject) {
+        if (inputObject.isJsonObject() && inputObject.getAsJsonObject().has("item"))
             return ShapedRecipe.deserializeItem(inputObject.getAsJsonObject());
         IngredientWithSize outgredient = IngredientWithSize.deserialize(inputObject);
         return IEApi.getPreferredStackbyMod(outgredient.getMatchingStacks());

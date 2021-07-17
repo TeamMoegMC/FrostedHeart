@@ -7,8 +7,7 @@
 package com.teammoeg.frostedheart.world.unused.gen;
 
 @Deprecated
-public class FHChunkGenerator /*extends ChunkGenerator implements IFHChunkGenerator*/
-{
+public class FHChunkGenerator /*extends ChunkGenerator implements IFHChunkGenerator*/ {
 //    public static final Codec<FHChunkGenerator> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 //        BiomeProvider.CODEC.fieldOf("biome_source").forGetter(c -> c.biomeProvider),
 //        DimensionSettings.CODEC.fieldOf("settings").forGetter(c -> () -> c.settings),
