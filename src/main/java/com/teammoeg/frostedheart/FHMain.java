@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart;
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.stereowalker.survive.Survive;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
@@ -16,12 +18,12 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IHasContainer;
-import net.minecraft.client.gui.ScreenManager;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
@@ -317,6 +319,33 @@ public class FHMain {
                     list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
                 }
             }
+        }
+
+        @SubscribeEvent
+        public static void renderGameOverlay(RenderGameOverlayEvent event) {
+            Minecraft mc = Minecraft.getInstance();
+            IngameGui gui = mc.ingameGUI;
+            FontRenderer font = gui.getFontRenderer();
+            ResourceLocation tempBarLocation = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_bar.png");
+
+            mc.getProfiler().startSection("frostedheart_temperature");
+            mc.getTextureManager().bindTexture(tempBarLocation);
+
+            if (Minecraft.isGuiEnabled() && mc.playerController.gameIsSurvivalOrAdventure()) {
+                gui.blit(event.getMatrixStack(), 0, 0, 0, 0, 148, 34);
+                if (mc.world != null) {
+                    BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
+                    if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
+                        ChunkData data = ChunkData.get(mc.world, pos);
+                        if (data.getStatus().isAtLeast(ChunkData.Status.CLIENT)) {
+                            font.drawString(event.getMatrixStack(), String.format("%.1f", data.getTemperatureAtBlock(pos) +  "℃"), 5, 15, 0);
+                        }
+                    }
+                }
+            }
+
+            mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+            mc.getProfiler().endSection();
         }
     }
 }

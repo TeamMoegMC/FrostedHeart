@@ -61,7 +61,7 @@ public class FHCropBlock extends CropsBlock {
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
         ChunkData data = ChunkData.get(worldIn, pos);
         float temp = data.getTemperatureAtBlock(pos);
-        if (temp > growTemperature) {
+        if (temp >= growTemperature) {
             return true;
         }
         return false;
