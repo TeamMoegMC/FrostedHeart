@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.common.container;
 import blusunrize.immersiveengineering.api.crafting.CokeOvenRecipe;
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
+import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
@@ -17,7 +18,7 @@ public class GeneratorContainer extends IEBaseContainer<GeneratorTileEntity> {
         this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return CokeOvenRecipe.findRecipe(itemStack) != null;
+                return GeneratorRecipe.findRecipe(itemStack) != null;
             }
         });
 

@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:generator",
   "result": {
-    "item": "minecraft:cobblestone"
+    "item": "frostedheart:generator_ash"
   },
   "input": {
-    "item": "minecraft:charcoal"
+    "item": "immersiveengineering:coal_coke"
   },
   "time": 1000
 }

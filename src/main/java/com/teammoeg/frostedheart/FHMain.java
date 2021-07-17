@@ -338,7 +338,8 @@ public class FHMain {
                     if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
                         ChunkData data = ChunkData.get(mc.world, pos);
                         if (data.getStatus().isAtLeast(ChunkData.Status.CLIENT)) {
-                            font.drawString(event.getMatrixStack(), String.format("%.1f", data.getTemperatureAtBlock(pos) +  "℃"), 5, 15, 0);
+                            font.drawString(event.getMatrixStack(), String.format("%.1f", data.getTemperatureAtBlock(pos)), 5, 14, 0);
+                            font.drawString(event.getMatrixStack(), I18n.format("gui.frostedheart.temperature.desc"), 33, 8, -1);
                         }
                     }
                 }

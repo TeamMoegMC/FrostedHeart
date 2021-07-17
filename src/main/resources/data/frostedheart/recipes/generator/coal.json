@@ -1,10 +1,10 @@
 {
   "type": "frostedheart:generator",
   "result": {
-    "item": "minecraft:stone"
+    "item": "frostedheart:generator_ash"
   },
   "input": {
-    "item": "minecraft:coal"
+    "item": "minecraft:charcoal"
   },
   "time": 500
 }
