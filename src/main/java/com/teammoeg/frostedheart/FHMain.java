@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
@@ -70,6 +71,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -381,6 +383,10 @@ public class FHMain {
 
             mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
             mc.getProfiler().endSection();
+
+            RenderSystem.enableBlend();
+            RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+            RenderSystem.disableAlphaTest();
         }
     }
 }
