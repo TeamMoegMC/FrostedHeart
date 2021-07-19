@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
@@ -16,6 +17,9 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
@@ -30,6 +34,7 @@ import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
@@ -37,6 +42,7 @@ import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -58,12 +64,14 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -317,6 +325,13 @@ public class FHMain {
                 event.getPlayer().inventory.armorInventory.set(0, new ItemStack(SItems.WOOL_BOOTS));
             }
         }
+
+        @SubscribeEvent
+        public static void setKeepInventory(FMLServerStartedEvent event) {
+            for (ServerWorld world : event.getServer().getWorlds()) {
+                world.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, event.getServer());
+            }
+        }
     }
 
     @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -338,6 +353,38 @@ public class FHMain {
                     list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
                 }
             }
+        }
+
+        @SubscribeEvent
+        public static void renderGameOverlay(RenderGameOverlayEvent event) {
+            Minecraft mc = Minecraft.getInstance();
+            IngameGui gui = mc.ingameGUI;
+            FontRenderer font = gui.getFontRenderer();
+            ResourceLocation tempBarLocation = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_bar.png");
+
+            mc.getProfiler().startSection("frostedheart_temperature");
+            mc.getTextureManager().bindTexture(tempBarLocation);
+
+            if (Minecraft.isGuiEnabled() && mc.playerController.gameIsSurvivalOrAdventure()) {
+                gui.blit(event.getMatrixStack(), 0, 0, 0, 0, 148, 34);
+                if (mc.world != null) {
+                    BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
+                    if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
+                        ChunkData data = ChunkData.get(mc.world, pos);
+                        if (data.getStatus().isAtLeast(ChunkData.Status.CLIENT)) {
+                            font.drawString(event.getMatrixStack(), String.format("%.1f", data.getTemperatureAtBlock(pos)), 5, 14, 0);
+                            font.drawString(event.getMatrixStack(), I18n.format("gui.frostedheart.temperature.desc"), 33, 8, -1);
+                        }
+                    }
+                }
+            }
+
+            mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+            mc.getProfiler().endSection();
+
+            RenderSystem.enableBlend();
+            RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+            RenderSystem.disableAlphaTest();
         }
     }
 }
