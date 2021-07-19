@@ -33,6 +33,7 @@ import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
@@ -40,6 +41,7 @@ import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -61,6 +63,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -320,6 +323,13 @@ public class FHMain {
                 event.getPlayer().inventory.armorInventory.set(2, new ItemStack(SItems.WOOL_JACKET));
                 event.getPlayer().inventory.armorInventory.set(1, new ItemStack(SItems.WOOL_PANTS));
                 event.getPlayer().inventory.armorInventory.set(0, new ItemStack(SItems.WOOL_BOOTS));
+            }
+        }
+
+        @SubscribeEvent
+        public static void setKeepInventory(FMLServerStartedEvent event) {
+            for (ServerWorld world : event.getServer().getWorlds()) {
+                world.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, event.getServer());
             }
         }
     }
