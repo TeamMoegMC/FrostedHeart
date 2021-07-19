@@ -286,7 +286,7 @@ public class FHMain {
 
         @SubscribeEvent
         public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
-            if (!(event.getState().getBlock() instanceof FHCropBlock)) {
+            if (!(event.getState().getBlock() instanceof FHCropBlock) && !(event.getState().getBlock() == Blocks.KELP) && !(event.getState().getBlock() == Blocks.KELP_PLANT)) {
                 event.setResult(Event.Result.DENY);
                 ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
                 float temp = data.getTemperatureAtBlock(event.getPos());
@@ -299,8 +299,6 @@ public class FHMain {
 
         @SubscribeEvent
         public static void addManualToPlayer(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
-
-
             CompoundNBT nbt = event.getPlayer().getPersistentData();
             CompoundNBT persistent;
 

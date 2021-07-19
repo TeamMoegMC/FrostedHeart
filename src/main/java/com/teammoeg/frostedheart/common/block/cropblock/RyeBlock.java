@@ -14,9 +14,7 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 
-import java.util.Random;
 import java.util.function.BiFunction;
 
 public class RyeBlock extends FHCropBlock {
@@ -37,12 +35,6 @@ public class RyeBlock extends FHCropBlock {
 
     protected IItemProvider getSeedsItem() {
         return FHContent.Blocks.rye_block.asItem();
-    }
-
-    public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
-        if (random.nextInt(2) != 0) {
-            super.randomTick(state, worldIn, pos, random);
-        }
     }
 
     protected int getBonemealAgeIncrease(World worldIn) {
