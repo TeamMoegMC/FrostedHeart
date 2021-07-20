@@ -16,6 +16,8 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.KelpBlock;
+import net.minecraft.block.KelpTopBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -294,7 +296,7 @@ public class FHMain {
 
         @SubscribeEvent
         public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
-            if (!(event.getState().getBlock() instanceof FHCropBlock) && !(event.getState().getBlock() == Blocks.KELP) && !(event.getState().getBlock() == Blocks.KELP_PLANT)) {
+            if (!(event.getState().getBlock() instanceof FHCropBlock) && !(event.getState().getBlock() instanceof KelpBlock) && !(event.getState().getBlock() instanceof KelpTopBlock)) {
                 event.setResult(Event.Result.DENY);
                 ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
                 float temp = data.getTemperatureAtBlock(event.getPos());
