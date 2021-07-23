@@ -6,8 +6,6 @@
   "mixins": [
     "MixinPortalSize",
     "MixinSnowBlock",
-    "accessors.BlockTemperatureDataAccess",
-    "accessors.ChunkGeneratorAccessor",
     "survive.MixinSurviveEvents"
   ],
   "client": [
