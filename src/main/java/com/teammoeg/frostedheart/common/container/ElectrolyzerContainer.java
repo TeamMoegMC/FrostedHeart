@@ -27,9 +27,9 @@ public class ElectrolyzerContainer extends GenericContainer<ElectrolyzerTile> {
 
     @Override
     public void addInventorySlots(IInventory inv, PlayerInventory playerinv) {
-        addSlot(new GenericSlot(inv, nextIndex(), 83, 31));
-        addSlot(new GenericSlot(inv, nextIndex(), 108, 31));
-        addSlot(new SlotRestricted(inv, nextIndex(), 31, 51, ElectrolyzerTile.SUPPORTED_INPUT_FLUIDS));
-        addSlot(new SlotRestricted(inv, nextIndex(), 31, 31, SlotRestricted.VALID_EMPTY_BUCKETS[1]));
+        addSlot(new GenericSlot(inv, 0, 60, 31));
+        addSlot(new GenericSlot(inv, 1, 108, 31));
+        addSlot(new SlotRestricted(inv, 2, 41, 51, ElectrolyzerTile.SUPPORTED_INPUT_FLUIDS));
+        addSlot(new SlotRestricted(inv, 3, 41, 31, SlotRestricted.VALID_EMPTY_BUCKETS[1]));
     }
 }

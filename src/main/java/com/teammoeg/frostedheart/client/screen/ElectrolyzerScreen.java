@@ -58,7 +58,7 @@ public class ElectrolyzerScreen extends GenericScreen<ElectrolyzerContainer> {
                 }
             }
             return null;
-        }, this, 127, 18));
+        }, this, 137, 18));
         components.add(new ScreenComponentElectricInfo(this::getEnergyInformation, this, -ScreenComponentInfo.SIZE + 1, 2));
     }
 

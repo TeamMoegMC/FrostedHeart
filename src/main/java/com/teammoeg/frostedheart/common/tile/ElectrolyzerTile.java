@@ -27,7 +27,7 @@ public class ElectrolyzerTile extends GenericTileTicking {
     public int clientTicks = 0;
     public static Fluid[] SUPPORTED_INPUT_FLUIDS = new Fluid[]{
 
-            Fluids.WATER, DeferredRegisters.fluidEthanol
+            Fluids.WATER
 
     };
     public static Fluid[] SUPPORTED_OUTPUT_FLUIDS = new Fluid[]{
@@ -48,8 +48,8 @@ public class ElectrolyzerTile extends GenericTileTicking {
                 .addMultipleFluidTanks(SUPPORTED_OUTPUT_FLUIDS, MAX_TANK_CAPACITY, false));
         addComponent(new ComponentInventory(this).size(4).relativeSlotFaces(0, Direction.EAST, Direction.UP).relativeSlotFaces(1, Direction.DOWN)
                 .valid((slot, stack) -> slot < 3 || stack.getItem() instanceof ItemProcessorUpgrade));
-        addComponent(new FHComponentProcessor(this).upgradeSlots(1, 2, 3).canProcess(component -> canProcessChemMix((FHComponentProcessor) component))
-                .process(component -> ((FHComponentProcessor) component).processElectrolyzerRecipe(component, ElectrolyzerRecipe.class))
+        addComponent(new ComponentProcessor(this).canProcess(component -> canProcessChemMix(component))
+                .process(component -> component.processFluidItem2FluidRecipe(component, ElectrolyzerRecipe.class))
                 .usage(Constants.CHEMICALMIXER_USAGE_PER_TICK).type(ComponentProcessorType.ObjectToObject)
                 .requiredTicks(Constants.CHEMICALMIXER_REQUIRED_TICKS));
         addComponent(new ComponentContainerProvider("electrolyzer")
@@ -61,7 +61,7 @@ public class ElectrolyzerTile extends GenericTileTicking {
         return super.getRenderBoundingBox().grow(1);
     }
 
-    protected boolean canProcessChemMix(FHComponentProcessor processor) {
+    protected boolean canProcessChemMix(ComponentProcessor processor) {
 
         ComponentDirection direction = getComponent(ComponentType.Direction);
         ComponentFluidHandler tank = getComponent(ComponentType.FluidHandler);
@@ -81,7 +81,7 @@ public class ElectrolyzerTile extends GenericTileTicking {
             }
         }
 
-        processor.consumeBucket(MAX_TANK_CAPACITY, SUPPORTED_INPUT_FLUIDS, 1).dispenseBucket(MAX_TANK_CAPACITY, 2);
+        processor.consumeBucket(MAX_TANK_CAPACITY, SUPPORTED_INPUT_FLUIDS, 2).dispenseBucket(MAX_TANK_CAPACITY, 3);
         return processor.canProcessFluidItem2FluidRecipe(processor, FluidItem2FluidRecipe.class, ElectrolyzerRecipe.TYPE);
     }
 }
