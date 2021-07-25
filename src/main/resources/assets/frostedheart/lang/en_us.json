@@ -16,5 +16,7 @@
   "frostedheart.gui.generator.mode.off": "Turn Off Generator",
   "frostedheart.gui.generator.overdrive.on": "Turn On Overdrive",
   "frostedheart.gui.generator.overdrive.off": "Turn Off Overdrive",
-  "gui.frostedheart.temperature.desc": "Average Temperature"
+  "gui.frostedheart.temperature.desc": "Average Temperature",
+  "gui.electrolyzer.usage": "Usage: %s",
+  "gui.electrolyzer.voltage": "Voltage: %s"
 }

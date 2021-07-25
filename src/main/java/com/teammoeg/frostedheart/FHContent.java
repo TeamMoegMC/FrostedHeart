@@ -2,10 +2,7 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import com.teammoeg.frostedheart.common.block.FHBaseBlock;
-import com.teammoeg.frostedheart.common.block.FHBlockItem;
-import com.teammoeg.frostedheart.common.block.GeneratorCoreBlock;
-import com.teammoeg.frostedheart.common.block.GeneratorMultiblockBlock;
+import com.teammoeg.frostedheart.common.block.*;
 import com.teammoeg.frostedheart.common.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.common.container.GeneratorContainer;
 import com.teammoeg.frostedheart.common.item.FHBaseItem;
@@ -40,6 +37,7 @@ public class FHContent {
         public static Block generator_core_t1;
         public static Block generator_amplifier_r1;
         public static Block rye_block;
+        public static Block electrolyzer;
     }
 
     public static class Items {
@@ -69,6 +67,8 @@ public class FHContent {
         FHContent.Blocks.generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
         FHContent.Blocks.rye_block = new RyeBlock("rye_block", -10, CropProps, FHBlockItem::new);
+        FHContent.Blocks.electrolyzer = new ElectrolyzerBlock("electrolyzer_block", FHBlockItem::new);
+
 
         Item.Properties properties = new Item.Properties().group(FHMain.itemGroup);
         FHContent.Items.energy_core = new FHBaseItem("energy_core", properties);

@@ -4,6 +4,7 @@ import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.item.SItems;
+import com.teammoeg.frostedheart.client.screen.ElectrolyzerScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
@@ -22,6 +23,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
@@ -113,6 +115,8 @@ public class FHMain {
         FHRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
         // Register tile types
         FHTileTypes.REGISTER.register(modBus);
+        // Register container
+        FHTileTypes.CONTAINERS.register(modBus);
         // Register recipe types
         DeferredWorkQueue.runLater(FHRecipeTypes::registerRecipeTypes);
         // Register network packets
@@ -121,6 +125,7 @@ public class FHMain {
         FHContent.populate();
         // Register FH content
         FHContent.registerAll();
+
     }
 
     public void setup(final FMLCommonSetupEvent event) {
@@ -197,6 +202,7 @@ public class FHMain {
         public static void onRenderTypeSetup(FMLClientSetupEvent event) {
             // Register screens
             ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
+            ScreenManager.registerFactory(FHTileTypes.ELECTROLYZER_CONTAINER.get(), ElectrolyzerScreen::new);
             // Register translucent render type
             RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
             RenderTypeLookup.setRenderLayer(FHContent.Multiblocks.generator, RenderType.getCutoutMipped());
