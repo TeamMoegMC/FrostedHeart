@@ -5,7 +5,6 @@ import com.teammoeg.frostedheart.common.container.ElectrolyzerContainer;
 import com.teammoeg.frostedheart.common.recipe.ElectrolyzerRecipe;
 import electrodynamics.DeferredRegisters;
 import electrodynamics.api.electricity.CapabilityElectrodynamic;
-import electrodynamics.common.item.ItemProcessorUpgrade;
 import electrodynamics.common.recipe.categories.fluiditem2fluid.FluidItem2FluidRecipe;
 import electrodynamics.common.settings.Constants;
 import electrodynamics.prefab.tile.GenericTileTicking;
@@ -46,13 +45,12 @@ public class ElectrolyzerTile extends GenericTileTicking {
         addComponent(new ComponentFluidHandler(this).relativeInput(Direction.EAST).relativeOutput(Direction.WEST)
                 .addMultipleFluidTanks(SUPPORTED_INPUT_FLUIDS, MAX_TANK_CAPACITY, true)
                 .addMultipleFluidTanks(SUPPORTED_OUTPUT_FLUIDS, MAX_TANK_CAPACITY, false));
-        addComponent(new ComponentInventory(this).size(4).relativeSlotFaces(0, Direction.EAST, Direction.UP).relativeSlotFaces(1, Direction.DOWN)
-                .valid((slot, stack) -> slot < 3 || stack.getItem() instanceof ItemProcessorUpgrade));
+        addComponent(new ComponentInventory(this).size(3).relativeSlotFaces(0, Direction.EAST, Direction.UP).relativeSlotFaces(1, Direction.DOWN));
         addComponent(new ComponentProcessor(this).canProcess(component -> canProcessChemMix(component))
                 .process(component -> component.processFluidItem2FluidRecipe(component, ElectrolyzerRecipe.class))
                 .usage(Constants.CHEMICALMIXER_USAGE_PER_TICK).type(ComponentProcessorType.ObjectToObject)
-                .requiredTicks(Constants.CHEMICALMIXER_REQUIRED_TICKS));
-        addComponent(new ComponentContainerProvider("electrolyzer")
+                .requiredTicks(600));
+        addComponent(new ComponentContainerProvider("container.electrolyzer")
                 .createMenu((id, player) -> new ElectrolyzerContainer(id, player, getComponent(ComponentType.Inventory), getCoordsArray())));
     }
 
@@ -81,7 +79,7 @@ public class ElectrolyzerTile extends GenericTileTicking {
             }
         }
 
-        processor.consumeBucket(MAX_TANK_CAPACITY, SUPPORTED_INPUT_FLUIDS, 2).dispenseBucket(MAX_TANK_CAPACITY, 3);
+        processor.consumeBucket(MAX_TANK_CAPACITY, SUPPORTED_INPUT_FLUIDS, 1).dispenseBucket(MAX_TANK_CAPACITY, 2);
         return processor.canProcessFluidItem2FluidRecipe(processor, FluidItem2FluidRecipe.class, ElectrolyzerRecipe.TYPE);
     }
 }

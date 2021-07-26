@@ -7,7 +7,7 @@ import net.minecraft.item.crafting.IRecipeType;
 public class FHRecipeTypes {
     public static void registerRecipeTypes() {
         GeneratorRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":generator");
-        ElectrolyzerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":electrolyzer");
+        ElectrolyzerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":electrolyzer_recipe");
     }
 
 }

@@ -7,10 +7,7 @@ import electrodynamics.api.electricity.formatting.ElectricUnit;
 import electrodynamics.common.item.subtype.SubtypeProcessorUpgrade;
 import electrodynamics.prefab.inventory.container.slot.SlotRestricted;
 import electrodynamics.prefab.screen.GenericScreen;
-import electrodynamics.prefab.screen.component.ScreenComponentElectricInfo;
-import electrodynamics.prefab.screen.component.ScreenComponentFluid;
-import electrodynamics.prefab.screen.component.ScreenComponentInfo;
-import electrodynamics.prefab.screen.component.ScreenComponentSlot;
+import electrodynamics.prefab.screen.component.*;
 import electrodynamics.prefab.tile.GenericTile;
 import electrodynamics.prefab.tile.components.ComponentType;
 import electrodynamics.prefab.tile.components.type.ComponentElectrodynamic;
@@ -33,6 +30,16 @@ public class ElectrolyzerScreen extends GenericScreen<ElectrolyzerContainer> {
 
     public ElectrolyzerScreen(ElectrolyzerContainer container, PlayerInventory playerInventory, ITextComponent title) {
         super(container, playerInventory, title);
+        components.add(new ScreenComponentProgress(() -> {
+            GenericTile furnace = container.getHostFromIntArray();
+            if (furnace != null) {
+                ComponentProcessor processor = furnace.getComponent(ComponentType.Processor);
+                if (processor.operatingTicks > 0) {
+                    return processor.operatingTicks / processor.requiredTicks;
+                }
+            }
+            return 0;
+        }, this, 80, 31));
         components.add(new ScreenComponentFluid(() -> {
             ElectrolyzerTile boiler = container.getHostFromIntArray();
             if (boiler != null) {

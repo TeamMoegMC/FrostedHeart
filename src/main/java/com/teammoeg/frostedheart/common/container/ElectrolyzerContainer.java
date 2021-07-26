@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.common.container;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.common.tile.ElectrolyzerTile;
+import electrodynamics.common.tile.TileChemicalMixer;
 import electrodynamics.prefab.inventory.container.GenericContainer;
 import electrodynamics.prefab.inventory.container.slot.GenericSlot;
 import electrodynamics.prefab.inventory.container.slot.SlotRestricted;
@@ -27,9 +28,8 @@ public class ElectrolyzerContainer extends GenericContainer<ElectrolyzerTile> {
 
     @Override
     public void addInventorySlots(IInventory inv, PlayerInventory playerinv) {
-        addSlot(new GenericSlot(inv, 0, 60, 31));
-        addSlot(new GenericSlot(inv, 1, 108, 31));
-        addSlot(new SlotRestricted(inv, 2, 41, 51, ElectrolyzerTile.SUPPORTED_INPUT_FLUIDS));
-        addSlot(new SlotRestricted(inv, 3, 41, 31, SlotRestricted.VALID_EMPTY_BUCKETS[1]));
+        addSlot(new GenericSlot(inv, nextIndex(), 60, 31));
+        addSlot(new SlotRestricted(inv, nextIndex(), 40, 51, TileChemicalMixer.SUPPORTED_INPUT_FLUIDS));
+        addSlot(new SlotRestricted(inv, nextIndex(), 60, 51, SlotRestricted.VALID_EMPTY_BUCKETS[1]));
     }
 }

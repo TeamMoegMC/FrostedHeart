@@ -205,6 +205,7 @@ public class FHMain {
             ScreenManager.registerFactory(FHTileTypes.ELECTROLYZER_CONTAINER.get(), ElectrolyzerScreen::new);
             // Register translucent render type
             RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
+            RenderTypeLookup.setRenderLayer(FHContent.Blocks.electrolyzer, RenderType.getCutoutMipped());
             RenderTypeLookup.setRenderLayer(FHContent.Multiblocks.generator, RenderType.getCutoutMipped());
         }
     }

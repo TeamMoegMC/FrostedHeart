@@ -1,0 +1,20 @@
+{
+	"variants": {
+		"facing=east": {
+			"model": "frostedheart:block/electrolyzer_block",
+			"y": 0
+		},
+		"facing=north": {
+			"model": "frostedheart:block/electrolyzer_block",
+			"y": 270
+		},
+		"facing=south": {
+			"model": "frostedheart:block/electrolyzer_block",
+			"y": 90
+		},
+		"facing=west": {
+			"model": "frostedheart:block/electrolyzer_block",
+			"y": 180
+		}
+	}
+}
