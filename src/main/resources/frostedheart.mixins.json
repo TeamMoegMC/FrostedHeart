@@ -6,7 +6,8 @@
   "mixins": [
     "MixinPortalSize",
     "MixinSnowBlock",
-    "survive.MixinSurviveEvents"
+    "survive.MixinSurviveEvents",
+    "util.WeightedListMixin"
   ],
   "client": [
   ],
