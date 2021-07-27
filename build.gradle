@@ -13,6 +13,7 @@ buildscript {
 
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'maven-publish'
 
 group = 'com.teammoeg'
 version = '1.0.1'
@@ -24,6 +25,7 @@ repositories {
     maven {	name = "BlameJared";	url = "https://maven.blamejared.com/" }         // IE & CT Files
     maven { name = "DVS1 Maven FS"; url = "https://dvs1.progwml6.com/files/maven" } // JEI & Tinkers Files
     maven { url = 'https://maven.latmod.com/' }                                     // Needed for JEI
+    maven { url = "http://server.teammoeg.com:8888/releases"}
 }
 
 sourceSets {
@@ -58,10 +60,8 @@ minecraft {
 
             arg "-mixin.config=" + "frostedheart.mixins.json"
 
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
 
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
             mods {
@@ -79,10 +79,7 @@ minecraft {
 
             arg "-mixin.config=" + "frostedheart.mixins.json"
 
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
             mods {
@@ -98,13 +95,9 @@ minecraft {
 
             workingDirectory project.file('run')
 
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             args '--mod', 'frostedheart', '--all', '--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/'), '--existing-mod', 'immersiveengineering'
 
             mods {
@@ -127,6 +120,12 @@ dependencies {
     compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135")
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:datagen")
 
+    compile fg.deobf('electrodynamics:Electrodynamics:1.16.5-0.4.0-1')
+    implementation fg.deobf('electrodynamics:Electrodynamics:1.16.5-0.4.0-1')
+
+    compile fg.deobf('com.cannolicatfish:Project-Rankine:1.16.5-1.3')
+    implementation fg.deobf('com.cannolicatfish:Project-Rankine:1.16.5-1.3')
+
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
 
@@ -134,20 +133,88 @@ dependencies {
     testAnnotationProcessor "org.spongepowered:mixin:0.8.2:processor"
 }
 
-// Example for how to get properties into the manifest for reading by the runtime..
+javadoc {
+    source = [sourceSets.main.allJava]
+    // prevent java 8's strict doclint for javadocs from failing builds
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : "frostedheart",
-                "Specification-Vendor"    : "YueSha",
+                "Specification-Title"     : "Frosted Heart",
+                "Specification-Vendor"    : "TeamMoeg",
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.version,
-                "Implementation-Vendor"   : "YueSha",
+                "Implementation-Vendor"   : "TeamMoeg",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 "MixinConfigs": "frostedheart.mixins.json"
         ])
     }
+    finalizedBy('reobfJar')
 }
 
-jar.finalizedBy('reobfJar')
+task datagenJar(type: Jar, dependsOn: datagenClasses) {
+    archiveClassifier.set('datagen')
+    from sourceSets.datagen.output
+    manifest {
+        attributes "FMLModType": "LIBRARY"
+    }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier.set('javadoc')
+    from javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.allSource
+    archiveClassifier.set('sources')
+}
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    archiveClassifier.set('deobf')
+}
+
+artifacts {
+    archives sourcesJar
+    archives deobfJar
+}
+
+def getPrivateProps() {
+    File propFile = file("private.properties")
+    if (propFile.exists()) {
+        Properties props = new Properties()
+        props.load(new FileInputStream(propFile))
+        return props
+    } else {
+        return "No private properties file"
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+            artifact deobfJar
+            artifact sourcesJar
+            artifact datagenJar
+            artifact javadocJar
+        }
+    }
+    repositories {
+        maven {
+            name = "TeamMoeg"
+            url = "http://server.teammoeg.com:8888/releases"
+            credentials {
+                username = project.getPrivateProps()["mavenUser"]
+                password = project.getPrivateProps()["mavenToken"]
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
