@@ -183,14 +183,16 @@ artifacts {
     archives deobfJar
 }
 
-def getPrivateProps() {
+def getPrivateString(String key) {
     File propFile = file("private.properties")
     if (propFile.exists()) {
         Properties props = new Properties()
         props.load(new FileInputStream(propFile))
-        return props
+        if ((props[key]).isEmpty()) {
+            return "NULL"
+        } else return props[key]
     } else {
-        return "No private properties file"
+        return "NULL"
     }
 }
 
@@ -209,8 +211,8 @@ publishing {
             name = "TeamMoeg"
             url = "http://server.teammoeg.com:8888/releases"
             credentials {
-                username = project.getPrivateProps()["mavenUser"]
-                password = project.getPrivateProps()["mavenToken"]
+                username = getPrivateString("mavenUser")
+                password = getPrivateString("mavenToken")
             }
             authentication {
                 basic(BasicAuthentication)
