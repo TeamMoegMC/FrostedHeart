@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart;
 
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.common.container.ElectrolyzerContainer;
+import com.teammoeg.frostedheart.common.tile.CrucibleTile;
 import com.teammoeg.frostedheart.common.tile.ElectrolyzerTile;
 import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import net.minecraft.block.Block;
@@ -28,6 +29,9 @@ public class FHTileTypes {
 
     public static final RegistryObject<TileEntityType<ElectrolyzerTile>> ELECTROLYZER = REGISTER.register(
             "electrolyzer", makeType(() -> new ElectrolyzerTile(), () -> FHContent.Blocks.electrolyzer)
+    );
+    public static final RegistryObject<TileEntityType<CrucibleTile>> CRUCIBLE = REGISTER.register(
+            "crucible", makeType(() -> new CrucibleTile(), () -> FHContent.Multiblocks.crucible)
     );
 
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
