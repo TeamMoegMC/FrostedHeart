@@ -9,7 +9,7 @@
 		"amount": 1000
 	},
 	"fluid_output": {
-		"fluid": "electrodynamics:fluidsulfuricacid",
+		"fluid": "minecraft:lava",
 		"amount": 2500
 	}
 }

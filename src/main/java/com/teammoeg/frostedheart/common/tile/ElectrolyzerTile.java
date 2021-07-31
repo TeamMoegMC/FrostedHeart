@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.common.tile;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.common.container.ElectrolyzerContainer;
 import com.teammoeg.frostedheart.common.recipe.ElectrolyzerRecipe;
-import electrodynamics.DeferredRegisters;
 import electrodynamics.api.electricity.CapabilityElectrodynamic;
 import electrodynamics.common.recipe.categories.fluiditem2fluid.FluidItem2FluidRecipe;
 import electrodynamics.common.settings.Constants;
@@ -14,11 +13,13 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class ElectrolyzerTile extends GenericTileTicking {
 
@@ -30,8 +31,7 @@ public class ElectrolyzerTile extends GenericTileTicking {
 
     };
     public static Fluid[] SUPPORTED_OUTPUT_FLUIDS = new Fluid[]{
-
-            DeferredRegisters.fluidSulfuricAcid, DeferredRegisters.fluidPolyethylene
+            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("minecraft", "lava"))
 
     };
 

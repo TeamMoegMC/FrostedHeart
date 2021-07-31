@@ -4,6 +4,7 @@ import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.client.ClientProxy;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.item.SItems;
+import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.ElectrolyzerScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.common.block.cropblock.FHCropBlock;
@@ -202,6 +203,7 @@ public class FHMain {
         public static void onRenderTypeSetup(FMLClientSetupEvent event) {
             // Register screens
             ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
+            ((ClientProxy) ImmersiveEngineering.proxy).registerScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
             ScreenManager.registerFactory(FHTileTypes.ELECTROLYZER_CONTAINER.get(), ElectrolyzerScreen::new);
             // Register translucent render type
             RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
