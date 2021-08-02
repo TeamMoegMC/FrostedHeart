@@ -29,6 +29,11 @@ public class CrucibleBlock<T extends MultiblockPartTileEntity<? super T>> extend
     }
 
     @Override
+    public boolean hasTileEntity(BlockState state) {
+        return true;
+    }
+
+    @Override
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }

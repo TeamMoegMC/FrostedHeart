@@ -1,8 +1,6 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.common.recipe.ElectrolyzerRecipe;
-import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
-import com.teammoeg.frostedheart.common.recipe.GeneratorRecipeSerializer;
+import com.teammoeg.frostedheart.common.recipe.*;
 import electrodynamics.common.recipe.categories.fluiditem2fluid.FluidItem2FluidRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraftforge.registries.DeferredRegister;
@@ -18,6 +16,9 @@ public class FHRecipeSerializers {
     static {
         GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register(
                 "generator", GeneratorRecipeSerializer::new
+        );
+        CrucibleRecipe.SERIALIZER = RECIPE_SERIALIZERS.register(
+                "crucible", CrucibleRecipeSerializer::new
         );
         ElectrolyzerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register(ElectrolyzerRecipe.RECIPE_GROUP,
                 () -> Electrolyzer_JSON_SERIALIZER);

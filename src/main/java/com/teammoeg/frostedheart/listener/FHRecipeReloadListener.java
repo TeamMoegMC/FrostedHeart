@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.listener;
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
+import com.teammoeg.frostedheart.common.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.crafting.IRecipe;
@@ -71,6 +72,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         if (recipes.size() == 0)
             return;
         GeneratorRecipe.recipeList = filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
+        CrucibleRecipe.recipeList = filterRecipes(recipes, CrucibleRecipe.class, CrucibleRecipe.TYPE);
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {

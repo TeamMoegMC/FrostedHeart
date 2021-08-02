@@ -40,6 +40,10 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
 
+        int temp = tile.temperature;
+        int offset = temp / 14;
+        int bar = temp / 14;
+        this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
     }
 
     @Override

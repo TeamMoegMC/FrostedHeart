@@ -209,6 +209,7 @@ public class FHMain {
             RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
             RenderTypeLookup.setRenderLayer(FHContent.Blocks.electrolyzer, RenderType.getCutoutMipped());
             RenderTypeLookup.setRenderLayer(FHContent.Multiblocks.generator, RenderType.getCutoutMipped());
+            RenderTypeLookup.setRenderLayer(FHContent.Multiblocks.crucible, RenderType.getCutoutMipped());
         }
     }
 
