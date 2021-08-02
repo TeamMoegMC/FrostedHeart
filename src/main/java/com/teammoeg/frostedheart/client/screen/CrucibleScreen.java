@@ -20,6 +20,7 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
     public CrucibleScreen(CrucibleContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);
         this.tile = container.tile;
+        clearIntArray(tile.guiData);
     }
 
     @Override

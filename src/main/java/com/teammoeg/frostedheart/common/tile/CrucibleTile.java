@@ -4,6 +4,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.items.IEItems;
 import blusunrize.immersiveengineering.common.util.Utils;
+import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
@@ -14,12 +15,17 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
+import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,9 +33,10 @@ import javax.annotation.Nullable;
 public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
+    public CrucibleTile.CrucibleData guiData = new CrucibleTile.CrucibleData();
     private NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
     public int temperature;
-    public int burntime;
+    public int burnTime;
     public int process = 0;
     public int processMax = 0;
 
@@ -59,6 +66,15 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
         return VoxelShapes.fullCube();
     }
 
+    @Override
+    public boolean receiveClientEvent(int id, int arg) {
+        if (id == 0)
+            this.formed = arg == 1;
+        markDirty();
+        this.markContainingBlockForUpdate(null);
+        return true;
+    }
+
     @Nullable
     @Override
     public IEBlockInterfaces.IInteractionObjectIE getGuiMaster() {
@@ -72,12 +88,18 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
 
     @Override
     public int[] getCurrentProcessesStep() {
-        return new int[0];
+        CrucibleTile master = master();
+        if (master != this && master != null)
+            return master.getCurrentProcessesStep();
+        return new int[]{processMax - process};
     }
 
     @Override
     public int[] getCurrentProcessesMax() {
-        return new int[0];
+        CrucibleTile master = master();
+        if (master != this && master != null)
+            return master.getCurrentProcessesMax();
+        return new int[]{processMax};
     }
 
     @Nullable
@@ -104,15 +126,43 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
 
     }
 
+    LazyOptional<IItemHandler> invHandler = registerConstantCap(
+            new IEInventoryHandler(3, this, 0, new boolean[]{true, false, true},
+                    new boolean[]{false, true, false})
+    );
+
+    @Nonnull
+    @Override
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            CrucibleTile master = master();
+            if (master != null)
+                return master.invHandler.cast();
+        }
+        return super.getCapability(capability, facing);
+    }
+
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         setTemperature(nbt.getInt("temperature"));
-        setBurntime(nbt.getInt("burntime"));
+        setBurnTime(nbt.getInt("burntime"));
         if (!descPacket) {
             ItemStackHelper.loadAllItems(nbt, inventory);
             process = nbt.getInt("process");
             processMax = nbt.getInt("processMax");
+        }
+    }
+
+    @Override
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.writeCustomNBT(nbt, descPacket);
+        nbt.putInt("temperature", temperature);
+        nbt.putInt("burntime", burnTime);
+        if (!descPacket) {
+            nbt.putInt("process", process);
+            nbt.putInt("processMax", processMax);
+            ItemStackHelper.saveAllItems(nbt, inventory);
         }
     }
 
@@ -121,21 +171,9 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
             master().temperature = temperature;
     }
 
-    public void setBurntime(int burntime) {
+    public void setBurnTime(int burnTime) {
         if (master() != null)
-            master().burntime = burntime;
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        nbt.putInt("temperature", temperature);
-        nbt.putInt("burntime", burntime);
-        if (!descPacket) {
-            nbt.putInt("process", process);
-            nbt.putInt("processMax", processMax);
-            ItemStackHelper.saveAllItems(nbt, inventory);
-        }
+            master().burnTime = burnTime;
     }
 
     @Override
@@ -144,16 +182,16 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
         if (world.isRemote && formed && !isDummy()) {
             CrucibleRecipe recipe = getRecipe();
             System.out.println(process);
-            if (burntime > 0 && temperature < 1600) {
-                burntime--;
+            if (burnTime > 0 && temperature < 1600) {
+                burnTime--;
                 temperature++;
             }
-            if (burntime <= 0 && temperature > 0) {
+            if (burnTime <= 0 && temperature > 0) {
                 temperature--;
             }
-            if (burntime <= 0) {
+            if (burnTime <= 0) {
                 if (inventory.get(2).getItem() == IEItems.Ingredients.coalCoke) {
-                    burntime = 400;
+                    burnTime = 400;
                     inventory.get(2).shrink(1);
                     this.markDirty();
                 }
@@ -202,5 +240,53 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
             return recipe;
         }
         return null;
+    }
+
+    public class CrucibleData implements IIntArray
+    {
+        public static final int BURN_TIME = 0;
+        public static final int PROCESS_MAX = 1;
+        public static final int CURRENT_PROCESS = 2;
+
+        @Override
+        public int get(int index)
+        {
+            switch(index)
+            {
+                case BURN_TIME:
+                    return burnTime;
+                case PROCESS_MAX:
+                    return processMax;
+                case CURRENT_PROCESS:
+                    return process;
+                default:
+                    throw new IllegalArgumentException("Unknown index "+index);
+            }
+        }
+
+        @Override
+        public void set(int index, int value)
+        {
+            switch(index)
+            {
+                case BURN_TIME:
+                    burnTime = value;
+                    break;
+                case PROCESS_MAX:
+                    processMax = value;
+                    break;
+                case CURRENT_PROCESS:
+                    process = value;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown index "+index);
+            }
+        }
+
+        @Override
+        public int size()
+        {
+            return 3;
+        }
     }
 }
