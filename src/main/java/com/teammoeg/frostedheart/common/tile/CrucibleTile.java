@@ -14,9 +14,12 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
@@ -29,6 +32,7 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Random;
 
 public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
@@ -64,15 +68,6 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
     @Override
     public VoxelShape getBlockBounds(@Nullable ISelectionContext ctx) {
         return VoxelShapes.fullCube();
-    }
-
-    @Override
-    public boolean receiveClientEvent(int id, int arg) {
-        if (id == 0)
-            this.formed = arg == 1;
-        markDirty();
-        this.markContainingBlockForUpdate(null);
-        return true;
     }
 
     @Nullable
@@ -113,6 +108,10 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
 
     @Override
     public boolean isStackValid(int slot, ItemStack stack) {
+        if (stack.isEmpty())
+            return false;
+        if (slot == 0)
+            return CrucibleRecipe.findRecipe(stack) != null;
         return false;
     }
 
@@ -179,9 +178,9 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
     @Override
     public void tick() {
         checkForNeedlessTicking();
-        if (world.isRemote && formed && !isDummy()) {
+        if (!world.isRemote && formed && !isDummy()) {
             CrucibleRecipe recipe = getRecipe();
-            System.out.println(process);
+            final boolean activeBeforeTick = getIsActive();
             if (burnTime > 0 && temperature < 1600) {
                 burnTime--;
                 temperature++;
@@ -191,7 +190,7 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
             }
             if (burnTime <= 0) {
                 if (inventory.get(2).getItem() == IEItems.Ingredients.coalCoke) {
-                    burnTime = 400;
+                    burnTime = 600;
                     inventory.get(2).shrink(1);
                     this.markDirty();
                 }
@@ -212,17 +211,43 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
                 }
                 this.markContainingBlockForUpdate(null);
             } else {
-                if (recipe != null && processMax != 0) {
-                    Utils.modifyInvStackSize(inventory, 0, -1);
-                    if (!inventory.get(1).isEmpty())
-                        inventory.get(1).grow(recipe.output.copy().getCount());
-                    else if (inventory.get(1).isEmpty())
-                        inventory.set(1, recipe.output.copy());
+                if (activeBeforeTick) {
+                    if (recipe != null) {
+                        Utils.modifyInvStackSize(inventory, 0, -recipe.input.getCount());
+                        if (!inventory.get(1).isEmpty())
+                            inventory.get(1).grow(recipe.output.copy().getCount());
+                        else if (inventory.get(1).isEmpty())
+                            inventory.set(1, recipe.output.copy());
+                    }
                     processMax = 0;
+                    setActive(false);
                 }
                 if (recipe != null) {
                     this.process = recipe.time;
                     this.processMax = process;
+                    setActive(true);
+                }
+            }
+            final boolean activeAfterTick = getIsActive();
+            if (activeBeforeTick != activeAfterTick) {
+                this.markDirty();
+                // scan 3x4x3
+                for (int x = 0; x < 3; ++x)
+                    for (int y = 0; y < 4; ++y)
+                        for (int z = 0; z < 3; ++z) {
+                            BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+                            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                            if (te instanceof CrucibleTile)
+                                ((CrucibleTile) te).setActive(activeAfterTick);
+                        }
+            }
+        }
+        if (world != null && world.isRemote && formed && !isDummy() && getIsActive()) {
+            Random random = world.rand;
+            if (random.nextFloat() < 0.50F) {
+                for (int i = 0; i < random.nextInt(2) + 2; ++i) {
+                    world.addOptionalParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, (double) pos.getX() + 0.5D + random.nextDouble() / 3.0D * (double) (random.nextBoolean() ? 1 : -1), (double) pos.getY() + random.nextDouble() + random.nextDouble(), (double) pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (double) (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
+                    world.addParticle(ParticleTypes.SMOKE, (double) pos.getX() + 0.25D + random.nextDouble() / 2.0D * (double) (random.nextBoolean() ? 1 : -1), (double) pos.getY() + 0.4D, (double) pos.getZ() + 0.25D + random.nextDouble() / 2.0D * (double) (random.nextBoolean() ? 1 : -1), 0.002D, 0.01D, 0.0D);
                 }
             }
         }

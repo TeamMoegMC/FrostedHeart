@@ -10,11 +10,8 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
-    private static final ResourceLocation TEXTURE = FHScreenUtils.makeTextureLocation("generatornew");
+    private static final ResourceLocation TEXTURE = FHScreenUtils.makeTextureLocation("crucible");
     private CrucibleTile tile;
 
     public CrucibleScreen(CrucibleContainer container, PlayerInventory inv, ITextComponent title) {
@@ -26,30 +23,32 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
     @Override
     public void init() {
         super.init();
-
     }
 
     @Override
     public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
-        List<ITextComponent> tooltip = new ArrayList<>();
-
     }
 
     @Override
     protected void drawGuiContainerBackgroundLayer(MatrixStack transform, float partial, int x, int y) {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
+        if (tile.temperature > 0) {
+            int temp = tile.temperature;
+            int bar = temp / 30;
+            this.blit(transform, guiLeft + 12, guiTop + 67 - bar, 177, 83 - bar, 5, bar);
+        }
+        if (tile.burnTime > 0) {
+            int h = tile.burnTime / 46;
+            this.blit(transform, guiLeft + 84, guiTop + 47 - h, 179, 1 + 12 - h, 9, h);
+        }
+        if (tile.process > 0) {
+            int h = tile.process / tile.processMax * 21;
+            this.blit(transform, guiLeft + 78, guiTop + 16, 204, 15, 21 - h, 15);
+        }
 
-        int temp = tile.temperature;
-        int offset = temp / 14;
-        int bar = temp / 14;
-        this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
     }
 
-    @Override
-    public boolean isMouseIn(int mouseX, int mouseY, int x, int y, int w, int h) {
-        return mouseX >= guiLeft + x && mouseY >= guiTop + y
-                && mouseX < guiLeft + x + w && mouseY < guiTop + y + h;
-    }
+
 }

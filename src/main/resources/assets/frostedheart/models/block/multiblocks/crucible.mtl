@@ -1,4 +1,3 @@
 # Made in Blockbench 3.9.2
 newmtl m_0
-map_Kd frostedheart:block/multiblocks/crucible_cup
-newmtl none
+map_Kd #side

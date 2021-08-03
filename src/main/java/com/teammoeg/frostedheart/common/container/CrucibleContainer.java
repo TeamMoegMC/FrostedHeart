@@ -2,8 +2,9 @@ package com.teammoeg.frostedheart.common.container;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
+import blusunrize.immersiveengineering.common.items.IEItems;
+import com.teammoeg.frostedheart.common.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.common.tile.CrucibleTile;
-import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
@@ -14,20 +15,20 @@ public class CrucibleContainer extends IEBaseContainer<CrucibleTile> {
     public CrucibleContainer(int id, PlayerInventory inventoryPlayer, CrucibleTile tile) {
         super(inventoryPlayer, tile, id);
 
-        // input fuel
-        this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
+        // input
+        this.addSlot(new IESlot(this, this.inv, 0, 51, 12) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return true;
+                return CrucibleRecipe.findRecipe(itemStack) != null;
             }
         });
         // output
-        this.addSlot(new IESlot.Output(this, this.inv, 1, 40, 51));
-        // input
+        this.addSlot(new IESlot.Output(this, this.inv, 1, 106, 12));
+        // input fuel
         this.addSlot(new IESlot(this, this.inv, 2, 80, 51) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return true;
+                return itemStack.getItem() == IEItems.Ingredients.coalCoke;
             }
         });
         slotCount = 3;
