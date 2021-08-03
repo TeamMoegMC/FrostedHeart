@@ -297,7 +297,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         if (world != null && world.isRemote && formed && !isDummy() && getIsActive()) {
             BlockPos blockpos = this.getPos();
             Random random = world.rand;
-            if (random.nextFloat() < 0.50F) {
+            if (random.nextFloat() < 0.4F) {
                 for (int i = 0; i < random.nextInt(2) + 2; ++i) {
                     GeneratorMultiblockBlock.spawnSmokeParticles(world, blockpos);
                     GeneratorMultiblockBlock.spawnFireParticles(world, blockpos);

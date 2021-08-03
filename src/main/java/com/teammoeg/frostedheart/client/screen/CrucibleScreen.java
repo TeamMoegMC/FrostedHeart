@@ -28,6 +28,7 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
     @Override
     public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
+
     }
 
     @Override
@@ -45,7 +46,7 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
         }
         if (tile.processMax > 0 && tile.process > 0) {
             int h = (int) (21 * (tile.process / (float) tile.processMax));
-            this.blit(transform, guiLeft + 78, guiTop + 16, 204, 15, 21 - h, 15);
+            this.blit(transform, guiLeft + 76, guiTop + 14, 204, 15, 21 - h, 15);
         }
 
     }
