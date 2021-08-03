@@ -42,7 +42,6 @@ public class CrucibleBlock<T extends MultiblockPartTileEntity<? super T>> extend
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
-
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);

@@ -1,8 +1,7 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "frostedheart:block/multiblocks/crudegeneratorstone",
-    "side": "frostedheart:block/multiblocks/crucible_cup_lit"
+    "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
   },
   "loader": "forge:obj",
   "model": "frostedheart:models/block/multiblocks/generator.obj",

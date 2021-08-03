@@ -22,7 +22,7 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
 
     @Override
     public void init() {
-        super.init();
+      super.init();
     }
 
     @Override
