@@ -70,6 +70,15 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
         return VoxelShapes.fullCube();
     }
 
+    @Override
+    public boolean receiveClientEvent(int id, int arg) {
+        if (id == 0)
+            this.formed = arg == 1;
+        markDirty();
+        this.markContainingBlockForUpdate(null);
+        return true;
+    }
+
     @Nullable
     @Override
     public IEBlockInterfaces.IInteractionObjectIE getGuiMaster() {

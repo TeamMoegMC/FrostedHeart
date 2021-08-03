@@ -40,11 +40,11 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
             this.blit(transform, guiLeft + 12, guiTop + 67 - bar, 177, 83 - bar, 5, bar);
         }
         if (tile.burnTime > 0) {
-            int h = tile.burnTime / 46;
+            int h = (int) (tile.burnTime / 46.0f);
             this.blit(transform, guiLeft + 84, guiTop + 47 - h, 179, 1 + 12 - h, 9, h);
         }
-        if (tile.process > 0) {
-            int h = tile.process / tile.processMax * 21;
+        if (tile.processMax > 0 && tile.process > 0) {
+            int h = (int) (21 * (tile.process / (float) tile.processMax));
             this.blit(transform, guiLeft + 78, guiTop + 16, 204, 15, 21 - h, 15);
         }
 
