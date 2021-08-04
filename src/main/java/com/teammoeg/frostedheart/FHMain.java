@@ -18,14 +18,15 @@ import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
-import com.teammoeg.frostedheart.world.noise.Vec4;
+import electrodynamics.DeferredRegisters;
+import electrodynamics.common.tile.TileChemicalCrystallizer;
+import electrodynamics.common.tile.TileChemicalMixer;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.KelpBlock;
 import net.minecraft.block.KelpTopBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.RenderType;
@@ -33,6 +34,7 @@ import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -83,7 +85,6 @@ import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.teammoeg.frostedheart.FHContent.*;
@@ -135,6 +136,21 @@ public class FHMain {
     }
 
     public void setup(final FMLCommonSetupEvent event) {
+        TileChemicalMixer.SUPPORTED_INPUT_FLUIDS = new Fluid[]{
+
+                Fluids.WATER, DeferredRegisters.fluidEthanol
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "chlorine"))
+
+        };
+        TileChemicalMixer.SUPPORTED_OUTPUT_FLUIDS = new Fluid[]{
+
+                DeferredRegisters.fluidSulfuricAcid, DeferredRegisters.fluidPolyethylene
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))
+
+        };
+        TileChemicalCrystallizer.OTHER_INPUT_FLUIDS = new Fluid[]{DeferredRegisters.fluidPolyethylene, ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))};
+        TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = new Fluid[DeferredRegisters.SUBTYPEMINERALFLUID_MAPPINGS.values().size() + TileChemicalCrystallizer.OTHER_INPUT_FLUIDS.length
+                ];
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapability.setup();
     }
