@@ -15,7 +15,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 
-public final class ChunkDataCapability {
+public final class ChunkDataCapabilityProvider {
     @CapabilityInject(ChunkData.class)
     public static Capability<ChunkData> CAPABILITY;
     public static final ResourceLocation KEY = new ResourceLocation(FHMain.MODID, "chunk_data");
