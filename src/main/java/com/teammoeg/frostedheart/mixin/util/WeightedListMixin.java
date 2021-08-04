@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.mixin.util;
 
 import com.google.common.collect.Lists;
-import com.teammoeg.frostedheart.util.IWeightedList;
+import com.teammoeg.frostedheart.bridge.WeightedListBridge;
 import net.minecraft.util.WeightedList;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,7 +17,7 @@ import java.util.Random;
  *     @see WeightedList
  */
 @Mixin(WeightedList.class)
-public class WeightedListMixin<U> implements IWeightedList {
+public class WeightedListMixin<U> implements WeightedListBridge {
     @Shadow @Final protected List<WeightedList.Entry<U>> weightedEntries;
     @Unique
     private boolean isUnsafe;
@@ -34,7 +34,7 @@ public class WeightedListMixin<U> implements IWeightedList {
 
     public WeightedList<U> getWeightedList(List<WeightedList.Entry<U>> weightedEntries, boolean isUnsafe) {
         WeightedList<U> weightedList = new WeightedList<U>(weightedEntries);
-        ((IWeightedList) weightedList).setUnsafe(isUnsafe);
+        ((WeightedListBridge) weightedList).setUnsafe(isUnsafe);
         return weightedList;
     }
 
@@ -46,7 +46,7 @@ public class WeightedListMixin<U> implements IWeightedList {
         List<WeightedList.Entry<U>> list = this.isUnsafe ? Lists.newArrayList(this.weightedEntries) : this.weightedEntries;
         list.forEach(entry -> entry.generateChance(rand.nextFloat()));
         list.sort(Comparator.comparingDouble(WeightedList.Entry::getChance));
-        IWeightedList weightedList = this;
+        WeightedListBridge weightedList = this;
         return this.isUnsafe ? getWeightedList(list, this.isUnsafe) : (WeightedList<U>) weightedList;
     }
 

@@ -5,6 +5,10 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "MixinPortalSize",
+    "MixinTileChemicalMixer",
+    "electrodynamics.ComponentFluidHandlerAccess",
+    "electrodynamics.ComponentFluidHandlerMixin",
+    "primalwinter.MixinWeatherData",
     "survive.MixinSurviveEvents",
     "util.WeightedListMixin"
   ],
