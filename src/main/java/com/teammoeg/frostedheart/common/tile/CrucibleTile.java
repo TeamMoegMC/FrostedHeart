@@ -43,7 +43,7 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
     public int burnTime;
     public int process = 0;
     public int processMax = 0;
-
+    public int updatetick = 0;
     public CrucibleTile() {
         super(FHMultiblocks.CRUCIBLE, FHTileTypes.CRUCIBLE.get(), false);
     }
@@ -121,6 +121,8 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
             return false;
         if (slot == 0)
             return CrucibleRecipe.findRecipe(stack) != null;
+        if (slot == 2)
+            return stack.getItem() == IEItems.Ingredients.coalCoke;
         return false;
     }
 
@@ -189,71 +191,79 @@ public class CrucibleTile extends MultiblockPartTileEntity<CrucibleTile> impleme
         checkForNeedlessTicking();
         if (!world.isRemote && formed && !isDummy()) {
             CrucibleRecipe recipe = getRecipe();
-            final boolean activeBeforeTick = getIsActive();
-            if (burnTime > 0 && temperature < 1600) {
-                burnTime--;
-                temperature++;
+            updatetick++;
+            if (temperature > 0 && updatetick > 20) {
+                updatetick = 0;
+                this.markContainingBlockForUpdate(null);
             }
-            if (burnTime <= 0 && temperature > 0) {
+            if (burnTime > 0 && temperature < 1600) {
+                temperature++;
+            } else if (burnTime <= 0 && temperature > 0) {
                 temperature--;
             }
-            if (burnTime <= 0) {
+            if (burnTime > 0) {
+                burnTime--;
+            } else {
                 if (inventory.get(2).getItem() == IEItems.Ingredients.coalCoke) {
                     burnTime = 600;
                     inventory.get(2).shrink(1);
                     this.markDirty();
                 }
             }
-            if (process > 0) {
-                if (inventory.get(0).isEmpty()) {
-                    process = 0;
-                    processMax = 0;
-                }
-                // during process
-                else {
-                    if (recipe == null || recipe.time != processMax) {
+            if (temperature > 1500) {
+                final boolean activeBeforeTick = getIsActive();
+                if (process > 0) {
+                    if (inventory.get(0).isEmpty()) {
                         process = 0;
                         processMax = 0;
-                    } else {
-                        process--;
                     }
-                }
-                this.markContainingBlockForUpdate(null);
-            } else {
-                if (activeBeforeTick) {
-                    if (recipe != null) {
-                        Utils.modifyInvStackSize(inventory, 0, -recipe.input.getCount());
-                        if (!inventory.get(1).isEmpty())
-                            inventory.get(1).grow(recipe.output.copy().getCount());
-                        else if (inventory.get(1).isEmpty())
-                            inventory.set(1, recipe.output.copy());
-                    }
-                    processMax = 0;
-                    setActive(false);
-                }
-                if (recipe != null) {
-                    this.process = recipe.time;
-                    this.processMax = process;
-                    setActive(true);
-                }
-            }
-            final boolean activeAfterTick = getIsActive();
-            if (activeBeforeTick != activeAfterTick) {
-                this.markDirty();
-                // scan 3x4x3
-                for (int x = 0; x < 3; ++x)
-                    for (int y = 0; y < 4; ++y)
-                        for (int z = 0; z < 3; ++z) {
-                            BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                            if (te instanceof CrucibleTile)
-                                ((CrucibleTile) te).setActive(activeAfterTick);
+                    // during process
+                    else {
+                        if (recipe == null || recipe.time != processMax) {
+                            process = 0;
+                            processMax = 0;
+                        } else {
+                            process--;
                         }
+                    }
+                    this.markContainingBlockForUpdate(null);
+                } else {
+
+                    if (activeBeforeTick) {
+                        if (recipe != null) {
+                            Utils.modifyInvStackSize(inventory, 0, -recipe.input.getCount());
+                            if (!inventory.get(1).isEmpty())
+                                inventory.get(1).grow(recipe.output.copy().getCount());
+                            else if (inventory.get(1).isEmpty())
+                                inventory.set(1, recipe.output.copy());
+                        }
+                        processMax = 0;
+                        setActive(false);
+                    }
+                    if (recipe != null) {
+                        this.process = recipe.time;
+                        this.processMax = process;
+                        setActive(true);
+                    }
+                }
+                final boolean activeAfterTick = getIsActive();
+                if (activeBeforeTick != activeAfterTick) {
+                    this.markDirty();
+                    // scan 3x4x3
+                    for (int x = 0; x < 3; ++x)
+                        for (int y = 0; y < 4; ++y)
+                            for (int z = 0; z < 3; ++z) {
+                                BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+                                TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                                if (te instanceof CrucibleTile)
+                                    ((CrucibleTile) te).setActive(activeAfterTick);
+                            }
+                }
             }
         }
         if (world != null && world.isRemote && formed && !isDummy() && getIsActive()) {
             Random random = world.rand;
-            if (random.nextFloat() < 0.50F) {
+            if (random.nextFloat() < 0.4F) {
                 for (int i = 0; i < random.nextInt(2) + 2; ++i) {
                     world.addOptionalParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, (double) pos.getX() + 0.5D + random.nextDouble() / 3.0D * (double) (random.nextBoolean() ? 1 : -1), (double) pos.getY() + random.nextDouble() + random.nextDouble(), (double) pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (double) (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);
                     world.addParticle(ParticleTypes.SMOKE, (double) pos.getX() + 0.25D + random.nextDouble() / 2.0D * (double) (random.nextBoolean() ? 1 : -1), (double) pos.getY() + 0.4D, (double) pos.getZ() + 0.25D + random.nextDouble() / 2.0D * (double) (random.nextBoolean() ? 1 : -1), 0.002D, 0.01D, 0.0D);
