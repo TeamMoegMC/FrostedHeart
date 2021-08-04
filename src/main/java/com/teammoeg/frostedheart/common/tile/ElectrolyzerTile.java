@@ -31,8 +31,7 @@ public class ElectrolyzerTile extends GenericTileTicking {
 
     };
     public static Fluid[] SUPPORTED_OUTPUT_FLUIDS = new Fluid[]{
-            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("minecraft", "lava"))
-
+            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "chlorine"))
     };
 
     public ElectrolyzerTile() {
