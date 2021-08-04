@@ -17,7 +17,7 @@ import com.teammoeg.frostedheart.util.UV4i;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapability;
+import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapabilityProvider;
 import electrodynamics.DeferredRegisters;
 import electrodynamics.common.tile.TileChemicalCrystallizer;
 import electrodynamics.common.tile.TileChemicalMixer;
@@ -85,7 +85,9 @@ import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.teammoeg.frostedheart.FHContent.*;
 import static net.minecraft.util.text.TextFormatting.*;
@@ -146,13 +148,16 @@ public class FHMain {
 
                 DeferredRegisters.fluidSulfuricAcid, DeferredRegisters.fluidPolyethylene
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water"))
 
         };
-        TileChemicalCrystallizer.OTHER_INPUT_FLUIDS = new Fluid[]{DeferredRegisters.fluidPolyethylene, ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))};
-        TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = new Fluid[DeferredRegisters.SUBTYPEMINERALFLUID_MAPPINGS.values().size() + TileChemicalCrystallizer.OTHER_INPUT_FLUIDS.length
-                ];
+        ArrayList<Fluid> list = Arrays.stream(TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS).collect(Collectors.toCollection(ArrayList::new));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride")));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water")));
+        TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = list.toArray(new Fluid[list.size()]);
+
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
-        ChunkDataCapability.setup();
+        ChunkDataCapabilityProvider.setup();
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
@@ -272,7 +277,7 @@ public class FHMain {
                     // Default to using the cache. If later the sync packet arrives it will update the same instance in the chunk capability and cache
                     data = ChunkDataCache.CLIENT.getOrCreate(chunkPos);
                 }
-                event.addCapability(ChunkDataCapability.KEY, data);
+                event.addCapability(ChunkDataCapabilityProvider.KEY, data);
             }
         }
 

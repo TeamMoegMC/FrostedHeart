@@ -48,7 +48,7 @@ public class ElectrolyzerTile extends GenericTileTicking {
         addComponent(new ComponentProcessor(this).canProcess(component -> canProcessChemMix(component))
                 .process(component -> component.processFluidItem2FluidRecipe(component, ElectrolyzerRecipe.class))
                 .usage(Constants.CHEMICALMIXER_USAGE_PER_TICK).type(ComponentProcessorType.ObjectToObject)
-                .requiredTicks(600));
+                .requiredTicks(400));
         addComponent(new ComponentContainerProvider("container.electrolyzer")
                 .createMenu((id, player) -> new ElectrolyzerContainer(id, player, getComponent(ComponentType.Inventory), getCoordsArray())));
     }
