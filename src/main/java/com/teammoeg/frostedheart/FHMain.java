@@ -5,6 +5,7 @@ import blusunrize.immersiveengineering.client.ClientProxy;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.item.SItems;
+import com.teammoeg.frostedheart.capability.TempForecastCapabilityProvider;
 import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.ElectrolyzerScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
@@ -13,6 +14,7 @@ import com.teammoeg.frostedheart.listener.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.listener.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.WeatherPacket;
 import com.teammoeg.frostedheart.util.UV4i;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
@@ -32,6 +34,7 @@ import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -60,6 +63,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -85,9 +89,7 @@ import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.teammoeg.frostedheart.FHContent.*;
 import static net.minecraft.util.text.TextFormatting.*;
@@ -148,16 +150,14 @@ public class FHMain {
 
                 DeferredRegisters.fluidSulfuricAcid, DeferredRegisters.fluidPolyethylene
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))
-                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water"))
 
         };
-        ArrayList<Fluid> list = Arrays.stream(TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS).collect(Collectors.toCollection(ArrayList::new));
-        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride")));
-        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water")));
-        TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = list.toArray(new Fluid[list.size()]);
-
+        TileChemicalCrystallizer.OTHER_INPUT_FLUIDS = new Fluid[]{DeferredRegisters.fluidPolyethylene, ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))};
+        TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = new Fluid[DeferredRegisters.SUBTYPEMINERALFLUID_MAPPINGS.values().size() + TileChemicalCrystallizer.OTHER_INPUT_FLUIDS.length
+                ];
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapabilityProvider.setup();
+        TempForecastCapabilityProvider.setup();
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
@@ -242,6 +242,13 @@ public class FHMain {
     @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ForgeEvents {
         @SubscribeEvent
+        public static void onServerTick(TickEvent.WorldTickEvent event) {
+            if (!event.world.isRemote) {
+                PacketHandler.send(PacketDistributor.ALL.noArg(), new WeatherPacket((ServerWorld) event.world));
+            }
+        }
+
+        @SubscribeEvent
         public static void addReloadListeners(AddReloadListenerEvent event) {
             DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
             IReloadableResourceManager resourceManager = (IReloadableResourceManager) dataPackRegistries.getResourceManager();
@@ -253,6 +260,13 @@ public class FHMain {
         public static void addReloadListenersLowest(AddReloadListenerEvent event) {
             DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
             event.addListener(new FHRecipeCachingReloadListener(dataPackRegistries));
+        }
+
+        @SubscribeEvent
+        public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
+            if (event.getObject() != null) {
+                event.addCapability(TempForecastCapabilityProvider.KEY, new TempForecastCapabilityProvider());
+            }
         }
 
         @SubscribeEvent
@@ -390,6 +404,14 @@ public class FHMain {
                 } else {
                     list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
                 }
+                mc.world.getCapability(TempForecastCapabilityProvider.CAPABILITY).ifPresent((capability -> {
+                    int clearTime = capability.getClearTime();
+                    int rainTime = capability.getRainTime();
+                    int thunderTime = capability.getThunderTime();
+                    list.add("Weather will be clear for: " + clearTime);
+                    list.add("Ticks until rain: " + rainTime);
+                    list.add("Ticks until thunder: " + thunderTime);
+                }));
             }
         }
 
