@@ -11,9 +11,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(SurviveEvents.class)
-public class MixinSurviveEvents {
+public class SurviveEventsMixin {
     /**
      * @author yuesha-yc
+     * Add our chunk temperature logic
      */
     @Overwrite
     @SubscribeEvent
