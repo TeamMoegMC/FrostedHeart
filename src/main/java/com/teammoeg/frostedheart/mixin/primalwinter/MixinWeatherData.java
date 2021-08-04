@@ -34,7 +34,7 @@ public class MixinWeatherData {
 //    @Inject(method = "trySetEndlessStorm(Lnet/minecraft/world/server/ServerWorld;)V", at = @At(value = "FIELD", target = "Lcom/alcatrazescapee/primalwinter/util/WeatherData;alreadySetWorldToWinter:Z", ordinal = 1), cancellable = true)
 //    @Inject(method = "trySetEndlessStorm(Lnet/minecraft/world/server/ServerWorld;)V", at = @At(value = "HEAD"), cancellable = true)
 //    @Inject(method = "trySetEndlessStorm(Lnet/minecraft/world/server/ServerWorld;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getGameRules()Lnet/minecraft/world/GameRules;"), cancellable = true)
-    @Inject(method = "trySetEndlessStorm(Lnet/minecraft/world/server/ServerWorld;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;getGameRules()Lnet/minecraft/world/GameRules;"), cancellable = true)
+    @Inject(method = "trySetEndlessStorm(Lnet/minecraft/world/server/ServerWorld;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;getGameRules()Lnet/minecraft/world/GameRules;"), cancellable = true, remap = false)
     private static void frostedheart$trySetEndlessStorm(ServerWorld world, CallbackInfo ci) {
         world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(true, world.getServer());
         world.setWeather(10000, Integer.MAX_VALUE, false, false);
