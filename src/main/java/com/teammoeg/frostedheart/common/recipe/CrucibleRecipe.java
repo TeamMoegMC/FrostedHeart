@@ -6,6 +6,8 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -45,5 +47,12 @@ public class CrucibleRecipe extends IESerializableRecipe {
             if (ItemUtils.stackMatchesObject(input, recipe.input))
                 return recipe;
         return null;
+    }
+
+    @Override
+    public NonNullList<Ingredient> getIngredients() {
+        NonNullList<Ingredient> nonnulllist = NonNullList.create();
+        nonnulllist.add(this.input.getBaseIngredient());
+        return nonnulllist;
     }
 }

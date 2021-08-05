@@ -24,6 +24,8 @@ public class FHFeatures {
     public static final ConfiguredFeature<?, ?> ore_bauxite = register("ore_bauxite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bauxite, RankineBlocks.BAUXITE_ORE.get().getStateContainer().getBaseState(), 50)).range(60).square().chance(0));
     public static final ConfiguredFeature<?, ?> ore_stibnite = register("ore_stibnite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.stibnite, RankineBlocks.STIBNITE_ORE.get().getStateContainer().getBaseState(), 35)).range(65).square().chance(10));
     public static final ConfiguredFeature<?, ?> ore_cinnabar = register("ore_cinnabar", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.CINNABAR_ORE.get().getStateContainer().getBaseState(), 40)).range(30).square().chance(4));
+    public static final ConfiguredFeature<?, ?> ore_magnesite = register("ore_magnesite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.magnesite, RankineBlocks.MAGNESITE_ORE.get().getStateContainer().getBaseState(), 40)).range(65).square().chance(8));
+    public static final ConfiguredFeature<?, ?> ore_galena = register("ore_galena", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.GALENA_ORE.get().getStateContainer().getBaseState(), 40)).range(65).square().chance(5));
 
     private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> register(String key, ConfiguredFeature<FC, ?> configuredFeature) {
         FH_ORES.add(configuredFeature);

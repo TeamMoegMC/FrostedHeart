@@ -1,0 +1,10 @@
+{
+	"type": "frostedheart:crucible",
+	"result": {
+		"item": "electrodynamics:ingotsteel"
+	},
+	"input": {
+		"item": "minecraft:iron_ingot"
+	},
+	"time": 1200
+}

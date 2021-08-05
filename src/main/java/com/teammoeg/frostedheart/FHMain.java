@@ -34,7 +34,6 @@ import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -89,7 +88,9 @@ import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.teammoeg.frostedheart.FHContent.*;
 import static net.minecraft.util.text.TextFormatting.*;
@@ -150,11 +151,14 @@ public class FHMain {
 
                 DeferredRegisters.fluidSulfuricAcid, DeferredRegisters.fluidPolyethylene
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water"))
 
         };
-        TileChemicalCrystallizer.OTHER_INPUT_FLUIDS = new Fluid[]{DeferredRegisters.fluidPolyethylene, ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))};
-        TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = new Fluid[DeferredRegisters.SUBTYPEMINERALFLUID_MAPPINGS.values().size() + TileChemicalCrystallizer.OTHER_INPUT_FLUIDS.length
-                ];
+        ArrayList<Fluid> list = Arrays.stream(TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS).collect(Collectors.toCollection(ArrayList::new));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride")));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water")));
+        TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = list.toArray(new Fluid[list.size()]);
+
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapabilityProvider.setup();
         TempForecastCapabilityProvider.setup();
