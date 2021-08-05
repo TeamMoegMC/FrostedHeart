@@ -22,6 +22,7 @@
   "gui.frostedheart.temperature.desc": "Average Temperature",
   "container.electrolyzer": "Electrolyzer",
   "gui.jei.category.electrolyzer": "Electrolyzer",
+  "gui.jei.category.crucible": "Crucible",
   "gui.jei.category.electrolyzer.info.power": "8 kW 240 V",
   "gui.electrolyzer.usage": "Usage: %s",
   "gui.electrolyzer.voltage": "Voltage: %s"

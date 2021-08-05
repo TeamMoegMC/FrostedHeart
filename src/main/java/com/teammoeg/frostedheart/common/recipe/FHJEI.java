@@ -1,9 +1,7 @@
 package com.teammoeg.frostedheart.common.recipe;
 
-import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import electrodynamics.common.recipe.categories.fluiditem2fluid.FluidItem2FluidRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -14,11 +12,11 @@ import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Set;
 
 @JeiPlugin
 public class FHJEI implements IModPlugin {
@@ -36,13 +34,11 @@ public class FHJEI implements IModPlugin {
 
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
-        Minecraft mc = Minecraft.getInstance();
-        ClientWorld world = Objects.requireNonNull(mc.world);
+        ClientWorld world = Minecraft.getInstance().world;
+        checkNotNull(world, "minecraft world");
+        RecipeManager recipeManager = world.getRecipeManager();
 
-        Set<FluidItem2FluidRecipe> eleRecipes = ImmutableSet
-                .copyOf(world.getRecipeManager().getRecipesForType(ElectrolyzerRecipe.TYPE));
-
-        registration.addRecipes(eleRecipes, EleRecipeCategory.UID);
+        registration.addRecipes(recipeManager.getRecipesForType(ElectrolyzerRecipe.TYPE), EleRecipeCategory.UID);
 
 //        Set<CrucibleRecipe> crucible = ImmutableSet
 //                .copyOf(world.getRecipeManager().getRecipesForType(CrucibleRecipe.TYPE));
@@ -64,5 +60,11 @@ public class FHJEI implements IModPlugin {
     public void registerGuiHandlers(IGuiHandlerRegistration registry) {
         //registry.addRecipeClickArea(ElectrolyzerScreen.class, 80, 31, 55, 55, EleRecipeCategory.UID);
         //registry.addRecipeClickArea(CrucibleScreen.class, 80, 31, o2oarrowLoc[2], o2oarrowLoc[3], CrucibleCategory.UID);
+    }
+
+    public static <T> void checkNotNull(@Nullable T object, String name) {
+        if (object == null) {
+            throw new NullPointerException(name + " must not be null.");
+        }
     }
 }

@@ -19,8 +19,8 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
     private IDrawable ICON;
 
     public CrucibleCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHContent.Multiblocks.crucible));
-        this.BACKGROUND = guiHelper.createDrawable(new ResourceLocation(FHMain.MODID, "textures/gui/crucible.png"), 8, 16, 142, 54);
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHContent.Blocks.burning_chamber_core));
+        this.BACKGROUND = guiHelper.createDrawable(new ResourceLocation(FHMain.MODID, "textures/gui/crucible.png"), 40, 0, 130, 40);
     }
 
     @Override
@@ -60,8 +60,8 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
     public void setRecipe(IRecipeLayout recipeLayout, CrucibleRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
-        guiItemStacks.init(0, true, 0, 0);
-        guiItemStacks.init(1, false, 60, 18);
+        guiItemStacks.init(0, true, 10, 10);
+        guiItemStacks.init(1, false, 65, 10);
 
         guiItemStacks.set(ingredients);
     }

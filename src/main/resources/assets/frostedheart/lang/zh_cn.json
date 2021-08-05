@@ -22,6 +22,7 @@
   "gui.frostedheart.temperature.desc": "平均气温",
   "container.electrolyzer": "电解器",
   "gui.jei.category.electrolyzer": "电解器",
+  "gui.jei.category.crucible": "坩埚",
   "gui.jei.category.electrolyzer.info.power": "8 kW 240 V",
   "gui.electrolyzer.usage": "占用：%s",
   "gui.electrolyzer.voltage": "电压%s"
