@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.common.recipe;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import electrodynamics.common.recipe.recipeutils.CountableIngredient;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -14,17 +13,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class CrucibleCategory implements IRecipeCategory<CrucibleRecipe> {
+public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCategory<CrucibleRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "crucible");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
 
     public CrucibleCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(FHContent.Multiblocks.crucible);
-        this.BACKGROUND = guiHelper.createDrawable(new ResourceLocation("textures/gui/sol_and_liq_to_liq_recipe_gui.png"), 10, 10, 10, 10);
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHContent.Multiblocks.crucible));
+        this.BACKGROUND = guiHelper.createDrawable(new ResourceLocation(FHMain.MODID, "textures/gui/crucible.png"), 8, 16, 142, 54);
     }
 
     @Override
@@ -54,22 +50,19 @@ public class CrucibleCategory implements IRecipeCategory<CrucibleRecipe> {
 
     @Override
     public void setIngredients(CrucibleRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, this.getIngredients(recipe));
+        ingredients.setInputIngredients(recipe.getIngredients());
         ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
     }
 
-    public List<List<ItemStack>> getIngredients(CrucibleRecipe recipe) {
-        List<List<ItemStack>> ingredients = new ArrayList();
-        ingredients.add(((CountableIngredient) recipe.getIngredients().get(0)).fetchCountedStacks());
-        return ingredients;
-    }
 
 
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, CrucibleRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
-        guiItemStacks.init(0, true, 20, 20);
-        guiItemStacks.init(2, false, 300, 30);
+
+        guiItemStacks.init(0, true, 0, 0);
+        guiItemStacks.init(1, false, 60, 18);
+
         guiItemStacks.set(ingredients);
     }
 }
