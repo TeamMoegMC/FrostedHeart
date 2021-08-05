@@ -10,6 +10,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ComponentFluidHandler.class)
 public class ComponentFluidHandlerMixin {
+    /**
+     * Fixes the NullPointerException when filling fluids not defined in Electrodynamics
+     */
     @Inject(method = "fill", at = @At(value = "HEAD"), cancellable = true, remap = false)
     public void inject$fill(FluidStack resource, IFluidHandler.FluidAction action, CallbackInfoReturnable<Integer> cir) {
         if (!((ComponentFluidHandlerAccess) this).getFluids().containsKey(resource.getFluid())) {
