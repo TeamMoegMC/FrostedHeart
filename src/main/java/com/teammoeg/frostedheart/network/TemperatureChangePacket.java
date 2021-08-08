@@ -1,9 +1,27 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.network;
 
-import com.teammoeg.frostedheart.FHUtil;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkMatrix;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkMatrix;
+import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -41,7 +59,7 @@ public class TemperatureChangePacket {
         context.get().enqueueWork(() -> {
             ChunkPos pos = new ChunkPos(chunkX, chunkZ);
             // Update client-side chunk data capability
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHUtil::getWorld);
+            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHUtils::getWorld);
             if (world != null) {
                 // First, synchronize the chunk data in the capability and cache.
                 // Then, update the single data instance with the packet data

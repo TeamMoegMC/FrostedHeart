@@ -1,14 +1,26 @@
 /*
- * Original work by AlcatrazEscapee
- * Work under Copyright. Licensed under the EUPL.
- * See the project README.md and LICENSE.txt for more information.
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package com.teammoeg.frostedheart.world.unused.gen;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;

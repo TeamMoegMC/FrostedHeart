@@ -1,19 +1,19 @@
 /*
- *  Copyright (c) 2021. TeamMoeg
+ * Copyright (c) 2021 TeamMoeg
  *
- *  This file is part of Energy Level Transition.
+ * This file is part of Frosted Heart.
  *
- *  Energy Level Transition is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, version 3.
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
  *
- *  Energy Level Transition is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with Energy Level Transition.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
 package com.teammoeg.frostedheart.world.unused.io;
@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.world.unused.io;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import net.minecraft.util.math.ChunkPos;
 
 import java.io.IOException;

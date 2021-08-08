@@ -1,11 +1,29 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.data;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.content.FHBlocks;
+import com.teammoeg.frostedheart.content.FHMultiblocks;
 import net.minecraft.block.Block;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.state.EnumProperty;
@@ -42,8 +60,7 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
     }
 
     protected void registerStatesAndModels() {
-        createMultiblock(FHContent.Multiblocks.generator, split(obj("block/multiblocks/generator.obj"), FHMultiblocks.GENERATOR));
-//        createMultiblock(FHContent.Multiblocks.generator, split(obj("block/multiblocks/generator_lit.obj"), FHMultiblocks.GENERATOR));
+        createMultiblock(FHBlocks.Multi.generator, split(obj("block/multiblocks/generator.obj"), FHMultiblocks.GENERATOR));
     }
 
     @Nonnull

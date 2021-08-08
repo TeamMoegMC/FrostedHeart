@@ -1,7 +1,25 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.client.screen;
 
-import com.teammoeg.frostedheart.common.container.ElectrolyzerContainer;
-import com.teammoeg.frostedheart.common.tile.ElectrolyzerTile;
+import com.teammoeg.frostedheart.container.ElectrolyzerContainer;
+import com.teammoeg.frostedheart.tileentity.ElectrolyzerTileEntity;
 import electrodynamics.api.electricity.formatting.ChatFormatter;
 import electrodynamics.api.electricity.formatting.ElectricUnit;
 import electrodynamics.common.item.subtype.SubtypeProcessorUpgrade;
@@ -41,7 +59,7 @@ public class ElectrolyzerScreen extends GenericScreen<ElectrolyzerContainer> {
             return 0;
         }, this, 80, 31));
         components.add(new ScreenComponentFluid(() -> {
-            ElectrolyzerTile boiler = container.getHostFromIntArray();
+            ElectrolyzerTileEntity boiler = container.getHostFromIntArray();
             if (boiler != null) {
                 ComponentFluidHandler handler = boiler.getComponent(ComponentType.FluidHandler);
                 for (Fluid fluid : handler.getInputFluids()) {
@@ -54,7 +72,7 @@ public class ElectrolyzerScreen extends GenericScreen<ElectrolyzerContainer> {
             return null;
         }, this, 21, 18));
         components.add(new ScreenComponentFluid(() -> {
-            ElectrolyzerTile boiler = container.getHostFromIntArray();
+            ElectrolyzerTileEntity boiler = container.getHostFromIntArray();
             if (boiler != null) {
                 ComponentFluidHandler handler = boiler.getComponent(ComponentType.FluidHandler);
                 for (Fluid fluid : handler.getOutputFluids()) {

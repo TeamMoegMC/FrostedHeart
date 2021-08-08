@@ -1,18 +1,36 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.client.screen;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.common.container.CrucibleContainer;
-import com.teammoeg.frostedheart.common.tile.CrucibleTile;
-import com.teammoeg.frostedheart.util.FHScreenUtils;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.container.CrucibleContainer;
+import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
-    private static final ResourceLocation TEXTURE = FHScreenUtils.makeTextureLocation("crucible");
-    private CrucibleTile tile;
+    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("crucible");
+    private CrucibleTileEntity tile;
 
     public CrucibleScreen(CrucibleContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);
@@ -22,7 +40,7 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
 
     @Override
     public void init() {
-      super.init();
+        super.init();
     }
 
     @Override
