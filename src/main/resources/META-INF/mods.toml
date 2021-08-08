@@ -36,9 +36,17 @@ Some heat in the cold...
     versionRange="[1.16.5-3.3.1,)"
     ordering="BEFORE"
     side="BOTH"
+
 [[dependencies.frostedheart]]
     modId="electrodynamics"
     mandatory=true
     versionRange="[1.16.5,)"
+    ordering="BEFORE"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="primalwinter"
+    mandatory=true
+    versionRange="[1.16.4-2.0.5,)"
     ordering="BEFORE"
     side="BOTH"

@@ -20,7 +20,7 @@ package com.teammoeg.frostedheart.world.unused.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
 import java.io.BufferedReader;
 import java.io.File;

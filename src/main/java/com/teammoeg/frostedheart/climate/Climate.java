@@ -6,8 +6,8 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.noise.INoise1D;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.util.noise.INoise1D;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;

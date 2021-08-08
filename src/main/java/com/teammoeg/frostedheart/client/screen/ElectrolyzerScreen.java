@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.client.screen;
 
-import com.teammoeg.frostedheart.common.container.ElectrolyzerContainer;
-import com.teammoeg.frostedheart.common.tile.ElectrolyzerTile;
+import com.teammoeg.frostedheart.container.ElectrolyzerContainer;
+import com.teammoeg.frostedheart.tileentity.ElectrolyzerTileEntity;
 import electrodynamics.api.electricity.formatting.ChatFormatter;
 import electrodynamics.api.electricity.formatting.ElectricUnit;
 import electrodynamics.common.item.subtype.SubtypeProcessorUpgrade;
@@ -41,7 +41,7 @@ public class ElectrolyzerScreen extends GenericScreen<ElectrolyzerContainer> {
             return 0;
         }, this, 80, 31));
         components.add(new ScreenComponentFluid(() -> {
-            ElectrolyzerTile boiler = container.getHostFromIntArray();
+            ElectrolyzerTileEntity boiler = container.getHostFromIntArray();
             if (boiler != null) {
                 ComponentFluidHandler handler = boiler.getComponent(ComponentType.FluidHandler);
                 for (Fluid fluid : handler.getInputFluids()) {
@@ -54,7 +54,7 @@ public class ElectrolyzerScreen extends GenericScreen<ElectrolyzerContainer> {
             return null;
         }, this, 21, 18));
         components.add(new ScreenComponentFluid(() -> {
-            ElectrolyzerTile boiler = container.getHostFromIntArray();
+            ElectrolyzerTileEntity boiler = container.getHostFromIntArray();
             if (boiler != null) {
                 ComponentFluidHandler handler = boiler.getComponent(ComponentType.FluidHandler);
                 for (Fluid fluid : handler.getOutputFluids()) {

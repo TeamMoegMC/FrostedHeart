@@ -5,7 +5,7 @@
 
 package com.teammoeg.frostedheart.network;
 
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.network.NetworkEvent;

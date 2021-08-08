@@ -6,7 +6,7 @@
 
 package com.teammoeg.frostedheart.world.unused.gen;
 
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
 /**
  * This is the object responsible for generating FH chunk data, in parallel with normal chunk generation.

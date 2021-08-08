@@ -6,7 +6,7 @@
 
 package com.teammoeg.frostedheart.world.unused.gen;
 
-import com.teammoeg.frostedheart.world.noise.NoiseUtil;
+import com.teammoeg.frostedheart.util.noise.NoiseUtil;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.util.INBTSerializable;

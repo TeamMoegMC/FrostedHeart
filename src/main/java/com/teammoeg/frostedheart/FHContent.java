@@ -2,15 +2,15 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import com.teammoeg.frostedheart.common.block.*;
-import com.teammoeg.frostedheart.common.block.cropblock.RyeBlock;
-import com.teammoeg.frostedheart.common.container.CrucibleContainer;
-import com.teammoeg.frostedheart.common.container.GeneratorContainer;
-import com.teammoeg.frostedheart.common.item.FHBaseItem;
-import com.teammoeg.frostedheart.common.multiblock.CrucibleMultiblock;
-import com.teammoeg.frostedheart.common.multiblock.GeneratorMultiblock;
-import com.teammoeg.frostedheart.common.tile.CrucibleTile;
-import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
+import com.teammoeg.frostedheart.block.*;
+import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
+import com.teammoeg.frostedheart.container.CrucibleContainer;
+import com.teammoeg.frostedheart.container.GeneratorContainer;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
+import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
+import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
+import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -97,7 +97,7 @@ public class FHContent {
         MultiblockHandler.registerMultiblock(FHMultiblocks.CRUCIBLE);
         // Register containers
         GuiHandler.register(GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
-        GuiHandler.register(CrucibleTile.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
+        GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
     }
 
 }

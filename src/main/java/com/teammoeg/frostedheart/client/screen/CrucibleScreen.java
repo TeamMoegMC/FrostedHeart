@@ -3,16 +3,16 @@ package com.teammoeg.frostedheart.client.screen;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.common.container.CrucibleContainer;
-import com.teammoeg.frostedheart.common.tile.CrucibleTile;
-import com.teammoeg.frostedheart.util.FHScreenUtils;
+import com.teammoeg.frostedheart.container.CrucibleContainer;
+import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
-    private static final ResourceLocation TEXTURE = FHScreenUtils.makeTextureLocation("crucible");
-    private CrucibleTile tile;
+    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("crucible");
+    private CrucibleTileEntity tile;
 
     public CrucibleScreen(CrucibleContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);

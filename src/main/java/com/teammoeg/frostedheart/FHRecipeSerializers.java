@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.common.recipe.*;
+import com.teammoeg.frostedheart.recipe.*;
 import electrodynamics.common.recipe.categories.fluiditem2fluid.FluidItem2FluidRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraftforge.registries.DeferredRegister;

@@ -5,15 +5,11 @@
 
 package com.teammoeg.frostedheart.network;
 
-import com.teammoeg.frostedheart.FHUtil;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.capability.ITempForecastCapability;
 import com.teammoeg.frostedheart.capability.TempForecastCapabilityProvider;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.util.LazyOptional;
@@ -50,7 +46,7 @@ public class WeatherPacket {
 
     void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHUtil::getWorld);
+            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHUtils::getWorld);
             if (world != null) {
                 LazyOptional<ITempForecastCapability> cap = TempForecastCapabilityProvider.getCapability(world);
                 cap.ifPresent((capability) -> {

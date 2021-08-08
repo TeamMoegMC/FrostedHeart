@@ -20,8 +20,8 @@ package com.teammoeg.frostedheart.world.unused.io;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 
 import java.io.BufferedWriter;
 import java.io.File;

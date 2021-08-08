@@ -5,21 +5,20 @@ import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.common.container.GeneratorContainer;
-import com.teammoeg.frostedheart.common.tile.GeneratorTileEntity;
+import com.teammoeg.frostedheart.container.GeneratorContainer;
+import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.util.FHScreenUtils;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.fml.client.gui.GuiUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
-    private static final ResourceLocation TEXTURE = FHScreenUtils.makeTextureLocation("generatornew");
+    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generatornew");
     private GeneratorTileEntity tile;
 
     public GeneratorScreen(GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
@@ -57,30 +56,30 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
 
         if (isMouseIn(mouseX, mouseY, 57, 36, 19, 10)) {
             if (tile.isWorking()) {
-                tooltip.add(FHScreenUtils.translateGui("generator.mode.off"));
+                tooltip.add(GuiUtils.translateGui("generator.mode.off"));
             } else {
-                tooltip.add(FHScreenUtils.translateGui("generator.mode.on"));
+                tooltip.add(GuiUtils.translateGui("generator.mode.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 102, 36, 19, 10)) {
             if (tile.isOverdrive()) {
-                tooltip.add(FHScreenUtils.translateGui("generator.overdrive.off"));
+                tooltip.add(GuiUtils.translateGui("generator.overdrive.off"));
             } else {
-                tooltip.add(FHScreenUtils.translateGui("generator.overdrive.on"));
+                tooltip.add(GuiUtils.translateGui("generator.overdrive.on"));
             }
         }
 
         if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54) && tile.getIsActive()) {
-            tooltip.add(FHScreenUtils.translateGui("generator.temperature.level").appendString(Integer.toString(tile.getActualTemp())));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(Integer.toString(tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54) && tile.getIsActive()) {
-            tooltip.add(FHScreenUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
 
         if (!tooltip.isEmpty()) {
-            GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
+            net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
         }
     }
 

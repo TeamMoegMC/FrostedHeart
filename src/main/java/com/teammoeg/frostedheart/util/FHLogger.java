@@ -1,11 +1,13 @@
 package com.teammoeg.frostedheart.util;
 
+import com.teammoeg.frostedheart.FHMain;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class FHLogger {
     public static boolean debug = false;
-    public static Logger logger;
+    public static Logger logger = LogManager.getLogger(FHMain.MODNAME);
 
     public static void log(Level logLevel, Object object) {
         logger.log(logLevel, String.valueOf(object));

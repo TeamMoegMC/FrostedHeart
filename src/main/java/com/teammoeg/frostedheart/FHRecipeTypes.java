@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.common.recipe.CrucibleRecipe;
-import com.teammoeg.frostedheart.common.recipe.ElectrolyzerRecipe;
-import com.teammoeg.frostedheart.common.recipe.GeneratorRecipe;
+import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
+import com.teammoeg.frostedheart.recipe.ElectrolyzerRecipe;
+import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 
 public class FHRecipeTypes {

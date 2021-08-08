@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.network;
 
-import com.teammoeg.frostedheart.FHUtil;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkMatrix;
+import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkMatrix;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -41,7 +41,7 @@ public class TemperatureChangePacket {
         context.get().enqueueWork(() -> {
             ChunkPos pos = new ChunkPos(chunkX, chunkZ);
             // Update client-side chunk data capability
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHUtil::getWorld);
+            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHUtils::getWorld);
             if (world != null) {
                 // First, synchronize the chunk data in the capability and cache.
                 // Then, update the single data instance with the packet data

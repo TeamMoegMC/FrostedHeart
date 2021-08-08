@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.world.unused.save;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.world.chunkdata.ChunkMatrix;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkMatrix;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
