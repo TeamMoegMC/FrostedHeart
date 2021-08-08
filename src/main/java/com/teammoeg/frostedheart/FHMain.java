@@ -68,7 +68,7 @@ public class FHMain {
         // Register tile types
         FHTileTypes.REGISTER.register(mod);
         // Register container
-        FHTileTypes.CONTAINERS.register(mod);
+        FHContainers.CONTAINERS.register(mod);
         // Register recipe types
         DeferredWorkQueue.runLater(FHRecipeTypes::registerRecipeTypes);
         // Register network packets

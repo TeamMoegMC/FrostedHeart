@@ -18,7 +18,7 @@
 
 package com.teammoeg.frostedheart.container;
 
-import com.teammoeg.frostedheart.content.FHTileTypes;
+import com.teammoeg.frostedheart.content.FHContainers;
 import com.teammoeg.frostedheart.tileentity.ElectrolyzerTileEntity;
 import electrodynamics.common.tile.TileChemicalMixer;
 import electrodynamics.prefab.inventory.container.GenericContainer;
@@ -37,7 +37,7 @@ public class ElectrolyzerContainer extends GenericContainer<ElectrolyzerTileEnti
     }
 
     public ElectrolyzerContainer(int id, PlayerInventory playerinv, IInventory inventory, IIntArray inventorydata) {
-        super(FHTileTypes.ELECTROLYZER_CONTAINER.get(), id, playerinv, inventory, inventorydata);
+        super(FHContainers.ELECTROLYZER_CONTAINER.get(), id, playerinv, inventory, inventorydata);
     }
 
     public ElectrolyzerContainer(ContainerType<?> type, int id, PlayerInventory playerinv, IInventory inventory, IIntArray inventorydata) {

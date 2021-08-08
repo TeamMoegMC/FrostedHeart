@@ -90,7 +90,7 @@ public class FHContent {
         // Register multiblocks
         MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
         MultiblockHandler.registerMultiblock(FHMultiblocks.CRUCIBLE);
-        // Register containers
+        // Register IE containers
         GuiHandler.register(GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
     }
