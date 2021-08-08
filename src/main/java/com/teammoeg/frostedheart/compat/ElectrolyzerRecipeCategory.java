@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.compat;
 
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.FHBlocks;
 import electrodynamics.compatability.jei.recipecategories.FluidItem2FluidRecipeCategory;
 import mezz.jei.api.gui.drawable.IDrawableAnimated.StartDirection;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -36,7 +36,7 @@ public class ElectrolyzerRecipeCategory extends FluidItem2FluidRecipeCategory {
     private static String RECIPE_GROUP = "electrolyzer";
     private static String GUI_TEXTURE = "textures/gui/sol_and_liq_to_liq_recipe_gui.png";
 
-    private static ItemStack INPUT_MACHINE = new ItemStack(FHContent.Blocks.electrolyzer);
+    private static ItemStack INPUT_MACHINE = new ItemStack(FHBlocks.electrolyzer);
 
     private static StartDirection MAJOR_ARROW_START_DIRECTION = StartDirection.LEFT;
     private static StartDirection MINOR_ARROW_START_DIRECTION = StartDirection.RIGHT;

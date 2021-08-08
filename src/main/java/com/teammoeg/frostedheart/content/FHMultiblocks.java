@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.content;
 
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 

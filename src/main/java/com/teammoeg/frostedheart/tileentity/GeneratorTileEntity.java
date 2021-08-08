@@ -5,11 +5,11 @@ import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileE
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.content.FHMultiblocks;
+import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.state.FHBlockInterfaces;
 import net.minecraft.entity.player.PlayerEntity;

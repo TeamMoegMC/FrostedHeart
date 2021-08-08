@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.block.cropblock;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.content.FHBlocks;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -34,7 +34,7 @@ public class RyeBlock extends FHCropBlock {
     }
 
     protected IItemProvider getSeedsItem() {
-        return FHContent.Blocks.rye_block.asItem();
+        return FHBlocks.rye_block.asItem();
     }
 
     protected int getBonemealAgeIncrease(World worldIn) {

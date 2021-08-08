@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart;
 import com.teammoeg.frostedheart.capability.TempForecastCapabilityProvider;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.EleCompat;
+import com.teammoeg.frostedheart.content.*;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import net.minecraft.item.ItemGroup;
@@ -29,7 +30,7 @@ public class FHMain {
         @Override
         @Nonnull
         public ItemStack createIcon() {
-            return new ItemStack(FHContent.Blocks.generator_core_t1.asItem());
+            return new ItemStack(FHBlocks.generator_core_t1.asItem());
         }
     };
 

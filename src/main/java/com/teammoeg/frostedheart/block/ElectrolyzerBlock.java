@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.block;
 
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.FHContent;
 import com.teammoeg.frostedheart.tileentity.ElectrolyzerTileEntity;
 import electrodynamics.api.IWrenchItem;
 import electrodynamics.common.block.BlockGenericMachine;

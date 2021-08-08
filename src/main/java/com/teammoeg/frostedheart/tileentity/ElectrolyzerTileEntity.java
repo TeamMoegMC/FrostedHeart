@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.tileentity;
 
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.container.ElectrolyzerContainer;
+import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.recipe.ElectrolyzerRecipe;
 import electrodynamics.api.electricity.CapabilityElectrodynamic;
 import electrodynamics.common.recipe.categories.fluiditem2fluid.FluidItem2FluidRecipe;

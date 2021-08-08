@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.multiblock;
 
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.FHBlocks;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -13,7 +13,7 @@ public class CrucibleMultiblock extends IETemplateMultiblock {
     public CrucibleMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/crucible"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3),
-                () -> FHContent.Multiblocks.crucible.getDefaultState());
+                () -> FHBlocks.Multi.crucible.getDefaultState());
     }
 
     @Override

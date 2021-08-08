@@ -10,7 +10,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import static com.teammoeg.frostedheart.FHContent.*;
+import static com.teammoeg.frostedheart.content.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHRegistryEvents {

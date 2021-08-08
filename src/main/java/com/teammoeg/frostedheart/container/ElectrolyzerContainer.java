@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.container;
 
-import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.tileentity.ElectrolyzerTileEntity;
 import electrodynamics.common.tile.TileChemicalMixer;
 import electrodynamics.prefab.inventory.container.GenericContainer;

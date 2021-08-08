@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.compat;
 
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.FHBlocks;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.recipe.ElectrolyzerRecipe;
 import mezz.jei.api.IModPlugin;
@@ -29,8 +29,8 @@ public class JEIFrostedHeartPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHContent.Blocks.electrolyzer), ElectrolyzerRecipeCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHContent.Blocks.burning_chamber_core), CrucibleCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.electrolyzer), ElectrolyzerRecipeCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.burning_chamber_core), CrucibleCategory.UID);
 
     }
 

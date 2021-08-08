@@ -1,12 +1,12 @@
 package com.teammoeg.frostedheart.client;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.ElectrolyzerScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
+import com.teammoeg.frostedheart.content.FHBlocks;
+import com.teammoeg.frostedheart.content.FHTileTypes;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.gui.screen.Screen;
@@ -29,10 +29,10 @@ public class FHClientModEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
         ScreenManager.registerFactory(FHTileTypes.ELECTROLYZER_CONTAINER.get(), ElectrolyzerScreen::new);
         // Register translucent render type
-        RenderTypeLookup.setRenderLayer(FHContent.Blocks.rye_block, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.Blocks.electrolyzer, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.Multiblocks.generator, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.Multiblocks.crucible, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHBlocks.electrolyzer, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHBlocks.Multi.generator, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHBlocks.Multi.crucible, RenderType.getCutoutMipped());
     }
 
     public static <C extends Container, S extends Screen & IHasContainer<C>> void

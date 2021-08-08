@@ -1,5 +1,6 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.content;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.recipe.ElectrolyzerRecipe;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;

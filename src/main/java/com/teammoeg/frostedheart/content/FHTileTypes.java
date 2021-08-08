@@ -1,6 +1,7 @@
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.content;
 
 import com.google.common.collect.ImmutableSet;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.container.ElectrolyzerContainer;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.ElectrolyzerTileEntity;
@@ -24,14 +25,14 @@ public class FHTileTypes {
             ForgeRegistries.CONTAINERS, FHMain.MODID);
 
     public static final RegistryObject<TileEntityType<GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
-            "generator", makeType(() -> new GeneratorTileEntity(1, 1), () -> FHContent.Multiblocks.generator)
+            "generator", makeType(() -> new GeneratorTileEntity(1, 1), () -> FHBlocks.Multi.generator)
     );
 
     public static final RegistryObject<TileEntityType<ElectrolyzerTileEntity>> ELECTROLYZER = REGISTER.register(
-            "electrolyzer", makeType(() -> new ElectrolyzerTileEntity(), () -> FHContent.Blocks.electrolyzer)
+            "electrolyzer", makeType(() -> new ElectrolyzerTileEntity(), () -> FHBlocks.electrolyzer)
     );
     public static final RegistryObject<TileEntityType<CrucibleTileEntity>> CRUCIBLE = REGISTER.register(
-            "crucible", makeType(() -> new CrucibleTileEntity(), () -> FHContent.Multiblocks.crucible)
+            "crucible", makeType(() -> new CrucibleTileEntity(), () -> FHBlocks.Multi.crucible)
     );
 
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
