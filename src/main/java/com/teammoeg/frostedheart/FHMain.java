@@ -28,8 +28,7 @@ public class FHMain {
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
         @Nonnull
-        public ItemStack createIcon()
-        {
+        public ItemStack createIcon() {
             return new ItemStack(FHContent.Blocks.generator_core_t1.asItem());
         }
     };

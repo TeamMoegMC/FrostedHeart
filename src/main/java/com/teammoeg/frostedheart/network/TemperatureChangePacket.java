@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.network;
 
-import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkMatrix;
+import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;

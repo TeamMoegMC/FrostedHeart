@@ -56,7 +56,6 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
     }
 
 
-
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, CrucibleRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();

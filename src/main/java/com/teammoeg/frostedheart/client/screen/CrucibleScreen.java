@@ -3,9 +3,9 @@ package com.teammoeg.frostedheart.client.screen;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -22,7 +22,7 @@ public class CrucibleScreen extends IEContainerScreen<CrucibleContainer> {
 
     @Override
     public void init() {
-      super.init();
+        super.init();
     }
 
     @Override

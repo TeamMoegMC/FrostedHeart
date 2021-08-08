@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static net.minecraft.util.text.TextFormatting.*;
-import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHClientForgeEvents {
@@ -132,20 +131,26 @@ public class FHClientForgeEvents {
         ArrayList<UV4i> rtn = new ArrayList<>();
         UV4i v1, v2, v3;
         if (digit / 10 == 0) { // len = 1
-            int firstDigit = digit; if (firstDigit == 0) firstDigit += 10;
+            int firstDigit = digit;
+            if (firstDigit == 0) firstDigit += 10;
             v1 = new UV4i(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
             rtn.add(v1);
         } else if (digit / 10 < 10) { // len = 2
-            int firstDigit = digit / 10; if (firstDigit == 0) firstDigit += 10;
-            int secondDigit = digit % 10; if (secondDigit == 0) secondDigit += 10;
+            int firstDigit = digit / 10;
+            if (firstDigit == 0) firstDigit += 10;
+            int secondDigit = digit % 10;
+            if (secondDigit == 0) secondDigit += 10;
             v1 = new UV4i(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
             v2 = new UV4i(10 * (secondDigit - 1), 0, 10 * secondDigit, 17);
             rtn.add(v1);
             rtn.add(v2);
         } else { // len = 3
-            int thirdDigit = digit % 10; if (thirdDigit == 0) thirdDigit += 10;
-            int secondDigit = digit / 10; if (secondDigit == 0) secondDigit += 10;
-            int firstDigit = digit / 100; if (firstDigit == 0) firstDigit += 10;
+            int thirdDigit = digit % 10;
+            if (thirdDigit == 0) thirdDigit += 10;
+            int secondDigit = digit / 10;
+            if (secondDigit == 0) secondDigit += 10;
+            int firstDigit = digit / 100;
+            if (firstDigit == 0) firstDigit += 10;
             v1 = new UV4i(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
             v2 = new UV4i(10 * (secondDigit - 1), 0, 10 * secondDigit, 17);
             v3 = new UV4i(10 * (thirdDigit - 1), 0, 10 * thirdDigit, 17);

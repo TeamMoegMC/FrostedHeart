@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 public class CrucibleBlock<T extends MultiblockPartTileEntity<? super T>> extends IEMultiblockBlock {
     private RegistryObject<TileEntityType<T>> type;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
+
     public CrucibleBlock(String name, RegistryObject type) {
         super(name, Properties.create(Material.IRON).hardnessAndResistance(4.0F, 40.0F).notSolid());
         this.type = type;
@@ -42,6 +43,7 @@ public class CrucibleBlock<T extends MultiblockPartTileEntity<? super T>> extend
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
+
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);

@@ -44,6 +44,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     public int process = 0;
     public int processMax = 0;
     public int updatetick = 0;
+
     public CrucibleTileEntity() {
         super(FHMultiblocks.CRUCIBLE, FHTileTypes.CRUCIBLE.get(), false);
     }
@@ -286,17 +287,14 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         return null;
     }
 
-    public class CrucibleData implements IIntArray
-    {
+    public class CrucibleData implements IIntArray {
         public static final int BURN_TIME = 0;
         public static final int PROCESS_MAX = 1;
         public static final int CURRENT_PROCESS = 2;
 
         @Override
-        public int get(int index)
-        {
-            switch(index)
-            {
+        public int get(int index) {
+            switch (index) {
                 case BURN_TIME:
                     return burnTime;
                 case PROCESS_MAX:
@@ -304,15 +302,13 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
                 case CURRENT_PROCESS:
                     return process;
                 default:
-                    throw new IllegalArgumentException("Unknown index "+index);
+                    throw new IllegalArgumentException("Unknown index " + index);
             }
         }
 
         @Override
-        public void set(int index, int value)
-        {
-            switch(index)
-            {
+        public void set(int index, int value) {
+            switch (index) {
                 case BURN_TIME:
                     burnTime = value;
                     break;
@@ -323,13 +319,12 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
                     process = value;
                     break;
                 default:
-                    throw new IllegalArgumentException("Unknown index "+index);
+                    throw new IllegalArgumentException("Unknown index " + index);
             }
         }
 
         @Override
-        public int size()
-        {
+        public int size() {
             return 3;
         }
     }
