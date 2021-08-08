@@ -24,7 +24,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHClientModEvents {
     @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
