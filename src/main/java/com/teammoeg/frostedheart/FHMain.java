@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.world.chunkdata.ChunkDataCapabilityProvider;
 import electrodynamics.DeferredRegisters;
 import electrodynamics.common.tile.TileChemicalCrystallizer;
 import electrodynamics.common.tile.TileChemicalMixer;
+import electrodynamics.common.tile.TileMineralWasher;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.KelpBlock;
@@ -143,22 +144,33 @@ public class FHMain {
     public void setup(final FMLCommonSetupEvent event) {
         TileChemicalMixer.SUPPORTED_INPUT_FLUIDS = new Fluid[]{
 
-                Fluids.WATER, DeferredRegisters.fluidEthanol
+                Fluids.WATER, DeferredRegisters.fluidEthanol, DeferredRegisters.fluidSulfuricAcid
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "chlorine"))
-
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "hydrogen_fluoride"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "fluoroaluminic_acid"))
         };
         TileChemicalMixer.SUPPORTED_OUTPUT_FLUIDS = new Fluid[]{
 
                 DeferredRegisters.fluidSulfuricAcid, DeferredRegisters.fluidPolyethylene
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "salt_water"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "hydrogen_fluoride"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "fluoroaluminic_acid"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "cryolite"))
+        };
+        TileMineralWasher.SUPPORTED_INPUT_FLUIDS = new Fluid[]{
 
+                DeferredRegisters.fluidSulfuricAcid,
+                ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "sodium_hydroxide"))
         };
         ArrayList<Fluid> list = Arrays.stream(TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS).collect(Collectors.toCollection(ArrayList::new));
         list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride")));
         list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water")));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "sodium_aluminate")));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "aluminium")));
         TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = list.toArray(new Fluid[list.size()]);
-
+        TileMineralWasher.SUPPORTED_OUTPUT_FLUIDS = TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS;
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapabilityProvider.setup();
         TempForecastCapabilityProvider.setup();

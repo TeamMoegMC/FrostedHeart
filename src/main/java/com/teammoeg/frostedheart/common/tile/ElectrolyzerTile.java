@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.common.tile;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.common.container.ElectrolyzerContainer;
 import com.teammoeg.frostedheart.common.recipe.ElectrolyzerRecipe;
+import electrodynamics.DeferredRegisters;
 import electrodynamics.api.electricity.CapabilityElectrodynamic;
 import electrodynamics.common.recipe.categories.fluiditem2fluid.FluidItem2FluidRecipe;
 import electrodynamics.common.settings.Constants;
@@ -27,11 +28,16 @@ public class ElectrolyzerTile extends GenericTileTicking {
     public int clientTicks = 0;
     public static Fluid[] SUPPORTED_INPUT_FLUIDS = new Fluid[]{
 
-            Fluids.WATER
+            Fluids.WATER,
+            DeferredRegisters.fluidSulfuricAcid,
+            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "salt_water")),
+            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "cryolite"))
 
     };
     public static Fluid[] SUPPORTED_OUTPUT_FLUIDS = new Fluid[]{
-            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "chlorine"))
+            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "chlorine")),
+            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "sodium_hydroxide")),
+            ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "aluminium"))
     };
 
     public ElectrolyzerTile() {
