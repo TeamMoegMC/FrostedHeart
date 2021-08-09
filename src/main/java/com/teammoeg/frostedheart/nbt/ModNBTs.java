@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.nbt;
 
+import com.teammoeg.frostedheart.FHMain;
+
 public class ModNBTs {
-    public static final String FIRST_LOGIN = "first";
+    public static final String FIRST_LOGIN_GIVE_MANUAL = "first";
+    public static final String FIRST_LOGIN_GIVE_NUTRITION = FHMain.MODID + "first_login_give_nutrition";
 }
