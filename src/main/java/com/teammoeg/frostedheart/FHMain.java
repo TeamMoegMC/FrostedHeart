@@ -63,6 +63,8 @@ public class FHMain {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
 
+        // Register config
+        FHConfig.register();
         // Register recipe serializers
         FHRecipeSerializers.RECIPE_SERIALIZERS.register(mod);
         // Register tile types

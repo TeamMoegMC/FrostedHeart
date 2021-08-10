@@ -64,7 +64,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -240,8 +239,10 @@ public class FHForgeEvents {
 
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
-        for (ServerWorld world : event.getServer().getWorlds()) {
-            world.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, event.getServer());
+        if (FHConfig.SERVER.alwaysKeepInventory.get()) {
+            for (ServerWorld world : event.getServer().getWorlds()) {
+                world.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, event.getServer());
+            }
         }
     }
 }
