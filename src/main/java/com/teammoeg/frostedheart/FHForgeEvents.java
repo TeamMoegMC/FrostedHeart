@@ -35,13 +35,18 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.KelpBlock;
 import net.minecraft.block.KelpTopBlock;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -53,6 +58,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -243,6 +249,19 @@ public class FHForgeEvents {
             for (ServerWorld world : event.getServer().getWorlds()) {
                 world.getGameRules().get(GameRules.KEEP_INVENTORY).set(true, event.getServer());
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void punishEatingRawMeat(LivingEntityUseItemEvent.Finish event) {
+        if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity && event.getItem().getItem().getTags().contains(FHMain.rl("raw_food"))) {
+            ServerPlayerEntity player = (ServerPlayerEntity)event.getEntityLiving();
+            player.addPotionEffect(new EffectInstance(Effects.POISON, 400, 1));
+            player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 400, 1));
+            if (ModList.get().isLoaded("diet") && player.getServer() != null) {
+                player.getServer().getCommandManager().handleCommand(player.getCommandSource(), "/diet subtract @s proteins 0.1");
+            }
+            player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
         }
     }
 }
