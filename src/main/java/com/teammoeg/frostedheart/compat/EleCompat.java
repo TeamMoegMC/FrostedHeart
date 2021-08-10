@@ -19,8 +19,10 @@
 package com.teammoeg.frostedheart.compat;
 
 import electrodynamics.DeferredRegisters;
+import electrodynamics.common.settings.Constants;
 import electrodynamics.common.tile.TileChemicalCrystallizer;
 import electrodynamics.common.tile.TileChemicalMixer;
+import electrodynamics.prefab.utilities.object.TransferPack;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.util.ResourceLocation;
@@ -50,5 +52,6 @@ public class EleCompat {
         list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water")));
         TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = list.toArray(new Fluid[list.size()]);
 
+        Constants.COALGENERATOR_MAX_OUTPUT = TransferPack.ampsVoltage(8, 120);
     }
 }

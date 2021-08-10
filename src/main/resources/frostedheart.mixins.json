@@ -4,9 +4,12 @@
   "package": "com.teammoeg.frostedheart.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "minecraft.PortalSizeMixin",
     "electrodynamics.ComponentFluidHandlerAccess",
     "electrodynamics.ComponentFluidHandlerMixin",
+    "electrodynamics.ElectricityUtilitiesMixin",
+    "electrodynamics.TileCoalGeneratorMixin",
+    "electrodynamics.TileCombustionChamberMixin",
+    "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataMixin",
     "survive.SurviveEventsMixin"
   ],
