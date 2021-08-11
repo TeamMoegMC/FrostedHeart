@@ -30,6 +30,7 @@ public class TileCombustionChamberMixin extends GenericTileTicking {
 
     /**
      * @author yuesha-yc
+     * @reason change burn time
      */
     @Overwrite(remap = false)
     protected void tickServer(ComponentTickable tickable) {
