@@ -25,6 +25,8 @@ import com.teammoeg.frostedheart.block.*;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
+import com.teammoeg.frostedheart.item.FHArmorMaterial;
+import com.teammoeg.frostedheart.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
@@ -35,6 +37,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -80,6 +83,22 @@ public class FHContent {
         FHItems.rye = new FHBaseItem("rye", properties);
         FHItems.rye_bread = new FHBaseItem("rye_bread", properties.food((new Food.Builder()).hunger(5).saturation(0.6F).build()));
         FHItems.generator_ash = new FHBaseItem("generator_ash", properties);
+
+        FHItems.raw_hide = new FHBaseItem("raw_hide", properties);
+        FHItems.hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, properties);
+        FHItems.hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, properties);
+        FHItems.hay_jacket = new FHBaseArmorItem("hay_jacket", FHArmorMaterial.HAY, EquipmentSlotType.CHEST, properties);
+        FHItems.hay_pants = new FHBaseArmorItem("hay_pants", FHArmorMaterial.HAY, EquipmentSlotType.LEGS, properties);
+
+        FHItems.wool_boots = new FHBaseArmorItem("wool_boots", FHArmorMaterial.WOOL, EquipmentSlotType.FEET, properties);
+        FHItems.wool_hat = new FHBaseArmorItem("wool_hat", FHArmorMaterial.WOOL, EquipmentSlotType.HEAD, properties);
+        FHItems.wool_jacket = new FHBaseArmorItem("wool_jacket", FHArmorMaterial.WOOL, EquipmentSlotType.CHEST, properties);
+        FHItems.wool_pants = new FHBaseArmorItem("wool_pants", FHArmorMaterial.WOOL, EquipmentSlotType.LEGS, properties);
+
+        FHItems.hide_boots = new FHBaseArmorItem("hide_boots", FHArmorMaterial.HIDE, EquipmentSlotType.FEET, properties);
+        FHItems.hide_hat = new FHBaseArmorItem("hide_hat", FHArmorMaterial.HIDE, EquipmentSlotType.HEAD, properties);
+        FHItems.hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, properties);
+        FHItems.hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, properties);
 
         // Init multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();

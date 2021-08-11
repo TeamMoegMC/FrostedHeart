@@ -21,8 +21,26 @@ package com.teammoeg.frostedheart.content;
 import net.minecraft.item.Item;
 
 public class FHItems {
+    // Dynamic register
     public static Item energy_core;
     public static Item rye;
     public static Item rye_bread;
     public static Item generator_ash;
+
+    public static Item raw_hide;
+
+    public static Item hay_hat;
+    public static Item hay_boots;
+    public static Item hay_jacket;
+    public static Item hay_pants;
+
+    public static Item wool_hat;
+    public static Item wool_boots;
+    public static Item wool_jacket;
+    public static Item wool_pants;
+
+    public static Item hide_hat;
+    public static Item hide_boots;
+    public static Item hide_jacket;
+    public static Item hide_pants;
 }

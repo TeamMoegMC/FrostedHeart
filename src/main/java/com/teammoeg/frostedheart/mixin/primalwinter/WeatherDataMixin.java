@@ -35,7 +35,7 @@ public class WeatherDataMixin {
     @Inject(method = "trySetEndlessStorm(Lnet/minecraft/world/server/ServerWorld;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;getGameRules()Lnet/minecraft/world/GameRules;"), cancellable = true, remap = false)
     private static void frostedheart$trySetEndlessStorm(ServerWorld world, CallbackInfo ci) {
         world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(true, world.getServer());
-        world.setWeather(10000, Integer.MAX_VALUE, false, false);
+        world.setWeather(0, 24000, false, false);
         ci.cancel();
     }
 }
