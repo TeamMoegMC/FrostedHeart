@@ -51,6 +51,5 @@ public class PacketHandler {
             ctx.get().setPacketHandled(true);
         });
         CHANNEL.registerMessage(id++, TemperatureChangePacket.class, TemperatureChangePacket::encode, TemperatureChangePacket::new, TemperatureChangePacket::handle);
-        CHANNEL.registerMessage(id++, WeatherPacket.class, WeatherPacket::encode, WeatherPacket::new, WeatherPacket::handle);
     }
 }

@@ -1,5 +1,5 @@
 {
-  "temperature_modifier": [
+  "temperature_modifiers": [
 		{
 			"condition": "survive:default",
 			"temperature": 1.0

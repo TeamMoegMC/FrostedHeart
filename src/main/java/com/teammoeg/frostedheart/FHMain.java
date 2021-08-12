@@ -18,7 +18,6 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.capability.TempForecastCapabilityProvider;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.EleCompat;
 import com.teammoeg.frostedheart.content.*;
@@ -85,7 +84,6 @@ public class FHMain {
     public void setup(final FMLCommonSetupEvent event) {
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapabilityProvider.setup();
-        TempForecastCapabilityProvider.setup();
         EleCompat.setup();
     }
 

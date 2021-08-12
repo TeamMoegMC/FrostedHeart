@@ -20,14 +20,12 @@ package com.teammoeg.frostedheart;
 
 import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
-import com.teammoeg.frostedheart.capability.TempForecastCapabilityProvider;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.nbt.ModNBTs;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.WeatherPacket;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -45,7 +43,6 @@ import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -84,9 +81,7 @@ public class FHForgeEvents {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.WorldTickEvent event) {
-        if (!event.world.isRemote) {
-            PacketHandler.send(PacketDistributor.ALL.noArg(), new WeatherPacket((ServerWorld) event.world));
-        }
+
     }
 
     @SubscribeEvent
@@ -105,9 +100,7 @@ public class FHForgeEvents {
 
     @SubscribeEvent
     public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
-        if (event.getObject() != null) {
-            event.addCapability(TempForecastCapabilityProvider.KEY, new TempForecastCapabilityProvider());
-        }
+
     }
 
     @SubscribeEvent

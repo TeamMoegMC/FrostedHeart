@@ -11,7 +11,9 @@
     "electrodynamics.TileCombustionChamberMixin",
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataMixin",
-    "survive.SurviveEventsMixin"
+    "survive.SEffectMixin",
+    "survive.SurviveEventsMixin",
+    "survive.SurviveRegistryEventsMixin"
   ],
   "client": [
   ],

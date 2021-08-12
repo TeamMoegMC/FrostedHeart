@@ -26,5 +26,8 @@
   "gui.jei.category.electrolyzer.info.power": "8 kW 240 V",
   "gui.electrolyzer.usage": "Usage: %s",
   "gui.electrolyzer.voltage": "Voltage: %s",
-  "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!"
+  "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
+  "tooltip.frostedheart.survive_temp_mod": "Temperature Modifier: ",
+  "tooltip.frostedheart.survive_weight_mod": "Weight Modifier: ",
+  "tooltip.frostedheart.survive_range": "Range: "
 }

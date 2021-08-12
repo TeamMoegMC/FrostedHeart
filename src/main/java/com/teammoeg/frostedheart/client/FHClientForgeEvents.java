@@ -20,20 +20,30 @@ package com.teammoeg.frostedheart.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.stereowalker.survive.Survive;
+import com.stereowalker.survive.temperature.TemperatureChangeInstance;
+import com.stereowalker.survive.util.data.ArmorData;
+import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.capability.TempForecastCapabilityProvider;
 import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -43,6 +53,36 @@ import static net.minecraft.util.text.TextFormatting.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHClientForgeEvents {
+
+    @SubscribeEvent
+    public static void addItemTooltip(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        for (ResourceLocation id : Survive.armorModifierMap.keySet()) {
+            Item armor = ForgeRegistries.ITEMS.getValue(id);
+            float weightMod = Survive.armorModifierMap.get(id).getWeightModifier();
+            if (Survive.armorModifierMap.get(id).getTemperatureModifier().size() > 0) {
+                TemperatureChangeInstance instance = Survive.armorModifierMap.get(id).getTemperatureModifier().get(0); // Get the first instance, we don't need the rest..
+                float tempMod = instance.getTemperature();
+                if (stack.getItem() == armor) {
+                    event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
+                    event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_weight_mod").appendString(String.valueOf(weightMod)).mergeStyle(TextFormatting.GRAY));
+                }
+            }
+        }
+
+        for (ResourceLocation id : Survive.blockTemperatureMap.keySet()) {
+            Block block = ForgeRegistries.BLOCKS.getValue(id);
+            BlockTemperatureData data = Survive.blockTemperatureMap.get(id);
+            float tempMod = data.getTemperatureModifier();
+            int range = data.getRange();
+            if (block != null && stack.getItem() == block.asItem()) {
+                event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
+                event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_range").appendString(String.valueOf(range)).mergeStyle(TextFormatting.GRAY));
+            }
+        }
+
+    }
+
     @SubscribeEvent
     public static void onRenderGameOverlayText(RenderGameOverlayEvent.Text event) {
         Minecraft mc = Minecraft.getInstance();
@@ -59,14 +99,6 @@ public class FHClientForgeEvents {
             } else {
                 list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
             }
-            mc.world.getCapability(TempForecastCapabilityProvider.CAPABILITY).ifPresent((capability -> {
-                int clearTime = capability.getClearTime();
-                int rainTime = capability.getRainTime();
-                int thunderTime = capability.getThunderTime();
-                list.add("Weather will be clear for: " + clearTime);
-                list.add("Ticks until rain: " + rainTime);
-                list.add("Ticks until thunder: " + thunderTime);
-            }));
         }
     }
 
