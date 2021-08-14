@@ -39,9 +39,6 @@ public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
 
-    public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(
-            ForgeRegistries.CONTAINERS, FHMain.MODID);
-
     public static final RegistryObject<TileEntityType<GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
             "generator", makeType(() -> new GeneratorTileEntity(1, 1), () -> FHBlocks.Multi.generator)
     );
@@ -60,8 +57,5 @@ public class FHTileTypes {
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeTypeMultipleBlocks(Supplier<T> create, Supplier<Collection<Block>> valid) {
         return () -> new TileEntityType<>(create, ImmutableSet.copyOf(valid.get()), null);
     }
-
-    public static final RegistryObject<ContainerType<ElectrolyzerContainer>> ELECTROLYZER_CONTAINER = CONTAINERS
-            .register("electrolyzer_container", () -> new ContainerType<>(ElectrolyzerContainer::new));
 
 }
