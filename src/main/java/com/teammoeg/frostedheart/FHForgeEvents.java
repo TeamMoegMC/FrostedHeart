@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
 import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -33,9 +32,6 @@ import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.KelpBlock;
-import net.minecraft.block.KelpTopBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -190,8 +186,7 @@ public class FHForgeEvents {
         float temp = data.getTemperatureAtBlock(event.getPos());
         if (growBlock instanceof FHCropBlock) {
             event.setResult(Event.Result.DEFAULT);
-        }
-        else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+        } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
             if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
                 if (event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
@@ -317,7 +312,7 @@ public class FHForgeEvents {
     @SubscribeEvent
     public static void punishEatingRawMeat(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity && event.getItem().getItem().getTags().contains(FHMain.rl("raw_food"))) {
-            ServerPlayerEntity player = (ServerPlayerEntity)event.getEntityLiving();
+            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             player.addPotionEffect(new EffectInstance(Effects.POISON, 400, 1));
             player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 400, 1));
             if (ModList.get().isLoaded("diet") && player.getServer() != null) {

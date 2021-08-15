@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.mixin.survive;
 
 import com.stereowalker.survive.config.Config;
@@ -39,12 +57,12 @@ public class SEffectMixin extends Effect {
     public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
         if (this == SEffects.THIRST && entityLivingBaseIn instanceof ServerPlayerEntity) {
             WaterStats waterStats = SurviveEntityStats.getWaterStats(entityLivingBaseIn);
-            waterStats.addExhaustion((PlayerEntity)entityLivingBaseIn, 0.005F * (float)(amplifier + 1));
+            waterStats.addExhaustion((PlayerEntity) entityLivingBaseIn, 0.005F * (float) (amplifier + 1));
             SurviveEntityStats.setWaterStats(entityLivingBaseIn, waterStats);
         }
         // Frosted Heart Starts
         else {
-            boolean flag = (!((PlayerEntity)entityLivingBaseIn).isSleeping() || !Config.hyp_allow_sleep);
+            boolean flag = (!((PlayerEntity) entityLivingBaseIn).isSleeping() || !Config.hyp_allow_sleep);
             if (this == SEffects.HYPOTHERMIA && entityLivingBaseIn instanceof PlayerEntity) {
                 if (flag) {
                     if (entityLivingBaseIn.getHealth() > 10.0F) {
@@ -70,13 +88,13 @@ public class SEffectMixin extends Effect {
             else {
                 TemperatureStats stats;
                 if (this == SEffects.CHILLED && entityLivingBaseIn instanceof ServerPlayerEntity) {
-                    stats = SurviveEntityStats.getTemperatureStats((ServerPlayerEntity)entityLivingBaseIn);
-                    TemperatureStats.setTemperatureModifier(entityLivingBaseIn, "survive:chilled_effect", (double)(-(0.05F * (float)(amplifier + 1))));
-                    SurviveEntityStats.setTemperatureStats((ServerPlayerEntity)entityLivingBaseIn, stats);
+                    stats = SurviveEntityStats.getTemperatureStats((ServerPlayerEntity) entityLivingBaseIn);
+                    TemperatureStats.setTemperatureModifier(entityLivingBaseIn, "survive:chilled_effect", (double) (-(0.05F * (float) (amplifier + 1))));
+                    SurviveEntityStats.setTemperatureStats((ServerPlayerEntity) entityLivingBaseIn, stats);
                 } else if (this == SEffects.HEATED && entityLivingBaseIn instanceof ServerPlayerEntity) {
-                    stats = SurviveEntityStats.getTemperatureStats((ServerPlayerEntity)entityLivingBaseIn);
-                    TemperatureStats.setTemperatureModifier(entityLivingBaseIn, "survive:heated_effect", (double)(0.05F * (float)(amplifier + 1)));
-                    SurviveEntityStats.setTemperatureStats((ServerPlayerEntity)entityLivingBaseIn, stats);
+                    stats = SurviveEntityStats.getTemperatureStats((ServerPlayerEntity) entityLivingBaseIn);
+                    TemperatureStats.setTemperatureModifier(entityLivingBaseIn, "survive:heated_effect", (double) (0.05F * (float) (amplifier + 1)));
+                    SurviveEntityStats.setTemperatureStats((ServerPlayerEntity) entityLivingBaseIn, stats);
                 } else {
                     EnergyStats energyStats;
                     if (this == SEffects.ENERGIZED && entityLivingBaseIn instanceof ServerPlayerEntity) {
@@ -91,7 +109,7 @@ public class SEffectMixin extends Effect {
                         }
                     } else if (this == SEffects.TIREDNESS && entityLivingBaseIn instanceof ServerPlayerEntity) {
                         energyStats = SurviveEntityStats.getEnergyStats(entityLivingBaseIn);
-                        energyStats.addExhaustion((PlayerEntity)entityLivingBaseIn, 0.005F * (float)(amplifier + 1));
+                        energyStats.addExhaustion((PlayerEntity) entityLivingBaseIn, 0.005F * (float) (amplifier + 1));
                         SurviveEntityStats.setEnergyStats(entityLivingBaseIn, energyStats);
                     }
                 }

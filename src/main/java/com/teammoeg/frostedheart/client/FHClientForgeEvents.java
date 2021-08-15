@@ -22,7 +22,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.Survive;
 import com.stereowalker.survive.temperature.TemperatureChangeInstance;
-import com.stereowalker.survive.util.data.ArmorData;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
@@ -125,20 +124,16 @@ public class FHClientForgeEvents {
                     if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.MIDDLE) {
                         offsetX = w / 2 - 18;
                         offsetY = h - 84;
-                    }
-                    else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_LEFT) {
+                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_LEFT) {
                         offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
                         offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
-                    }
-                    else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_RIGHT) {
+                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_RIGHT) {
                         offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
                         offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
-                    }
-                    else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_LEFT) {
+                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_LEFT) {
                         offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
                         offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
-                    }
-                    else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_RIGHT) {
+                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_RIGHT) {
                         offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
                         offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
                     }
