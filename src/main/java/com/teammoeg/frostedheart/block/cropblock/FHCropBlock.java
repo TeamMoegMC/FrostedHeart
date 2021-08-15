@@ -56,6 +56,10 @@ public class FHCropBlock extends CropsBlock {
         return new ResourceLocation(FHMain.MODID, name);
     }
 
+    public int getGrowTemperature() {
+        return growTemperature;
+    }
+
     @Override
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
         if (!worldIn.isAreaLoaded(pos, 1))

@@ -9,6 +9,7 @@
     "electrodynamics.ElectricityUtilitiesMixin",
     "electrodynamics.TileCoalGeneratorMixin",
     "electrodynamics.TileCombustionChamberMixin",
+    "immersiveengineering.HempBlockMixin",
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataMixin",
     "survive.SEffectMixin",

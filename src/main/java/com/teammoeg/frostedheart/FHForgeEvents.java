@@ -60,6 +60,7 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -200,10 +201,61 @@ public class FHForgeEvents {
         } else {
             if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
-                if (event.getWorld().getRandom().nextInt(3) == 0) {
+                if (event.getWorld().getBlockState(event.getPos()) != growBlock.getDefaultState() && event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onUseBoneMeal(BonemealEvent event) {
+        if (event.getPlayer() instanceof ServerPlayerEntity) {
+            PlayerEntity player = event.getPlayer();
+            Block growBlock = event.getBlock().getBlock();
+            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
+            float temp = data.getTemperatureAtBlock(event.getPos());
+            if (growBlock instanceof FHCropBlock) {
+                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                if (temp < growTemp) {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                }
+            } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+                if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
+                }
+            } else {
+                event.setCanceled(true);
+                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
+            }
+        }
+    }
+
+    //TODO create grow temperature mappings for every plant in the modpack
+    @SubscribeEvent
+    public static void onEntityPlaceBlock(BlockEvent.EntityPlaceEvent event) {
+        if (event.getEntity() instanceof ServerPlayerEntity) {
+            PlayerEntity player = (PlayerEntity) event.getEntity();
+            Block growBlock = event.getPlacedBlock().getBlock();
+            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
+            float temp = data.getTemperatureAtBlock(event.getPos());
+            if (growBlock instanceof FHCropBlock) {
+                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                if (temp < growTemp) {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                }
+            } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+                if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
+                }
+            } else {
+                event.setCanceled(true);
+                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
             }
         }
     }

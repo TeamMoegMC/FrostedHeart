@@ -67,7 +67,7 @@ public class FHClientForgeEvents {
                 TemperatureChangeInstance instance = Survive.armorModifierMap.get(id).getTemperatureModifier().get(0); // Get the first instance, we don't need the rest..
                 float tempMod = instance.getTemperature();
                 if (stack.getItem() == armor) {
-                    event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
+                    event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_armor_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
                     event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_weight_mod").appendString(String.valueOf(weightMod)).mergeStyle(TextFormatting.GRAY));
                 }
             }
@@ -79,7 +79,7 @@ public class FHClientForgeEvents {
             float tempMod = data.getTemperatureModifier();
             int range = data.getRange();
             if (block != null && stack.getItem() == block.asItem()) {
-                event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
+                event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_block_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
                 event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_range").appendString(String.valueOf(range)).mergeStyle(TextFormatting.GRAY));
             }
         }
