@@ -18,8 +18,11 @@
 
 package com.teammoeg.frostedheart;
 
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
 import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
@@ -29,6 +32,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.KelpBlock;
 import net.minecraft.block.KelpTopBlock;
@@ -180,15 +184,28 @@ public class FHForgeEvents {
 
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
-        if (!(event.getState().getBlock() instanceof FHCropBlock) && !(event.getState().getBlock() instanceof KelpBlock) && !(event.getState().getBlock() instanceof KelpTopBlock)) {
-            event.setResult(Event.Result.DENY);
-            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
-            float temp = data.getTemperatureAtBlock(event.getPos());
-            if (temp < 20) {
-                event.getWorld().setBlockState(event.getPos(), Blocks.DEAD_BUSH.getDefaultState(), 2);
+        Block growBlock = event.getState().getBlock();
+        ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
+        float temp = data.getTemperatureAtBlock(event.getPos());
+        if (growBlock instanceof FHCropBlock) {
+            event.setResult(Event.Result.DEFAULT);
+        }
+        else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+            if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
+                    event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                }
+                event.setResult(Event.Result.DENY);
+            }
+        } else {
+            if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
+                // Set back to default state, might not be necessary
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
+                    event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                }
+                event.setResult(Event.Result.DENY);
             }
         }
-
     }
 
     @SubscribeEvent

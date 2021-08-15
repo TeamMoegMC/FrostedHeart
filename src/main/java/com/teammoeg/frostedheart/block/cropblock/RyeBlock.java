@@ -28,6 +28,7 @@ import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
@@ -56,7 +57,7 @@ public class RyeBlock extends FHCropBlock {
     }
 
     protected int getBonemealAgeIncrease(World worldIn) {
-        return super.getBonemealAgeIncrease(worldIn) / 5;
+        return MathHelper.nextInt(worldIn.rand, 0, 1);
     }
 
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
