@@ -13,8 +13,27 @@ public class FHConfig {
     }
 
     public static class Client {
-        Client(ForgeConfigSpec.Builder builder) {
+        public final ForgeConfigSpec.BooleanValue enablesTemperatureOrb;
+        public final ForgeConfigSpec.IntValue tempOrbOffsetX;
+        public final ForgeConfigSpec.IntValue tempOrbOffsetY;
+        public final ForgeConfigSpec.EnumValue<TempOrbPos> tempOrbPosition;
 
+        Client(ForgeConfigSpec.Builder builder) {
+            enablesTemperatureOrb = builder
+                    .comment("Enables the temperature orb overlay. ")
+                    .define("enableTemperatureOrb", true);
+
+            tempOrbPosition = builder
+                    .comment("Position of the temperature orb in game screen. ")
+                    .defineEnum("renderTempOrbAtCenter", TempOrbPos.MIDDLE);
+
+            tempOrbOffsetX = builder
+                    .comment("X Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used. ")
+                    .defineInRange("tempOrbOffsetX", 0, -4096, 4096);
+
+            tempOrbOffsetY = builder
+                    .comment("Y Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used.  ")
+                    .defineInRange("tempOrbOffsetY", 0, -4096, 4096);
         }
     }
 
@@ -51,5 +70,9 @@ public class FHConfig {
         ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
         SERVER = new Server(SERVER_BUILDER);
         SERVER_CONFIG = SERVER_BUILDER.build();
+    }
+
+    public enum TempOrbPos {
+        MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT;
     }
 }
