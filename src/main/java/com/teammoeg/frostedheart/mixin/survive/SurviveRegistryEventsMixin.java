@@ -16,18 +16,21 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.item;
+package com.teammoeg.frostedheart.mixin.survive;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.FHContent;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.IArmorMaterial;
+import com.stereowalker.survive.registries.SurviveRegistryEvents;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-public class FHBaseArmorItem extends ArmorItem {
-    public FHBaseArmorItem(String name, IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
-        super(materialIn, slot, builderIn);
-        setRegistryName(FHMain.MODID, name);
-        FHContent.registeredFHItems.add(this);
+@Mixin(SurviveRegistryEvents.class)
+public class SurviveRegistryEventsMixin {
+    /**
+     * Disables survive enchantments completely
+     */
+    @Inject(method = "registerEnchantments", at = @At(value = "HEAD"), remap = false, cancellable = true)
+    private static void cancelSurviveEnchantments(CallbackInfo ci) {
+        ci.cancel();
     }
 }

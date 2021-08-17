@@ -20,4 +20,6 @@ package com.teammoeg.frostedheart.climate;
 
 public class WorldClimate {
     public static final byte WORLD_TEMPERATURE = -20;
+    public static final int VANILLA_PLANT_GROW_TEMPERATURE = 20;
+    public static final int HEMP_GROW_TEMPERATURE = 0;
 }

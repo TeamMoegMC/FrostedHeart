@@ -29,6 +29,6 @@ import java.util.HashMap;
 @Mixin(ComponentFluidHandler.class)
 public interface ComponentFluidHandlerAccess {
 
-    @Accessor("fluids")
+    @Accessor(value = "fluids", remap = false)
     HashMap<Fluid, FluidTank> getFluids();
 }

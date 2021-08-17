@@ -32,9 +32,9 @@ import org.spongepowered.asm.mixin.Overwrite;
 public class SurviveEventsMixin {
     /**
      * @author yuesha-yc
-     * Add our chunk temperature logic
+     * @reason Add our chunk temperature logic
      */
-    @Overwrite
+    @Overwrite(remap = false)
     @SubscribeEvent
     public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity) {

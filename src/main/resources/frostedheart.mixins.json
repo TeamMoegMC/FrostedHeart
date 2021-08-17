@@ -9,9 +9,13 @@
     "electrodynamics.ElectricityUtilitiesMixin",
     "electrodynamics.TileCoalGeneratorMixin",
     "electrodynamics.TileCombustionChamberMixin",
+    "immersiveengineering.HempBlockMixin",
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataMixin",
-    "survive.SurviveEventsMixin"
+    "rankine.AlloyTemplateItemMixin",
+    "survive.SEffectMixin",
+    "survive.SurviveEventsMixin",
+    "survive.SurviveRegistryEventsMixin"
   ],
   "client": [
   ],

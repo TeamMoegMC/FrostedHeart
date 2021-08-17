@@ -20,12 +20,10 @@ package com.teammoeg.frostedheart.content;
 
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.container.ElectrolyzerContainer;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.ElectrolyzerTileEntity;
 import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
 import net.minecraft.block.Block;
-import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;

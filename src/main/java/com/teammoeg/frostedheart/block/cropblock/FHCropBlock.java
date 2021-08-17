@@ -23,7 +23,6 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.FHContent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.CropsBlock;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -56,6 +55,10 @@ public class FHCropBlock extends CropsBlock {
         return new ResourceLocation(FHMain.MODID, name);
     }
 
+    public int getGrowTemperature() {
+        return growTemperature;
+    }
+
     @Override
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
         if (!worldIn.isAreaLoaded(pos, 1))
@@ -65,7 +68,9 @@ public class FHCropBlock extends CropsBlock {
             ChunkData data = ChunkData.get(worldIn, pos);
             float temp = data.getTemperatureAtBlock(pos);
             if (temp < growTemperature) {
-                worldIn.setBlockState(pos, Blocks.DEAD_BUSH.getDefaultState(), 2);
+                if (worldIn.getRandom().nextInt(3) == 0) {
+                    worldIn.setBlockState(pos, this.getDefaultState(), 2);
+                }
             } else if (i < this.getMaxAge()) {
                 float f = getGrowthChance(this, worldIn, pos);
                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt((int) (25.0F / f) + 1) == 0)) {
@@ -80,9 +85,6 @@ public class FHCropBlock extends CropsBlock {
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
         ChunkData data = ChunkData.get(worldIn, pos);
         float temp = data.getTemperatureAtBlock(pos);
-        if (temp >= growTemperature) {
-            return true;
-        }
-        return false;
+        return temp >= growTemperature;
     }
 }

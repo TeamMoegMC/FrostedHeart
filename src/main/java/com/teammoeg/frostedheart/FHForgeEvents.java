@@ -18,22 +18,22 @@
 
 package com.teammoeg.frostedheart;
 
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
-import com.teammoeg.frostedheart.capability.TempForecastCapabilityProvider;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
+import com.teammoeg.frostedheart.content.FHItems;
 import com.teammoeg.frostedheart.nbt.ModNBTs;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.WeatherPacket;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.KelpBlock;
-import net.minecraft.block.KelpTopBlock;
+import net.minecraft.block.Block;
+import net.minecraft.block.IGrowable;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -45,7 +45,6 @@ import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -59,6 +58,7 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -84,9 +84,7 @@ public class FHForgeEvents {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.WorldTickEvent event) {
-        if (!event.world.isRemote) {
-            PacketHandler.send(PacketDistributor.ALL.noArg(), new WeatherPacket((ServerWorld) event.world));
-        }
+
     }
 
     @SubscribeEvent
@@ -105,9 +103,7 @@ public class FHForgeEvents {
 
     @SubscribeEvent
     public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
-        if (event.getObject() != null) {
-            event.addCapability(TempForecastCapabilityProvider.KEY, new TempForecastCapabilityProvider());
-        }
+
     }
 
     @SubscribeEvent
@@ -187,15 +183,80 @@ public class FHForgeEvents {
 
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
-        if (!(event.getState().getBlock() instanceof FHCropBlock) && !(event.getState().getBlock() instanceof KelpBlock) && !(event.getState().getBlock() instanceof KelpTopBlock)) {
-            event.setResult(Event.Result.DENY);
-            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
-            float temp = data.getTemperatureAtBlock(event.getPos());
-            if (temp < 20) {
-                event.getWorld().setBlockState(event.getPos(), Blocks.DEAD_BUSH.getDefaultState(), 2);
+        Block growBlock = event.getState().getBlock();
+        ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
+        float temp = data.getTemperatureAtBlock(event.getPos());
+        if (growBlock instanceof FHCropBlock) {
+            event.setResult(Event.Result.DEFAULT);
+        } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+            if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                if (event.getWorld().getRandom().nextInt(3) == 0) {
+                    event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                }
+                event.setResult(Event.Result.DENY);
+            }
+        } else {
+            if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
+                // Set back to default state, might not be necessary
+                if (event.getWorld().getBlockState(event.getPos()) != growBlock.getDefaultState() && event.getWorld().getRandom().nextInt(3) == 0) {
+                    event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                }
+                event.setResult(Event.Result.DENY);
             }
         }
+    }
 
+    @SubscribeEvent
+    public static void onUseBoneMeal(BonemealEvent event) {
+        if (event.getPlayer() instanceof ServerPlayerEntity) {
+            PlayerEntity player = event.getPlayer();
+            Block growBlock = event.getBlock().getBlock();
+            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
+            float temp = data.getTemperatureAtBlock(event.getPos());
+            if (growBlock instanceof FHCropBlock) {
+                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                if (temp < growTemp) {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                }
+            } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+                if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
+                }
+            } else {
+                event.setCanceled(true);
+                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
+            }
+        }
+    }
+
+    //TODO create grow temperature mappings for every plant in the modpack
+    @SubscribeEvent
+    public static void onEntityPlaceBlock(BlockEvent.EntityPlaceEvent event) {
+        if (event.getEntity() instanceof ServerPlayerEntity) {
+            PlayerEntity player = (PlayerEntity) event.getEntity();
+            Block growBlock = event.getPlacedBlock().getBlock();
+            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
+            float temp = data.getTemperatureAtBlock(event.getPos());
+            if (growBlock instanceof IGrowable) {
+                if (growBlock instanceof FHCropBlock) {
+                    int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                    if (temp < growTemp) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                    }
+                } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+                    if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
+                    }
+                } else {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
+                }
+            }
+        }
     }
 
     @SubscribeEvent
@@ -211,37 +272,37 @@ public class FHForgeEvents {
         if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_MANUAL)) {
             persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
-            event.getPlayer().inventory.armorInventory.set(3, new ItemStack(SItems.WOOL_HAT));
-            event.getPlayer().inventory.armorInventory.set(2, new ItemStack(SItems.WOOL_JACKET));
-            event.getPlayer().inventory.armorInventory.set(1, new ItemStack(SItems.WOOL_PANTS));
-            event.getPlayer().inventory.armorInventory.set(0, new ItemStack(SItems.WOOL_BOOTS));
+            event.getPlayer().inventory.armorInventory.set(3, new ItemStack(FHItems.wool_hat));
+            event.getPlayer().inventory.armorInventory.set(2, new ItemStack(FHItems.wool_jacket));
+            event.getPlayer().inventory.armorInventory.set(1, new ItemStack(FHItems.wool_pants));
+            event.getPlayer().inventory.armorInventory.set(0, new ItemStack(FHItems.wool_boots));
             ItemStack breads = new ItemStack(Items.BREAD);
             breads.setCount(16);
             event.getPlayer().inventory.addItemStackToInventory(breads);
         }
     }
 
-    @SubscribeEvent
-    public static void addBaseNutritionOnFirstLogin(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
-        CompoundNBT nbt = event.getPlayer().getPersistentData();
-        CompoundNBT persistent;
-
-        if (nbt.contains(PlayerEntity.PERSISTED_NBT_TAG)) {
-            persistent = nbt.getCompound(PlayerEntity.PERSISTED_NBT_TAG);
-        } else {
-            nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
-        }
-        if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION)) {
-            persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION, false);
-            if (ModList.get().isLoaded("diet") && event.getPlayer().getServer() != null && event.getPlayer().isServerWorld()) {
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s fruits 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s grains 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s proteins 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s sugars 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s vegetables 0.75");
-            }
-        }
-    }
+//    @SubscribeEvent
+//    public static void addBaseNutritionOnFirstLogin(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
+//        CompoundNBT nbt = event.getPlayer().getPersistentData();
+//        CompoundNBT persistent;
+//
+//        if (nbt.contains(PlayerEntity.PERSISTED_NBT_TAG)) {
+//            persistent = nbt.getCompound(PlayerEntity.PERSISTED_NBT_TAG);
+//        } else {
+//            nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
+//        }
+//        if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION)) {
+//            persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION, false);
+//            if (ModList.get().isLoaded("diet") && event.getPlayer().getServer() != null && event.getPlayer().isServerWorld()) {
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s fruits 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s grains 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s proteins 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s sugars 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s vegetables 0.75");
+//            }
+//        }
+//    }
 
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
@@ -255,7 +316,7 @@ public class FHForgeEvents {
     @SubscribeEvent
     public static void punishEatingRawMeat(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity && event.getItem().getItem().getTags().contains(FHMain.rl("raw_food"))) {
-            ServerPlayerEntity player = (ServerPlayerEntity)event.getEntityLiving();
+            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             player.addPotionEffect(new EffectInstance(Effects.POISON, 400, 1));
             player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 400, 1));
             if (ModList.get().isLoaded("diet") && player.getServer() != null) {
