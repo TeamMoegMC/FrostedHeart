@@ -17,6 +17,7 @@ public class FHSoupItem extends FHBaseItem {
     public FHSoupItem(String name, Properties properties, boolean isPoorlyMade) {
         super(name, properties);
         isPoor = isPoorlyMade;
+        properties.maxStackSize(1);
     }
 
     @Override

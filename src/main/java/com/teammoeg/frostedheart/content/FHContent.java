@@ -85,6 +85,7 @@ public class FHContent {
         FHItems.generator_ash = new FHBaseItem("generator_ash", properties);
 
         FHItems.rye_bread = new FHBaseItem("rye_bread", properties.food(FHFoods.RYE_BREAD));
+        FHItems.black_bread = new FHBaseItem("black_bread", properties.food(FHFoods.BLACK_BREAD));
         FHItems.vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", properties.food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
         FHItems.rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
         FHItems.rye_porridge = new FHSoupItem("rye_porridge", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
