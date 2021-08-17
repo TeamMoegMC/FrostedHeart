@@ -19,10 +19,9 @@
 package com.teammoeg.frostedheart.compat;
 
 import electrodynamics.DeferredRegisters;
-import electrodynamics.common.settings.Constants;
 import electrodynamics.common.tile.TileChemicalCrystallizer;
 import electrodynamics.common.tile.TileChemicalMixer;
-import electrodynamics.prefab.utilities.object.TransferPack;
+import electrodynamics.common.tile.TileMineralWasher;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.util.ResourceLocation;
@@ -36,22 +35,33 @@ public class EleCompat {
     public static void setup() {
         TileChemicalMixer.SUPPORTED_INPUT_FLUIDS = new Fluid[]{
 
-                Fluids.WATER, DeferredRegisters.fluidEthanol
+                Fluids.WATER, DeferredRegisters.fluidEthanol, DeferredRegisters.fluidSulfuricAcid
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "chlorine"))
-
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "hydrogen_fluoride"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "fluoroaluminic_acid"))
         };
         TileChemicalMixer.SUPPORTED_OUTPUT_FLUIDS = new Fluid[]{
 
                 DeferredRegisters.fluidSulfuricAcid, DeferredRegisters.fluidPolyethylene
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride"))
                 , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "salt_water"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "hydrogen_fluoride"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "fluoroaluminic_acid"))
+                , ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "cryolite"))
+        };
+        TileMineralWasher.SUPPORTED_INPUT_FLUIDS = new Fluid[]{
 
+                DeferredRegisters.fluidSulfuricAcid,
+                ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "sodium_hydroxide"))
         };
         ArrayList<Fluid> list = Arrays.stream(TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS).collect(Collectors.toCollection(ArrayList::new));
         list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "magnesium_chloride")));
         list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "lime_water")));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "sodium_aluminate")));
+        list.add(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "aluminium")));
         TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS = list.toArray(new Fluid[list.size()]);
+        TileMineralWasher.SUPPORTED_OUTPUT_FLUIDS = TileChemicalCrystallizer.SUPPORTED_INPUT_FLUIDS;
 
-        Constants.COALGENERATOR_MAX_OUTPUT = TransferPack.ampsVoltage(8, 120);
     }
 }
