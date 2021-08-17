@@ -12,6 +12,7 @@
     "immersiveengineering.HempBlockMixin",
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataMixin",
+    "rankine.AlloyTemplateItemMixin",
     "survive.SEffectMixin",
     "survive.SurviveEventsMixin",
     "survive.SurviveRegistryEventsMixin"
