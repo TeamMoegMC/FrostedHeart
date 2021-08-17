@@ -28,6 +28,8 @@ public class FHItems {
     public static Item rye_bread;
     public static Item black_bread;
     public static Item generator_ash;
+    public static Item rye_flour;
+    public static Item raw_rye_bread;
 
     public static Item raw_hide;
 
