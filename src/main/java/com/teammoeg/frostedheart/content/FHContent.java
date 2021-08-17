@@ -84,13 +84,15 @@ public class FHContent {
         FHItems.energy_core = new FHBaseItem("energy_core", itemProps);
         FHItems.rye = new FHBaseItem("rye", itemProps);
         FHItems.generator_ash = new FHBaseItem("generator_ash", itemProps);
+        FHItems.rye_flour = new FHBaseItem("rye_flour", itemProps);
+        FHItems.raw_rye_bread = new FHBaseItem("raw_rye_bread", itemProps);
 
         FHItems.rye_bread = new FHBaseItem("rye_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
-        FHItems.black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
-        FHItems.vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
-        FHItems.rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
-        FHItems.rye_porridge = new FHSoupItem("rye_porridge", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
-        FHItems.vegetable_soup = new FHSoupItem("vegetable_soup", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
+        FHItems.black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.BLACK_BREAD));
+        FHItems.vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
+        FHItems.rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
+        FHItems.rye_porridge = new FHSoupItem("rye_porridge", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
+        FHItems.vegetable_soup = new FHSoupItem("vegetable_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
 
         FHItems.raw_hide = new FHBaseItem("raw_hide", itemProps);
         FHItems.hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, itemProps);
