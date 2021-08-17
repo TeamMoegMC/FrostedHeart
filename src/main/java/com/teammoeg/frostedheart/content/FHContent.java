@@ -79,32 +79,33 @@ public class FHContent {
         FHBlocks.electrolyzer = new ElectrolyzerBlock("electrolyzer_block", FHBlockItem::new);
 
         // Init Items
-        Item.Properties properties = new Item.Properties().group(FHMain.itemGroup);
-        FHItems.energy_core = new FHBaseItem("energy_core", properties);
-        FHItems.rye = new FHBaseItem("rye", properties);
-        FHItems.generator_ash = new FHBaseItem("generator_ash", properties);
+        Item.Properties foodProps = new Item.Properties().group(FHMain.itemGroup);
+        Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
+        FHItems.energy_core = new FHBaseItem("energy_core", itemProps);
+        FHItems.rye = new FHBaseItem("rye", itemProps);
+        FHItems.generator_ash = new FHBaseItem("generator_ash", itemProps);
 
-        FHItems.rye_bread = new FHBaseItem("rye_bread", properties.food(FHFoods.RYE_BREAD));
-        FHItems.vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", properties.food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
-        FHItems.rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
-        FHItems.rye_porridge = new FHSoupItem("rye_porridge", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
-        FHItems.vegetable_soup = new FHSoupItem("vegetable_soup", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
+        FHItems.rye_bread = new FHBaseItem("rye_bread", foodProps.food(FHFoods.RYE_BREAD));
+        FHItems.vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", foodProps.food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
+        FHItems.rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", foodProps.food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
+        FHItems.rye_porridge = new FHSoupItem("rye_porridge", foodProps.food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
+        FHItems.vegetable_soup = new FHSoupItem("vegetable_soup", foodProps.food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
 
-        FHItems.raw_hide = new FHBaseItem("raw_hide", properties);
-        FHItems.hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, properties);
-        FHItems.hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, properties);
-        FHItems.hay_jacket = new FHBaseArmorItem("hay_jacket", FHArmorMaterial.HAY, EquipmentSlotType.CHEST, properties);
-        FHItems.hay_pants = new FHBaseArmorItem("hay_pants", FHArmorMaterial.HAY, EquipmentSlotType.LEGS, properties);
+        FHItems.raw_hide = new FHBaseItem("raw_hide", itemProps);
+        FHItems.hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, itemProps);
+        FHItems.hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, itemProps);
+        FHItems.hay_jacket = new FHBaseArmorItem("hay_jacket", FHArmorMaterial.HAY, EquipmentSlotType.CHEST, itemProps);
+        FHItems.hay_pants = new FHBaseArmorItem("hay_pants", FHArmorMaterial.HAY, EquipmentSlotType.LEGS, itemProps);
 
-        FHItems.wool_boots = new FHBaseArmorItem("wool_boots", FHArmorMaterial.WOOL, EquipmentSlotType.FEET, properties);
-        FHItems.wool_hat = new FHBaseArmorItem("wool_hat", FHArmorMaterial.WOOL, EquipmentSlotType.HEAD, properties);
-        FHItems.wool_jacket = new FHBaseArmorItem("wool_jacket", FHArmorMaterial.WOOL, EquipmentSlotType.CHEST, properties);
-        FHItems.wool_pants = new FHBaseArmorItem("wool_pants", FHArmorMaterial.WOOL, EquipmentSlotType.LEGS, properties);
+        FHItems.wool_boots = new FHBaseArmorItem("wool_boots", FHArmorMaterial.WOOL, EquipmentSlotType.FEET, itemProps);
+        FHItems.wool_hat = new FHBaseArmorItem("wool_hat", FHArmorMaterial.WOOL, EquipmentSlotType.HEAD, itemProps);
+        FHItems.wool_jacket = new FHBaseArmorItem("wool_jacket", FHArmorMaterial.WOOL, EquipmentSlotType.CHEST, itemProps);
+        FHItems.wool_pants = new FHBaseArmorItem("wool_pants", FHArmorMaterial.WOOL, EquipmentSlotType.LEGS, itemProps);
 
-        FHItems.hide_boots = new FHBaseArmorItem("hide_boots", FHArmorMaterial.HIDE, EquipmentSlotType.FEET, properties);
-        FHItems.hide_hat = new FHBaseArmorItem("hide_hat", FHArmorMaterial.HIDE, EquipmentSlotType.HEAD, properties);
-        FHItems.hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, properties);
-        FHItems.hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, properties);
+        FHItems.hide_boots = new FHBaseArmorItem("hide_boots", FHArmorMaterial.HIDE, EquipmentSlotType.FEET, itemProps);
+        FHItems.hide_hat = new FHBaseArmorItem("hide_hat", FHArmorMaterial.HIDE, EquipmentSlotType.HEAD, itemProps);
+        FHItems.hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, itemProps);
+        FHItems.hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, itemProps);
 
         // Init Multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();

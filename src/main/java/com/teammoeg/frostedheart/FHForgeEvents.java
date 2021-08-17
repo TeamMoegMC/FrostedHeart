@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;
+import net.minecraft.block.IGrowable;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -237,20 +238,22 @@ public class FHForgeEvents {
             Block growBlock = event.getPlacedBlock().getBlock();
             ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
             float temp = data.getTemperatureAtBlock(event.getPos());
-            if (growBlock instanceof FHCropBlock) {
-                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
-                if (temp < growTemp) {
+            if (growBlock instanceof IGrowable) {
+                if (growBlock instanceof FHCropBlock) {
+                    int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                    if (temp < growTemp) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                    }
+                } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+                    if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
+                    }
+                } else {
                     event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
                 }
-            } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
-                if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
-                    event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
-                }
-            } else {
-                event.setCanceled(true);
-                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
             }
         }
     }
