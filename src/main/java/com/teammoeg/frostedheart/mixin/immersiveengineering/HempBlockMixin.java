@@ -36,7 +36,7 @@ import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.GROW
 @Mixin(HempBlock.class)
 public class HempBlockMixin {
 
-    private float getGrowthSpeed(World world, BlockPos pos, BlockState state, int light) {
+    private float fh$getGrowthSpeed(World world, BlockPos pos, BlockState state, int light) {
         float growth = 0.125f*(light-11);
         if(world.canBlockSeeSky(pos))
             growth += 2f;
@@ -46,8 +46,7 @@ public class HempBlockMixin {
         return 1f+growth;
     }
 
-    private static EnumHempGrowth getMaxGrowth(EnumHempGrowth current)
-    {
+    private static EnumHempGrowth fh$getMaxGrowth(EnumHempGrowth current) {
         if(current==EnumHempGrowth.TOP0)
             return EnumHempGrowth.TOP0;
         else
@@ -67,9 +66,8 @@ public class HempBlockMixin {
      * @author yuesha-yc
      * @reason obfuscation issues if i use inject above
      */
-    @Overwrite
-    public void tick(BlockState state, ServerWorld world, BlockPos pos, Random random)
-    {
+    @Overwrite(remap = false)
+    public void tick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
         int light = world.getLight(pos);
         if(light >= 12)
         {
@@ -83,14 +81,14 @@ public class HempBlockMixin {
             EnumHempGrowth growth = state.get(GROWTH);
             if(growth==EnumHempGrowth.TOP0)
                 return;
-            float speed = this.getGrowthSpeed(world, pos, state, light);
+            float speed = this.fh$getGrowthSpeed(world, pos, state, light);
             if(random.nextInt((int)(50F/speed)+1)==0)
             {
-                if(getMaxGrowth(growth)!=growth)
+                if(fh$getMaxGrowth(growth)!=growth)
                 {
                     world.setBlockState(pos, state.with(GROWTH, growth.next()));
                 }
-                if(growth==getMaxGrowth(growth)&&world.isAirBlock(pos.add(0, 1, 0)))
+                if(growth== fh$getMaxGrowth(growth)&&world.isAirBlock(pos.add(0, 1, 0)))
                     world.setBlockState(pos.add(0, 1, 0), state.with(GROWTH, EnumHempGrowth.TOP0));
             }
         }
