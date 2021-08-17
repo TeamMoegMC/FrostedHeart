@@ -23,7 +23,7 @@ import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileE
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.block.GeneratorMultiblockBlock;
+import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.FHMultiblocks;
@@ -317,8 +317,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             Random random = world.rand;
             if (random.nextFloat() < 0.4F) {
                 for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                    GeneratorMultiblockBlock.spawnSmokeParticles(world, blockpos);
-                    GeneratorMultiblockBlock.spawnFireParticles(world, blockpos);
+                    FHClientUtils.spawnSmokeParticles(world, blockpos);
+                    FHClientUtils.spawnFireParticles(world, blockpos);
                 }
             }
         }

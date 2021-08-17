@@ -37,10 +37,6 @@ public class FHUtils {
         });
     }
 
-    public static World getWorld() {
-        return Minecraft.getInstance().world;
-    }
-
     public static ToIntFunction<BlockState> getLightValueLit(int lightValue) {
         return (state) -> {
             return state.get(BlockStateProperties.LIT) ? lightValue : 0;
