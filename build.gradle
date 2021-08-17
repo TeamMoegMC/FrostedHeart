@@ -207,7 +207,7 @@ def getPrivateString(String key) {
 // Automatically apply a license header when running checkLicense / updateLicense
 license {
     header = project.file('HEADER.txt')
-
+    ignoreFailures = true
     include '**/*.java'
 }
 
