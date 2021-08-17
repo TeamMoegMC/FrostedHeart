@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.container.GeneratorContainer;
 import com.teammoeg.frostedheart.item.FHArmorMaterial;
 import com.teammoeg.frostedheart.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.item.FHSoupItem;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
@@ -53,7 +54,7 @@ public class FHContent {
     public static List<Fluid> registeredFHFluids = new ArrayList<>();
 
     public static void populate() {
-        // Init block
+        // Init Blocks
         Block.Properties stoneDecoProps = Block.Properties.create(Material.ROCK)
                 .sound(SoundType.STONE)
                 .setRequiresTool()
@@ -77,12 +78,17 @@ public class FHContent {
         FHBlocks.rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
         FHBlocks.electrolyzer = new ElectrolyzerBlock("electrolyzer_block", FHBlockItem::new);
 
-
+        // Init Items
         Item.Properties properties = new Item.Properties().group(FHMain.itemGroup);
         FHItems.energy_core = new FHBaseItem("energy_core", properties);
         FHItems.rye = new FHBaseItem("rye", properties);
-        FHItems.rye_bread = new FHBaseItem("rye_bread", properties.food((new Food.Builder()).hunger(5).saturation(0.6F).build()));
         FHItems.generator_ash = new FHBaseItem("generator_ash", properties);
+
+        FHItems.rye_bread = new FHBaseItem("rye_bread", properties.food(FHFoods.RYE_BREAD));
+        FHItems.vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", properties.food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
+        FHItems.rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
+        FHItems.rye_porridge = new FHSoupItem("rye_porridge", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
+        FHItems.vegetable_soup = new FHSoupItem("vegetable_soup", properties.food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
 
         FHItems.raw_hide = new FHBaseItem("raw_hide", properties);
         FHItems.hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, properties);
@@ -100,7 +106,7 @@ public class FHContent {
         FHItems.hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, properties);
         FHItems.hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, properties);
 
-        // Init multiblocks
+        // Init Multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();
         FHMultiblocks.CRUCIBLE = new CrucibleMultiblock();
     }

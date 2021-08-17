@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.content;
 
+import com.teammoeg.frostedheart.item.FHSoupItem;
 import net.minecraft.item.Item;
 
 public class FHItems {
@@ -43,4 +44,8 @@ public class FHItems {
     public static Item hide_boots;
     public static Item hide_jacket;
     public static Item hide_pants;
+    public static FHSoupItem vegetable_sawdust_soup;
+    public static FHSoupItem rye_sawdust_porridge;
+    public static FHSoupItem rye_porridge;
+    public static FHSoupItem vegetable_soup;
 }
