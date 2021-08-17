@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.content;
 import net.minecraft.item.Food;
 
 public class FHFoods {
-    public static final Food VEGETABLE_SAWDUST_SOUP = buildStew(6);
-    public static final Food RYE_SAWDUST_PORRIDGE = buildStew(6, 1.0F);
+    public static final Food VEGETABLE_SAWDUST_SOUP = buildStew(6, 0.4F);
+    public static final Food RYE_SAWDUST_PORRIDGE = buildStew(6, 0.6F);
     public static final Food RYE_BREAD = buildStew(6);
     public static final Food BLACK_BREAD = buildStew(5, 0.0F);
 
