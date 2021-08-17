@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
+import com.teammoeg.frostedheart.content.FHItems;
 import com.teammoeg.frostedheart.nbt.ModNBTs;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
@@ -32,6 +33,7 @@ import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;
+import net.minecraft.block.IGrowable;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -237,20 +239,22 @@ public class FHForgeEvents {
             Block growBlock = event.getPlacedBlock().getBlock();
             ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
             float temp = data.getTemperatureAtBlock(event.getPos());
-            if (growBlock instanceof FHCropBlock) {
-                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
-                if (temp < growTemp) {
+            if (growBlock instanceof IGrowable) {
+                if (growBlock instanceof FHCropBlock) {
+                    int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                    if (temp < growTemp) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                    }
+                } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
+                    if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
+                    }
+                } else {
                     event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
                 }
-            } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
-                if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
-                    event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
-                }
-            } else {
-                event.setCanceled(true);
-                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
             }
         }
     }
@@ -268,37 +272,37 @@ public class FHForgeEvents {
         if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_MANUAL)) {
             persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
-            event.getPlayer().inventory.armorInventory.set(3, new ItemStack(SItems.WOOL_HAT));
-            event.getPlayer().inventory.armorInventory.set(2, new ItemStack(SItems.WOOL_JACKET));
-            event.getPlayer().inventory.armorInventory.set(1, new ItemStack(SItems.WOOL_PANTS));
-            event.getPlayer().inventory.armorInventory.set(0, new ItemStack(SItems.WOOL_BOOTS));
+            event.getPlayer().inventory.armorInventory.set(3, new ItemStack(FHItems.wool_hat));
+            event.getPlayer().inventory.armorInventory.set(2, new ItemStack(FHItems.wool_jacket));
+            event.getPlayer().inventory.armorInventory.set(1, new ItemStack(FHItems.wool_pants));
+            event.getPlayer().inventory.armorInventory.set(0, new ItemStack(FHItems.wool_boots));
             ItemStack breads = new ItemStack(Items.BREAD);
             breads.setCount(16);
             event.getPlayer().inventory.addItemStackToInventory(breads);
         }
     }
 
-    @SubscribeEvent
-    public static void addBaseNutritionOnFirstLogin(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
-        CompoundNBT nbt = event.getPlayer().getPersistentData();
-        CompoundNBT persistent;
-
-        if (nbt.contains(PlayerEntity.PERSISTED_NBT_TAG)) {
-            persistent = nbt.getCompound(PlayerEntity.PERSISTED_NBT_TAG);
-        } else {
-            nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
-        }
-        if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION)) {
-            persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION, false);
-            if (ModList.get().isLoaded("diet") && event.getPlayer().getServer() != null && event.getPlayer().isServerWorld()) {
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s fruits 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s grains 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s proteins 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s sugars 0.75");
-                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s vegetables 0.75");
-            }
-        }
-    }
+//    @SubscribeEvent
+//    public static void addBaseNutritionOnFirstLogin(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
+//        CompoundNBT nbt = event.getPlayer().getPersistentData();
+//        CompoundNBT persistent;
+//
+//        if (nbt.contains(PlayerEntity.PERSISTED_NBT_TAG)) {
+//            persistent = nbt.getCompound(PlayerEntity.PERSISTED_NBT_TAG);
+//        } else {
+//            nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
+//        }
+//        if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION)) {
+//            persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION, false);
+//            if (ModList.get().isLoaded("diet") && event.getPlayer().getServer() != null && event.getPlayer().isServerWorld()) {
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s fruits 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s grains 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s proteins 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s sugars 0.75");
+//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s vegetables 0.75");
+//            }
+//        }
+//    }
 
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {

@@ -4,7 +4,7 @@ license = "GPLv3"
 issueTrackerURL = "https://github.com/TeamMoegMC/Frosted-Heart/issues"
 [[mods]] #mandatory
 modId = "frostedheart" #mandatory
-version = "1.16.5-1.1.0" #mandatory
+version = "1.16.5-0.2.0" #mandatory
 displayName = "Frosted Heart" #mandatory
 authors = "YueSha, dashuaibia, duck_egg, Luyuuke"
 description = '''
