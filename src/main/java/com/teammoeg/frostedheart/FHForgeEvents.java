@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
+import net.minecraft.block.SaplingBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -240,7 +241,10 @@ public class FHForgeEvents {
             ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
             float temp = data.getTemperatureAtBlock(event.getPos());
             if (growBlock instanceof IGrowable) {
-                if (growBlock instanceof FHCropBlock) {
+                if (growBlock instanceof SaplingBlock) {
+                    //TODO: allow planting trees now, maybe i will add some restrictions in the future
+                }
+                else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
@@ -320,7 +324,7 @@ public class FHForgeEvents {
             player.addPotionEffect(new EffectInstance(Effects.POISON, 400, 1));
             player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 400, 1));
             if (ModList.get().isLoaded("diet") && player.getServer() != null) {
-                player.getServer().getCommandManager().handleCommand(player.getCommandSource(), "/diet subtract @s proteins 0.1");
+                player.getServer().getCommandManager().handleCommand(player.getCommandSource(), "/diet subtract @s proteins 0.01");
             }
             player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
         }
