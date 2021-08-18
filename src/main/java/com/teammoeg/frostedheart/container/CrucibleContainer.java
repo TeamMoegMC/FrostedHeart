@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.container;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import blusunrize.immersiveengineering.common.items.IEItems;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -46,7 +45,7 @@ public class CrucibleContainer extends IEBaseContainer<CrucibleTileEntity> {
         this.addSlot(new IESlot(this, this.inv, 2, 80, 51) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return itemStack.getItem() == IEItems.Ingredients.coalCoke;
+                return itemStack.getItem().getTags().contains(CrucibleTileEntity.coal_coke);
             }
         });
         slotCount = 3;

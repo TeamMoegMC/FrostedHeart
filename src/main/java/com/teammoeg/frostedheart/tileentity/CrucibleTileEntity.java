@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.tileentity;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import blusunrize.immersiveengineering.common.items.IEItems;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
@@ -37,6 +36,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
@@ -62,7 +62,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     public int process = 0;
     public int processMax = 0;
     public int updatetick = 0;
-
+    public static ResourceLocation coal_coke = new ResourceLocation("forge:coal_coke");
     public CrucibleTileEntity() {
         super(FHMultiblocks.CRUCIBLE, FHTileTypes.CRUCIBLE.get(), false);
     }
@@ -141,7 +141,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         if (slot == 0)
             return CrucibleRecipe.findRecipe(stack) != null;
         if (slot == 2)
-            return stack.getItem() == IEItems.Ingredients.coalCoke;
+            return stack.getItem().getTags().contains(coal_coke);
         return false;
     }
 
@@ -223,7 +223,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
             if (burnTime > 0) {
                 burnTime--;
             } else {
-                if (inventory.get(2).getItem() == IEItems.Ingredients.coalCoke) {
+                if (inventory.get(2).getItem().getTags().contains(coal_coke)) {
                     burnTime = 600;
                     inventory.get(2).shrink(1);
                     this.markDirty();

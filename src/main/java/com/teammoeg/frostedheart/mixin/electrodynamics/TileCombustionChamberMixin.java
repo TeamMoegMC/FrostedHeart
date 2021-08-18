@@ -69,7 +69,7 @@ public class TileCombustionChamberMixin extends GenericTileTicking {
             if (stack.getAmount() > 0) {
                 stack.setAmount(stack.getAmount() - 1);
                 running = true;
-                burnTime = 20; // TICKS_PER_MILIBUCKET
+                burnTime = 60; // TICKS_PER_MILIBUCKET
                 shouldSend = true;
             }
             if (shouldSend) {

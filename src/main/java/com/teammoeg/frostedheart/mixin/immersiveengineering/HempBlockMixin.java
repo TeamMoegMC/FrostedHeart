@@ -66,7 +66,7 @@ public class HempBlockMixin {
      * @author yuesha-yc
      * @reason obfuscation issues if i use inject above
      */
-    @Overwrite()
+    @Overwrite
     public void tick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
         int light = world.getLight(pos);
         if(light >= 12)
