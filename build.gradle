@@ -134,8 +134,8 @@ dependencies {
     compile fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5')
     implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5')
 
-    runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
-    compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
+    compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
+//    implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
 
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
     testAnnotationProcessor "org.spongepowered:mixin:0.8.2:processor"

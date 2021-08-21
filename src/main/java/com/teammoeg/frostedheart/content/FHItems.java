@@ -51,4 +51,9 @@ public class FHItems {
     public static FHSoupItem rye_sawdust_porridge;
     public static FHSoupItem rye_porridge;
     public static FHSoupItem vegetable_soup;
+
+    public static class Misc {
+        public static Item heater_vest;
+
+    }
 }

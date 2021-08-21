@@ -25,10 +25,7 @@ import com.teammoeg.frostedheart.block.*;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
-import com.teammoeg.frostedheart.item.FHArmorMaterial;
-import com.teammoeg.frostedheart.item.FHBaseArmorItem;
-import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.frostedheart.item.FHSoupItem;
+import com.teammoeg.frostedheart.item.*;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
@@ -79,7 +76,6 @@ public class FHContent {
         FHBlocks.electrolyzer = new ElectrolyzerBlock("electrolyzer_block", FHBlockItem::new);
 
         // Init Items
-        Item.Properties foodProps = new Item.Properties().group(FHMain.itemGroup);
         Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
         FHItems.energy_core = new FHBaseItem("energy_core", itemProps);
         FHItems.rye = new FHBaseItem("rye", itemProps);
@@ -109,6 +105,8 @@ public class FHContent {
         FHItems.hide_hat = new FHBaseArmorItem("hide_hat", FHArmorMaterial.HIDE, EquipmentSlotType.HEAD, itemProps);
         FHItems.hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, itemProps);
         FHItems.hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, itemProps);
+
+        FHItems.Misc.heater_vest = new HeaterVestItem("heater_vest", itemProps);
 
         // Init Multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();

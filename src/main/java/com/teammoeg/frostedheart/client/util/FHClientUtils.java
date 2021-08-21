@@ -8,6 +8,10 @@ import net.minecraft.world.World;
 import java.util.Random;
 
 public class FHClientUtils {
+    public static Minecraft mc() {
+        return Minecraft.getInstance();
+    }
+
     public static World getWorld() {
         return Minecraft.getInstance().world;
     }

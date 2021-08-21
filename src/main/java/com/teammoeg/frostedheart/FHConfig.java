@@ -22,6 +22,9 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FHConfig {
 
     public static void register() {
@@ -63,11 +66,21 @@ public class FHConfig {
 
     public static class Server {
         public final ForgeConfigSpec.BooleanValue alwaysKeepInventory;
+        public final ForgeConfigSpec.BooleanValue fixEssJeiIssue;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> developers;
 
         Server(ForgeConfigSpec.Builder builder) {
             alwaysKeepInventory = builder
                     .comment("Always keep inventory on death on every dimension and world")
                     .define("alwaysKeepInventory", false);
+
+            fixEssJeiIssue = builder
+                    .comment("Fixes JEI and Essentials compat issue")
+                    .define("fixEssJeiIssue", false);
+
+            developers = builder
+                    .comment("Special array of players")
+                    .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
         }
     }
 
@@ -77,6 +90,8 @@ public class FHConfig {
     public static final Client CLIENT;
     public static final Common COMMON;
     public static final Server SERVER;
+
+    public static ArrayList<String> DEFAULT_WHITELIST = new ArrayList<>();
 
     static {
         ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
@@ -88,6 +103,12 @@ public class FHConfig {
         ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
         SERVER = new Server(SERVER_BUILDER);
         SERVER_CONFIG = SERVER_BUILDER.build();
+
+        DEFAULT_WHITELIST.add("YueSha");
+        DEFAULT_WHITELIST.add("duck_egg");
+        DEFAULT_WHITELIST.add("Evan");
+        DEFAULT_WHITELIST.add("dashuaibia");
+        DEFAULT_WHITELIST.add("Dev");
     }
 
     public enum TempOrbPos {
