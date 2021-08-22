@@ -10,6 +10,7 @@
     "electrodynamics.TileCoalGeneratorMixin",
     "electrodynamics.TileCombustionChamberMixin",
     "immersiveengineering.HempBlockMixin",
+    "jei.MixinCommandUtilServer",
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataMixin",
     "rankine.AlloyTemplateItemMixin",
