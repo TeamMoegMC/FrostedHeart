@@ -139,7 +139,7 @@ dependencies {
     implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5')
 
     implementation fg.deobf("com.simibubi.create:Create:1.16.5-0.3.2d")
-    implementation fg.deobf("com.jozufozu.flywheel:Flywheel:0.2.3")
+    implementation fg.deobf("com.jozufozu.flywheel:Flywheel:1.16-0.2.3.46")
 
     compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 //    implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
