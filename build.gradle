@@ -31,6 +31,12 @@ repositories {
     maven { name = "DVS1 Maven FS"; url = "https://dvs1.progwml6.com/files/maven" } // JEI & Tinkers Files
     maven { url = 'https://maven.latmod.com/' }                                     // Needed for JEI
     maven { url = "http://server.teammoeg.com:8888/releases"}
+    repositories {
+        maven {
+            name "tterrag maven"
+            url "https://maven.tterrag.com/"
+        }
+    }
 }
 
 sourceSets {
@@ -134,8 +140,11 @@ dependencies {
     compile fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5')
     implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5')
 
-    runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
-    compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
+    implementation fg.deobf("com.simibubi.create:Create:1.16.5-0.3.2d")
+    implementation fg.deobf("com.jozufozu.flywheel:Flywheel:0.2.3")
+
+    compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
+//    implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88:api")
 
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
     testAnnotationProcessor "org.spongepowered:mixin:0.8.2:processor"

@@ -18,15 +18,16 @@
 
 package com.teammoeg.frostedheart;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.client.render.IEBipedLayerRenderer;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import com.stereowalker.survive.item.SItems;
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.content.FHItems;
-import com.teammoeg.frostedheart.nbt.ModNBTs;
+import com.teammoeg.frostedheart.nbt.FHNBT;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
@@ -35,6 +36,8 @@ import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
+import net.minecraft.client.renderer.entity.ArmorStandRenderer;
+import net.minecraft.client.renderer.entity.BipedRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -61,10 +64,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.world.BiomeLoadingEvent;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.event.world.ChunkWatchEvent;
+import net.minecraftforge.event.world.*;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -75,6 +75,8 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
+
+import static blusunrize.immersiveengineering.client.ClientUtils.mc;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHForgeEvents {
@@ -273,8 +275,8 @@ public class FHForgeEvents {
         } else {
             nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
         }
-        if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_MANUAL)) {
-            persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_MANUAL, false);
+        if (!persistent.contains(FHNBT.FIRST_LOGIN_GIVE_MANUAL)) {
+            persistent.putBoolean(FHNBT.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
             event.getPlayer().inventory.armorInventory.set(3, new ItemStack(FHItems.wool_hat));
             event.getPlayer().inventory.armorInventory.set(2, new ItemStack(FHItems.wool_jacket));
@@ -296,8 +298,8 @@ public class FHForgeEvents {
 //        } else {
 //            nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
 //        }
-//        if (!persistent.contains(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION)) {
-//            persistent.putBoolean(ModNBTs.FIRST_LOGIN_GIVE_NUTRITION, false);
+//        if (!persistent.contains(FHNBT.FIRST_LOGIN_GIVE_NUTRITION)) {
+//            persistent.putBoolean(FHNBT.FIRST_LOGIN_GIVE_NUTRITION, false);
 //            if (ModList.get().isLoaded("diet") && event.getPlayer().getServer() != null && event.getPlayer().isServerWorld()) {
 //                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s fruits 0.75");
 //                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s grains 0.75");

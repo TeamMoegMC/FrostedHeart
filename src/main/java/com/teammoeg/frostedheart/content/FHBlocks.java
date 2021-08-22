@@ -28,6 +28,7 @@ public class FHBlocks {
     public static Block electrolyzer;
     public static Block burning_chamber_core;
     public static Block burning_chamber;
+    public static Block white_turnip_block;
 
     public static class Multi {
         public static Block generator;
