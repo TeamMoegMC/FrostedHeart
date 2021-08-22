@@ -23,4 +23,5 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 public class FHMultiblocks {
     public static IETemplateMultiblock GENERATOR;
     public static IETemplateMultiblock CRUCIBLE;
+    public static IETemplateMultiblock STEAMTURBINE;
 }
