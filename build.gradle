@@ -31,11 +31,9 @@ repositories {
     maven { name = "DVS1 Maven FS"; url = "https://dvs1.progwml6.com/files/maven" } // JEI & Tinkers Files
     maven { url = 'https://maven.latmod.com/' }                                     // Needed for JEI
     maven { url = "http://server.teammoeg.com:8888/releases"}
-    repositories {
-        maven {
-            name "tterrag maven"
-            url "https://maven.tterrag.com/"
-        }
+    maven {
+        name "tterrag maven"
+        url "https://maven.tterrag.com/"
     }
 }
 
