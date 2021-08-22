@@ -106,7 +106,7 @@ public class FHContent {
         FHItems.hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, itemProps);
         FHItems.hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, itemProps);
 
-        FHItems.Misc.heater_vest = new HeaterVestItem("heater_vest", itemProps);
+//        FHItems.Misc.heater_vest = new HeaterVestItem("heater_vest", itemProps);
 
         // Init Multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();

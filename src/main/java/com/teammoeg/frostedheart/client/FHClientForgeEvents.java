@@ -63,14 +63,14 @@ public class FHClientForgeEvents {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-        if(!FHBipedLayerRenderer.rendersAssigned) {
-            for(Object render : FHClientUtils.mc().getRenderManager().renderers.values())
-                if(BipedRenderer.class.isAssignableFrom(render.getClass()))
-                    ((BipedRenderer)render).addLayer(new FHBipedLayerRenderer<>((BipedRenderer)render));
-                else if(ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
-                    ((ArmorStandRenderer)render).addLayer(new FHBipedLayerRenderer<>((ArmorStandRenderer)render));
-            FHBipedLayerRenderer.rendersAssigned = true;
-        }
+//        if(!FHBipedLayerRenderer.rendersAssigned) {
+//            for(Object render : FHClientUtils.mc().getRenderManager().renderers.values())
+//                if(BipedRenderer.class.isAssignableFrom(render.getClass()))
+//                    ((BipedRenderer)render).addLayer(new FHBipedLayerRenderer<>((BipedRenderer)render));
+//                else if(ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
+//                    ((ArmorStandRenderer)render).addLayer(new FHBipedLayerRenderer<>((ArmorStandRenderer)render));
+//            FHBipedLayerRenderer.rendersAssigned = true;
+//        }
     }
 
     @SubscribeEvent
