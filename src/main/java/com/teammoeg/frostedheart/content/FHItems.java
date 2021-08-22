@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.content;
 
 import com.teammoeg.frostedheart.item.FHSoupItem;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 
 public class FHItems {
@@ -30,6 +31,8 @@ public class FHItems {
     public static Item generator_ash;
     public static Item rye_flour;
     public static Item raw_rye_bread;
+    public static BlockItem white_turnip;
+
 
     public static Item raw_hide;
 

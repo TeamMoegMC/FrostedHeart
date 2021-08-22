@@ -7,6 +7,7 @@
   "block.frostedheart.electrolyzer_block": "电解器",
   "block.frostedheart.burning_chamber_core": "燃烧室核心",
   "block.frostedheart.burning_chamber": "燃烧室",
+  "block.frostedheart.white_turnip_block": "白萝卜",
   "item.frostedheart.rye": "黑麦穗",
   "item.frostedheart.rye_bread": "黑麦面包",
   "item.frostedheart.energy_core": "能量核心",
@@ -17,7 +18,8 @@
   "item.frostedheart.rye_sawdust_porridge": "锯末黑麦粥",
   "item.frostedheart.vegetable_sawdust_soup": "锯末蔬菜汤",
   "item.frostedheart.vegetable_soup": "蔬菜汤",
-    "item.frostedheart.black_bread": "黑面包",
+  "item.frostedheart.black_bread": "黑面包",
+  "item.frostedheart.white_turnip": "白萝卜",
   "frostedheart.tooltip.f3_average_temperature": "平均气温: %s°C",
   "frostedheart.tooltip.f3_invalid_chunk_data": "区块数据不可用",
   "frostedheart.gui.generator.temperature.level": "温度增幅: ",
@@ -51,5 +53,5 @@
   "tooltip.frostedheart.survive_armor_temp_mod": "保暖指数：",
   "tooltip.frostedheart.survive_block_temp_mod": "温度指数：",
   "tooltip.frostedheart.survive_weight_mod": "沉重指数：",
-  "tooltip.frostedheart.survive_range": ""
+  "tooltip.frostedheart.survive_range": "范围:"
 }

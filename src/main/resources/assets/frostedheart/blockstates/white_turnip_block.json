@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "frostedheart:block/crop/white_turnip_block0"
+    },
+    "age=1": {
+      "model": "frostedheart:block/crop/white_turnip_block1"
+    },
+    "age=2": {
+      "model": "frostedheart:block/crop/white_turnip_block2"
+    },
+    "age=3": {
+      "model": "frostedheart:block/crop/white_turnip_block3"
+    },
+    "age=4": {
+      "model": "frostedheart:block/crop/white_turnip_block4"
+    },
+    "age=5": {
+      "model": "frostedheart:block/crop/white_turnip_block5"
+    },
+    "age=6": {
+      "model": "frostedheart:block/crop/white_turnip_block6"
+    },
+    "age=7": {
+      "model": "frostedheart:block/crop/white_turnip_block7"
+    }
+  }
+}

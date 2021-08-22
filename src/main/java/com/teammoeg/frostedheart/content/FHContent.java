@@ -23,6 +23,7 @@ import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.block.*;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
+import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
 import com.teammoeg.frostedheart.item.FHArmorMaterial;
@@ -77,6 +78,7 @@ public class FHContent {
         FHBlocks.burning_chamber = new FHBaseBlock("burning_chamber", stoneDecoProps, FHBlockItem::new);
         FHBlocks.rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
         FHBlocks.electrolyzer = new ElectrolyzerBlock("electrolyzer_block", FHBlockItem::new);
+        FHBlocks.white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps);//white_turnip crop block.
 
         // Init Items
         Item.Properties foodProps = new Item.Properties().group(FHMain.itemGroup);
@@ -93,6 +95,12 @@ public class FHContent {
         FHItems.rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
         FHItems.rye_porridge = new FHSoupItem("rye_porridge", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
         FHItems.vegetable_soup = new FHSoupItem("vegetable_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
+        {
+            FHItems.white_turnip = new FHBlockItem(FHBlocks.white_turnip_block, new Item.Properties().group(FHMain.itemGroup).food(FHFoods.WHITE_TURNIP));
+            FHItems.white_turnip.setRegistryName(FHMain.MODID, "white_turnip");
+            FHContent.registeredFHItems.add(FHItems.white_turnip);
+            //white_turnip item.can be planted.can be eaten.
+        }
 
         FHItems.raw_hide = new FHBaseItem("raw_hide", itemProps);
         FHItems.hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, itemProps);
