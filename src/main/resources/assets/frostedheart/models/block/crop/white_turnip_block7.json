@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/crop",
+  "textures": {
+    "crop": "frostedheart:block/crop/white_turnip_block7"
+  }
+}

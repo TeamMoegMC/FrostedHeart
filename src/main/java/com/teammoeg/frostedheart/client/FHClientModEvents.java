@@ -48,6 +48,7 @@ public class FHClientModEvents {
         ScreenManager.registerFactory(FHContainers.ELECTROLYZER_CONTAINER.get(), ElectrolyzerScreen::new);
         // Register translucent render type
         RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.electrolyzer, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.Multi.generator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.Multi.crucible, RenderType.getCutoutMipped());

@@ -51,6 +51,17 @@ public class FHCropBlock extends CropsBlock {
         }
     }
 
+    public FHCropBlock(String name, int growTemperature, Properties builder) {
+        super(builder);
+        this.name = name;
+        this.growTemperature = growTemperature;
+        FHContent.registeredFHBlocks.add(this);
+        ResourceLocation registryName = createRegistryName();
+        setRegistryName(registryName);
+        //custom BlockItem
+    }
+
+
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
