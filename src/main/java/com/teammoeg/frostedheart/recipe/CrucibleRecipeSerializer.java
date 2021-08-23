@@ -39,8 +39,9 @@ public class CrucibleRecipeSerializer extends IERecipeSerializer<CrucibleRecipe>
     public CrucibleRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
         ItemStack output = readOutput(json.get("result"));
         IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
+        IngredientWithSize input2 = IngredientWithSize.deserialize(json.get("input2"));
         int time = JSONUtils.getInt(json, "time");
-        return new CrucibleRecipe(recipeId, output, input, time);
+        return new CrucibleRecipe(recipeId, output, input, input2, time);
     }
 
     @Nullable
@@ -48,14 +49,16 @@ public class CrucibleRecipeSerializer extends IERecipeSerializer<CrucibleRecipe>
     public CrucibleRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
         ItemStack output = buffer.readItemStack();
         IngredientWithSize input = IngredientWithSize.read(buffer);
+        IngredientWithSize input2 = IngredientWithSize.read(buffer);
         int time = buffer.readInt();
-        return new CrucibleRecipe(recipeId, output, input, time);
+        return new CrucibleRecipe(recipeId, output, input, input2, time);
     }
 
     @Override
     public void write(PacketBuffer buffer, CrucibleRecipe recipe) {
         buffer.writeItemStack(recipe.output);
         recipe.input.write(buffer);
+        recipe.input2.write(buffer);
         buffer.writeInt(recipe.time);
     }
 }

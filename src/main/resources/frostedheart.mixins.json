@@ -4,11 +4,6 @@
   "package": "com.teammoeg.frostedheart.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "electrodynamics.ComponentFluidHandlerAccess",
-    "electrodynamics.ComponentFluidHandlerMixin",
-    "electrodynamics.ElectricityUtilitiesMixin",
-    "electrodynamics.TileCoalGeneratorMixin",
-    "electrodynamics.TileCombustionChamberMixin",
     "immersiveengineering.HempBlockMixin",
     "jei.MixinCommandUtilServer",
     "minecraft.PortalSizeMixin",

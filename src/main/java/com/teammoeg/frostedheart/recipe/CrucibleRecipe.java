@@ -37,13 +37,15 @@ public class CrucibleRecipe extends IESerializableRecipe {
     public static RegistryObject<IERecipeSerializer<CrucibleRecipe>> SERIALIZER;
 
     public final IngredientWithSize input;
+    public final IngredientWithSize input2;
     public final ItemStack output;
     public final int time;
 
-    public CrucibleRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
+    public CrucibleRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, IngredientWithSize input2, int time) {
         super(output, TYPE, id);
         this.output = output;
         this.input = input;
+        this.input2 = input;
         this.time = time;
     }
 
@@ -62,8 +64,19 @@ public class CrucibleRecipe extends IESerializableRecipe {
 
     public static CrucibleRecipe findRecipe(ItemStack input) {
         for (CrucibleRecipe recipe : recipeList.values())
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
+            if (ItemUtils.stackMatchesObject(input, recipe.input)) {
                 return recipe;
+            } else if (ItemUtils.stackMatchesObject(input, recipe.input2)) {
+                return recipe;
+            }
+        return null;
+    }
+
+    public static CrucibleRecipe Recipe(ItemStack input, ItemStack input2) {
+        for (CrucibleRecipe recipe : recipeList.values())
+            if (ItemUtils.stackMatchesObject(input, recipe.input))
+                if (ItemUtils.stackMatchesObject(input2, recipe.input2))
+                    return recipe;
         return null;
     }
 
@@ -71,6 +84,7 @@ public class CrucibleRecipe extends IESerializableRecipe {
     public NonNullList<Ingredient> getIngredients() {
         NonNullList<Ingredient> nonnulllist = NonNullList.create();
         nonnulllist.add(this.input.getBaseIngredient());
+        nonnulllist.add(this.input2.getBaseIngredient());
         return nonnulllist;
     }
 }
