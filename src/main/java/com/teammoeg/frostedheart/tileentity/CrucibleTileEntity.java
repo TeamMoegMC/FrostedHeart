@@ -142,7 +142,9 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         if (stack.isEmpty())
             return false;
         if (slot == 0)
-            return CrucibleRecipe.findRecipe(stack) != null;
+            return CrucibleRecipe.isValidRecipeInput(stack,true);
+        if (slot == 1)
+            return CrucibleRecipe.isValidRecipeInput(stack,false);
         if (slot == 3)
             return stack.getItem().getTags().contains(coal_coke);
         return false;
@@ -214,7 +216,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         if (!world.isRemote && formed && !isDummy()) {
             CrucibleRecipe recipe = getRecipe();
             updatetick++;
-            if (temperature > 0 && updatetick > 20) {
+            if (temperature > 0 && updatetick > 10) {
                 updatetick = 0;
                 this.markContainingBlockForUpdate(null);
             }
@@ -299,7 +301,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     public CrucibleRecipe getRecipe() {
         if (inventory.get(0).isEmpty())
             return null;
-        CrucibleRecipe recipe = CrucibleRecipe.Recipe(inventory.get(0), inventory.get(1));
+        CrucibleRecipe recipe = CrucibleRecipe.findRecipe(inventory.get(0), inventory.get(1));
         if (recipe == null)
             return null;
         if (inventory.get(2).isEmpty() || (ItemStack.areItemsEqual(inventory.get(2), recipe.output) &&
