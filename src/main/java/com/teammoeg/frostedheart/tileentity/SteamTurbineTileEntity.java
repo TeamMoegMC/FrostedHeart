@@ -24,7 +24,7 @@ public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbin
 
 
     public SteamTurbineTileEntity() {
-        super(FHMultiblocks.STEAMTURBINE, FHTileTypes.STEAMTURBINE.get(), true);
+        super(FHMultiblocks.STEAMTURBINE, FHTileTypes.STEAMTURBINE.get(), false);
     }
 
     @Nonnull

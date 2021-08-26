@@ -30,12 +30,8 @@ import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.List;
 
 public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCategory<CrucibleRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "crucible");
@@ -43,7 +39,7 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
     private IDrawable ICON;
 
     public CrucibleCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.burning_chamber_core));
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.Multi.crucible));
         this.BACKGROUND = guiHelper.createDrawable(new ResourceLocation(FHMain.MODID, "textures/gui/crucible.png"), 40, 0, 130, 40);
     }
 
