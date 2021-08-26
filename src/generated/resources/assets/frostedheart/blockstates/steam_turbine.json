@@ -1,0 +1,23 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/multiblocks/steam_turbine_split",
+      "uvlock": true
+    },
+    "facing=south": {
+      "model": "frostedheart:block/multiblocks/steam_turbine_split",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west": {
+      "model": "frostedheart:block/multiblocks/steam_turbine_split",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=east": {
+      "model": "frostedheart:block/multiblocks/steam_turbine_split",
+      "y": 90,
+      "uvlock": true
+    }
+  }
+}
