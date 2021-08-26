@@ -32,7 +32,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 public class SteamTurbineMultiblock extends IETemplateMultiblock {
     public SteamTurbineMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/steam_turbine"),
-                new BlockPos(1, 1, 6), new BlockPos(1, 1, 6), new BlockPos(3, 3, 7),
+                new BlockPos(0, 1, 0), new BlockPos(1, 1, 6), new BlockPos(3, 3, 7),
                 () -> FHBlocks.Multi.steam_turbine.getDefaultState());
     }
 
