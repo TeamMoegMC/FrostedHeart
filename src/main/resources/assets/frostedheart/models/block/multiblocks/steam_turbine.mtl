@@ -1,6 +1,7 @@
 # Blender MTL File: 'None'
-# Material Count: 1
+# Material Count: 2
 
+newmtl None
 newmtl steam_turbine
-
-map_Kd frostedheart:block/multiblocks/steam_turbine
+map_Kd -o 0.000000 -1.000000 0.000000 frostedheart:block/multiblocks/steam_turbine
+map_d -o 0.000000 -1.000000 0.000000 frostedheart:block/multiblocks/steam_turbine
