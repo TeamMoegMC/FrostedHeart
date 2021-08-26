@@ -33,16 +33,22 @@ public class CrucibleContainer extends IEBaseContainer<CrucibleTileEntity> {
         super(inventoryPlayer, tile, id);
 
         // input
-        this.addSlot(new IESlot(this, this.inv, 0, 51, 12) {
+        this.addSlot(new IESlot(this, this.inv, 0, 30, 12) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return CrucibleRecipe.findRecipe(itemStack) != null;
+                return CrucibleRecipe.isValidRecipeInput(itemStack,true);
+            }
+        });
+        this.addSlot(new IESlot(this, this.inv, 1, 51, 12) {
+            @Override
+            public boolean isItemValid(ItemStack itemStack) {
+                return CrucibleRecipe.isValidRecipeInput(itemStack,false);
             }
         });
         // output
-        this.addSlot(new IESlot.Output(this, this.inv, 1, 106, 12));
+        this.addSlot(new IESlot.Output(this, this.inv, 2, 106, 12));
         // input fuel
-        this.addSlot(new IESlot(this, this.inv, 2, 80, 51) {
+        this.addSlot(new IESlot(this, this.inv, 3, 80, 51) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
                 return itemStack.getItem().getTags().contains(CrucibleTileEntity.coal_coke);

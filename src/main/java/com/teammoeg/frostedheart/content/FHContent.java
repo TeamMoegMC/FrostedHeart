@@ -26,9 +26,13 @@ import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
-import com.teammoeg.frostedheart.item.*;
+import com.teammoeg.frostedheart.item.FHArmorMaterial;
+import com.teammoeg.frostedheart.item.FHBaseArmorItem;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.item.FHSoupItem;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
+import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
 import net.minecraft.block.AbstractBlock;
@@ -37,7 +41,6 @@ import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ToolType;
@@ -67,14 +70,13 @@ public class FHContent {
 
         FHBlocks.Multi.generator = new GeneratorMultiblockBlock("generator", FHTileTypes.GENERATOR_T1);
         FHBlocks.Multi.crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
-
+        FHBlocks.Multi.steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
         FHBlocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
         FHBlocks.generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         FHBlocks.generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
         FHBlocks.burning_chamber_core = new FHBaseBlock("burning_chamber_core", stoneDecoProps, FHBlockItem::new);
         FHBlocks.burning_chamber = new FHBaseBlock("burning_chamber", stoneDecoProps, FHBlockItem::new);
         FHBlocks.rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
-        FHBlocks.electrolyzer = new ElectrolyzerBlock("electrolyzer_block", FHBlockItem::new);
         FHBlocks.white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps);//white_turnip crop block.
 
         // Init Items
@@ -119,12 +121,14 @@ public class FHContent {
         // Init Multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();
         FHMultiblocks.CRUCIBLE = new CrucibleMultiblock();
+        FHMultiblocks.STEAMTURBINE = new SteamTurbineMultiblock();
     }
 
     public static void registerAll() {
         // Register multiblocks
         MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
         MultiblockHandler.registerMultiblock(FHMultiblocks.CRUCIBLE);
+        MultiblockHandler.registerMultiblock(FHMultiblocks.STEAMTURBINE);
         // Register IE containers
         GuiHandler.register(GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);

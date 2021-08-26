@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
+import blusunrize.immersiveengineering.common.util.compat.jei.JEIIngredientStackListBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.FHBlocks;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
@@ -29,8 +30,12 @@ import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+
+import java.util.List;
 
 public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCategory<CrucibleRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "crucible");
@@ -69,7 +74,7 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
 
     @Override
     public void setIngredients(CrucibleRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputIngredients(recipe.getIngredients());
+        ingredients.setInputLists(VanillaTypes.ITEM, JEIIngredientStackListBuilder.make(recipe.input).add(recipe.input2).build());
         ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
     }
 
@@ -78,8 +83,9 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
     public void setRecipe(IRecipeLayout recipeLayout, CrucibleRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
-        guiItemStacks.init(0, true, 10, 10);
-        guiItemStacks.init(1, false, 65, 10);
+        guiItemStacks.init(0, true, 0, 10);
+        guiItemStacks.init(1, true, 10, 10);
+        guiItemStacks.init(2, false, 65, 10);
 
         guiItemStacks.set(ingredients);
     }

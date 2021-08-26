@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.tileentity;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.common.blocks.metal.BlastFurnacePreheaterTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
@@ -50,13 +51,15 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.Random;
+import java.util.function.Function;
 
 public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEntity> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
     public CrucibleTileEntity.CrucibleData guiData = new CrucibleTileEntity.CrucibleData();
-    private NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
+    private NonNullList<ItemStack> inventory = NonNullList.withSize(4, ItemStack.EMPTY);
     public int temperature;
     public int burnTime;
     public int process = 0;
@@ -139,8 +142,10 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         if (stack.isEmpty())
             return false;
         if (slot == 0)
-            return CrucibleRecipe.findRecipe(stack) != null;
-        if (slot == 2)
+            return CrucibleRecipe.isValidRecipeInput(stack,true);
+        if (slot == 1)
+            return CrucibleRecipe.isValidRecipeInput(stack,false);
+        if (slot == 3)
             return stack.getItem().getTags().contains(coal_coke);
         return false;
     }
@@ -156,7 +161,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
-            new IEInventoryHandler(3, this, 0, new boolean[]{true, false, true},
+            new IEInventoryHandler(4, this, 0, new boolean[]{true, false, true},
                     new boolean[]{false, true, false})
     );
 
@@ -211,7 +216,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         if (!world.isRemote && formed && !isDummy()) {
             CrucibleRecipe recipe = getRecipe();
             updatetick++;
-            if (temperature > 0 && updatetick > 20) {
+            if (temperature > 0 && updatetick > 10) {
                 updatetick = 0;
                 this.markContainingBlockForUpdate(null);
             }
@@ -223,13 +228,14 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
             if (burnTime > 0) {
                 burnTime--;
             } else {
-                if (inventory.get(2).getItem().getTags().contains(coal_coke)) {
+                if (inventory.get(3).getItem().getTags().contains(coal_coke)) {
                     burnTime = 600;
-                    inventory.get(2).shrink(1);
+                    inventory.get(3).shrink(1);
                     this.markDirty();
                 }
             }
             if (temperature > 1500) {
+                int blast = getFromPreheater(BlastFurnacePreheaterTileEntity::doSpeedup, 0);
                 final boolean activeBeforeTick = getIsActive();
                 if (process > 0) {
                     if (inventory.get(0).isEmpty()) {
@@ -241,7 +247,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
                         if (recipe == null || recipe.time != processMax) {
                             process = 0;
                             processMax = 0;
-                        } else {
+                        } else if (blast > 0) {
                             process--;
                         }
                     }
@@ -251,10 +257,10 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
                     if (activeBeforeTick) {
                         if (recipe != null) {
                             Utils.modifyInvStackSize(inventory, 0, -recipe.input.getCount());
-                            if (!inventory.get(1).isEmpty())
-                                inventory.get(1).grow(recipe.output.copy().getCount());
-                            else if (inventory.get(1).isEmpty())
-                                inventory.set(1, recipe.output.copy());
+                            if (!inventory.get(2).isEmpty())
+                                inventory.get(2).grow(recipe.output.copy().getCount());
+                            else if (inventory.get(2).isEmpty())
+                                inventory.set(2, recipe.output.copy());
                         }
                         processMax = 0;
                         setActive(false);
@@ -295,11 +301,11 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     public CrucibleRecipe getRecipe() {
         if (inventory.get(0).isEmpty())
             return null;
-        CrucibleRecipe recipe = CrucibleRecipe.findRecipe(inventory.get(0));
+        CrucibleRecipe recipe = CrucibleRecipe.findRecipe(inventory.get(0), inventory.get(1));
         if (recipe == null)
             return null;
-        if (inventory.get(1).isEmpty() || (ItemStack.areItemsEqual(inventory.get(1), recipe.output) &&
-                inventory.get(1).getCount() + recipe.output.getCount() <= getSlotLimit(1))) {
+        if (inventory.get(2).isEmpty() || (ItemStack.areItemsEqual(inventory.get(2), recipe.output) &&
+                inventory.get(2).getCount() + recipe.output.getCount() <= getSlotLimit(2))) {
             return recipe;
         }
         return null;
@@ -345,5 +351,17 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         public int size() {
             return 3;
         }
+    }
+
+    public <V> V getFromPreheater(Function<BlastFurnacePreheaterTileEntity, V> getter, V orElse) {
+        return getBlast().map(getter).orElse(orElse);
+    }
+
+    public Optional<BlastFurnacePreheaterTileEntity> getBlast() {
+        BlockPos pos = getPos().add(0, -1, 0).offset(getFacing(), 2);
+        TileEntity te = Utils.getExistingTileEntity(world, pos);
+        if (te instanceof BlastFurnacePreheaterTileEntity)
+            return Optional.of((BlastFurnacePreheaterTileEntity) te);
+        return Optional.empty();
     }
 }

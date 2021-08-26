@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.compat.jei;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.FHBlocks;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
-import com.teammoeg.frostedheart.recipe.ElectrolyzerRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -47,7 +46,6 @@ public class JEIFrostedHeartPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.electrolyzer), ElectrolyzerRecipeCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHBlocks.burning_chamber_core), CrucibleCategory.UID);
 
     }
@@ -58,7 +56,6 @@ public class JEIFrostedHeartPlugin implements IModPlugin {
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
 
-        registration.addRecipes(recipeManager.getRecipesForType(ElectrolyzerRecipe.TYPE), ElectrolyzerRecipeCategory.UID);
         registration.addRecipes(new ArrayList<>(CrucibleRecipe.recipeList.values()), CrucibleCategory.UID);
     }
 
@@ -66,7 +63,6 @@ public class JEIFrostedHeartPlugin implements IModPlugin {
     public void registerCategories(IRecipeCategoryRegistration registration) {
         IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
         registration.addRecipeCategories(
-                new ElectrolyzerRecipeCategory(guiHelper),
                 new CrucibleCategory(guiHelper)
         );
     }
