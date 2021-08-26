@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "frostedheart:block/multiblocks/metal_multiblock_steam_turbine"
+    "particle": "frostedheart:block/multiblocks/steam_turbine"
   },
   "loader": "forge:obj",
   "model": "frostedheart:models/block/multiblocks/steam_turbine.obj",

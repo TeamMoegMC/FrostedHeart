@@ -26,12 +26,30 @@ import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class SteamTurbineMultiblock extends IETemplateMultiblock {
     public SteamTurbineMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/steam_turbine"),
-                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 2, 4),
+                new BlockPos(1, 1, 6), new BlockPos(1, 1, 6), new BlockPos(3, 3, 7),
                 () -> FHBlocks.Multi.steam_turbine.getDefaultState());
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public boolean canRenderFormedStructure() {
+        return false;
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
+    }
+
+    @Override
+    public float getManualScale() {
+        return 0;
     }
 
     @Override
@@ -49,27 +67,4 @@ public class SteamTurbineMultiblock extends IETemplateMultiblock {
         return transformed.getOpposite();
     }
 
-    @Override
-    public BlockPos multiblockToModelPos(BlockPos posInMultiblock) {
-        return super.multiblockToModelPos(new BlockPos(
-                getSize(null).getX() - posInMultiblock.getX() - 1,
-                posInMultiblock.getY(),
-                getSize(null).getZ() - posInMultiblock.getZ() - 1
-        ));
-    }
-
-    @Override
-    public float getManualScale() {
-        return 0;
-    }
-
-    @Override
-    public boolean canRenderFormedStructure() {
-        return false;
-    }
-
-    @Override
-    public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
-
-    }
 }
