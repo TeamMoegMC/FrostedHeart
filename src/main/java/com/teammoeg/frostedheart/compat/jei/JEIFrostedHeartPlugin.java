@@ -46,7 +46,7 @@ public class JEIFrostedHeartPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHBlocks.Multi.crucible), CrucibleCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.burning_chamber), CrucibleCategory.UID);
 
     }
 
