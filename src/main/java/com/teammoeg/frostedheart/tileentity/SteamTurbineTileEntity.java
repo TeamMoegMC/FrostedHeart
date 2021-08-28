@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbineTileEntity> implements IEBlockInterfaces.IBlockBounds {
     public FluidTank[] tanks = new FluidTank[]{new FluidTank(24 * FluidAttributes.BUCKET_VOLUME)};
     public boolean active = false;
-    public static Fluid steam = ForgeRegistries.FLUIDS.getValue(new ResourceLocation("kubejs", "steam"));
+    public static Fluid steam = ForgeRegistries.FLUIDS.getValue(new ResourceLocation("steampowered", "steam"));
 
     //public static Fluid steam = Fluids.WATER;
     public SteamTurbineTileEntity() {
