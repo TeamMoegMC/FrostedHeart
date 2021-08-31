@@ -30,6 +30,7 @@ public class FHFoods {
     private static Food buildStew(int hunger, float saturation) {
         return (new Food.Builder()).hunger(hunger).saturation(saturation).build();
     }
+
     private static Food buildStew(int hunger) {
         return (new Food.Builder()).hunger(hunger).saturation(0.6F).build();
     }

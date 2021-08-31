@@ -19,9 +19,7 @@
 package com.teammoeg.frostedheart.util;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 
 import java.util.function.ToIntFunction;

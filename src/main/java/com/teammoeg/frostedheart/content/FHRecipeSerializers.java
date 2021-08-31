@@ -31,6 +31,7 @@ public class FHRecipeSerializers {
     public static final DeferredRegister<IRecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(
             ForgeRegistries.RECIPE_SERIALIZERS, FHMain.MODID
     );
+
     static {
         GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register(
                 "generator", GeneratorRecipeSerializer::new

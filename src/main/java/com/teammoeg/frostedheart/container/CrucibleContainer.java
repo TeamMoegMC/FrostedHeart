@@ -36,13 +36,13 @@ public class CrucibleContainer extends IEBaseContainer<CrucibleTileEntity> {
         this.addSlot(new IESlot(this, this.inv, 0, 30, 12) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return CrucibleRecipe.isValidRecipeInput(itemStack,true);
+                return CrucibleRecipe.isValidRecipeInput(itemStack, true);
             }
         });
         this.addSlot(new IESlot(this, this.inv, 1, 51, 12) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return CrucibleRecipe.isValidRecipeInput(itemStack,false);
+                return CrucibleRecipe.isValidRecipeInput(itemStack, false);
             }
         });
         // output

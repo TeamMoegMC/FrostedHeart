@@ -37,17 +37,17 @@ import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.GROW
 public class HempBlockMixin {
 
     private float fh$getGrowthSpeed(World world, BlockPos pos, BlockState state, int light) {
-        float growth = 0.125f*(light-11);
-        if(world.canBlockSeeSky(pos))
+        float growth = 0.125f * (light - 11);
+        if (world.canBlockSeeSky(pos))
             growth += 2f;
         BlockState soil = world.getBlockState(pos.add(0, -1, 0));
-        if(soil.getBlock().isFertile(soil, world, pos.add(0, -1, 0)))
+        if (soil.getBlock().isFertile(soil, world, pos.add(0, -1, 0)))
             growth *= 1.5f;
-        return 1f+growth;
+        return 1f + growth;
     }
 
     private static EnumHempGrowth fh$getMaxGrowth(EnumHempGrowth current) {
-        if(current==EnumHempGrowth.TOP0)
+        if (current == EnumHempGrowth.TOP0)
             return EnumHempGrowth.TOP0;
         else
             return EnumHempGrowth.BOTTOM4;
@@ -69,8 +69,7 @@ public class HempBlockMixin {
     @Overwrite
     public void tick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
         int light = world.getLight(pos);
-        if(light >= 12)
-        {
+        if (light >= 12) {
             // FH Starts
             ChunkData data = ChunkData.get(world, pos);
             float temp = data.getTemperatureAtBlock(pos);
@@ -79,16 +78,14 @@ public class HempBlockMixin {
             }
             // FH Ends
             EnumHempGrowth growth = state.get(GROWTH);
-            if(growth==EnumHempGrowth.TOP0)
+            if (growth == EnumHempGrowth.TOP0)
                 return;
             float speed = this.fh$getGrowthSpeed(world, pos, state, light);
-            if(random.nextInt((int)(50F/speed)+1)==0)
-            {
-                if(fh$getMaxGrowth(growth)!=growth)
-                {
+            if (random.nextInt((int) (50F / speed) + 1) == 0) {
+                if (fh$getMaxGrowth(growth) != growth) {
                     world.setBlockState(pos, state.with(GROWTH, growth.next()));
                 }
-                if(growth== fh$getMaxGrowth(growth)&&world.isAirBlock(pos.add(0, 1, 0)))
+                if (growth == fh$getMaxGrowth(growth) && world.isAirBlock(pos.add(0, 1, 0)))
                     world.setBlockState(pos.add(0, 1, 0), state.with(GROWTH, EnumHempGrowth.TOP0));
             }
         }

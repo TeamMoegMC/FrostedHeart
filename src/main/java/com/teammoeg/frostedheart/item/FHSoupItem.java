@@ -53,7 +53,7 @@ public class FHSoupItem extends FHBaseItem {
             }
         }
 
-        return entityLiving instanceof PlayerEntity && ((PlayerEntity)entityLiving).abilities.isCreativeMode ? itemstack : new ItemStack(Items.BOWL);
+        return entityLiving instanceof PlayerEntity && ((PlayerEntity) entityLiving).abilities.isCreativeMode ? itemstack : new ItemStack(Items.BOWL);
     }
 
     public boolean isPoor() {

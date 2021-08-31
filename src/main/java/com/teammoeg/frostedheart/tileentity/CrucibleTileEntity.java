@@ -66,6 +66,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     public int processMax = 0;
     public int updatetick = 0;
     public static ResourceLocation coal_coke = new ResourceLocation("forge:coal_coke");
+
     public CrucibleTileEntity() {
         super(FHMultiblocks.CRUCIBLE, FHTileTypes.CRUCIBLE.get(), false);
     }
@@ -142,9 +143,9 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         if (stack.isEmpty())
             return false;
         if (slot == 0)
-            return CrucibleRecipe.isValidRecipeInput(stack,true);
+            return CrucibleRecipe.isValidRecipeInput(stack, true);
         if (slot == 1)
-            return CrucibleRecipe.isValidRecipeInput(stack,false);
+            return CrucibleRecipe.isValidRecipeInput(stack, false);
         if (slot == 3)
             return stack.getItem().getTags().contains(coal_coke);
         return false;

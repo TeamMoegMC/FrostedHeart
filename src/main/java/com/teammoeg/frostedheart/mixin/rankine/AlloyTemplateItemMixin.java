@@ -35,10 +35,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -61,12 +57,10 @@ public class AlloyTemplateItemMixin extends Item {
             String p1;
             String p2;
             String p3;
-            if (comp.contains("#"))
-            {
+            if (comp.contains("#")) {
                 p1 = comp.split("#")[0];
                 p2 = new TranslationTextComponent(comp.split("#")[1]).getString();
-            } else
-            {
+            } else {
                 p1 = "";
                 p2 = new TranslationTextComponent(comp).getString();
             }
@@ -79,7 +73,7 @@ public class AlloyTemplateItemMixin extends Item {
                 p3 = text.getString().split(" ")[1];
             }
 
-            return new StringTextComponent( p1 + " " + p2 + " " + p3);
+            return new StringTextComponent(p1 + " " + p2 + " " + p3);
         } else {
             return new TranslationTextComponent(this.getTranslationKey(stack));
         }
@@ -98,23 +92,22 @@ public class AlloyTemplateItemMixin extends Item {
             tooltip.add(new StringTextComponent("Requires:").mergeStyle(TextFormatting.DARK_GREEN));
             String comp = AlloyTemplateItem.getTemplate(stack).get("StoredTemplate").getString();
             int count = 0;
-            for (String s : comp.split("-"))
-            {
+            for (String s : comp.split("-")) {
                 String str = s.replaceAll("[^A-Za-z]+", "");
                 String end = "";
-                int num = Integer.parseInt(s.replaceAll("[A-Za-z]+",""));
+                int num = Integer.parseInt(s.replaceAll("[A-Za-z]+", ""));
 
                 String namespace, path;
-                ListNBT nbt = AlloyTemplateItem.getTemplate(stack).getList("Inputs",10);
+                ListNBT nbt = AlloyTemplateItem.getTemplate(stack).getList("Inputs", 10);
                 String nbtstring = nbt.getString(count);
                 String t = nbtstring.split("\"")[3];
                 namespace = t.split(":")[0];
                 path = t.split(":")[1];
 
-                Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(namespace,path));
+                Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(namespace, path));
                 if (item != null) {
-                    int reduce = AlloyRecipeHelper.returnMaterialCountFromStack(new ItemStack(item,1));
-                    num = num/reduce;
+                    int reduce = AlloyRecipeHelper.returnMaterialCountFromStack(new ItemStack(item, 1));
+                    num = num / reduce;
                     count++;
 
 
@@ -124,14 +117,14 @@ public class AlloyTemplateItemMixin extends Item {
 
                 //tooltip.add(new StringTextComponent(num + "x " + utils.getElementBySymbol(str).toString().substring(0,1).toUpperCase() + utils.getElementBySymbol(str).toString().substring(1).toLowerCase() + " " + end).mergeStyle(TextFormatting.GRAY));
             }
-            tooltip.add(new StringTextComponent( ""));
-            tooltip.add(new StringTextComponent( "Made in:").mergeStyle(TextFormatting.DARK_GREEN));
+            tooltip.add(new StringTextComponent(""));
+            tooltip.add(new StringTextComponent("Made in:").mergeStyle(TextFormatting.DARK_GREEN));
             int tier = AlloyTemplateItem.getTier(stack);
             if ((tier & 1) != 0) {
-                tooltip.add(new StringTextComponent( "Alloy Furnace").mergeStyle(TextFormatting.GRAY));
+                tooltip.add(new StringTextComponent("Alloy Furnace").mergeStyle(TextFormatting.GRAY));
             }
             if ((tier & 2) != 0) {
-                tooltip.add(new StringTextComponent( "Induction Furnace").mergeStyle(TextFormatting.GRAY));
+                tooltip.add(new StringTextComponent("Induction Furnace").mergeStyle(TextFormatting.GRAY));
             }
         }
     }

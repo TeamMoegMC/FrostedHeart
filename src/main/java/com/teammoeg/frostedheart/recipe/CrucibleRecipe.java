@@ -18,11 +18,9 @@
 
 package com.teammoeg.frostedheart.recipe;
 
-import blusunrize.immersiveengineering.api.crafting.ArcFurnaceRecipe;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
@@ -63,31 +61,29 @@ public class CrucibleRecipe extends IESerializableRecipe {
     // Initialized by reload listener
     public static Map<ResourceLocation, CrucibleRecipe> recipeList = Collections.emptyMap();
 
-    public boolean matches(ItemStack input,ItemStack input2) {
-        if (this.input!=null&&this.input.test(input) && this.input2!=null&&this.input2.test(input2))
+    public boolean matches(ItemStack input, ItemStack input2) {
+        if (this.input != null && this.input.test(input) && this.input2 != null && this.input2.test(input2))
             return true;
-            return false;
+        return false;
     }
 
-    public boolean isValidInput(ItemStack stack,boolean one)
-    {
-        if (one && this.input!=null&&this.input.test(stack))
-        return true;
+    public boolean isValidInput(ItemStack stack, boolean one) {
+        if (one && this.input != null && this.input.test(stack))
+            return true;
         else
-        return !one && this.input2!=null&&this.input2.test(stack);
+            return !one && this.input2 != null && this.input2.test(stack);
     }
 
     public static CrucibleRecipe findRecipe(ItemStack input, ItemStack input2) {
-        for(CrucibleRecipe recipe : recipeList.values())
-            if(recipe!=null&&recipe.matches(input,input2))
+        for (CrucibleRecipe recipe : recipeList.values())
+            if (recipe != null && recipe.matches(input, input2))
                 return recipe;
         return null;
     }
 
-    public static boolean isValidRecipeInput(ItemStack stack,boolean one)
-    {
-        for(CrucibleRecipe recipe : recipeList.values())
-            if(recipe!=null&&recipe.isValidInput(stack,one))
+    public static boolean isValidRecipeInput(ItemStack stack, boolean one) {
+        for (CrucibleRecipe recipe : recipeList.values())
+            if (recipe != null && recipe.isValidInput(stack, one))
                 return true;
         return false;
     }
