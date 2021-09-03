@@ -7,6 +7,7 @@
     "immersiveengineering.HempBlockMixin",
     "jei.MixinCommandUtilServer",
     "minecraft.PortalSizeMixin",
+    "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "rankine.AlloyTemplateItemMixin",
     "survive.SEffectMixin",

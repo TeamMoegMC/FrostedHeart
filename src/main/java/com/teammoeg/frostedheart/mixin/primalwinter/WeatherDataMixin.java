@@ -18,24 +18,33 @@
 
 package com.teammoeg.frostedheart.mixin.primalwinter;
 
+import com.alcatrazescapee.primalwinter.Config;
 import com.alcatrazescapee.primalwinter.util.WeatherData;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(WeatherData.class)
 public class WeatherDataMixin {
 
     /**
-     * Enables weather cycle in Primal Winter for our needs
+     * @author yuesha-yc
+     * @reason we don't want endless storm
      */
-    @Inject(method = "trySetEndlessStorm(Lnet/minecraft/world/server/ServerWorld;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;getGameRules()Lnet/minecraft/world/GameRules;"), cancellable = true, remap = false)
-    private static void frostedheart$trySetEndlessStorm(ServerWorld world, CallbackInfo ci) {
-        world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(true, world.getServer());
-        world.setWeather(0, 24000, false, false);
-        ci.cancel();
+    @Overwrite
+    public static void trySetEndlessStorm(ServerWorld world)
+    {
+        final WeatherData cap = world.getCapability(WeatherData.CAPABILITY).orElseThrow(() -> new IllegalStateException("Expected WeatherData to exist on World " + world.getDimensionKey() + " / " + world.getDimensionType()));
+        WeatherDataAccess dataAccess = (WeatherDataAccess) cap;
+        if (!dataAccess.getAlreadySetWorldToWinter())
+        {
+            dataAccess.setAlreadySetWorldToWinter(true);
+            if (Config.COMMON.isWinterDimension(world.getDimensionKey().getLocation()))
+            {
+                world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, world.getServer());
+                world.setWeather(0, Integer.MAX_VALUE, true, true);
+            }
+        }
     }
 }
