@@ -53,5 +53,7 @@
   "tooltip.frostedheart.survive_armor_temp_mod": "Armor Temperature Modifier: ",
   "tooltip.frostedheart.survive_block_temp_mod": "Block Temperature Modifier: ",
   "tooltip.frostedheart.survive_weight_mod": "Weight Modifier: ",
-  "tooltip.frostedheart.survive_range": "Range: "
+  "tooltip.frostedheart.survive_range": "Range: ",
+
+  "gui.jei.category.crucible": "Steel Mill Crucible"
 }
