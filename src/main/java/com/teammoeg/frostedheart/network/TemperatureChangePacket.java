@@ -52,7 +52,8 @@ public class TemperatureChangePacket {
         tempMatrix = new LinkedList<>();
         int len=buffer.readVarInt();
         for(int i=0;i<len;i++)
-        	tempMatrix.add(ITemperatureAdjust.valueOf(buffer));
+        	if(buffer.isReadable())
+        		tempMatrix.add(ITemperatureAdjust.valueOf(buffer));
     }
 
     void encode(PacketBuffer buffer) {

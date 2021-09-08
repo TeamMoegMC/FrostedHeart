@@ -138,9 +138,14 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
         int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
         int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+        System.out.println(chunkOffsetW);
+        System.out.println(chunkOffsetE);
         for(int x=chunkOffsetW;x<=chunkOffsetE;x++) 
-        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++)
-        		addTempToChunk(world, new ChunkPos(x, z),heatPos,range, tempMod);
+        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++) {
+        		ChunkPos cp=new ChunkPos(x, z);
+        		System.out.println(cp.asBlockPos());
+        		addTempToChunk(world,cp,heatPos,range, tempMod);
+        	}
     }
 
     /**

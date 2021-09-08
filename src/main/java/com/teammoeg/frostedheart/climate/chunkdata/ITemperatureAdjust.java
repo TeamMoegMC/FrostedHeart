@@ -20,14 +20,14 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
 	public static ITemperatureAdjust valueOf(PacketBuffer buffer) {
 		int packetId=buffer.readVarInt();
 		switch(packetId) {
-		case 1:new CubicTemperatureAdjust(buffer);
+		case 1:return new CubicTemperatureAdjust(buffer);
 		case 2:return new SphericTemperatureAdjust(buffer);
 		default:return new CubicTemperatureAdjust(buffer);
 		}
 	}
 	static ITemperatureAdjust valueOf(CompoundNBT nc) {
 		switch(nc.getInt("type")) {
-		case 1:new CubicTemperatureAdjust(nc);
+		case 1:return new CubicTemperatureAdjust(nc);
 		case 2:return new SphericTemperatureAdjust(nc);
 		default:return new CubicTemperatureAdjust(nc);
 		}

@@ -160,6 +160,7 @@ public class FHForgeEvents {
     public static void onChunkUnload(ChunkEvent.Unload event) {
         // Clear server side chunk data cache
         if (!event.getWorld().isRemote() && !(event.getChunk() instanceof EmptyChunk)) {
+        	
             ChunkDataCache.SERVER.remove(event.getChunk().getPos());
         }
     }
