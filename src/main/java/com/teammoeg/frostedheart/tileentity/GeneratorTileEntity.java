@@ -392,11 +392,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                             if (te instanceof GeneratorTileEntity)
                                 ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
-            } else if (activeAfterTick) {
-                if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + actualTemp) {
-                    ChunkData.resetTempToCube(world, getPos(),getActualRange());
-                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
-                }
             }
         }
 

@@ -79,7 +79,7 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
 
 	@Override
 	public boolean isEffective(int x, int y, int z) {
-		if(Math.abs(x-cx)<=r||Math.abs(y-cy)<=r||Math.abs(z-cz)<=r)
+		if(Math.abs(x-cx)<=r&&Math.abs(y-cy)<=r&&Math.abs(z-cz)<=r)
 			return true;
 		return false;
 	}
