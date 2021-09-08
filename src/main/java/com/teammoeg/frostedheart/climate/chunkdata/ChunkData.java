@@ -29,7 +29,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
@@ -82,7 +81,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      *
      * @see TemperatureChangePacket
      */
-    private static void addTempToChunk(IWorld world, ChunkPos chunkPos,BlockPos src,int range, byte tempMod) {
+    private static void addChunkAdjust(IWorld world, ChunkPos chunkPos,ITemperatureAdjust adjx) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
@@ -90,8 +89,8 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                         ChunkDataCache.SERVER.update(chunkPos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.adjusters.removeIf(adj->adj.getCenterX()==src.getX()&&adj.getCenterY()==src.getY()&&adj.getCenterZ()==src.getZ());
-            data.adjusters.add(new CubicTemperatureAdjust(src.getX(),src.getY(),src.getZ(),range, tempMod));
+            data.adjusters.removeIf(adj->adj.getCenterX()==adjx.getCenterX()&&adj.getCenterY()==adjx.getCenterY()&&adj.getCenterZ()==adjx.getCenterZ());
+            data.adjusters.add(adjx);
             PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
@@ -102,7 +101,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      *
      * @see TemperatureChangePacket
      */
-    private static void resetTempToChunk(IWorld world, ChunkPos chunkPos,BlockPos src) {
+    private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos,BlockPos src) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
@@ -123,37 +122,21 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param heatPos the position of the heating block, at the center of the cube
      * @param range   the distance from the heatPos to the boundary
      * @param tempMod the temperature added
+     * @deprecated use {@link addCubicTempAdjust}
      */
+    @Deprecated
     public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
-        int sourceX = heatPos.getX(), sourceY = heatPos.getY(), sourceZ = heatPos.getZ();
-
-        // these are block position offset
-        int offsetN = sourceZ - range;
-        int offsetS = sourceZ + range + 1;
-        int offsetW = sourceX - range;
-        int offsetE = sourceX + range + 1;
-
-        // these are chunk position offset
-        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
-        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
-        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
-        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
-        for(int x=chunkOffsetW;x<=chunkOffsetE;x++) 
-        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++) {
-        		ChunkPos cp=new ChunkPos(x, z);
-        		addTempToChunk(world,cp,heatPos,range, tempMod);
-        	}
+    	addCubicTempAdjust(world,heatPos,range,tempMod);
     }
-
     /**
-     * Used on a ServerWorld context to set temperature in a cubic region
+     * Used on a ServerWorld context to add temperature in a cubic region
      *
      * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the cube
      * @param range   the distance from the heatPos to the boundary
-     * @param tempMod the new temperature
+     * @param tempMod the temperature added
      */
-   public static void resetTempToCube(IWorld world, BlockPos heatPos,int range) {
+    public static void addCubicTempAdjust(IWorld world, BlockPos heatPos, int range, byte tempMod) {
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
         // these are block position offset
@@ -167,10 +150,82 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
         int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
         int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
-        for(int x=chunkOffsetW;x<=chunkOffsetE;x++) 
-        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++)
-        		resetTempToChunk(world, new ChunkPos(x, z),heatPos);
+        //add adjust to effected chunks
+        ITemperatureAdjust adj=new CubicTemperatureAdjust(heatPos,range, tempMod);
+        for(int x=chunkOffsetW;x<=chunkOffsetE;x++)
+        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++) {
+        		ChunkPos cp=new ChunkPos(x, z);
+        		addChunkAdjust(world,cp,adj);
+        	}
     }
+    /**
+     * Used on a ServerWorld context to add temperature in a spheric region
+     *
+     * @param world   must be server side
+     * @param heatPos the position of the heating block, at the center of the cube
+     * @param range   the distance from the heatPos to the boundary
+     * @param tempMod the temperature added
+     */
+    public static void addSphericTempAdjust(IWorld world, BlockPos heatPos, int range, byte tempMod) {
+        int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
+
+        // these are block position offset
+        int offsetN = sourceZ - range;
+        int offsetS = sourceZ + range + 1;
+        int offsetW = sourceX - range;
+        int offsetE = sourceX + range + 1;
+
+        // these are chunk position offset
+        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
+        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
+        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
+        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+        //add adjust to effected chunks
+        ITemperatureAdjust adj=new SphericTemperatureAdjust(heatPos,range, tempMod);
+        for(int x=chunkOffsetW;x<=chunkOffsetE;x++)
+        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++) {
+        		ChunkPos cp=new ChunkPos(x, z);
+        		addChunkAdjust(world,cp,adj);
+        	}
+    }
+    /**
+     * Used on a ServerWorld context to reset a temperature area
+     *
+     * @param world   must be server side
+     * @param heatPos the position of the heating block, at the center of the cube
+     * @param range   the distance from the heatPos to the boundary
+     * @param tempMod the new temperature
+     * @deprecated use {@link removeTempAdjust}
+     */
+    @Deprecated
+   public static void resetTempToCube(IWorld world, BlockPos heatPos,int range) {
+	   removeTempAdjust(world,heatPos,range);
+    }
+   /**
+    * Used on a ServerWorld context to reset a temperature area
+    *
+    * @param world   must be server side
+    * @param heatPos the position of the heating block, at the center of the area
+    * @param range   the distance from the heatPos to the boundary
+    */
+  public static void removeTempAdjust(IWorld world, BlockPos heatPos,int range) {
+       int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
+
+       // these are block position offset
+       int offsetN = sourceZ - range;
+       int offsetS = sourceZ + range + 1;
+       int offsetW = sourceX - range;
+       int offsetE = sourceX + range + 1;
+
+       // these are chunk position offset
+       int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
+       int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
+       int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
+       int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+       for(int x=chunkOffsetW;x<=chunkOffsetE;x++) 
+       	for(int z=chunkOffsetN;z<=chunkOffsetS;z++)
+       		removeChunkAdjust(world, new ChunkPos(x, z),heatPos);
+   }
     private final LazyOptional<ChunkData> capability;
     private final ChunkPos pos;
     byte dTemperature;
@@ -202,7 +257,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     	for(ITemperatureAdjust adj:adjusters) {
     		if(adj.isEffective(pos))
-    			return adj.getValueAt(pos);
+    			return dTemperature+adj.getValueAt(pos);
     	}
         return dTemperature;
     }

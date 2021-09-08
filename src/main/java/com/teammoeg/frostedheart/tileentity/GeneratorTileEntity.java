@@ -237,7 +237,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void disassemble() {
         super.disassemble();
-        ChunkData.resetTempToCube(world, getPos(),getActualRange());
+        ChunkData.removeTempAdjust(world, getPos(),getActualRange());
     }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
@@ -328,7 +328,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             setActive(false);
             process = 0;
             processMax = 0;
-            ChunkData.resetTempToCube(world, getPos(),getActualRange());
+            ChunkData.removeTempAdjust(world, getPos(),getActualRange());
         }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();
@@ -379,9 +379,9 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
                 if (activeAfterTick) {
-                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
+                    ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
                 } else {
-                    ChunkData.resetTempToCube(world, getPos(),getActualRange());
+                    ChunkData.removeTempAdjust(world, getPos(),getActualRange());
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
