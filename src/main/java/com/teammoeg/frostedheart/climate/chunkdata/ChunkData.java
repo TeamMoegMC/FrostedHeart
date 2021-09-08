@@ -23,10 +23,13 @@ import com.teammoeg.frostedheart.network.ChunkWatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.TemperatureChangePacket;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
@@ -35,6 +38,9 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
+
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
@@ -76,7 +82,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      *
      * @see TemperatureChangePacket
      */
-    private static void addTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte tempMod) {
+    private static void addTempToChunk(IWorld world, ChunkPos chunkPos,BlockPos src,int range, byte tempMod) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
@@ -84,7 +90,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                         ChunkDataCache.SERVER.update(chunkPos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.chunkMatrix.addTemp(fromX, fromY, fromZ, toX, toY, toZ, tempMod);
+            data.adjusters.add(new CubicTemperatureAdjust(src.getX(),src.getY(),src.getZ(),range, tempMod));
             PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
@@ -95,7 +101,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      *
      * @see TemperatureChangePacket
      */
-    private static void setTempToChunk(IWorld world, ChunkPos chunkPos, int fromX, int fromY, int fromZ, int toX, int toY, int toZ, byte newTemp) {
+    private static void resetTempToChunk(IWorld world, ChunkPos chunkPos,BlockPos src) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
             ChunkData data = ChunkData.getCapability(chunk).map(
@@ -103,17 +109,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                         ChunkDataCache.SERVER.update(chunkPos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.chunkMatrix.setTemp(fromX, fromY, fromZ, toX, toY, toZ, newTemp);
+            data.adjusters.removeIf(adj->adj.getCenterX()==src.getX()&&adj.getCenterY()==src.getY()&&adj.getCenterZ()==src.getZ());
             PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
-    /**
-     * Helper method to map actual BlockPos to relative BlockPos in a chunk
-     */
-    private static int getChunkRelativePos(int actualPos) {
-        return actualPos < 0 ? actualPos % 16 + 15 : actualPos % 16;
-    }
 
     /**
      * Used on a ServerWorld context to add temperature in a cubic region
@@ -125,8 +125,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     public static void addTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
         int sourceX = heatPos.getX(), sourceY = heatPos.getY(), sourceZ = heatPos.getZ();
-        int sourceRelativeX = getChunkRelativePos(sourceX);
-        int sourceRelativeZ = getChunkRelativePos(sourceZ);
 
         // these are block position offset
         int offsetN = sourceZ - range;
@@ -169,53 +167,53 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         if (hasInnerChunks) {
             for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++)
                 for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++)
-                    addTempToChunk(world, new ChunkPos(x, z), 0, lowerLimit, 0, 16, upperLimit, 16, tempMod);
+                    addTempToChunk(world, new ChunkPos(x, z),heatPos,range, tempMod);
         }
 
         // side chunks
         if (hasNSSide) {
             for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
                 // west side
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, z),heatPos,range, tempMod);
                 // east side
-                addTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetE, z),heatPos,range, tempMod);
             }
         }
         if (hasWESide) {
             for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++) {
                 // north side
-                addTempToChunk(world, new ChunkPos(x, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(x, chunkOffsetN),heatPos,range, tempMod);
                 // south side
-                addTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(x, chunkOffsetS),heatPos,range, tempMod);
             }
         }
 
         // corner chunks
         if (hasWECorners && hasNSCorners) {
             // northwest
-            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos,range, tempMod);
             // northeast
-            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos,range, tempMod);
             // southwest
-            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS),heatPos,range, tempMod);
             // southeast
-            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS),heatPos,range, tempMod);
         } else {
             if (!hasWECorners && hasNSCorners) {
                 // north (W or E is either Ok here)
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos,range, tempMod);
                 // south
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), heatPos,range, tempMod);
             }
             if (hasWECorners && !hasNSCorners) {
                 // west
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos,range, tempMod);
                 // east
-                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos,range, tempMod);
             }
             if (!hasWECorners && !hasNSCorners) {
                 // single (W or E, N or S)
-                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos,range, tempMod);
             }
         }
     }
@@ -228,10 +226,8 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param range   the distance from the heatPos to the boundary
      * @param tempMod the new temperature
      */
-    public static void setTempToCube(IWorld world, BlockPos heatPos, int range, byte tempMod) {
+   public static void resetTempToCube(IWorld world, BlockPos heatPos,int range) {
         int sourceX = heatPos.getX(), sourceY = heatPos.getY(), sourceZ = heatPos.getZ();
-        int sourceRelativeX = getChunkRelativePos(sourceX);
-        int sourceRelativeZ = getChunkRelativePos(sourceZ);
 
         // these are block position offset
         int offsetN = sourceZ - range;
@@ -274,63 +270,62 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         if (hasInnerChunks) {
             for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++)
                 for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++)
-                    setTempToChunk(world, new ChunkPos(x, z), 0, lowerLimit, 0, 16, upperLimit, 16, tempMod);
+                    resetTempToChunk(world, new ChunkPos(x, z),heatPos);
         }
 
         // side chunks
         if (hasNSSide) {
             for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
                 // west side
-                setTempToChunk(world, new ChunkPos(chunkOffsetW, z), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, 16, tempMod);
+                resetTempToChunk(world, new ChunkPos(chunkOffsetW, z),heatPos);
                 // east side
-                setTempToChunk(world, new ChunkPos(chunkOffsetE, z), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                resetTempToChunk(world, new ChunkPos(chunkOffsetE, z),heatPos);
             }
         }
         if (hasWESide) {
             for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++) {
                 // north side
-                setTempToChunk(world, new ChunkPos(x, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+                resetTempToChunk(world, new ChunkPos(x, chunkOffsetN),heatPos);
                 // south side
-                setTempToChunk(world, new ChunkPos(x, chunkOffsetS), 0, lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                resetTempToChunk(world, new ChunkPos(x, chunkOffsetS),heatPos);
             }
         }
 
         // corner chunks
         if (hasWECorners && hasNSCorners) {
             // northwest
-            setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, 16, tempMod);
+            resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos);
             // northeast
-            setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+            resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos);
             // southwest
-            setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+            resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS),heatPos);
             // southeast
-            setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS), 0, lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+            resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS),heatPos);
         } else {
             if (!hasWECorners && hasNSCorners) {
                 // north (W or E is either Ok here)
-                setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, 16, tempMod);
+                resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos);
                 // south
-                setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), getChunkRelativePos(offsetW), lowerLimit, 0, getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS),heatPos);
             }
             if (hasWECorners && !hasNSCorners) {
                 // west
-                setTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), 16, upperLimit, getChunkRelativePos(offsetS), tempMod);
+                resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos);
                 // east
-                setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), 0, lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos);
             }
             if (!hasWECorners && !hasNSCorners) {
                 // single (W or E, N or S)
-                setTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN), getChunkRelativePos(offsetW), lowerLimit, getChunkRelativePos(offsetN), getChunkRelativePos(offsetE), upperLimit, getChunkRelativePos(offsetS), tempMod);
+                resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos);
             }
         }
     }
-
     private final LazyOptional<ChunkData> capability;
     private final ChunkPos pos;
-
+    byte dTemperature;
     private Status status;
 
-    private ChunkMatrix chunkMatrix;
+    private List<ITemperatureAdjust> adjusters=new LinkedList<>();
 
     public ChunkData(ChunkPos pos) {
         this.pos = pos;
@@ -339,24 +334,29 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         reset();
     }
 
-    public ChunkMatrix getChunkMatrix() {
-        return chunkMatrix;
-    }
 
-    public void setChunkMatrix(ChunkMatrix chunkMatrix) {
-        this.chunkMatrix = chunkMatrix;
-    }
+    public List<ITemperatureAdjust> getAdjusters() {
+		return adjusters;
+	}
 
-    public ChunkPos getPos() {
+	public void setAdjusters(List<ITemperatureAdjust> adjusters) {
+		this.adjusters = adjusters;
+	}
+
+	public ChunkPos getPos() {
         return pos;
     }
 
     public float getTemperatureAtBlock(BlockPos pos) {
-        return chunkMatrix.getTemperature(pos);
+    	int val=dTemperature;
+    	for(ITemperatureAdjust adj:adjusters) {
+    		val+=adj.getTemperatureAt(pos);
+    	}
+        return val;
     }
 
     public void initChunkMatrix(byte defaultValue) {
-        chunkMatrix.init(defaultValue);
+    	dTemperature=defaultValue;
     }
 
     public Status getStatus() {
@@ -378,18 +378,18 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * Create an update packet to send to client with necessary information
      */
     public ChunkWatchPacket getUpdatePacket() {
-        return new ChunkWatchPacket(pos.x, pos.z, chunkMatrix);
+        return new ChunkWatchPacket(pos.x, pos.z,adjusters);
     }
 
     public TemperatureChangePacket getTempChangePacket() {
-        return new TemperatureChangePacket(pos.x, pos.z, chunkMatrix);
+        return new TemperatureChangePacket(pos.x, pos.z,adjusters);
     }
 
     /**
      * Called on client, sets to received data
      */
-    public void onUpdatePacket(ChunkMatrix chunkMatrix) {
-        this.chunkMatrix = chunkMatrix;
+    public void onUpdatePacket(List<ITemperatureAdjust> tempMatrix) {
+        this.adjusters = tempMatrix;
 
         if (status == Status.CLIENT || status == Status.EMPTY) {
             this.status = Status.CLIENT;
@@ -409,7 +409,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
         nbt.putByte("status", (byte) status.ordinal());
         if (status.isAtLeast(Status.CLIMATE)) {
-            nbt.put("temperature", chunkMatrix.serializeNBT());
+        	ListNBT nl=new ListNBT();
+        	for(ITemperatureAdjust adj:adjusters)
+        		nl.add(adj.serializeNBT());
+            nbt.put("temperature",nl);
         }
         return nbt;
     }
@@ -419,7 +422,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         if (nbt != null) {
             status = Status.valueOf(nbt.getByte("status"));
             if (status.isAtLeast(Status.CLIMATE)) {
-                chunkMatrix.deserializeNBT(nbt.getCompound("temperature"));
+                //chunkMatrix.deserializeNBT(nbt.getCompound("temperature"));
+            	ListNBT nl=nbt.getList("temperature",10);
+            	for(INBT nc:nl) {
+            		adjusters.add(ITemperatureAdjust.valueOf((CompoundNBT)nc));
+            	}
             }
         }
     }
@@ -430,7 +437,8 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     private void reset() {
-        chunkMatrix = new ChunkMatrix(WorldClimate.WORLD_TEMPERATURE);
+        this.dTemperature=WorldClimate.WORLD_TEMPERATURE;
+        adjusters.clear();
         status = Status.EMPTY;
     }
 
@@ -474,7 +482,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         }
 
         @Override
-        public void onUpdatePacket(ChunkMatrix temperatureLayer) {
+        public void onUpdatePacket(List<ITemperatureAdjust> temperatureLayer) {
             throw new UnsupportedOperationException("Tried to modify immutable chunk data");
         }
 
@@ -488,5 +496,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             return "ImmutableChunkData";
         }
     }
+
 }
 

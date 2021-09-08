@@ -32,7 +32,7 @@ public class ChunkDataAdapter extends TypeAdapter<ChunkData> {
 
     @Override
     public ChunkData read(JsonReader in) throws IOException {
-        while (in.hasNext()) {
+       /* while (in.hasNext()) {
             in.beginObject();
             while (in.hasNext()) {
                 String chunkName = in.nextName();
@@ -54,13 +54,13 @@ public class ChunkDataAdapter extends TypeAdapter<ChunkData> {
                 in.endArray();
             }
             in.endObject();
-        }
+        }*/
         return null;
     }
 
     @Override
     public void write(JsonWriter writer, ChunkData value) throws IOException {
-        if (value == null) {
+        /*if (value == null) {
             writer.nullValue();
             return;
         }
@@ -73,6 +73,6 @@ public class ChunkDataAdapter extends TypeAdapter<ChunkData> {
                     writer.name("block_x=" + x + ",y=" + y + ",z=" + z).value(value.getChunkMatrix().getValue(x, y, z));
                 }
         writer.endObject().endArray();
-        writer.endObject();
+        writer.endObject();*/
     }
 }

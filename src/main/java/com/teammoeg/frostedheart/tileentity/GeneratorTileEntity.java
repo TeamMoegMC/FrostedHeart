@@ -237,7 +237,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void disassemble() {
         super.disassemble();
-        ChunkData.setTempToCube(world, getPos(), getActualRange(), WorldClimate.WORLD_TEMPERATURE);
+        ChunkData.resetTempToCube(world, getPos(),getActualRange());
     }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
@@ -328,9 +328,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             setActive(false);
             process = 0;
             processMax = 0;
-            if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE) {
-                ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
-            }
+            ChunkData.resetTempToCube(world, getPos(),getActualRange());
         }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();
@@ -383,7 +381,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 if (activeAfterTick) {
                     ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
                 } else {
-                    ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
+                    ChunkData.resetTempToCube(world, getPos(),getActualRange());
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
@@ -396,7 +394,8 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                         }
             } else if (activeAfterTick) {
                 if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + actualTemp) {
-                    ChunkData.setTempToCube(world, getPos(), actualRange, (byte) (WorldClimate.WORLD_TEMPERATURE + actualTemp));
+                    ChunkData.resetTempToCube(world, getPos(),getActualRange());
+                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
                 }
             }
         }
