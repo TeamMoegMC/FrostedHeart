@@ -32,7 +32,7 @@ public class WeatherDataMixin {
      * @author yuesha-yc
      * @reason we don't want endless storm
      */
-    @Overwrite
+    @Overwrite(remap = false)
     public static void trySetEndlessStorm(ServerWorld world) {
         final WeatherData cap = world.getCapability(WeatherData.CAPABILITY).orElseThrow(() -> new IllegalStateException("Expected WeatherData to exist on World " + world.getDimensionKey() + " / " + world.getDimensionType()));
         WeatherDataAccess dataAccess = (WeatherDataAccess) cap;
