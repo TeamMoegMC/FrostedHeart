@@ -138,85 +138,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
         int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
         int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
-
-        boolean hasInnerChunks = true, hasWESide = true, hasNSSide = true, hasNSCorners = true, hasWECorners = true;
-        int innerChunkOffsetW = chunkOffsetW + 1;
-        int innerChunkOffsetE = chunkOffsetE - 1;
-        int innerChunkOffsetN = chunkOffsetN + 1;
-        int innerChunkOffsetS = chunkOffsetS - 1;
-
-        if (innerChunkOffsetW > innerChunkOffsetE) {
-            hasWESide = false;
-            if (chunkOffsetW == chunkOffsetE) {
-                hasWECorners = false;
-            }
-        }
-        if (innerChunkOffsetN > innerChunkOffsetS) {
-            hasNSSide = false;
-            if (chunkOffsetN == chunkOffsetS) {
-                hasNSCorners = false;
-            }
-        }
-        if (!hasWESide && !hasNSSide) {
-            hasInnerChunks = false;
-        }
-
-        int upperLimit = sourceY + range;
-        int lowerLimit = sourceY - range;
-
-        // inner chunks
-        if (hasInnerChunks) {
-            for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++)
-                for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++)
-                    addTempToChunk(world, new ChunkPos(x, z),heatPos,range, tempMod);
-        }
-
-        // side chunks
-        if (hasNSSide) {
-            for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
-                // west side
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, z),heatPos,range, tempMod);
-                // east side
-                addTempToChunk(world, new ChunkPos(chunkOffsetE, z),heatPos,range, tempMod);
-            }
-        }
-        if (hasWESide) {
-            for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++) {
-                // north side
-                addTempToChunk(world, new ChunkPos(x, chunkOffsetN),heatPos,range, tempMod);
-                // south side
-                addTempToChunk(world, new ChunkPos(x, chunkOffsetS),heatPos,range, tempMod);
-            }
-        }
-
-        // corner chunks
-        if (hasWECorners && hasNSCorners) {
-            // northwest
-            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos,range, tempMod);
-            // northeast
-            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos,range, tempMod);
-            // southwest
-            addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS),heatPos,range, tempMod);
-            // southeast
-            addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS),heatPos,range, tempMod);
-        } else {
-            if (!hasWECorners && hasNSCorners) {
-                // north (W or E is either Ok here)
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos,range, tempMod);
-                // south
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS), heatPos,range, tempMod);
-            }
-            if (hasWECorners && !hasNSCorners) {
-                // west
-                addTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos,range, tempMod);
-                // east
-                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos,range, tempMod);
-            }
-            if (!hasWECorners && !hasNSCorners) {
-                // single (W or E, N or S)
-                addTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos,range, tempMod);
-            }
-        }
+        for(int x=chunkOffsetW;x<=chunkOffsetE;x++) 
+        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++)
+        		addTempToChunk(world, new ChunkPos(x, z),heatPos,range, tempMod);
     }
 
     /**
@@ -241,85 +165,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
         int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
         int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
-
-        boolean hasInnerChunks = true, hasWESide = true, hasNSSide = true, hasNSCorners = true, hasWECorners = true;
-        int innerChunkOffsetW = chunkOffsetW + 1;
-        int innerChunkOffsetE = chunkOffsetE - 1;
-        int innerChunkOffsetN = chunkOffsetN + 1;
-        int innerChunkOffsetS = chunkOffsetS - 1;
-
-        if (innerChunkOffsetW > innerChunkOffsetE) {
-            hasWESide = false;
-            if (chunkOffsetW == chunkOffsetE) {
-                hasWECorners = false;
-            }
-        }
-        if (innerChunkOffsetN > innerChunkOffsetS) {
-            hasNSSide = false;
-            if (chunkOffsetN == chunkOffsetS) {
-                hasNSCorners = false;
-            }
-        }
-        if (!hasWESide && !hasNSSide) {
-            hasInnerChunks = false;
-        }
-
-        int upperLimit = sourceY + range;
-        int lowerLimit = sourceY - range;
-
-        // inner chunks
-        if (hasInnerChunks) {
-            for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++)
-                for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++)
-                    resetTempToChunk(world, new ChunkPos(x, z),heatPos);
-        }
-
-        // side chunks
-        if (hasNSSide) {
-            for (int z = innerChunkOffsetN; z <= innerChunkOffsetS; z++) {
-                // west side
-                resetTempToChunk(world, new ChunkPos(chunkOffsetW, z),heatPos);
-                // east side
-                resetTempToChunk(world, new ChunkPos(chunkOffsetE, z),heatPos);
-            }
-        }
-        if (hasWESide) {
-            for (int x = innerChunkOffsetW; x <= innerChunkOffsetE; x++) {
-                // north side
-                resetTempToChunk(world, new ChunkPos(x, chunkOffsetN),heatPos);
-                // south side
-                resetTempToChunk(world, new ChunkPos(x, chunkOffsetS),heatPos);
-            }
-        }
-
-        // corner chunks
-        if (hasWECorners && hasNSCorners) {
-            // northwest
-            resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos);
-            // northeast
-            resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos);
-            // southwest
-            resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS),heatPos);
-            // southeast
-            resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetS),heatPos);
-        } else {
-            if (!hasWECorners && hasNSCorners) {
-                // north (W or E is either Ok here)
-                resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos);
-                // south
-                resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetS),heatPos);
-            }
-            if (hasWECorners && !hasNSCorners) {
-                // west
-                resetTempToChunk(world, new ChunkPos(chunkOffsetW, chunkOffsetN),heatPos);
-                // east
-                resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos);
-            }
-            if (!hasWECorners && !hasNSCorners) {
-                // single (W or E, N or S)
-                resetTempToChunk(world, new ChunkPos(chunkOffsetE, chunkOffsetN),heatPos);
-            }
-        }
+        for(int x=chunkOffsetW;x<=chunkOffsetE;x++) 
+        	for(int z=chunkOffsetN;z<=chunkOffsetS;z++)
+        		resetTempToChunk(world, new ChunkPos(x, z),heatPos);
     }
     private final LazyOptional<ChunkData> capability;
     private final ChunkPos pos;
