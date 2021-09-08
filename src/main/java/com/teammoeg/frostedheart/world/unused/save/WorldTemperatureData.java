@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.world.unused.save;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkMatrix;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -49,7 +48,7 @@ public class WorldTemperatureData extends WorldSavedData {
 
     @Override
     public void read(CompoundNBT nbt) {
-        for (String chunkName : nbt.keySet()) {
+        /*for (String chunkName : nbt.keySet()) {
             int chunkX = Integer.parseInt(chunkName.substring(chunkName.indexOf('x') + 2, chunkName.indexOf(".chunk_z")));
             int chunkZ = Integer.parseInt(chunkName.substring(chunkName.indexOf('z') + 2));
             ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
@@ -60,12 +59,12 @@ public class WorldTemperatureData extends WorldSavedData {
                 for (int z = 0; z < 16; z++) {
                     blocksNBT.putByteArray("block_x_" + x + ".block_z_" + z, matrix[x][z]);
                 }
-        }
+        }*/
     }
 
     @Override
     public CompoundNBT write(CompoundNBT compound) {
-        for (ChunkPos chunkPos : serverCache.getCache().keySet()) {
+       /* for (ChunkPos chunkPos : serverCache.getCache().keySet()) {
             ChunkData chunkData = serverCache.getCache().get(chunkPos);
             ChunkMatrix chunkMatrix = chunkData.getChunkMatrix();
             byte[][][] matrix = chunkMatrix.getMatrix();
@@ -75,7 +74,7 @@ public class WorldTemperatureData extends WorldSavedData {
                     blocks.putByteArray("block_x_" + x + ".block_z_" + z, matrix[x][z]);
                 }
             compound.put("chunk_x_" + chunkPos.x + ".chunk_z_" + chunkPos.z, blocks);
-        }
+        }*/
         return compound;
     }
 

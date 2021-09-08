@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.network;
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkMatrix;
+import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -30,14 +31,16 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class TemperatureChangePacket {
     private final int chunkX;
     private final int chunkZ;
-    private final ChunkMatrix tempMatrix;
+    private final List<ITemperatureAdjust> tempMatrix;
 
-    public TemperatureChangePacket(int chunkX, int chunkZ, ChunkMatrix tempMatrix) {
+    public TemperatureChangePacket(int chunkX, int chunkZ,List<ITemperatureAdjust> tempMatrix) {
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
         this.tempMatrix = tempMatrix;
@@ -46,13 +49,19 @@ public class TemperatureChangePacket {
     TemperatureChangePacket(PacketBuffer buffer) {
         chunkX = buffer.readVarInt();
         chunkZ = buffer.readVarInt();
-        tempMatrix = new ChunkMatrix(buffer);
+        tempMatrix = new LinkedList<>();
+        int len=buffer.readVarInt();
+        for(int i=0;i<len;i++)
+        	if(buffer.isReadable())
+        		tempMatrix.add(ITemperatureAdjust.valueOf(buffer));
     }
 
     void encode(PacketBuffer buffer) {
         buffer.writeVarInt(chunkX);
         buffer.writeVarInt(chunkZ);
-        tempMatrix.serialize(buffer);
+        buffer.writeVarInt(tempMatrix.size());
+        for(ITemperatureAdjust adjust:tempMatrix)
+        	adjust.serialize(buffer);;
     }
 
     void handle(Supplier<NetworkEvent.Context> context) {

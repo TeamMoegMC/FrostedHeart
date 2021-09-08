@@ -137,12 +137,12 @@ public class FHForgeEvents {
         // Send an update packet to the client when watching the chunk
         ChunkPos pos = event.getPos();
         ChunkData chunkData = ChunkData.get(event.getWorld(), pos);
-        if (chunkData.getStatus() != ChunkData.Status.EMPTY) {
+       // if (chunkData.getStatus() != ChunkData.Status.EMPTY) {
             PacketHandler.send(PacketDistributor.PLAYER.with(event::getPlayer), chunkData.getUpdatePacket());
-        } else {
+        /*} else {
             // Chunk does not exist yet but it's queue'd for watch. Queue an update packet to be sent on chunk load
             ChunkDataCache.WATCH_QUEUE.enqueueUnloadedChunk(pos, event.getPlayer());
-        }
+        }*/
     }
 
     @SubscribeEvent
@@ -153,6 +153,7 @@ public class FHForgeEvents {
                 ChunkDataCache.SERVER.update(pos, data);
                 ChunkDataCache.WATCH_QUEUE.dequeueLoadedChunk(pos, data);
             });
+            
         }
     }
 
@@ -160,6 +161,7 @@ public class FHForgeEvents {
     public static void onChunkUnload(ChunkEvent.Unload event) {
         // Clear server side chunk data cache
         if (!event.getWorld().isRemote() && !(event.getChunk() instanceof EmptyChunk)) {
+        	
             ChunkDataCache.SERVER.remove(event.getChunk().getPos());
         }
     }

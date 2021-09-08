@@ -27,6 +27,7 @@ archivesBaseName = 'frostedheart'
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
 
 repositories {
+	mavenLocal()
     maven {	name = "BlameJared";	url = "https://maven.blamejared.com/" }         // IE & CT Files
     maven { name = "DVS1 Maven FS"; url = "https://dvs1.progwml6.com/files/maven" } // JEI & Tinkers Files
     maven { url = 'https://maven.latmod.com/' }                                     // Needed for JEI
@@ -35,6 +36,7 @@ repositories {
         name "tterrag maven"
         url "https://maven.tterrag.com/"
     }
+    
 }
 
 sourceSets {

@@ -71,6 +71,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
     private boolean isWorking;
     private boolean isOverdrive;
+    private boolean isOverdriveBefore;
 
     public GeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
         super(FHMultiblocks.GENERATOR, getSpecificGeneratorType(temperatureLevelIn, rangeLevelIn), false);
@@ -141,6 +142,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         super.readCustomNBT(nbt, descPacket);
         setWorking(nbt.getBoolean("isWorking"));
         setOverdrive(nbt.getBoolean("isOverdrive"));
+        isOverdriveBefore=isOverdrive;
         setTemperatureLevel(nbt.getInt("temperatureLevel"));
         setRangeLevel(nbt.getInt("rangeLevel"));
         if (!descPacket) {
@@ -237,7 +239,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void disassemble() {
         super.disassemble();
-        ChunkData.setTempToCube(world, getPos(), getActualRange(), WorldClimate.WORLD_TEMPERATURE);
+        ChunkData.removeTempAdjust(world, getPos(),getActualRange());
     }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
@@ -328,9 +330,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             setActive(false);
             process = 0;
             processMax = 0;
-            if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE) {
-                ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
-            }
+            ChunkData.removeTempAdjust(world, getPos(),getActualRange());
         }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();
@@ -381,9 +381,9 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
                 if (activeAfterTick) {
-                    ChunkData.addTempToCube(world, getPos(), actualRange, (byte) actualTemp);
+                    ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
                 } else {
-                    ChunkData.setTempToCube(world, getPos(), actualRange, WorldClimate.WORLD_TEMPERATURE);
+                    ChunkData.removeTempAdjust(world, getPos(),getActualRange());
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
@@ -394,10 +394,11 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                             if (te instanceof GeneratorTileEntity)
                                 ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
-            } else if (activeAfterTick) {
-                if (ChunkData.get(world, getPos()).getTemperatureAtBlock(getPos()) != WorldClimate.WORLD_TEMPERATURE + actualTemp) {
-                    ChunkData.setTempToCube(world, getPos(), actualRange, (byte) (WorldClimate.WORLD_TEMPERATURE + actualTemp));
-                }
+            }else if(activeAfterTick){
+            	if(isOverdriveBefore!=isOverdrive) {
+            		isOverdriveBefore=isOverdrive;
+            		ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
+            	}
             }
         }
 

@@ -75,9 +75,9 @@ public final class ChunkDataProvider {
      * @param requiredStatus The minimum status of the chunk data returned
      * @return A chunk data for the provided chunk pos
      */
-    public final ChunkData get(BlockPos pos, ChunkData.Status requiredStatus) {
+   /* public final ChunkData get(BlockPos pos, ChunkData.Status requiredStatus) {
         return get(new ChunkPos(pos), requiredStatus);
-    }
+    }*/
 
     /**
      * Gets the chunk data for a chunk, during world generation.
@@ -88,7 +88,7 @@ public final class ChunkDataProvider {
      * @param requiredStatus The minimum status of the chunk data returned
      * @return A chunk data for the provided chunk pos
      */
-    public final ChunkData get(ChunkPos pos, ChunkData.Status requiredStatus) {
+    /*public final ChunkData get(ChunkPos pos, ChunkData.Status requiredStatus) {
         final ChunkData data = ChunkDataCache.WORLD_GEN.getOrCreate(pos);
         while (!data.getStatus().isAtLeast(requiredStatus)) {
             final ChunkData.Status next = data.getStatus().next();
@@ -96,7 +96,7 @@ public final class ChunkDataProvider {
             data.setStatus(next);
         }
         return data;
-    }
+    }*/
 
     @VisibleForTesting
     public IChunkDataGenerator getGenerator() {
