@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.climate.chunkdata;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
 
 public class CubicTemperatureAdjust implements ITemperatureAdjust {
 	int cx;
@@ -102,6 +103,11 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
 		cz=buffer.readVarInt();
 		r=buffer.readVarInt();
 		value=buffer.readByte();
+	}
+
+	@Override
+	public float getValueAt(BlockPos pos) {
+		return value;
 	}
 
 }

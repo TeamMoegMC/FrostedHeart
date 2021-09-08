@@ -348,11 +348,12 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     public float getTemperatureAtBlock(BlockPos pos) {
-    	int val=dTemperature;
+
     	for(ITemperatureAdjust adj:adjusters) {
-    		val+=adj.getTemperatureAt(pos);
+    		if(adj.isEffective(pos))
+    			return adj.getValueAt(pos);
     	}
-        return val;
+        return dTemperature;
     }
 
     public void initChunkMatrix(byte defaultValue) {

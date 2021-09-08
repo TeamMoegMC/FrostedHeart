@@ -37,4 +37,5 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
 	int getCenterY();
 
 	int getCenterZ();
+	float getValueAt(BlockPos pos);
 }
