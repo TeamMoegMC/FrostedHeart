@@ -90,6 +90,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                         ChunkDataCache.SERVER.update(chunkPos, dataIn);
                         return dataIn;
                     }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
+            data.adjusters.removeIf(adj->adj.getCenterX()==src.getX()&&adj.getCenterY()==src.getY()&&adj.getCenterZ()==src.getZ());
             data.adjusters.add(new CubicTemperatureAdjust(src.getX(),src.getY(),src.getZ(),range, tempMod));
             PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
