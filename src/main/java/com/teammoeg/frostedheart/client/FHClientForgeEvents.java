@@ -108,9 +108,7 @@ public class FHClientForgeEvents {
                 list.add("");
                 list.add(AQUA + FHMain.MODNAME);
                 ChunkData data = ChunkData.get(mc.world, pos);
-                if (data.getStatus().isAtLeast(ChunkData.Status.CLIENT)) {
                     list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", data.getTemperatureAtBlock(pos))));
-                }
             } else {
                 list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
             }
@@ -125,7 +123,6 @@ public class FHClientForgeEvents {
             BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
                 ChunkData data = ChunkData.get(mc.world, pos);
-                if (data.getStatus().isAtLeast(ChunkData.Status.CLIENT)) {
                     // FETCH TEMPERATURE
                     int temperature = (int) data.getTemperatureAtBlock(pos);
 
@@ -153,7 +150,6 @@ public class FHClientForgeEvents {
 
                     // RENDER TEMPERATURE
                     renderTemp(event.getMatrixStack(), mc, temperature, offsetX, offsetY, true);
-                }
             }
         }
 

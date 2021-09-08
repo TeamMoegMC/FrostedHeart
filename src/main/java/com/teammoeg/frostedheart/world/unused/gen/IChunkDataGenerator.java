@@ -27,5 +27,5 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
  */
 @Deprecated
 public interface IChunkDataGenerator {
-    void generate(ChunkData data, ChunkData.Status status);
+   // void generate(ChunkData data, ChunkData.Status status);
 }

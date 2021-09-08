@@ -130,7 +130,7 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
 	 * @return center Z<br>
 	 */
 	int getCenterZ();
-	
+	int getRadius();
 	/**
 	 * Get value at location, wont do range check.
 	 *
@@ -138,4 +138,5 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
 	 * @return value for that location<br>
 	 */
 	float getValueAt(BlockPos pos);
+	void setValue(byte value);
 }

@@ -71,6 +71,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
     private boolean isWorking;
     private boolean isOverdrive;
+    private boolean isOverdriveBefore;
 
     public GeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
         super(FHMultiblocks.GENERATOR, getSpecificGeneratorType(temperatureLevelIn, rangeLevelIn), false);
@@ -141,6 +142,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         super.readCustomNBT(nbt, descPacket);
         setWorking(nbt.getBoolean("isWorking"));
         setOverdrive(nbt.getBoolean("isOverdrive"));
+        isOverdriveBefore=isOverdrive;
         setTemperatureLevel(nbt.getInt("temperatureLevel"));
         setRangeLevel(nbt.getInt("rangeLevel"));
         if (!descPacket) {
@@ -392,6 +394,11 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                             if (te instanceof GeneratorTileEntity)
                                 ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
+            }else if(activeAfterTick){
+            	if(isOverdriveBefore!=isOverdrive) {
+            		isOverdriveBefore=isOverdrive;
+            		ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
+            	}
             }
         }
 

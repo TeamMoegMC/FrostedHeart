@@ -133,4 +133,9 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
 		return value;
 	}
 
+	@Override
+	public void setValue(byte value) {
+		this.value=value;
+	}
+
 }

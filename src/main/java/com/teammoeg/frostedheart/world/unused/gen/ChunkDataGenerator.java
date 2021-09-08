@@ -58,7 +58,7 @@ public class ChunkDataGenerator implements IChunkDataGenerator {
                         .scaled(-REGIONAL_TEMPERATURE_SCALE, REGIONAL_TEMPERATURE_SCALE));
     }
 
-    @Override
+   /* @Override
     public void generate(ChunkData data, ChunkData.Status status) {
         ChunkPos pos = data.getPos();
         int chunkX = pos.getXStart(), chunkZ = pos.getZStart();
@@ -70,7 +70,7 @@ public class ChunkDataGenerator implements IChunkDataGenerator {
                 generateClimate(data, chunkX, chunkZ);
                 break;
         }
-    }
+    }*/
 
     private void generateClimate(ChunkData data, int chunkX, int chunkZ) {
         data.initChunkMatrix((byte) 10);
