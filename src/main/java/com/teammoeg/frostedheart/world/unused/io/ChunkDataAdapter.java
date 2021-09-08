@@ -22,8 +22,6 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
-import net.minecraft.util.math.ChunkPos;
 
 import java.io.IOException;
 

@@ -33,15 +33,12 @@ public class WeatherDataMixin {
      * @reason we don't want endless storm
      */
     @Overwrite
-    public static void trySetEndlessStorm(ServerWorld world)
-    {
+    public static void trySetEndlessStorm(ServerWorld world) {
         final WeatherData cap = world.getCapability(WeatherData.CAPABILITY).orElseThrow(() -> new IllegalStateException("Expected WeatherData to exist on World " + world.getDimensionKey() + " / " + world.getDimensionType()));
         WeatherDataAccess dataAccess = (WeatherDataAccess) cap;
-        if (!dataAccess.getAlreadySetWorldToWinter())
-        {
+        if (!dataAccess.getAlreadySetWorldToWinter()) {
             dataAccess.setAlreadySetWorldToWinter(true);
-            if (Config.COMMON.isWinterDimension(world.getDimensionKey().getLocation()))
-            {
+            if (Config.COMMON.isWinterDimension(world.getDimensionKey().getLocation())) {
                 world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, world.getServer());
                 world.setWeather(0, Integer.MAX_VALUE, true, true);
             }

@@ -20,122 +20,128 @@ package com.teammoeg.frostedheart.climate.chunkdata;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
+
 /**
  * Cubic Temperature Adjust, would adjust temperature in a cube
- * */
+ */
 public class CubicTemperatureAdjust implements ITemperatureAdjust {
-	int cx;
-	int cy;
-	int cz;
-	public CubicTemperatureAdjust(int cx, int cy, int cz, int r, byte value) {
-		this.cx = cx;
-		this.cy = cy;
-		this.cz = cz;
-		this.r = r;
-		this.value = value;
-	}
+    int cx;
+    int cy;
+    int cz;
 
-	public CubicTemperatureAdjust(PacketBuffer buffer) {
-		deserialize(buffer);
-	}
+    public CubicTemperatureAdjust(int cx, int cy, int cz, int r, byte value) {
+        this.cx = cx;
+        this.cy = cy;
+        this.cz = cz;
+        this.r = r;
+        this.value = value;
+    }
 
-	public CubicTemperatureAdjust(CompoundNBT nc) {
-		deserializeNBT(nc);
-	}
+    public CubicTemperatureAdjust(PacketBuffer buffer) {
+        deserialize(buffer);
+    }
 
-	public CubicTemperatureAdjust(BlockPos heatPos, int range, byte tempMod) {
-		this(heatPos.getX(),heatPos.getY(),heatPos.getZ(),range,tempMod);
-	}
+    public CubicTemperatureAdjust(CompoundNBT nc) {
+        deserializeNBT(nc);
+    }
 
-	int r;
-	byte value;
-	@Override
-	public CompoundNBT serializeNBT() {
-		CompoundNBT nbt = serializeNBTData() ;
-		nbt.putInt("type",1);
-		return nbt;
-	}
+    public CubicTemperatureAdjust(BlockPos heatPos, int range, byte tempMod) {
+        this(heatPos.getX(), heatPos.getY(), heatPos.getZ(), range, tempMod);
+    }
 
-	protected CompoundNBT serializeNBTData() {
-		CompoundNBT nbt = new CompoundNBT();
-		nbt.putIntArray("location",new int[] {cx,cy,cz});
-		nbt.putInt("range",r);
-		nbt.putByte("value", value);
-		return nbt;
-	}
-	public int getCenterX() {
-		return cx;
-	}
+    int r;
+    byte value;
 
-	public int getCenterY() {
-		return cy;
-	}
+    @Override
+    public CompoundNBT serializeNBT() {
+        CompoundNBT nbt = serializeNBTData();
+        nbt.putInt("type", 1);
+        return nbt;
+    }
 
-	public int getCenterZ() {
-		return cz;
-	}
+    protected CompoundNBT serializeNBTData() {
+        CompoundNBT nbt = new CompoundNBT();
+        nbt.putIntArray("location", new int[]{cx, cy, cz});
+        nbt.putInt("range", r);
+        nbt.putByte("value", value);
+        return nbt;
+    }
 
-	public int getRadius() {
-		return r;
-	}
+    public int getCenterX() {
+        return cx;
+    }
 
-	public byte getValue() {
-		return value;
-	}
+    public int getCenterY() {
+        return cy;
+    }
 
-	@Override
-	public void deserializeNBT(CompoundNBT nbt) {
-		int[] loc=nbt.getIntArray("location");
-		cx=loc[0];
-		cy=loc[1];
-		cz=loc[2];
-		r=nbt.getInt("range");
-		value=nbt.getByte("value");
-	}
+    public int getCenterZ() {
+        return cz;
+    }
 
-	@Override
-	public byte getTemperatureAt(int x, int y, int z) {
-		if(isEffective(x,y,z))
-			return value;
-		return 0;
-	}
+    public int getRadius() {
+        return r;
+    }
 
-	@Override
-	public boolean isEffective(int x, int y, int z) {
-		if(Math.abs(x-cx)<=r&&Math.abs(y-cy)<=r&&Math.abs(z-cz)<=r)
-			return true;
-		return false;
-	}
+    public byte getValue() {
+        return value;
+    }
 
-	@Override
-	public void serialize(PacketBuffer buffer) {
-		buffer.writeVarInt(1);//packet id
-		serializeData(buffer);
-	}
-	protected void serializeData(PacketBuffer buffer) {
-		buffer.writeVarInt(cx);
-		buffer.writeVarInt(cy);
-		buffer.writeVarInt(cz);
-		buffer.writeVarInt(r);
-		buffer.writeByte(value);
-	}
-	@Override
-	public void deserialize(PacketBuffer buffer) {
-		cx=buffer.readVarInt();
-		cy=buffer.readVarInt();
-		cz=buffer.readVarInt();
-		r=buffer.readVarInt();
-		value=buffer.readByte();
-	}
+    @Override
+    public void deserializeNBT(CompoundNBT nbt) {
+        int[] loc = nbt.getIntArray("location");
+        cx = loc[0];
+        cy = loc[1];
+        cz = loc[2];
+        r = nbt.getInt("range");
+        value = nbt.getByte("value");
+    }
 
-	@Override
-	public float getValueAt(BlockPos pos) {
-		return value;
-	}
+    @Override
+    public byte getTemperatureAt(int x, int y, int z) {
+        if (isEffective(x, y, z))
+            return value;
+        return 0;
+    }
 
-	@Override
-	public void setValue(byte value) {
-		this.value=value;
-	}
+    @Override
+    public boolean isEffective(int x, int y, int z) {
+        if (Math.abs(x - cx) <= r && Math.abs(y - cy) <= r && Math.abs(z - cz) <= r)
+            return true;
+        return false;
+    }
+
+    @Override
+    public void serialize(PacketBuffer buffer) {
+        buffer.writeVarInt(1);//packet id
+        serializeData(buffer);
+    }
+
+    protected void serializeData(PacketBuffer buffer) {
+        buffer.writeVarInt(cx);
+        buffer.writeVarInt(cy);
+        buffer.writeVarInt(cz);
+        buffer.writeVarInt(r);
+        buffer.writeByte(value);
+    }
+
+    @Override
+    public void deserialize(PacketBuffer buffer) {
+        cx = buffer.readVarInt();
+        cy = buffer.readVarInt();
+        cz = buffer.readVarInt();
+        r = buffer.readVarInt();
+        value = buffer.readByte();
+    }
+
+    @Override
+    public float getValueAt(BlockPos pos) {
+        return value;
+    }
+
+    @Override
+    public void setValue(byte value) {
+        this.value = value;
+    }
 
 }

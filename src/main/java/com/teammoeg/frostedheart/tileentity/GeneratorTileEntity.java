@@ -24,7 +24,6 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
-import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.FHMultiblocks;
 import com.teammoeg.frostedheart.content.FHTileTypes;
@@ -142,7 +141,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         super.readCustomNBT(nbt, descPacket);
         setWorking(nbt.getBoolean("isWorking"));
         setOverdrive(nbt.getBoolean("isOverdrive"));
-        isOverdriveBefore=isOverdrive;
+        isOverdriveBefore = isOverdrive;
         setTemperatureLevel(nbt.getInt("temperatureLevel"));
         setRangeLevel(nbt.getInt("rangeLevel"));
         if (!descPacket) {
@@ -239,7 +238,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
     @Override
     public void disassemble() {
         super.disassemble();
-        ChunkData.removeTempAdjust(world, getPos(),getActualRange());
+        ChunkData.removeTempAdjust(world, getPos(), getActualRange());
     }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
@@ -330,7 +329,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             setActive(false);
             process = 0;
             processMax = 0;
-            ChunkData.removeTempAdjust(world, getPos(),getActualRange());
+            ChunkData.removeTempAdjust(world, getPos(), getActualRange());
         }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();
@@ -383,7 +382,7 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                 if (activeAfterTick) {
                     ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
                 } else {
-                    ChunkData.removeTempAdjust(world, getPos(),getActualRange());
+                    ChunkData.removeTempAdjust(world, getPos(), getActualRange());
                 }
                 // scan 3x4x3
                 for (int x = 0; x < 3; ++x)
@@ -394,11 +393,11 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
                             if (te instanceof GeneratorTileEntity)
                                 ((GeneratorTileEntity) te).setActive(activeAfterTick);
                         }
-            }else if(activeAfterTick){
-            	if(isOverdriveBefore!=isOverdrive) {
-            		isOverdriveBefore=isOverdrive;
-            		ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
-            	}
+            } else if (activeAfterTick) {
+                if (isOverdriveBefore != isOverdrive) {
+                    isOverdriveBefore = isOverdrive;
+                    ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
+                }
             }
         }
 

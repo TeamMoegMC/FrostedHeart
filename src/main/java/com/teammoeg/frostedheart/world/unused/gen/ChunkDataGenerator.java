@@ -22,7 +22,6 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.util.noise.INoise1D;
 import com.teammoeg.frostedheart.util.noise.INoise2D;
 import com.teammoeg.frostedheart.util.noise.OpenSimplex2D;
-import net.minecraft.util.math.ChunkPos;
 
 import java.util.Random;
 

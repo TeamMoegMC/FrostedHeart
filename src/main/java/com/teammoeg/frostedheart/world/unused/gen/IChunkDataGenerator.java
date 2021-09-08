@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.world.unused.gen;
 
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-
 /**
  * This is the object responsible for generating FH chunk data, in parallel with normal chunk generation.
  * <p>
@@ -27,5 +25,5 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
  */
 @Deprecated
 public interface IChunkDataGenerator {
-   // void generate(ChunkData data, ChunkData.Status status);
+    // void generate(ChunkData data, ChunkData.Status status);
 }

@@ -108,7 +108,7 @@ public class FHClientForgeEvents {
                 list.add("");
                 list.add(AQUA + FHMain.MODNAME);
                 ChunkData data = ChunkData.get(mc.world, pos);
-                    list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", data.getTemperatureAtBlock(pos))));
+                list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", data.getTemperatureAtBlock(pos))));
             } else {
                 list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
             }
@@ -123,33 +123,33 @@ public class FHClientForgeEvents {
             BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
                 ChunkData data = ChunkData.get(mc.world, pos);
-                    // FETCH TEMPERATURE
-                    int temperature = (int) data.getTemperatureAtBlock(pos);
+                // FETCH TEMPERATURE
+                int temperature = (int) data.getTemperatureAtBlock(pos);
 
-                    // RENDER CONFIGURATION
-                    int w = event.getWindow().getScaledWidth();
-                    int h = event.getWindow().getScaledHeight();
-                    int offsetX = 0;
-                    int offsetY = 0;
-                    if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.MIDDLE) {
-                        offsetX = w / 2 - 18;
-                        offsetY = h - 84;
-                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_LEFT) {
-                        offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
-                        offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
-                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_RIGHT) {
-                        offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
-                        offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
-                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_LEFT) {
-                        offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
-                        offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
-                    } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_RIGHT) {
-                        offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
-                        offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
-                    }
+                // RENDER CONFIGURATION
+                int w = event.getWindow().getScaledWidth();
+                int h = event.getWindow().getScaledHeight();
+                int offsetX = 0;
+                int offsetY = 0;
+                if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.MIDDLE) {
+                    offsetX = w / 2 - 18;
+                    offsetY = h - 84;
+                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_LEFT) {
+                    offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
+                    offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
+                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_RIGHT) {
+                    offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
+                    offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
+                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_LEFT) {
+                    offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
+                    offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
+                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_RIGHT) {
+                    offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
+                    offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
+                }
 
-                    // RENDER TEMPERATURE
-                    renderTemp(event.getMatrixStack(), mc, temperature, offsetX, offsetY, true);
+                // RENDER TEMPERATURE
+                renderTemp(event.getMatrixStack(), mc, temperature, offsetX, offsetY, true);
             }
         }
 

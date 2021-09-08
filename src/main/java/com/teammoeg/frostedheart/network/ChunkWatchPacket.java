@@ -22,7 +22,6 @@ import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -43,7 +42,7 @@ public class ChunkWatchPacket {
     private final int chunkZ;
     private final List<ITemperatureAdjust> tempMatrix;
 
-    public ChunkWatchPacket(int chunkX, int chunkZ,List<ITemperatureAdjust> tempMatrix) {
+    public ChunkWatchPacket(int chunkX, int chunkZ, List<ITemperatureAdjust> tempMatrix) {
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
         this.tempMatrix = tempMatrix;
@@ -53,18 +52,18 @@ public class ChunkWatchPacket {
         chunkX = buffer.readVarInt();
         chunkZ = buffer.readVarInt();
         tempMatrix = new LinkedList<>();
-        int len=buffer.readVarInt();
-        for(int i=0;i<len;i++)
-        	if(buffer.isReadable())
-        		tempMatrix.add(ITemperatureAdjust.valueOf(buffer));
+        int len = buffer.readVarInt();
+        for (int i = 0; i < len; i++)
+            if (buffer.isReadable())
+                tempMatrix.add(ITemperatureAdjust.valueOf(buffer));
     }
 
     void encode(PacketBuffer buffer) {
         buffer.writeVarInt(chunkX);
         buffer.writeVarInt(chunkZ);
         buffer.writeVarInt(tempMatrix.size());
-        for(ITemperatureAdjust adjust:tempMatrix)
-        	adjust.serialize(buffer);
+        for (ITemperatureAdjust adjust : tempMatrix)
+            adjust.serialize(buffer);
     }
 
     void handle(Supplier<NetworkEvent.Context> context) {

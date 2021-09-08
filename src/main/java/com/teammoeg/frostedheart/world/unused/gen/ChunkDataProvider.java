@@ -19,10 +19,7 @@
 package com.teammoeg.frostedheart.world.unused.gen;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -97,7 +94,6 @@ public final class ChunkDataProvider {
         }
         return data;
     }*/
-
     @VisibleForTesting
     public IChunkDataGenerator getGenerator() {
         return generator;
