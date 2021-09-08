@@ -35,6 +35,7 @@ repositories {
         name "tterrag maven"
         url "https://maven.tterrag.com/"
     }
+    mavenLocal()
 }
 
 sourceSets {
