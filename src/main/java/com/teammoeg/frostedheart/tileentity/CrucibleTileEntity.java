@@ -162,8 +162,8 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
-            new IEInventoryHandler(4, this, 0, new boolean[]{true, false, true},
-                    new boolean[]{false, true, false})
+            new IEInventoryHandler(4, this, 0, new boolean[]{true, false, true, true},
+                    new boolean[]{false, true, false, false})
     );
 
     @Nonnull
