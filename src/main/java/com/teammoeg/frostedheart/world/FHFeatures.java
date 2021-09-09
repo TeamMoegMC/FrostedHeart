@@ -49,6 +49,7 @@ public class FHFeatures {
     public static final ConfiguredFeature<?, ?> ore_vanadinite = register("ore_vanadinite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.VANADINITE_ORE.get().getStateContainer().getBaseState(), 30)).range(65).square().chance(10));
     public static final ConfiguredFeature<?, ?> ore_silver = register("ore_silver", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_SILVER_ORE.get().getStateContainer().getBaseState(), 35)).range(30).square().chance(12));
     public static final ConfiguredFeature<?, ?> ore_gold = register("ore_gold", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_GOLD_ORE.get().getStateContainer().getBaseState(), 35)).range(30).square().chance(12));
+    public static final ConfiguredFeature<?, ?> ore_sphalerite = register("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getStateContainer().getBaseState(), 40)).range(65).square().chance(4));
 
     private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> register(String key, ConfiguredFeature<FC, ?> configuredFeature) {
         FH_ORES.add(configuredFeature);
