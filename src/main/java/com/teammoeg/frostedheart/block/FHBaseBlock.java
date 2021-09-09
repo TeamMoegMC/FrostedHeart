@@ -31,7 +31,7 @@ import net.minecraft.world.IBlockReader;
 
 import java.util.function.BiFunction;
 
-public class FHBaseBlock extends Block implements IWaterLoggable {
+public class FHBaseBlock extends Block {
     public final String name;
     protected int lightOpacity;
 
@@ -40,7 +40,6 @@ public class FHBaseBlock extends Block implements IWaterLoggable {
         this.name = name;
         lightOpacity = 15;
 
-        this.setDefaultState(getInitDefaultState());
         ResourceLocation registryName = createRegistryName();
         setRegistryName(registryName);
 
@@ -54,13 +53,6 @@ public class FHBaseBlock extends Block implements IWaterLoggable {
 
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
-    }
-
-    protected BlockState getInitDefaultState() {
-        BlockState state = this.stateContainer.getBaseState();
-        if (state.hasProperty(BlockStateProperties.WATERLOGGED))
-            state = state.with(BlockStateProperties.WATERLOGGED, Boolean.FALSE);
-        return state;
     }
 
     public FHBaseBlock setLightOpacity(int opacity) {
