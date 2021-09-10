@@ -19,12 +19,11 @@
 package com.teammoeg.frostedheart.tileentity;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.FHMultiblocks;
 import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
@@ -50,40 +49,27 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Random;
 
-public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileEntity> implements IIEInventory,
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    public int temperatureLevel; //1: +10 , 2: +20 , 3: +30 , 4: +40
-    public int rangeLevel; //1: 8, 2: 12, 3: 16, 4: 20
     public boolean rfSupported = false; //todo: future impl
     public boolean euSupported = false;
     public int process = 0;
     public int processMax = 0;
-    private NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
+    NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
-    private boolean isWorking;
-    private boolean isOverdrive;
-    private boolean isOverdriveBefore;
-
     public GeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
         super(FHMultiblocks.GENERATOR, getSpecificGeneratorType(temperatureLevelIn, rangeLevelIn), false);
         temperatureLevel = temperatureLevelIn;
         rangeLevel = rangeLevelIn;
-    }
-
-    public int getActualRange() {
-        return 8 + (getRangeLevel() - 1) * 4;
-    }
-
-    public int getActualTemp() {
-        return getTemperatureLevel() * 10;
     }
 
     private static TileEntityType<GeneratorTileEntity> getSpecificGeneratorType(int tLevel, int rLevel) {
@@ -107,7 +93,24 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             return null;
         }
     }
-
+	@Override
+	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+	    super.readCustomNBT(nbt, descPacket);
+	    if (!descPacket) {
+	        ItemStackHelper.loadAllItems(nbt, inventory);
+	        process = nbt.getInt("process");
+	        processMax = nbt.getInt("processMax");
+	    }
+	}
+	@Override
+	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+	    super.writeCustomNBT(nbt, descPacket);
+	    if (!descPacket) {
+	        nbt.putInt("process", process);
+	        nbt.putInt("processMax", processMax);
+	        ItemStackHelper.saveAllItems(nbt, inventory);
+	    }
+	}
     @Nonnull
     @Override
     public VoxelShape getBlockBounds(@Nullable ISelectionContext ctx) {
@@ -134,35 +137,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
             setTemperatureLevel(message.getInt("temperatureLevel"));
         if (message.contains("rangeLevel", Constants.NBT.TAG_INT))
             setRangeLevel(message.getInt("rangeLevel"));
-    }
-
-    @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        super.readCustomNBT(nbt, descPacket);
-        setWorking(nbt.getBoolean("isWorking"));
-        setOverdrive(nbt.getBoolean("isOverdrive"));
-        isOverdriveBefore = isOverdrive;
-        setTemperatureLevel(nbt.getInt("temperatureLevel"));
-        setRangeLevel(nbt.getInt("rangeLevel"));
-        if (!descPacket) {
-            ItemStackHelper.loadAllItems(nbt, inventory);
-            process = nbt.getInt("process");
-            processMax = nbt.getInt("processMax");
-        }
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        nbt.putBoolean("isWorking", isWorking());
-        nbt.putBoolean("isOverdrive", isOverdrive());
-        nbt.putInt("temperatureLevel", getTemperatureLevel());
-        nbt.putInt("rangeLevel", getRangeLevel());
-        if (!descPacket) {
-            nbt.putInt("process", process);
-            nbt.putInt("processMax", processMax);
-            ItemStackHelper.saveAllItems(nbt, inventory);
-        }
     }
 
     @Nonnull
@@ -235,12 +209,6 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
 
     }
 
-    @Override
-    public void disassemble() {
-        super.disassemble();
-        ChunkData.removeTempAdjust(world, getPos(), getActualRange());
-    }
-
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
             new IEInventoryHandler(2, this, 0, new boolean[]{true, false},
                     new boolean[]{false, true})
@@ -307,149 +275,80 @@ public class GeneratorTileEntity extends MultiblockPartTileEntity<GeneratorTileE
         return null;
     }
 
-    @Override
-    public void tick() {
-        checkForNeedlessTicking();
-        int actualTemp = getActualTemp();
-        int actualRange = getActualRange();
-        // spawn smoke particle
-        if (world != null && world.isRemote && formed && !isDummy() && getIsActive()) {
-            BlockPos blockpos = this.getPos();
-            Random random = world.rand;
-            if (random.nextFloat() < 0.4F) {
-                for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                    FHClientUtils.spawnSmokeParticles(world, blockpos);
-                    FHClientUtils.spawnFireParticles(world, blockpos);
-                }
+	@Override
+	public void onShutDown() {
+        process = 0;
+        processMax = 0;
+	}
+	
+	@Override
+	protected void tickFuel() {
+		// just finished process or during process
+        if (process > 0) {
+            if (inventory.get(INPUT_SLOT).isEmpty()) {
+                process = 0;
+                processMax = 0;
             }
-        }
-
-        // logic
-        if (!world.isRemote && formed && !isDummy() && !isWorking()) {
-            setActive(false);
-            process = 0;
-            processMax = 0;
-            ChunkData.removeTempAdjust(world, getPos(), getActualRange());
-        }
-        if (!world.isRemote && formed && !isDummy() && isWorking()) {
-            final boolean activeBeforeTick = getIsActive();
-            // just finished process or during process
-            if (process > 0) {
-                if (inventory.get(INPUT_SLOT).isEmpty()) {
+            // during process
+            else {
+                GeneratorRecipe recipe = getRecipe();
+                if (recipe == null || recipe.time != processMax) {
                     process = 0;
                     processMax = 0;
-                }
-                // during process
-                else {
-                    GeneratorRecipe recipe = getRecipe();
-                    if (recipe == null || recipe.time != processMax) {
-                        process = 0;
-                        processMax = 0;
-                        setActive(false);
-                    } else
-                        process--;
-                }
-                this.markContainingBlockForUpdate(null);
-            }
-            // process not started yet
-            else {
-                if (activeBeforeTick) {
-                    GeneratorRecipe recipe = getRecipe();
-                    if (recipe != null) {
-                        int overdriveModifier = 1;
-                        if (isOverdrive()) overdriveModifier = 4;
-                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -recipe.input.getCount() * overdriveModifier);
-                        if (!inventory.get(OUTPUT_SLOT).isEmpty())
-                            inventory.get(OUTPUT_SLOT).grow(recipe.output.copy().getCount());
-                        else if (inventory.get(OUTPUT_SLOT).isEmpty())
-                            inventory.set(OUTPUT_SLOT, recipe.output.copy());
-                    }
-                    processMax = 0;
                     setActive(false);
-                }
+                } else
+                    process--;
+            }
+            this.markContainingBlockForUpdate(null);
+        }
+        // process not started yet
+        else {
+            if (getIsActive()) {
                 GeneratorRecipe recipe = getRecipe();
                 if (recipe != null) {
-                    this.process = recipe.time;
-                    this.processMax = process;
-                    setActive(true);
+                    int overdriveModifier = 1;
+                    if (isOverdrive()) overdriveModifier = 4;
+                    Utils.modifyInvStackSize(inventory, INPUT_SLOT, -recipe.input.getCount() * overdriveModifier);
+                    if (!inventory.get(OUTPUT_SLOT).isEmpty())
+                        inventory.get(OUTPUT_SLOT).grow(recipe.output.copy().getCount());
+                    else if (inventory.get(OUTPUT_SLOT).isEmpty())
+                        inventory.set(OUTPUT_SLOT, recipe.output.copy());
                 }
+                processMax = 0;
+                setActive(false);
             }
-
-            // set activity status
-            final boolean activeAfterTick = getIsActive();
-            if (activeBeforeTick != activeAfterTick) {
-                this.markDirty();
-                if (activeAfterTick) {
-                    ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
-                } else {
-                    ChunkData.removeTempAdjust(world, getPos(), getActualRange());
-                }
-                // scan 3x4x3
-                for (int x = 0; x < 3; ++x)
-                    for (int y = 0; y < 4; ++y)
-                        for (int z = 0; z < 3; ++z) {
-                            BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                            if (te instanceof GeneratorTileEntity)
-                                ((GeneratorTileEntity) te).setActive(activeAfterTick);
-                        }
-            } else if (activeAfterTick) {
-                if (isOverdriveBefore != isOverdrive) {
-                    isOverdriveBefore = isOverdrive;
-                    ChunkData.addCubicTempAdjust(world, getPos(), actualRange, (byte) actualTemp);
-                }
+            GeneratorRecipe recipe = getRecipe();
+            if (recipe != null) {
+                this.process = recipe.time;
+                this.processMax = process;
+                setActive(true);
             }
         }
+	}
 
-    }
+	@Override
+	protected void setAllActive(boolean state) {
+		for (int x = 0; x < 3; ++x)
+            for (int y = 0; y < 4; ++y)
+                for (int z = 0; z < 3; ++z) {
+                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                    if (te instanceof GeneratorTileEntity)
+                        ((GeneratorTileEntity) te).setActive(state);
+                }
+	}
 
-    public void setWorking(boolean working) {
-        if (master() != null)
-            master().isWorking = working;
-    }
-
-    public boolean isWorking() {
-        if (master() != null)
-            return master().isWorking;
-        else return false;
-    }
-
-    public boolean isOverdrive() {
-        if (master() != null)
-            return master().isOverdrive;
-        else return false;
-    }
-
-    public void setOverdrive(boolean overdrive) {
-        if (master() != null) {
-            master().isOverdrive = overdrive;
-            if (overdrive) {
-                setTemperatureLevel(getTemperatureLevel() * 2);
-            } else {
-                setTemperatureLevel(Math.max(1, getTemperatureLevel() / 2));
-            }
+	@Override
+	protected void tickEffects(boolean isActive) {
+		if(isActive) {
+			BlockPos blockpos = this.getPos();
+	        Random random = world.rand;
+	        if (random.nextFloat() < 0.4F) {
+	            for (int i = 0; i < random.nextInt(2) + 2; ++i) {
+	                FHClientUtils.spawnSmokeParticles(world, blockpos);
+	                FHClientUtils.spawnFireParticles(world, blockpos);
+	            }
+	        }
         }
-    }
-
-    public void setTemperatureLevel(int temperatureLevel) {
-        if (master() != null)
-            master().temperatureLevel = temperatureLevel;
-    }
-
-    public int getTemperatureLevel() {
-        if (master() != null)
-            return master().temperatureLevel;
-        else return 1;
-    }
-
-    public void setRangeLevel(int rangeLevel) {
-        if (master() != null)
-            master().rangeLevel = rangeLevel;
-    }
-
-    public int getRangeLevel() {
-        if (master() != null)
-            return master().rangeLevel;
-        else return 1;
-    }
+	}
 }
