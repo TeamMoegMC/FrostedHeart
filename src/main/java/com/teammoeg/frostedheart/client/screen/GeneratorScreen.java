@@ -26,7 +26,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
+import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
@@ -37,7 +37,7 @@ import java.util.List;
 
 public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generatornew");
-    private GeneratorTileEntity tile;
+    private BurnerGeneratorTileEntity tile;
 
     public GeneratorScreen(GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);

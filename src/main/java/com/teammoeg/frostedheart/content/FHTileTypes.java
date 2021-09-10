@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content;
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
-import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
+import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.tileentity.SteamTurbineTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
@@ -37,8 +37,8 @@ public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
 
-    public static final RegistryObject<TileEntityType<GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
-            "generator", makeType(() -> new GeneratorTileEntity(1, 1), () -> FHBlocks.Multi.generator)
+    public static final RegistryObject<TileEntityType<BurnerGeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
+            "generator", makeType(() -> new BurnerGeneratorTileEntity(1, 1), () -> FHBlocks.Multi.generator)
     );
     public static final RegistryObject<TileEntityType<CrucibleTileEntity>> CRUCIBLE = REGISTER.register(
             "crucible", makeType(() -> new CrucibleTileEntity(), () -> FHBlocks.Multi.crucible)

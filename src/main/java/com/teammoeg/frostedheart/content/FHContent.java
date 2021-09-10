@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
-import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
+import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -130,7 +130,7 @@ public class FHContent {
         MultiblockHandler.registerMultiblock(FHMultiblocks.CRUCIBLE);
         MultiblockHandler.registerMultiblock(FHMultiblocks.STEAMTURBINE);
         // Register IE containers
-        GuiHandler.register(GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
+        GuiHandler.register(BurnerGeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
     }
 

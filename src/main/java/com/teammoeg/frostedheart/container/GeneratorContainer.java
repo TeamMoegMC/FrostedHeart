@@ -21,15 +21,15 @@ package com.teammoeg.frostedheart.container;
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
-import com.teammoeg.frostedheart.tileentity.GeneratorTileEntity;
+import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 
-public class GeneratorContainer extends IEBaseContainer<GeneratorTileEntity> {
-    public GeneratorTileEntity.GeneratorData data;
+public class GeneratorContainer extends IEBaseContainer<BurnerGeneratorTileEntity> {
+    public BurnerGeneratorTileEntity.GeneratorData data;
 
-    public GeneratorContainer(int id, PlayerInventory inventoryPlayer, GeneratorTileEntity tile) {
+    public GeneratorContainer(int id, PlayerInventory inventoryPlayer, BurnerGeneratorTileEntity tile) {
         super(inventoryPlayer, tile, id);
 
         this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {

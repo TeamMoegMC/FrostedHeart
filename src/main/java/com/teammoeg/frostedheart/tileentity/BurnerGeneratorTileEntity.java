@@ -54,7 +54,7 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> implements IIEInventory,
+public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGeneratorTileEntity> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
     public static final int INPUT_SLOT = 0;
@@ -63,8 +63,8 @@ public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> 
     public int processMax = 0;
     NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     ItemStack currentItem;
-    public GeneratorTileEntity.GeneratorData guiData = new GeneratorTileEntity.GeneratorData();
-    public GeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
+    public BurnerGeneratorTileEntity.GeneratorData guiData = new BurnerGeneratorTileEntity.GeneratorData();
+    public BurnerGeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
         super(FHMultiblocks.GENERATOR,FHTileTypes.GENERATOR_T1.get(), false);
         temperatureLevel = temperatureLevelIn;
         rangeLevel = rangeLevelIn;
@@ -149,7 +149,7 @@ public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> 
 
     @Override
     public int[] getCurrentProcessesStep() {
-        GeneratorTileEntity master = master();
+        BurnerGeneratorTileEntity master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesStep();
         return new int[]{processMax - process};
@@ -157,7 +157,7 @@ public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> 
 
     @Override
     public int[] getCurrentProcessesMax() {
-        GeneratorTileEntity master = master();
+        BurnerGeneratorTileEntity master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesMax();
         return new int[]{processMax};
@@ -165,7 +165,7 @@ public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> 
 
     @Override
     public NonNullList<ItemStack> getInventory() {
-        GeneratorTileEntity master = master();
+        BurnerGeneratorTileEntity master = master();
         if (master != null && master.formed && formed)
             return master.inventory;
         return this.inventory;
@@ -199,7 +199,7 @@ public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> 
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            GeneratorTileEntity master = master();
+            BurnerGeneratorTileEntity master = master();
             if (master != null)
                 return master.invHandler.cast();
         }
@@ -311,8 +311,8 @@ public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> 
                 for (int z = 0; z < 3; ++z) {
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
                     TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                    if (te instanceof GeneratorTileEntity)
-                        ((GeneratorTileEntity) te).setActive(state);
+                    if (te instanceof BurnerGeneratorTileEntity)
+                        ((BurnerGeneratorTileEntity) te).setActive(state);
                 }
 	}
 
