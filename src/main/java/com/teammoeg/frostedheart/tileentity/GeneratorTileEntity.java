@@ -85,6 +85,8 @@ public class GeneratorTileEntity extends AbstractGenerator<GeneratorTileEntity> 
 	    if (!descPacket) {
 	    	if(currentItem!=null)
 	    		nbt.put("current",currentItem.serializeNBT());
+	    	else
+	    		nbt.remove("current");
 	        nbt.putInt("process", process);
 	        nbt.putInt("processMax", processMax);
 	        ItemStackHelper.saveAllItems(nbt, inventory);
