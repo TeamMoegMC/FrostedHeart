@@ -1,18 +1,14 @@
 package com.teammoeg.frostedheart.tileentity;
 
-import java.util.Random;
-
-import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.state.FHBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
+
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
 
-public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile {
+public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState{
 
 	public int temperatureLevel;
 	public int rangeLevel;
