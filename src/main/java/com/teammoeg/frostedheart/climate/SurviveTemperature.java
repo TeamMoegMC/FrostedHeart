@@ -50,8 +50,7 @@ public class SurviveTemperature {
 
             case BIOME:
                 // we use our own chunk temperature system here
-                ChunkData data = ChunkData.get(world, pos);
-                biomeTemp = data.getTemperatureAtBlock(pos) / 4f;
+                biomeTemp = ChunkData.getTemperature(world,pos) / 4f;
                 return biomeTemp;
 
             case BLOCK:

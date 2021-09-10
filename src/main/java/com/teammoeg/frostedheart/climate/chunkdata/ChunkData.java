@@ -18,10 +18,17 @@
 
 package com.teammoeg.frostedheart.climate.chunkdata;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.network.ChunkWatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.TemperatureChangePacket;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -36,18 +43,24 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
 public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public static final ChunkData EMPTY = new Immutable();
 
     public static ChunkData get(IWorld world, BlockPos pos) {
         return get(world, new ChunkPos(pos));
     }
-
+    /**
+     * Called to get temperature when a world context is available.
+     * If on client, will query capability, falling back to cache, and send request
+     * packets if necessary
+     * If on server, will either query capability falling back to cache, or query
+     * provider to generate the data.
+     * This method directly get temperature at any positions.
+     * @see ChunkDataCache#get(ChunkPos) to directly access the cache
+     */
+    public static float getTemperature(IWorld world, BlockPos pos) {
+        return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
+    }
     /**
      * Called to get chunk data when a world context is available.
      * If on client, will query capability, falling back to cache, and send request
@@ -309,7 +322,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     private final LazyOptional<ChunkData> capability;
     private final ChunkPos pos;
-    byte dTemperature;
 
     private List<ITemperatureAdjust> adjusters = new LinkedList<>();
 
@@ -331,7 +343,28 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public ChunkPos getPos() {
         return pos;
     }
-
+    /**
+     * Get Temperature in a world at a location
+     * @param world world in
+     * @param pos position 
+     * */
+    float getTemperatureAtBlock(IWorld world,BlockPos pos) {
+        float ret = 0, tmp;
+        for (ITemperatureAdjust adj : adjusters) {
+            if (adj.isEffective(pos)) {
+                tmp = adj.getValueAt(pos);
+                if (tmp > ret)
+                    ret = tmp;
+            }
+        }
+        return WorldClimate.getWorldTemperature(world) + ret;
+    }
+    /**
+     * 
+     * @deprecated This does not consider world specific temperature<br>use {@link #getTemperature(IWorld,BlockPos)}
+     * 
+     * */
+    @Deprecated
     public float getTemperatureAtBlock(BlockPos pos) {
         float ret = 0, tmp;
         for (ITemperatureAdjust adj : adjusters) {
@@ -341,13 +374,8 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                     ret = tmp;
             }
         }
-        return dTemperature + ret;
+        return WorldClimate.WORLD_TEMPERATURE + ret;
     }
-
-    public void initChunkMatrix(byte defaultValue) {
-        dTemperature = defaultValue;
-    }
-
     /**
      * Create an update packet to send to client with necessary information
      */
@@ -398,7 +426,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     private void reset() {
-        this.dTemperature = WorldClimate.WORLD_TEMPERATURE;
         adjusters.clear();
 
     }
@@ -414,10 +441,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             super(new ChunkPos(ChunkPos.SENTINEL));
         }
 
-        @Override
-        public void initChunkMatrix(byte defaultValue) {
-            throw new UnsupportedOperationException("Tried to modify immutable chunk data");
-        }
 
 
         @Override

@@ -71,8 +71,7 @@ public class HempBlockMixin {
         int light = world.getLight(pos);
         if (light >= 12) {
             // FH Starts
-            ChunkData data = ChunkData.get(world, pos);
-            float temp = data.getTemperatureAtBlock(pos);
+            float temp = ChunkData.getTemperature(world,pos);
             if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
                 return;
             }

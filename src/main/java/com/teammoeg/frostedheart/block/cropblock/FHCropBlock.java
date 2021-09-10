@@ -76,8 +76,7 @@ public class FHCropBlock extends CropsBlock {
             return; // Forge: prevent loading unloaded chunks when checking neighbor's light
         if (worldIn.getLightSubtracted(pos, 0) >= 9) {
             int i = this.getAge(state);
-            ChunkData data = ChunkData.get(worldIn, pos);
-            float temp = data.getTemperatureAtBlock(pos);
+            float temp = ChunkData.getTemperature(worldIn,pos);
             if (temp < growTemperature) {
                 if (worldIn.getRandom().nextInt(3) == 0) {
                     worldIn.setBlockState(pos, this.getDefaultState(), 2);
@@ -94,8 +93,7 @@ public class FHCropBlock extends CropsBlock {
 
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
-        ChunkData data = ChunkData.get(worldIn, pos);
-        float temp = data.getTemperatureAtBlock(pos);
+        float temp = ChunkData.getTemperature(worldIn,pos);
         return temp >= growTemperature;
     }
 }

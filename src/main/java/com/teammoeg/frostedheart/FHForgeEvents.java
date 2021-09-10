@@ -186,8 +186,7 @@ public class FHForgeEvents {
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock = event.getState().getBlock();
-        ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
-        float temp = data.getTemperatureAtBlock(event.getPos());
+        float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
         if (growBlock instanceof FHCropBlock) {
             event.setResult(Event.Result.DEFAULT);
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
@@ -213,8 +212,7 @@ public class FHForgeEvents {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             PlayerEntity player = event.getPlayer();
             Block growBlock = event.getBlock().getBlock();
-            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
-            float temp = data.getTemperatureAtBlock(event.getPos());
+            float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                 if (temp < growTemp) {
@@ -239,8 +237,7 @@ public class FHForgeEvents {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntity();
             Block growBlock = event.getPlacedBlock().getBlock();
-            ChunkData data = ChunkData.get(event.getWorld(), event.getPos());
-            float temp = data.getTemperatureAtBlock(event.getPos());
+            float temp = ChunkData.getTemperature(event.getWorld(),event.getPos());
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     //TODO: allow planting trees now, maybe i will add some restrictions in the future

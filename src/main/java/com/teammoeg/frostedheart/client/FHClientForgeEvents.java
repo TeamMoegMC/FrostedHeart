@@ -107,8 +107,7 @@ public class FHClientForgeEvents {
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
                 list.add("");
                 list.add(AQUA + FHMain.MODNAME);
-                ChunkData data = ChunkData.get(mc.world, pos);
-                list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", data.getTemperatureAtBlock(pos))));
+                list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", ChunkData.getTemperature(mc.world,pos))));
             } else {
                 list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
             }
@@ -122,9 +121,8 @@ public class FHClientForgeEvents {
         if (Minecraft.isGuiEnabled() && mc.playerController.gameIsSurvivalOrAdventure() && mc.world != null && event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
             BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
-                ChunkData data = ChunkData.get(mc.world, pos);
                 // FETCH TEMPERATURE
-                int temperature = (int) data.getTemperatureAtBlock(pos);
+                int temperature = (int) ChunkData.getTemperature(mc.world,pos);
 
                 // RENDER CONFIGURATION
                 int w = event.getWindow().getScaledWidth();

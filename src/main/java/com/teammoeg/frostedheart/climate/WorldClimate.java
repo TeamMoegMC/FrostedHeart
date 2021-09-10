@@ -18,8 +18,27 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import net.minecraft.world.IWorld;
+import net.minecraft.world.server.ServerWorld;
+
 public class WorldClimate {
+    
+    /** Constant WORLD_TEMPERATURE.<br> */
     public static final byte WORLD_TEMPERATURE = -20;
+    
+    /** Constant VANILLA_PLANT_GROW_TEMPERATURE.<br> */
     public static final int VANILLA_PLANT_GROW_TEMPERATURE = 20;
+    
+    /** Constant HEMP_GROW_TEMPERATURE.<br> */
     public static final int HEMP_GROW_TEMPERATURE = 0;
+    
+    /**
+     * Get World temperature for a specific world, effected by weather and so on
+     *
+     * @param w the world<br>
+     * @return world temperature<br>
+     */
+    public static byte getWorldTemperature(IWorld w) {
+    	return WORLD_TEMPERATURE;
+    }
 }

@@ -57,8 +57,7 @@ public final class Climate {
      * MUST NOT be used by world generation, it should use {@link Climate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
      */
     public static float getTemperature(IWorld world, BlockPos pos) {
-        ChunkData data = ChunkData.get(world, pos);
-        return calculateTemperature(pos.getZ(), pos.getY(), data.getTemperatureAtBlock(pos));
+        return calculateTemperature(pos.getZ(), pos.getY(), ChunkData.getTemperature(world,pos));
     }
 
     /**
