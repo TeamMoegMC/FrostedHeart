@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.steamenergy;
 
 import java.util.EnumMap;
+import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.state.FHBlockInterfaces;
@@ -22,15 +23,40 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 
 	@Override
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+		if(descPacket)return;
+		int[] dirs=nbt.getIntArray("nodes");
+		for(int i=0;i<6;i++)
+			if(dirs[i]!=-1)
+				dMaster.put(Direction.values()[i],dirs[i]);
+		length=nbt.getInt("length");
 	}
 
 	@Override
 	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+		if(descPacket)return;
+		int[] dirs=new int[6];
+		for(int i=0;i<6;i++)
+			dirs[i]=-1;
+		for(Entry<Direction, Integer> k:dMaster.entrySet()) {
+			dirs[k.getKey().ordinal()]=k.getValue();
+		}
+		nbt.putIntArray("nodes",dirs);
+		nbt.putInt("length",length);
 	}
 	public SteamEnergyNetwork getNetwork() {
+		if(network==null&&!dMaster.isEmpty()) {
+			for(Direction d:dMaster.keySet()) {
+				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
+				if (te instanceof HeatPipeTileEntity) {
+					network=((HeatPipeTileEntity) te).getNetwork();
+				}
+			}
+		}
 		return network;
 	}
 	protected void propagate(Direction from,SteamEnergyNetwork newNetwork,int lengthx) {
+		System.out.println("propagate "+this.getPos());
+		final SteamEnergyNetwork network=getNetwork();
 		if(network!=null&&newNetwork!=null&&network!=newNetwork) {//network conflict
 			return;//disconnect
 		}
@@ -39,19 +65,20 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 			return;
 		}
 		setActive(true);
+		
 		dMaster.put(from,lengthx);
 		length=Integer.MAX_VALUE;
 		for(int i:dMaster.values()) {
 			length=Math.min(length,i);
 		}
 		if(network!=newNetwork) {
-			network=newNetwork;
+			this.network=newNetwork;
 			for(Direction d:Direction.values()) {
 				if(d==from)continue;
 				BlockPos n=this.getPos().offset(d);
 				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
 				if (te instanceof HeatPipeTileEntity) {
-					((HeatPipeTileEntity) te).propagate(d.getOpposite(),network,length+1);
+					((HeatPipeTileEntity) te).propagate(d.getOpposite(),this.network,length+1);
 				}
 			}
 		}
@@ -140,6 +167,9 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 	}
 	public void connectAt(Direction to) {
 		TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
+		if(te!=null)
+		System.out.println(te.getClass());
+		final SteamEnergyNetwork network=getNetwork();
 		if(te instanceof HeatProvider){
 			SteamEnergyNetwork newNetwork=((HeatProvider) te).getNetwork();
 			if(network==null) {
