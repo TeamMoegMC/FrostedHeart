@@ -41,7 +41,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity{
 			BlockPos n=this.getPos().add(d.getDirectionVec());
 			TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
 			if (te instanceof HeatPipeTileEntity) {
-				int rs=((HeatPipeTileEntity) te).findPathToMaster(d)+1;
+				int rs=((HeatPipeTileEntity) te).findPathToMaster(d.getOpposite())+1;
 				if(rs>0){
 					if(result==-1)
 						result=rs;
