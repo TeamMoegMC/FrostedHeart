@@ -14,7 +14,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
@@ -34,28 +36,21 @@ public class HeatPipeBlock extends FHBaseBlock {
         return FHTileTypes.HEATPIPE.get().create();
     }
 
-    @Override
-	public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
-    	TileEntity te=Utils.getExistingTileEntity(worldIn,pos);
-    	if(te instanceof HeatPipeTileEntity)
-    		((HeatPipeTileEntity) te).findPathToMaster(null);
-	}
 
 
 	@Override
 	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
 			boolean isMoving) {
 		TileEntity te=Utils.getExistingTileEntity(worldIn,pos);
-		((HeatPipeTileEntity) te).findPathToMaster(null);
-		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
+		if(te instanceof HeatPipeTileEntity) {
+			Vector3i vec=fromPos.subtract(pos);
+			Direction dir=Direction.getFacingFromVector(vec.getX(),vec.getY(),vec.getZ());
+			((HeatPipeTileEntity) te).connectAt(dir);
+		}
 	}
 
 	@Override
     public boolean hasTileEntity(BlockState state) {
         return true;
     }
-
-
-
-
 }

@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.steamenergy;
 import java.util.EnumMap;
 
 import com.teammoeg.frostedheart.content.FHTileTypes;
+import com.teammoeg.frostedheart.state.FHBlockInterfaces;
+
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
@@ -10,10 +12,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
-public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider{
-	protected EnumMap<Direction,Integer> dMaster;
+public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider,FHBlockInterfaces.IActiveState{
+	protected EnumMap<Direction,Integer> dMaster=new EnumMap<>(Direction.class);
 	private SteamEnergyNetwork network;
-	boolean isVisiting=false;
+	int length;
 	public HeatPipeTileEntity() {
 		super(FHTileTypes.HEATPIPE.get());
 	}
@@ -28,6 +30,61 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 	public SteamEnergyNetwork getNetwork() {
 		return network;
 	}
+	protected void propagate(Direction from,SteamEnergyNetwork newNetwork,int lengthx) {
+		if(network!=null&&newNetwork!=null&&network!=newNetwork) {//network conflict
+			return;//disconnect
+		}
+		if(newNetwork==null) {
+			unpropagate(from);
+			return;
+		}
+		setActive(true);
+		dMaster.put(from,lengthx);
+		length=Integer.MAX_VALUE;
+		for(int i:dMaster.values()) {
+			length=Math.min(length,i);
+		}
+		if(network!=newNetwork) {
+			network=newNetwork;
+			for(Direction d:Direction.values()) {
+				if(d==from)continue;
+				BlockPos n=this.getPos().offset(d);
+				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
+				if (te instanceof HeatPipeTileEntity) {
+					((HeatPipeTileEntity) te).propagate(d.getOpposite(),network,length+1);
+				}
+			}
+		}
+	}
+	protected void unpropagate(Direction from) {
+		dMaster.remove(from);
+		if(dMaster.isEmpty()) {
+			network=null;
+			setActive(false);
+			for(Direction d:Direction.values()) {
+				if(d==from)continue;
+				BlockPos n=this.getPos().offset(d);
+				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
+				if (te instanceof HeatPipeTileEntity) {
+					((HeatPipeTileEntity) te).unpropagate(d.getOpposite());
+				}
+			}
+		}else {
+			length=Integer.MAX_VALUE;
+			for(int i:dMaster.values()) {
+				length=Math.min(length,i);
+			}
+			for(Direction d:Direction.values()) {
+				if(d==from)continue;
+				BlockPos n=this.getPos().offset(d);
+				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
+				if (te instanceof HeatPipeTileEntity) {
+					((HeatPipeTileEntity) te).propagate(d.getOpposite(),network,length+1);
+				}
+			}
+		}
+	}
+	/*
 	protected int findPathToMaster(Direction from) {
 		if(isVisiting)return -1;
 		try {
@@ -76,20 +133,25 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 			isVisiting=false;
 		}
 	}
-	@Override
-	public void remove() {
-		for(Direction d:Direction.values()) {
-			BlockPos n=this.getPos().add(d.getDirectionVec());
-			TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
-			if (te instanceof HeatPipeTileEntity) {
-				((HeatPipeTileEntity) te).disconnectAt(d.getOpposite());
+	*/
+	public void disconnectAt(Direction to) {
+		if(network==null)return;
+		unpropagate(to);//try find new path
+	}
+	public void connectAt(Direction to) {
+		TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
+		if(te instanceof HeatProvider){
+			SteamEnergyNetwork newNetwork=((HeatProvider) te).getNetwork();
+			if(network==null) {
+				this.propagate(to, newNetwork,1);
 			}
+			return;
 		}
-	}
-	public void disconnectAt(Direction from) {
-		findPathToMaster(from);//try find new path
-	}
-	public void connectAt(Direction from) {
-		findPathToMaster(from);
+		if(network==null)return;
+		if (te instanceof HeatPipeTileEntity) {
+			((HeatPipeTileEntity) te).propagate(to.getOpposite(),network, length);
+		}else {
+			disconnectAt(to);
+		}
 	}
 }

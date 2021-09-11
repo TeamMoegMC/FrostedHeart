@@ -39,7 +39,7 @@ public class FHTileTypes {
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
 
     public static final RegistryObject<TileEntityType<BurnerGeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
-            "generator", makeType(() -> new BurnerGeneratorTileEntity(1, 1), () -> FHBlocks.Multi.generator)
+            "generator", makeType(() -> new BurnerGeneratorTileEntity(1,2, 1), () -> FHBlocks.Multi.generator)
     );
     public static final RegistryObject<TileEntityType<CrucibleTileEntity>> CRUCIBLE = REGISTER.register(
             "crucible", makeType(() -> new CrucibleTileEntity(), () -> FHBlocks.Multi.crucible)
