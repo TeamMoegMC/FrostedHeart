@@ -134,8 +134,8 @@ dependencies {
     compile fg.deobf('com.cannolicatfish:Project-Rankine:1.16.5-1.3')
     implementation fg.deobf('com.cannolicatfish:Project-Rankine:1.16.5-1.3')
 
-    compile fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5')
-    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5')
+    compile fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
+    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
 
     compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 
