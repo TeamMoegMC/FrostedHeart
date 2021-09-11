@@ -12,6 +12,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 
 	public int temperatureLevel;
 	public int rangeLevel;
+	public int overdriveBoost;
 	boolean isWorking;
 	boolean isOverdrive;
 	boolean isDirty;//mark if user changes settings
@@ -32,8 +33,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	    super.readCustomNBT(nbt, descPacket);
 	    setWorking(nbt.getBoolean("isWorking"));
 	    setOverdrive(nbt.getBoolean("isOverdrive"));
-	    setTemperatureLevel(nbt.getInt("temperatureLevel"));
-	    setRangeLevel(nbt.getInt("rangeLevel"));
 	}
 
 	@Override
@@ -41,8 +40,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	    super.writeCustomNBT(nbt, descPacket);
 	    nbt.putBoolean("isWorking", isWorking());
 	    nbt.putBoolean("isOverdrive", isOverdrive());
-	    nbt.putInt("temperatureLevel", getTemperatureLevel());
-	    nbt.putInt("rangeLevel", getRangeLevel());
 
 	}
 
@@ -124,30 +121,13 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	    if (master() != null) {
 	    	markUserOperation(true);
 	        master().isOverdrive = overdrive;
-	        if (overdrive) {
-	            setTemperatureLevel(getTemperatureLevel() * 2);
-	        } else {
-	            setTemperatureLevel(Math.max(1, getTemperatureLevel() / 2));
-	        }
 	    }
 	}
-
-	public void setTemperatureLevel(int temperatureLevel) {
-	    if (master() != null)
-	        master().temperatureLevel = temperatureLevel;
-	}
-
 	public int getTemperatureLevel() {
 	    if (master() != null)
-	        return master().temperatureLevel;
-	    else return 1;
+	        return master().temperatureLevel*(isOverdrive()?master().overdriveBoost:1);
+	    return 1;
 	}
-
-	public void setRangeLevel(int rangeLevel) {
-	    if (master() != null)
-	        master().rangeLevel = rangeLevel;
-	}
-
 	public int getRangeLevel() {
 	    if (master() != null)
 	        return master().rangeLevel;

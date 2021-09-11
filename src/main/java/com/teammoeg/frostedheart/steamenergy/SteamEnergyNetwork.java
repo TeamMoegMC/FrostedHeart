@@ -5,4 +5,5 @@ public class SteamEnergyNetwork {
 	public boolean drainHeat(float val) {
 		return provider.drainHeat(val);
 	}
+	
 }
