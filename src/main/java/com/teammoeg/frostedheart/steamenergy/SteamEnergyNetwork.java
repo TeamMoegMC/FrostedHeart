@@ -1,5 +1,8 @@
 package com.teammoeg.frostedheart.steamenergy;
 
 public class SteamEnergyNetwork {
-	public static final SteamEnergyNetwork conflict=new SteamEnergyNetwork();
+	HeatProvider provider;
+	public boolean drainHeat(float val) {
+		return provider.drainHeat(val);
+	}
 }

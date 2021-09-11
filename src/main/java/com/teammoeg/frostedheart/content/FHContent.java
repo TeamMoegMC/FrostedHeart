@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.item.FHSoupItem;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
+import com.teammoeg.frostedheart.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import net.minecraft.block.AbstractBlock;
