@@ -16,7 +16,8 @@ import net.minecraft.util.math.BlockPos;
 public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider,FHBlockInterfaces.IActiveState{
 	protected EnumMap<Direction,Integer> dMaster=new EnumMap<>(Direction.class);
 	private SteamEnergyNetwork network;
-	int length;
+	private int length;
+	private boolean networkinit;
 	public HeatPipeTileEntity() {
 		super(FHTileTypes.HEATPIPE.get());
 	}
@@ -44,18 +45,25 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		nbt.putInt("length",length);
 	}
 	public SteamEnergyNetwork getNetwork() {
-		if(network==null&&!dMaster.isEmpty()) {
-			for(Direction d:dMaster.keySet()) {
-				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
-				if (te instanceof HeatPipeTileEntity) {
-					network=((HeatPipeTileEntity) te).getNetwork();
+		if(networkinit)return null;
+		networkinit=true;
+		try {
+			if(network==null&&!dMaster.isEmpty()) {
+				for(Direction d:dMaster.keySet()) {
+					TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
+					if (te instanceof EnergyNetworkProvider) {
+						SteamEnergyNetwork tnetwork=((EnergyNetworkProvider) te).getNetwork();
+						if(tnetwork!=null)
+							network=tnetwork;
+					}
 				}
 			}
+		}finally {
+			networkinit=false;
 		}
 		return network;
 	}
 	protected void propagate(Direction from,SteamEnergyNetwork newNetwork,int lengthx) {
-		System.out.println("propagate "+this.getPos());
 		final SteamEnergyNetwork network=getNetwork();
 		if(network!=null&&newNetwork!=null&&network!=newNetwork) {//network conflict
 			return;//disconnect
@@ -167,8 +175,6 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 	}
 	public void connectAt(Direction to) {
 		TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
-		if(te!=null)
-		System.out.println(te.getClass());
 		final SteamEnergyNetwork network=getNetwork();
 		if(te instanceof HeatProvider){
 			SteamEnergyNetwork newNetwork=((HeatProvider) te).getNetwork();
