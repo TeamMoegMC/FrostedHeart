@@ -78,7 +78,7 @@ public class FHContent {
         FHBlocks.burning_chamber = new FHBaseBlock("burning_chamber", stoneDecoProps, FHBlockItem::new);
         FHBlocks.rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
         FHBlocks.white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps);//white_turnip crop block.
-
+        FHBlocks.heat_pipe=new HeatPipeBlock("heat_pipe", stoneDecoProps, FHBlockItem::new);
         // Init Items
         Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
         FHItems.energy_core = new FHBaseItem("energy_core", itemProps);

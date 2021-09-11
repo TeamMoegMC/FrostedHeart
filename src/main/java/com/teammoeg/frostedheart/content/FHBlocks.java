@@ -28,7 +28,7 @@ public class FHBlocks {
     public static Block burning_chamber_core;
     public static Block burning_chamber;
     public static Block white_turnip_block;
-
+    public static Block heat_pipe;
     public static class Multi {
         public static Block generator;
         public static Block crucible;
