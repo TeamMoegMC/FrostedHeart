@@ -20,6 +20,8 @@ package com.teammoeg.frostedheart.content;
 
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.steamenergy.DebugHeaterTileEntity;
+import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.tileentity.SteamTurbineTileEntity;
@@ -38,7 +40,7 @@ public class FHTileTypes {
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
 
     public static final RegistryObject<TileEntityType<BurnerGeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
-            "generator", makeType(() -> new BurnerGeneratorTileEntity(1, 1), () -> FHBlocks.Multi.generator)
+            "generator", makeType(() -> new BurnerGeneratorTileEntity(1,2, 1), () -> FHBlocks.Multi.generator)
     );
     public static final RegistryObject<TileEntityType<CrucibleTileEntity>> CRUCIBLE = REGISTER.register(
             "crucible", makeType(() -> new CrucibleTileEntity(), () -> FHBlocks.Multi.crucible)
@@ -47,6 +49,12 @@ public class FHTileTypes {
             "steam_turbine", makeType(() -> new SteamTurbineTileEntity(), () -> FHBlocks.Multi.steam_turbine)
     );
 
+    public static final RegistryObject<TileEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
+            "heat_pipe", makeType(() -> new HeatPipeTileEntity(), () -> FHBlocks.heat_pipe)
+    );
+    public static final RegistryObject<TileEntityType<DebugHeaterTileEntity>> DEBUGHEATER = REGISTER.register(
+            "debug_heater", makeType(() -> new DebugHeaterTileEntity(), () -> FHBlocks.debug_heater)
+    );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

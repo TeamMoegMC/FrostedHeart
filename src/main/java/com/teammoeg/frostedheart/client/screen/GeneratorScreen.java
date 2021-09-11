@@ -122,8 +122,8 @@ public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
             this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
         }
 
-        int tempLevel = tile.temperatureLevel;
-        int rangeLevel = tile.rangeLevel;
+        int tempLevel = tile.getTemperatureLevel();
+        int rangeLevel = tile.getRangeLevel();
 
         // temperature bar (182, 30)
         if (tile.getIsActive()) {

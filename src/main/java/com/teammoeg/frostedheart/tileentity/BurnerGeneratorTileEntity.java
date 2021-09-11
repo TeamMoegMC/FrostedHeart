@@ -33,7 +33,6 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
@@ -64,10 +63,11 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
     NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     ItemStack currentItem;
     public BurnerGeneratorTileEntity.GeneratorData guiData = new BurnerGeneratorTileEntity.GeneratorData();
-    public BurnerGeneratorTileEntity(int temperatureLevelIn, int rangeLevelIn) {
+    public BurnerGeneratorTileEntity(int temperatureLevelIn,int overdriveBoostIn, int rangeLevelIn) {
         super(FHMultiblocks.GENERATOR,FHTileTypes.GENERATOR_T1.get(), false);
         temperatureLevel = temperatureLevelIn;
         rangeLevel = rangeLevelIn;
+        overdriveBoost=overdriveBoostIn;
     }
 	@Override
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -114,10 +114,10 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
             setWorking(message.getBoolean("isWorking"));
         if (message.contains("isOverdrive", Constants.NBT.TAG_BYTE))
             setOverdrive(message.getBoolean("isOverdrive"));
-        if (message.contains("temperatureLevel", Constants.NBT.TAG_INT))
+       /* if (message.contains("temperatureLevel", Constants.NBT.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));
         if (message.contains("rangeLevel", Constants.NBT.TAG_INT))
-            setRangeLevel(message.getInt("rangeLevel"));
+            setRangeLevel(message.getInt("rangeLevel"));*/
     }
 
     @Nonnull
