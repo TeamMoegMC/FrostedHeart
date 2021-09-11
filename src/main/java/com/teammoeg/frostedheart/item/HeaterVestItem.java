@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.item;
 
 import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.model.HeaterVestModel;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.util.ITooltipFlag;
@@ -59,7 +60,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 
     @Override
     public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlotType slot, String type) {
-        return "immersiveengineering:textures/models/powerpack.png";
+        return FHMain.rl("textures/models/heater_vest.png").toString();
     }
 
     @Override

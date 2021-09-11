@@ -19,7 +19,7 @@
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
-import com.teammoeg.frostedheart.compat.EleCompat;
+import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.*;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
@@ -84,11 +84,10 @@ public class FHMain {
     public void setup(final FMLCommonSetupEvent event) {
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapabilityProvider.setup();
-        EleCompat.setup();
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
-
+        CuriosCompat.sendIMCS();
     }
 
     private void processIMC(final InterModProcessEvent event) {

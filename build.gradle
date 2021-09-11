@@ -28,15 +28,34 @@ sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = co
 
 repositories {
 	mavenLocal()
-    maven {	name = "BlameJared";	url = "https://maven.blamejared.com/" }         // IE & CT Files
-    maven { name = "DVS1 Maven FS"; url = "https://dvs1.progwml6.com/files/maven" } // JEI & Tinkers Files
-    maven { url = 'https://maven.latmod.com/' }                                     // Needed for JEI
-    maven { url = "http://server.teammoeg.com:8888/releases"}
+    // IE & CT Files
     maven {
-        name "tterrag maven"
-        url "https://maven.tterrag.com/"
+        name = "BlameJared"
+        url = "https://maven.blamejared.com/"
     }
-    
+    // JEI and TC Files
+    maven {
+        name = "DVS1 Maven FS"
+        url = "https://dvs1.progwml6.com/files/maven"
+    }
+    // Needed for JEI
+    maven {
+        name = "latvian maven"
+        url = "https://maven.latmod.com/"
+    }
+    maven {
+        name = "teammoeg maven"
+        url = "http://server.teammoeg.com:8888/releases"
+    }
+    maven {
+        name = "tterrag maven"
+        url = "https://maven.tterrag.com/"
+    }
+    // Needed for Curios API
+    maven {
+        name = "theillusivec4 maven"
+        url = "https://maven.theillusivec4.top/"
+    }
 }
 
 sourceSets {
@@ -138,6 +157,9 @@ dependencies {
     implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
 
     compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
+
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
 
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
     testAnnotationProcessor "org.spongepowered:mixin:0.8.2:processor"

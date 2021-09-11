@@ -26,10 +26,7 @@ import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
-import com.teammoeg.frostedheart.item.FHArmorMaterial;
-import com.teammoeg.frostedheart.item.FHBaseArmorItem;
-import com.teammoeg.frostedheart.item.FHBaseItem;
-import com.teammoeg.frostedheart.item.FHSoupItem;
+import com.teammoeg.frostedheart.item.*;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
@@ -116,7 +113,7 @@ public class FHContent {
         FHItems.hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, itemProps);
         FHItems.hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, itemProps);
 
-//        FHItems.Misc.heater_vest = new HeaterVestItem("heater_vest", itemProps);
+        FHItems.Misc.heater_vest = new HeaterVestItem("heater_vest", itemProps);
 
         // Init Multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();

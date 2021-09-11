@@ -25,12 +25,16 @@ import com.stereowalker.survive.temperature.TemperatureChangeInstance;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
+import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.renderer.entity.ArmorStandRenderer;
+import net.minecraft.client.renderer.entity.BipedRenderer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -59,14 +63,14 @@ public class FHClientForgeEvents {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-//        if(!FHBipedLayerRenderer.rendersAssigned) {
-//            for(Object render : FHClientUtils.mc().getRenderManager().renderers.values())
-//                if(BipedRenderer.class.isAssignableFrom(render.getClass()))
-//                    ((BipedRenderer)render).addLayer(new FHBipedLayerRenderer<>((BipedRenderer)render));
-//                else if(ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
-//                    ((ArmorStandRenderer)render).addLayer(new FHBipedLayerRenderer<>((ArmorStandRenderer)render));
-//            FHBipedLayerRenderer.rendersAssigned = true;
-//        }
+        if(!FHBipedLayerRenderer.rendersAssigned) {
+            for(Object render : FHClientUtils.mc().getRenderManager().renderers.values())
+                if(BipedRenderer.class.isAssignableFrom(render.getClass()))
+                    ((BipedRenderer)render).addLayer(new FHBipedLayerRenderer<>((BipedRenderer)render));
+                else if(ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
+                    ((ArmorStandRenderer)render).addLayer(new FHBipedLayerRenderer<>((ArmorStandRenderer)render));
+            FHBipedLayerRenderer.rendersAssigned = true;
+        }
     }
 
     @SubscribeEvent
