@@ -53,8 +53,10 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 					TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
 					if (te instanceof EnergyNetworkProvider) {
 						SteamEnergyNetwork tnetwork=((EnergyNetworkProvider) te).getNetwork();
-						if(tnetwork!=null)
+						if(tnetwork!=null) {
 							network=tnetwork;
+							break;
+						}
 					}
 				}
 			}
