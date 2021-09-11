@@ -13,6 +13,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	public int temperatureLevel;
 	public int rangeLevel;
 	public int overdriveBoost;
+	private boolean initialized;
 	boolean isWorking;
 	boolean isOverdrive;
 	boolean isDirty;//mark if user changes settings
@@ -80,7 +81,8 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	            }
 	            setAllActive(activeAfterTick);        
 	        } else if (activeAfterTick) {
-	            if (isUserOperated()) {
+	            if (isUserOperated()||!initialized) {
+	            	initialized=true;
 	            	markUserOperation(false);
 	                ChunkData.addCubicTempAdjust(world, getPos(),getActualRange(), (byte) getActualTemp());
 	            }
