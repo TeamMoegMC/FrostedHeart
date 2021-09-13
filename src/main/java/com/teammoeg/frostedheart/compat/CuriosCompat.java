@@ -29,8 +29,11 @@ import top.theillusivec4.curios.api.SlotTypeMessage;
 import top.theillusivec4.curios.api.SlotTypePreset;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
+import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
 
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.Iterator;
 
 public class CuriosCompat {
     public static void sendIMCS() {
@@ -39,6 +42,7 @@ public class CuriosCompat {
     }
 
     public static ItemStack getHeaterVest(LivingEntity living) {
+    	Map map;
         return getCuriosIfVisible(living, SlotTypePreset.BACK, stack -> stack.getItem() instanceof HeaterVestItem);
     }
 
@@ -57,5 +61,59 @@ public class CuriosCompat {
                         }
                     return ItemStack.EMPTY;
                 }).orElse(ItemStack.EMPTY);
+    }
+    public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el){
+    	return new Iterable<ItemStack>() {
+			@Override
+			public Iterator<ItemStack> iterator() {
+				return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h->new CuriosIterator(h.getCurios().values().iterator())).orElse(null);
+			}
+    	};
+    }
+    static class CuriosIterator implements Iterator<ItemStack>{
+    	ItemIterator cur;
+    	Iterator<ICurioStacksHandler> it;
+		public CuriosIterator(Iterator<ICurioStacksHandler> it) {
+			this.it = it;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return (cur!=null&&cur.hasNext())||it.hasNext();
+		}
+
+		@Override
+		public ItemStack next() {
+			if(cur!=null&&cur.hasNext())return cur.next();
+			ICurioStacksHandler current;
+			do {
+			current=it.next();
+			}while(!current.isVisible()&&it.hasNext());
+			if(current.isVisible()) {
+				cur=new ItemIterator(current.getSlots(),current.getStacks());
+				return cur.next();
+			}
+			return null;
+		}
+    	static class ItemIterator implements Iterator<ItemStack>{
+    		int i=0;
+    		int max;
+    		IDynamicStackHandler handler;
+			@Override
+			public boolean hasNext() {
+				return i<max;
+			}
+
+			public ItemIterator(int max, IDynamicStackHandler handler) {
+				this.max = max;
+				this.handler = handler;
+			}
+
+			@Override
+			public ItemStack next() {
+				return handler.getStackInSlot(i++);
+			}
+    		
+    	}
     }
 }

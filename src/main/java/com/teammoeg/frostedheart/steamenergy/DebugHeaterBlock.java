@@ -31,8 +31,27 @@ public class DebugHeaterBlock extends FHBaseBlock{
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
         return FHTileTypes.DEBUGHEATER.get().create();
     }
+	/*@Override
+	public void onBlockAdded(BlockState state, World worldIn, BlockPos pos, BlockState oldState, boolean isMoving) {
+		super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
+		for(Direction d:Direction.values()) {
+			TileEntity te=Utils.getExistingTileEntity(worldIn,pos.offset(d));
+			if(te instanceof HeatPipeTileEntity)
+				((HeatPipeTileEntity) te).connectAt(d.getOpposite());
+		}
+	}
+
 
 	@Override
+	public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+		super.onReplaced(state, worldIn, pos, newState, isMoving);
+		for(Direction d:Direction.values()) {
+			TileEntity te=Utils.getExistingTileEntity(worldIn,pos.offset(d));
+			if(te instanceof HeatPipeTileEntity)
+				((HeatPipeTileEntity) te).disconnectAt(d.getOpposite());
+		}
+	}*/
+    @Override
 	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
 			boolean isMoving) {
 		TileEntity te=Utils.getExistingTileEntity(worldIn,fromPos);

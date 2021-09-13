@@ -20,6 +20,8 @@ package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
+import com.teammoeg.frostedheart.climate.IHotFood;
+import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
@@ -36,6 +38,7 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
@@ -324,6 +327,20 @@ public class FHForgeEvents {
                 player.getServer().getCommandManager().handleCommand(player.getCommandSource(), "/diet subtract @s proteins 0.01");
             }
             player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
+        }
+    }
+    @SubscribeEvent
+    public static void eatingFood(LivingEntityUseItemEvent.Finish event) {
+        if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity) {
+            Item it=event.getItem().getItem() ;
+        	if(it instanceof IHotFood) {
+            	float current=SurviveTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
+            	float max=((IHotFood) it).getMaxTemp(event.getItem());
+            	if(current>=max)return;
+            	current+=((IHotFood) it).getHeat(event.getItem());
+            	if(current>max)current=max;
+            	SurviveTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(),current);
+            }
         }
     }
 }

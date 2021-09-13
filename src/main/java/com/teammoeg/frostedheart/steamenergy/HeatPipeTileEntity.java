@@ -3,11 +3,14 @@ package com.teammoeg.frostedheart.steamenergy;
 import java.util.EnumMap;
 import java.util.Map.Entry;
 
+import org.apache.logging.log4j.util.Strings;
+
 import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.state.FHBlockInterfaces;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
+import it.unimi.dsi.fastutil.Arrays;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -26,12 +29,14 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
 		if(descPacket)return;
 		int[] dirs=nbt.getIntArray("nodes");
-		for(int i=0;i<6;i++)
+		for(int i=0;i<dirs.length;i++)
 			if(dirs[i]!=-1)
 				dMaster.put(Direction.values()[i],dirs[i]);
 		length=nbt.getInt("length");
 	}
-
+	public void debug(){
+		System.out.println(Strings.join(dMaster.entrySet(),','));
+	}
 	@Override
 	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
 		if(descPacket)return;
@@ -46,8 +51,8 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 	}
 	public SteamEnergyNetwork getNetwork() {
 		if(networkinit)return null;
-		networkinit=true;
 		try {
+			networkinit=true;//avoid recursive calling
 			if(network==null&&!dMaster.isEmpty()) {
 				for(Direction d:dMaster.keySet()) {
 					TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
@@ -66,6 +71,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		return network;
 	}
 	protected void propagate(Direction from,SteamEnergyNetwork newNetwork,int lengthx) {
+		System.out.println("p!"+this.getPos()+from.toString());
 		final SteamEnergyNetwork network=getNetwork();
 		if(network!=null&&newNetwork!=null&&network!=newNetwork) {//network conflict
 			return;//disconnect
@@ -74,8 +80,9 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 			unpropagate(from);
 			return;
 		}
-		setActive(true);
-		
+		//setActive(true);
+		Integer lx=dMaster.get(from);
+		if(lx!=null&&lx==lengthx)return;
 		dMaster.put(from,lengthx);
 		length=Integer.MAX_VALUE;
 		for(int i:dMaster.values()) {
@@ -84,7 +91,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		if(network!=newNetwork) {
 			this.network=newNetwork;
 			for(Direction d:Direction.values()) {
-				if(d==from)continue;
+				if(dMaster.containsKey(d))continue;
 				BlockPos n=this.getPos().offset(d);
 				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
 				if (te instanceof HeatPipeTileEntity) {
@@ -94,10 +101,13 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		}
 	}
 	protected void unpropagate(Direction from) {
+		if(!dMaster.containsKey(from))return;
+		System.out.println("unp!"+this.getPos()+from.toString());
 		dMaster.remove(from);
 		if(dMaster.isEmpty()) {
+			System.out.println("nm!");
 			network=null;
-			setActive(false);
+			
 			for(Direction d:Direction.values()) {
 				if(d==from)continue;
 				BlockPos n=this.getPos().offset(d);
@@ -106,13 +116,15 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 					((HeatPipeTileEntity) te).unpropagate(d.getOpposite());
 				}
 			}
+			//setActive(false);
 		}else {
+			System.out.println("m!");
 			length=Integer.MAX_VALUE;
 			for(int i:dMaster.values()) {
 				length=Math.min(length,i);
 			}
 			for(Direction d:Direction.values()) {
-				if(d==from)continue;
+				if(dMaster.containsKey(d))continue;
 				BlockPos n=this.getPos().offset(d);
 				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
 				if (te instanceof HeatPipeTileEntity) {
@@ -187,7 +199,8 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		}
 		if(network==null)return;
 		if (te instanceof HeatPipeTileEntity) {
-			((HeatPipeTileEntity) te).propagate(to.getOpposite(),network, length);
+			if(!dMaster.containsKey(to))
+				((HeatPipeTileEntity) te).propagate(to.getOpposite(),network, length);
 		}else {
 			disconnectAt(to);
 		}

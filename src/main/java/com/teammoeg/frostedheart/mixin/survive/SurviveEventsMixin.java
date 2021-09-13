@@ -21,8 +21,19 @@ package com.teammoeg.frostedheart.mixin.survive;
 import com.stereowalker.survive.config.Config;
 import com.stereowalker.survive.events.SurviveEvents;
 import com.stereowalker.survive.util.TemperatureStats;
+import com.teammoeg.frostedheart.climate.IHeatingEquipment;
+import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.compat.CuriosCompat;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.LightType;
+import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,22 +49,43 @@ public class SurviveEventsMixin {
     @SubscribeEvent
     public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity) {
+        	
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-            for (SurviveTemperature.TempType type : SurviveTemperature.TempType.values()) {
-                double temperature;
-                if (type.isUsingExact()) {
-                    temperature = SurviveTemperature.getExactTemperature(player.world, player.getPosition(), type);
-                } else {
-                    temperature = SurviveTemperature.getAverageTemperature(player.world, player.getPosition(), type, 5, Config.tempMode);
-                }
-                double modifier = (temperature) / type.getReductionAmount();
-                int modInt = (int) (modifier * 1000);
-                modifier = modInt / 1000.0D;
-                if (player.ticksExisted % type.getTickInterval() == type.getTickInterval() - 1) {
-                    TemperatureStats.setTemperatureModifier(player, "survive:" + type.getName(), modifier);
-                }
+            if (player.ticksExisted %10!=0)return;
+            float current=SurviveTemperature.getBodyTemperature(player);
+            if(current<0)
+            	current+=0.05;
+            World world=player.getEntityWorld();
+            BlockPos pos=player.getPosition();
+            float envtemp=ChunkData.getTemperature(world,pos);
+            float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
+            float gameTime = world.getDayTime() % 24000L;
+            gameTime = gameTime / (200 / 3);
+            gameTime = (float) Math.sin(Math.toRadians(gameTime));
+            envtemp+=SurviveTemperature.getBlockTemp(world,pos);
+            envtemp+=skyLight > 5.0F?(gameTime * 5.0F):(-1.0F * 5.0F);
+            envtemp-=37F;//normalize
+            float keepwarm=0;
+            for(ItemStack is:CuriosCompat.getAllCuriosIfVisible(player)) {
+            	if(is==null)continue;
+            	Item it=is.getItem();
+            	if(it instanceof IHeatingEquipment)
+            		current=((IHeatingEquipment) it).compute(is,current, envtemp);
+            	if(it instanceof IWarmKeepingEquipment)
+            		keepwarm+=((IWarmKeepingEquipment) it).getFactor(is);
             }
+            for(ItemStack is:player.getArmorInventoryList()) {
+            	if(is==null)continue;
+            	Item it=is.getItem();
+            	if(it instanceof IHeatingEquipment)
+            		current=((IHeatingEquipment) it).compute(is,current, envtemp);
+            	if(it instanceof IWarmKeepingEquipment)
+            		keepwarm+=((IWarmKeepingEquipment) it).getFactor(is);
+            }
+            if(keepwarm>1)keepwarm=1;
+            current+=0.1*(1-keepwarm)*(envtemp-current);
+            SurviveTemperature.setBodyTemperature(player,current);
+            TemperatureStats.setTemperatureModifier(player, "survive:all",current);
         }
     }
-
 }

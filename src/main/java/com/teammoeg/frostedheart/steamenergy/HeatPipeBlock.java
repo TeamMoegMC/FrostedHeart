@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.content.FHTileTypes;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -44,18 +45,51 @@ public class HeatPipeBlock extends FHBaseBlock {
     }
 
 
-	@Override
+	/*@Override
+	public void onBlockAdded(BlockState state, World worldIn, BlockPos pos, BlockState oldState, boolean isMoving) {
+		super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
+		TileEntity tec=Utils.getExistingTileEntity(worldIn,pos);
+		for(Direction d:Direction.values()) {
+			TileEntity te=Utils.getExistingTileEntity(worldIn,pos.offset(d));
+			if(te instanceof HeatPipeTileEntity)
+				((HeatPipeTileEntity) te).connectAt(d.getOpposite());
+			else
+				((HeatPipeTileEntity) tec).connectAt(d);
+		}
+	}*/
+
+
+	/*@Override
+	public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+		super.onReplaced(state, worldIn, pos, newState, isMoving);
+		for(Direction d:Direction.values()) {
+			TileEntity te=Utils.getExistingTileEntity(worldIn,pos.offset(d));
+			if(te instanceof HeatPipeTileEntity)
+				((HeatPipeTileEntity) te).disconnectAt(d.getOpposite());
+		}
+	}*/
+
+
+    @Override
 	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
 			boolean isMoving) {
 		//System.out.println(pos);
 		//System.out.println(fromPos);
-		TileEntity te=Utils.getExistingTileEntity(worldIn,pos);
+    	TileEntity te=Utils.getExistingTileEntity(worldIn,pos);
 		if(te instanceof HeatPipeTileEntity) {
 			Vector3i vec=fromPos.subtract(pos);
 			Direction dir=Direction.getFacingFromVector(vec.getX(),vec.getY(),vec.getZ());
 			((HeatPipeTileEntity) te).connectAt(dir);
 		}
 	}
+
+	@Override
+	public void onBlockClicked(BlockState state, World worldIn, BlockPos pos, PlayerEntity player) {
+		TileEntity te=Utils.getExistingTileEntity(worldIn,pos);
+		if(te instanceof HeatPipeTileEntity)
+			((HeatPipeTileEntity) te).debug();
+	}
+
 
 	@Override
     public boolean hasTileEntity(BlockState state) {
