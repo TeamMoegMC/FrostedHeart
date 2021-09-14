@@ -93,18 +93,20 @@ public class SurviveEventsMixin {
 				keepwarm = 1;
 			current += 0.0012 * (1 - keepwarm) * (envtemp - current);
 			SurviveTemperature.setBodyTemperature(player, current);
-			//TemperatureStats ts = SurviveEntityStats.getTemperatureStats(player);
-			//ts.setTemperatureLevel(50);
+			// TemperatureStats ts = SurviveEntityStats.getTemperatureStats(player);
+			// ts.setTemperatureLevel(50);
 			/*
 			 * SurviveTemperature.resetTState(ts);
 			 * TemperatureStats.setTemperatureModifier(player, "survive:all",current);
 			 * ts.setTemperatureLevel((int)(current+37F));
 			 */
-			
-			  /*if (player.ticksExisted %20==0) {
-			  System.out.println(current);
-			  }*/
-			 
+
+			/*
+			 * if (player.ticksExisted %20==0) {
+			 * System.out.println(current);
+			 * }
+			 */
+
 		}
 	}
 
@@ -128,30 +130,20 @@ public class SurviveEventsMixin {
 		if (event.getEntityLiving() != null && !(event.getEntityLiving()).world.isRemote
 				&& event.getEntityLiving() instanceof ServerPlayerEntity) {
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-			double calculatedTarget = SurviveTemperature.getBodyTemperature(player) + 37;
+			double calculatedTarget = SurviveTemperature.getBodyTemperature(player);
 			if (!(player.isCreative() || player.isSpectator())) {
-				if (calculatedTarget > 37.8 || calculatedTarget < 36) {
-					
-					if (!player.isPotionActive(SEffects.HYPERTHERMIA)
-							&& !player.isPotionActive(SEffects.HYPOTHERMIA)) {
-						
-						if (calculatedTarget > 37.8) {
-							if (calculatedTarget < 38.5) {
-								player.addPotionEffect(new EffectInstance(SEffects.HYPERTHERMIA, 100, 0));
-							} else if (calculatedTarget < 39.5) {
-								player.addPotionEffect(new EffectInstance(SEffects.HYPERTHERMIA, 100, 1));
-							} else {
-								player.addPotionEffect(new EffectInstance(SEffects.HYPERTHERMIA, 100, 2));
-							}
-						} else if (calculatedTarget >= 35) {
-							player.addPotionEffect(new EffectInstance(SEffects.HYPOTHERMIA, 100, 0));
-						} else if (calculatedTarget >= 34) {
-							player.addPotionEffect(new EffectInstance(SEffects.HYPOTHERMIA, 100, 1));
-						} else {
-							player.addPotionEffect(new EffectInstance(SEffects.HYPOTHERMIA, 100, 2));
-						}
+				if (calculatedTarget > 1 || calculatedTarget < -1) {
+
+					if (!player.isPotionActive(SEffects.HYPERTHERMIA) && !player.isPotionActive(SEffects.HYPOTHERMIA)) {
+
+						if (calculatedTarget > 1)
+							player.addPotionEffect(
+									new EffectInstance(SEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 1)));
+						else
+							player.addPotionEffect(
+									new EffectInstance(SEffects.HYPOTHERMIA, 100, (int) (1 + calculatedTarget)));
 					}
-					}
+				}
 			}
 		}
 	}
