@@ -83,12 +83,6 @@ public class HeatPipeBlock extends FHBaseBlock {
 		}
 	}
 
-	@Override
-	public void onBlockClicked(BlockState state, World worldIn, BlockPos pos, PlayerEntity player) {
-		TileEntity te=Utils.getExistingTileEntity(worldIn,pos);
-		if(te instanceof HeatPipeTileEntity)
-			((HeatPipeTileEntity) te).debug();
-	}
 
 
 	@Override

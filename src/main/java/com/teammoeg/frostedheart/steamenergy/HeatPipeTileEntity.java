@@ -12,15 +12,18 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import it.unimi.dsi.fastutil.Arrays;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
-public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider,FHBlockInterfaces.IActiveState{
-	protected EnumMap<Direction,Integer> dMaster=new EnumMap<>(Direction.class);
+public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider,ITickableTileEntity,FHBlockInterfaces.IActiveState{
+	protected Direction dMaster;
 	private SteamEnergyNetwork network;
-	private int length;
+	private int length=Integer.MAX_VALUE;
 	private boolean networkinit;
+	private boolean isPathFinding;
+	private boolean requireRP;
 	public HeatPipeTileEntity() {
 		super(FHTileTypes.HEATPIPE.get());
 	}
@@ -28,40 +31,29 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 	@Override
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
 		if(descPacket)return;
-		int[] dirs=nbt.getIntArray("nodes");
-		for(int i=0;i<dirs.length;i++)
-			if(dirs[i]!=-1)
-				dMaster.put(Direction.values()[i],dirs[i]);
+		if(nbt.contains("dm"))
+		dMaster=Direction.values()[nbt.getInt("dm")];
 		length=nbt.getInt("length");
-	}
-	public void debug(){
-		System.out.println(Strings.join(dMaster.entrySet(),','));
+		requireRP=nbt.getBoolean("rep");
 	}
 	@Override
 	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
 		if(descPacket)return;
-		int[] dirs=new int[6];
-		for(int i=0;i<6;i++)
-			dirs[i]=-1;
-		for(Entry<Direction, Integer> k:dMaster.entrySet()) {
-			dirs[k.getKey().ordinal()]=k.getValue();
-		}
-		nbt.putIntArray("nodes",dirs);
+		if(dMaster!=null)
+			nbt.putInt("dm",dMaster.ordinal());
 		nbt.putInt("length",length);
+		nbt.putBoolean("rep",requireRP);
 	}
 	public SteamEnergyNetwork getNetwork() {
 		if(networkinit)return null;
 		try {
 			networkinit=true;//avoid recursive calling
-			if(network==null&&!dMaster.isEmpty()) {
-				for(Direction d:dMaster.keySet()) {
-					TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
-					if (te instanceof EnergyNetworkProvider) {
-						SteamEnergyNetwork tnetwork=((EnergyNetworkProvider) te).getNetwork();
-						if(tnetwork!=null) {
-							network=tnetwork;
-							break;
-						}
+			if(network==null&&dMaster!=null) {
+				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(dMaster));
+				if (te instanceof EnergyNetworkProvider) {
+					SteamEnergyNetwork tnetwork=((EnergyNetworkProvider) te).getNetwork();
+					if(tnetwork!=null) {
+						network=tnetwork;
 					}
 				}
 			}
@@ -70,44 +62,51 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		}
 		return network;
 	}
+	
 	protected void propagate(Direction from,SteamEnergyNetwork newNetwork,int lengthx) {
-		System.out.println("p!"+this.getPos()+from.toString());
-		final SteamEnergyNetwork network=getNetwork();
-		if(network!=null&&newNetwork!=null&&network!=newNetwork) {//network conflict
-			return;//disconnect
-		}
-		if(newNetwork==null) {
-			unpropagate(from);
-			return;
-		}
-		//setActive(true);
-		Integer lx=dMaster.get(from);
-		if(lx!=null&&lx==lengthx)return;
-		dMaster.put(from,lengthx);
-		length=Integer.MAX_VALUE;
-		for(int i:dMaster.values()) {
-			length=Math.min(length,i);
-		}
-		if(network!=newNetwork) {
-			this.network=newNetwork;
-			for(Direction d:Direction.values()) {
-				if(dMaster.containsKey(d))continue;
-				BlockPos n=this.getPos().offset(d);
-				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
-				if (te instanceof HeatPipeTileEntity) {
-					((HeatPipeTileEntity) te).propagate(d.getOpposite(),this.network,length+1);
+		if(isPathFinding)return;
+		try {
+			isPathFinding=true;
+			System.out.println("p!"+this.getPos()+from.toString());
+			final SteamEnergyNetwork network=getNetwork();
+			if(network!=null&&newNetwork!=null&&network!=newNetwork) {//network conflict
+				return;//disconnect
+			}
+			if(newNetwork==null) {
+				unpropagate(from);
+				return;
+			}
+			//setActive(true);
+			if(length<=lengthx)return;
+			length=lengthx;
+			dMaster=from;
+			if(network!=newNetwork) {
+				this.network=newNetwork;
+				for(Direction d:Direction.values()) {
+					if(dMaster==d)continue;
+					BlockPos n=this.getPos().offset(d);
+					TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
+					if (te instanceof HeatPipeTileEntity) {
+						((HeatPipeTileEntity) te).propagate(d.getOpposite(),this.network,length+1);
+					}
 				}
 			}
+			return;
+		}finally {
+			isPathFinding=false;
 		}
 	}
 	protected void unpropagate(Direction from) {
-		if(!dMaster.containsKey(from))return;
 		System.out.println("unp!"+this.getPos()+from.toString());
-		dMaster.remove(from);
-		if(dMaster.isEmpty()) {
+		doUnpropagate(from);
+	}
+	protected void doUnpropagate(Direction from) {
+		if(dMaster==null)return;
+		if(dMaster==from) {
 			System.out.println("nm!");
 			network=null;
-			
+			dMaster=null;
+			length=Integer.MAX_VALUE;
 			for(Direction d:Direction.values()) {
 				if(d==from)continue;
 				BlockPos n=this.getPos().offset(d);
@@ -119,18 +118,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 			//setActive(false);
 		}else {
 			System.out.println("m!");
-			length=Integer.MAX_VALUE;
-			for(int i:dMaster.values()) {
-				length=Math.min(length,i);
-			}
-			for(Direction d:Direction.values()) {
-				if(dMaster.containsKey(d))continue;
-				BlockPos n=this.getPos().offset(d);
-				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
-				if (te instanceof HeatPipeTileEntity) {
-					((HeatPipeTileEntity) te).propagate(d.getOpposite(),network,length+1);
-				}
-			}
+			requireRP=true;
 		}
 	}
 	/*
@@ -199,10 +187,27 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		}
 		if(network==null)return;
 		if (te instanceof HeatPipeTileEntity) {
-			if(!dMaster.containsKey(to))
+			if(dMaster!=to)
 				((HeatPipeTileEntity) te).propagate(to.getOpposite(),network, length);
 		}else {
 			disconnectAt(to);
+		}
+	}
+
+	@Override
+	public void tick() {
+		if(requireRP) {
+			requireRP=false;
+			if(dMaster!=null) {
+				for(Direction d:Direction.values()) {
+					if(d==dMaster)continue;
+					BlockPos n=this.getPos().offset(d);
+					TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
+					if (te instanceof HeatPipeTileEntity) {
+						((HeatPipeTileEntity) te).propagate(d.getOpposite(),network,length+1);
+					}
+				}
+			}
 		}
 	}
 }
