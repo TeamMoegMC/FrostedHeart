@@ -92,6 +92,11 @@ public class SurviveEventsMixin {
 			if (keepwarm > 1)
 				keepwarm = 1;
 			current += 0.0012 * (1 - keepwarm) * (envtemp - current);
+			if(current<-10)
+				current=-10;
+			else if(current>10)
+				current=10;
+				
 			SurviveTemperature.setBodyTemperature(player, current);
 			// TemperatureStats ts = SurviveEntityStats.getTemperatureStats(player);
 			// ts.setTemperatureLevel(50);
