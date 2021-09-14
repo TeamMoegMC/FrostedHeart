@@ -3,11 +3,14 @@ package com.teammoeg.frostedheart.steamenergy;
 import com.teammoeg.frostedheart.content.FHTileTypes;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.vector.Vector3i;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider {
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider,IConnectable {
 	public DebugHeaterTileEntity() {
 		super(FHTileTypes.DEBUGHEATER.get());
 	}
@@ -24,8 +27,8 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 	}
 
 	@Override
-	public boolean drainHeat(float value) {
-		return true;
+	public float drainHeat(float value) {
+		return value;
 	}
 
 	@Override
@@ -34,6 +37,22 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 
 	@Override
 	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+	}
+
+	@Override
+	public void disconnectAt(Direction to) {
+		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
+		if(te instanceof IConnectable&&!(te instanceof DebugHeaterTileEntity)) {
+			((IConnectable) te).disconnectAt(to.getOpposite());
+		}
+	}
+
+	@Override
+	public void connectAt(Direction to) {
+		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
+		if(te instanceof IConnectable&&!(te instanceof DebugHeaterTileEntity)) {
+			((IConnectable) te).connectAt(to.getOpposite());
+		}
 	}
 
 }

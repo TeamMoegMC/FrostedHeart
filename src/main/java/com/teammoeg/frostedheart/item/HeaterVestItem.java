@@ -23,6 +23,7 @@ import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.model.HeaterVestModel;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
+import com.teammoeg.frostedheart.steamenergy.IChargable;
 
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.util.ITooltipFlag;
@@ -43,7 +44,7 @@ import java.util.List;
  * Heater Vest: wear it to warm yourself from the coldness.
  * 加温背心：穿戴抵御寒冷
  */
-public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergyItem,IHeatingEquipment {
+public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergyItem,IHeatingEquipment,IChargable {
 
     public HeaterVestItem(String name, Properties properties) {
         super(name, properties);
@@ -88,6 +89,11 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 			bodyTemp+=rex/10F;
 		}
 		return bodyTemp;
+	}
+
+	@Override
+	public float charge(ItemStack stack,float value) {
+		return this.receiveEnergy(stack,(int)value,false);
 	}
 
 

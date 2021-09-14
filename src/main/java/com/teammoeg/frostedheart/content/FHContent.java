@@ -24,12 +24,15 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.block.*;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
+import com.teammoeg.frostedheart.container.ChargerContainer;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
 import com.teammoeg.frostedheart.item.*;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
+import com.teammoeg.frostedheart.steamenergy.ChargerBlock;
+import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
@@ -81,6 +84,7 @@ public class FHContent {
         FHBlocks.white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps);//white_turnip crop block.
         FHBlocks.heat_pipe=new HeatPipeBlock("heat_pipe",Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)), FHBlockItem::new);
         FHBlocks.debug_heater=new DebugHeaterBlock("debug_heater", stoneDecoProps, FHBlockItem::new);
+        FHBlocks.charger=new ChargerBlock("charger",stoneDecoProps,FHBlockItem::new);
         // Init Items
         Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
         FHItems.energy_core = new FHBaseItem("energy_core", itemProps);
@@ -134,6 +138,7 @@ public class FHContent {
         // Register IE containers
         GuiHandler.register(BurnerGeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
+        GuiHandler.register(ChargerTileEntity.class, new ResourceLocation(FHMain.MODID, "charger"), ChargerContainer::new);
     }
 
 }

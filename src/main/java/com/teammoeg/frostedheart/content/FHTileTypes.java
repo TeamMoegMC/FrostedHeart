@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.content;
 
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
@@ -54,6 +55,9 @@ public class FHTileTypes {
     );
     public static final RegistryObject<TileEntityType<DebugHeaterTileEntity>> DEBUGHEATER = REGISTER.register(
             "debug_heater", makeType(() -> new DebugHeaterTileEntity(), () -> FHBlocks.debug_heater)
+    );
+    public static final RegistryObject<TileEntityType<ChargerTileEntity>> CHARGER = REGISTER.register(
+            "charger", makeType(() -> new ChargerTileEntity(), () -> FHBlocks.charger)
     );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));

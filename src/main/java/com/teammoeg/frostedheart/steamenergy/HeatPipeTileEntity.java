@@ -17,7 +17,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
-public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider,ITickableTileEntity,FHBlockInterfaces.IActiveState{
+public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider,ITickableTileEntity,FHBlockInterfaces.IActiveState,IConnectable{
 	protected Direction dMaster;
 	private SteamEnergyNetwork network;
 	private int length=Integer.MAX_VALUE;
@@ -44,6 +44,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		nbt.putInt("length",length);
 		nbt.putBoolean("rep",requireRP);
 	}
+	@Override
 	public SteamEnergyNetwork getNetwork() {
 		if(networkinit)return null;
 		try {
@@ -87,6 +88,8 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 					TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
 					if (te instanceof HeatPipeTileEntity) {
 						((HeatPipeTileEntity) te).propagate(d.getOpposite(),this.network,length+1);
+					}else if(te instanceof IConnectable) {
+						((IConnectable) te).connectAt(d.getOpposite());
 					}
 				}
 			}
@@ -110,6 +113,8 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 				TileEntity te = Utils.getExistingTileEntity(this.getWorld(),n);
 				if (te instanceof HeatPipeTileEntity) {
 					((HeatPipeTileEntity) te).unpropagate(d.getOpposite());
+				}else if(te instanceof IConnectable) {
+					((IConnectable) te).disconnectAt(d.getOpposite());
 				}
 			}
 			//setActive(false);
@@ -185,6 +190,8 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		if (te instanceof HeatPipeTileEntity) {
 			if(dMaster!=to)
 				((HeatPipeTileEntity) te).propagate(to.getOpposite(),network, length);
+		}else if(te instanceof IConnectable){
+			((IConnectable) te).connectAt(to.getOpposite());
 		}else {
 			disconnectAt(to);
 		}

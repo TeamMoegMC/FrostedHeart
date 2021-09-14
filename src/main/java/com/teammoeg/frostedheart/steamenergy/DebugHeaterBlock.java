@@ -55,10 +55,10 @@ public class DebugHeaterBlock extends FHBaseBlock{
 	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
 			boolean isMoving) {
 		TileEntity te=Utils.getExistingTileEntity(worldIn,fromPos);
-		if(te instanceof HeatPipeTileEntity) {
+		if(te instanceof IConnectable) {
 			Vector3i vec=pos.subtract(fromPos);
 			Direction dir=Direction.getFacingFromVector(vec.getX(),vec.getY(),vec.getZ());
-			((HeatPipeTileEntity) te).connectAt(dir);
+			((IConnectable) te).connectAt(dir);
 		}
 	}
 	@Override

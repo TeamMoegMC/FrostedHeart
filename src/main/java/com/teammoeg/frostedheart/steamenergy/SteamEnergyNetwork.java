@@ -5,7 +5,7 @@ public class SteamEnergyNetwork {
 	public SteamEnergyNetwork(HeatProvider provider) {
 		this.provider = provider;
 	}
-	public boolean drainHeat(float val) {
+	public float drainHeat(float val) {
 		return provider.drainHeat(val);
 	}
 	
