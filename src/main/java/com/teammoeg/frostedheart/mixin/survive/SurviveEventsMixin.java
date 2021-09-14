@@ -101,9 +101,9 @@ public class SurviveEventsMixin {
 			 * ts.setTemperatureLevel((int)(current+37F));
 			 */
 			
-			  if (player.ticksExisted %20==0) {
+			  /*if (player.ticksExisted %20==0) {
 			  System.out.println(current);
-			  }
+			  }*/
 			 
 		}
 	}
