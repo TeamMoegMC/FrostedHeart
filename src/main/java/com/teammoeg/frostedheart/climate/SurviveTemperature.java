@@ -18,14 +18,19 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.lang.reflect.Field;
+import java.util.Map;
+
 import com.stereowalker.survive.Survive;
 import com.stereowalker.survive.events.SurviveEvents;
+import com.stereowalker.survive.util.TemperatureStats;
 import com.stereowalker.survive.util.TemperatureUtil;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.stereowalker.unionlib.state.properties.UBlockStateProperties;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -38,6 +43,28 @@ import net.minecraft.world.World;
  * Original Author: Stereowalker
  */
 public class SurviveTemperature {
+	static Field tmf;
+	public static void resetTState(TemperatureStats ts) {
+		if(tmf==null) {
+			try {
+				tmf=TemperatureStats.class.getDeclaredField("temperatureModifiers");
+				tmf.setAccessible(true);
+			} catch (NoSuchFieldException | SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(tmf!=null) {
+			try {
+				Map m=(Map) tmf.get(ts);
+				if(!m.isEmpty())
+					m.clear();
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			};
+		}
+	}
 	public static float getBlockTemp(World world,BlockPos pos) {
 	    float blockTemp = 0;
 	    int rangeInBlocks = 2;
@@ -80,24 +107,20 @@ public class SurviveTemperature {
 	    return blockTemp;
 	}
 
-	public static final String DATA_ID=FHMain.MODID+"_pd";
+	public static final String DATA_ID=FHMain.MODID+":data";
 
-	public static float getBodyTemperature(ServerPlayerEntity spe) {
+	public static float getBodyTemperature(PlayerEntity spe) {
 		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
-		if(nc==null) {
-			nc=new CompoundNBT();
-			spe.getPersistentData().put(DATA_ID,nc);
-			nc.putFloat("bodytemperature",0);
-		}
+		if(nc==null)
+			return 0;
 		return nc.getFloat("bodytemperature");
 	}
 
-	public static void setBodyTemperature(ServerPlayerEntity spe,float val) {
+	public static void setBodyTemperature(PlayerEntity spe,float val) {
 		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
-		if(nc==null) {
+		if(nc==null)
 			nc=new CompoundNBT();
-			spe.getPersistentData().put(DATA_ID,nc);
-		}
 		nc.putFloat("bodytemperature",val);
+		spe.getPersistentData().put(DATA_ID,nc);
 	}
 }

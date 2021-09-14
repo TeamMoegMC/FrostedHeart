@@ -67,7 +67,6 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		if(isPathFinding)return;
 		try {
 			isPathFinding=true;
-			System.out.println("p!"+this.getPos()+from.toString());
 			final SteamEnergyNetwork network=getNetwork();
 			if(network!=null&&newNetwork!=null&&network!=newNetwork) {//network conflict
 				return;//disconnect
@@ -97,13 +96,11 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		}
 	}
 	protected void unpropagate(Direction from) {
-		System.out.println("unp!"+this.getPos()+from.toString());
 		doUnpropagate(from);
 	}
 	protected void doUnpropagate(Direction from) {
 		if(dMaster==null)return;
 		if(dMaster==from) {
-			System.out.println("nm!");
 			network=null;
 			dMaster=null;
 			length=Integer.MAX_VALUE;
@@ -117,7 +114,6 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 			}
 			//setActive(false);
 		}else {
-			System.out.println("m!");
 			requireRP=true;
 		}
 	}

@@ -80,8 +80,8 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 	@Override
 	public float compute(ItemStack stack,float bodyTemp, float environmentTemp) {
 		int energycost=20;
-		if(bodyTemp<2) {
-			float delta=2-bodyTemp;
+		if(bodyTemp<0.2) {
+			float delta=0.2F-bodyTemp;
 			if(delta>2)
 				delta=2;
 			int rex=this.extractEnergy(stack,energycost+(int)(delta*10),false)-20;

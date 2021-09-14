@@ -12,7 +12,8 @@
     "rankine.AlloyTemplateItemMixin",
     "survive.SEffectMixin",
     "survive.SurviveEventsMixin",
-    "survive.SurviveRegistryEventsMixin"
+    "survive.SurviveRegistryEventsMixin",
+    "survive.SurviveTemperatureStatMixin"
   ],
   "client": [
   ],
