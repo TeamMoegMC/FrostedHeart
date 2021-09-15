@@ -4,4 +4,5 @@ public interface HeatProvider extends EnergyNetworkProvider{
 	
 	float getMaxHeat();
 	float drainHeat(float value);
+	boolean isOverdrive();
 }

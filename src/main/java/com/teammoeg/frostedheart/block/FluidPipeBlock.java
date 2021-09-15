@@ -202,7 +202,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		}else {
 			state=state.with(CASING,false);
 		}
-		System.out.println(shouldDrawCasing(world, pos, state));
 		return state;
 		/*BracketedTileEntityBehaviour bracket = TileEntityBehaviour.get(world, pos, BracketedTileEntityBehaviour.TYPE);
 		if (bracket != null && bracket.isBracketPresent())

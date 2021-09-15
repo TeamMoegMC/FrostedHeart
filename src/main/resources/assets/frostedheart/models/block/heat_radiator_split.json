@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
+  },
+  "loader": "immersiveengineering:basic_split",
+  "dynamic": false,
+  "base_model": "frostedheart:block/heat_radiator",
+  "split_parts": [
+  [0,-1,0],
+  [0,0,0],
+  [0,1,0]
+  ]
+}

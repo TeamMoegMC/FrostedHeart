@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
+import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
 import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.SteamTurbineTileEntity;
@@ -60,6 +61,9 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<ChargerTileEntity>> CHARGER = REGISTER.register(
             "charger", makeType(() -> new ChargerTileEntity(), () -> FHBlocks.charger)
     );
+
+	public static final RegistryObject<TileEntityType<RadiatorTileEntity>> RADIATOR = REGISTER.register(
+            "heat_radiator", makeType(() -> new RadiatorTileEntity(), () -> FHBlocks.radiator));
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

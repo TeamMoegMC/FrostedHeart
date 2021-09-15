@@ -32,6 +32,7 @@ public class FHBlocks {
     public static Block debug_heater;
     public static Block heat_lamp;
 	public static Block charger;
+	public static Block radiator;
     public static class Multi {
         public static Block generator;
         public static Block crucible;

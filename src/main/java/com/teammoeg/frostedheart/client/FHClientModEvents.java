@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
 import com.teammoeg.frostedheart.client.screen.ChargerScreen;
 import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
+import com.teammoeg.frostedheart.client.screen.RadiatorScreen;
 import com.teammoeg.frostedheart.content.FHBlocks;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
@@ -51,6 +52,7 @@ public class FHClientModEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "charger"), ChargerScreen::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "radiator"), RadiatorScreen::new);
         // Register translucent render type
         RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
