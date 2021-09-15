@@ -2,8 +2,8 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"1": "frostedheart:block/fluid_pipe",
-		"particle": "frostedheart:block/fluid_pipe"
+		"1": "frostedheart:block/heat_pipe",
+		"particle": "frostedheart:block/heat_pipe"
 	},
 	"elements": [
 		{
