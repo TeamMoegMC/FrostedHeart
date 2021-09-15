@@ -1,0 +1,425 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/block_end",
+        "x": 180,
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "up": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/block_end",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/block_end",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/block_end",
+        "x": 90,
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/block_end",
+        "x": 90,
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/block_end",
+        "x": 90,
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "north": "true",
+        "south": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lu_x"
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "north": "false",
+        "south": "true",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ru_x"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "north": "true",
+        "south": "false",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ld_x"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "north": "false",
+        "south": "true",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/rd_x"
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "north": "false",
+        "south": "false",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_x"
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "north": "false",
+        "south": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_x"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "north": "false",
+        "south": "false",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_x"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "north": "true",
+        "south": "true",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_x"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "north": "true",
+        "south": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_x"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "north": "false",
+        "south": "true",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_x"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "north": "false",
+        "south": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/none_x"
+      }
+    },
+    {
+      "when": {
+        "south": "true",
+        "west": "true",
+        "east": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lu_y"
+      }
+    },
+    {
+      "when": {
+        "south": "true",
+        "west": "false",
+        "east": "true",
+        "north": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ru_y"
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "west": "true",
+        "east": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ld_y"
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "west": "false",
+        "east": "true",
+        "north": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/rd_y"
+      }
+    },
+    {
+      "when": {
+        "south": "true",
+        "west": "false",
+        "east": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_y"
+      }
+    },
+    {
+      "when": {
+        "south": "true",
+        "west": "false",
+        "east": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_y"
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "west": "false",
+        "east": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_y"
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "west": "true",
+        "east": "true",
+        "north": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_y"
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "west": "true",
+        "east": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_y"
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "west": "false",
+        "east": "true",
+        "north": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_y"
+      }
+    },
+    {
+      "when": {
+        "south": "false",
+        "west": "false",
+        "east": "false",
+        "north": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/none_y"
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "east": "true",
+        "west": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lu_z"
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "east": "false",
+        "west": "true",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ru_z"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "east": "true",
+        "west": "false",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ld_z"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "east": "false",
+        "west": "true",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/rd_z"
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "east": "false",
+        "west": "false",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_z"
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "east": "false",
+        "west": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_z"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "east": "false",
+        "west": "false",
+        "down": "true"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/ud_z"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "east": "true",
+        "west": "true",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_z"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "east": "true",
+        "west": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_z"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "east": "false",
+        "west": "true",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/lr_z"
+      }
+    },
+    {
+      "when": {
+        "up": "false",
+        "east": "false",
+        "west": "false",
+        "down": "false"
+      },
+      "apply": {
+        "model": "steampowered:block/fluid_pipe/none_z"
+      }
+    }
+  ]
+}
