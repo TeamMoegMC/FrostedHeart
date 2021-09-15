@@ -18,12 +18,13 @@
 
 package com.teammoeg.frostedheart.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 /**
  * Sent from server -> client, clears the client side chunk data cache when a chunk is unwatched

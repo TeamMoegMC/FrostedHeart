@@ -18,10 +18,14 @@
 
 package com.teammoeg.frostedheart.block;
 
-import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FHUtils;
+
+import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
@@ -33,9 +37,6 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IBlockReader;
 import net.minecraftforge.fml.RegistryObject;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T>> extends IEMultiblockBlock {
     private RegistryObject<TileEntityType<T>> type;

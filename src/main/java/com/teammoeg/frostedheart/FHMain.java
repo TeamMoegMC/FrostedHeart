@@ -18,11 +18,19 @@
 
 package com.teammoeg.frostedheart;
 
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.content.*;
+import com.teammoeg.frostedheart.content.FHBlocks;
+import com.teammoeg.frostedheart.content.FHContainers;
+import com.teammoeg.frostedheart.content.FHContent;
+import com.teammoeg.frostedheart.content.FHRecipeSerializers;
+import com.teammoeg.frostedheart.content.FHRecipeTypes;
+import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
+
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -34,8 +42,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-
-import javax.annotation.Nonnull;
 
 @Mod(FHMain.MODID)
 public class FHMain {

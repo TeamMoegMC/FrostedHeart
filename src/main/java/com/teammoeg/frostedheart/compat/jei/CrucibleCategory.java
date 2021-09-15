@@ -18,10 +18,11 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import blusunrize.immersiveengineering.common.util.compat.jei.JEIIngredientStackListBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.FHBlocks;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
+
+import blusunrize.immersiveengineering.common.util.compat.jei.JEIIngredientStackListBuilder;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;

@@ -18,9 +18,14 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
+import java.util.ArrayList;
+
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.FHBlocks;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
+
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -33,9 +38,6 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 
 @JeiPlugin
 public class JEIFrostedHeartPlugin implements IModPlugin {

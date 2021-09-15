@@ -18,23 +18,24 @@
 
 package com.teammoeg.frostedheart.content;
 
+import java.util.Collection;
+import java.util.function.Supplier;
+
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
-import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
+import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.SteamTurbineTileEntity;
+
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.Collection;
-import java.util.function.Supplier;
 
 public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(

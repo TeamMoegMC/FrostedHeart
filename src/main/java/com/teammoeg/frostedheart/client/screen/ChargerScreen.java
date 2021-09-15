@@ -6,8 +6,6 @@ import java.util.List;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.container.ChargerContainer;
-import com.teammoeg.frostedheart.container.GeneratorContainer;
-import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;

@@ -18,10 +18,15 @@
 
 package com.teammoeg.frostedheart.network;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -29,10 +34,6 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Sent from server -> client on chunk watch, partially syncs chunk data and updates the client cache

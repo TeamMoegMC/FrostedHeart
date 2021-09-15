@@ -18,13 +18,16 @@
 
 package com.teammoeg.frostedheart.client;
 
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
 import com.teammoeg.frostedheart.client.screen.ChargerScreen;
 import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.content.FHBlocks;
+
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -39,8 +42,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-
-import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class FHClientModEvents {

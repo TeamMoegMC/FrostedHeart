@@ -18,6 +18,17 @@
 
 package com.teammoeg.frostedheart.client;
 
+import static net.minecraft.util.text.TextFormatting.AQUA;
+import static net.minecraft.util.text.TextFormatting.GRAY;
+import static net.minecraft.util.text.TextFormatting.WHITE;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.lwjgl.opengl.GL11;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.Survive;
@@ -29,6 +40,7 @@ import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
@@ -49,14 +61,6 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
-import org.lwjgl.opengl.GL11;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.ArrayList;
-import java.util.List;
-
-import static net.minecraft.util.text.TextFormatting.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHClientForgeEvents {

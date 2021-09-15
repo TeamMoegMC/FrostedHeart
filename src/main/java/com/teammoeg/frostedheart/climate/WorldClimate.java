@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.climate;
 
 import net.minecraft.world.IWorld;
-import net.minecraft.world.server.ServerWorld;
 
 public class WorldClimate {
     

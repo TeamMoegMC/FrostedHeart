@@ -18,11 +18,10 @@
 
 package com.teammoeg.frostedheart.container;
 
+import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
+
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
-import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
-import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;

@@ -18,11 +18,11 @@
 
 package com.teammoeg.frostedheart.util;
 
+import java.util.function.ToIntFunction;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-
-import java.util.function.ToIntFunction;
 
 public class FHUtils {
     public static <T> T notNull() {

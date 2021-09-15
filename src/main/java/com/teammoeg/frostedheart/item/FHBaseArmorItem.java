@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.item;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.content.FHContent;
+
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;

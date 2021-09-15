@@ -18,14 +18,24 @@
 
 package com.teammoeg.frostedheart.tileentity;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.google.common.collect.ImmutableSet;
+import com.teammoeg.frostedheart.content.FHMultiblocks;
+import com.teammoeg.frostedheart.content.FHTileTypes;
+
 import blusunrize.immersiveengineering.api.utils.CapabilityReference;
 import blusunrize.immersiveengineering.api.utils.DirectionalBlockPos;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
-import com.google.common.collect.ImmutableSet;
-import com.teammoeg.frostedheart.content.FHMultiblocks;
-import com.teammoeg.frostedheart.content.FHTileTypes;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -42,14 +52,6 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbineTileEntity> implements IEBlockInterfaces.IBlockBounds {
     public FluidTank[] tanks = new FluidTank[]{new FluidTank(24 * FluidAttributes.BUCKET_VOLUME)};

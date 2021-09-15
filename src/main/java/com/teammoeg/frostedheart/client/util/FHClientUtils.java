@@ -18,12 +18,12 @@
 
 package com.teammoeg.frostedheart.client.util;
 
+import java.util.Random;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.util.Random;
 
 public class FHClientUtils {
     public static Minecraft mc() {

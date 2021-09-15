@@ -18,16 +18,21 @@
 
 package com.teammoeg.frostedheart.tileentity;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.util.Utils;
-import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import java.util.Random;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.content.FHMultiblocks;
 import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.state.FHBlockInterfaces;
+
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
+import blusunrize.immersiveengineering.common.util.Utils;
+import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -47,11 +52,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-
-import java.util.Random;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGeneratorTileEntity> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {

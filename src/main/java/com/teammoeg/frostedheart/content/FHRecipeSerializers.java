@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipeSerializer;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipeSerializer;
+
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;

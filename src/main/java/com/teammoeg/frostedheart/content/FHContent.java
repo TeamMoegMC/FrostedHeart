@@ -18,17 +18,30 @@
 
 package com.teammoeg.frostedheart.content;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.block.*;
+import com.teammoeg.frostedheart.block.CrucibleBlock;
+import com.teammoeg.frostedheart.block.FHBaseBlock;
+import com.teammoeg.frostedheart.block.FHBlockItem;
+import com.teammoeg.frostedheart.block.FluidPipeBlock;
+import com.teammoeg.frostedheart.block.GeneratorCoreBlock;
+import com.teammoeg.frostedheart.block.GeneratorMultiblockBlock;
+import com.teammoeg.frostedheart.block.SteamTurbineBlock;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
-import com.teammoeg.frostedheart.client.model.PipeAttachmentModel;
 import com.teammoeg.frostedheart.container.ChargerContainer;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
-import com.teammoeg.frostedheart.item.*;
+import com.teammoeg.frostedheart.item.FHArmorMaterial;
+import com.teammoeg.frostedheart.item.FHBaseArmorItem;
+import com.teammoeg.frostedheart.item.FHBaseItem;
+import com.teammoeg.frostedheart.item.FHSoupItem;
+import com.teammoeg.frostedheart.item.HeaterVestItem;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
@@ -36,13 +49,16 @@ import com.teammoeg.frostedheart.steamenergy.ChargerBlock;
 import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeBlock;
+import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
+
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.AbstractBlock.Properties;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
-import net.minecraft.block.AbstractBlock.Properties;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.fluid.Fluid;
@@ -52,14 +68,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ToolType;
-import net.minecraftforge.common.util.NonNullFunction;
-
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class FHContent {
 
@@ -98,7 +106,6 @@ public class FHContent {
         FHBlocks.heat_pipe=new HeatPipeBlock("heat_pipe",Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)), FHBlockItem::new);
         FHBlocks.debug_heater=new DebugHeaterBlock("debug_heater", stoneDecoProps, FHBlockItem::new);
         FHBlocks.charger=new ChargerBlock("charger",stoneDecoProps,FHBlockItem::new);
-        registerBlockModel(FHBlocks.heat_pipe,(ibm)->new PipeAttachmentModel<HeatPipeBlock>((FluidPipeBlock<HeatPipeBlock>) FHBlocks.heat_pipe,ibm));
         // Init Items
         Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
         FHItems.energy_core = new FHBaseItem("energy_core", itemProps);

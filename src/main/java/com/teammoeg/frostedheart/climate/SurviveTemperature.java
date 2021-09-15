@@ -22,16 +22,13 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import com.stereowalker.survive.Survive;
-import com.stereowalker.survive.events.SurviveEvents;
 import com.stereowalker.survive.util.TemperatureStats;
-import com.stereowalker.survive.util.TemperatureUtil;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.stereowalker.unionlib.state.properties.UBlockStateProperties;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.math.BlockPos;

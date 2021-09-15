@@ -18,10 +18,10 @@
 
 package com.teammoeg.frostedheart.block;
 
+import java.util.function.BiFunction;
+
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
-
-import java.util.function.BiFunction;
 
 public class GeneratorCoreBlock extends FHBaseBlock {
 

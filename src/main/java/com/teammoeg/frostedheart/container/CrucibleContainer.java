@@ -18,10 +18,11 @@
 
 package com.teammoeg.frostedheart.container;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
-import blusunrize.immersiveengineering.common.gui.IESlot;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
+
+import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
+import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;

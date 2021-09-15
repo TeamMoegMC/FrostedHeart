@@ -18,22 +18,23 @@
 
 package com.teammoeg.frostedheart.client.screen;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
-import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
-import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
-import blusunrize.immersiveengineering.common.network.MessageTileSync;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
+
+import blusunrize.immersiveengineering.client.ClientUtils;
+import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
+import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
+import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generatornew");

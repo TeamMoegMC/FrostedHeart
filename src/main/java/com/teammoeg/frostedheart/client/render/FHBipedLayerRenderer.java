@@ -18,11 +18,20 @@
 
 package com.teammoeg.frostedheart.client.render;
 
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.FHItems;
 import com.teammoeg.frostedheart.nbt.FHNBT;
+
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
@@ -34,12 +43,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModList;
-import org.apache.commons.lang3.tuple.Pair;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class FHBipedLayerRenderer<E extends LivingEntity, M extends BipedModel<E>> extends LayerRenderer<E, M> {
     public static boolean rendersAssigned = false;

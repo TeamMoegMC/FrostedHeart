@@ -18,18 +18,17 @@
 
 package com.teammoeg.frostedheart.block;
 
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.FHContent;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.IWaterLoggable;
 import net.minecraft.item.Item;
-import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
-
-import java.util.function.BiFunction;
 
 public class FHBaseBlock extends Block {
     public final String name;

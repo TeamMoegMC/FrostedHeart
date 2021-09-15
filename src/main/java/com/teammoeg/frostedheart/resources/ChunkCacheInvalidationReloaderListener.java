@@ -18,13 +18,14 @@
 
 package com.teammoeg.frostedheart.resources;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
+
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IFutureReloadListener;
 import net.minecraft.resources.IResourceManager;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 /**
  * This is a manager for various cache invalidations, either on resource reload or server start/stop

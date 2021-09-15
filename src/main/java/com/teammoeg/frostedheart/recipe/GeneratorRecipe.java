@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.recipe;
 
+import java.util.Collections;
+import java.util.Map;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -26,9 +29,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.Collections;
-import java.util.Map;
 
 public class GeneratorRecipe extends IESerializableRecipe {
     public static IRecipeType<GeneratorRecipe> TYPE;

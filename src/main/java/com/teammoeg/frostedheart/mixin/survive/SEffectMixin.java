@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.mixin.survive;
 
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+
 import com.stereowalker.survive.config.Config;
 import com.stereowalker.survive.entity.SurviveEntityStats;
 import com.stereowalker.survive.potion.SEffect;
@@ -26,13 +29,12 @@ import com.stereowalker.survive.util.EnergyStats;
 import com.stereowalker.survive.util.SDamageSource;
 import com.stereowalker.survive.util.TemperatureStats;
 import com.stereowalker.survive.util.WaterStats;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(SEffect.class)
 public class SEffectMixin extends Effect {

@@ -18,13 +18,17 @@
 
 package com.teammoeg.frostedheart.item;
 
-import blusunrize.immersiveengineering.api.Lib;
-import blusunrize.immersiveengineering.common.util.EnergyHelper;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.model.HeaterVestModel;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.steamenergy.IChargable;
 
+import blusunrize.immersiveengineering.api.Lib;
+import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -36,9 +40,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-
-import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  * Heater Vest: wear it to warm yourself from the coldness.

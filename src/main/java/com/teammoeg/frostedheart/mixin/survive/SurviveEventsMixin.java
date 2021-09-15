@@ -18,11 +18,11 @@
 
 package com.teammoeg.frostedheart.mixin.survive;
 
-import com.stereowalker.survive.config.Config;
-import com.stereowalker.survive.entity.SurviveEntityStats;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+
 import com.stereowalker.survive.events.SurviveEvents;
 import com.stereowalker.survive.potion.SEffects;
-import com.stereowalker.survive.util.TemperatureStats;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
@@ -39,8 +39,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(SurviveEvents.class)
 public class SurviveEventsMixin {

@@ -18,6 +18,13 @@
 
 package com.teammoeg.frostedheart;
 
+import static com.teammoeg.frostedheart.content.FHContent.customModels;
+import static com.teammoeg.frostedheart.content.FHContent.registeredFHBlocks;
+import static com.teammoeg.frostedheart.content.FHContent.registeredFHFluids;
+import static com.teammoeg.frostedheart.content.FHContent.registeredFHItems;
+
+import java.util.Map;
+
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
@@ -27,17 +34,10 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.feature.Feature;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-
-import static com.teammoeg.frostedheart.content.FHContent.*;
-
-import java.util.Map;
-import java.util.function.Supplier;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHRegistryEvents {

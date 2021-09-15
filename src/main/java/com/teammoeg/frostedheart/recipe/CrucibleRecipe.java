@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.recipe;
 
+import java.util.Collections;
+import java.util.Map;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -27,9 +30,6 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.Collections;
-import java.util.Map;
 
 public class CrucibleRecipe extends IESerializableRecipe {
     public static IRecipeType<CrucibleRecipe> TYPE;

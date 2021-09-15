@@ -18,9 +18,13 @@
 
 package com.teammoeg.frostedheart.block.cropblock;
 
+import java.util.Random;
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.FHContent;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CropsBlock;
@@ -29,9 +33,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-
-import java.util.Random;
-import java.util.function.BiFunction;
 
 public class FHCropBlock extends CropsBlock {
     public final String name;

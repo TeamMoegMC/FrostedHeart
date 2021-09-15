@@ -18,8 +18,12 @@
 
 package com.teammoeg.frostedheart.compat;
 
-import blusunrize.immersiveengineering.common.items.PowerpackItem;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.function.Predicate;
+
 import com.teammoeg.frostedheart.item.HeaterVestItem;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
@@ -30,10 +34,6 @@ import top.theillusivec4.curios.api.SlotTypePreset;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
-
-import java.util.Map;
-import java.util.function.Predicate;
-import java.util.Iterator;
 
 public class CuriosCompat {
     public static void sendIMCS() {

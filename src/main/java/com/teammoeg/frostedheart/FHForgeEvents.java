@@ -18,7 +18,8 @@
 
 package com.teammoeg.frostedheart;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.climate.IHotFood;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
@@ -33,6 +34,8 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
+
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
@@ -75,8 +78,6 @@ import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHForgeEvents {
