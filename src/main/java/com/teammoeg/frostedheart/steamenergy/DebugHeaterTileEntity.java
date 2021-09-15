@@ -6,9 +6,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.vector.Vector3i;
 
 public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider,IConnectable {
 	public DebugHeaterTileEntity() {

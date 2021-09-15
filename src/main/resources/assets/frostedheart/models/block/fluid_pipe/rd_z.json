@@ -1,5 +1,5 @@
 {
-  "parent": "steampowered:block/fluid_pipe/core_z",
+  "parent": "frostedheart:block/fluid_pipe/core_z",
   "elements": [
     {
       "from": [

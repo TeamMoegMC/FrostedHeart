@@ -19,7 +19,7 @@ import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
-public class DebugHeaterBlock extends FHBaseBlock{
+public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock{
 	public DebugHeaterBlock(String name, Properties blockProps,
 			BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
 		super(name, blockProps, createItemBlock);

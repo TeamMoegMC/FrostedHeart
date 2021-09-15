@@ -1,8 +1,6 @@
 package com.teammoeg.frostedheart.steamenergy;
 
 import com.teammoeg.frostedheart.content.FHTileTypes;
-import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
-import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;

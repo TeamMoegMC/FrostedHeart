@@ -1,12 +1,14 @@
 package com.teammoeg.frostedheart.block;
 
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Maps;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.FHContent;
-import com.teammoeg.frostedheart.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.steamenergy.ISteamEnergyBlock;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -17,9 +19,11 @@ import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.pathfinding.PathType;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Util;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +36,15 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	Class<T> type;
     public final String name;
     protected int lightOpacity;
-
+    public static final BooleanProperty CASING=BooleanProperty.create("casing");
+    public static final Map<Direction, BooleanProperty> RIM_MAP = Util.make(Maps.newEnumMap(Direction.class), (directions) -> {
+        directions.put(Direction.NORTH,BooleanProperty.create("north_rim"));
+        directions.put(Direction.EAST,BooleanProperty.create("east_rim"));
+        directions.put(Direction.SOUTH,BooleanProperty.create("south_rim"));
+        directions.put(Direction.WEST,BooleanProperty.create("west_rim"));
+        directions.put(Direction.UP,BooleanProperty.create("up_rim"));
+        directions.put(Direction.DOWN,BooleanProperty.create("down_rim"));
+     });
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
@@ -66,7 +78,10 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
         }
 		this.type=type;
 		
-		this.setDefaultState(super.getDefaultState().with(BlockStateProperties.WATERLOGGED, false));
+		BlockState defaultState = getDefaultState().with(BlockStateProperties.WATERLOGGED, false);
+		for (Direction d : Direction.values())
+			defaultState = defaultState.with(FACING_TO_PROPERTY_MAP.get(d),false);
+		this.setDefaultState(defaultState);
 	}
 
 
@@ -80,24 +95,16 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	@Nullable
 	private Axis getAxis(IBlockReader world, BlockPos pos, BlockState state) {
 		if(!type.isInstance(state.getBlock()))return null;
-		Axis axisFound = null;
-		int connections = 0;
 		for (Axis axis : Axis.values()) {
 			Direction d1 = Direction.getFacingFromAxis(AxisDirection.NEGATIVE, axis);
 			Direction d2 = Direction.getFacingFromAxis(AxisDirection.POSITIVE, axis);
 			boolean openAt1 = isOpenAt(state, d1);
 			boolean openAt2 = isOpenAt(state, d2);
-			if (openAt1)
-				connections++;
-			if (openAt2)
-				connections++;
 			if (openAt1 && openAt2) {
-				if (axisFound != null)
-					return null;
-				axisFound = axis;
+				return axis;
 			}
 		}
-		return connections == 2 ? axisFound : null;
+		return null;
 	}
 
 	@Override
@@ -107,16 +114,18 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
 
 	public boolean canConnectTo(IBlockDisplayReader world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-		if (neighbour.getBlock() instanceof IConnectable)
+		if (neighbour.getBlock() instanceof ISteamEnergyBlock)
 			return true;
 		return false;
 	}
 
 	public boolean shouldDrawRim(IBlockDisplayReader world, BlockPos pos, BlockState state,
 		Direction direction) {
+		if(!isOpenAt(state,direction))
+			return false;
 		BlockPos offsetPos = pos.offset(direction);
 		BlockState facingState = world.getBlockState(offsetPos);
-		if (type.isInstance(facingState.getBlock()))
+		if (!type.isInstance(facingState.getBlock()))
 			return true;
 		if (!canConnectTo(world, offsetPos, facingState, direction))
 			return true;
@@ -141,21 +150,21 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	public boolean shouldDrawCasing(IBlockDisplayReader world, BlockPos pos, BlockState state) {
-		if (!type.isInstance(state))
+		if (!type.isInstance(state.getBlock()))
 			return false;
-		for (Axis axis : Axis.values()) {
-			int connections = 0;
-			for (Direction direction : Direction.values())
-				if (direction.getAxis() != axis && isOpenAt(state, direction))
-					connections++;
-			if (connections > 2)
+		Axis axis=getAxis(world,pos,state);
+		if(axis==null)return false;
+		for (Direction direction : Direction.values())
+			if (direction.getAxis() != axis && isOpenAt(state, direction))
 				return true;
-		}
 		return false;
 	}
 	@Override
 	protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
-		builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, BlockStateProperties.WATERLOGGED);
+		builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN,CASING, BlockStateProperties.WATERLOGGED);
+		for(BooleanProperty rim:RIM_MAP.values()){
+			builder.add(rim);
+		}
 		super.fillStateContainer(builder);
 	}
 
@@ -181,7 +190,19 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	public BlockState updateBlockState(BlockState state, Direction preferredDirection, @Nullable Direction ignore,
-		IBlockDisplayReader world, BlockPos pos) {
+		IWorld world, BlockPos pos) {
+
+		for (Direction d : Direction.values())
+			if (d != ignore) {
+				state = state.with(FACING_TO_PROPERTY_MAP.get(d),canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
+				state = state.with(RIM_MAP.get(d),shouldDrawRim(world,pos,state,d));
+			}
+		if(shouldDrawCasing(world, pos, state)) {
+			state=state.with(CASING,true);
+		}else {
+			state=state.with(CASING,false);
+		}
+		System.out.println(shouldDrawCasing(world, pos, state));
 		return state;
 		/*BracketedTileEntityBehaviour bracket = TileEntityBehaviour.get(world, pos, BracketedTileEntityBehaviour.TYPE);
 		if (bracket != null && bracket.isBracketPresent())

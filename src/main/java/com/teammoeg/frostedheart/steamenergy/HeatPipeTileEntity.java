@@ -1,16 +1,10 @@
 package com.teammoeg.frostedheart.steamenergy;
 
-import java.util.EnumMap;
-import java.util.Map.Entry;
-
-import org.apache.logging.log4j.util.Strings;
-
 import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.state.FHBlockInterfaces;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
-import it.unimi.dsi.fastutil.Arrays;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;

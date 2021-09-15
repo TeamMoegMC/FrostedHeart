@@ -1,5 +1,5 @@
 {
-  "parent": "steampowered:block/fluid_pipe/core_y",
+  "parent": "frostedheart:block/fluid_pipe/core_y",
   "elements": [
     {
       "from": [

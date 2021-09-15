@@ -62,9 +62,6 @@ public class PipeAttachmentModel<T extends FluidPipeBlock<T>> extends BakedModel
 		if (pipeData.isEncased())
 			quads.addAll(PartialModels.FLUID_PIPE_CASING.get()
 				.getQuads(state, side, rand, data));
-		IBakedModel bracket = pipeData.getBracket();
-		if (bracket != null)
-			quads.addAll(bracket.getQuads(state, side, rand, data));
 	}
 
 	private class PipeModelData {

@@ -5,14 +5,12 @@ import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.block.FHBaseBlock;
 import com.teammoeg.frostedheart.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.content.FHTileTypes;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -24,7 +22,7 @@ import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
-public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> {
+public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISteamEnergyBlock {
 	public static final BooleanProperty LIT = BlockStateProperties.LIT;
 	public HeatPipeBlock(String name, Properties blockProps,
 			BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
@@ -85,6 +83,7 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> {
 			}else{
 				state.with(FACING_TO_PROPERTY_MAP.get(dir),false);
 			}
+			
 		}
 	}
 
