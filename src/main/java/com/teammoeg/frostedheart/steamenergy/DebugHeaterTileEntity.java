@@ -40,19 +40,21 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 	}
 
 	@Override
-	public void disconnectAt(Direction to) {
+	public boolean disconnectAt(Direction to) {
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		if(te instanceof IConnectable&&!(te instanceof DebugHeaterTileEntity)) {
 			((IConnectable) te).disconnectAt(to.getOpposite());
 		}
+		return true;
 	}
 
 	@Override
-	public void connectAt(Direction to) {
+	public boolean connectAt(Direction to) {
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		if(te instanceof IConnectable&&!(te instanceof DebugHeaterTileEntity)) {
 			((IConnectable) te).connectAt(to.getOpposite());
 		}
+		return true;
 	}
 
 }

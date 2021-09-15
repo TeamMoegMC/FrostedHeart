@@ -59,7 +59,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 	}
 
 	@Override
-	public void disconnectAt(Direction to) {
+	public boolean disconnectAt(Direction to) {
 		if(last==to)
 			for(Direction d:Direction.values()) {
 				if(d==to)continue;
@@ -70,15 +70,18 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 					break;
 				}
 			}
+		return true;
 	}
 
 	@Override
-	public void connectAt(Direction to) {
+	public boolean connectAt(Direction to) {
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		if(te instanceof EnergyNetworkProvider) {
 			last=to;
 			network=((EnergyNetworkProvider) te).getNetwork();
+			return true;
 		}
+		return false;
 	}
 
 

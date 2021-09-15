@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.block.*;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
+import com.teammoeg.frostedheart.client.model.PipeAttachmentModel;
 import com.teammoeg.frostedheart.container.ChargerContainer;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
@@ -43,21 +44,33 @@ import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.AbstractBlock.Properties;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ToolType;
+import net.minecraftforge.common.util.NonNullFunction;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class FHContent {
 
     public static List<Block> registeredFHBlocks = new ArrayList<>();
     public static List<Item> registeredFHItems = new ArrayList<>();
     public static List<Fluid> registeredFHFluids = new ArrayList<>();
-
+    public static Map<Block,Function<IBakedModel,? extends IBakedModel>> customModels=new IdentityHashMap<>();
+	@OnlyIn(Dist.CLIENT)
+	private static void registerBlockModel(Block entry,Function<IBakedModel,? extends IBakedModel> ibm) {
+		 customModels.put(entry,ibm);
+	}
     public static void populate() {
         // Init Blocks
         Block.Properties stoneDecoProps = Block.Properties.create(Material.ROCK)
@@ -71,7 +84,7 @@ public class FHContent {
                 .tickRandomly()
                 .zeroHardnessAndResistance()
                 .sound(SoundType.CROP);
-
+        
         FHBlocks.Multi.generator = new GeneratorMultiblockBlock("generator", FHTileTypes.GENERATOR_T1);
         FHBlocks.Multi.crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
         FHBlocks.Multi.steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
@@ -85,6 +98,7 @@ public class FHContent {
         FHBlocks.heat_pipe=new HeatPipeBlock("heat_pipe",Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)), FHBlockItem::new);
         FHBlocks.debug_heater=new DebugHeaterBlock("debug_heater", stoneDecoProps, FHBlockItem::new);
         FHBlocks.charger=new ChargerBlock("charger",stoneDecoProps,FHBlockItem::new);
+        registerBlockModel(FHBlocks.heat_pipe,(ibm)->new PipeAttachmentModel<HeatPipeBlock>((FluidPipeBlock<HeatPipeBlock>) FHBlocks.heat_pipe,ibm));
         // Init Items
         Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
         FHItems.energy_core = new FHBaseItem("energy_core", itemProps);

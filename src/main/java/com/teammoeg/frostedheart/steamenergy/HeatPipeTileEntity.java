@@ -172,11 +172,12 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 		}
 	}
 	*/
-	public void disconnectAt(Direction to) {
-		if(network==null)return;
-		unpropagate(to);//try find new path
+	public boolean disconnectAt(Direction to) {
+		if(network!=null)
+			unpropagate(to);//try find new path
+		return true;
 	}
-	public void connectAt(Direction to) {
+	public boolean connectAt(Direction to) {
 		TileEntity te = Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		final SteamEnergyNetwork network=getNetwork();
 		if(te instanceof HeatProvider){
@@ -184,17 +185,22 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 			if(network==null) {
 				this.propagate(to, newNetwork,1);
 			}
-			return;
+			return true;
 		}
-		if(network==null)return;
+		
 		if (te instanceof HeatPipeTileEntity) {
-			if(dMaster!=to)
-				((HeatPipeTileEntity) te).propagate(to.getOpposite(),network, length);
+			if(network!=null)
+				if(dMaster!=to)
+					((HeatPipeTileEntity) te).propagate(to.getOpposite(),network, length);
+			return true;
 		}else if(te instanceof IConnectable){
+			if(network!=null)
 			((IConnectable) te).connectAt(to.getOpposite());
+			return true;
 		}else {
 			disconnectAt(to);
 		}
+		return false;
 	}
 
 	@Override

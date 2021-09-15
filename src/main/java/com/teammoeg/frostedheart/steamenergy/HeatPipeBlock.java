@@ -6,6 +6,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.block.FHBaseBlock;
+import com.teammoeg.frostedheart.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.content.FHTileTypes;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -23,11 +24,11 @@ import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
-public class HeatPipeBlock extends FHBaseBlock {
+public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> {
 	public static final BooleanProperty LIT = BlockStateProperties.LIT;
 	public HeatPipeBlock(String name, Properties blockProps,
 			BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-		super(name, blockProps, createItemBlock);
+		super(HeatPipeBlock.class,name, blockProps, createItemBlock);
 		this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
 	}
@@ -79,7 +80,11 @@ public class HeatPipeBlock extends FHBaseBlock {
 		if(te instanceof HeatPipeTileEntity) {
 			Vector3i vec=fromPos.subtract(pos);
 			Direction dir=Direction.getFacingFromVector(vec.getX(),vec.getY(),vec.getZ());
-			((HeatPipeTileEntity) te).connectAt(dir);
+			if(((HeatPipeTileEntity) te).connectAt(dir)) {
+				state.with(FACING_TO_PROPERTY_MAP.get(dir),true);
+			}else{
+				state.with(FACING_TO_PROPERTY_MAP.get(dir),false);
+			}
 		}
 	}
 

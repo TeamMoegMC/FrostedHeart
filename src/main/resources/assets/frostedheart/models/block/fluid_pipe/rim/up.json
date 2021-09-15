@@ -1,0 +1,21 @@
+{
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "frostedheart:block/fluid_pipe",
+		"particle": "frostedheart:block/fluid_pipe"
+	},
+	"elements": [
+		{
+			"from": [3.1, 15, 3.1],
+			"to": [12.9, 17.1, 12.9],
+			"faces": {
+				"north": {"uv": [6, 5, 11, 6], "texture": "#0"},
+				"east": {"uv": [11, 6, 6, 5], "rotation": 180, "texture": "#0"},
+				"south": {"uv": [6, 5, 11, 6], "texture": "#0"},
+				"west": {"uv": [11, 6, 6, 5], "rotation": 180, "texture": "#0"},
+				"up": {"uv": [6, 0, 11, 5], "rotation": 90, "texture": "#0"},
+				"down": {"uv": [6, 0, 11, 5], "rotation": 90, "texture": "#0"}
+			}
+		}
+	]
+}
