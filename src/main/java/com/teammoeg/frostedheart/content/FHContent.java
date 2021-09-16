@@ -28,13 +28,11 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.block.CrucibleBlock;
 import com.teammoeg.frostedheart.block.FHBaseBlock;
 import com.teammoeg.frostedheart.block.FHBlockItem;
-import com.teammoeg.frostedheart.block.FluidPipeBlock;
 import com.teammoeg.frostedheart.block.GeneratorCoreBlock;
 import com.teammoeg.frostedheart.block.GeneratorMultiblockBlock;
 import com.teammoeg.frostedheart.block.SteamTurbineBlock;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
-import com.teammoeg.frostedheart.container.ChargerContainer;
 import com.teammoeg.frostedheart.container.CrucibleContainer;
 import com.teammoeg.frostedheart.container.GeneratorContainer;
 import com.teammoeg.frostedheart.container.RadiatorContainer;
@@ -47,7 +45,6 @@ import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
 import com.teammoeg.frostedheart.steamenergy.ChargerBlock;
-import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.steamenergy.RadiatorBlock;
@@ -163,7 +160,6 @@ public class FHContent {
         // Register IE containers
         GuiHandler.register(BurnerGeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
-        GuiHandler.register(ChargerTileEntity.class, new ResourceLocation(FHMain.MODID, "charger"), ChargerContainer::new);
         GuiHandler.register(RadiatorTileEntity.class, new ResourceLocation(FHMain.MODID, "radiator"), RadiatorContainer::new);
     }
 

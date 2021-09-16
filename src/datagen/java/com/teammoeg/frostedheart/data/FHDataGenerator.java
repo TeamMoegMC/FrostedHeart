@@ -18,8 +18,9 @@
 
 package com.teammoeg.frostedheart.data;
 
-import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
 import com.teammoeg.frostedheart.FHMain;
+
+import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

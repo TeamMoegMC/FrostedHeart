@@ -1,7 +1,33 @@
 {
   "variants": {
-    "": {
-      "model": "frostedheart:block/generator_core_t1"
+    "facing=north": {
+      "model": "frostedheart:block/charger",
+      "uvlock": true
+    },
+    "facing=south": {
+      "model": "frostedheart:block/charger",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west": {
+      "model": "frostedheart:block/charger",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=east": {
+      "model": "frostedheart:block/charger",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=up": {
+      "model": "frostedheart:block/charger",
+      "uvlock": true,
+	  "x": 90
+    },
+	"facing=down": {
+      "model": "frostedheart:block/charger",
+      "uvlock": true,
+	  "x": 270
     }
   }
 }

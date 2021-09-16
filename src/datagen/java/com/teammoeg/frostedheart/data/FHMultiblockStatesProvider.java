@@ -18,12 +18,23 @@
 
 package com.teammoeg.frostedheart.data;
 
-import blusunrize.immersiveengineering.api.IEProperties;
-import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
+import static blusunrize.immersiveengineering.ImmersiveEngineering.rl;
+
+import java.util.List;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.content.FHBlocks;
 import com.teammoeg.frostedheart.content.FHMultiblocks;
+
+import blusunrize.immersiveengineering.api.IEProperties;
+import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import net.minecraft.block.Block;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.state.EnumProperty;
@@ -36,15 +47,6 @@ import net.minecraftforge.client.model.generators.ConfiguredModel;
 import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.client.model.generators.VariantBlockStateBuilder;
 import net.minecraftforge.common.data.ExistingFileHelper;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static blusunrize.immersiveengineering.ImmersiveEngineering.rl;
 
 public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 

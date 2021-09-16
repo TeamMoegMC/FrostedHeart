@@ -22,7 +22,6 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
-import com.teammoeg.frostedheart.client.screen.ChargerScreen;
 import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.client.screen.RadiatorScreen;
@@ -51,7 +50,6 @@ public class FHClientModEvents {
         // Register screens
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "charger"), ChargerScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "radiator"), RadiatorScreen::new);
         // Register translucent render type
         RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutoutMipped());

@@ -12,6 +12,7 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -39,6 +40,15 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 			disconnectAt(last);
 		}
 		return network;
+	}
+	public void onClick(ItemStack is) {
+		
+		if(is!=null) {
+			Item it=is.getItem();
+			if(it instanceof IChargable) {
+				power-=((IChargable) it).charge(is,power);
+			}
+		}
 	}
 	@Override
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -73,6 +83,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
 	@Override
 	public boolean connectAt(Direction to) {
+		if(to!=this.getWorld().getBlockState(this.getPos()).get(BlockStateProperties.FACING))return false;
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		if(te instanceof EnergyNetworkProvider) {
 			last=to;
@@ -115,30 +126,19 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 	@Override
 	public void doGraphicalUpdates(int slot) {
 	}
-
+	public float getMaxPower() {
+		return 960000F;
+	}
 	@Override
 	public void tick() {
 		SteamEnergyNetwork network=getNetwork();
 		boolean isDirty=false;
 		if(network!=null) {
-			float actual=network.drainHeat(Math.min(200,500000-power));
+			float actual=network.drainHeat(Math.min(200,getMaxPower()-power));
 			if(actual>0) {
-				power+=actual;
+				power+=actual*0.9;
 				isDirty=true;
 				//world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
-			}
-		}
-		if(inventory.get(INPUT_SLOT)!=null) {
-			Item i=inventory.get(INPUT_SLOT).getItem();
-			if(i instanceof IChargable) {
-				float actual=((IChargable)i).charge(inventory.get(INPUT_SLOT),Math.min(power,20000));
-				power-=actual;
-				if(power>0&&actual<=0) {
-					ItemStack is=inventory.get(INPUT_SLOT);
-					inventory.set(INPUT_SLOT,ItemStack.EMPTY);
-					inventory.set(OUTPUT_SLOT,is);
-				}
-				isDirty=true;
 			}
 		}
 		if(isDirty) {

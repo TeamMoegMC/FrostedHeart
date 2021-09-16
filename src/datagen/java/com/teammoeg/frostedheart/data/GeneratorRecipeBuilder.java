@@ -18,9 +18,10 @@
 
 package com.teammoeg.frostedheart.data;
 
+import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
+
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.crafting.builders.IEFinishedRecipe;
-import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tags.ITag;

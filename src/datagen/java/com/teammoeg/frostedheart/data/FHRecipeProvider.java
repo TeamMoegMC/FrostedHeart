@@ -18,17 +18,19 @@
 
 package com.teammoeg.frostedheart.data;
 
-import blusunrize.immersiveengineering.api.IETags;
+import java.util.HashMap;
+import java.util.function.Consumer;
+
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.FHMain;
+
+import blusunrize.immersiveengineering.api.IETags;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.function.Consumer;
 
 public class FHRecipeProvider extends RecipeProvider {
     private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();

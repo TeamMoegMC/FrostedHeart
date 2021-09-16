@@ -18,30 +18,17 @@
 
 package com.teammoeg.frostedheart.container;
 
-import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
-import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
 
 public class RadiatorContainer extends IEBaseContainer<RadiatorTileEntity> {
 
     public RadiatorContainer(int id, PlayerInventory inventoryPlayer, RadiatorTileEntity tile) {
         super(inventoryPlayer, tile, id);
-
-        this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
-            @Override
-            public boolean isItemValid(ItemStack itemStack) {
-            	return tile.isStackValid(0, itemStack);
-            }
-        });
-
-        this.addSlot(new IESlot.Output(this, this.inv, 1, 80, 51));
-
-        slotCount = 2;
+        slotCount = 0;
 
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 9; j++)
