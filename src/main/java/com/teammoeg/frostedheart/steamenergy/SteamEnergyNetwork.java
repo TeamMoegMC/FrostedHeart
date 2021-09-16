@@ -8,7 +8,7 @@ public class SteamEnergyNetwork {
 	public float drainHeat(float val) {
 		return provider.drainHeat(val);
 	}
-	public boolean isOverdrive() {
-		return provider.isOverdrive();
+	public float getTemperatureLevel() {
+		return provider.getTemperatureLevel();
 	}
 }

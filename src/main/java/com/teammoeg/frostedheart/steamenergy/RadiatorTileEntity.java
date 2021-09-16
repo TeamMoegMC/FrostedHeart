@@ -136,8 +136,8 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 		boolean beforeState=this.getIsActive();
 		boolean afterState=false;
         if (process > 0) {
-        	if (network!=null&&network.isOverdrive())
-        		process-=2;
+        	if (network!=null)
+        		process-=network.getTemperatureLevel();
         	else
         		process--;
             isDirty=true;
@@ -151,9 +151,12 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 		}
         if(beforeState!=afterState) {
         	this.setActive(afterState);
-        	if(afterState)
-        		ChunkData.addCubicTempAdjust(this.getWorld(),this.getPos(),8,(byte) (10*(network.isOverdrive()?2:1)));
-        	else
+        	if(afterState) {
+        		if(network!=null)
+        			ChunkData.addCubicTempAdjust(this.getWorld(),this.getPos(),8,(byte) (8*network.getTemperatureLevel()));
+        		else
+        			ChunkData.addCubicTempAdjust(this.getWorld(),this.getPos(),8,(byte) 8);
+        	}else
         		ChunkData.removeTempAdjust(this.getWorld(),this.getPos(),8);
         }
 		if(isDirty) {

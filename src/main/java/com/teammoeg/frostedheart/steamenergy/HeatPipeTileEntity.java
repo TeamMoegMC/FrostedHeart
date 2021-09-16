@@ -212,5 +212,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 				}
 			}
 		}
+		if(network!=null)
+			network.drainHeat(network.getTemperatureLevel()*0.15F);
 	}
 }

@@ -121,7 +121,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 		SteamEnergyNetwork network=getNetwork();
 		boolean isDirty=false;
 		if(network!=null) {
-			float actual=network.drainHeat(Math.min(2000,500000-power));
+			float actual=network.drainHeat(Math.min(200,500000-power));
 			if(actual>0) {
 				power+=actual;
 				isDirty=true;

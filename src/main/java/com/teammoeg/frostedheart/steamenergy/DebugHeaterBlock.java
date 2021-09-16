@@ -16,6 +16,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
@@ -65,4 +66,10 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock{
     public boolean hasTileEntity(BlockState state) {
         return true;
     }
+
+
+	@Override
+	public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
+		return true;
+	}
 }

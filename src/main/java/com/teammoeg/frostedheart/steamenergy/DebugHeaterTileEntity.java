@@ -55,9 +55,10 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 		return true;
 	}
 
+
 	@Override
-	public boolean isOverdrive() {
-		return false;
+	public float getTemperatureLevel() {
+		return 1;
 	}
 
 }

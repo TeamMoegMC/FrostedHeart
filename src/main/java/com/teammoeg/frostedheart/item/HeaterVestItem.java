@@ -53,7 +53,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 
     @Override
     public int getMaxEnergyStored(ItemStack container) {
-        return 100000;
+        return 380000;
     }
 
     @Nullable
@@ -84,10 +84,10 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 		int energycost=20;
 		if(bodyTemp<0.2) {
 			float delta=0.2F-bodyTemp;
-			if(delta>2)
-				delta=2;
-			int rex= Math.max(this.extractEnergy(stack,energycost+(int)(delta*10),false)-20, 0);
-			bodyTemp+=rex/10F;
+			if(delta>0.25)
+				delta=0.25F;
+			float rex= Math.max(this.extractEnergy(stack,energycost+(int)(delta*120F),false)-5F, 0F);
+			bodyTemp+=rex/120F;
 		}
 		return bodyTemp;
 	}

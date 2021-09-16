@@ -12,10 +12,13 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
+import net.minecraft.state.StateContainer.Builder;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
@@ -34,6 +37,13 @@ public class ChargerBlock extends FHGuiBlock  implements ISteamEnergyBlock{
     }
     
     @Override
+	protected void fillStateContainer(Builder<Block, BlockState> builder) {
+    	builder.add(BlockStateProperties.FACING);
+		super.fillStateContainer(builder);
+	}
+
+
+	@Override
 	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
 			boolean isMoving) {
 		TileEntity te=Utils.getExistingTileEntity(worldIn,pos);
@@ -42,6 +52,12 @@ public class ChargerBlock extends FHGuiBlock  implements ISteamEnergyBlock{
 			Direction dir=Direction.getFacingFromVector(vec.getX(),vec.getY(),vec.getZ());
 			((IConnectable) te).connectAt(dir);
 		}
+	}
+
+
+	@Override
+	public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
+		return dir==state.get(BlockStateProperties.FACING).getOpposite();
 	}
 
 }

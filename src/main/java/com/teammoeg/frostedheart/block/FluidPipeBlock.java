@@ -114,8 +114,9 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
 
 	public boolean canConnectTo(IBlockDisplayReader world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-		if (neighbour.getBlock() instanceof ISteamEnergyBlock)
+		if (neighbour.getBlock() instanceof ISteamEnergyBlock&&((ISteamEnergyBlock) neighbour.getBlock()).canConnectFrom(world,neighbourPos,neighbour,direction))
 			return true;
+		
 		return false;
 	}
 

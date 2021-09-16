@@ -51,9 +51,9 @@ public class SurviveEventsMixin {
 	public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
 		if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
 				&& event.getEntityLiving() instanceof ServerPlayerEntity) {
-
+			
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-			if (player.ticksExisted % 10 != 0)
+			if (player.ticksExisted % 10 != 0||player.isCreative()||player.isSpectator())
 				return;
 			float current = SurviveTemperature.getBodyTemperature(player);
 			if (current < 0)
