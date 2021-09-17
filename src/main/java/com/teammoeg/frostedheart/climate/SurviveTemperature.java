@@ -105,7 +105,6 @@ public class SurviveTemperature {
 	}
 
 	public static final String DATA_ID=FHMain.MODID+":data";
-
 	public static float getBodyTemperature(PlayerEntity spe) {
 		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
 		if(nc==null)

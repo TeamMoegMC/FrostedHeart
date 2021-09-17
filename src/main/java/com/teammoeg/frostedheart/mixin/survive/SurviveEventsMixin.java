@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
+import com.teammoeg.frostedheart.data.FHDataManager;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
@@ -75,8 +76,13 @@ public class SurviveEventsMixin {
 				Item it = is.getItem();
 				if (it instanceof IHeatingEquipment)
 					current = ((IHeatingEquipment) it).compute(is, current, envtemp);
-				if (it instanceof IWarmKeepingEquipment)
-					keepwarm += ((IWarmKeepingEquipment) it).getFactor(is);
+				if (it instanceof IWarmKeepingEquipment) {
+					keepwarm += ((IWarmKeepingEquipment) it).getFactor(player,is);
+				}else {
+					IWarmKeepingEquipment iw=FHDataManager.getArmor(is);
+					if(iw!=null)
+						keepwarm+=iw.getFactor(player,is);
+				}
 			}
 			for (ItemStack is : player.getArmorInventoryList()) {
 				if (is == null)
@@ -84,8 +90,13 @@ public class SurviveEventsMixin {
 				Item it = is.getItem();
 				if (it instanceof IHeatingEquipment)
 					current = ((IHeatingEquipment) it).compute(is, current, envtemp);
-				if (it instanceof IWarmKeepingEquipment)
-					keepwarm += ((IWarmKeepingEquipment) it).getFactor(is);
+				if (it instanceof IWarmKeepingEquipment) {
+					keepwarm += ((IWarmKeepingEquipment) it).getFactor(player,is);
+				}else {
+					IWarmKeepingEquipment iw=FHDataManager.getArmor(is);
+					if(iw!=null)
+						keepwarm+=iw.getFactor(player,is);
+				}
 			}
 			if (keepwarm > 1)
 				keepwarm = 1;

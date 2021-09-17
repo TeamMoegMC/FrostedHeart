@@ -148,7 +148,7 @@ public class FHClientForgeEvents {
         RenderSystem.disableAlphaTest();
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderHelmet && FrostedHud.getRenderViewPlayer() != null) {
-            System.out.println(SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()));
+            //System.out.println(SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()));
             if (SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()) <= -1) {
                 FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, player);
             }

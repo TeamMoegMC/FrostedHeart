@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.stereowalker.survive.util.SDamageSource;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
-import com.teammoeg.frostedheart.climate.IHotFood;
+import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
@@ -24,7 +24,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
-public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment,IHotFood,EnergyHelper.IIEEnergyItem{
+public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment,ITempAdjustFood,EnergyHelper.IIEEnergyItem{
 
 
 	public SteamBottleItem(String name, Properties properties) {
@@ -108,10 +108,6 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment,IHo
 	@Override
 	public int getMaxEnergyStored(ItemStack container) {
 		return 240;
-	}
-	@Override
-	public float getMaxTemp(ItemStack is) {
-		return 10;
 	}
 	@Override
 	public float getHeat(ItemStack is) {

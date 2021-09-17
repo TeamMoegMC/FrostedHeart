@@ -357,7 +357,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                     ret = tmp;
             }
         }
-        return WorldClimate.getWorldTemperature(world) + ret;
+        return WorldClimate.getWorldTemperature(world,pos) + ret;
     }
     /**
      * 

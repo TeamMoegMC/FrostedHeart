@@ -21,13 +21,15 @@ package com.teammoeg.frostedheart;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
-import com.teammoeg.frostedheart.climate.IHotFood;
+import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.content.FHItems;
+import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.nbt.FHNBT;
 import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
@@ -94,8 +96,9 @@ public class FHForgeEvents {
     @SubscribeEvent
     public static void addReloadListeners(AddReloadListenerEvent event) {
         DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
-        IReloadableResourceManager resourceManager = (IReloadableResourceManager) dataPackRegistries.getResourceManager();
+        //IReloadableResourceManager resourceManager = (IReloadableResourceManager) dataPackRegistries.getResourceManager();
         event.addListener(new FHRecipeReloadListener(dataPackRegistries));
+        event.addListener(FHDataReloadManager.INSTANCE);
 //            resourceManager.addReloadListener(ChunkCacheInvalidationReloaderListener.INSTANCE);
     }
 
@@ -333,13 +336,29 @@ public class FHForgeEvents {
     @SubscribeEvent
     public static void eatingFood(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity) {
-            Item it=event.getItem().getItem() ;
-        	if(it instanceof IHotFood) {
+            ItemStack is=event.getItem();
+        	Item it=event.getItem().getItem() ;
+            ITempAdjustFood adj=null;
+            //System.out.println(it.getRegistryName());
+        	if(it instanceof ITempAdjustFood) {
+        		adj=(ITempAdjustFood) it;
+        	}else {
+        		adj=FHDataManager.getFood(is);
+        	}
+        	if(adj!=null) {
             	float current=SurviveTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
-            	float max=((IHotFood) it).getMaxTemp(event.getItem());
-            	if(current>=max)return;
-            	current+=((IHotFood) it).getHeat(event.getItem());
-            	if(current>max)current=max;
+            	float max=adj.getMaxTemp(event.getItem());
+            	float min=adj.getMinTemp(event.getItem());
+            	float heat=adj.getHeat(event.getItem());
+            	if(current>0) {
+	            	if(current>=max)return;
+	            	current+=heat;
+	            	if(current>max)current=max;
+            	}else{
+            		if(current<=min)return;
+            		current+=heat;
+            		if(current<=min)return;
+            	}
             	SurviveTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(),current);
             }
         }

@@ -27,29 +27,11 @@ import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
 import net.minecraft.item.ItemStack;
 
-public class FHBaseArmorItem extends ArmorItem implements IWarmKeepingEquipment{
+public class FHBaseArmorItem extends ArmorItem{
     public FHBaseArmorItem(String name, IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
     }
 
-	@Override
-	public float getFactor(ItemStack stack) {
-		float modifier=1;
-		switch(this.getEquipmentSlot()) {
-		case FEET:modifier=0.5F;break;
-		case LEGS:modifier=1.5F;break;
-		case CHEST:modifier=2.5F;break;
-		case HEAD:modifier=1.5F;break;
-		}
-		IArmorMaterial imi=this.getArmorMaterial();
-		if(imi==FHArmorMaterial.HAY)
-			return modifier*0.05F;
-		if(imi==FHArmorMaterial.HIDE)
-			return modifier*0.15F;
-		if(imi==FHArmorMaterial.WOOL)
-			return modifier*0.17F;
-		return 0;
-	}
 }

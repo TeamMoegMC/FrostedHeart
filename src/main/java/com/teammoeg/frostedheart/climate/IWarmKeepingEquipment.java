@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.climate;
 
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 
 // TODO: Auto-generated Javadoc
@@ -18,5 +19,5 @@ public interface IWarmKeepingEquipment {
 	 * @param stack the stack<br>
 	 * @return factor<br>
 	 */
-	float getFactor(ItemStack stack);
+	float getFactor(ServerPlayerEntity pe,ItemStack stack);
 }
