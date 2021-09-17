@@ -111,16 +111,14 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
 	@Override
 	public boolean disconnectAt(Direction to) {
-		if(last==to)
+		if(last==to) {
+			network=null;
 			for(Direction d:Direction.values()) {
 				if(d==to)continue;
-				TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
-				if(te instanceof EnergyNetworkProvider) {
-					last=d;
-					network=((EnergyNetworkProvider) te).getNetwork();
+				if(connectAt(to))
 					break;
-				}
 			}
+		}
 		return true;
 	}
 
@@ -128,7 +126,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 	public boolean connectAt(Direction to) {
 		Direction bd=this.getWorld().getBlockState(this.getPos()).get(BlockStateProperties.FACING);
 		if(to!=bd&&
-			!((bd!=Direction.DOWN&&to==Direction.UP)
+			!((bd!=Direction.DOWN&&to==Direction.DOWN)
 			||(bd==Direction.UP&&to==Direction.NORTH)
 			||(bd==Direction.DOWN&&to==Direction.SOUTH)))return false;
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));

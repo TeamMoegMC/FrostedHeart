@@ -55,7 +55,7 @@ public class RadiatorBlock extends FHGuiBlock  implements ISteamEnergyBlock{
 
 	@Override
 	public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
-		return dir!=Direction.UP;
+		return dir!=Direction.DOWN;
 	}
 
 }

@@ -99,7 +99,7 @@ public class ChargerBlock extends FHBaseBlock  implements ISteamEnergyBlock{
 	@Override
 	public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
 		Direction bd=state.get(BlockStateProperties.FACING);
-		return dir==bd.getOpposite()||(bd!=Direction.DOWN&&dir==Direction.DOWN)||(bd==Direction.UP&&dir==Direction.SOUTH)||(bd==Direction.DOWN&&dir==Direction.NORTH);
+		return dir==bd.getOpposite()||(bd!=Direction.DOWN&&dir==Direction.UP)||(bd==Direction.UP&&dir==Direction.SOUTH)||(bd==Direction.DOWN&&dir==Direction.NORTH);
 	}
 
 }

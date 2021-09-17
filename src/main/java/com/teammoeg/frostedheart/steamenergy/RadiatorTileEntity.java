@@ -65,21 +65,20 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 
 	@Override
 	public boolean disconnectAt(Direction to) {
-		if(last==to)
+		if(last==to) {
+			network=null;
 			for(Direction d:Direction.values()) {
 				if(d==to)continue;
-				TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(d));
-				if(te instanceof EnergyNetworkProvider) {
-					last=d;
-					network=((EnergyNetworkProvider) te).getNetwork();
+				if(connectAt(to))
 					break;
-				}
 			}
+		}
 		return true;
 	}
 
 	@Override
 	public boolean connectAt(Direction to) {
+		if(to==Direction.DOWN)return false;
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		if(te instanceof EnergyNetworkProvider) {
 			last=to;
