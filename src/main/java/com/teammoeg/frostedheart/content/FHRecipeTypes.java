@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.content;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.recipe.ChargerRecipe;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 
@@ -28,6 +29,7 @@ public class FHRecipeTypes {
     public static void registerRecipeTypes() {
         GeneratorRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":generator");
         CrucibleRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":crucible");
+        ChargerRecipe.TYPE=IRecipeType.register(FHMain.MODID + ":charger");
     }
 
 }

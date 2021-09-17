@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.item.FHBaseItem;
 import com.teammoeg.frostedheart.item.FHSoupItem;
 import com.teammoeg.frostedheart.item.HeaterVestItem;
+import com.teammoeg.frostedheart.item.SteamBottleItem;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
@@ -64,6 +65,7 @@ import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -127,7 +129,7 @@ public class FHContent {
             FHContent.registeredFHItems.add(FHItems.white_turnip);
             //white_turnip item.can be planted.can be eaten.
         }
-
+        FHItems.steam_bottle=new SteamBottleItem("steam_bottle",new Item.Properties().maxStackSize(1).containerItem(Items.GLASS_BOTTLE));
         FHItems.raw_hide = new FHBaseItem("raw_hide", itemProps);
         FHItems.hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, itemProps);
         FHItems.hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, itemProps);

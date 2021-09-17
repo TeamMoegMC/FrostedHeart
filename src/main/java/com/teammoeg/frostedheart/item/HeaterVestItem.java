@@ -76,17 +76,17 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        list.add(new TranslationTextComponent(Lib.DESC + "info.energyStored", stored));
+        list.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored));
     }
 
 	@Override
 	public float compute(ItemStack stack,float bodyTemp, float environmentTemp) {
-		int energycost=20;
+		int energycost=2;
 		if(bodyTemp<0.2) {
 			float delta=0.2F-bodyTemp;
 			if(delta>0.25)
 				delta=0.25F;
-			float rex= Math.max(this.extractEnergy(stack,energycost+(int)(delta*120F),false)-5F, 0F);
+			float rex= Math.max(this.extractEnergy(stack,energycost+(int)(delta*120F),false)-2F, 0F);
 			bodyTemp+=rex/120F;
 		}
 		return bodyTemp;

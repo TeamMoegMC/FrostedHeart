@@ -53,6 +53,6 @@
   "tooltip.frostedheart.survive_block_temp_mod": "温度指数：",
   "tooltip.frostedheart.survive_weight_mod": "沉重指数：",
   "tooltip.frostedheart.survive_range": "范围:",
-
+  "frostedheart.desc.steamStored": "蒸汽:%ssu",
   "gui.jei.category.crucible": "炼钢坩埚"
 }

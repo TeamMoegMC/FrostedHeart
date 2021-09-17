@@ -33,7 +33,7 @@ public class FHItems {
     public static Item rye_flour;
     public static Item raw_rye_bread;
     public static BlockItem white_turnip;
-
+    public static Item steam_bottle;
 
     public static Item raw_hide;
 

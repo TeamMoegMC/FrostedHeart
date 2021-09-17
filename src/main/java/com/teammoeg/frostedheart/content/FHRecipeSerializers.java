@@ -19,6 +19,8 @@
 package com.teammoeg.frostedheart.content;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.recipe.ChargerRecipe;
+import com.teammoeg.frostedheart.recipe.ChargerRecipeSerializer;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import com.teammoeg.frostedheart.recipe.CrucibleRecipeSerializer;
 import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
@@ -40,5 +42,6 @@ public class FHRecipeSerializers {
         CrucibleRecipe.SERIALIZER = RECIPE_SERIALIZERS.register(
                 "crucible", CrucibleRecipeSerializer::new
         );
+        ChargerRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("charger",ChargerRecipeSerializer::new);
     }
 }

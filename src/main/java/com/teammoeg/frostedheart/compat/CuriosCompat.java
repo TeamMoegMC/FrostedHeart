@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.compat;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.function.Predicate;
 
 import com.teammoeg.frostedheart.item.HeaterVestItem;
@@ -39,10 +38,11 @@ public class CuriosCompat {
     public static void sendIMCS() {
         InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
                 () -> SlotTypePreset.BACK.getMessageBuilder().build());
+        InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
+                () -> SlotTypePreset.CHARM.getMessageBuilder().build());
     }
 
     public static ItemStack getHeaterVest(LivingEntity living) {
-    	Map map;
         return getCuriosIfVisible(living, SlotTypePreset.BACK, stack -> stack.getItem() instanceof HeaterVestItem);
     }
 
