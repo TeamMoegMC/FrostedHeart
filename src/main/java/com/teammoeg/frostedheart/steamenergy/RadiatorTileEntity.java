@@ -69,7 +69,7 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 			network=null;
 			for(Direction d:Direction.values()) {
 				if(d==to)continue;
-				if(connectAt(to))
+				if(connectAt(d))
 					break;
 			}
 		}
@@ -78,13 +78,14 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 
 	@Override
 	public boolean connectAt(Direction to) {
-		if(to==Direction.DOWN)return false;
+		if(to==Direction.UP)return false;
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		if(te instanceof EnergyNetworkProvider) {
 			last=to;
 			network=((EnergyNetworkProvider) te).getNetwork();
 			return true;
-		}
+		}else
+			disconnectAt(to);
 		return false;
 	}
 

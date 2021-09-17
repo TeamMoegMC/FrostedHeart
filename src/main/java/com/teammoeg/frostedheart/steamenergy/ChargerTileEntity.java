@@ -115,7 +115,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 			network=null;
 			for(Direction d:Direction.values()) {
 				if(d==to)continue;
-				if(connectAt(to))
+				if(connectAt(d))
 					break;
 			}
 		}
@@ -134,7 +134,8 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 			last=to;
 			network=((EnergyNetworkProvider) te).getNetwork();
 			return true;
-		}
+		}else
+			disconnectAt(to);
 		return false;
 	}
 
