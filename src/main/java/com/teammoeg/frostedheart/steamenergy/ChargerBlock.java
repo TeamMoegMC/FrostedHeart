@@ -23,6 +23,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockDisplayReader;
@@ -86,6 +88,8 @@ public class ChargerBlock extends FHBaseBlock  implements ISteamEnergyBlock{
 	}
 
 
+
+
 	@Override
 	public boolean hasTileEntity(BlockState state) {
 		return true;
@@ -94,7 +98,8 @@ public class ChargerBlock extends FHBaseBlock  implements ISteamEnergyBlock{
 
 	@Override
 	public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
-		return dir==state.get(BlockStateProperties.FACING).getOpposite();
+		Direction bd=state.get(BlockStateProperties.FACING);
+		return dir==bd.getOpposite()||(bd!=Direction.DOWN&&dir==Direction.DOWN)||(bd==Direction.UP&&dir==Direction.SOUTH)||(bd==Direction.DOWN&&dir==Direction.NORTH);
 	}
 
 }

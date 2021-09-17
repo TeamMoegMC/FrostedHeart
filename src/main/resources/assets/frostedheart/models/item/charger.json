@@ -1,3 +1,5 @@
 {
-  "parent": "frostedheart:block/charger"
+  "parent": "frostedheart:block/charger",
+  "flip-v": true,
+   "y":180
 }

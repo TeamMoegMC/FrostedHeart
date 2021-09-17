@@ -108,7 +108,11 @@ public class FHContent {
         FHBlocks.white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps);//white_turnip crop block.
         FHBlocks.heat_pipe=new HeatPipeBlock("heat_pipe",stoneDecoProps, FHBlockItem::new);
         FHBlocks.debug_heater=new DebugHeaterBlock("debug_heater", stoneDecoProps, FHBlockItem::new);
-        FHBlocks.charger=new ChargerBlock("charger",stoneDecoProps,FHBlockItem::new);
+        FHBlocks.charger=new ChargerBlock("charger",Block.Properties.create(Material.ROCK)
+                .sound(SoundType.STONE)
+                .setRequiresTool()
+                .harvestTool(ToolType.PICKAXE)
+                .hardnessAndResistance(2, 10).notSolid(),FHBlockItem::new);
         FHBlocks.radiator=new RadiatorBlock("heat_radiator",Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)),FHBlockItem::new);
         // Init Items
         Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);

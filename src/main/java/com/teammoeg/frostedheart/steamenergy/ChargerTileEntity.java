@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.steamenergy;
 import java.util.List;
 
 import com.teammoeg.frostedheart.content.FHTileTypes;
+import com.teammoeg.frostedheart.recipe.ChargerRecipe;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
@@ -56,6 +57,18 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 			if(it instanceof IChargable) {
 				power-=((IChargable) it).charge(is,power);
 				return ActionResultType.SUCCESS;
+			}
+			ChargerRecipe cr=ChargerRecipe.findRecipe(is);
+			if(cr!=null) {
+				if(power>=cr.cost&&is.getCount()>=cr.input.getCount()) {
+					power-=cr.cost;
+					is.setCount(is.getCount()-cr.input.getCount());
+					ItemStack gain=cr.output.copy();
+					
+					if(!pe.inventory.addItemStackToInventory(gain)) {
+						pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(),pe.getPosX(),pe.getPosY(),pe.getPosZ(),gain));
+					}
+				}
 			}
 			if(power>=100) {
 				List<SmokingRecipe> irs=this.world.getRecipeManager().getRecipesForType(IRecipeType.SMOKING);
@@ -113,7 +126,11 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
 	@Override
 	public boolean connectAt(Direction to) {
-		if(to!=this.getWorld().getBlockState(this.getPos()).get(BlockStateProperties.FACING))return false;
+		Direction bd=this.getWorld().getBlockState(this.getPos()).get(BlockStateProperties.FACING);
+		if(to!=bd&&
+			!((bd!=Direction.DOWN&&to==Direction.UP)
+			||(bd==Direction.UP&&to==Direction.NORTH)
+			||(bd==Direction.DOWN&&to==Direction.SOUTH)))return false;
 		TileEntity te=Utils.getExistingTileEntity(this.getWorld(),this.getPos().offset(to));
 		if(te instanceof EnergyNetworkProvider) {
 			last=to;
@@ -166,7 +183,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 		if(network!=null) {
 			float actual=network.drainHeat(Math.min(200,getMaxPower()-power));
 			if(actual>0) {
-				power+=actual*0.9;
+				power+=actual*0.8;
 				isDirty=true;
 				//world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
 			}

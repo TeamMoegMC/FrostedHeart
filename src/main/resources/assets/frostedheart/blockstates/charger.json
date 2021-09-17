@@ -1,12 +1,12 @@
 {
   "variants": {
-    "facing=north": {
-      "model": "frostedheart:block/charger",
-      "uvlock": true
-    },
-    "facing=south": {
+      "facing=south": {
       "model": "frostedheart:block/charger",
       "y": 180,
+      "uvlock": true
+    },
+    "facing=north": {
+      "model": "frostedheart:block/charger",
       "uvlock": true
     },
     "facing=west": {

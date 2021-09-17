@@ -1,0 +1,13 @@
+{
+  "type": "frostedheart:charger",
+  "result": {
+    "item": "frostedheart:steam_bottle",
+    "nbt": {
+      "energy":240
+    }
+  },
+  "input": {
+    "item": "minecraft:glass_bottle"
+  },
+  "cost": 240
+}
