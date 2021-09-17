@@ -11,6 +11,7 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.UseAction;
@@ -18,6 +19,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
@@ -41,7 +43,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment,IHo
 
 		if (entityplayer instanceof ServerPlayerEntity) {
 			CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayerEntity)entityplayer, stack);
-			entityplayer.attackEntityFrom(SDamageSource.HYPOTHERMIA,this.getEnergyStored(stack)/60+2);
+			entityplayer.attackEntityFrom(SDamageSource.HYPOTHERMIA,(this.getEnergyStored(stack)/60)+2);
 		}
 
 		if (entityplayer != null) {
@@ -93,6 +95,15 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment,IHo
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
 		playerIn.setActiveHand(handIn);
 		return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
+	}
+	@Override
+	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+		if (this.isInGroup(group)) {
+			ItemStack is = new ItemStack(this);
+			this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
+			items.add(is);
+		}
+
 	}
 	@Override
 	public int getMaxEnergyStored(ItemStack container) {
