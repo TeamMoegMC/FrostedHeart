@@ -61,17 +61,18 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 				List<SmokingRecipe> irs=this.world.getRecipeManager().getRecipesForType(IRecipeType.SMOKING);
 				for(SmokingRecipe sr:irs) {
 					if(sr.getIngredients().iterator().next().test(is)){
-						if(pe instanceof ServerPlayerEntity) {
+						//if(pe instanceof ServerPlayerEntity) {
 							power-=sr.getCookTime()/10;
 							pe.giveExperiencePoints((int) sr.getExperience());
 							is.setCount(is.getCount()-1);
-							ItemStack gain=sr.getRecipeOutput();
-							if(!pe.addItemStackToInventory(gain)) {
+							ItemStack gain=sr.getRecipeOutput().copy();
+							
+							if(!pe.inventory.addItemStackToInventory(gain)) {
 								pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(),pe.getPosX(),pe.getPosY(),pe.getPosZ(),gain));
 							}
 							markDirty();
 							this.markContainingBlockForUpdate(null);
-						}
+						//}
 						return ActionResultType.SUCCESS;
 					}
 				}
