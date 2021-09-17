@@ -27,6 +27,11 @@ import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.stereowalker.survive.entity.SurviveEntityStats;
+import com.teammoeg.frostedheart.client.hud.FrostedHud;
+import com.teammoeg.frostedheart.climate.SurviveTemperature;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.world.GameType;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -123,6 +128,75 @@ public class FHClientForgeEvents {
     }
 
     @SubscribeEvent
+    public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
+        Minecraft mc = Minecraft.getInstance();
+        ClientPlayerEntity player = mc.player;
+
+        if (mc.gameSettings.hideGUI || player == null) {
+            return;
+        }
+
+        MatrixStack stack = event.getMatrixStack();
+        int anchorX = event.getWindow().getScaledWidth() / 2;
+        int anchorY = event.getWindow().getScaledHeight();
+        float partialTicks =  event.getPartialTicks();
+
+        mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+
+        FrostedHud.renderSetup();
+
+        RenderSystem.disableAlphaTest();
+
+        if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderHelmet && FrostedHud.getRenderViewPlayer() != null) {
+            System.out.println(SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()));
+            if (SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()) <= -1) {
+                FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, player);
+            }
+        }
+
+        if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
+            if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
+                mc.ingameGUI.getSpectatorGui().func_238528_a_(stack, partialTicks);
+            } else {
+                FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, player, partialTicks);
+            }
+            event.setCanceled(true);
+        }
+        if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience && FrostedHud.getRenderViewPlayer() != null) {
+            if (SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()) <= -1) {
+                FrostedHud.renderHypothermia(stack, anchorX, anchorY, mc, player);
+            } else {
+                FrostedHud.renderExperience(stack, anchorX, anchorY, mc, player);
+            }
+            event.setCanceled(true);
+        }
+        if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTH && FrostedHud.renderHealth) {
+            FrostedHud.renderHealth(stack, anchorX, anchorY, mc, player);
+            event.setCanceled(true);
+        }
+        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD && FrostedHud.renderFood) {
+            FrostedHud.renderFood(stack, anchorX, anchorY, mc, player);
+            FrostedHud.renderThirst(stack, anchorX, anchorY, mc, player);
+            FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, player);
+            event.setCanceled(true);
+        }
+        if (event.getType() == RenderGameOverlayEvent.ElementType.ARMOR && FrostedHud.renderArmor) {
+            FrostedHud.renderArmor(stack, anchorX, anchorY, mc, player);
+            event.setCanceled(true);
+        }
+        if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTHMOUNT && FrostedHud.renderHealthMount) {
+            FrostedHud.renderMountHealth(stack, anchorX, anchorY, mc, player);
+            event.setCanceled(true);
+        }
+        if (event.getType() == RenderGameOverlayEvent.ElementType.JUMPBAR && FrostedHud.renderJumpBar) {
+            FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, player);
+            event.setCanceled(true);
+        }
+
+        RenderSystem.enableAlphaTest();
+    }
+
+    @SubscribeEvent
     public static void renderGameOverlay(RenderGameOverlayEvent event) {
         Minecraft mc = Minecraft.getInstance();
         mc.getProfiler().startSection("frostedheart_temperature");
@@ -155,7 +229,7 @@ public class FHClientForgeEvents {
                 }
 
                 // RENDER TEMPERATURE
-                renderTemp(event.getMatrixStack(), mc, temperature, offsetX, offsetY, true);
+//                renderTemp(event.getMatrixStack(), mc, temperature, offsetX, offsetY, true);
             }
         }
 
@@ -167,96 +241,5 @@ public class FHClientForgeEvents {
         RenderSystem.disableAlphaTest();
     }
 
-    private static void renderTemp(MatrixStack stack, Minecraft mc, double temp, int offsetX, int offsetY, boolean celsius) {
-        UV4i unitUV = celsius ? new UV4i(0, 25, 13, 34) : new UV4i(13, 25, 26, 34);
-        UV4i signUV = temp >= 0 ? new UV4i(61, 17, 68, 24) : new UV4i(68, 17, 75, 24);
-        double abs = Math.abs(temp);
-        BigDecimal bigDecimal = new BigDecimal(String.valueOf(abs));
-        bigDecimal.round(new MathContext(1));
-        int integer = bigDecimal.intValue();
-        int decimal = (int) (bigDecimal.subtract(new BigDecimal(integer)).doubleValue() * 10);
 
-        ResourceLocation digits = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_orb/digits.png");
-        ResourceLocation moderate = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_orb/moderate.png");
-        ResourceLocation chilly = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_orb/chilly.png");
-        ResourceLocation cold = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_orb/cold.png");
-        ResourceLocation frigid = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_orb/frigid.png");
-        ResourceLocation hadean = new ResourceLocation(FHMain.MODID, "textures/gui/temperature_orb/hadean.png");
-
-        // draw orb
-        if (temp > 0) {
-            mc.getTextureManager().bindTexture(moderate);
-        } else if (temp > -20) {
-            mc.getTextureManager().bindTexture(chilly);
-        } else if (temp > -40) {
-            mc.getTextureManager().bindTexture(cold);
-        } else if (temp > -80) {
-            mc.getTextureManager().bindTexture(frigid);
-        } else {
-            mc.getTextureManager().bindTexture(hadean);
-        }
-        IngameGui.blit(stack, offsetX + 0, offsetY + 0, 0, 0, 36, 36, 36, 36);
-
-        // draw temperature
-        mc.getTextureManager().bindTexture(digits);
-        // sign and unit
-        IngameGui.blit(stack, offsetX + 1, offsetY + 12, signUV.x, signUV.y, signUV.w, signUV.h, 100, 34);
-        IngameGui.blit(stack, offsetX + 11, offsetY + 24, unitUV.x, unitUV.y, unitUV.w, unitUV.h, 100, 34);
-        // digits
-        ArrayList<UV4i> uv4is = getIntegerDigitUVs(integer);
-        UV4i decUV = getDecDigitUV(decimal);
-        if (uv4is.size() == 1) {
-            UV4i uv1 = uv4is.get(0);
-            IngameGui.blit(stack, offsetX + 13, offsetY + 7, uv1.x, uv1.y, uv1.w, uv1.h, 100, 34);
-            IngameGui.blit(stack, offsetX + 25, offsetY + 16, decUV.x, decUV.y, decUV.w, decUV.h, 100, 34);
-        } else if (uv4is.size() == 2) {
-            UV4i uv1 = uv4is.get(0), uv2 = uv4is.get(1);
-            IngameGui.blit(stack, offsetX + 8, offsetY + 7, uv1.x, uv1.y, uv1.w, uv1.h, 100, 34);
-            IngameGui.blit(stack, offsetX + 18, offsetY + 7, uv2.x, uv2.y, uv2.w, uv2.h, 100, 34);
-            IngameGui.blit(stack, offsetX + 28, offsetY + 16, decUV.x, decUV.y, decUV.w, decUV.h, 100, 34);
-        } else if (uv4is.size() == 3) {
-            UV4i uv1 = uv4is.get(0), uv2 = uv4is.get(1), uv3 = uv4is.get(2);
-            IngameGui.blit(stack, offsetX + 7, offsetY + 7, uv1.x, uv1.y, uv1.w, uv1.h, 100, 34);
-            IngameGui.blit(stack, offsetX + 14, offsetY + 7, uv2.x, uv2.y, uv2.w, uv2.h, 100, 34);
-            IngameGui.blit(stack, offsetX + 24, offsetY + 7, uv3.x, uv3.y, uv3.w, uv3.h, 100, 34);
-        }
-    }
-
-    private static ArrayList<UV4i> getIntegerDigitUVs(int digit) {
-        ArrayList<UV4i> rtn = new ArrayList<>();
-        UV4i v1, v2, v3;
-        if (digit / 10 == 0) { // len = 1
-            int firstDigit = digit;
-            if (firstDigit == 0) firstDigit += 10;
-            v1 = new UV4i(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
-            rtn.add(v1);
-        } else if (digit / 10 < 10) { // len = 2
-            int firstDigit = digit / 10;
-            if (firstDigit == 0) firstDigit += 10;
-            int secondDigit = digit % 10;
-            if (secondDigit == 0) secondDigit += 10;
-            v1 = new UV4i(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
-            v2 = new UV4i(10 * (secondDigit - 1), 0, 10 * secondDigit, 17);
-            rtn.add(v1);
-            rtn.add(v2);
-        } else { // len = 3
-            int thirdDigit = digit % 10;
-            if (thirdDigit == 0) thirdDigit += 10;
-            int secondDigit = digit / 10;
-            if (secondDigit == 0) secondDigit += 10;
-            int firstDigit = digit / 100;
-            if (firstDigit == 0) firstDigit += 10;
-            v1 = new UV4i(10 * (firstDigit - 1), 0, 10 * firstDigit, 17);
-            v2 = new UV4i(10 * (secondDigit - 1), 0, 10 * secondDigit, 17);
-            v3 = new UV4i(10 * (thirdDigit - 1), 0, 10 * thirdDigit, 17);
-            rtn.add(v1);
-            rtn.add(v2);
-            rtn.add(v3);
-        }
-        return rtn;
-    }
-
-    private static UV4i getDecDigitUV(int dec) {
-        return new UV4i(6 * (dec - 1), 17, 6 * dec, 25);
-    }
 }
