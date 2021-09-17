@@ -14,9 +14,11 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	public int rangeLevel;
 	public int overdriveBoost;
 	private boolean initialized;
+	boolean isUserOperated;
 	boolean isWorking;
 	boolean isOverdrive;
-	boolean isDirty;//mark if user changes settings
+	boolean isActualOverdrive;
+	boolean isDirty;//mark if temperature change required
 	public AbstractGenerator(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
 		super(multiblockInstance, type, hasRSControl);
 	}
@@ -34,6 +36,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	    super.readCustomNBT(nbt, descPacket);
 	    setWorking(nbt.getBoolean("isWorking"));
 	    setOverdrive(nbt.getBoolean("isOverdrive"));
+	    setActualOverdrive(nbt.getBoolean("Overdriven"));
 	}
 
 	@Override
@@ -41,6 +44,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	    super.writeCustomNBT(nbt, descPacket);
 	    nbt.putBoolean("isWorking", isWorking());
 	    nbt.putBoolean("isOverdrive", isOverdrive());
+	    nbt.putBoolean("Overdriven",isActualOverdrive());
 
 	}
 
@@ -81,9 +85,9 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	            }
 	            setAllActive(activeAfterTick);        
 	        } else if (activeAfterTick) {
-	            if (isUserOperated()||!initialized) {
+	            if (isChanged()||!initialized) {
 	            	initialized=true;
-	            	markUserOperation(false);
+	            	markChanged(false);
 	                ChunkData.addCubicTempAdjust(world, getPos(),getActualRange(), (byte) getActualTemp());
 	            }
 	        }
@@ -94,7 +98,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	public void setWorking(boolean working) {
 	    if (master() != null) {
 	        master().isWorking = working;
-	        markUserOperation(true);
+	        setUserOperated(true);
 	    }
 	}
 
@@ -109,31 +113,55 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	        return master().isOverdrive;
 		return false;
 	}
-	public void markUserOperation(boolean dirty) {
+	public void markChanged(boolean dirty) {
 		if (master() != null)
 	        master().isDirty=dirty;
 	}
 
-	public boolean isUserOperated() {
+	public boolean isChanged() {
 	    if (master() != null)
 	        return master().isDirty;
 		return false;
 	}
 	public void setOverdrive(boolean overdrive) {
 	    if (master() != null) {
-	    	markUserOperation(true);
+	    	setUserOperated(true);
 	        master().isOverdrive = overdrive;
 	    }
 	}
+	public boolean isActualOverdrive() {
+		if (master() != null)
+			return master().isActualOverdrive;
+		return false;
+	}
+
+	public void setActualOverdrive(boolean isActualOverdrive) {
+		if (master() != null) {
+	    	markChanged(true);
+	    	master().isActualOverdrive = isActualOverdrive;
+		}
+	}
+
 	public int getTemperatureLevel() {
 	    if (master() != null)
-	        return master().temperatureLevel*(isOverdrive()?master().overdriveBoost:1);
+	        return master().temperatureLevel*(isActualOverdrive()?master().overdriveBoost:1);
 	    return 1;
 	}
 	public int getRangeLevel() {
 	    if (master() != null)
 	        return master().rangeLevel;
 		return 1;
+	}
+
+	public boolean isUserOperated() {
+		if (master() != null)
+			return master().isUserOperated;
+		return false;
+	}
+
+	public void setUserOperated(boolean isUserOperated) {
+		if (master() != null)
+			master().isUserOperated = isUserOperated;
 	}
 
 }

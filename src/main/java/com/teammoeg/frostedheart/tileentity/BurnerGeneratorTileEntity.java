@@ -273,7 +273,28 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
 	protected void tickFuel() {
 		// just finished process or during process
         if (process > 0) {
-        	if (isOverdrive())
+        	if(isOverdrive()&&!isActualOverdrive()) {
+    			GeneratorRecipe recipe = getRecipe();
+                if (recipe != null) {
+                	int count=recipe.input.getCount();
+                	if(inventory.get(INPUT_SLOT).getCount()>=4*count) {
+    	                Utils.modifyInvStackSize(inventory, INPUT_SLOT, -4*count);
+    	                if(currentItem != null) {
+    	        			if (!inventory.get(OUTPUT_SLOT).isEmpty())
+    	                        inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
+    	                    else
+    	                        inventory.set(OUTPUT_SLOT, currentItem);
+    	        			currentItem=null;
+    	            	}
+    	                currentItem=recipe.output.copy();
+    	                currentItem.setCount(4*currentItem.getCount());
+    	                this.process += recipe.time*4;
+    	                this.processMax += recipe.time*4;
+    	                setActualOverdrive(true);
+                	}
+                }
+        	}
+        	if (isActualOverdrive())
         		process-=4;
         	else
         		process--;
@@ -290,10 +311,19 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
         	}
             GeneratorRecipe recipe = getRecipe();
             if (recipe != null) {
-            	int count=recipe.input.getCount();
+            	int modifier=1;
+            	if(isOverdrive()&&inventory.get(INPUT_SLOT).getCount()>=4*recipe.input.getCount()) {
+            		if(!isActualOverdrive())
+            			this.setActualOverdrive(true);
+            		modifier=4;
+            	}else if(isActualOverdrive()) {
+            		this.setActualOverdrive(false);
+            	}
+            	int count=recipe.input.getCount()*modifier;
                 Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
                 currentItem=recipe.output.copy();
-                this.process = recipe.time;
+                currentItem.setCount(currentItem.getCount()*modifier);
+                this.process = recipe.time*modifier;
                 this.processMax = process;
                 setActive(true);
             }else {
