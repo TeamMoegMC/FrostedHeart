@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.steamenergy;
 
+import java.util.List;
+
 import com.teammoeg.frostedheart.content.FHTileTypes;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -7,14 +9,21 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.AbstractCookingRecipe;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.item.crafting.SmokingRecipe;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 
@@ -41,14 +50,34 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 		}
 		return network;
 	}
-	public void onClick(ItemStack is) {
-		
+	public ActionResultType onClick(PlayerEntity pe,ItemStack is) {
 		if(is!=null) {
 			Item it=is.getItem();
 			if(it instanceof IChargable) {
 				power-=((IChargable) it).charge(is,power);
+				return ActionResultType.SUCCESS;
+			}
+			if(power>=100) {
+				List<SmokingRecipe> irs=this.world.getRecipeManager().getRecipesForType(IRecipeType.SMOKING);
+				for(SmokingRecipe sr:irs) {
+					if(sr.getIngredients().iterator().next().test(is)){
+						if(pe instanceof ServerPlayerEntity) {
+							power-=sr.getCookTime()/10;
+							pe.giveExperiencePoints((int) sr.getExperience());
+							is.setCount(is.getCount()-1);
+							ItemStack gain=sr.getRecipeOutput();
+							if(!pe.addItemStackToInventory(gain)) {
+								pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(),pe.getPosX(),pe.getPosY(),pe.getPosZ(),gain));
+							}
+							markDirty();
+							this.markContainingBlockForUpdate(null);
+						}
+						return ActionResultType.SUCCESS;
+					}
+				}
 			}
 		}
+		return ActionResultType.FAIL;
 	}
 	@Override
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
