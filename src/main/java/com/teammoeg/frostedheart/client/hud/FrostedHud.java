@@ -5,7 +5,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.AbstractGui;
@@ -21,8 +20,6 @@ import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import org.lwjgl.system.CallbackI;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
@@ -209,7 +206,7 @@ public class FrostedHud {
         if (mc.world != null) {
             BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
-                int temperature = (int) ChunkData.getTemperature(mc.world, pos);
+                int temperature = (int) SurviveTemperature.getEnvTemperature(player);
                 renderTemp(stack, mc, temperature, x + BarPos.temp_orb.getA(), y + BarPos.temp_orb.getB() + 3, true);
             }
         }
