@@ -18,70 +18,43 @@
 
 package com.teammoeg.frostedheart.network;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
-import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
-
+import com.teammoeg.frostedheart.climate.SurviveTemperature;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHDataSyncPacket {
-    private final int chunkX;
-    private final int chunkZ;
-    private final List<ITemperatureAdjust> tempMatrix;
+	private final CompoundNBT data;
 
-    public FHDataSyncPacket(int chunkX, int chunkZ, List<ITemperatureAdjust> tempMatrix) {
-        this.chunkX = chunkX;
-        this.chunkZ = chunkZ;
-        this.tempMatrix = tempMatrix;
-    }
+	public FHDataSyncPacket(PlayerEntity pe) {
+		this.data = SurviveTemperature.getFHData(pe);
+	}
 
-    FHDataSyncPacket(PacketBuffer buffer) {
-        chunkX = buffer.readVarInt();
-        chunkZ = buffer.readVarInt();
-        tempMatrix = new LinkedList<>();
-        int len = buffer.readVarInt();
-        for (int i = 0; i < len; i++)
-            if (buffer.isReadable())
-                tempMatrix.add(ITemperatureAdjust.valueOf(buffer));
-    }
+	FHDataSyncPacket(PacketBuffer buffer) {
+		data = buffer.readCompoundTag();
+	}
 
-    void encode(PacketBuffer buffer) {
-        buffer.writeVarInt(chunkX);
-        buffer.writeVarInt(chunkZ);
-        buffer.writeVarInt(tempMatrix.size());
-        for (ITemperatureAdjust adjust : tempMatrix)
-            adjust.serialize(buffer);
-        ;
-    }
+	void encode(PacketBuffer buffer) {
+		buffer.writeCompoundTag(data);
+	}
 
-    void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> {
-            ChunkPos pos = new ChunkPos(chunkX, chunkZ);
-            // Update client-side chunk data capability
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHClientUtils::getWorld);
-            if (world != null) {
-                // First, synchronize the chunk data in the capability and cache.
-                // Then, update the single data instance with the packet data
-                IChunk chunk = world.chunkExists(chunkX, chunkZ) ? world.getChunk(chunkX, chunkZ) : null;
-                ChunkData data = ChunkData.getCapability(chunk)
-                        .map(dataIn -> {
-                            ChunkDataCache.CLIENT.update(pos, dataIn);
-                            return dataIn;
-                        }).orElseGet(() -> ChunkDataCache.CLIENT.getOrCreate(pos));
-                data.onUpdatePacket(tempMatrix);
-            }
-        });
-        context.get().setPacketHandled(true);
-    }
+	void handle(Supplier<NetworkEvent.Context> context) {
+		context.get().enqueueWork(() -> {
+			// Update client-side nbt
+			World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHClientUtils::getWorld);
+			if (world != null) {
+				// First, synchronize the chunk data in the capability and cache.
+				// Then, update the single data instance with the packet data
+				SurviveTemperature.setFHData(FHClientUtils.mc().player,data);
+			}
+		});
+		context.get().setPacketHandled(true);
+	}
 }

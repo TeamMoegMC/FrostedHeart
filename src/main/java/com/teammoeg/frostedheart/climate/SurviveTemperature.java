@@ -111,12 +111,42 @@ public class SurviveTemperature {
 			return 0;
 		return nc.getFloat("bodytemperature");
 	}
-
+	public static float getLastTemperature(PlayerEntity spe) {
+		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
+		if(nc==null)
+			return 0;
+		return nc.getFloat("lasttemperature");
+	}
+	public static float getEnvTemperature(PlayerEntity spe) {
+		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
+		if(nc==null)
+			return 0;
+		return nc.getFloat("envtemperature");
+	}
+	public static CompoundNBT getFHData(PlayerEntity spe) {
+		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
+		if(nc==null)
+			return new CompoundNBT();
+		return nc;
+	}
+	public static void setFHData(PlayerEntity spe,CompoundNBT nc) {
+		spe.getPersistentData().put(DATA_ID,nc);
+	}
 	public static void setBodyTemperature(PlayerEntity spe,float val) {
 		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
 		if(nc==null)
 			nc=new CompoundNBT();
 		nc.putFloat("bodytemperature",val);
+		spe.getPersistentData().put(DATA_ID,nc);
+	}
+	public static void setTemperature(PlayerEntity spe,float body,float env) {
+		CompoundNBT nc=spe.getPersistentData().getCompound(DATA_ID);
+		if(nc==null)
+			nc=new CompoundNBT();
+		nc.putFloat("bodytemperature",body);
+		nc.putFloat("envtemperature",env);
+		nc.putFloat("deltatemperature",nc.getFloat("lasttemperature")-body);
+		nc.putFloat("lasttemperature",body);
 		spe.getPersistentData().put(DATA_ID,nc);
 	}
 }

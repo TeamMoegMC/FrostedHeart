@@ -29,6 +29,8 @@ import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.network.FHDataSyncPacket;
+import com.teammoeg.frostedheart.network.PacketHandler;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
@@ -40,6 +42,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 @Mixin(SurviveEvents.class)
 public class SurviveEventsMixin {
@@ -70,6 +73,8 @@ public class SurviveEventsMixin {
 			envtemp += skyLight > 5.0F ? (gameTime * 5.0F) : (-1.0F * 5.0F);
 			envtemp -= 37F;// normalize
 			float keepwarm = 0;
+			if(player.isBurning())
+				envtemp+=150F;
 			for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
 				if (is == null)
 					continue;
@@ -106,7 +111,8 @@ public class SurviveEventsMixin {
 			else if(current>10)
 				current=10;
 				
-			SurviveTemperature.setBodyTemperature(player, current);
+			SurviveTemperature.setTemperature(player, current,envtemp+37);
+			PacketHandler.send(PacketDistributor.PLAYER.with(()->player),new FHDataSyncPacket(player));
 			// TemperatureStats ts = SurviveEntityStats.getTemperatureStats(player);
 			// ts.setTemperatureLevel(50);
 			/*
