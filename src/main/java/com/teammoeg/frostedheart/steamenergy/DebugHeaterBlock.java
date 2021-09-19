@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.steamenergy;
 
+import java.util.Properties;
 import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;

@@ -21,11 +21,13 @@ package com.teammoeg.frostedheart.client;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.render.ClockBlockTileRenderer;
 import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
 import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.client.screen.RadiatorScreen;
 import com.teammoeg.frostedheart.content.FHBlocks;
+import com.teammoeg.frostedheart.content.FHTileTypes;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.client.Minecraft;
@@ -40,6 +42,7 @@ import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
@@ -58,6 +61,7 @@ public class FHClientModEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.Multi.crucible, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.radiator, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater,RenderType.getCutoutMipped());
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
         PlayerRenderer render = skinMap.get("default");

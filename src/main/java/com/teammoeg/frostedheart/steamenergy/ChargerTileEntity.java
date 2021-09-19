@@ -175,6 +175,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 	public float getMaxPower() {
 		return 960000F;
 	}
+	public Direction getDirection() {
+		return this.getBlockState().get(BlockStateProperties.FACING);
+	}
 	@Override
 	public void tick() {
 		SteamEnergyNetwork network=getNetwork();
