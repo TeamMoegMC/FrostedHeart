@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.world;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -54,7 +53,7 @@ public class FHOreFeatureConfig implements IFeatureConfig {
         public static final FHRuleTest pyrite = new FHRuleTest(new Block[]{RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
         public static final FHRuleTest native_copper = new FHRuleTest(new Block[]{Blocks.ANDESITE, RankineBlocks.SLATE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
         public static final FHRuleTest malachite = new FHRuleTest(new Block[]{RankineBlocks.TUFA_LIMESTONE.get(), RankineBlocks.WHITE_MARBLE.get(), RankineBlocks.BLACK_MARBLE.get(), RankineBlocks.BRECCIA.get()});
-        public static final FHRuleTest pentlandite = new FHRuleTest(new Block[]{Blocks.DIORITE, RankineBlocks.RHYOLITE.get(), RankineBlocks.PYROXENE_GABBRO.get(), RankineBlocks.GRANODIORITE.get(), RankineBlocks.KOMATIITE.get()});
+        public static final FHRuleTest pentlandite = new FHRuleTest(new Block[]{Blocks.DIORITE, Blocks.GRANITE, RankineBlocks.RHYOLITE.get(), RankineBlocks.PYROXENE_GABBRO.get(), RankineBlocks.GRANODIORITE.get(), RankineBlocks.KOMATIITE.get()});
         public static final FHRuleTest native_tin = new FHRuleTest(new Block[]{RankineBlocks.PEGMATITE.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.QUARTZITE.get(), RankineBlocks.QUARTZ_SANDSTONE.get()});
         public static final FHRuleTest cassiterite = new FHRuleTest(new Block[]{Blocks.DIORITE, RankineBlocks.GRANODIORITE.get(), Blocks.GRANITE, RankineBlocks.GRAY_GRANITE.get(), RankineBlocks.PYROXENE_GABBRO.get(), RankineBlocks.WHITE_MARBLE.get()});
         public static final FHRuleTest bituminous = new FHRuleTest(new Block[]{RankineBlocks.CHALK.get(), RankineBlocks.CARBONACEOUS_SHALE.get(), RankineBlocks.DOLOSTONE.get(), RankineBlocks.TUFA_LIMESTONE.get()});
