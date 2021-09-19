@@ -31,8 +31,6 @@ import com.teammoeg.frostedheart.content.FHItems;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.nbt.FHNBT;
-import com.teammoeg.frostedheart.network.ChunkUnwatchPacket;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -50,7 +48,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
-import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -71,14 +68,12 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -130,27 +125,12 @@ public class FHForgeEvents {
                 //    data = new ChunkData(chunkPos);
                 // }
                 data = ChunkDataCache.SERVER.getOrCreate(chunkPos);
-            } else {
-                // This may happen before or after the chunk is watched and synced to client
-                // Default to using the cache. If later the sync packet arrives it will update the same instance in the chunk capability and cache
-                data = ChunkDataCache.CLIENT.getOrCreate(chunkPos);
+                event.addCapability(ChunkDataCapabilityProvider.KEY, data);
             }
-            event.addCapability(ChunkDataCapabilityProvider.KEY, data);
+            
         }
     }
 
-    @SubscribeEvent
-    public static void onChunkWatch(ChunkWatchEvent.Watch event) {
-        // Send an update packet to the client when watching the chunk
-        ChunkPos pos = event.getPos();
-        ChunkData chunkData = ChunkData.get(event.getWorld(), pos);
-        // if (chunkData.getStatus() != ChunkData.Status.EMPTY) {
-        PacketHandler.send(PacketDistributor.PLAYER.with(event::getPlayer), chunkData.getUpdatePacket());
-        /*} else {
-            // Chunk does not exist yet but it's queue'd for watch. Queue an update packet to be sent on chunk load
-            ChunkDataCache.WATCH_QUEUE.enqueueUnloadedChunk(pos, event.getPlayer());
-        }*/
-    }
 
     @SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
@@ -158,7 +138,7 @@ public class FHForgeEvents {
             ChunkPos pos = event.getChunk().getPos();
             ChunkData.getCapability(event.getChunk()).ifPresent(data -> {
                 ChunkDataCache.SERVER.update(pos, data);
-                ChunkDataCache.WATCH_QUEUE.dequeueLoadedChunk(pos, data);
+               // ChunkDataCache.WATCH_QUEUE.dequeueLoadedChunk(pos, data);
             });
 
         }
@@ -168,18 +148,10 @@ public class FHForgeEvents {
     public static void onChunkUnload(ChunkEvent.Unload event) {
         // Clear server side chunk data cache
         if (!event.getWorld().isRemote() && !(event.getChunk() instanceof EmptyChunk)) {
-
             ChunkDataCache.SERVER.remove(event.getChunk().getPos());
         }
     }
 
-    @SubscribeEvent
-    public static void onChunkUnwatch(ChunkWatchEvent.UnWatch event) {
-        // Send an update packet to the client when un-watching the chunk
-        ChunkPos pos = event.getPos();
-        PacketHandler.send(PacketDistributor.PLAYER.with(event::getPlayer), new ChunkUnwatchPacket(pos));
-        ChunkDataCache.WATCH_QUEUE.dequeueChunk(pos, event.getPlayer());
-    }
 
     @SubscribeEvent
     public static void addOreGenFeatures(BiomeLoadingEvent event) {

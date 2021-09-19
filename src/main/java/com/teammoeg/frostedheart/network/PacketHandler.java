@@ -46,13 +46,13 @@ public class PacketHandler {
     public static void register() {
         int id = 0;
 
-        CHANNEL.registerMessage(id++, ChunkWatchPacket.class, ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
-        CHANNEL.registerMessage(id++, ChunkUnwatchPacket.class, ChunkUnwatchPacket::encode, ChunkUnwatchPacket::new, ChunkUnwatchPacket::handle);
+        //CHANNEL.registerMessage(id++, ChunkWatchPacket.class, ChunkWatchPacket::encode, ChunkWatchPacket::new, ChunkWatchPacket::handle);
+        //CHANNEL.registerMessage(id++, ChunkUnwatchPacket.class, ChunkUnwatchPacket::encode, ChunkUnwatchPacket::new, ChunkUnwatchPacket::handle);
         CHANNEL.registerMessage(id++, MessageTileSync.class, MessageTileSync::toBytes, MessageTileSync::new, (t, ctx) -> {
             t.process(ctx);
             ctx.get().setPacketHandled(true);
         });
-        CHANNEL.registerMessage(id++, TemperatureChangePacket.class, TemperatureChangePacket::encode, TemperatureChangePacket::new, TemperatureChangePacket::handle);
+        //CHANNEL.registerMessage(id++, TemperatureChangePacket.class, TemperatureChangePacket::encode, TemperatureChangePacket::new, TemperatureChangePacket::handle);
         CHANNEL.registerMessage(id++,FHDataSyncPacket.class,FHDataSyncPacket::encode,FHDataSyncPacket::new,FHDataSyncPacket::handle);
     }
 

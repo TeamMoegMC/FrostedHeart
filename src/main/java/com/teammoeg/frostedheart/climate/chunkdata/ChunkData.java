@@ -25,9 +25,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.network.ChunkWatchPacket;
-import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.TemperatureChangePacket;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -41,7 +38,6 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public static final ChunkData EMPTY = new Immutable();
@@ -108,7 +104,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
                     && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
             data.adjusters.add(adjx);
-            PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
+            //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
@@ -128,7 +124,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
             data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
                     && adj.getCenterZ() == src.getZ());
-            PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
+            //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
@@ -147,7 +143,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                 return dataIn;
             }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
             data.adjusters.remove(adj);
-            PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
+            //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
@@ -375,16 +371,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             }
         }
         return WorldClimate.WORLD_TEMPERATURE + ret;
-    }
-    /**
-     * Create an update packet to send to client with necessary information
-     */
-    public ChunkWatchPacket getUpdatePacket() {
-        return new ChunkWatchPacket(pos.x, pos.z, adjusters);
-    }
-
-    public TemperatureChangePacket getTempChangePacket() {
-        return new TemperatureChangePacket(pos.x, pos.z, adjusters);
     }
 
     /**
