@@ -38,7 +38,7 @@ import net.minecraft.util.text.ITextComponent;
 
 public class GeneratorScreen extends IEContainerScreen<GeneratorContainer> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generatornew");
-    private BurnerGeneratorTileEntity tile;
+    private T1GeneratorTileEntity tile;
 
     public GeneratorScreen(GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);

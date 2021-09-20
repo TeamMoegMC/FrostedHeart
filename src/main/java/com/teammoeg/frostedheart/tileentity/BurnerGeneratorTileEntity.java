@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 import com.teammoeg.frostedheart.state.FHBlockInterfaces;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
@@ -38,6 +39,7 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
@@ -53,7 +55,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGeneratorTileEntity> implements IIEInventory,
+public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> extends AbstractGenerator<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
     public static final int INPUT_SLOT = 0;
@@ -62,9 +64,43 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
     public int processMax = 0;
     NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     ItemStack currentItem;
-    public BurnerGeneratorTileEntity.GeneratorData guiData = new BurnerGeneratorTileEntity.GeneratorData();
-    public BurnerGeneratorTileEntity(int temperatureLevelIn,int overdriveBoostIn, int rangeLevelIn) {
-        super(FHMultiblocks.GENERATOR,FHTileTypes.GENERATOR_T1.get(), false);
+    public class GeneratorData implements IIntArray {
+        public static final int MAX_BURN_TIME = 0;
+        public static final int BURN_TIME = 1;
+
+        @Override
+        public int get(int index) {
+            switch (index) {
+                case MAX_BURN_TIME:
+                    return processMax;
+                case BURN_TIME:
+                    return process;
+                default:
+                    throw new IllegalArgumentException("Unknown index " + index);
+            }
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case MAX_BURN_TIME:
+                    processMax = value;
+                    break;
+                case BURN_TIME:
+                    process = value;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown index " + index);
+            }
+        }
+
+        @Override
+        public int size() {
+            return 2;
+        }
+    }
+    public BurnerGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl,int temperatureLevelIn,int overdriveBoostIn, int rangeLevelIn) {
+    	super(multiblockInstance,type, hasRSControl);
         temperatureLevel = temperatureLevelIn;
         rangeLevel = rangeLevelIn;
         overdriveBoost=overdriveBoostIn;
@@ -149,7 +185,7 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
 
     @Override
     public int[] getCurrentProcessesStep() {
-        BurnerGeneratorTileEntity master = master();
+        T master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesStep();
         return new int[]{processMax - process};
@@ -157,7 +193,7 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
 
     @Override
     public int[] getCurrentProcessesMax() {
-        BurnerGeneratorTileEntity master = master();
+        T master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesMax();
         return new int[]{processMax};
@@ -165,7 +201,7 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
 
     @Override
     public NonNullList<ItemStack> getInventory() {
-        BurnerGeneratorTileEntity master = master();
+        T master = master();
         if (master != null && master.formed && formed)
             return master.inventory;
         return this.inventory;
@@ -197,49 +233,13 @@ public class BurnerGeneratorTileEntity extends AbstractGenerator<BurnerGenerator
 
     @Nonnull
     @Override
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+    public <X> LazyOptional<X> getCapability(@Nonnull Capability<X> capability, Direction facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            BurnerGeneratorTileEntity master = master();
+            T master = master();
             if (master != null)
                 return master.invHandler.cast();
         }
         return super.getCapability(capability, facing);
-    }
-
-    public class GeneratorData implements IIntArray {
-        public static final int MAX_BURN_TIME = 0;
-        public static final int BURN_TIME = 1;
-
-        @Override
-        public int get(int index) {
-            switch (index) {
-                case MAX_BURN_TIME:
-                    return processMax;
-                case BURN_TIME:
-                    return process;
-                default:
-                    throw new IllegalArgumentException("Unknown index " + index);
-            }
-        }
-
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case MAX_BURN_TIME:
-                    processMax = value;
-                    break;
-                case BURN_TIME:
-                    process = value;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown index " + index);
-            }
-        }
-
-        @Override
-        public int size() {
-            return 2;
-        }
     }
 
     @Nullable

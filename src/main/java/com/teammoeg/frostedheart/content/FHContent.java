@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.item.HeaterVestItem;
 import com.teammoeg.frostedheart.item.SteamBottleItem;
 import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
 import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
+import com.teammoeg.frostedheart.multiblock.GeneratorMultiblockT2;
 import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
 import com.teammoeg.frostedheart.steamenergy.ChargerBlock;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterBlock;
@@ -52,6 +53,7 @@ import com.teammoeg.frostedheart.steamenergy.RadiatorBlock;
 import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
 import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
+import com.teammoeg.frostedheart.tileentity.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
@@ -157,6 +159,7 @@ public class FHContent {
 
         // Init Multiblocks
         FHMultiblocks.GENERATOR = new GeneratorMultiblock();
+        FHMultiblocks.GENERATOR_T2=new GeneratorMultiblockT2();
         FHMultiblocks.CRUCIBLE = new CrucibleMultiblock();
         FHMultiblocks.STEAMTURBINE = new SteamTurbineMultiblock();
     }
@@ -166,8 +169,9 @@ public class FHContent {
         MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
         MultiblockHandler.registerMultiblock(FHMultiblocks.CRUCIBLE);
         MultiblockHandler.registerMultiblock(FHMultiblocks.STEAMTURBINE);
+        MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T2);
         // Register IE containers
-        GuiHandler.register(BurnerGeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
+        GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
         GuiHandler.register(RadiatorTileEntity.class, new ResourceLocation(FHMain.MODID, "radiator"), RadiatorContainer::new);
     }
