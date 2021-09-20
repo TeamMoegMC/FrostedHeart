@@ -151,7 +151,6 @@ dependencies {
     compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135")
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.0-135:datagen")
 
-    
     compile fg.deobf('com.cannolicatfish:Project-Rankine:1.16.5-1.3')
     implementation fg.deobf('com.cannolicatfish:Project-Rankine:1.16.5-1.3')
 
@@ -162,6 +161,9 @@ dependencies {
 
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
+
+    runtimeOnly fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
+    compileOnly fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
 
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
     testAnnotationProcessor "org.spongepowered:mixin:0.8.2:processor"
