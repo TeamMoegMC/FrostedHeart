@@ -55,6 +55,7 @@ public class FHClientModEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.Multi.generator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.Multi.crucible, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHBlocks.Multi.generator_t2, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.radiator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater,RenderType.getCutoutMipped());

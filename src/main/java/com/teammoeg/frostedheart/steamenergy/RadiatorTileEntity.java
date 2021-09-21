@@ -141,9 +141,9 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
             isDirty=true;
             afterState=true;
         }else if(power>=100000) {
-        	power-=100000;
-        	process=1000;
-        	processMax=1000;
+        	power-=4000*network.getTemperatureLevel();
+        	process=(int) (1000*network.getTemperatureLevel());
+        	processMax=(int) (1000*network.getTemperatureLevel());
 			isDirty=true;
 			afterState=true;
 		}

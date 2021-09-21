@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.block.FHBaseBlock;
 import com.teammoeg.frostedheart.block.FHBlockItem;
 import com.teammoeg.frostedheart.block.GeneratorCoreBlock;
 import com.teammoeg.frostedheart.block.GeneratorMultiblockBlock;
+import com.teammoeg.frostedheart.block.HeatedGeneratorMultiBlock;
 import com.teammoeg.frostedheart.block.SteamTurbineBlock;
 import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
 import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
@@ -99,6 +100,7 @@ public class FHContent {
                 .sound(SoundType.CROP);
         
         FHBlocks.Multi.generator = new GeneratorMultiblockBlock("generator", FHTileTypes.GENERATOR_T1);
+        FHBlocks.Multi.generator_t2 = new HeatedGeneratorMultiBlock("generator_r2", FHTileTypes.GENERATOR_T1);
         FHBlocks.Multi.crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
         FHBlocks.Multi.steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
         FHBlocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
