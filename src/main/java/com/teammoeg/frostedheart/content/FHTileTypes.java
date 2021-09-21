@@ -30,6 +30,8 @@ import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
 import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.SteamTurbineTileEntity;
+import com.teammoeg.frostedheart.tileentity.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.tileentity.T2GeneratorTileEntity;
 
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
@@ -42,8 +44,8 @@ public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
 
-    public static final RegistryObject<TileEntityType<BurnerGeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
-            "generator", makeType(() -> new BurnerGeneratorTileEntity(1,2, 1), () -> FHBlocks.Multi.generator)
+    public static final RegistryObject<TileEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
+            "generator", makeType(() -> new T1GeneratorTileEntity(1,2, 1), () -> FHBlocks.Multi.generator)
     );
     public static final RegistryObject<TileEntityType<CrucibleTileEntity>> CRUCIBLE = REGISTER.register(
             "crucible", makeType(() -> new CrucibleTileEntity(), () -> FHBlocks.Multi.crucible)
@@ -64,6 +66,10 @@ public class FHTileTypes {
 
 	public static final RegistryObject<TileEntityType<RadiatorTileEntity>> RADIATOR = REGISTER.register(
             "heat_radiator", makeType(() -> new RadiatorTileEntity(), () -> FHBlocks.radiator));
+
+	public static final RegistryObject<TileEntityType<T2GeneratorTileEntity>> GENERATOR_T2 = REGISTER.register(
+            "generator_r2", makeType(() -> new T2GeneratorTileEntity(2,4, 2), () -> FHBlocks.Multi.generator_t2)
+    );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

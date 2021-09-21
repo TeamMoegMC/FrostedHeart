@@ -18,10 +18,13 @@
 
 package com.teammoeg.frostedheart.content;
 
+import com.teammoeg.frostedheart.multiblock.GeneratorMultiblockT2;
+
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 
 public class FHMultiblocks {
     public static IETemplateMultiblock GENERATOR;
     public static IETemplateMultiblock CRUCIBLE;
     public static IETemplateMultiblock STEAMTURBINE;
+	public static IETemplateMultiblock GENERATOR_T2;
 }

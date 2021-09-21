@@ -37,5 +37,6 @@ public class FHBlocks {
         public static Block generator;
         public static Block crucible;
         public static Block steam_turbine;
+        public static Block generator_t2;
     }
 }
