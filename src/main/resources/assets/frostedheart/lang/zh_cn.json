@@ -1,18 +1,20 @@
 {
   "itemGroup.frostedheart": "冰冻之心",
-
   "block.frostedheart.generator_brick": "能量塔砖",
   "block.frostedheart.generator_core_t1": "能量塔核心",
   "block.frostedheart.generator_amplifier_r1": "能量塔增幅器",
   "block.frostedheart.burning_chamber_core": "燃烧室核心",
   "block.frostedheart.burning_chamber": "燃烧室",
-
   "block.frostedheart.generator": "初级能量塔",
   "block.frostedheart.crucible": "炼钢坩埚",
   "block.frostedheart.steam_turbine": "工业蒸汽轮机",
-
   "block.frostedheart.rye_block": "黑麦",
   "block.frostedheart.white_turnip_block": "白萝卜",
+  "block.frostedheart.heat_pipe": "输热管",
+  "block.frostedheart.debug_heater": "调试加热器",
+  "block.frostedheart.charger": "蒸汽充气机",
+  "block.frostedheart.heat_radiator": "蒸汽加热器",
+
   "item.frostedheart.rye": "黑麦穗",
   "item.frostedheart.rye_bread": "黑麦面包",
   "item.frostedheart.energy_core": "能量核心",
@@ -25,16 +27,7 @@
   "item.frostedheart.vegetable_soup": "蔬菜汤",
   "item.frostedheart.black_bread": "黑面包",
   "item.frostedheart.white_turnip": "白萝卜",
-  "frostedheart.tooltip.f3_average_temperature": "平均气温: %s°C",
-  "frostedheart.tooltip.f3_invalid_chunk_data": "区块数据不可用",
-  "frostedheart.gui.generator.temperature.level": "温度增幅: ",
-  "frostedheart.gui.generator.range.level": "增温范围: ",
-  "frostedheart.gui.generator.mode.on": "开启能量塔",
-  "frostedheart.gui.generator.mode.off": "关闭能量塔",
-  "frostedheart.gui.generator.overdrive.on": "开启超频",
-  "frostedheart.gui.generator.overdrive.off": "关闭超频",
-  "gui.frostedheart.temperature.desc": "平均气温",
-  "message.frostedheart.eaten_poisonous_food": "你不应该吃生肉！",
+
   "item.frostedheart.hay_boots": "干草靴子",
   "item.frostedheart.hay_hat": "干草帽子",
   "item.frostedheart.hay_jacket": "干草夹克",
@@ -48,11 +41,23 @@
   "item.frostedheart.wool_jacket": "羊毛夹克",
   "item.frostedheart.wool_pants": "羊毛裤子",
   "item.frostedheart.raw_hide": "兽皮",
+  "item.frostedheart.steam_bottle": "蒸汽瓶",
+
+  "frostedheart.gui.generator.temperature.level": "温度增幅: ",
+  "frostedheart.gui.generator.range.level": "增温范围: ",
+  "frostedheart.gui.generator.mode.on": "开启能量塔",
+  "frostedheart.gui.generator.mode.off": "关闭能量塔",
+  "frostedheart.gui.generator.overdrive.on": "开启超频",
+  "frostedheart.gui.generator.overdrive.off": "关闭超频",
+  "message.frostedheart.eaten_poisonous_food": "你不应该吃生肉！",
   "message.frostedheart.crop_not_growable": "这里的温度太低了，这株植物生长至少需要",
+  "tooltip.frostedheart.f3_average_temperature": "平均气温: %s°C",
+  "tooltip.frostedheart.f3_invalid_chunk_data": "区块数据不可用",
   "tooltip.frostedheart.survive_armor_temp_mod": "保暖指数：",
   "tooltip.frostedheart.survive_block_temp_mod": "温度指数：",
   "tooltip.frostedheart.survive_weight_mod": "沉重指数：",
   "tooltip.frostedheart.survive_range": "范围:",
   "frostedheart.desc.steamStored": "蒸汽:%ssu",
-  "gui.jei.category.crucible": "炼钢坩埚"
+  "gui.jei.category.crucible": "炼钢坩埚",
+  "gui.frostedheart.temperature.desc": "平均气温"
 }

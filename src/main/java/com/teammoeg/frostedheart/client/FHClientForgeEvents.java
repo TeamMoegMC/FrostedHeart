@@ -31,6 +31,7 @@ import com.stereowalker.survive.entity.SurviveEntityStats;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.GameType;
 import org.lwjgl.opengl.GL11;
 
@@ -120,9 +121,9 @@ public class FHClientForgeEvents {
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
                 list.add("");
                 list.add(AQUA + FHMain.MODNAME);
-                list.add(GRAY + I18n.format("frostedheart.tooltip.f3_average_temperature", WHITE + String.format("%.1f", ChunkData.getTemperature(mc.world,pos))));
+                list.add(GRAY + I18n.format("tooltip.frostedheart.f3_average_temperature", WHITE + String.format("%.1f", ChunkData.getTemperature(mc.world,pos))));
             } else {
-                list.add(GRAY + I18n.format("frostedheart.tooltip.f3_invalid_chunk_data"));
+                list.add(GRAY + I18n.format("tooltip.frostedheart.f3_invalid_chunk_data"));
             }
         }
     }
@@ -130,9 +131,10 @@ public class FHClientForgeEvents {
     @SubscribeEvent
     public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
-        ClientPlayerEntity player = mc.player;
+        ClientPlayerEntity clientPlayer = mc.player;
+        PlayerEntity renderViewPlayer = FrostedHud.getRenderViewPlayer();
 
-        if (mc.gameSettings.hideGUI || player == null) {
+        if (renderViewPlayer == null || clientPlayer == null || mc.gameSettings.hideGUI) {
             return;
         }
 
@@ -141,105 +143,53 @@ public class FHClientForgeEvents {
         int anchorY = event.getWindow().getScaledHeight();
         float partialTicks =  event.getPartialTicks();
 
-        mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
-        FrostedHud.renderSetup();
+//        RenderSystem.disableAlphaTest();
 
-        RenderSystem.disableAlphaTest();
-
-        if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderHelmet && FrostedHud.getRenderViewPlayer() != null) {
-            //System.out.println(SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()));
-            if (SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()) <= -1) {
-                FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, player);
-            }
+        if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
+            FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, clientPlayer);
         }
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
             if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
                 mc.ingameGUI.getSpectatorGui().func_238528_a_(stack, partialTicks);
             } else {
-                FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, player, partialTicks);
+                FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
             }
             event.setCanceled(true);
         }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience && FrostedHud.getRenderViewPlayer() != null) {
-            if (SurviveTemperature.getBodyTemperature(FrostedHud.getRenderViewPlayer()) <= -1) {
-                FrostedHud.renderHypothermia(stack, anchorX, anchorY, mc, player);
+        if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience) {
+            if (FrostedHud.renderHypothermia) {
+                FrostedHud.renderHypothermia(stack, anchorX, anchorY, mc, clientPlayer);
             } else {
-                FrostedHud.renderExperience(stack, anchorX, anchorY, mc, player);
+                FrostedHud.renderExperience(stack, anchorX, anchorY, mc, clientPlayer);
             }
             event.setCanceled(true);
         }
         if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTH && FrostedHud.renderHealth) {
-            FrostedHud.renderHealth(stack, anchorX, anchorY, mc, player);
+            FrostedHud.renderHealth(stack, anchorX, anchorY, mc, renderViewPlayer);
             event.setCanceled(true);
         }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD && FrostedHud.renderFood) {
-            FrostedHud.renderFood(stack, anchorX, anchorY, mc, player);
-            FrostedHud.renderThirst(stack, anchorX, anchorY, mc, player);
-            FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, player);
+        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
+            if (FrostedHud.renderFood) FrostedHud.renderFood(stack, anchorX, anchorY, mc, renderViewPlayer);
+            if (FrostedHud.renderThirst) FrostedHud.renderThirst(stack, anchorX, anchorY, mc, renderViewPlayer);
+            if (FrostedHud.renderHealth) FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
             event.setCanceled(true);
         }
         if (event.getType() == RenderGameOverlayEvent.ElementType.ARMOR && FrostedHud.renderArmor) {
-            FrostedHud.renderArmor(stack, anchorX, anchorY, mc, player);
+            FrostedHud.renderArmor(stack, anchorX, anchorY, mc, clientPlayer);
             event.setCanceled(true);
         }
         if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTHMOUNT && FrostedHud.renderHealthMount) {
-            FrostedHud.renderMountHealth(stack, anchorX, anchorY, mc, player);
+            FrostedHud.renderMountHealth(stack, anchorX, anchorY, mc, clientPlayer);
             event.setCanceled(true);
         }
         if (event.getType() == RenderGameOverlayEvent.ElementType.JUMPBAR && FrostedHud.renderJumpBar) {
-            FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, player);
+            FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
             event.setCanceled(true);
         }
 
-        RenderSystem.enableAlphaTest();
+//        RenderSystem.enableAlphaTest();
     }
-
-    @SubscribeEvent
-    public static void renderGameOverlay(RenderGameOverlayEvent event) {
-        Minecraft mc = Minecraft.getInstance();
-        mc.getProfiler().startSection("frostedheart_temperature");
-        if (Minecraft.isGuiEnabled() && mc.playerController.gameIsSurvivalOrAdventure() && mc.world != null && event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
-            BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
-            if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
-                // FETCH TEMPERATURE
-                int temperature = (int) ChunkData.getTemperature(mc.world,pos);
-
-                // RENDER CONFIGURATION
-                int w = event.getWindow().getScaledWidth();
-                int h = event.getWindow().getScaledHeight();
-                int offsetX = 0;
-                int offsetY = 0;
-                if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.MIDDLE) {
-                    offsetX = w / 2 - 18;
-                    offsetY = h - 84;
-                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_LEFT) {
-                    offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
-                    offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
-                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.TOP_RIGHT) {
-                    offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
-                    offsetY = FHConfig.CLIENT.tempOrbOffsetY.get();
-                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_LEFT) {
-                    offsetX = FHConfig.CLIENT.tempOrbOffsetX.get();
-                    offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
-                } else if (FHConfig.CLIENT.tempOrbPosition.get() == FHConfig.TempOrbPos.BOTTOM_RIGHT) {
-                    offsetX = w - 36 + FHConfig.CLIENT.tempOrbOffsetX.get();
-                    offsetY = h - 36 + FHConfig.CLIENT.tempOrbOffsetY.get();
-                }
-
-                // RENDER TEMPERATURE
-//                renderTemp(event.getMatrixStack(), mc, temperature, offsetX, offsetY, true);
-            }
-        }
-
-        mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
-        mc.getProfiler().endSection();
-
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        RenderSystem.disableAlphaTest();
-    }
-
-
 }

@@ -6,16 +6,18 @@
   "block.frostedheart.generator_amplifier_r1": "Generator Amplifier",
   "block.frostedheart.burning_chamber_core": "Burning Chamber Core",
   "block.frostedheart.burning_chamber": "Burning Chamber",
-
   "block.frostedheart.generator": "Generator T1",
   "block.frostedheart.crucible": "Steel Mill Crucible",
   "block.frostedheart.steam_turbine": "Industrial Steam Turbine",
-
   "block.frostedheart.rye_block": "Rye",
   "block.frostedheart.white_turnip_block": "White Turnip",
+  "block.frostedheart.heat_pipe": "Heat Pipe",
+  "block.frostedheart.debug_heater": "Debug Heater",
+  "block.frostedheart.charger": "Steam Charger",
+  "block.frostedheart.heat_radiator": "Steam Radiator",
+
   "item.frostedheart.rye": "Rye Ears",
   "item.frostedheart.rye_bread": "Rye Bread",
-
   "item.frostedheart.energy_core": "Energy Core",
   "item.frostedheart.generator_ash": "Generator Ash",
   "item.frostedheart.hay_boots": "Hay Boots",
@@ -39,21 +41,23 @@
   "item.frostedheart.vegetable_soup": "Vegetable Soup",
   "item.frostedheart.black_bread": "Black Bread",
   "item.frostedheart.white_turnip": "White Turnip",
-  "frostedheart.tooltip.f3_average_temperature": "Average Temperature: %s°C",
-  "frostedheart.tooltip.f3_invalid_chunk_data": "Invalid Chunk Data",
+  "item.frostedheart.steam_bottle": "Steam Bottle",
+
   "frostedheart.gui.generator.temperature.level": "Temperature Increment: ",
   "frostedheart.gui.generator.range.level": "Range: ",
   "frostedheart.gui.generator.mode.on": "Turn On Generator",
   "frostedheart.gui.generator.mode.off": "Turn Off Generator",
   "frostedheart.gui.generator.overdrive.on": "Turn On Overdrive",
   "frostedheart.gui.generator.overdrive.off": "Turn Off Overdrive",
-  "gui.frostedheart.temperature.desc": "Average Temperature",
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under ",
+  "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s°C",
+  "tooltip.frostedheart.f3_invalid_chunk_data": "Invalid Chunk Data",
   "tooltip.frostedheart.survive_armor_temp_mod": "Armor Temperature Modifier: ",
   "tooltip.frostedheart.survive_block_temp_mod": "Block Temperature Modifier: ",
   "tooltip.frostedheart.survive_weight_mod": "Weight Modifier: ",
   "tooltip.frostedheart.survive_range": "Range: ",
   "frostedheart.desc.steamStored": "Steam:%ssu",
-  "gui.jei.category.crucible": "Steel Mill Crucible"
+  "gui.jei.category.crucible": "Steel Mill Crucible",
+  "gui.frostedheart.temperature.desc": "Average Temperature"
 }
