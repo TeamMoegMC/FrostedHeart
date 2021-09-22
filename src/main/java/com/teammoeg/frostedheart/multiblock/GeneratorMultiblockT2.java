@@ -28,7 +28,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class GeneratorMultiblockT2 extends FHStoneMultiblock {
+public class GeneratorMultiblockT2 extends FHStoneMultiblock{
     public GeneratorMultiblockT2() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3),
