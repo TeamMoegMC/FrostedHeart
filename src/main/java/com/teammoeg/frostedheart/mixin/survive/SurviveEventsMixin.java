@@ -18,11 +18,11 @@
 
 package com.teammoeg.frostedheart.mixin.survive;
 
+import com.teammoeg.frostedheart.content.FHEffects;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import com.stereowalker.survive.events.SurviveEvents;
-import com.stereowalker.survive.potion.SEffects;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
@@ -154,14 +154,14 @@ public class SurviveEventsMixin {
 			if (!(player.isCreative() || player.isSpectator())) {
 				if (calculatedTarget > 1 || calculatedTarget < -1) {
 
-					if (!player.isPotionActive(SEffects.HYPERTHERMIA) && !player.isPotionActive(SEffects.HYPOTHERMIA)) {
+					if (!player.isPotionActive(FHEffects.HYPERTHERMIA) && !player.isPotionActive(FHEffects.HYPOTHERMIA)) {
 
 						if (calculatedTarget > 1)
 							player.addPotionEffect(
-									new EffectInstance(SEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 1)));
+									new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 1)));
 						else
 							player.addPotionEffect(
-									new EffectInstance(SEffects.HYPOTHERMIA, 100, (int) (1 + calculatedTarget)));
+									new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (1 + calculatedTarget)));
 					}
 				}
 			}

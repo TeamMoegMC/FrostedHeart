@@ -25,6 +25,8 @@ import static com.teammoeg.frostedheart.content.FHContent.registeredFHItems;
 
 import java.util.Map;
 
+import com.stereowalker.survive.potion.SEffects;
+import com.teammoeg.frostedheart.content.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
@@ -32,6 +34,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
+import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.feature.Feature;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -75,6 +78,11 @@ public class FHRegistryEvents {
                 throw e;
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void registerEffects(final RegistryEvent.Register<Effect> event) {
+        FHEffects.registerAll(event.getRegistry());
     }
 
     @SubscribeEvent
