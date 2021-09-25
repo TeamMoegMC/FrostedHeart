@@ -77,7 +77,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		return actual;
 	}
 	@Override
-	public float getTemperatureLevel() {
+	public int getTemperatureLevel() {
 		return super.getTemperatureLevel();
 	}
 	@Override

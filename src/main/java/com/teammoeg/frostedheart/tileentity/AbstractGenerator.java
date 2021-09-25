@@ -142,7 +142,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 		}
 	}
 
-	public float getTemperatureLevel() {
+	public int getTemperatureLevel() {
 	    if (master() != null)
 	        return master().temperatureLevel*(isActualOverdrive()?master().overdriveBoost:1);
 	    return 1;

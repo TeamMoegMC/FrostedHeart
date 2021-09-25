@@ -4,7 +4,7 @@
     "particle": "frostedheart:block/multiblocks/crudegeneratorstone"
   },
   "loader": "forge:obj",
-  "model": "frostedheart:models/block/generator_t2.obj",
+  "model": "frostedheart:models/block/multiblocks/generator_t2.obj",
   "detectCullableFaces": false,
   "flip-v": true
 }

@@ -1,0 +1,8 @@
+# Made in Blockbench 3.9.3
+newmtl m_0
+map_Kd frostedheart:block/multiblocks/generatoriibottom
+newmtl m_1
+map_Kd frostedheart:block/multiblocks/generatoriimiddle
+newmtl m_2
+map_Kd frostedheart:block/multiblocks/generatoriiupper
+newmtl none
