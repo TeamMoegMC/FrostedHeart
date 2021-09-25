@@ -50,7 +50,7 @@ public class FHDataManager {
 		return foodData.get(is.getItem().getRegistryName());
 	}
 	public static IWarmKeepingEquipment getArmor(ItemStack is) {
-		System.out.println(is.getItem().getRegistryName());
+		//System.out.println(is.getItem().getRegistryName());
 		return armorData.get(is.getItem().getRegistryName());
 	}
 	public static Byte getBiomeTemp(Biome b) {
