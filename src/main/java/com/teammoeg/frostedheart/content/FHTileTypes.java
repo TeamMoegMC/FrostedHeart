@@ -67,7 +67,7 @@ public class FHTileTypes {
             "heat_radiator", makeType(() -> new RadiatorTileEntity(), () -> FHBlocks.radiator));
 
 	public static final RegistryObject<TileEntityType<T2GeneratorTileEntity>> GENERATOR_T2 = REGISTER.register(
-            "generator_r2", makeType(() -> new T2GeneratorTileEntity(2,4, 2), () -> FHBlocks.Multi.generator_t2)
+            "generator_t2", makeType(() -> new T2GeneratorTileEntity(2,4, 2), () -> FHBlocks.Multi.generator_t2)
     );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));

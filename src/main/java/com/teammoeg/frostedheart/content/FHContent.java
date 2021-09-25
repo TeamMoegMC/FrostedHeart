@@ -100,7 +100,7 @@ public class FHContent {
                 .sound(SoundType.CROP);
         
         FHBlocks.Multi.generator = new GeneratorMultiblockBlock("generator", FHTileTypes.GENERATOR_T1);
-        FHBlocks.Multi.generator_t2 = new HeatedGeneratorMultiBlock("generator_r2", FHTileTypes.GENERATOR_T1);
+        FHBlocks.Multi.generator_t2 = new HeatedGeneratorMultiBlock("generator_t2", FHTileTypes.GENERATOR_T2);
         FHBlocks.Multi.crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
         FHBlocks.Multi.steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
         FHBlocks.generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
