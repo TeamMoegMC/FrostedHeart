@@ -26,6 +26,8 @@ import com.stereowalker.survive.util.TemperatureStats;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.stereowalker.unionlib.state.properties.UBlockStateProperties;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.data.BlockTempData;
+import com.teammoeg.frostedheart.data.FHDataManager;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -71,32 +73,35 @@ public class SurviveTemperature {
 	                BlockPos heatSource = pos.add(x,y,z);
 	                float blockLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.BLOCK).getLightFor(heatSource);
 	                BlockState heatState = world.getBlockState(heatSource);
-	                int sourceRange = Survive.blockTemperatureMap.containsKey(heatState.getBlock().getRegistryName()) ? Survive.blockTemperatureMap.get(heatState.getBlock().getRegistryName()).getRange() : 5;
-	                if (pos.withinDistance(heatSource, sourceRange)) {
-	                    blockTemp += blockLight / 500.0F;
-	                    if (Survive.blockTemperatureMap.containsKey(heatState.getBlock().getRegistryName())) {
-	                        BlockTemperatureData blockTemperatureData = Survive.blockTemperatureMap.get(heatState.getBlock().getRegistryName());
-	                        if (blockTemperatureData.usesLitOrActiveProperty()) {
-	                            boolean litOrActive = false;
-	                            if (heatState.hasProperty(BlockStateProperties.LIT) && heatState.get(BlockStateProperties.LIT))
-	                                litOrActive = true;
-	                            if (heatState.hasProperty(UBlockStateProperties.ACTIVE) && heatState.get(UBlockStateProperties.ACTIVE))
-	                                litOrActive = true;
-	                            if (litOrActive) blockTemp += blockTemperatureData.getTemperatureModifier();
-	                        } else
-	                            blockTemp += blockTemperatureData.getTemperatureModifier();
-	                        if (blockTemperatureData.usesLevelProperty()) {
-	                            if (heatState.hasProperty(BlockStateProperties.LEVEL_0_15)) {
-	                                blockTemp *= (heatState.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
-	                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_8)) {
-	                                blockTemp *= (heatState.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
-	                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_1_8)) {
-	                                blockTemp *= (heatState.get(BlockStateProperties.LEVEL_1_8)) / 8;
-	                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_3)) {
-	                                blockTemp *= (heatState.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
-	                            }
-	                        }
-	                    }
+	                BlockTempData b=FHDataManager.getBlockData(heatState.getBlock());
+	                if(b==null) {
+	                	blockTemp += blockLight / 500.0F;
+	                	continue;
+	                }
+	                
+	                if (pos.withinDistance(heatSource,b.getRange())) {
+	                	float cblocktemp=blockLight / 500.0F;
+                        if (b.isLit()) {
+                            boolean litOrActive = false;
+                            if (heatState.hasProperty(BlockStateProperties.LIT) && heatState.get(BlockStateProperties.LIT))
+                                litOrActive = true;
+                            if (heatState.hasProperty(UBlockStateProperties.ACTIVE) && heatState.get(UBlockStateProperties.ACTIVE))
+                                litOrActive = true;
+                            if (litOrActive) cblocktemp += b.getTemp();
+                        } else
+                        	cblocktemp += b.getTemp();
+                        if (b.isLevel()) {
+                            if (heatState.hasProperty(BlockStateProperties.LEVEL_0_15)) {
+                            	cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
+                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_8)) {
+                            	cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
+                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_1_8)) {
+                                cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_1_8)) / 8;
+                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_3)) {
+                                cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
+                            }
+                        }
+                        blockTemp+=cblocktemp;
 	                }
 	            }
 	        }
