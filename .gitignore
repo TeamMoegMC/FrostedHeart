@@ -121,3 +121,4 @@ run/
 # datagen cache
 /src/generated/resources/.cache/
 /private.properties
+/bin/

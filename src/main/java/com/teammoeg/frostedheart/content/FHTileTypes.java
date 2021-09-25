@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.steamenergy.ChargerTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
-import com.teammoeg.frostedheart.tileentity.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
 import com.teammoeg.frostedheart.tileentity.SteamTurbineTileEntity;
 import com.teammoeg.frostedheart.tileentity.T1GeneratorTileEntity;
