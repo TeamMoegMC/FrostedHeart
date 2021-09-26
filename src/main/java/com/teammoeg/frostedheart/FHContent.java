@@ -36,9 +36,7 @@ import com.teammoeg.frostedheart.content.generator.NormalGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipeSerializer;
 import com.teammoeg.frostedheart.content.generatort1.*;
-import com.teammoeg.frostedheart.content.heating.FHSoupItem;
-import com.teammoeg.frostedheart.content.heating.HeaterVestItem;
-import com.teammoeg.frostedheart.content.heating.SteamBottleItem;
+import com.teammoeg.frostedheart.content.heating.*;
 import com.teammoeg.frostedheart.content.radiator.RadiatorBlock;
 import com.teammoeg.frostedheart.content.radiator.RadiatorContainer;
 import com.teammoeg.frostedheart.content.generator.HeatedGeneratorMultiBlock;
@@ -54,10 +52,15 @@ import com.teammoeg.frostedheart.content.generatort1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.util.FHFoods;
 import com.teammoeg.frostedheart.util.FHUtils;
+import gloridifice.watersource.WaterSource;
+import gloridifice.watersource.registry.BlockRegistry;
+import gloridifice.watersource.registry.FluidRegistry;
+import gloridifice.watersource.registry.ItemRegistry;
 import net.minecraft.block.AbstractBlock.Properties;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.fluid.FlowingFluid;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
@@ -68,6 +71,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ToolType;
+import net.minecraftforge.fluids.FluidAttributes;
+import net.minecraftforge.fluids.ForgeFlowingFluid;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -148,6 +153,8 @@ public class FHContent {
         public static Item hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, itemProps);
         public static Item hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, itemProps);
         public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
+        public static Item thermos = new ThermosItem("thermos", 1500, 250);
+        public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
     }
 
     public static class FHMultiblocks {

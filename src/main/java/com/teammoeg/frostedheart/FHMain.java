@@ -72,6 +72,7 @@ public class FHMain {
 
         FHContent.registerContainers();
         FHContent.FHTileTypes.REGISTER.register(mod);
+        FHFluids.FLUIDS.register(mod);
         FHContent.FHRecipes.RECIPE_SERIALIZERS.register(mod);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
 

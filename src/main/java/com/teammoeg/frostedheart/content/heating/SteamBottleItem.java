@@ -63,7 +63,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
 
         if (entityplayer instanceof ServerPlayerEntity) {
             CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayerEntity) entityplayer, stack);
-            entityplayer.attackEntityFrom(FHDamageSources.HYPOTHERMIA, (this.getEnergyStored(stack) / 60) + 2);
+            entityplayer.attackEntityFrom(FHDamageSources.HYPERTHERMIA, (this.getEnergyStored(stack) / 60) + 2);
         }
 
         if (entityplayer != null) {

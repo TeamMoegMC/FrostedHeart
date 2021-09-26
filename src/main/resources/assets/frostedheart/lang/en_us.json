@@ -42,6 +42,13 @@
   "item.frostedheart.black_bread": "Black Bread",
   "item.frostedheart.white_turnip": "White Turnip",
   "item.frostedheart.steam_bottle": "Steam Bottle",
+  "item.frostedheart.thermos": "Thermos",
+  "item.frostedheart.advanced_thermos": "Advanced Thermos",
+
+  "effect.frostedheart.hypothermia": "Hypothermia",
+  "effect.frostedheart.hyperthermia": "Hyperthermia",
+  "death.attack.hyperthermia": "%s died of hyperthermia.",
+  "death.attack.hypothermia": "%s turned into a frozen stick.",
 
   "frostedheart.gui.generator.temperature.level": "Temperature Increment: ",
   "frostedheart.gui.generator.range.level": "Range: ",

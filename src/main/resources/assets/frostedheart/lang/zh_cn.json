@@ -42,6 +42,13 @@
   "item.frostedheart.wool_pants": "羊毛裤子",
   "item.frostedheart.raw_hide": "兽皮",
   "item.frostedheart.steam_bottle": "蒸汽瓶",
+  "item.frostedheart.thermos": "热水壶",
+  "item.frostedheart.advanced_thermos": "高级热水壶",
+
+  "effect.frostedheart.hypothermia": "失温",
+  "effect.frostedheart.hyperthermia": "高温",
+  "death.attack.hyperthermia": "%s死于高温。",
+  "death.attack.hypothermia": "%s被冻成了冰棍儿。",
 
   "frostedheart.gui.generator.temperature.level": "温度增幅: ",
   "frostedheart.gui.generator.range.level": "增温范围: ",
