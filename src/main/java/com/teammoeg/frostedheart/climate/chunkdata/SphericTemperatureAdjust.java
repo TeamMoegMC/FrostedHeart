@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package com.teammoeg.frostedheart.climate.chunkdata;
 
 import net.minecraft.nbt.CompoundNBT;
