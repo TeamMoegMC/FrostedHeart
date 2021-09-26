@@ -37,3 +37,10 @@ Some heat in the cold...
     versionRange="[1.16.4-2.0.5,)"
     ordering="BEFORE"
     side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="watersource"
+    mandatory=true
+    versionRange="[1.1.33-beta-1.16.5,)"
+    ordering="BEFORE"
+    side="BOTH"
