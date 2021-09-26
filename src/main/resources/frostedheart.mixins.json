@@ -9,10 +9,7 @@
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
-    "rankine.AlloyTemplateItemMixin",
-    "survive.SurviveEventsMixin",
-    "survive.SurviveRegistryEventsMixin",
-    "survive.SurviveTemperatureStatMixin"
+    "rankine.AlloyTemplateItemMixin"
   ],
   "client": [
   ],

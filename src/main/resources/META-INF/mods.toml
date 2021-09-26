@@ -6,7 +6,7 @@ issueTrackerURL = "https://github.com/TeamMoegMC/Frosted-Heart/issues"
 modId = "frostedheart" #mandatory
 version = "1.16.5-0.3.0" #mandatory
 displayName = "Frosted Heart" #mandatory
-authors = "YueSha, dashuaibia, duck_egg, Luyuuke"
+authors = "[TeamMoeg] YueSha, dashuaibia, khjxiaogu, duck_egg, Lyuuke, gomou_g"
 description = '''
 Some heat in the cold...
 '''
@@ -28,13 +28,6 @@ Some heat in the cold...
     modId="immersiveengineering"
     mandatory=true
     versionRange="[1.16.5-5.0.0,)"
-    ordering="BEFORE"
-    side="BOTH"
-
-[[dependencies.frostedheart]]
-    modId="survive"
-    mandatory=true
-    versionRange="[1.16.5-3.3.1,)"
     ordering="BEFORE"
     side="BOTH"
 

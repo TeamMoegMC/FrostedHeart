@@ -48,7 +48,7 @@ public class AlloyTemplateItemMixin extends Item {
 
     /**
      * @author yuesha-yc
-     * @reason fixes ArrayIndexOutOfBoundException
+     * @reason Fixes ArrayIndexOutOfBoundException. Will be made superfluous by Rankine 1.3
      */
     @Overwrite
     public ITextComponent getDisplayName(ItemStack stack) {

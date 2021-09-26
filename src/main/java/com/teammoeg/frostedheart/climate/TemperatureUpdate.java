@@ -16,18 +16,14 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.mixin.survive;
+package com.teammoeg.frostedheart.climate;
 
-import com.stereowalker.survive.events.SurviveEvents;
-import com.teammoeg.frostedheart.util.FHEffects;
-import com.teammoeg.frostedheart.climate.IHeatingEquipment;
-import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
-import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.util.FHEffects;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -38,17 +34,16 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.network.PacketDistributor;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(SurviveEvents.class)
-public class SurviveEventsMixin {
+@Mod.EventBusSubscriber
+public class TemperatureUpdate {
+
     /**
-     * @author yuesha-yc
-     * @reason Add our chunk temperature logic
+     * Perform temperature tick logic
+     * @param event fired every tick on player
      */
-    @Overwrite(remap = false)
     @SubscribeEvent
     public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
@@ -57,7 +52,7 @@ public class SurviveEventsMixin {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
                 return;
-            float current = SurviveTemperature.getBodyTemperature(player);
+            float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
                 current += 0.05;
             World world = player.getEntityWorld();
@@ -67,7 +62,7 @@ public class SurviveEventsMixin {
             float gameTime = world.getDayTime() % 24000L;
             gameTime = gameTime / (200 / 3);
             gameTime = (float) Math.sin(Math.toRadians(gameTime));
-            envtemp += SurviveTemperature.getBlockTemp(world, pos);
+            envtemp += TemperatureCore.getBlockTemp(world, pos);
             envtemp += skyLight > 5.0F ? (gameTime * 5.0F) : (-1.0F * 5.0F);
             envtemp -= 37F;// normalize
             float keepwarm = 0;
@@ -109,46 +104,21 @@ public class SurviveEventsMixin {
             else if (current > 10)
                 current = 10;
 
-            SurviveTemperature.setTemperature(player, current, envtemp + 37);
+            TemperatureCore.setTemperature(player, current, envtemp + 37);
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHDataSyncPacket(player));
-            // TemperatureStats ts = SurviveEntityStats.getTemperatureStats(player);
-            // ts.setTemperatureLevel(50);
-            /*
-             * SurviveTemperature.resetTState(ts);
-             * TemperatureStats.setTemperatureModifier(player, "survive:all",current);
-             * ts.setTemperatureLevel((int)(current+37F));
-             */
-
-            /*
-             * if (player.ticksExisted %20==0) {
-             * System.out.println(current);
-             * }
-             */
-
         }
     }
 
     /**
-     * @author khjxiaogu
-     * @reason overwrite
+     * Perform temperature effect
+     * @param event fired every tick on player
      */
-    @Overwrite(remap = false)
-    @SubscribeEvent
-    public static void updateEnvTemperature(LivingUpdateEvent event) {
-
-    }
-
-    /**
-     * @author khjxiaogu
-     * @reason overwrite
-     */
-    @Overwrite(remap = false)
     @SubscribeEvent
     public static void regulateTemperature(LivingUpdateEvent event) {
         if (event.getEntityLiving() != null && !(event.getEntityLiving()).world.isRemote
                 && event.getEntityLiving() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-            double calculatedTarget = SurviveTemperature.getBodyTemperature(player);
+            double calculatedTarget = TemperatureCore.getBodyTemperature(player);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
 

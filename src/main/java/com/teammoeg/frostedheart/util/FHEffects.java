@@ -47,8 +47,4 @@ public class FHEffects {
         return effect;
     }
 
-    public static class FHDamageSources {
-        public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).setDamageBypassesArmor().setDifficultyScaled();
-        public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).setDamageBypassesArmor().setDifficultyScaled();
-    }
 }

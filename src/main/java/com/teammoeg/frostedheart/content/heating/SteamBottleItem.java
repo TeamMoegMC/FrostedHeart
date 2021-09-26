@@ -19,10 +19,10 @@
 package com.teammoeg.frostedheart.content.heating;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
-import com.stereowalker.survive.util.SDamageSource;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.util.FHDamageSources;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -63,7 +63,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
 
         if (entityplayer instanceof ServerPlayerEntity) {
             CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayerEntity) entityplayer, stack);
-            entityplayer.attackEntityFrom(SDamageSource.HYPOTHERMIA, (this.getEnergyStored(stack) / 60) + 2);
+            entityplayer.attackEntityFrom(FHDamageSources.HYPOTHERMIA, (this.getEnergyStored(stack) / 60) + 2);
         }
 
         if (entityplayer != null) {

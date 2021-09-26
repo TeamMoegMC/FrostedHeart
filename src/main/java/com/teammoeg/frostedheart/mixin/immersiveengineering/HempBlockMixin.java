@@ -64,7 +64,7 @@ public class HempBlockMixin {
 
     /**
      * @author yuesha-yc
-     * @reason obfuscation issues if i use inject above
+     * @reason Got some weird obfuscation issues if I use @Inject above
      */
     @Overwrite
     public void tick(BlockState state, ServerWorld world, BlockPos pos, Random random) {

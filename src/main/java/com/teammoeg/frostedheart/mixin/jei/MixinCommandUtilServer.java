@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 public class MixinCommandUtilServer {
     /**
      * @author yuesha-yc
-     * @reason I must do this hack because of stupid Essentials and Bukkit.
+     * @reason I must do this hack because EssentialsX and Bukkit does not compat with JEI
      */
     @Overwrite(remap = false)
     public static boolean hasPermission(PlayerEntity sender) {

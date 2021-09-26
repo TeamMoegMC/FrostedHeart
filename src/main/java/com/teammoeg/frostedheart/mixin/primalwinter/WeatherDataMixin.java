@@ -30,7 +30,7 @@ public class WeatherDataMixin {
 
     /**
      * @author yuesha-yc
-     * @reason we don't want endless storm
+     * @reason Disable endless storm
      */
     @Overwrite(remap = false)
     public static void trySetEndlessStorm(ServerWorld world) {

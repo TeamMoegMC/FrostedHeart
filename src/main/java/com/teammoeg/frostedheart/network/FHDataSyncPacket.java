@@ -19,7 +19,7 @@
 package com.teammoeg.frostedheart.network;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.climate.SurviveTemperature;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -34,7 +34,7 @@ public class FHDataSyncPacket {
     private final CompoundNBT data;
 
     public FHDataSyncPacket(PlayerEntity pe) {
-        this.data = SurviveTemperature.getFHData(pe);
+        this.data = TemperatureCore.getFHData(pe);
     }
 
     FHDataSyncPacket(PacketBuffer buffer) {
@@ -52,7 +52,7 @@ public class FHDataSyncPacket {
             if (world != null) {
                 // First, synchronize the chunk data in the capability and cache.
                 // Then, update the single data instance with the packet data
-                SurviveTemperature.setFHData(ClientUtils.mc().player, data);
+                TemperatureCore.setFHData(ClientUtils.mc().player, data);
             }
         });
         context.get().setPacketHandled(true);

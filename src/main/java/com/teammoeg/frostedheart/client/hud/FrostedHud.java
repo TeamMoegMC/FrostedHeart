@@ -22,7 +22,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.UV4i;
-import com.teammoeg.frostedheart.climate.SurviveTemperature;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -88,8 +88,8 @@ public class FrostedHud {
         renderJumpBar = renderHealth && player.isRidingHorse();
         renderArmor = renderHealth && player.getTotalArmorValue() > 0;
         renderExperience = renderHealth;
-        renderHypothermia = renderHealth && SurviveTemperature.getBodyTemperature(renderViewPlayer) <= -0.2 && SurviveTemperature.getBodyTemperature(renderViewPlayer) >= 1.0;
-        renderFrozen = renderHealth && SurviveTemperature.getBodyTemperature(renderViewPlayer) <= -1.0;
+        renderHypothermia = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -0.2 && TemperatureCore.getBodyTemperature(renderViewPlayer) >= 1.0;
+        renderFrozen = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -1.0;
     }
 
     public static PlayerEntity getRenderViewPlayer() {
@@ -224,8 +224,8 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
 
-        int k = (int) ((Math.abs(SurviveTemperature.getBodyTemperature(player)) - 0.2) / 0.8 * 181.0F);
-//        System.out.println(SurviveTemperature.getBodyTemperature(player) + ", " + k);
+        int k = (int) ((Math.abs(TemperatureCore.getBodyTemperature(player)) - 0.2) / 0.8 * 181.0F);
+//        System.out.println(TemperatureCore.getBodyTemperature(player) + ", " + k);
         mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA(), y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, k, UV.hypothermia_bar.h);
         mc.getProfiler().endSection();
     }
@@ -319,7 +319,7 @@ public class FrostedHud {
         if (mc.world != null) {
             BlockPos pos = new BlockPos(player.getPosX(), player.getBoundingBox().minY, player.getPosZ());
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
-                int temperature = (int) SurviveTemperature.getEnvTemperature(player);
+                int temperature = (int) TemperatureCore.getEnvTemperature(player);
                 renderTemp(stack, mc, temperature, x + BarPos.temp_orb.getA(), y + BarPos.temp_orb.getB() + 3, true);
             }
         }

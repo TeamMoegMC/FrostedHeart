@@ -26,6 +26,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PortalSize.class)
 public class PortalSizeMixin {
+    /**
+     * @author yuesha-yc
+     * @reason Disable nether portal
+     */
     @Inject(at = @At("INVOKE"), method = "func_242974_d()I", cancellable = true)
     private void func_242974_d(CallbackInfoReturnable<Integer> callbackInfoReturnable) {
         callbackInfoReturnable.setReturnValue(0);

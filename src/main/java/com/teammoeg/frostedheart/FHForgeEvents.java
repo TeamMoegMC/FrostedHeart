@@ -19,9 +19,9 @@
 package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
@@ -317,7 +317,7 @@ public class FHForgeEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = SurviveTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
+                float current = TemperatureCore.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
                 float heat = adj.getHeat(event.getItem());
@@ -330,7 +330,7 @@ public class FHForgeEvents {
                     current += heat;
                     if (current <= min) return;
                 }
-                SurviveTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(), current);
+                TemperatureCore.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(), current);
             }
         }
     }

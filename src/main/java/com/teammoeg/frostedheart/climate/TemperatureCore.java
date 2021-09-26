@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import com.stereowalker.survive.util.TemperatureStats;
-import com.stereowalker.unionlib.state.properties.UBlockStateProperties;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
@@ -31,38 +29,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 
-import java.lang.reflect.Field;
-import java.util.Map;
-
 /**
- * Re-write of survive's temperature methods since SurviveEvents.TempType is private.
- * Original Author: Stereowalker
+ * The core of our dynamic body & environment temperature system
+ * @author yuesha-yc
+ * @author khjxiaogu
  */
-public class SurviveTemperature {
-    static Field tmf;
-
-    public static void resetTState(TemperatureStats ts) {
-        if (tmf == null) {
-            try {
-                tmf = TemperatureStats.class.getDeclaredField("temperatureModifiers");
-                tmf.setAccessible(true);
-            } catch (NoSuchFieldException | SecurityException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        if (tmf != null) {
-            try {
-                Map m = (Map) tmf.get(ts);
-                if (!m.isEmpty())
-                    m.clear();
-            } catch (IllegalArgumentException | IllegalAccessException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            ;
-        }
-    }
+public class TemperatureCore {
 
     public static float getBlockTemp(World world, BlockPos pos) {
         float blockTemp = 0;
@@ -84,8 +56,6 @@ public class SurviveTemperature {
                         if (b.isLit()) {
                             boolean litOrActive = false;
                             if (heatState.hasProperty(BlockStateProperties.LIT) && heatState.get(BlockStateProperties.LIT))
-                                litOrActive = true;
-                            if (heatState.hasProperty(UBlockStateProperties.ACTIVE) && heatState.get(UBlockStateProperties.ACTIVE))
                                 litOrActive = true;
                             if (litOrActive) cblocktemp += b.getTemp();
                         } else
