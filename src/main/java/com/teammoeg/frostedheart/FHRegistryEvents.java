@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;

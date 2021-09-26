@@ -24,8 +24,8 @@ import com.stereowalker.survive.temperature.TemperatureChangeInstance;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
-import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
-import com.teammoeg.frostedheart.client.util.FHClientUtils;
+import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -58,13 +58,13 @@ public class FHClientForgeEvents {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-        if (!FHBipedLayerRenderer.rendersAssigned) {
-            for (Object render : FHClientUtils.mc().getRenderManager().renderers.values())
+        if (!HeaterVestRenderer.rendersAssigned) {
+            for (Object render : ClientUtils.mc().getRenderManager().renderers.values())
                 if (BipedRenderer.class.isAssignableFrom(render.getClass()))
-                    ((BipedRenderer) render).addLayer(new FHBipedLayerRenderer<>((BipedRenderer) render));
+                    ((BipedRenderer) render).addLayer(new HeaterVestRenderer<>((BipedRenderer) render));
                 else if (ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
-                    ((ArmorStandRenderer) render).addLayer(new FHBipedLayerRenderer<>((ArmorStandRenderer) render));
-            FHBipedLayerRenderer.rendersAssigned = true;
+                    ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
+            HeaterVestRenderer.rendersAssigned = true;
         }
     }
 
@@ -130,8 +130,6 @@ public class FHClientForgeEvents {
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
-//        RenderSystem.disableAlphaTest();
-
         if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
             FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, clientPlayer);
         }
@@ -174,7 +172,5 @@ public class FHClientForgeEvents {
             FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
             event.setCanceled(true);
         }
-
-//        RenderSystem.enableAlphaTest();
     }
 }

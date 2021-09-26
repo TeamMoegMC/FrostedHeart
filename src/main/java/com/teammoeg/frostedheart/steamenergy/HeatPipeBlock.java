@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.steamenergy;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.block.FluidPipeBlock;
+import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;

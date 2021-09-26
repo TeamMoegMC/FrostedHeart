@@ -19,7 +19,7 @@
 package com.teammoeg.frostedheart.mixin.survive;
 
 import com.stereowalker.survive.events.SurviveEvents;
-import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;

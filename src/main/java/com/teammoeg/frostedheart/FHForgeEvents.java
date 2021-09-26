@@ -19,7 +19,7 @@
 package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
+import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -28,9 +28,9 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
-import com.teammoeg.frostedheart.nbt.FHNBT;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;

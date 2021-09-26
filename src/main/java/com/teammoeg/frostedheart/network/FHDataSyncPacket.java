@@ -18,7 +18,7 @@
 
 package com.teammoeg.frostedheart.network;
 
-import com.teammoeg.frostedheart.client.util.FHClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -48,11 +48,11 @@ public class FHDataSyncPacket {
     void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHClientUtils::getWorld);
+            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
             if (world != null) {
                 // First, synchronize the chunk data in the capability and cache.
                 // Then, update the single data instance with the packet data
-                SurviveTemperature.setFHData(FHClientUtils.mc().player, data);
+                SurviveTemperature.setFHData(ClientUtils.mc().player, data);
             }
         });
         context.get().setPacketHandled(true);

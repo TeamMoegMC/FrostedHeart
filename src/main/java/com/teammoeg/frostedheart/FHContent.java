@@ -22,23 +22,37 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.google.common.collect.ImmutableSet;
-import com.teammoeg.frostedheart.block.*;
-import com.teammoeg.frostedheart.block.cropblock.RyeBlock;
-import com.teammoeg.frostedheart.block.cropblock.WhiteTurnipBlock;
-import com.teammoeg.frostedheart.container.CrucibleContainer;
-import com.teammoeg.frostedheart.container.GeneratorContainer;
-import com.teammoeg.frostedheart.container.RadiatorContainer;
-import com.teammoeg.frostedheart.item.*;
-import com.teammoeg.frostedheart.multiblock.CrucibleMultiblock;
-import com.teammoeg.frostedheart.multiblock.GeneratorMultiblock;
-import com.teammoeg.frostedheart.multiblock.GeneratorMultiblockT2;
-import com.teammoeg.frostedheart.multiblock.SteamTurbineMultiblock;
-import com.teammoeg.frostedheart.recipe.*;
+import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.base.item.FHBlockItem;
+import com.teammoeg.frostedheart.base.item.FoodBlockItem;
+import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
+import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
+import com.teammoeg.frostedheart.content.charger.ChargerBlock;
+import com.teammoeg.frostedheart.content.charger.ChargerRecipe;
+import com.teammoeg.frostedheart.content.charger.ChargerRecipeSerializer;
+import com.teammoeg.frostedheart.content.charger.ChargerTileEntity;
+import com.teammoeg.frostedheart.content.crucible.*;
+import com.teammoeg.frostedheart.content.generator.NormalGeneratorMultiBlock;
+import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.generator.GeneratorRecipeSerializer;
+import com.teammoeg.frostedheart.content.generatort1.*;
+import com.teammoeg.frostedheart.content.heating.FHSoupItem;
+import com.teammoeg.frostedheart.content.heating.HeaterVestItem;
+import com.teammoeg.frostedheart.content.heating.SteamBottleItem;
+import com.teammoeg.frostedheart.content.radiator.RadiatorBlock;
+import com.teammoeg.frostedheart.content.radiator.RadiatorContainer;
+import com.teammoeg.frostedheart.content.generator.HeatedGeneratorMultiBlock;
+import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
+import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineBlock;
+import com.teammoeg.frostedheart.base.item.*;
+import com.teammoeg.frostedheart.content.generatort2.T2GeneratorMultiblock;
+import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineMultiblock;
 import com.teammoeg.frostedheart.steamenergy.*;
-import com.teammoeg.frostedheart.tileentity.CrucibleTileEntity;
-import com.teammoeg.frostedheart.tileentity.SteamTurbineTileEntity;
-import com.teammoeg.frostedheart.tileentity.T1GeneratorTileEntity;
-import com.teammoeg.frostedheart.tileentity.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.crucible.CrucibleTileEntity;
+import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineTileEntity;
+import com.teammoeg.frostedheart.content.generatort1.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.util.FHFoods;
 import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.block.AbstractBlock.Properties;
 import net.minecraft.block.Block;
@@ -76,12 +90,12 @@ public class FHContent {
         }
 
         public static Block generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
-        public static Block generator_core_t1 = new GeneratorCoreBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
+        public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
         public static Block burning_chamber_core = new FHBaseBlock("burning_chamber_core", stoneDecoProps, FHBlockItem::new);
         public static Block burning_chamber = new FHBaseBlock("burning_chamber", stoneDecoProps, FHBlockItem::new);
         public static Block rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
-        public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, FHBlockItem::new);
+        public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
         public static Block heat_pipe = new HeatPipeBlock("heat_pipe", stoneDecoProps, FHBlockItem::new);
         public static Block debug_heater = new DebugHeaterBlock("debug_heater", Block.Properties
                 .create(Material.ROCK).sound(SoundType.STONE)
@@ -137,11 +151,11 @@ public class FHContent {
     }
 
     public static class FHMultiblocks {
-        public static IETemplateMultiblock GENERATOR = new GeneratorMultiblock();
-        public static IETemplateMultiblock CRUCIBLE = new GeneratorMultiblockT2();
+        public static IETemplateMultiblock GENERATOR = new T1GeneratorMultiblock();
+        public static IETemplateMultiblock CRUCIBLE = new T2GeneratorMultiblock();
         public static IETemplateMultiblock STEAMTURBINE = new SteamTurbineMultiblock();
         public static IETemplateMultiblock GENERATOR_T2 = new CrucibleMultiblock();
-        public static Block generator = new GeneratorMultiblockBlock("generator", FHTileTypes.GENERATOR_T1);
+        public static Block generator = new NormalGeneratorMultiBlock("generator", FHTileTypes.GENERATOR_T1);
         public static Block generator_t2 = new HeatedGeneratorMultiBlock("generator_t2", FHTileTypes.GENERATOR_T2);
         public static Block crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
         public static Block steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
@@ -214,7 +228,7 @@ public class FHContent {
     }
 
     public static void registerContainers() {
-        GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), GeneratorContainer::new);
+        GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
         GuiHandler.register(RadiatorTileEntity.class, new ResourceLocation(FHMain.MODID, "radiator"), RadiatorContainer::new);
     }

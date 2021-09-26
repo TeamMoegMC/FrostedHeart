@@ -18,7 +18,7 @@
 
 package com.teammoeg.frostedheart.compat;
 
-import com.teammoeg.frostedheart.item.HeaterVestItem;
+import com.teammoeg.frostedheart.content.heating.HeaterVestItem;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;

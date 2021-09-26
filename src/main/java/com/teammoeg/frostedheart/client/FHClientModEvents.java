@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.client;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
-import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
-import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
-import com.teammoeg.frostedheart.client.screen.RadiatorScreen;
+import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.content.crucible.CrucibleScreen;
+import com.teammoeg.frostedheart.content.generatort1.T1GeneratorScreen;
+import com.teammoeg.frostedheart.content.radiator.RadiatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -47,7 +47,7 @@ public class FHClientModEvents {
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), GeneratorScreen::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "radiator"), RadiatorScreen::new);
         // Register translucent render type
@@ -62,9 +62,9 @@ public class FHClientModEvents {
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
         PlayerRenderer render = skinMap.get("default");
-        render.addLayer(new FHBipedLayerRenderer<>(render));
+        render.addLayer(new HeaterVestRenderer<>(render));
         render = skinMap.get("slim");
-        render.addLayer(new FHBipedLayerRenderer<>(render));
+        render.addLayer(new HeaterVestRenderer<>(render));
     }
 
     public static <C extends Container, S extends Screen & IHasContainer<C>> void

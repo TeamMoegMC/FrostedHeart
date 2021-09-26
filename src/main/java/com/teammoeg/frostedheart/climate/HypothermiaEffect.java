@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.climate;
 
-import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.util.FHEffects;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.Effect;

@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.steamenergy;
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.state.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
