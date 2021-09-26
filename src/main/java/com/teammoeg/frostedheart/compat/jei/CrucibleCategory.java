@@ -18,11 +18,10 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.FHBlocks;
-import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
-
 import blusunrize.immersiveengineering.common.util.compat.jei.JEIIngredientStackListBuilder;
+import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -40,7 +39,7 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
     private IDrawable ICON;
 
     public CrucibleCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.burning_chamber));
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHContent.FHBlocks.burning_chamber));
         this.BACKGROUND = guiHelper.createDrawable(new ResourceLocation(FHMain.MODID, "textures/gui/crucible.png"), 19, 0, 130, 40);
     }
 

@@ -18,19 +18,11 @@
 
 package com.teammoeg.frostedheart;
 
-import javax.annotation.Nonnull;
-
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.content.FHBlocks;
-import com.teammoeg.frostedheart.content.FHContainers;
-import com.teammoeg.frostedheart.content.FHContent;
-import com.teammoeg.frostedheart.content.FHRecipeSerializers;
-import com.teammoeg.frostedheart.content.FHRecipeTypes;
-import com.teammoeg.frostedheart.content.FHTileTypes;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
-
+import com.teammoeg.frostedheart.util.FHProps;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -43,6 +35,8 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
+import javax.annotation.Nonnull;
+
 @Mod(FHMain.MODID)
 public class FHMain {
 
@@ -53,7 +47,7 @@ public class FHMain {
         @Override
         @Nonnull
         public ItemStack createIcon() {
-            return new ItemStack(FHBlocks.generator_core_t1.asItem());
+            return new ItemStack(FHContent.FHBlocks.generator_core_t1.asItem());
         }
     };
 
@@ -68,22 +62,18 @@ public class FHMain {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
 
-        // Register config
         FHConfig.register();
-        // Register recipe serializers
-        FHRecipeSerializers.RECIPE_SERIALIZERS.register(mod);
-        // Register tile types
-        FHTileTypes.REGISTER.register(mod);
-        // Register container
-        FHContainers.CONTAINERS.register(mod);
-        // Register recipe types
-        DeferredWorkQueue.runLater(FHRecipeTypes::registerRecipeTypes);
-        // Register network packets
         PacketHandler.register();
-        // Populate FH content
-        FHContent.populate();
-        // Register FH content
-        FHContent.registerAll();
+
+        FHProps.init();
+        FHContent.FHItems.init();
+        FHContent.FHBlocks.init();
+        FHContent.FHMultiblocks.init();
+
+        FHContent.registerContainers();
+        FHContent.FHTileTypes.REGISTER.register(mod);
+        FHContent.FHRecipes.RECIPE_SERIALIZERS.register(mod);
+        DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
 
     }
 

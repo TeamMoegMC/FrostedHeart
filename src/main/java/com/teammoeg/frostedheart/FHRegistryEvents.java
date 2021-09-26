@@ -18,29 +18,18 @@
 
 package com.teammoeg.frostedheart;
 
-import static com.teammoeg.frostedheart.content.FHContent.customModels;
-import static com.teammoeg.frostedheart.content.FHContent.registeredFHBlocks;
-import static com.teammoeg.frostedheart.content.FHContent.registeredFHFluids;
-import static com.teammoeg.frostedheart.content.FHContent.registeredFHItems;
-
-import java.util.Map;
-
-import com.stereowalker.survive.potion.SEffects;
-import com.teammoeg.frostedheart.content.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
-
 import net.minecraft.block.Block;
-import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.potion.Effect;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.feature.Feature;
-import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import static com.teammoeg.frostedheart.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class FHRegistryEvents {
@@ -85,12 +74,6 @@ public class FHRegistryEvents {
         FHEffects.registerAll(event.getRegistry());
     }
 
-    @SubscribeEvent
-	public static void onModelBake(ModelBakeEvent event) {
-		Map<ResourceLocation, IBakedModel> modelRegistry = event.getModelRegistry();
-		
-		customModels.entrySet().forEach((ent) ->modelRegistry.put(ent.getKey().delegate.name(),ent.getValue().apply(modelRegistry.get(ent.getKey().delegate.name()))));
-	}
     @SubscribeEvent
     public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
         event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));

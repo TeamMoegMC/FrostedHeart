@@ -18,16 +18,13 @@
 
 package com.teammoeg.frostedheart.item;
 
+import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
-import com.teammoeg.frostedheart.content.FHContent;
-
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
-import net.minecraft.item.ItemStack;
 
-public class FHBaseArmorItem extends ArmorItem{
+public class FHBaseArmorItem extends ArmorItem {
     public FHBaseArmorItem(String name, IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
         setRegistryName(FHMain.MODID, name);

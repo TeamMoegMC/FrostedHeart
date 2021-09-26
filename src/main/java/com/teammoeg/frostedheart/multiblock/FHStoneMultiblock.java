@@ -18,13 +18,13 @@
 
 package com.teammoeg.frostedheart.multiblock;
 
-import java.util.function.Supplier;
-
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+
+import java.util.function.Supplier;
 
 public abstract class FHStoneMultiblock extends IETemplateMultiblock {
     public FHStoneMultiblock(ResourceLocation loc, BlockPos masterFromOrigin, BlockPos triggerFromOrigin, BlockPos size, Supplier<BlockState> baseState) {

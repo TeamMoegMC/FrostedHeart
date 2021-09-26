@@ -19,32 +19,37 @@
 package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.data.FHDataManager;
-
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 
 public class WorldClimate {
-    
-    /** Constant WORLD_TEMPERATURE.<br> */
+
+    /**
+     * Constant WORLD_TEMPERATURE.<br>
+     */
     public static final byte WORLD_TEMPERATURE = -20;
-    
-    /** Constant VANILLA_PLANT_GROW_TEMPERATURE.<br> */
+
+    /**
+     * Constant VANILLA_PLANT_GROW_TEMPERATURE.<br>
+     */
     public static final int VANILLA_PLANT_GROW_TEMPERATURE = 20;
-    
-    /** Constant HEMP_GROW_TEMPERATURE.<br> */
+
+    /**
+     * Constant HEMP_GROW_TEMPERATURE.<br>
+     */
     public static final int HEMP_GROW_TEMPERATURE = 0;
-    
+
     /**
      * Get World temperature for a specific world, effected by weather and so on
      *
      * @param w the world<br>
      * @return world temperature<br>
      */
-    public static byte getWorldTemperature(IWorld w,BlockPos pos) {
-    	
-    	Byte temp=FHDataManager.getBiomeTemp(w.getBiome(pos));
-    	if(temp!=null)
-    		return temp;
-    	return WORLD_TEMPERATURE;
+    public static byte getWorldTemperature(IWorld w, BlockPos pos) {
+
+        Byte temp = FHDataManager.getBiomeTemp(w.getBiome(pos));
+        if (temp != null)
+            return temp;
+        return WORLD_TEMPERATURE;
     }
 }

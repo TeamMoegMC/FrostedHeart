@@ -18,9 +18,8 @@
 
 package com.teammoeg.frostedheart.container;
 
-import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
-
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
+import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 

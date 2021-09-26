@@ -18,10 +18,9 @@
 
 package com.teammoeg.frostedheart.client.model;
 
+import blusunrize.immersiveengineering.mixin.accessors.client.ModelAccess;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
-
-import blusunrize.immersiveengineering.mixin.accessors.client.ModelAccess;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.entity.LivingEntity;

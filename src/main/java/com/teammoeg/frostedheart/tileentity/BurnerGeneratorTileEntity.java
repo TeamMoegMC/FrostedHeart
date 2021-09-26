@@ -18,22 +18,14 @@
 
 package com.teammoeg.frostedheart.tileentity;
 
-import java.util.Random;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.client.util.FHClientUtils;
-import com.teammoeg.frostedheart.content.FHMultiblocks;
-import com.teammoeg.frostedheart.content.FHTileTypes;
-import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
-import com.teammoeg.frostedheart.state.FHBlockInterfaces;
-
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import com.teammoeg.frostedheart.client.util.FHClientUtils;
+import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
+import com.teammoeg.frostedheart.state.FHBlockInterfaces;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -55,6 +47,10 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Random;
+
 public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> extends AbstractGenerator<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
@@ -64,6 +60,7 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
     public int processMax = 0;
     NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     ItemStack currentItem;
+
     public class GeneratorData implements IIntArray {
         public static final int MAX_BURN_TIME = 0;
         public static final int BURN_TIME = 1;
@@ -99,35 +96,40 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
             return 2;
         }
     }
-    public BurnerGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl,int temperatureLevelIn,int overdriveBoostIn, int rangeLevelIn) {
-    	super(multiblockInstance,type, hasRSControl);
+
+    public BurnerGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl, int temperatureLevelIn, int overdriveBoostIn, int rangeLevelIn) {
+        super(multiblockInstance, type, hasRSControl);
         temperatureLevel = temperatureLevelIn;
         rangeLevel = rangeLevelIn;
-        overdriveBoost=overdriveBoostIn;
+        overdriveBoost = overdriveBoostIn;
     }
-	@Override
-	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-	    super.readCustomNBT(nbt, descPacket);
-	    if (!descPacket) {
-	        ItemStackHelper.loadAllItems(nbt, inventory);
-	        process = nbt.getInt("process");
-	        processMax = nbt.getInt("processMax");
-	        currentItem=ItemStack.read(nbt.getCompound("currentItem"));
-	    };
-	}
-	@Override
-	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-	    super.writeCustomNBT(nbt, descPacket);
-	    if (!descPacket) {
-	    	if(currentItem!=null)
-	    		nbt.put("current",currentItem.serializeNBT());
-	    	else
-	    		nbt.remove("current");
-	        nbt.putInt("process", process);
-	        nbt.putInt("processMax", processMax);
-	        ItemStackHelper.saveAllItems(nbt, inventory);
-	    }
-	}
+
+    @Override
+    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.readCustomNBT(nbt, descPacket);
+        if (!descPacket) {
+            ItemStackHelper.loadAllItems(nbt, inventory);
+            process = nbt.getInt("process");
+            processMax = nbt.getInt("processMax");
+            currentItem = ItemStack.read(nbt.getCompound("currentItem"));
+        }
+        ;
+    }
+
+    @Override
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.writeCustomNBT(nbt, descPacket);
+        if (!descPacket) {
+            if (currentItem != null)
+                nbt.put("current", currentItem.serializeNBT());
+            else
+                nbt.remove("current");
+            nbt.putInt("process", process);
+            nbt.putInt("processMax", processMax);
+            ItemStackHelper.saveAllItems(nbt, inventory);
+        }
+    }
+
     @Nonnull
     @Override
     public VoxelShape getBlockBounds(@Nullable ISelectionContext ctx) {
@@ -256,87 +258,87 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
         return null;
     }
 
-	@Override
-	public void onShutDown() {
+    @Override
+    public void onShutDown() {
         process = 0;
         processMax = 0;
-        if(currentItem != null) {
-			if (!inventory.get(OUTPUT_SLOT).isEmpty())
+        if (currentItem != null) {
+            if (!inventory.get(OUTPUT_SLOT).isEmpty())
                 inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
             else
                 inventory.set(OUTPUT_SLOT, currentItem);
-			currentItem=null;
-    	}
-	}
-	
-	@Override
-	protected void tickFuel() {
-		// just finished process or during process
+            currentItem = null;
+        }
+    }
+
+    @Override
+    protected void tickFuel() {
+        // just finished process or during process
         if (process > 0) {
-        	if(isOverdrive()&&!isActualOverdrive()) {
-    			GeneratorRecipe recipe = getRecipe();
+            if (isOverdrive() && !isActualOverdrive()) {
+                GeneratorRecipe recipe = getRecipe();
                 if (recipe != null) {
-                	int count=recipe.input.getCount();
-                	if(inventory.get(INPUT_SLOT).getCount()>=4*count) {
-    	                Utils.modifyInvStackSize(inventory, INPUT_SLOT, -4*count);
-    	                if(currentItem != null) {
-    	        			if (!inventory.get(OUTPUT_SLOT).isEmpty())
-    	                        inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
-    	                    else
-    	                        inventory.set(OUTPUT_SLOT, currentItem);
-    	        			currentItem=null;
-    	            	}
-    	                currentItem=recipe.output.copy();
-    	                currentItem.setCount(4*currentItem.getCount());
-    	                this.process += recipe.time*4;
-    	                this.processMax += recipe.time*4;
-    	                setActualOverdrive(true);
-                	}
+                    int count = recipe.input.getCount();
+                    if (inventory.get(INPUT_SLOT).getCount() >= 4 * count) {
+                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -4 * count);
+                        if (currentItem != null) {
+                            if (!inventory.get(OUTPUT_SLOT).isEmpty())
+                                inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
+                            else
+                                inventory.set(OUTPUT_SLOT, currentItem);
+                            currentItem = null;
+                        }
+                        currentItem = recipe.output.copy();
+                        currentItem.setCount(4 * currentItem.getCount());
+                        this.process += recipe.time * 4;
+                        this.processMax += recipe.time * 4;
+                        setActualOverdrive(true);
+                    }
                 }
-        	}
-        	if (isActualOverdrive())
-        		process-=4;
-        	else
-        		process--;
+            }
+            if (isActualOverdrive())
+                process -= 4;
+            else
+                process--;
             this.markContainingBlockForUpdate(null);
         }
         // process not started yet
         else {
-        	if(currentItem != null) {
-    			if (!inventory.get(OUTPUT_SLOT).isEmpty())
+            if (currentItem != null) {
+                if (!inventory.get(OUTPUT_SLOT).isEmpty())
                     inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
                 else
                     inventory.set(OUTPUT_SLOT, currentItem);
-    			currentItem=null;
-        	}
+                currentItem = null;
+            }
             GeneratorRecipe recipe = getRecipe();
             if (recipe != null) {
-            	int modifier=1;
-            	if(isOverdrive()&&inventory.get(INPUT_SLOT).getCount()>=4*recipe.input.getCount()) {
-            		if(!isActualOverdrive())
-            			this.setActualOverdrive(true);
-            		modifier=4;
-            	}else if(isActualOverdrive()) {
-            		this.setActualOverdrive(false);
-            	}
-            	int count=recipe.input.getCount()*modifier;
+                int modifier = 1;
+                if (isOverdrive() && inventory.get(INPUT_SLOT).getCount() >= 4 * recipe.input.getCount()) {
+                    if (!isActualOverdrive())
+                        this.setActualOverdrive(true);
+                    modifier = 4;
+                } else if (isActualOverdrive()) {
+                    this.setActualOverdrive(false);
+                }
+                int count = recipe.input.getCount() * modifier;
                 Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
-                currentItem=recipe.output.copy();
-                currentItem.setCount(currentItem.getCount()*modifier);
-                this.process = recipe.time*modifier;
+                currentItem = recipe.output.copy();
+                currentItem.setCount(currentItem.getCount() * modifier);
+                this.process = recipe.time * modifier;
                 this.processMax = process;
                 setActive(true);
-            }else {
-            	this.process=0;
-            	processMax = 0;
+            } else {
+                this.process = 0;
+                processMax = 0;
                 setActive(false);
             }
         }
-	}
+    }
 
-	@Override
-	protected void setAllActive(boolean state) {
-		for (int x = 0; x < 3; ++x)
+    @Override
+    protected void setAllActive(boolean state) {
+        for (int x = 0; x < 3; ++x)
             for (int y = 0; y < 4; ++y)
                 for (int z = 0; z < 3; ++z) {
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
@@ -344,19 +346,19 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
                     if (te instanceof BurnerGeneratorTileEntity)
                         ((BurnerGeneratorTileEntity) te).setActive(state);
                 }
-	}
+    }
 
-	@Override
-	protected void tickEffects(boolean isActive) {
-		if(isActive) {
-			BlockPos blockpos = this.getPos();
-	        Random random = world.rand;
-	        if (random.nextFloat() < 0.4F) {
-	            for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-	                FHClientUtils.spawnSmokeParticles(world, blockpos);
-	                FHClientUtils.spawnFireParticles(world, blockpos);
-	            }
-	        }
+    @Override
+    protected void tickEffects(boolean isActive) {
+        if (isActive) {
+            BlockPos blockpos = this.getPos();
+            Random random = world.rand;
+            if (random.nextFloat() < 0.4F) {
+                for (int i = 0; i < random.nextInt(2) + 2; ++i) {
+                    FHClientUtils.spawnSmokeParticles(world, blockpos);
+                    FHClientUtils.spawnFireParticles(world, blockpos);
+                }
+            }
         }
-	}
+    }
 }

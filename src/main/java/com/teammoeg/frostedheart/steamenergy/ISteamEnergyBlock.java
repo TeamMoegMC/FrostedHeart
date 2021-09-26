@@ -6,5 +6,5 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockDisplayReader;
 
 public interface ISteamEnergyBlock {
-	boolean canConnectFrom(IBlockDisplayReader world,BlockPos pos,BlockState state,Direction dir);
+    boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir);
 }

@@ -18,22 +18,21 @@
 
 package com.teammoeg.frostedheart.recipe;
 
-import javax.annotation.Nullable;
-
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.content.FHBlocks;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHContent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 
+import javax.annotation.Nullable;
+
 public class ChargerRecipeSerializer extends IERecipeSerializer<ChargerRecipe> {
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(FHBlocks.charger);
+        return new ItemStack(FHContent.FHBlocks.charger);
     }
 
     @Override
@@ -41,7 +40,7 @@ public class ChargerRecipeSerializer extends IERecipeSerializer<ChargerRecipe> {
         ItemStack output = readOutput(json.get("result"));
         IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
         float cost = JSONUtils.getInt(json, "cost");
-        return new ChargerRecipe(recipeId, output, input,cost);
+        return new ChargerRecipe(recipeId, output, input, cost);
     }
 
     @Nullable
@@ -50,7 +49,7 @@ public class ChargerRecipeSerializer extends IERecipeSerializer<ChargerRecipe> {
         ItemStack output = buffer.readItemStack();
         IngredientWithSize input = IngredientWithSize.read(buffer);
         float cost = buffer.readFloat();
-        return new ChargerRecipe(recipeId, output, input,cost);
+        return new ChargerRecipe(recipeId, output, input, cost);
     }
 
     @Override

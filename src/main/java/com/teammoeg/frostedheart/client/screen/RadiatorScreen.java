@@ -18,19 +18,18 @@
 
 package com.teammoeg.frostedheart.client.screen;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import blusunrize.immersiveengineering.client.ClientUtils;
+import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.container.RadiatorContainer;
 import com.teammoeg.frostedheart.steamenergy.RadiatorTileEntity;
-
-import blusunrize.immersiveengineering.client.ClientUtils;
-import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RadiatorScreen extends IEContainerScreen<RadiatorContainer> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generatornew");

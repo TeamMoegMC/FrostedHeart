@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.block;
 
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;

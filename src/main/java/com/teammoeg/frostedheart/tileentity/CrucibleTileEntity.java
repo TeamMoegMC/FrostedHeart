@@ -18,24 +18,15 @@
 
 package com.teammoeg.frostedheart.tileentity;
 
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.Function;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.content.FHMultiblocks;
-import com.teammoeg.frostedheart.content.FHTileTypes;
-import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
-import com.teammoeg.frostedheart.state.FHBlockInterfaces;
-
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.metal.BlastFurnacePreheaterTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
+import com.teammoeg.frostedheart.state.FHBlockInterfaces;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -57,6 +48,12 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Optional;
+import java.util.Random;
+import java.util.function.Function;
+
 public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEntity> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
@@ -70,7 +67,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     public static ResourceLocation coal_coke = new ResourceLocation("forge:coal_coke");
 
     public CrucibleTileEntity() {
-        super(FHMultiblocks.CRUCIBLE, FHTileTypes.CRUCIBLE.get(), false);
+        super(FHContent.FHMultiblocks.CRUCIBLE, FHContent.FHTileTypes.CRUCIBLE.get(), false);
     }
 
     @Nonnull

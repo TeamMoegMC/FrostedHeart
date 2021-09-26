@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.network;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,31 +28,33 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
+import java.util.function.Supplier;
+
 public class FHDataSyncPacket {
-	private final CompoundNBT data;
+    private final CompoundNBT data;
 
-	public FHDataSyncPacket(PlayerEntity pe) {
-		this.data = SurviveTemperature.getFHData(pe);
-	}
+    public FHDataSyncPacket(PlayerEntity pe) {
+        this.data = SurviveTemperature.getFHData(pe);
+    }
 
-	FHDataSyncPacket(PacketBuffer buffer) {
-		data = buffer.readCompoundTag();
-	}
+    FHDataSyncPacket(PacketBuffer buffer) {
+        data = buffer.readCompoundTag();
+    }
 
-	void encode(PacketBuffer buffer) {
-		buffer.writeCompoundTag(data);
-	}
+    void encode(PacketBuffer buffer) {
+        buffer.writeCompoundTag(data);
+    }
 
-	void handle(Supplier<NetworkEvent.Context> context) {
-		context.get().enqueueWork(() -> {
-			// Update client-side nbt
-			World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHClientUtils::getWorld);
-			if (world != null) {
-				// First, synchronize the chunk data in the capability and cache.
-				// Then, update the single data instance with the packet data
-				SurviveTemperature.setFHData(FHClientUtils.mc().player,data);
-			}
-		});
-		context.get().setPacketHandled(true);
-	}
+    void handle(Supplier<NetworkEvent.Context> context) {
+        context.get().enqueueWork(() -> {
+            // Update client-side nbt
+            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> FHClientUtils::getWorld);
+            if (world != null) {
+                // First, synchronize the chunk data in the capability and cache.
+                // Then, update the single data instance with the packet data
+                SurviveTemperature.setFHData(FHClientUtils.mc().player, data);
+            }
+        });
+        context.get().setPacketHandled(true);
+    }
 }

@@ -18,20 +18,12 @@
 
 package com.teammoeg.frostedheart.resources;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-
-import com.teammoeg.frostedheart.recipe.ChargerRecipe;
-import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
-import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
-
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
+import com.teammoeg.frostedheart.recipe.ChargerRecipe;
+import com.teammoeg.frostedheart.recipe.CrucibleRecipe;
+import com.teammoeg.frostedheart.recipe.GeneratorRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
@@ -50,6 +42,12 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     private final DataPackRegistries dataPackRegistries;
@@ -94,7 +92,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
             return;
         GeneratorRecipe.recipeList = filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         CrucibleRecipe.recipeList = filterRecipes(recipes, CrucibleRecipe.class, CrucibleRecipe.TYPE);
-        ChargerRecipe.recipeList=filterRecipes(recipes, ChargerRecipe.class, ChargerRecipe.TYPE);
+        ChargerRecipe.recipeList = filterRecipes(recipes, ChargerRecipe.class, ChargerRecipe.TYPE);
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {

@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.block;
 
-import java.util.Random;
-
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.SoundCategory;
@@ -29,6 +27,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.RegistryObject;
+
+import java.util.Random;
 
 public class GeneratorMultiblockBlock<T extends MultiblockPartTileEntity<? super T>> extends FHStoneMultiblockBlock<T> {
     public GeneratorMultiblockBlock(String name, RegistryObject type) {

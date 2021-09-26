@@ -18,11 +18,8 @@
 
 package com.teammoeg.frostedheart.mixin.survive;
 
-import com.teammoeg.frostedheart.content.FHEffects;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-
 import com.stereowalker.survive.events.SurviveEvents;
+import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
@@ -31,7 +28,6 @@ import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
-
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -43,128 +39,130 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(SurviveEvents.class)
 public class SurviveEventsMixin {
-	/**
-	 * @author yuesha-yc
-	 * @reason Add our chunk temperature logic
-	 */
-	@Overwrite(remap = false)
-	@SubscribeEvent
-	public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
-		if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
-				&& event.getEntityLiving() instanceof ServerPlayerEntity) {
-			
-			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-			if (player.ticksExisted % 10 != 0||player.isCreative()||player.isSpectator())
-				return;
-			float current = SurviveTemperature.getBodyTemperature(player);
-			if (current < 0)
-				current += 0.05;
-			World world = player.getEntityWorld();
-			BlockPos pos = player.getPosition();
-			float envtemp = ChunkData.getTemperature(world, pos);
-			float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
-			float gameTime = world.getDayTime() % 24000L;
-			gameTime = gameTime / (200 / 3);
-			gameTime = (float) Math.sin(Math.toRadians(gameTime));
-			envtemp += SurviveTemperature.getBlockTemp(world, pos);
-			envtemp += skyLight > 5.0F ? (gameTime * 5.0F) : (-1.0F * 5.0F);
-			envtemp -= 37F;// normalize
-			float keepwarm = 0;
-			if(player.isBurning())
-				envtemp+=150F;
-			for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
-				if (is == null)
-					continue;
-				Item it = is.getItem();
-				if (it instanceof IHeatingEquipment)
-					current = ((IHeatingEquipment) it).compute(is, current, envtemp);
-				if (it instanceof IWarmKeepingEquipment) {
-					keepwarm += ((IWarmKeepingEquipment) it).getFactor(player,is);
-				}else {
-					IWarmKeepingEquipment iw=FHDataManager.getArmor(is);
-					if(iw!=null)
-						keepwarm+=iw.getFactor(player,is);
-				}
-			}
-			for (ItemStack is : player.getArmorInventoryList()) {
-				if (is == null)
-					continue;
-				Item it = is.getItem();
-				if (it instanceof IHeatingEquipment)
-					current = ((IHeatingEquipment) it).compute(is, current, envtemp);
-				if (it instanceof IWarmKeepingEquipment) {
-					keepwarm += ((IWarmKeepingEquipment) it).getFactor(player,is);
-				}else {
-					IWarmKeepingEquipment iw=FHDataManager.getArmor(is);
-					if(iw!=null)
-						keepwarm+=iw.getFactor(player,is);
-				}
-			}
-			if (keepwarm > 1)
-				keepwarm = 1;
-			current += 0.0012 * (1 - keepwarm) * (envtemp - current);
-			if(current<-10)
-				current=-10;
-			else if(current>10)
-				current=10;
-				
-			SurviveTemperature.setTemperature(player, current,envtemp+37);
-			PacketHandler.send(PacketDistributor.PLAYER.with(()->player),new FHDataSyncPacket(player));
-			// TemperatureStats ts = SurviveEntityStats.getTemperatureStats(player);
-			// ts.setTemperatureLevel(50);
-			/*
-			 * SurviveTemperature.resetTState(ts);
-			 * TemperatureStats.setTemperatureModifier(player, "survive:all",current);
-			 * ts.setTemperatureLevel((int)(current+37F));
-			 */
+    /**
+     * @author yuesha-yc
+     * @reason Add our chunk temperature logic
+     */
+    @Overwrite(remap = false)
+    @SubscribeEvent
+    public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
+        if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
+                && event.getEntityLiving() instanceof ServerPlayerEntity) {
 
-			/*
-			 * if (player.ticksExisted %20==0) {
-			 * System.out.println(current);
-			 * }
-			 */
+            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
+            if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
+                return;
+            float current = SurviveTemperature.getBodyTemperature(player);
+            if (current < 0)
+                current += 0.05;
+            World world = player.getEntityWorld();
+            BlockPos pos = player.getPosition();
+            float envtemp = ChunkData.getTemperature(world, pos);
+            float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
+            float gameTime = world.getDayTime() % 24000L;
+            gameTime = gameTime / (200 / 3);
+            gameTime = (float) Math.sin(Math.toRadians(gameTime));
+            envtemp += SurviveTemperature.getBlockTemp(world, pos);
+            envtemp += skyLight > 5.0F ? (gameTime * 5.0F) : (-1.0F * 5.0F);
+            envtemp -= 37F;// normalize
+            float keepwarm = 0;
+            if (player.isBurning())
+                envtemp += 150F;
+            for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
+                if (is == null)
+                    continue;
+                Item it = is.getItem();
+                if (it instanceof IHeatingEquipment)
+                    current = ((IHeatingEquipment) it).compute(is, current, envtemp);
+                if (it instanceof IWarmKeepingEquipment) {
+                    keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
+                } else {
+                    IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
+                    if (iw != null)
+                        keepwarm += iw.getFactor(player, is);
+                }
+            }
+            for (ItemStack is : player.getArmorInventoryList()) {
+                if (is == null)
+                    continue;
+                Item it = is.getItem();
+                if (it instanceof IHeatingEquipment)
+                    current = ((IHeatingEquipment) it).compute(is, current, envtemp);
+                if (it instanceof IWarmKeepingEquipment) {
+                    keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
+                } else {
+                    IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
+                    if (iw != null)
+                        keepwarm += iw.getFactor(player, is);
+                }
+            }
+            if (keepwarm > 1)
+                keepwarm = 1;
+            current += 0.0012 * (1 - keepwarm) * (envtemp - current);
+            if (current < -10)
+                current = -10;
+            else if (current > 10)
+                current = 10;
 
-		}
-	}
+            SurviveTemperature.setTemperature(player, current, envtemp + 37);
+            PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHDataSyncPacket(player));
+            // TemperatureStats ts = SurviveEntityStats.getTemperatureStats(player);
+            // ts.setTemperatureLevel(50);
+            /*
+             * SurviveTemperature.resetTState(ts);
+             * TemperatureStats.setTemperatureModifier(player, "survive:all",current);
+             * ts.setTemperatureLevel((int)(current+37F));
+             */
 
-	/**
-	 * @author khjxiaogu
-	 * @reason overwrite
-	 */
-	@Overwrite(remap = false)
-	@SubscribeEvent
-	public static void updateEnvTemperature(LivingUpdateEvent event) {
+            /*
+             * if (player.ticksExisted %20==0) {
+             * System.out.println(current);
+             * }
+             */
 
-	}
+        }
+    }
 
-	/**
-	 * @author khjxiaogu
-	 * @reason overwrite
-	 */
-	@Overwrite(remap = false)
-	@SubscribeEvent
-	public static void regulateTemperature(LivingUpdateEvent event) {
-		if (event.getEntityLiving() != null && !(event.getEntityLiving()).world.isRemote
-				&& event.getEntityLiving() instanceof ServerPlayerEntity) {
-			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-			double calculatedTarget = SurviveTemperature.getBodyTemperature(player);
-			if (!(player.isCreative() || player.isSpectator())) {
-				if (calculatedTarget > 1 || calculatedTarget < -1) {
+    /**
+     * @author khjxiaogu
+     * @reason overwrite
+     */
+    @Overwrite(remap = false)
+    @SubscribeEvent
+    public static void updateEnvTemperature(LivingUpdateEvent event) {
 
-					if (!player.isPotionActive(FHEffects.HYPERTHERMIA) && !player.isPotionActive(FHEffects.HYPOTHERMIA)) {
+    }
 
-						if (calculatedTarget > 1)
-							player.addPotionEffect(
-									new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 1)));
-						else
-							player.addPotionEffect(
-									new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (1 + calculatedTarget)));
-					}
-				}
-			}
-		}
-	}
+    /**
+     * @author khjxiaogu
+     * @reason overwrite
+     */
+    @Overwrite(remap = false)
+    @SubscribeEvent
+    public static void regulateTemperature(LivingUpdateEvent event) {
+        if (event.getEntityLiving() != null && !(event.getEntityLiving()).world.isRemote
+                && event.getEntityLiving() instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
+            double calculatedTarget = SurviveTemperature.getBodyTemperature(player);
+            if (!(player.isCreative() || player.isSpectator())) {
+                if (calculatedTarget > 1 || calculatedTarget < -1) {
+
+                    if (!player.isPotionActive(FHEffects.HYPERTHERMIA) && !player.isPotionActive(FHEffects.HYPOTHERMIA)) {
+
+                        if (calculatedTarget > 1)
+                            player.addPotionEffect(
+                                    new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 1)));
+                        else
+                            player.addPotionEffect(
+                                    new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (1 + calculatedTarget)));
+                    }
+                }
+            }
+        }
+    }
 }

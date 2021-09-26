@@ -18,11 +18,10 @@
 
 package com.teammoeg.frostedheart.multiblock;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.FHBlocks;
-
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -34,7 +33,7 @@ public class SteamTurbineMultiblock extends IETemplateMultiblock {
     public SteamTurbineMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/steam_turbine"),
                 new BlockPos(0, 1, 0), new BlockPos(1, 1, 6), new BlockPos(3, 3, 7),
-                () -> FHBlocks.Multi.steam_turbine.getDefaultState());
+                () -> FHContent.FHMultiblocks.steam_turbine.getDefaultState());
     }
 
     @Override

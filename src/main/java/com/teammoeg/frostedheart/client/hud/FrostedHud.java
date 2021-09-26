@@ -33,8 +33,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 
-import static net.minecraft.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS;
-
 public class FrostedHud {
     public static boolean renderHotbar = true;
     public static boolean renderHealth = true;
@@ -77,19 +75,19 @@ public class FrostedHud {
     }
 
     public static PlayerEntity getRenderViewPlayer() {
-        return !(Minecraft.getInstance().getRenderViewEntity() instanceof PlayerEntity) ? null : (PlayerEntity)Minecraft.getInstance().getRenderViewEntity();
+        return !(Minecraft.getInstance().getRenderViewEntity() instanceof PlayerEntity) ? null : (PlayerEntity) Minecraft.getInstance().getRenderViewEntity();
     }
 
     private static void renderHotbarItem(int x, int y, float partialTicks, PlayerEntity player, ItemStack stack) {
         Minecraft mc = Minecraft.getInstance();
         if (!stack.isEmpty()) {
-            float f = (float)stack.getAnimationsToGo() - partialTicks;
+            float f = (float) stack.getAnimationsToGo() - partialTicks;
             if (f > 0.0F) {
                 RenderSystem.pushMatrix();
                 float f1 = 1.0F + f / 5.0F;
-                RenderSystem.translatef((float)(x + 8), (float)(y + 12), 0.0F);
+                RenderSystem.translatef((float) (x + 8), (float) (y + 12), 0.0F);
                 RenderSystem.scalef(1.0F / f1, (f1 + 1.0F) / 2.0F, 1.0F);
-                RenderSystem.translatef((float)(-(x + 8)), (float)(-(y + 12)), 0.0F);
+                RenderSystem.translatef((float) (-(x + 8)), (float) (-(y + 12)), 0.0F);
             }
 
             mc.getItemRenderer().renderItemAndEffectIntoGUI(player, stack, x, y);
@@ -132,7 +130,7 @@ public class FrostedHud {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
-        for(int i1 = 0; i1 < 9; ++i1) {
+        for (int i1 = 0; i1 < 9; ++i1) {
             int j1 = x - 90 + i1 * 20 + 2;
             int k1 = y - 16 - 3 + 1; // +1
             renderHotbarItem(j1, k1, partialTicks, player, player.inventory.mainInventory.get(i1));
@@ -157,7 +155,7 @@ public class FrostedHud {
                 }
 
                 mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
-                int l1 = (int)(f * 19.0F);
+                int l1 = (int) (f * 19.0F);
                 RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 mc.ingameGUI.blit(stack, k2, j2, 0, 94, 18, 18);
                 mc.ingameGUI.blit(stack, k2, j2 + 18 - l1, 18, 112 - l1, 18, l1);
@@ -180,7 +178,7 @@ public class FrostedHud {
         int i = mc.player.xpBarCap();
         if (i > 0) {
             int j = 182;
-            int k = (int)(mc.player.experience * 183.0F);
+            int k = (int) (mc.player.experience * 183.0F);
             int l = y - 32 + 3;
 //            mc.ingameGUI.blit(stack, x - 91, l, 0, 64, 182, 5);
             if (k > 0) {
@@ -191,11 +189,11 @@ public class FrostedHud {
             String s = "" + mc.player.experienceLevel;
             int i1 = (x * 2 - mc.fontRenderer.getStringWidth(s)) / 2;
             int j1 = y - 29;
-            mc.fontRenderer.drawString(stack, s, (float)(i1 + 1), (float)j1, 0);
-            mc.fontRenderer.drawString(stack, s, (float)(i1 - 1), (float)j1, 0);
-            mc.fontRenderer.drawString(stack, s, (float)i1, (float)(j1 + 1), 0);
-            mc.fontRenderer.drawString(stack, s, (float)i1, (float)(j1 - 1), 0);
-            mc.fontRenderer.drawString(stack, s, (float)i1, (float)j1, 8453920);
+            mc.fontRenderer.drawString(stack, s, (float) (i1 + 1), (float) j1, 0);
+            mc.fontRenderer.drawString(stack, s, (float) (i1 - 1), (float) j1, 0);
+            mc.fontRenderer.drawString(stack, s, (float) i1, (float) (j1 + 1), 0);
+            mc.fontRenderer.drawString(stack, s, (float) i1, (float) (j1 - 1), 0);
+            mc.fontRenderer.drawString(stack, s, (float) i1, (float) j1, 8453920);
         }
         RenderSystem.enableBlend();
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -223,7 +221,7 @@ public class FrostedHud {
 
         int health = MathHelper.ceil(player.getHealth());
         ModifiableAttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
-        float healthMax = (float)attrMaxHealth.getValue();
+        float healthMax = (float) attrMaxHealth.getValue();
         float absorb = MathHelper.ceil(player.getAbsorptionAmount()); // let's say max is 20
 
         // range: [0, 99]
@@ -334,8 +332,8 @@ public class FrostedHud {
         mc.ingameGUI.blit(stack, x + IconPos.right_threequarters.getA(), y + IconPos.right_threequarters.getB(), UV.icon_horse_normal.x, UV.icon_horse_normal.y, UV.icon_horse_normal.w, UV.icon_horse_normal.h);
         Entity tmp = player.getRidingEntity();
         if (!(tmp instanceof LivingEntity)) return;
-        LivingEntity mount = (LivingEntity)tmp;
-        int health = (int)Math.ceil(mount.getHealth());
+        LivingEntity mount = (LivingEntity) tmp;
+        int health = (int) Math.ceil(mount.getHealth());
         float healthMax = mount.getMaxHealth();
         int healthState = MathHelper.ceil(health / healthMax * 100) - 1;
         int healthCol = healthState / 10;
@@ -370,9 +368,9 @@ public class FrostedHud {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-        bufferbuilder.pos(0.0D, (double)y, -90.0D).tex(0.0F, 1.0F).endVertex();
-        bufferbuilder.pos((double)x*2, (double)y, -90.0D).tex(1.0F, 1.0F).endVertex();
-        bufferbuilder.pos((double)x*2, 0.0D, -90.0D).tex(1.0F, 0.0F).endVertex();
+        bufferbuilder.pos(0.0D, (double) y, -90.0D).tex(0.0F, 1.0F).endVertex();
+        bufferbuilder.pos((double) x * 2, (double) y, -90.0D).tex(1.0F, 1.0F).endVertex();
+        bufferbuilder.pos((double) x * 2, 0.0D, -90.0D).tex(1.0F, 0.0F).endVertex();
         bufferbuilder.pos(0.0D, 0.0D, -90.0D).tex(0.0F, 0.0F).endVertex();
         tessellator.draw();
         RenderSystem.depthMask(true);
@@ -436,7 +434,7 @@ public class FrostedHud {
         public static final UV4i selected = new UV4i(108, 109, 22, 22);
         public static final UV4i exp_bar_frame = new UV4i(45, 1, 184, 7);
         public static final UV4i temperature_orb_frame = new UV4i(1, 24, 43, 43);
-        public static final UV4i left_threequarters_frame = new UV4i(45, 9,36, 38);
+        public static final UV4i left_threequarters_frame = new UV4i(45, 9, 36, 38);
         public static final UV4i right_threequarters_frame = new UV4i(1, 113, 36, 38);
         public static final UV4i left_half_frame = new UV4i(82, 9, 23, 24 + 10);
         public static final UV4i right_half_frame = new UV4i(106, 9, 23, 24 + 10);

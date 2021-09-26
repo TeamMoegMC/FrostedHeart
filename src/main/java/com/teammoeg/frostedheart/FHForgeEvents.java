@@ -18,8 +18,7 @@
 
 package com.teammoeg.frostedheart;
 
-import javax.annotation.Nonnull;
-
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.teammoeg.frostedheart.block.cropblock.FHCropBlock;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.SurviveTemperature;
@@ -27,15 +26,12 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
-import com.teammoeg.frostedheart.content.FHItems;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.nbt.FHNBT;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.world.FHFeatures;
-
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
@@ -75,6 +71,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class FHForgeEvents {
@@ -127,7 +125,7 @@ public class FHForgeEvents {
                 data = ChunkDataCache.SERVER.getOrCreate(chunkPos);
                 event.addCapability(ChunkDataCapabilityProvider.KEY, data);
             }
-            
+
         }
     }
 
@@ -138,7 +136,7 @@ public class FHForgeEvents {
             ChunkPos pos = event.getChunk().getPos();
             ChunkData.getCapability(event.getChunk()).ifPresent(data -> {
                 ChunkDataCache.SERVER.update(pos, data);
-               // ChunkDataCache.WATCH_QUEUE.dequeueLoadedChunk(pos, data);
+                // ChunkDataCache.WATCH_QUEUE.dequeueLoadedChunk(pos, data);
             });
 
         }
@@ -216,7 +214,7 @@ public class FHForgeEvents {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntity();
             Block growBlock = event.getPlacedBlock().getBlock();
-            float temp = ChunkData.getTemperature(event.getWorld(),event.getPos());
+            float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     //TODO: allow planting trees now, maybe i will add some restrictions in the future
@@ -252,10 +250,10 @@ public class FHForgeEvents {
         if (!persistent.contains(FHNBT.FIRST_LOGIN_GIVE_MANUAL)) {
             persistent.putBoolean(FHNBT.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
-            event.getPlayer().inventory.armorInventory.set(3, new ItemStack(FHItems.wool_hat));
-            event.getPlayer().inventory.armorInventory.set(2, new ItemStack(FHItems.wool_jacket));
-            event.getPlayer().inventory.armorInventory.set(1, new ItemStack(FHItems.wool_pants));
-            event.getPlayer().inventory.armorInventory.set(0, new ItemStack(FHItems.wool_boots));
+            event.getPlayer().inventory.armorInventory.set(3, new ItemStack(FHContent.FHItems.wool_hat));
+            event.getPlayer().inventory.armorInventory.set(2, new ItemStack(FHContent.FHItems.wool_jacket));
+            event.getPlayer().inventory.armorInventory.set(1, new ItemStack(FHContent.FHItems.wool_pants));
+            event.getPlayer().inventory.armorInventory.set(0, new ItemStack(FHContent.FHItems.wool_boots));
             ItemStack breads = new ItemStack(Items.BREAD);
             breads.setCount(16);
             event.getPlayer().inventory.addItemStackToInventory(breads);
@@ -305,33 +303,34 @@ public class FHForgeEvents {
             player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
         }
     }
+
     @SubscribeEvent
     public static void eatingFood(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote && event.getEntityLiving() instanceof ServerPlayerEntity) {
-            ItemStack is=event.getItem();
-        	Item it=event.getItem().getItem() ;
-            ITempAdjustFood adj=null;
+            ItemStack is = event.getItem();
+            Item it = event.getItem().getItem();
+            ITempAdjustFood adj = null;
             //System.out.println(it.getRegistryName());
-        	if(it instanceof ITempAdjustFood) {
-        		adj=(ITempAdjustFood) it;
-        	}else {
-        		adj=FHDataManager.getFood(is);
-        	}
-        	if(adj!=null) {
-            	float current=SurviveTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
-            	float max=adj.getMaxTemp(event.getItem());
-            	float min=adj.getMinTemp(event.getItem());
-            	float heat=adj.getHeat(event.getItem());
-            	if(current>0) {
-	            	if(current>=max)return;
-	            	current+=heat;
-	            	if(current>max)current=max;
-            	}else{
-            		if(current<=min)return;
-            		current+=heat;
-            		if(current<=min)return;
-            	}
-            	SurviveTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(),current);
+            if (it instanceof ITempAdjustFood) {
+                adj = (ITempAdjustFood) it;
+            } else {
+                adj = FHDataManager.getFood(is);
+            }
+            if (adj != null) {
+                float current = SurviveTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
+                float max = adj.getMaxTemp(event.getItem());
+                float min = adj.getMinTemp(event.getItem());
+                float heat = adj.getHeat(event.getItem());
+                if (current > 0) {
+                    if (current >= max) return;
+                    current += heat;
+                    if (current > max) current = max;
+                } else {
+                    if (current <= min) return;
+                    current += heat;
+                    if (current <= min) return;
+                }
+                SurviveTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(), current);
             }
         }
     }

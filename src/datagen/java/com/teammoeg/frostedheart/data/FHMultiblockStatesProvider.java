@@ -30,8 +30,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.teammoeg.frostedheart.content.FHBlocks;
-import com.teammoeg.frostedheart.content.FHMultiblocks;
+import com.teammoeg.frostedheart.FHContent;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
@@ -62,10 +61,10 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
     }
 
     protected void registerStatesAndModels() {
-        createMultiblock(FHBlocks.Multi.generator, split(obj("block/multiblocks/generator.obj"), FHMultiblocks.GENERATOR));
+        createMultiblock(FHContent.FHMultiblocks.generator, split(obj("block/multiblocks/generator.obj"), FHContent.FHMultiblocks.GENERATOR));
 //        createMultiblock(FHBlocks.Multi.crucible, split(obj("block/multiblocks/crucible.obj"), FHMultiblocks.CRUCIBLE));
-        createMultiblock(FHBlocks.Multi.generator_t2,split(obj("block/multiblocks/generator_t2.obj"), FHMultiblocks.GENERATOR_T2));
-        createMultiblock(FHBlocks.Multi.steam_turbine, split(obj("block/multiblocks/steam_turbine.obj"), FHMultiblocks.STEAMTURBINE));
+        createMultiblock(FHContent.FHMultiblocks.generator_t2,split(obj("block/multiblocks/generator_t2.obj"), FHContent.FHMultiblocks.GENERATOR_T2));
+        createMultiblock(FHContent.FHMultiblocks.steam_turbine, split(obj("block/multiblocks/steam_turbine.obj"), FHContent.FHMultiblocks.STEAMTURBINE));
     }
 
     @Nonnull

@@ -18,20 +18,11 @@
 
 package com.teammoeg.frostedheart.client.render;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import org.apache.commons.lang3.tuple.Pair;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.content.FHItems;
-import com.teammoeg.frostedheart.nbt.FHNBT;
-
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.compat.CuriosCompat;
+import com.teammoeg.frostedheart.nbt.FHNBT;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
@@ -43,6 +34,12 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModList;
+import org.apache.commons.lang3.tuple.Pair;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class FHBipedLayerRenderer<E extends LivingEntity, M extends BipedModel<E>> extends LayerRenderer<E, M> {
     public static boolean rendersAssigned = false;
@@ -56,14 +53,12 @@ public class FHBipedLayerRenderer<E extends LivingEntity, M extends BipedModel<E
     @ParametersAreNonnullByDefault
     public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         ItemStack chest = living.getItemStackFromSlot(EquipmentSlotType.CHEST);
-        if (!chest.isEmpty() && (chest.getItem() == FHItems.Misc.heater_vest || ItemNBTHelper.hasKey(chest, FHNBT.NBT_HEATER_VEST))) {
-            ItemStack heaterVest = chest.getItem() == FHItems.Misc.heater_vest ? chest : ItemNBTHelper.getItemStack(chest, FHNBT.NBT_HEATER_VEST);
+        if (!chest.isEmpty() && (chest.getItem() == FHContent.FHItems.heater_vest || ItemNBTHelper.hasKey(chest, FHNBT.NBT_HEATER_VEST))) {
+            ItemStack heaterVest = chest.getItem() == FHContent.FHItems.heater_vest ? chest : ItemNBTHelper.getItemStack(chest, FHNBT.NBT_HEATER_VEST);
             addWornHeaterVest(living, heaterVest);
-        }
-        else if(ModList.get().isLoaded("curios"))
-        {
+        } else if (ModList.get().isLoaded("curios")) {
             ItemStack heaterVest = CuriosCompat.getHeaterVest(living);
-            if(!heaterVest.isEmpty())
+            if (!heaterVest.isEmpty())
                 addWornHeaterVest(living, heaterVest);
         }
 
@@ -84,11 +79,11 @@ public class FHBipedLayerRenderer<E extends LivingEntity, M extends BipedModel<E
 
     private void renderHeaterVest(ItemStack heaterVest, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!heaterVest.isEmpty()) {
-            BipedModel<E> model = FHItems.Misc.heater_vest.getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
+            BipedModel<E> model = FHContent.FHItems.heater_vest.getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
             if (model != null) {
                 model.setRotationAngles(living, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
                 RenderType type = model.getRenderType(
-                        new ResourceLocation(FHItems.Misc.heater_vest.getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
+                        new ResourceLocation(FHContent.FHItems.heater_vest.getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
                 );
                 model.render(matrixStackIn, bufferIn.getBuffer(type), packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 1F);
             }

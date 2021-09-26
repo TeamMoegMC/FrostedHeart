@@ -18,22 +18,21 @@
 
 package com.teammoeg.frostedheart.recipe;
 
-import javax.annotation.Nullable;
-
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.content.FHBlocks;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHContent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 
+import javax.annotation.Nullable;
+
 public class CrucibleRecipeSerializer extends IERecipeSerializer<CrucibleRecipe> {
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(FHBlocks.Multi.crucible);
+        return new ItemStack(FHContent.FHMultiblocks.crucible);
     }
 
     @Override

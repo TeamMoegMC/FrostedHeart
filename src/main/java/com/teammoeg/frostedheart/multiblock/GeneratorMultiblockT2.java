@@ -19,20 +19,19 @@
 package com.teammoeg.frostedheart.multiblock;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.FHBlocks;
-
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class GeneratorMultiblockT2 extends FHStoneMultiblock{
+public class GeneratorMultiblockT2 extends FHStoneMultiblock {
     public GeneratorMultiblockT2() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3),
-                () -> FHBlocks.Multi.generator_t2.getDefaultState());
+                () -> FHContent.FHMultiblocks.generator_t2.getDefaultState());
     }
 
     @Override

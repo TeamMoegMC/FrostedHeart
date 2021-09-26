@@ -18,11 +18,7 @@
 
 package com.teammoeg.frostedheart.compat;
 
-import java.util.Iterator;
-import java.util.function.Predicate;
-
 import com.teammoeg.frostedheart.item.HeaterVestItem;
-
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
@@ -33,6 +29,9 @@ import top.theillusivec4.curios.api.SlotTypePreset;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
+
+import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class CuriosCompat {
     public static void sendIMCS() {
@@ -52,68 +51,72 @@ public class CuriosCompat {
                 .flatMap(handler -> handler.getStacksHandler(slot.getIdentifier()))
                 .filter(ICurioStacksHandler::isVisible)
                 .map(stacksHandler -> {
-                    for(int i = 0; i < stacksHandler.getSlots(); i++)
-                        if(stacksHandler.getRenders().get(i))
-                        {
+                    for (int i = 0; i < stacksHandler.getSlots(); i++)
+                        if (stacksHandler.getRenders().get(i)) {
                             ItemStack stack = stacksHandler.getStacks().getStackInSlot(i);
-                            if(predicate.test(stack))
+                            if (predicate.test(stack))
                                 return stack;
                         }
                     return ItemStack.EMPTY;
                 }).orElse(ItemStack.EMPTY);
     }
-    public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el){
-    	return new Iterable<ItemStack>() {
-			@Override
-			public Iterator<ItemStack> iterator() {
-				return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h->new CuriosIterator(h.getCurios().values().iterator())).orElse(null);
-			}
-    	};
+
+    public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
+        return new Iterable<ItemStack>() {
+            @Override
+            public Iterator<ItemStack> iterator() {
+                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h -> new CuriosIterator(h.getCurios().values().iterator())).orElse(null);
+            }
+        };
     }
-    static class CuriosIterator implements Iterator<ItemStack>{
-    	ItemIterator cur;
-    	Iterator<ICurioStacksHandler> it;
-		public CuriosIterator(Iterator<ICurioStacksHandler> it) {
-			this.it = it;
-		}
 
-		@Override
-		public boolean hasNext() {
-			return (cur!=null&&cur.hasNext())||it.hasNext();
-		}
+    static class CuriosIterator implements Iterator<ItemStack> {
+        ItemIterator cur;
+        Iterator<ICurioStacksHandler> it;
 
-		@Override
-		public ItemStack next() {
-			if(cur!=null&&cur.hasNext())return cur.next();
-			ICurioStacksHandler current;
-			do {
-			current=it.next();
-			}while(!current.isVisible()&&it.hasNext());
-			if(current.isVisible()) {
-				cur=new ItemIterator(current.getSlots(),current.getStacks());
-				return cur.next();
-			}
-			return null;
-		}
-    	static class ItemIterator implements Iterator<ItemStack>{
-    		int i=0;
-    		int max;
-    		IDynamicStackHandler handler;
-			@Override
-			public boolean hasNext() {
-				return i<max;
-			}
+        public CuriosIterator(Iterator<ICurioStacksHandler> it) {
+            this.it = it;
+        }
 
-			public ItemIterator(int max, IDynamicStackHandler handler) {
-				this.max = max;
-				this.handler = handler;
-			}
+        @Override
+        public boolean hasNext() {
+            return (cur != null && cur.hasNext()) || it.hasNext();
+        }
 
-			@Override
-			public ItemStack next() {
-				return handler.getStackInSlot(i++);
-			}
-    		
-    	}
+        @Override
+        public ItemStack next() {
+            if (cur != null && cur.hasNext()) return cur.next();
+            ICurioStacksHandler current;
+            do {
+                current = it.next();
+            } while (!current.isVisible() && it.hasNext());
+            if (current.isVisible()) {
+                cur = new ItemIterator(current.getSlots(), current.getStacks());
+                return cur.next();
+            }
+            return null;
+        }
+
+        static class ItemIterator implements Iterator<ItemStack> {
+            int i = 0;
+            int max;
+            IDynamicStackHandler handler;
+
+            @Override
+            public boolean hasNext() {
+                return i < max;
+            }
+
+            public ItemIterator(int max, IDynamicStackHandler handler) {
+                this.max = max;
+                this.handler = handler;
+            }
+
+            @Override
+            public ItemStack next() {
+                return handler.getStackInSlot(i++);
+            }
+
+        }
     }
 }

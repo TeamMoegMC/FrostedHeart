@@ -18,11 +18,11 @@
 
 package com.teammoeg.frostedheart.block.cropblock;
 
-import com.teammoeg.frostedheart.content.FHItems;
-
+import com.teammoeg.frostedheart.FHContent;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.item.Item;
 import net.minecraft.state.IntegerProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -34,12 +34,14 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
+import java.util.function.BiFunction;
+
 public class WhiteTurnipBlock extends FHCropBlock {
     public static final IntegerProperty WhiteTurnip_AGE = BlockStateProperties.AGE_0_7;
     private static final VoxelShape[] SHAPE = new VoxelShape[]{Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 4.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 6.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 8.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 10.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D), Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 16.0D, 16.0D)};
 
-    public WhiteTurnipBlock(String name, int growTemp, AbstractBlock.Properties properties) {
-        super(name, growTemp, properties);
+    public WhiteTurnipBlock(String name, int growTemp, AbstractBlock.Properties properties, BiFunction<Block, Item.Properties, Item> createItemBlock) {
+        super(name, growTemp, properties, createItemBlock);
     }
 
     public IntegerProperty getAgeProperty() {
@@ -51,7 +53,7 @@ public class WhiteTurnipBlock extends FHCropBlock {
     }
 
     protected IItemProvider getSeedsItem() {
-        return FHItems.white_turnip;
+        return FHContent.FHBlocks.white_turnip_block.asItem();
     }
 
     protected int getBonemealAgeIncrease(World worldIn) {

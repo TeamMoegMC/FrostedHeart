@@ -4,10 +4,11 @@ import com.google.gson.JsonObject;
 
 public class BiomeTempData extends JsonDataHolder {
 
-	public BiomeTempData(JsonObject data) {
-		super(data);
-	}
-	public Float getTemp() {
-		return this.getFloat("temperature");
-	}
+    public BiomeTempData(JsonObject data) {
+        super(data);
+    }
+
+    public Float getTemp() {
+        return this.getFloat("temperature");
+    }
 }

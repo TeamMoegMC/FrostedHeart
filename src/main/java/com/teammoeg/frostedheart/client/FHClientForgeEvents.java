@@ -18,48 +18,29 @@
 
 package com.teammoeg.frostedheart.client;
 
-import static net.minecraft.util.text.TextFormatting.AQUA;
-import static net.minecraft.util.text.TextFormatting.GRAY;
-import static net.minecraft.util.text.TextFormatting.WHITE;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.stereowalker.survive.entity.SurviveEntityStats;
-import com.teammoeg.frostedheart.client.hud.FrostedHud;
-import com.teammoeg.frostedheart.climate.SurviveTemperature;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.GameType;
-import org.lwjgl.opengl.GL11;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.stereowalker.survive.Survive;
 import com.stereowalker.survive.temperature.TemperatureChangeInstance;
 import com.stereowalker.survive.util.data.BlockTemperatureData;
-import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
 import com.teammoeg.frostedheart.client.util.FHClientUtils;
-import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
@@ -68,17 +49,21 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.List;
+
+import static net.minecraft.util.text.TextFormatting.*;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHClientForgeEvents {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
-        if(!FHBipedLayerRenderer.rendersAssigned) {
-            for(Object render : FHClientUtils.mc().getRenderManager().renderers.values())
-                if(BipedRenderer.class.isAssignableFrom(render.getClass()))
-                    ((BipedRenderer)render).addLayer(new FHBipedLayerRenderer<>((BipedRenderer)render));
-                else if(ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
-                    ((ArmorStandRenderer)render).addLayer(new FHBipedLayerRenderer<>((ArmorStandRenderer)render));
+        if (!FHBipedLayerRenderer.rendersAssigned) {
+            for (Object render : FHClientUtils.mc().getRenderManager().renderers.values())
+                if (BipedRenderer.class.isAssignableFrom(render.getClass()))
+                    ((BipedRenderer) render).addLayer(new FHBipedLayerRenderer<>((BipedRenderer) render));
+                else if (ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
+                    ((ArmorStandRenderer) render).addLayer(new FHBipedLayerRenderer<>((ArmorStandRenderer) render));
             FHBipedLayerRenderer.rendersAssigned = true;
         }
     }
@@ -121,7 +106,7 @@ public class FHClientForgeEvents {
             if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
                 list.add("");
                 list.add(AQUA + FHMain.MODNAME);
-                list.add(GRAY + I18n.format("tooltip.frostedheart.f3_average_temperature", WHITE + String.format("%.1f", ChunkData.getTemperature(mc.world,pos))));
+                list.add(GRAY + I18n.format("tooltip.frostedheart.f3_average_temperature", WHITE + String.format("%.1f", ChunkData.getTemperature(mc.world, pos))));
             } else {
                 list.add(GRAY + I18n.format("tooltip.frostedheart.f3_invalid_chunk_data"));
             }
@@ -141,7 +126,7 @@ public class FHClientForgeEvents {
         MatrixStack stack = event.getMatrixStack();
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
-        float partialTicks =  event.getPartialTicks();
+        float partialTicks = event.getPartialTicks();
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 

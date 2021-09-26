@@ -18,17 +18,11 @@
 
 package com.teammoeg.frostedheart.item;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.model.HeaterVestModel;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.steamenergy.IChargable;
-
-import blusunrize.immersiveengineering.api.Lib;
-import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -43,72 +37,75 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nullable;
+import java.util.List;
+
 /**
  * Heater Vest: wear it to warm yourself from the coldness.
  * 加温背心：穿戴抵御寒冷
  */
 public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergyItem, IHeatingEquipment, IChargable {
 
-	public HeaterVestItem(String name, Properties properties) {
-		super(name, properties);
-	}
+    public HeaterVestItem(String name, Properties properties) {
+        super(name, properties);
+    }
 
-	@Override
-	public int getMaxEnergyStored(ItemStack container) {
-		return 380000;
-	}
+    @Override
+    public int getMaxEnergyStored(ItemStack container) {
+        return 380000;
+    }
 
-	@Nullable
-	@Override
-	public EquipmentSlotType getEquipmentSlot(ItemStack stack) {
-		return EquipmentSlotType.CHEST;
-	}
+    @Nullable
+    @Override
+    public EquipmentSlotType getEquipmentSlot(ItemStack stack) {
+        return EquipmentSlotType.CHEST;
+    }
 
-	@Override
-	public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlotType slot, String type) {
-		return FHMain.rl("textures/models/heater_vest.png").toString();
-	}
+    @Override
+    public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlotType slot, String type) {
+        return FHMain.rl("textures/models/heater_vest.png").toString();
+    }
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public BipedModel getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlotType armorSlot,
-			BipedModel _default) {
-		return HeaterVestModel.getModel();
-	}
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public BipedModel getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlotType armorSlot,
+                                    BipedModel _default) {
+        return HeaterVestModel.getModel();
+    }
 
-	@Override
-	public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
-		String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-		list.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored));
-	}
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
+        String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
+        list.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored));
+    }
 
-	@Override
-	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-		if (this.isInGroup(group)) {
-			items.add(new ItemStack(this));
-			ItemStack is = new ItemStack(this);
-			this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
-			items.add(is);
-		}
+    @Override
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+        if (this.isInGroup(group)) {
+            items.add(new ItemStack(this));
+            ItemStack is = new ItemStack(this);
+            this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
+            items.add(is);
+        }
 
-	}
+    }
 
-	@Override
-	public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-		int energycost = 2;
-		if (bodyTemp < 0.2) {
-			float delta = 0.2F - bodyTemp;
-			if (delta > 0.25)
-				delta = 0.25F;
-			float rex = Math.max(this.extractEnergy(stack, energycost + (int) (delta * 120F), false) - 2F, 0F);
-			bodyTemp += rex / 120F;
-		}
-		return bodyTemp;
-	}
+    @Override
+    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
+        int energycost = 2;
+        if (bodyTemp < 0.2) {
+            float delta = 0.2F - bodyTemp;
+            if (delta > 0.25)
+                delta = 0.25F;
+            float rex = Math.max(this.extractEnergy(stack, energycost + (int) (delta * 120F), false) - 2F, 0F);
+            bodyTemp += rex / 120F;
+        }
+        return bodyTemp;
+    }
 
-	@Override
-	public float charge(ItemStack stack, float value) {
-		return this.receiveEnergy(stack, (int) value, false);
-	}
+    @Override
+    public float charge(ItemStack stack, float value) {
+        return this.receiveEnergy(stack, (int) value, false);
+    }
 
 }

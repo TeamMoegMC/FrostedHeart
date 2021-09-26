@@ -18,14 +18,7 @@
 
 package com.teammoeg.frostedheart.climate.chunkdata;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.teammoeg.frostedheart.climate.WorldClimate;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -39,12 +32,18 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public static final ChunkData EMPTY = new Immutable();
 
     public static ChunkData get(IWorld world, BlockPos pos) {
         return get(world, new ChunkPos(pos));
     }
+
     /**
      * Called to get temperature when a world context is available.
      * If on client, will query capability, falling back to cache, and send request
@@ -52,11 +51,13 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * If on server, will either query capability falling back to cache, or query
      * provider to generate the data.
      * This method directly get temperature at any positions.
+     *
      * @see ChunkDataCache#get(ChunkPos) to directly access the cache
      */
     public static float getTemperature(IWorld world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
     }
+
     /**
      * Called to get chunk data when a world context is available.
      * If on client, will query capability, falling back to cache, and send request
@@ -339,12 +340,14 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public ChunkPos getPos() {
         return pos;
     }
+
     /**
      * Get Temperature in a world at a location
+     *
      * @param world world in
-     * @param pos position 
-     * */
-    float getTemperatureAtBlock(IWorld world,BlockPos pos) {
+     * @param pos   position
+     */
+    float getTemperatureAtBlock(IWorld world, BlockPos pos) {
         float ret = 0, tmp;
         for (ITemperatureAdjust adj : adjusters) {
             if (adj.isEffective(pos)) {
@@ -353,13 +356,12 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                     ret = tmp;
             }
         }
-        return WorldClimate.getWorldTemperature(world,pos) + ret;
+        return WorldClimate.getWorldTemperature(world, pos) + ret;
     }
+
     /**
-     * 
-     * @deprecated This does not consider world specific temperature<br>use {@link #getTemperature(IWorld,BlockPos)}
-     * 
-     * */
+     * @deprecated This does not consider world specific temperature<br>use {@link #getTemperature(IWorld, BlockPos)}
+     */
     @Deprecated
     public float getTemperatureAtBlock(BlockPos pos) {
         float ret = 0, tmp;
@@ -426,7 +428,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         private Immutable() {
             super(new ChunkPos(ChunkPos.SENTINEL));
         }
-
 
 
         @Override

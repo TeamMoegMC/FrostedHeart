@@ -19,12 +19,12 @@
 package com.teammoeg.frostedheart.client;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.render.FHBipedLayerRenderer;
 import com.teammoeg.frostedheart.client.screen.CrucibleScreen;
 import com.teammoeg.frostedheart.client.screen.GeneratorScreen;
 import com.teammoeg.frostedheart.client.screen.RadiatorScreen;
-import com.teammoeg.frostedheart.content.FHBlocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -51,14 +51,14 @@ public class FHClientModEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "radiator"), RadiatorScreen::new);
         // Register translucent render type
-        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHBlocks.Multi.generator, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHBlocks.Multi.crucible, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHBlocks.Multi.generator_t2, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHBlocks.radiator, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater,RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.crucible, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.radiator, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
         PlayerRenderer render = skinMap.get("default");
