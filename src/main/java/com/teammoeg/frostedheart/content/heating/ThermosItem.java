@@ -129,7 +129,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
         if (this.isInGroup(group)) {
-            ITag<Fluid> tag = FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID,"hot_drink"));
+            ITag<Fluid> tag = FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID,"drink"));
             if (tag == null) return;
             for (Fluid fluid : tag.getAllElements()) {
                 ItemStack itemStack = new ItemStack(this);
