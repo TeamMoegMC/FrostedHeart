@@ -159,9 +159,9 @@ public class FHContent {
 
     public static class FHMultiblocks {
         public static IETemplateMultiblock GENERATOR = new T1GeneratorMultiblock();
-        public static IETemplateMultiblock CRUCIBLE = new T2GeneratorMultiblock();
+        public static IETemplateMultiblock CRUCIBLE = new CrucibleMultiblock();
         public static IETemplateMultiblock STEAMTURBINE = new SteamTurbineMultiblock();
-        public static IETemplateMultiblock GENERATOR_T2 = new CrucibleMultiblock();
+        public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
         public static Block generator = new NormalGeneratorMultiBlock("generator", FHTileTypes.GENERATOR_T1);
         public static Block generator_t2 = new HeatedGeneratorMultiBlock("generator_t2", FHTileTypes.GENERATOR_T2);
         public static Block crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
