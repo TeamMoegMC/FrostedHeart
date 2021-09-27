@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -121,6 +122,8 @@ public class FHClientForgeEvents {
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
+        RenderSystem.enableBlend();
+
         if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
             FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, clientPlayer);
         }
@@ -163,5 +166,7 @@ public class FHClientForgeEvents {
             FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
             event.setCanceled(true);
         }
+
+        RenderSystem.disableBlend();
     }
 }

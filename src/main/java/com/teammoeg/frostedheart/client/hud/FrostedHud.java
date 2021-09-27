@@ -23,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.util.FHLogger;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -88,8 +89,9 @@ public class FrostedHud {
         renderJumpBar = renderHealth && player.isRidingHorse();
         renderArmor = renderHealth && player.getTotalArmorValue() > 0;
         renderExperience = renderHealth;
-        renderHypothermia = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -0.2 && TemperatureCore.getBodyTemperature(renderViewPlayer) >= 1.0;
+        renderHypothermia = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -0.2;
         renderFrozen = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -1.0;
+        System.out.println(TemperatureCore.getBodyTemperature(renderViewPlayer));
     }
 
     public static PlayerEntity getRenderViewPlayer() {
@@ -140,13 +142,13 @@ public class FrostedHud {
             mc.ingameGUI.blit(stack, x + BasePos.off_hand.getA(), y + BasePos.off_hand.getB(), UV.selected.x, UV.selected.y, UV.selected.w, UV.selected.h);
         }
 
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         ItemStack itemstack = player.getHeldItemOffhand();
         HandSide handside = player.getPrimaryHand().opposite();
 
         RenderSystem.enableRescaleNormal();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+//        RenderSystem.enableBlend();
+//        RenderSystem.defaultBlendFunc();
 
         for (int i1 = 0; i1 < 9; ++i1) {
             int j1 = x - 90 + i1 * 20 + 2;
@@ -174,14 +176,14 @@ public class FrostedHud {
 
                 mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
                 int l1 = (int) (f * 19.0F);
-                RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//                RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 mc.ingameGUI.blit(stack, k2, j2, 0, 94, 18, 18);
                 mc.ingameGUI.blit(stack, k2, j2 + 18 - l1, 18, 112 - l1, 18, l1);
             }
         }
 
         RenderSystem.disableRescaleNormal();
-        RenderSystem.disableBlend();
+//        RenderSystem.disableBlend();
 
         mc.getProfiler().endSection();
     }
@@ -191,8 +193,8 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
 
         mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.disableBlend();
+//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        RenderSystem.disableBlend();
         int i = mc.player.xpBarCap();
         if (i > 0) {
             int j = 182;
@@ -213,8 +215,8 @@ public class FrostedHud {
             mc.fontRenderer.drawString(stack, s, (float) i1, (float) (j1 - 1), 0);
             mc.fontRenderer.drawString(stack, s, (float) i1, (float) j1, 8453920);
         }
-        RenderSystem.enableBlend();
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        RenderSystem.enableBlend();
+//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
         mc.getProfiler().endSection();
     }
@@ -224,8 +226,7 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
 
-        int k = (int) ((Math.abs(TemperatureCore.getBodyTemperature(player)) - 0.2) / 0.8 * 181.0F);
-//        System.out.println(TemperatureCore.getBodyTemperature(player) + ", " + k);
+        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), -1)) - 0.2) / 0.8 * 181.0F);
         mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA(), y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, k, UV.hypothermia_bar.h);
         mc.getProfiler().endSection();
     }
@@ -254,8 +255,8 @@ public class FrostedHud {
         int healthRow = healthState % 10;
         int absorbRow = absorbState % 10;
 
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.disableBlend();
+//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        RenderSystem.disableBlend();
         mc.getTextureManager().bindTexture(HP);
         mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), healthCol * UV.health_bar.w, healthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
         mc.getTextureManager().bindTexture(ABSORPTION);
@@ -264,8 +265,8 @@ public class FrostedHud {
         int offset = mc.fontRenderer.getStringWidth(String.valueOf(health)) / 2;
         mc.fontRenderer.drawString(stack, String.valueOf(health), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
 
-        RenderSystem.enableBlend();
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        RenderSystem.enableBlend();
+//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
         mc.getProfiler().endSection();
     }
@@ -377,11 +378,12 @@ public class FrostedHud {
     }
 
     public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
-        mc.getProfiler().startSection("frostedheart_frozen");
+//        mc.getProfiler().startSection("frostedheart_frozen");
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.defaultBlendFunc();
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.disableAlphaTest();
         mc.getTextureManager().bindTexture(FROZEN_OVERLAY_PATH);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
@@ -393,8 +395,9 @@ public class FrostedHud {
         tessellator.draw();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        mc.getProfiler().endSection();
+        RenderSystem.enableAlphaTest();
+//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+//        mc.getProfiler().endSection();
     }
 
     private static class BasePos {

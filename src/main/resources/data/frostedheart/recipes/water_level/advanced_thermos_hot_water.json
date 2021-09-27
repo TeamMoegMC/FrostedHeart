@@ -1,0 +1,9 @@
+{
+  "type": "watersource:water_level_fluid",
+  "ingredient": {
+    "item": "frostedheart:advanced_thermos"
+  },
+  "fluid": "frostedheart:hot_water",
+  "waterLevel": 5,
+  "waterSaturationLevel": 6
+}
