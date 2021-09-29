@@ -206,7 +206,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 //                heat += 10;
 //            }
 //        });
-        return 10;
+        return 0.25F;
     }
 
     @Override
