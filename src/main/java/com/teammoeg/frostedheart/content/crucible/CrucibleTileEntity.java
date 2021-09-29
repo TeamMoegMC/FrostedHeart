@@ -256,6 +256,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
                     if (activeBeforeTick) {
                         if (recipe != null) {
                             Utils.modifyInvStackSize(inventory, 0, -recipe.input.getCount());
+                            Utils.modifyInvStackSize(inventory, 1, -recipe.input2.getCount());
                             if (!inventory.get(2).isEmpty())
                                 inventory.get(2).grow(recipe.output.copy().getCount());
                             else if (inventory.get(2).isEmpty())
