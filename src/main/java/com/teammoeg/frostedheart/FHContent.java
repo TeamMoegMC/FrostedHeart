@@ -35,6 +35,8 @@ import com.teammoeg.frostedheart.content.crucible.*;
 import com.teammoeg.frostedheart.content.generator.NormalGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipeSerializer;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipeSerializer;
 import com.teammoeg.frostedheart.content.generatort1.*;
 import com.teammoeg.frostedheart.content.heating.*;
 import com.teammoeg.frostedheart.content.radiator.RadiatorBlock;
@@ -203,7 +205,7 @@ public class FHContent {
                 "heat_radiator", makeType(() -> new RadiatorTileEntity(), () -> FHBlocks.radiator));
 
         public static final RegistryObject<TileEntityType<T2GeneratorTileEntity>> GENERATOR_T2 = REGISTER.register(
-                "generator_t2", makeType(() -> new T2GeneratorTileEntity(2, 4, 2), () -> FHMultiblocks.generator_t2)
+                "generator_t2", makeType(() -> new T2GeneratorTileEntity(1, 2, 1), () -> FHMultiblocks.generator_t2)
         );
 
         private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
@@ -224,11 +226,13 @@ public class FHContent {
         static {
             GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipeSerializer::new);
             CrucibleRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("crucible", CrucibleRecipeSerializer::new);
+            GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipeSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
         }
 
         public static void registerRecipeTypes() {
             GeneratorRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":generator");
+            GeneratorSteamRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":steam_generator");
             CrucibleRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":crucible");
             ChargerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":charger");
         }
