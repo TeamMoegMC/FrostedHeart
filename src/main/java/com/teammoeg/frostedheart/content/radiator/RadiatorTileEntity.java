@@ -44,6 +44,7 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
     public float power = 0;
     public int process = 0;
     public int processMax = 0;
+    public float tempLevelLast;
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
@@ -141,13 +142,15 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
     @Override
     public void doGraphicalUpdates(int slot) {
     }
-
+    public float getMaxPower() {
+    	return 5000;
+    }
     @Override
     public void tick() {
         SteamEnergyNetwork network = getNetwork();
         boolean isDirty = false;
         if (network != null) {
-            float actual = network.drainHeat(Math.min(2000, 500000 - power));
+            float actual = network.drainHeat(Math.min(24,getMaxPower() - power));
             if (actual > 0) {
                 power += actual;
                 isDirty = true;
@@ -160,25 +163,27 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
             if (network != null)
                 process -= network.getTemperatureLevel();
             else
-                process--;
+                process-=tempLevelLast;
             isDirty = true;
             afterState = true;
-        } else if (network != null && power >= 4000 * network.getTemperatureLevel()) {
-            power -= 4000 * network.getTemperatureLevel();
-            process = (int) (1000 * network.getTemperatureLevel());
-            processMax = (int) (1000 * network.getTemperatureLevel());
+        } else if (network != null && power >= 8*160 * network.getTemperatureLevel()) {
+            power -= 8*160 * network.getTemperatureLevel();
+            process = (int) (160 * network.getTemperatureLevel());
+            processMax = (int) (160 * network.getTemperatureLevel());
             isDirty = true;
             afterState = true;
         }
-        if (beforeState != afterState) {
+        if (beforeState != afterState||(network!=null&&tempLevelLast!=network.getTemperatureLevel())) {
+        	
             this.setActive(afterState);
             if (afterState) {
-                if (network != null)
-                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 8, (byte) (8 * network.getTemperatureLevel()));
-                else
-                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 8, (byte) 8);
+                if (network != null) {
+                	tempLevelLast=network.getTemperatureLevel();
+                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 8, (byte) (10 * network.getTemperatureLevel()));
+                }else
+                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 8, (byte) (10*tempLevelLast));
             } else
-                ChunkData.removeTempAdjust(this.getWorld(), this.getPos(), 8);
+                ChunkData.removeTempAdjust(this.getWorld(), this.getPos());
         }
         if (isDirty) {
             markDirty();

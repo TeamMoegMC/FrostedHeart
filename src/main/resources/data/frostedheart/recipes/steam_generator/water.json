@@ -3,6 +3,5 @@
   "input":{"tag":"forge:water","amount":10},
   "energy":20,
   "temp_multiplier":1.0,
-  "range_multiplier":1.0,
-  "time": 1600
+  "range_multiplier":1.0
 }

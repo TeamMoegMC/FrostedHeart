@@ -57,8 +57,8 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
     public static final int OUTPUT_SLOT = 1;
     public int process = 0;
     public int processMax = 0;
-    NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
-    ItemStack currentItem;
+    protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
+    protected ItemStack currentItem;
 
     public class GeneratorData implements IIntArray {
         public static final int MAX_BURN_TIME = 0;

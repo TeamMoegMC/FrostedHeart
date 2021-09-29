@@ -26,6 +26,7 @@ import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
 
 import java.util.Collections;
@@ -59,9 +60,9 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     // Initialized by reload listener
     public static Map<ResourceLocation, GeneratorSteamRecipe> recipeList = Collections.emptyMap();
 
-    public static GeneratorSteamRecipe findRecipe(ItemStack input) {
+    public static GeneratorSteamRecipe findRecipe(FluidStack input) {
         for (GeneratorSteamRecipe recipe : recipeList.values())
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
+            if(recipe.input.testIgnoringAmount(input))
                 return recipe;
         return null;
     }
