@@ -69,7 +69,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     @Override
     public void disassemble() {
         super.disassemble();
-        ChunkData.removeTempAdjust(world, getPos(), getActualRange());
+        ChunkData.removeTempAdjust(world, getPos());
     }
 
     protected abstract void onShutDown();
@@ -92,7 +92,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
             if (!world.isRemote && formed && !isDummy() && !isWorking()) {
                 setActive(false);
                 onShutDown();
-                ChunkData.removeTempAdjust(world, getPos(), getActualRange());
+                ChunkData.removeTempAdjust(world, getPos());
             }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
             final boolean activeBeforeTick = getIsActive();
@@ -104,7 +104,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
                 if (activeAfterTick) {
                     ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), (byte) getActualTemp());
                 } else {
-                    ChunkData.removeTempAdjust(world, getPos(), getActualRange());
+                    ChunkData.removeTempAdjust(world, getPos());
                 }
                 setAllActive(activeAfterTick);
             } else if (activeAfterTick) {
