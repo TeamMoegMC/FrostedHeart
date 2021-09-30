@@ -23,16 +23,24 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.climate.IHeatingEquipment;
+import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.data.FHDataManager;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -63,6 +71,46 @@ public class FHClientForgeEvents {
     @SubscribeEvent
     public static void addItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
+        Item i=stack.getItem();
+        ITempAdjustFood itf=null;
+        IWarmKeepingEquipment iwe=null;
+        if (i instanceof ITempAdjustFood) {
+            itf = (ITempAdjustFood) i;
+        } else {
+            itf = FHDataManager.getFood(stack);
+        }
+        if (i instanceof IWarmKeepingEquipment) {
+            iwe = (IWarmKeepingEquipment) i;
+        } else {
+            iwe = FHDataManager.getArmor(stack);
+        }
+        if(itf!=null) {
+        	float temp=itf.getHeat(stack);
+        	temp=(Math.round(temp*1000))/1000.0F;//round
+        	String temps=Float.toString(temp);
+        	if(temp>0)
+        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.food_temp","+"+temps).mergeStyle(TextFormatting.GOLD));
+        	else
+        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.food_temp",temps).mergeStyle(TextFormatting.AQUA));
+        }
+        if(iwe!=null) {
+        	float temp=iwe.getFactor(null, stack);
+        	temp=Math.round(temp*100);
+        	String temps=Float.toString(temp);
+        	if(temp>0)
+        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_warm","+"+temps).mergeStyle(TextFormatting.GOLD));
+        	else
+        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_warm",temps).mergeStyle(TextFormatting.AQUA));
+        }
+        if(i instanceof IHeatingEquipment) {
+        	float temp=((IHeatingEquipment) i).getMax(stack);
+        	temp=(Math.round(temp*2000))/1000.0F;
+        	String temps=Float.toString(temp);
+        	if(temp>0)
+        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_heating","+"+temps).mergeStyle(TextFormatting.GOLD));
+        	else
+        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_heating",temps).mergeStyle(TextFormatting.AQUA));
+        }
 //        for (ResourceLocation id : Survive.armorModifierMap.keySet()) {
 //            Item armor = ForgeRegistries.ITEMS.getValue(id);
 //            float weightMod = Survive.armorModifierMap.get(id).getWeightModifier();
@@ -122,7 +170,7 @@ public class FHClientForgeEvents {
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
-        RenderSystem.enableBlend();
+        //RenderSystem.enableBlend();
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
             FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, clientPlayer);
@@ -167,6 +215,6 @@ public class FHClientForgeEvents {
             event.setCanceled(true);
         }
 
-        RenderSystem.disableBlend();
+        //RenderSystem.disableBlend();
     }
 }

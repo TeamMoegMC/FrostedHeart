@@ -131,6 +131,8 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
                 process--;
             if(steam!=null)
             	this.power+=steam.power*this.getTemperatureLevel();
+            if(power>=2000)
+            	power=20000;
             this.markContainingBlockForUpdate(null);
         }
         // process not started yet
@@ -192,16 +194,6 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     protected void tickEffects(boolean isActive) {
-        if (isActive) {
-            BlockPos blockpos = this.getPos();
-            Random random = world.rand;
-            if (random.nextFloat() < 0.4F) {
-                for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                    ClientUtils.spawnSmokeParticles(world, blockpos);
-                    ClientUtils.spawnFireParticles(world, blockpos);
-                }
-            }
-        }
     }
 
     @Override

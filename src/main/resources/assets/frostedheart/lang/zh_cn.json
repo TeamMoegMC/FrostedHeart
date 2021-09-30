@@ -27,6 +27,7 @@
   "item.frostedheart.vegetable_soup": "蔬菜汤",
   "item.frostedheart.black_bread": "黑面包",
   "item.frostedheart.white_turnip": "白萝卜",
+  
 
   "item.frostedheart.hay_boots": "干草靴子",
   "item.frostedheart.hay_hat": "干草帽子",
@@ -42,9 +43,10 @@
   "item.frostedheart.wool_pants": "羊毛裤子",
   "item.frostedheart.raw_hide": "兽皮",
   "item.frostedheart.steam_bottle": "蒸汽瓶",
-  "item.frostedheart.thermos": "热水壶",
-  "item.frostedheart.advanced_thermos": "高级热水壶",
-
+  "item.frostedheart.heater_vest": "加热背心",
+  "item.frostedheart.thermos": "保温杯",
+  "item.frostedheart.advanced_thermos": "高级保温杯",
+  "item.frostedheart.mercury_body_thermometer": "水银体温计",
   "effect.frostedheart.hypothermia": "失温",
   "effect.frostedheart.hyperthermia": "高温",
   "death.attack.hyperthermia": "%s死于高温。",
@@ -64,7 +66,14 @@
   "tooltip.frostedheart.survive_block_temp_mod": "温度指数：",
   "tooltip.frostedheart.survive_weight_mod": "沉重指数：",
   "tooltip.frostedheart.survive_range": "范围:",
-  "frostedheart.desc.steamStored": "蒸汽:%ssu",
+  "tooltip.frostedheart.meme.thermos": "不要与同名服务端混淆！",
+  "tooltip.frostedheart.meme.steam_bottle": "是兄弟就干了这杯",
+  "tooltip.frostedheart.meme.thermometerbody": "体温高于37.8°C禁止进入",
+  "tooltip.frostedheart.food_temp": "使用后体温%s °C",
+  "tooltip.frostedheart.armor_warm": "保暖指数：%s %",
+  "tooltip.frostedheart.armor_heating": "加热功率：%s °C/s",
+  "frostedheart.desc.steamStored": "蒸汽:%s su",
+  "frostedheart.info.thermometerbody": "体温：%s °C",
   "gui.jei.category.crucible": "炼钢坩埚",
   "gui.frostedheart.temperature.desc": "平均气温"
 }

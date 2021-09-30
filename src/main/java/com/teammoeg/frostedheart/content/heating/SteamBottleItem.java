@@ -38,6 +38,7 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
@@ -86,7 +87,8 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        tooltip.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored));
+        tooltip.add(new TranslationTextComponent("tooltip.frostedheart.meme.steam_bottle").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored).mergeStyle(TextFormatting.GOLD));
     }
 
     /**
@@ -103,7 +105,8 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
         this.receiveEnergy(stack, 240, false);
     }
 
-    /**
+
+	/**
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
@@ -145,5 +148,10 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
         return bodyTemp + this.extractEnergy(stack, 3, false) / 120;
     }
+
+	@Override
+	public float getMax(ItemStack stack) {
+		return 0.025F;
+	}
 
 }

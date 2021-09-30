@@ -33,6 +33,7 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -53,7 +54,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 
     @Override
     public int getMaxEnergyStored(ItemStack container) {
-        return 380000;
+        return 9600;
     }
 
     @Nullable
@@ -77,7 +78,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        list.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored));
+        list.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored).mergeStyle(TextFormatting.GOLD));
     }
 
     @Override
@@ -108,5 +109,10 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     public float charge(ItemStack stack, float value) {
         return this.receiveEnergy(stack, (int) value, false);
     }
+
+	@Override
+	public float getMax(ItemStack stack) {
+		return 0.25F;
+	}
 
 }

@@ -44,7 +44,8 @@
   "item.frostedheart.steam_bottle": "Steam Bottle",
   "item.frostedheart.thermos": "Thermos",
   "item.frostedheart.advanced_thermos": "Advanced Thermos",
-
+  "item.frostedheart.mercury_body_thermometer": "Mercury Body Thermometer",
+  "item.frostedheart.heater_vest": "Heater Vest",
   "effect.frostedheart.hypothermia": "Hypothermia",
   "effect.frostedheart.hyperthermia": "Hyperthermia",
   "death.attack.hyperthermia": "%s died of hyperthermia.",
@@ -64,7 +65,14 @@
   "tooltip.frostedheart.survive_block_temp_mod": "Block Temperature Modifier: ",
   "tooltip.frostedheart.survive_weight_mod": "Weight Modifier: ",
   "tooltip.frostedheart.survive_range": "Range: ",
-  "frostedheart.desc.steamStored": "Steam:%ssu",
+  "tooltip.frostedheart.meme.thermos": "Don't mess up with the server",
+  "tooltip.frostedheart.meme.steam_bottle": "Cheers!",
+  "tooltip.frostedheart.meme.thermometerbody": "Do not actually drink it.",
+  "tooltip.frostedheart.food_temp": "Temperature apply:%s °C",
+  "tooltip.frostedheart.armor_warm": "Warming Modifier:%s %",
+  "tooltip.frostedheart.armor_heating": "Heating rate:%s °C/s",
+  "frostedheart.desc.steamStored": "Steam:%s su",
+  "frostedheart.info.thermometerbody": "Body Temperature:%s °C",
   "gui.jei.category.crucible": "Steel Mill Crucible",
   "gui.frostedheart.temperature.desc": "Average Temperature"
 }

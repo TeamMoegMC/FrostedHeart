@@ -91,7 +91,7 @@ public class FrostedHud {
         renderExperience = renderHealth;
         renderHypothermia = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -0.2;
         renderFrozen = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -1.0;
-        System.out.println(TemperatureCore.getBodyTemperature(renderViewPlayer));
+        //System.out.println(TemperatureCore.getBodyTemperature(renderViewPlayer));
     }
 
     public static PlayerEntity getRenderViewPlayer() {
@@ -378,7 +378,8 @@ public class FrostedHud {
     }
 
     public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
-//        mc.getProfiler().startSection("frostedheart_frozen");
+        mc.getProfiler().startSection("frostedheart_frozen");
+        RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.defaultBlendFunc();
@@ -396,8 +397,9 @@ public class FrostedHud {
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.enableAlphaTest();
+        RenderSystem.disableBlend();
 //        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-//        mc.getProfiler().endSection();
+        mc.getProfiler().endSection();
     }
 
     private static class BasePos {

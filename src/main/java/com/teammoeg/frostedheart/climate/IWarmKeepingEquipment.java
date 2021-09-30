@@ -18,6 +18,8 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 
@@ -36,9 +38,9 @@ public interface IWarmKeepingEquipment {
     /**
      * returns warm keeping factor.
      * max factor is 1.
-     *
+     * @param pe the player, null means get default
      * @param stack the stack<br>
      * @return factor<br>
      */
-    float getFactor(ServerPlayerEntity pe, ItemStack stack);
+    float getFactor(@Nullable ServerPlayerEntity pe, ItemStack stack);
 }

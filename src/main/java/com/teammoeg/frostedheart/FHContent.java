@@ -134,6 +134,7 @@ public class FHContent {
         public static Item generator_ash = new FHBaseItem("generator_ash", itemProps);
         public static Item rye_flour = new FHBaseItem("rye_flour", itemProps);
         public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", itemProps);
+        public static Item mercury_body_thermometer=new ThermometerItem("mercury_body_thermometer",itemProps);
         public static Item rye_bread = new FHBaseItem("rye_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
         public static Item black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.BLACK_BREAD));
         public static Item vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);

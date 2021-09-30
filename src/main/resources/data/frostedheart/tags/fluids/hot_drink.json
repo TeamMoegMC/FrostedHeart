@@ -1,7 +1,6 @@
 {
     "replace": false,
     "values": [
-      "frostedheart:hot_water",
-      "steampowered:steam"
+      "frostedheart:hot_water"
     ]
 }
