@@ -89,9 +89,9 @@ public class FrostedHud {
         renderJumpBar = renderHealth && player.isRidingHorse();
         renderArmor = renderHealth && player.getTotalArmorValue() > 0;
         renderExperience = renderHealth;
-        renderHypothermia = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -0.2;
+        renderHypothermia = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -0.5;
         renderFrozen = renderHealth && TemperatureCore.getBodyTemperature(renderViewPlayer) <= -1.0;
-        System.out.println(TemperatureCore.getBodyTemperature(renderViewPlayer));
+        //System.out.println(TemperatureCore.getBodyTemperature(renderViewPlayer));
     }
 
     public static PlayerEntity getRenderViewPlayer() {
@@ -226,7 +226,7 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
 
-        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), -1)) - 0.2) / 0.8 * 181.0F);
+        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), -1)) - 0.5) / 0.5 * 181.0F);
         mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA(), y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, k, UV.hypothermia_bar.h);
         mc.getProfiler().endSection();
     }
@@ -378,7 +378,8 @@ public class FrostedHud {
     }
 
     public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
-//        mc.getProfiler().startSection("frostedheart_frozen");
+        mc.getProfiler().startSection("frostedheart_frozen");
+        RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.defaultBlendFunc();
@@ -396,8 +397,9 @@ public class FrostedHud {
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.enableAlphaTest();
+        RenderSystem.disableBlend();
 //        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-//        mc.getProfiler().endSection();
+        mc.getProfiler().endSection();
     }
 
     private static class BasePos {

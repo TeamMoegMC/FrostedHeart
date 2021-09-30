@@ -95,7 +95,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                 for (SmokingRecipe sr : irs) {
                     if (sr.getIngredients().iterator().next().test(is)) {
                         //if(pe instanceof ServerPlayerEntity) {
-                        power -= sr.getCookTime() / 10;
+                        power -= sr.getCookTime() / 20;
                         pe.giveExperiencePoints((int) sr.getExperience());
                         is.setCount(is.getCount() - 1);
                         ItemStack gain = sr.getRecipeOutput().copy();
@@ -195,7 +195,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     }
 
     public float getMaxPower() {
-        return 960000F;
+        return 20000F;
     }
 
     public Direction getDirection() {

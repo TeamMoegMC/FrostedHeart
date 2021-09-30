@@ -33,6 +33,7 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
     @Override
     public float getFactor(ServerPlayerEntity pe, ItemStack stack) {
         float base = this.getFloatOrDefault("factor", 0F);
+        if(pe==null)return base;
         if (pe.isBurning())
             base += this.getFloatOrDefault("fire", 0F);
         if (pe.isInWaterOrBubbleColumn())
@@ -46,7 +47,7 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
         if (false) {//further implement wet
             base += this.getFloatOrDefault("wet", 0F);
         }
-        float min = this.getFloatOrDefault("min", Float.NEGATIVE_INFINITY);
+        float min = this.getFloatOrDefault("min",0F);
         if (base < min) {
             base = min;
         } else {

@@ -4,6 +4,9 @@ import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHFluids;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+import com.teammoeg.frostedheart.data.FHDataManager;
+
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import gloridifice.watersource.WaterSource;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.helper.FluidHelper;
@@ -32,22 +35,24 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
 
 public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
-    boolean canDrink = false;
-    boolean canFill = false;
     final int unit;
 
     public ThermosItem(String name, int capacity, int unit) {
@@ -55,14 +60,15 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         this.unit = unit;
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
+        
     }
 
     public int getUseDuration(ItemStack stack) {
-        return canDrink ? 40 : 0;
+        return hasLiquid(stack) ? 40 : 0;
     }
 
     public UseAction getUseAction(ItemStack stack) {
-        return canDrink ? UseAction.DRINK : UseAction.NONE;
+        return hasLiquid(stack) ? UseAction.DRINK : UseAction.NONE;
     }
 
     @Override
@@ -96,57 +102,56 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
 
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        canFill = false;
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
             playerIn.setActiveHand(handIn);
             return canDrink(playerIn,playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
-        } else {
-            if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
-                BlockPos blockpos = ((BlockRayTraceResult)raytraceresult).getPos();
-                if (worldIn.getFluidState(blockpos).isTagged(FluidTags.WATER)) {
-                    itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data ->{
-                        if (data.getFluidInTank(0).isEmpty() || data.getFluidInTank(0).getFluid() == Fluids.WATER){
-                            canFill = true;
-                        }
-                    });
-                    if (canFill){
-                        worldIn.playSound(playerIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.NEUTRAL, 1.0F, 1.0F);
-                        itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-                            data.fill(new FluidStack(Fluids.WATER,data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
-                        });
-                        return ActionResult.resultSuccess(itemstack);
-                    }
-                }
-                playerIn.setActiveHand(handIn);
-                return canDrink(playerIn,playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
-            }
-            return ActionResult.resultFail(itemstack);
         }
+		if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
+		    BlockPos blockpos = ((BlockRayTraceResult)raytraceresult).getPos();
+		    if (worldIn.getFluidState(blockpos).isTagged(FluidTags.WATER)) {
+		        if (canFill(itemstack,Fluids.WATER)){
+		            worldIn.playSound(playerIn, playerIn.getPosX(), playerIn.getPosY(), playerIn.getPosZ(), SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.NEUTRAL, 1.0F, 1.0F);
+		            itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+		                data.fill(new FluidStack(Fluids.WATER,data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
+		            });
+		           
+		            return ActionResult.resultSuccess(itemstack);
+		        }
+		    }
+		    playerIn.setActiveHand(handIn);
+		    return canDrink(playerIn,playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
+		}
+		return ActionResult.resultFail(itemstack);
     }
 
     @Override
     public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
         if (this.isInGroup(group)) {
             ITag<Fluid> tag = FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID,"drink"));
+            items.add(new ItemStack(this));
             if (tag == null) return;
             for (Fluid fluid : tag.getAllElements()) {
                 ItemStack itemStack = new ItemStack(this);
-                items.add(FluidHelper.fillContainer(itemStack,fluid));
+                itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+	                data.fill(new FluidStack(fluid,data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
+	            });
+                items.add(itemStack);
             }
-            items.add(new ItemStack(this));
+            
         }
     }
 
     public boolean canDrink(PlayerEntity playerIn, ItemStack stack){
-        canDrink = false;
+       /* canDrink = false;
         if (this.getDamage(stack) <= this.getMaxDamage(stack) - getUnit()){
             playerIn.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(data -> {
                 canDrink = data.getWaterLevel() < 20;
             });
-        }
-        return canDrink;
+            
+        }*/
+        return true;
     }
 
     public SoundEvent getDrinkSound() {
@@ -158,7 +163,12 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     {
         return new FluidHandlerItemStack(stack, capacity)
         {
-            @Nonnull
+            @Override
+			public int fill(FluidStack resource, FluidAction doFill) {
+				return super.fill(resource, doFill);
+			}
+
+			@Nonnull
             @Override
             @SuppressWarnings("deprecation")
             public ItemStack getContainer()
@@ -189,6 +199,8 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
+        tooltip.add(new TranslationTextComponent("tooltip.frostedheart.meme.thermos").mergeStyle(TextFormatting.GRAY));
+        
         if (stack.getChildTag(FLUID_NBT_KEY) != null)
         {
             FluidUtil.getFluidHandler(stack).ifPresent(f ->{
@@ -197,16 +209,31 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             });
         }
     }
-
+    public boolean hasLiquid(ItemStack is) {
+    	LazyOptional<IFluidHandlerItem> ih=FluidUtil.getFluidHandler(is);
+    	if(ih.isPresent())
+    		return !ih.resolve().get().getFluidInTank(0).isEmpty();
+		return false;
+    }
+    public boolean canFill(ItemStack is,Fluid f) {
+    	LazyOptional<IFluidHandlerItem> ih=FluidUtil.getFluidHandler(is);
+    	if(ih.isPresent()) {
+    		IFluidHandlerItem ihr=ih.resolve().get();
+    		return ihr.getFluidInTank(0).isEmpty()||ihr.getFluidInTank(0).getFluid().isEquivalentTo(f);
+    	}
+		return false;
+    }
     @Override
     public float getHeat(ItemStack is) {
-        int heat = 0;
-//        FluidUtil.getFluidHandler(is).ifPresent(f ->{
-//            if (FluidTags.getCollection().get(FHMain.rl("hot_drink")).contains(f.getFluidInTank(0).getFluid())) {
-//                heat += 10;
-//            }
-//        });
-        return 10;
+    	LazyOptional<IFluidHandlerItem> ih=FluidUtil.getFluidHandler(is);
+    	if(ih.isPresent()) {
+    		IFluidHandlerItem f=ih.resolve().get();
+    		FluidStack fs=f.getFluidInTank(0);
+    		if(!fs.isEmpty()) {
+    			return FHDataManager.getDrinkHeat(fs);
+    		}
+    	};
+    	return 0;
     }
 
     @Override

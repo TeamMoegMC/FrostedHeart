@@ -19,17 +19,26 @@
 package com.teammoeg.frostedheart.content.generatort2;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+
+import java.util.Random;
+
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.steamenergy.HeatProvider;
 import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.SteamEnergyNetwork;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity> implements HeatProvider, IConnectable {
@@ -41,7 +50,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     float power = 0;
     SteamEnergyNetwork sen = new SteamEnergyNetwork(this);
-
+    GeneratorSteamRecipe steam;
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
@@ -80,13 +89,111 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     protected boolean canDrainTankFrom(int iTank, Direction side) {
         return false;
     }
-
+    //we have to override all 
     @Override
     protected void tickFuel() {
-        super.tickFuel();
-        if (this.getIsActive()) {
-            power += 25 * this.getTemperatureLevel();
+        // just finished process or during process
+        if (process > 0) {
+            if (isOverdrive() && !isActualOverdrive()) {
+                GeneratorRecipe recipe = getRecipe();
+                if (recipe != null) {
+                    int count = recipe.input.getCount();
+                    if (inventory.get(INPUT_SLOT).getCount() >= 4 * count) {
+                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -4 * count);
+                        if (currentItem != null) {
+                            if (!inventory.get(OUTPUT_SLOT).isEmpty())
+                                inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
+                            else
+                                inventory.set(OUTPUT_SLOT, currentItem);
+                            currentItem = null;
+                        }
+                        currentItem = recipe.output.copy();
+                        currentItem.setCount(4 * currentItem.getCount());
+                        this.process += recipe.time * 4;
+                        this.processMax += recipe.time * 4;
+                        this.steam=null;
+                        GeneratorSteamRecipe sgr=GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
+                        if(sgr!=null) {
+                        	int actualDrain=recipe.time*this.getTemperatureLevel()*sgr.input.getAmount();
+                        	FluidStack fs=this.tank.drain(actualDrain,FluidAction.SIMULATE);
+                        	if(fs.getAmount()>=actualDrain) {
+	                        	this.steam=sgr;
+	                        	this.tank.drain(actualDrain,FluidAction.EXECUTE);
+                        	}
+                        }
+                        setActualOverdrive(true);
+                    }
+                }
+            }
+            if (isActualOverdrive())
+                process -= 4;
+            else
+                process--;
+            if(steam!=null)
+            	this.power+=steam.power*this.getTemperatureLevel();
+            if(power>=2000)
+            	power=20000;
+            this.markContainingBlockForUpdate(null);
         }
+        // process not started yet
+        else {
+            if (currentItem != null) {
+                if (!inventory.get(OUTPUT_SLOT).isEmpty())
+                    inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
+                else
+                    inventory.set(OUTPUT_SLOT, currentItem);
+                currentItem = null;
+            }
+            GeneratorRecipe recipe = getRecipe();
+            if (recipe != null) {
+                int modifier = 1;
+                if (isOverdrive() && inventory.get(INPUT_SLOT).getCount() >= 4 * recipe.input.getCount()) {
+                    if (!isActualOverdrive())
+                        this.setActualOverdrive(true);
+                    modifier = 4;
+                } else if (isActualOverdrive()) {
+                    this.setActualOverdrive(false);
+                }
+                int count = recipe.input.getCount() * modifier;
+                Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
+                currentItem = recipe.output.copy();
+                currentItem.setCount(currentItem.getCount() * modifier);
+                this.process = recipe.time * modifier;
+                this.processMax = process;
+                GeneratorSteamRecipe sgr=GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
+                if(sgr!=null) {
+                	int actualDrain=recipe.time*this.getTemperatureLevel()*sgr.input.getAmount();
+                	FluidStack fs=this.tank.drain(actualDrain,FluidAction.SIMULATE);
+                	if(fs.getAmount()>=actualDrain) {
+                		if(this.steam!=sgr)
+                			this.markChanged(true);
+                    	this.steam=sgr;
+                    	this.tank.drain(actualDrain,FluidAction.EXECUTE);
+                	}
+                }
+                setActive(true);
+            } else {
+                this.process = 0;
+                processMax = 0;
+                setActive(false);
+            }
+        }
+    }
+
+    @Override
+    protected void setAllActive(boolean state) {
+        for (int x = 0; x < 3; ++x)
+            for (int y = 0; y < 7; ++y)
+                for (int z = 0; z < 3; ++z) {
+                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                    if (te instanceof BurnerGeneratorTileEntity)
+                        ((BurnerGeneratorTileEntity) te).setActive(state);
+                }
+    }
+
+    @Override
+    protected void tickEffects(boolean isActive) {
     }
 
     @Override
@@ -108,10 +215,21 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public int getTemperatureLevel() {
+    	if(master().steam!=null) {
+    		return (int) (master().steam.tempMod*super.getTemperatureLevel());
+    	}
         return super.getTemperatureLevel();
     }
 
     @Override
+	public int getRangeLevel() {
+    	if(master().steam!=null) {
+    		return (int) (master().steam.rangeMod*super.getRangeLevel());
+    	}
+		return super.getRangeLevel();
+	}
+
+	@Override
     public boolean disconnectAt(Direction to) {
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof IConnectable && !(te instanceof HeatProvider)) {

@@ -321,7 +321,7 @@ public class FHForgeEvents {
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
                 float heat = adj.getHeat(event.getItem());
-                if (current > 0) {
+                if (heat > 0) {
                     if (current >= max) return;
                     current += heat;
                     if (current > max) current = max;

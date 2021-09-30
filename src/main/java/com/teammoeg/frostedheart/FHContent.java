@@ -35,6 +35,8 @@ import com.teammoeg.frostedheart.content.crucible.*;
 import com.teammoeg.frostedheart.content.generator.NormalGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipeSerializer;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipeSerializer;
 import com.teammoeg.frostedheart.content.generatort1.*;
 import com.teammoeg.frostedheart.content.heating.*;
 import com.teammoeg.frostedheart.content.radiator.RadiatorBlock;
@@ -132,6 +134,7 @@ public class FHContent {
         public static Item generator_ash = new FHBaseItem("generator_ash", itemProps);
         public static Item rye_flour = new FHBaseItem("rye_flour", itemProps);
         public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", itemProps);
+        public static Item mercury_body_thermometer=new ThermometerItem("mercury_body_thermometer",itemProps);
         public static Item rye_bread = new FHBaseItem("rye_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
         public static Item black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.BLACK_BREAD));
         public static Item vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
@@ -203,7 +206,7 @@ public class FHContent {
                 "heat_radiator", makeType(() -> new RadiatorTileEntity(), () -> FHBlocks.radiator));
 
         public static final RegistryObject<TileEntityType<T2GeneratorTileEntity>> GENERATOR_T2 = REGISTER.register(
-                "generator_t2", makeType(() -> new T2GeneratorTileEntity(2, 4, 2), () -> FHMultiblocks.generator_t2)
+                "generator_t2", makeType(() -> new T2GeneratorTileEntity(1, 2, 1), () -> FHMultiblocks.generator_t2)
         );
 
         private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
@@ -224,11 +227,13 @@ public class FHContent {
         static {
             GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipeSerializer::new);
             CrucibleRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("crucible", CrucibleRecipeSerializer::new);
+            GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipeSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
         }
 
         public static void registerRecipeTypes() {
             GeneratorRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":generator");
+            GeneratorSteamRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":steam_generator");
             CrucibleRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":crucible");
             ChargerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":charger");
         }

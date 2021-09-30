@@ -16,31 +16,19 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.data;
 
-import javax.annotation.Nullable;
-
-import net.minecraft.entity.player.ServerPlayerEntity;
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import net.minecraft.item.ItemStack;
 
-// TODO: Auto-generated Javadoc
+public class DrinkTempData extends JsonDataHolder {
 
-/**
- * Interface IWarmKeepingEquipment.
- * Interface for warmkeeping equipments
- *
- * @author khjxiaogu
- * file: IWarmKeepingEquipment.java
- * @date 2021年9月14日
- */
-public interface IWarmKeepingEquipment {
+    public DrinkTempData(JsonObject data) {
+        super(data);
+    }
 
-    /**
-     * returns warm keeping factor.
-     * max factor is 1.
-     * @param pe the player, null means get default
-     * @param stack the stack<br>
-     * @return factor<br>
-     */
-    float getFactor(@Nullable ServerPlayerEntity pe, ItemStack stack);
+    public float getHeat() {
+        return this.getFloatOrDefault("heat", 0F);
+    }
 }
