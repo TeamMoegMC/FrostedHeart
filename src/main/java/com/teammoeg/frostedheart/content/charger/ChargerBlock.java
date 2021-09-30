@@ -81,7 +81,9 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-
+    	if(context.getFace()==Direction.UP||context.getPlayer().isSneaking()) {
+    		return this.getDefaultState().with(BlockStateProperties.FACING,context.getNearestLookingDirection());
+    	}
         return this.getDefaultState().with(BlockStateProperties.FACING, context.getFace().getOpposite());
     }
 
