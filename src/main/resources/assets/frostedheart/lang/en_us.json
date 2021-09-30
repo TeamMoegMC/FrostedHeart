@@ -47,6 +47,7 @@
   "item.frostedheart.mercury_body_thermometer": "Mercury Body Thermometer",
   "item.frostedheart.copper_pro_pick": "copper prospector Pick",
   "item.frostedheart.iron_pro_pick": "Iron prospector Pick",
+  "frostedheart.nothing": "Nothing",
   "effect.frostedheart.hypothermia": "Hypothermia",
   "effect.frostedheart.hyperthermia": "Hyperthermia",
   "death.attack.hyperthermia": "%s died of hyperthermia.",

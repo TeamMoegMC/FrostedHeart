@@ -34,9 +34,9 @@ public class ProspectorPick extends FHBaseItem {
         if (player != null) {
             context.getItem().damageItem(1, player, (player2) -> player2.sendBreakAnimation(context.getHand()));
         }
-        for (int x2 = -7; x2 < 2; x2++) {
-            for (int y2 = -2; y2 < 3; y2++) {
-                for (int z2 = -7; z2 < 2; z2++) {
+        for (int x2 = -7; x2 < 7; x2++) {
+            for (int y2 = -5; y2 < 5; y2++) {
+                for (int z2 = -7; z2 < 7; z2++) {
                     int BlockX = x + x2;
                     int BlockY = y + y2;
                     int BlockZ = z + z2;
@@ -56,7 +56,7 @@ public class ProspectorPick extends FHBaseItem {
             if (ore_name != null) {
                 player.sendStatusMessage(new StringTextComponent(new TranslationTextComponent(ore_name).getString() + " Count:" + count), true);
             } else {
-                player.sendStatusMessage(new TranslationTextComponent("Nothing"), true);
+                player.sendStatusMessage(new TranslationTextComponent("frostedheart.nothing"), true);
             }
         }
         return ActionResultType.SUCCESS;

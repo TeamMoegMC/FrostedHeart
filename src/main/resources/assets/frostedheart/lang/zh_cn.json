@@ -49,6 +49,7 @@
   "item.frostedheart.mercury_body_thermometer": "水银体温计",
   "item.frostedheart.copper_pro_pick": "铜探矿镐",
   "item.frostedheart.iron_pro_pick": "铁探矿镐",
+  "frostedheart.nothing": "什么都没有",
   "effect.frostedheart.hypothermia": "失温",
   "effect.frostedheart.hyperthermia": "高温",
   "death.attack.hyperthermia": "%s死于高温。",
