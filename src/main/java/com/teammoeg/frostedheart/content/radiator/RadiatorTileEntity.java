@@ -179,9 +179,9 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
             if (afterState) {
                 if (network != null) {
                 	tempLevelLast=network.getTemperatureLevel();
-                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 8, (byte) (10 * network.getTemperatureLevel()));
+                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 5, (byte) (10 * network.getTemperatureLevel()));
                 }else
-                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 8, (byte) (10*tempLevelLast));
+                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 5, (byte) (10*tempLevelLast));
             } else
                 ChunkData.removeTempAdjust(this.getWorld(), this.getPos());
         }
