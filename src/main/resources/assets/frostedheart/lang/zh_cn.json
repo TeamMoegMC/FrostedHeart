@@ -14,7 +14,7 @@
   "block.frostedheart.debug_heater": "调试加热器",
   "block.frostedheart.charger": "蒸汽充气机",
   "block.frostedheart.heat_radiator": "蒸汽加热器",
-
+  "fluid.frostedheart.hot_water": "热水",
   "item.frostedheart.rye": "黑麦穗",
   "item.frostedheart.rye_bread": "黑麦面包",
   "item.frostedheart.energy_core": "能量核心",

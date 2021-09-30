@@ -25,6 +25,7 @@ import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fluids.FluidStack;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ public class FHDataManager {
     public static final ResourceMap<ArmorTempData> armorData = new ResourceMap<>();
     public static final ResourceMap<BiomeTempData> biomeData = new ResourceMap<>();
     public static final ResourceMap<BlockTempData> blockData = new ResourceMap<>();
+    public static final ResourceMap<DrinkTempData> drinkData = new ResourceMap<>();
     public static final EnumMap<FHDataTypes, ResourceMap> datas = new EnumMap<>(FHDataTypes.class);
 
     static {
@@ -63,6 +65,7 @@ public class FHDataManager {
         datas.put(FHDataTypes.Biome, biomeData);
         datas.put(FHDataTypes.Block, blockData);
         datas.put(FHDataTypes.Food, foodData);
+        datas.put(FHDataTypes.Drink,drinkData);
     }
 
     @SuppressWarnings("unchecked")
@@ -91,5 +94,10 @@ public class FHDataManager {
     public static BlockTempData getBlockData(Block b) {
         return blockData.get(b.getRegistryName());
     }
-
+    public static float getDrinkHeat(FluidStack f) {
+    	DrinkTempData dtd=drinkData.get(f.getFluid().getRegistryName());
+    	if(dtd!=null)
+    		return dtd.getHeat();
+    	return -0.3f;
+    }
 }

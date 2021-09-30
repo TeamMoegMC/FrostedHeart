@@ -4,6 +4,9 @@ import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHFluids;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+import com.teammoeg.frostedheart.data.FHDataManager;
+
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import gloridifice.watersource.WaterSource;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.helper.FluidHelper;
@@ -37,6 +40,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
@@ -130,7 +134,10 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             if (tag == null) return;
             for (Fluid fluid : tag.getAllElements()) {
                 ItemStack itemStack = new ItemStack(this);
-                items.add(FluidHelper.fillContainer(itemStack,fluid));
+                itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+	                data.fill(new FluidStack(fluid,data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
+	            });
+                items.add(itemStack);
             }
             
         }
@@ -156,7 +163,12 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     {
         return new FluidHandlerItemStack(stack, capacity)
         {
-            @Nonnull
+            @Override
+			public int fill(FluidStack resource, FluidAction doFill) {
+				return super.fill(resource, doFill);
+			}
+
+			@Nonnull
             @Override
             @SuppressWarnings("deprecation")
             public ItemStack getContainer()
@@ -213,13 +225,15 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
     @Override
     public float getHeat(ItemStack is) {
-        int heat = 0;
-//        FluidUtil.getFluidHandler(is).ifPresent(f ->{
-//            if (FluidTags.getCollection().get(FHMain.rl("hot_drink")).contains(f.getFluidInTank(0).getFluid())) {
-//                heat += 10;
-//            }
-//        });
-        return 0.25F;
+    	LazyOptional<IFluidHandlerItem> ih=FluidUtil.getFluidHandler(is);
+    	if(ih.isPresent()) {
+    		IFluidHandlerItem f=ih.resolve().get();
+    		FluidStack fs=f.getFluidInTank(0);
+    		if(!fs.isEmpty()) {
+    			return FHDataManager.getDrinkHeat(fs);
+    		}
+    	};
+    	return 0;
     }
 
     @Override

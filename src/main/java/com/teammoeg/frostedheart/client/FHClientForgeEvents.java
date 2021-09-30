@@ -88,6 +88,7 @@ public class FHClientForgeEvents {
         	float temp=itf.getHeat(stack);
         	temp=(Math.round(temp*1000))/1000.0F;//round
         	String temps=Float.toString(temp);
+        	if(temp!=0)
         	if(temp>0)
         		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.food_temp","+"+temps).mergeStyle(TextFormatting.GOLD));
         	else
@@ -97,6 +98,7 @@ public class FHClientForgeEvents {
         	float temp=iwe.getFactor(null, stack);
         	temp=Math.round(temp*100);
         	String temps=Float.toString(temp);
+        	if(temp!=0)
         	if(temp>0)
         		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_warm","+"+temps).mergeStyle(TextFormatting.GOLD));
         	else
@@ -106,6 +108,7 @@ public class FHClientForgeEvents {
         	float temp=((IHeatingEquipment) i).getMax(stack);
         	temp=(Math.round(temp*2000))/1000.0F;
         	String temps=Float.toString(temp);
+        	if(temp!=0)
         	if(temp>0)
         		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_heating","+"+temps).mergeStyle(TextFormatting.GOLD));
         	else
