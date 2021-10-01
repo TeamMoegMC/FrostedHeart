@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.client;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.content.crucible.CrucibleScreen;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorScreen;
+import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.content.radiator.RadiatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
@@ -56,6 +56,7 @@ public class FHClientModEvents {
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.crucible, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.steam_turbine, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.radiator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());

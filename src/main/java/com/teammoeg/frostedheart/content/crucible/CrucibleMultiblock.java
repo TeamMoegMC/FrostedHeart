@@ -18,18 +18,17 @@
 
 package com.teammoeg.frostedheart.content.crucible;
 
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class CrucibleMultiblock extends IETemplateMultiblock {
+public class CrucibleMultiblock extends FHBaseMultiblock {
     public CrucibleMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/crucible"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3),
@@ -58,22 +57,7 @@ public class CrucibleMultiblock extends IETemplateMultiblock {
 
     @Override
     public float getManualScale() {
-        return 0;
-    }
-
-    @Override
-    public boolean canBeMirrored() {
-        return false;
-    }
-
-    @Override
-    public Direction transformDirection(Direction original) {
-        return original.getOpposite();
-    }
-
-    @Override
-    public Direction untransformDirection(Direction transformed) {
-        return transformed.getOpposite();
+        return 16;
     }
 
 }

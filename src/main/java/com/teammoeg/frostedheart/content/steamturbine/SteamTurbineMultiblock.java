@@ -18,18 +18,17 @@
 
 package com.teammoeg.frostedheart.content.steamturbine;
 
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class SteamTurbineMultiblock extends IETemplateMultiblock {
+public class SteamTurbineMultiblock extends FHBaseMultiblock {
     public SteamTurbineMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/steam_turbine"),
                 new BlockPos(0, 1, 0), new BlockPos(1, 1, 6), new BlockPos(3, 3, 7),
@@ -49,22 +48,6 @@ public class SteamTurbineMultiblock extends IETemplateMultiblock {
 
     @Override
     public float getManualScale() {
-        return 0;
+        return 16;
     }
-
-    @Override
-    public boolean canBeMirrored() {
-        return false;
-    }
-
-    @Override
-    public Direction transformDirection(Direction original) {
-        return original.getOpposite();
-    }
-
-    @Override
-    public Direction untransformDirection(Direction transformed) {
-        return transformed.getOpposite();
-    }
-
 }
