@@ -52,11 +52,11 @@ public class ProspectorPick extends FHBaseItem {
         if (player != null) {
             if (ore_name != null) {
                 if (count < 20)
-                    player.sendStatusMessage(new TranslationTextComponent(ore_name).appendSibling(new TranslationTextComponent("frostedheart.small")), true);
+                    player.sendStatusMessage(new TranslationTextComponent("frostedheart.small").appendSibling(new TranslationTextComponent(ore_name)), true);
                 else if (count < 40)
-                    player.sendStatusMessage(new TranslationTextComponent(ore_name).appendSibling(new TranslationTextComponent("frostedheart.medium")), true);
+                    player.sendStatusMessage(new TranslationTextComponent("frostedheart.medium").appendSibling(new TranslationTextComponent(ore_name)), true);
                 else {
-                    player.sendStatusMessage(new TranslationTextComponent(ore_name).appendSibling(new TranslationTextComponent("frostedheart.large")), true);
+                    player.sendStatusMessage(new TranslationTextComponent("frostedheart.large").appendSibling(new TranslationTextComponent(ore_name)), true);
                 }
             } else {
                 player.sendStatusMessage(new TranslationTextComponent("frostedheart.nothing"), true);
