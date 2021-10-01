@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.generator.*;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generatort2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.heating.*;
@@ -235,6 +236,7 @@ public class FHContent {
 
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
+        GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
         GuiHandler.register(RadiatorTileEntity.class, new ResourceLocation(FHMain.MODID, "radiator"), RadiatorContainer::new);
     }
