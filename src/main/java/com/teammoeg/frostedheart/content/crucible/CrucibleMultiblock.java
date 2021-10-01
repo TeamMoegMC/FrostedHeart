@@ -37,6 +37,15 @@ public class CrucibleMultiblock extends IETemplateMultiblock {
     }
 
     @Override
+    public BlockPos multiblockToModelPos(BlockPos posInMultiblock) {
+        return super.multiblockToModelPos(new BlockPos(
+                getSize(null).getX() - posInMultiblock.getX() - 1,
+                posInMultiblock.getY(),
+                getSize(null).getZ() - posInMultiblock.getZ() - 1
+        ));
+    }
+
+    @Override
     @OnlyIn(Dist.CLIENT)
     public boolean canRenderFormedStructure() {
         return false;
