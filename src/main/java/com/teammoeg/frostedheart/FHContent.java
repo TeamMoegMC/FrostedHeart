@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.generatort2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.heating.*;
 import com.teammoeg.frostedheart.content.other.ProspectorPick;
+import com.teammoeg.frostedheart.content.other.SteelProspectorPick;
 import com.teammoeg.frostedheart.content.radiator.RadiatorBlock;
 import com.teammoeg.frostedheart.content.radiator.RadiatorContainer;
 import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
@@ -150,6 +151,7 @@ public class FHContent {
         public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
         public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(32));
         public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(128));
+        public static Item steel_pro_pick = new SteelProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(256));
     }
 
     public static class FHMultiblocks {

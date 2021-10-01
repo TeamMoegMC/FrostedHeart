@@ -6,15 +6,12 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IWorld;
 
-public class ProspectorPick extends FHBaseItem {
-    public static ResourceLocation tag = new ResourceLocation("forge:ores");
-
-    public ProspectorPick(String name, Properties properties) {
+public class SteelProspectorPick extends FHBaseItem {
+    public SteelProspectorPick(String name, Properties properties) {
         super(name, properties);
     }
 
@@ -33,14 +30,14 @@ public class ProspectorPick extends FHBaseItem {
         if (player != null) {
             context.getItem().damageItem(1, player, (player2) -> player2.sendBreakAnimation(context.getHand()));
         }
-        for (int x2 = -6; x2 < 6; x2++)
-            for (int y2 = -3; y2 < 3; y2++)
-                for (int z2 = -6; z2 < 6; z2++) {
+        for (int x2 = -8; x2 < 8; x2++)
+            for (int y2 = -4; y2 < 4; y2++)
+                for (int z2 = -8; z2 < 8; z2++) {
                     int BlockX = x + x2;
                     int BlockY = y + y2;
                     int BlockZ = z + z2;
                     ore = world.getBlockState(new BlockPos(BlockX, BlockY, BlockZ)).getBlock();
-                    if (ore.getTags().contains(tag)) {
+                    if (ore.getTags().contains(ProspectorPick.tag)) {
                         count += 1;
                         if (!found) ;
                         {
@@ -48,16 +45,10 @@ public class ProspectorPick extends FHBaseItem {
                             found = true;
                         }
                     }
-        }
+                }
         if (player != null) {
             if (ore_name != null) {
-                if (count < 20)
-                    player.sendStatusMessage(new TranslationTextComponent(ore_name).appendSibling(new TranslationTextComponent("frostedheart.small")), true);
-                else if (count < 40)
-                    player.sendStatusMessage(new TranslationTextComponent(ore_name).appendSibling(new TranslationTextComponent("frostedheart.medium")), true);
-                else {
-                    player.sendStatusMessage(new TranslationTextComponent(ore_name).appendSibling(new TranslationTextComponent("frostedheart.large")), true);
-                }
+                player.sendStatusMessage(new TranslationTextComponent(ore_name).appendString(" Count:" + count), true);
             } else {
                 player.sendStatusMessage(new TranslationTextComponent("frostedheart.nothing"), true);
             }
