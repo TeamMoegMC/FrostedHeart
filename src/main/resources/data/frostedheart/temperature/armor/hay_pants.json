@@ -1,0 +1,11 @@
+{
+  "id":"frostedheart:hay_pants",
+  "factor":0.13,
+  "fire":-0.23,
+  "water":-0.3,
+  "wet":-0.2,
+  "snow":-0.01,
+  "rain":-0.01,
+  "min":0,
+  "max":1
+}

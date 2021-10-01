@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
-    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generatornew");
+    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generator_t1");
     private T1GeneratorTileEntity tile;
 
     public T1GeneratorScreen(T1GeneratorContainer container, PlayerInventory inv, ITextComponent title) {

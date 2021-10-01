@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
-    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generatornew_t2");
+    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generator_t2");
     private T2GeneratorTileEntity tile;
 
     public T2GeneratorScreen(T2GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
@@ -96,7 +96,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
             tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
 
-        if (isMouseIn(mouseX, mouseY, 151, 13, 2, 54) && tile.getIsActive()) {
+        if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54) && tile.getIsActive()) {
             tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int)tile.power)));
         }
 
@@ -147,9 +147,9 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
 
         // power
         if (tile.getIsActive()) {
-            int offset = (int) ((1 - powerRatio) * 56) - 14;
+            int offset = (int) ((1 - powerRatio) * 56);
             int bar = (int) (powerRatio * 56);
-            this.blit(transform, guiLeft + 151, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
+            this.blit(transform, guiLeft + 146, guiTop + offset, 181, 30, 2, bar);
         }
     }
 

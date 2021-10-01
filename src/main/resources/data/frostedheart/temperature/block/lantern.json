@@ -1,0 +1,8 @@
+{
+  "id":"minecraft:lantern",
+  "temperature":5,
+  "range":5,
+  "level_divide": false,
+  "must_lit": false
+
+}

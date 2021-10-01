@@ -108,6 +108,9 @@ public class FHConfig {
         DEFAULT_WHITELIST.add("duck_egg");
         DEFAULT_WHITELIST.add("Evan");
         DEFAULT_WHITELIST.add("dashuaibia");
+        DEFAULT_WHITELIST.add("khjxiaogu");
+        DEFAULT_WHITELIST.add("Lyuuke");
+        DEFAULT_WHITELIST.add("goumo_g");
         DEFAULT_WHITELIST.add("Dev");
     }
 

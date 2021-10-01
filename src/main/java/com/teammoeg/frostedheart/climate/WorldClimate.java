@@ -40,13 +40,12 @@ public class WorldClimate {
     public static final int HEMP_GROW_TEMPERATURE = 0;
 
     /**
-     * Get World temperature for a specific world, effected by weather and so on
+     * Get World temperature for a specific world, affected by weather and so on
      *
      * @param w the world<br>
      * @return world temperature<br>
      */
     public static byte getWorldTemperature(IWorld w, BlockPos pos) {
-
         Byte temp = FHDataManager.getBiomeTemp(w.getBiome(pos));
         if (temp != null)
             return temp;
