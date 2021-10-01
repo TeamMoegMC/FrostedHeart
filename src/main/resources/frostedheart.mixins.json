@@ -6,6 +6,8 @@
   "mixins": [
     "immersiveengineering.HempBlockMixin",
     "jei.MixinCommandUtilServer",
+    "minecraft.CampfireMixin",
+    "minecraft.CampfireTileEntityMixin",
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
