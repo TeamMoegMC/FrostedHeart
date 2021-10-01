@@ -96,6 +96,10 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
             tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
 
+        if (isMouseIn(mouseX, mouseY, 151, 13, 2, 54) && tile.getIsActive()) {
+            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int)tile.power)));
+        }
+
         if (!tooltip.isEmpty()) {
             net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
         }
@@ -125,6 +129,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
 
         int tempLevel = tile.getTemperatureLevel();
         int rangeLevel = tile.getRangeLevel();
+        float powerRatio = tile.power / tile.getMaxPower(); // (0, 1)
 
         // temperature bar (182, 30)
         if (tile.getIsActive()) {
@@ -138,6 +143,13 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
             int offset = (4 - rangeLevel) * 14;
             int bar = (rangeLevel - 1) * 14;
             this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
+        }
+
+        // power
+        if (tile.getIsActive()) {
+            int offset = (int) ((1 - powerRatio) * 56) - 14;
+            int bar = (int) (powerRatio * 56);
+            this.blit(transform, guiLeft + 151, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
         }
     }
 

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.crucible;
 import blusunrize.immersiveengineering.common.util.compat.jei.JEIIngredientStackListBuilder;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.crucible.CrucibleRecipe;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -29,6 +30,7 @@ import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -55,7 +57,7 @@ public class CrucibleCategory<T extends CrucibleRecipe> implements IRecipeCatego
 
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + "crucible")).getString();
+        return (GuiUtils.translateJeiCategory("crucible")).getString();
     }
 
     @Override

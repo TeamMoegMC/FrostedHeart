@@ -66,10 +66,10 @@ public class FrostedHud {
 
     public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hud_elements.png");
     public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
-    public static final ResourceLocation LEFT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_half.png");
-    public static final ResourceLocation RIGHT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/right_half.png");
-    public static final ResourceLocation LEFT_THREEQUARTERS_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_threequarters.png");
-    public static final ResourceLocation RIGHT_THREEQUARTERS_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/right_threequarters.png");
+//    public static final ResourceLocation LEFT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_half.png");
+//    public static final ResourceLocation RIGHT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/right_half.png");
+//    public static final ResourceLocation LEFT_THREEQUARTERS_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_threequarters.png");
+//    public static final ResourceLocation RIGHT_THREEQUARTERS_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/right_threequarters.png");
 
     public static final ResourceLocation ABSORPTION = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/absorption.png");
     public static final ResourceLocation DEFENCE = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/defence.png");
@@ -122,6 +122,7 @@ public class FrostedHud {
     public static void renderHotbar(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player, float partialTicks) {
         mc.getProfiler().startSection("frostedheart_hotbar");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.hotbar_1.getA(), y + BasePos.hotbar_1.getB(), UV.hotbar_slot.x, UV.hotbar_slot.y, UV.hotbar_slot.w, UV.hotbar_slot.h);
         mc.ingameGUI.blit(stack, x + BasePos.hotbar_2.getA(), y + BasePos.hotbar_2.getB(), UV.hotbar_slot.x, UV.hotbar_slot.y, UV.hotbar_slot.w, UV.hotbar_slot.h);
@@ -142,13 +143,10 @@ public class FrostedHud {
             mc.ingameGUI.blit(stack, x + BasePos.off_hand.getA(), y + BasePos.off_hand.getB(), UV.selected.x, UV.selected.y, UV.selected.w, UV.selected.h);
         }
 
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         ItemStack itemstack = player.getHeldItemOffhand();
         HandSide handside = player.getPrimaryHand().opposite();
 
         RenderSystem.enableRescaleNormal();
-//        RenderSystem.enableBlend();
-//        RenderSystem.defaultBlendFunc();
 
         for (int i1 = 0; i1 < 9; ++i1) {
             int j1 = x - 90 + i1 * 20 + 2;
@@ -176,14 +174,13 @@ public class FrostedHud {
 
                 mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
                 int l1 = (int) (f * 19.0F);
-//                RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 mc.ingameGUI.blit(stack, k2, j2, 0, 94, 18, 18);
                 mc.ingameGUI.blit(stack, k2, j2 + 18 - l1, 18, 112 - l1, 18, l1);
             }
         }
 
         RenderSystem.disableRescaleNormal();
-//        RenderSystem.disableBlend();
+        RenderSystem.disableBlend();
 
         mc.getProfiler().endSection();
     }
@@ -191,16 +188,14 @@ public class FrostedHud {
     public static void renderExperience(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_experience");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-//        RenderSystem.disableBlend();
         int i = mc.player.xpBarCap();
         if (i > 0) {
             int j = 182;
             int k = (int) (mc.player.experience * 183.0F);
             int l = y - 32 + 3;
-//            mc.ingameGUI.blit(stack, x - 91, l, 0, 64, 182, 5);
             if (k > 0) {
                 mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA(), y + BarPos.exp_bar.getB(), UV.exp_bar.x, UV.exp_bar.y, k, UV.exp_bar.h);
             }
@@ -215,25 +210,28 @@ public class FrostedHud {
             mc.fontRenderer.drawString(stack, s, (float) i1, (float) (j1 - 1), 0);
             mc.fontRenderer.drawString(stack, s, (float) i1, (float) j1, 8453920);
         }
-//        RenderSystem.enableBlend();
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderHypothermia(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_hypothermia");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
-        mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
+        RenderSystem.enableBlend();
 
+        mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
         int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), -1)) - 0.5) / 0.5 * 181.0F);
         mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA(), y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, k, UV.hypothermia_bar.h);
+
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderHealth(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_health");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.left_threequarters.getA(), y + BasePos.left_threequarters.getB(), UV.left_threequarters_frame.x, UV.left_threequarters_frame.y, UV.left_threequarters_frame.w, UV.left_threequarters_frame.h);
         mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), UV.icon_health_normal.x, UV.icon_health_normal.y, UV.icon_health_normal.w, UV.icon_health_normal.h);
@@ -255,8 +253,6 @@ public class FrostedHud {
         int healthRow = healthState % 10;
         int absorbRow = absorbState % 10;
 
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-//        RenderSystem.disableBlend();
         mc.getTextureManager().bindTexture(HP);
         mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), healthCol * UV.health_bar.w, healthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
         mc.getTextureManager().bindTexture(ABSORPTION);
@@ -265,15 +261,14 @@ public class FrostedHud {
         int offset = mc.fontRenderer.getStringWidth(String.valueOf(health)) / 2;
         mc.fontRenderer.drawString(stack, String.valueOf(health), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
 
-//        RenderSystem.enableBlend();
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderFood(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_food");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.right_half_1.getB().getA(), y + BasePos.right_half_1.getB().getB(), UV.right_half_frame.x, UV.right_half_frame.y, UV.right_half_frame.w, UV.right_half_frame.h);
         mc.ingameGUI.blit(stack, x + IconPos.right_half_1.getB().getA(), y + IconPos.right_half_1.getB().getB(), UV.icon_hunger_normal.x, UV.icon_hunger_normal.y, UV.icon_hunger_normal.w, UV.icon_hunger_normal.h);
@@ -285,12 +280,14 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(HUNGER);
         mc.ingameGUI.blit(stack, x + BarPos.right_half_1.getB().getA(), y + BarPos.right_half_1.getB().getB(), hungerCol * UV.hunger_bar.w, hungerRow * UV.hunger_bar.h, UV.hunger_bar.w, UV.hunger_bar.h, 160, 320);
 
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderThirst(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_thirst");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         EffectInstance effectInstance = mc.player.getActivePotionEffect(EffectRegistry.THIRST);
         boolean isThirsty = effectInstance != null;
@@ -309,12 +306,14 @@ public class FrostedHud {
             mc.ingameGUI.blit(stack, x + BarPos.right_half_2.getB().getA(), y + BarPos.right_half_2.getB().getB(), waterCol * UV.thirst_bar.w, waterRow * UV.thirst_bar.h, UV.thirst_bar.w, UV.thirst_bar.h, 160, 320);
         });
 
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderTemperature(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_temperature");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.temperature_orb_frame.getA(), y + BasePos.temperature_orb_frame.getB() + 3, UV.temperature_orb_frame.x, UV.temperature_orb_frame.y, UV.temperature_orb_frame.w, UV.temperature_orb_frame.h);
         if (mc.world != null) {
@@ -324,12 +323,15 @@ public class FrostedHud {
                 renderTemp(stack, mc, temperature, x + BarPos.temp_orb.getA(), y + BarPos.temp_orb.getB() + 3, true);
             }
         }
+
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderArmor(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_armor");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.left_half_1.getA().getA(), y + BasePos.left_half_1.getA().getB(), UV.left_half_frame.x, UV.left_half_frame.y, UV.left_half_frame.w, UV.left_half_frame.h);
         mc.ingameGUI.blit(stack, x + IconPos.left_half_1.getA().getA(), y + IconPos.left_half_1.getA().getB(), UV.icon_defence_normal.x, UV.icon_defence_normal.y, UV.icon_defence_normal.w, UV.icon_defence_normal.h);
@@ -340,12 +342,14 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(DEFENCE);
         mc.ingameGUI.blit(stack, x + BarPos.left_half_1.getA().getA(), y + BarPos.left_half_1.getA().getB(), armorCol * UV.defence_bar.w, armorRow * UV.defence_bar.h, UV.defence_bar.w, UV.defence_bar.h, 160, 320);
 
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderMountHealth(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_mounthealth");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.right_threequarters.getA(), y + BasePos.right_threequarters.getB(), UV.right_threequarters_frame.x, UV.right_threequarters_frame.y, UV.right_threequarters_frame.w, UV.right_threequarters_frame.h);
         mc.ingameGUI.blit(stack, x + IconPos.right_threequarters.getA(), y + IconPos.right_threequarters.getB(), UV.icon_horse_normal.x, UV.icon_horse_normal.y, UV.icon_horse_normal.w, UV.icon_horse_normal.h);
@@ -360,12 +364,14 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(HORSEHP);
         mc.ingameGUI.blit(stack, x + BarPos.right_threequarters_inner.getA(), y + BarPos.right_threequarters_inner.getB(), healthCol * UV.horse_health_bar.w, healthRow * UV.horse_health_bar.h, UV.horse_health_bar.w, UV.horse_health_bar.h, 320, 320);
 
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 
     public static void renderJumpbar(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_jumpbar");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+        RenderSystem.enableBlend();
 
         float jumpPower = player.getHorseJumpPower();
         int jumpState = MathHelper.ceil(jumpPower * 100) - 1;
@@ -374,6 +380,7 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(JUMP);
         mc.ingameGUI.blit(stack, x + BarPos.right_threequarters_outer.getA(), y + BarPos.right_threequarters_outer.getB(), jumpCol * UV.horse_jump_bar.w, jumpRow * UV.horse_jump_bar.h, UV.horse_jump_bar.w, UV.horse_jump_bar.h, 360, 360);
 
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 

@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.content.heating;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHFluids;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.data.FHDataManager;
 
@@ -199,7 +200,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
-        tooltip.add(new TranslationTextComponent("tooltip.frostedheart.meme.thermos").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(GuiUtils.translateTooltip("meme.thermos").mergeStyle(TextFormatting.GRAY));
         
         if (stack.getChildTag(FLUID_NBT_KEY) != null)
         {

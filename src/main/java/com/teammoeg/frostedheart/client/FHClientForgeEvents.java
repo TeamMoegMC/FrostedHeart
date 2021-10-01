@@ -23,6 +23,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
@@ -38,6 +39,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -69,6 +71,16 @@ public class FHClientForgeEvents {
     }
 
     @SubscribeEvent
+    public static void addNormalItemTooltip(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        Item i = stack.getItem();
+        if (i == Items.FLINT) {
+            event.getToolTip().add(GuiUtils.translateTooltip("double_flint_ignition").mergeStyle(DARK_RED));
+        }
+    }
+
+
+    @SubscribeEvent
     public static void addItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         Item i=stack.getItem();
@@ -90,9 +102,9 @@ public class FHClientForgeEvents {
         	String temps=Float.toString(temp);
         	if(temp!=0)
         	if(temp>0)
-        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.food_temp","+"+temps).mergeStyle(TextFormatting.GOLD));
+        		event.getToolTip().add(GuiUtils.translateTooltip("food_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
         	else
-        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.food_temp",temps).mergeStyle(TextFormatting.AQUA));
+        		event.getToolTip().add(GuiUtils.translateTooltip("food_temp",temps).mergeStyle(TextFormatting.AQUA));
         }
         if(iwe!=null) {
         	float temp=iwe.getFactor(null, stack);
@@ -100,9 +112,9 @@ public class FHClientForgeEvents {
         	String temps=Float.toString(temp);
         	if(temp!=0)
         	if(temp>0)
-        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_warm","+"+temps).mergeStyle(TextFormatting.GOLD));
+        		event.getToolTip().add(GuiUtils.translateTooltip("armor_warm","+"+temps).mergeStyle(TextFormatting.GOLD));
         	else
-        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_warm",temps).mergeStyle(TextFormatting.AQUA));
+        		event.getToolTip().add(GuiUtils.translateTooltip("armor_warm",temps).mergeStyle(TextFormatting.AQUA));
         }
         if(i instanceof IHeatingEquipment) {
         	float temp=((IHeatingEquipment) i).getMax(stack);
@@ -110,34 +122,10 @@ public class FHClientForgeEvents {
         	String temps=Float.toString(temp);
         	if(temp!=0)
         	if(temp>0)
-        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_heating","+"+temps).mergeStyle(TextFormatting.GOLD));
+        		event.getToolTip().add(GuiUtils.translateTooltip("armor_heating","+"+temps).mergeStyle(TextFormatting.GOLD));
         	else
-        		event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.armor_heating",temps).mergeStyle(TextFormatting.AQUA));
+        		event.getToolTip().add(GuiUtils.translateTooltip("armor_heating",temps).mergeStyle(TextFormatting.AQUA));
         }
-//        for (ResourceLocation id : Survive.armorModifierMap.keySet()) {
-//            Item armor = ForgeRegistries.ITEMS.getValue(id);
-//            float weightMod = Survive.armorModifierMap.get(id).getWeightModifier();
-//            if (Survive.armorModifierMap.get(id).getTemperatureModifier().size() > 0) {
-//                TemperatureChangeInstance instance = Survive.armorModifierMap.get(id).getTemperatureModifier().get(0); // Get the first instance, we don't need the rest..
-//                float tempMod = instance.getTemperature();
-//                if (stack.getItem() == armor) {
-//                    event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_armor_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
-//                    event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_weight_mod").appendString(String.valueOf(weightMod)).mergeStyle(TextFormatting.GRAY));
-//                }
-//            }
-//        }
-//
-//        for (ResourceLocation id : Survive.blockTemperatureMap.keySet()) {
-//            Block block = ForgeRegistries.BLOCKS.getValue(id);
-//            BlockTemperatureData data = Survive.blockTemperatureMap.get(id);
-//            float tempMod = data.getTemperatureModifier();
-//            int range = data.getRange();
-//            if (block != null && stack.getItem() == block.asItem()) {
-//                event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_block_temp_mod").appendString(String.valueOf(tempMod)).mergeStyle(TextFormatting.GRAY));
-//                event.getToolTip().add(new TranslationTextComponent("tooltip.frostedheart.survive_range").appendString(String.valueOf(range)).mergeStyle(TextFormatting.GRAY));
-//            }
-//        }
-
     }
 
     @SubscribeEvent
@@ -172,8 +160,6 @@ public class FHClientForgeEvents {
         float partialTicks = event.getPartialTicks();
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
-
-        //RenderSystem.enableBlend();
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
             FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, clientPlayer);
@@ -217,7 +203,5 @@ public class FHClientForgeEvents {
             FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
             event.setCanceled(true);
         }
-
-        //RenderSystem.disableBlend();
     }
 }

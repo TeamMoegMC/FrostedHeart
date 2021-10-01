@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.other;
 
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
@@ -52,14 +53,14 @@ public class ProspectorPick extends FHBaseItem {
         if (player != null) {
             if (ore_name != null) {
                 if (count < 20)
-                    player.sendStatusMessage(new TranslationTextComponent("frostedheart.small").appendSibling(new TranslationTextComponent(ore_name)), true);
+                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)), true);
                 else if (count < 40)
-                    player.sendStatusMessage(new TranslationTextComponent("frostedheart.medium").appendSibling(new TranslationTextComponent(ore_name)), true);
+                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)), true);
                 else {
-                    player.sendStatusMessage(new TranslationTextComponent("frostedheart.large").appendSibling(new TranslationTextComponent(ore_name)), true);
+                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)), true);
                 }
             } else {
-                player.sendStatusMessage(new TranslationTextComponent("frostedheart.nothing"), true);
+                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing"), true);
             }
         }
         return ActionResultType.SUCCESS;

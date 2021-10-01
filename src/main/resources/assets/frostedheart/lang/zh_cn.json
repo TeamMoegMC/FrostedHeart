@@ -1,5 +1,8 @@
 {
   "itemGroup.frostedheart": "冰冻之心",
+
+  "fluid.frostedheart.hot_water": "热水",
+
   "block.frostedheart.generator_brick": "能量塔砖",
   "block.frostedheart.generator_core_t1": "能量塔核心",
   "block.frostedheart.generator_amplifier_r1": "能量塔增幅器",
@@ -14,7 +17,7 @@
   "block.frostedheart.debug_heater": "调试加热器",
   "block.frostedheart.charger": "蒸汽充气机",
   "block.frostedheart.heat_radiator": "蒸汽加热器",
-  "fluid.frostedheart.hot_water": "热水",
+
   "item.frostedheart.rye": "黑麦穗",
   "item.frostedheart.rye_bread": "黑麦面包",
   "item.frostedheart.energy_core": "能量核心",
@@ -27,8 +30,6 @@
   "item.frostedheart.vegetable_soup": "蔬菜汤",
   "item.frostedheart.black_bread": "黑面包",
   "item.frostedheart.white_turnip": "白萝卜",
-  
-
   "item.frostedheart.hay_boots": "干草靴子",
   "item.frostedheart.hay_hat": "干草帽子",
   "item.frostedheart.hay_jacket": "干草夹克",
@@ -50,22 +51,28 @@
   "item.frostedheart.copper_pro_pick": "铜探矿镐",
   "item.frostedheart.iron_pro_pick": "铁探矿镐",
   "item.frostedheart.steel_pro_pick": "钢探矿镐",
-  "frostedheart.nothing": "什么都没有",
-  "frostedheart.small": "少量的 ",
-  "frostedheart.medium": "中等的 ",
-  "frostedheart.large": "大量的 ",
-  "effect.frostedheart.hypothermia": "失温",
-  "effect.frostedheart.hyperthermia": "高温",
-  "death.attack.hyperthermia": "%s死于高温。",
-  "death.attack.hypothermia": "%s被冻成了冰棍儿。",
-  "frostedheart.gui.generator.temperature.level": "温度增幅: ",
-  "frostedheart.gui.generator.range.level": "增温范围: ",
-  "frostedheart.gui.generator.mode.on": "开启能量塔",
-  "frostedheart.gui.generator.mode.off": "关闭能量塔",
-  "frostedheart.gui.generator.overdrive.on": "开启超频",
-  "frostedheart.gui.generator.overdrive.off": "关闭超频",
+
+  "gui.frostedheart.generator.temperature.level": "温度增幅: ",
+  "gui.frostedheart.generator.range.level": "增温范围: ",
+  "gui.frostedheart.generator.power.level": "能量: ",
+  "gui.frostedheart.generator.mode.on": "开启能量塔",
+  "gui.frostedheart.generator.mode.off": "关闭能量塔",
+  "gui.frostedheart.generator.overdrive.on": "开启超频",
+  "gui.frostedheart.generator.overdrive.off": "关闭超频",
+  "gui.frostedheart.temperature.desc": "平均气温",
+
+  "message.frostedheart.vein_size.nothing": "什么都没有",
+  "message.frostedheart.vein_size.small": "少量的 ",
+  "message.frostedheart.vein_size.medium": "中等的 ",
+  "message.frostedheart.vein_size.large": "大量的 ",
+  "message.frostedheart.vein_size.count": "发现了%s个",
   "message.frostedheart.eaten_poisonous_food": "你不应该吃生肉！",
   "message.frostedheart.crop_not_growable": "这里的温度太低了，这株植物生长至少需要",
+  "message.frostedheart.info.thermometerbody": "体温：%s °C",
+  "message.frostedheart.campfire.forever": "这个篝火不会熄灭！",
+  "message.frostedheart.campfire.remaining": "这个篝火还能燃烧%s秒",
+  "message.frostedheart.campfire.fuel": "这个篝火没有燃料了！向篝火上扔任何熔炉燃料来增加燃烧时间，然后将其再次点燃",
+
   "tooltip.frostedheart.f3_average_temperature": "平均气温: %s°C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "区块数据不可用",
   "tooltip.frostedheart.survive_armor_temp_mod": "保暖指数：",
@@ -76,10 +83,16 @@
   "tooltip.frostedheart.meme.steam_bottle": "是兄弟就干了这杯",
   "tooltip.frostedheart.meme.thermometerbody": "体温高于37.8°C禁止进入",
   "tooltip.frostedheart.food_temp": "使用后体温%s °C",
-  "tooltip.frostedheart.armor_warm": "保暖指数：%s %",
+  "tooltip.frostedheart.armor_warm": "保暖指数：百分之%s",
   "tooltip.frostedheart.armor_heating": "加热功率：%s °C/s",
-  "frostedheart.desc.steamStored": "蒸汽:%s su",
-  "frostedheart.info.thermometerbody": "体温：%s °C",
-  "gui.jei.category.crucible": "炼钢坩埚",
-  "gui.frostedheart.temperature.desc": "平均气温"
+  "tooltip.frostedheart.steam_stored": "蒸汽:%s su",
+  "tooltip.frostedheart.double_flint_ignition": "双手同时持燧石便可以当作起火器使用",
+
+  "effect.frostedheart.hypothermia": "失温",
+  "effect.frostedheart.hyperthermia": "高温",
+
+  "death.attack.hyperthermia": "%s死于高温。",
+  "death.attack.hypothermia": "%s被冻成了冰棍儿。",
+
+  "gui.jei.category.frostedheart.crucible": "炼钢坩埚"
 }

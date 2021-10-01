@@ -131,8 +131,8 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
                 process--;
             if(steam!=null)
             	this.power+=steam.power*this.getTemperatureLevel();
-            if(power>=2000)
-            	power=20000;
+            if(power>=getMaxPower())
+            	power=getMaxPower();
             this.markContainingBlockForUpdate(null);
         }
         // process not started yet
@@ -203,7 +203,11 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public float getMaxHeat() {
-        return 100000;
+        return power;
+    }
+
+    public float getMaxPower() {
+        return 20000;
     }
 
     @Override

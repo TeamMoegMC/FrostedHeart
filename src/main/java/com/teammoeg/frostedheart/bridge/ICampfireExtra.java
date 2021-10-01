@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.mixin.minecraft;
+package com.teammoeg.frostedheart.bridge;
 
 public interface ICampfireExtra {
     int getLifeTime();

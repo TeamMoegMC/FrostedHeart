@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import com.teammoeg.frostedheart.bridge.ICampfireExtra;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.CampfireBlock;

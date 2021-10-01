@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.other;
 
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
@@ -48,7 +49,7 @@ public class SteelProspectorPick extends FHBaseItem {
                 }
         if (player != null) {
             if (ore_name != null) {
-                player.sendStatusMessage(new TranslationTextComponent(ore_name).appendString(" Count:" + count), true);
+                player.sendStatusMessage(GuiUtils.translateGui("vein_size.count", Integer.toString(count)).appendSibling(new TranslationTextComponent(ore_name)), true);
             } else {
                 player.sendStatusMessage(new TranslationTextComponent("frostedheart.nothing"), true);
             }

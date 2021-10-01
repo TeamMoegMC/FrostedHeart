@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.content.heating;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
@@ -87,8 +88,8 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        tooltip.add(new TranslationTextComponent("tooltip.frostedheart.meme.steam_bottle").mergeStyle(TextFormatting.GRAY));
-        tooltip.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored).mergeStyle(TextFormatting.GOLD));
+        tooltip.add(GuiUtils.translateTooltip("meme.steam_bottle").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(GuiUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
     }
 
     /**

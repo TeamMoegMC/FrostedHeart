@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.content.heating;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestModel;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
@@ -78,7 +79,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        list.add(new TranslationTextComponent("frostedheart.desc.steamStored", stored).mergeStyle(TextFormatting.GOLD));
+        list.add(GuiUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
     }
 
     @Override

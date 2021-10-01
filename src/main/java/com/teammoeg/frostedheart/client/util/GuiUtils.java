@@ -28,7 +28,19 @@ public class GuiUtils {
         return FHMain.rl("textures/gui/" + name + ".png");
     }
 
-    public static TranslationTextComponent translateGui(String name) {
-        return new TranslationTextComponent(FHMain.MODID + ".gui." + name);
+    public static TranslationTextComponent translateGui(String name, Object... args) {
+        return new TranslationTextComponent("gui." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateTooltip(String name, Object... args) {
+        return new TranslationTextComponent("tooltip." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateMessage(String name, Object... args) {
+        return new TranslationTextComponent("message." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateJeiCategory(String name, Object... args) {
+        return new TranslationTextComponent("gui.jei.category." + FHMain.MODID + "." + name, args);
     }
 }

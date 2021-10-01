@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.content.heating;
 
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 
 import java.util.List;
@@ -66,14 +67,14 @@ public class ThermometerItem extends FHBaseItem{
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
-        	entityplayer.sendMessage(new TranslationTextComponent("frostedheart.info.thermometerbody",getTemperature((ServerPlayerEntity) entityLiving)/10.0+37.0),entityplayer.getUniqueID());
+        	entityplayer.sendMessage(GuiUtils.translateMessage("info.thermometerbody",getTemperature((ServerPlayerEntity) entityLiving)/10.0+37.0),entityplayer.getUniqueID());
         }
 
         return stack;
     }
     @Override
 	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-    	tooltip.add(new TranslationTextComponent("tooltip.frostedheart.meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
+    	tooltip.add(GuiUtils.translateTooltip("meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
 	}
 
 	public int getTemperature(ServerPlayerEntity p) {
