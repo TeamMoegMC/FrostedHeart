@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -45,7 +46,14 @@ import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
 public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
-    public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    @Override
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
+    	
+		return super.getStateForPlacement(context).with(BlockStateProperties.FACING,context.getPlacementHorizontalFacing());
+	}
+
+
+	public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public RadiatorBlock(String name, Properties blockProps,
                          BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
