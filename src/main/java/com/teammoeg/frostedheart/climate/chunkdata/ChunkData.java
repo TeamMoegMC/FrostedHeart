@@ -26,6 +26,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
@@ -54,7 +55,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      *
      * @see ChunkDataCache#get(ChunkPos) to directly access the cache
      */
-    public static float getTemperature(IWorld world, BlockPos pos) {
+    public static float getTemperature(IWorldReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
     }
 
@@ -67,7 +68,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      *
      * @see ChunkDataCache#get(ChunkPos) to directly access the cache
      */
-    public static ChunkData get(IWorld world, ChunkPos pos) {
+    public static ChunkData get(IWorldReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
         ChunkData data = ChunkDataCache.get(world).get(pos);
         if (data == null) {
@@ -358,7 +359,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param world world in
      * @param pos   position
      */
-    float getTemperatureAtBlock(IWorld world, BlockPos pos) {
+    float getTemperatureAtBlock(IWorldReader world, BlockPos pos) {
         float ret = 0, tmp;
         for (ITemperatureAdjust adj : adjusters) {
             if (adj.isEffective(pos)) {
@@ -369,7 +370,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         }
         return WorldClimate.getWorldTemperature(world, pos) + ret;
     }
-
     /**
      * @deprecated This does not consider world specific temperature<br>use {@link #getTemperature(IWorld, BlockPos)}
      */

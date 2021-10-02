@@ -29,6 +29,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
@@ -40,6 +41,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -47,10 +49,11 @@ import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
 public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
-
+	public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public ChargerBlock(String name, Properties blockProps,
                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
 
@@ -62,8 +65,9 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
 
     @Override
     protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        builder.add(BlockStateProperties.FACING);
-        super.fillStateContainer(builder);
+    	super.fillStateContainer(builder);
+    	builder.add(BlockStateProperties.FACING);
+        builder.add(LIT);
     }
 
 
@@ -109,7 +113,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
 
 
     @Override
-    public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
         Direction bd = state.get(BlockStateProperties.FACING);
         return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
     }

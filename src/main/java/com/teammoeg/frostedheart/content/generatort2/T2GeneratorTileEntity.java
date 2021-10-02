@@ -73,7 +73,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
         T2GeneratorTileEntity master = master();
-        if (master != null && side == Direction.DOWN)
+        if (master != null && side == Direction.DOWN&&this.offsetToMaster.getX()==0&&this.offsetToMaster.getZ()==0)
             return new FluidTank[]{master.tank};
         return new FluidTank[0];
     }
@@ -219,7 +219,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public SteamEnergyNetwork getNetwork() {
-        return sen;
+        return master().sen;
     }
 
     @Override
@@ -265,13 +265,18 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public boolean connectAt(Direction to) {
-        if (to != Direction.DOWN && this.offsetToMaster.getY() != 0) return false;
+    	if (to != Direction.DOWN ||this.offsetToMaster.getY() != 0||(this.offsetToMaster.getX()!=0&&this.offsetToMaster.getZ()!=0)) return false;
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof IConnectable && !(te instanceof HeatProvider)) {
             ((IConnectable) te).connectAt(to.getOpposite());
         }
         return true;
     }
+
+	@Override
+	public boolean canConnectAt(Direction to) {
+		return to == Direction.UP &&(this.offsetToMaster.getX()==0||this.offsetToMaster.getZ()==0);
+	}
 
 
 }

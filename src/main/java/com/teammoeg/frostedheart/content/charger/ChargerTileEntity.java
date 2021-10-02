@@ -24,6 +24,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteract
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.steamenergy.IChargable;
@@ -47,7 +48,7 @@ import net.minecraft.util.NonNullList;
 import java.util.List;
 
 public class ChargerTileEntity extends IEBaseTileEntity implements
-        IConnectable, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity {
+        IConnectable, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity , FHBlockInterfaces.IActiveState{
     NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public float power = 0;
     public static final int INPUT_SLOT = 0;
@@ -209,19 +210,29 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     @Override
     public void tick() {
         SteamEnergyNetwork network = getNetwork();
-        boolean isDirty = false;
         if (network != null) {
             float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
             if (actual > 0) {
                 power += actual * 0.8;
-                isDirty = true;
+                if(!this.getIsActive()) {
+                	this.setActive(true);
+                }
+                markDirty();
+                this.markContainingBlockForUpdate(null);
+                
                 //world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
+            }else if(this.getIsActive()) {
+            	this.setActive(false);
             }
-        }
-        if (isDirty) {
-            markDirty();
-            this.markContainingBlockForUpdate(null);
+        }else if(this.getIsActive()) {
+        	this.setActive(false);
         }
     }
+
+	@Override
+	public boolean canConnectAt(Direction dir) {
+		Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
+        return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
+	}
 
 }

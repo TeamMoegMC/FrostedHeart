@@ -76,7 +76,12 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 
     @Override
     public int getTemperatureLevel() {
-        return 1;
+        return 3;
     }
+
+	@Override
+	public boolean canConnectAt(Direction to) {
+		return true;
+	}
 
 }

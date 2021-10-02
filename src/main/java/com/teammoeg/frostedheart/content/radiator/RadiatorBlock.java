@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -37,6 +38,7 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -44,11 +46,19 @@ import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
 public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
-    public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    @Override
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
+    	
+		return super.getStateForPlacement(context).with(BlockStateProperties.FACING,context.getPlacementHorizontalFacing());
+	}
+
+
+	public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public RadiatorBlock(String name, Properties blockProps,
                          BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
     @Override
@@ -66,6 +76,7 @@ public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);
         builder.add(LIT);
+        builder.add(BlockStateProperties.FACING);
     }
 
     @Override
@@ -81,7 +92,7 @@ public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
 
 
     @Override
-    public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
         return dir != Direction.DOWN;
     }
 

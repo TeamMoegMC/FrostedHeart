@@ -205,4 +205,9 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
         return new int[]{processMax};
     }
 
+	@Override
+	public boolean canConnectAt(Direction to) {
+		return to == Direction.UP;
+	}
+
 }
