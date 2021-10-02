@@ -131,14 +131,14 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
     }
 
 
-    public boolean canConnectTo(IBlockDisplayReader world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
+    public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
         if (neighbour.getBlock() instanceof ISteamEnergyBlock && ((ISteamEnergyBlock) neighbour.getBlock()).canConnectFrom(world, neighbourPos, neighbour, direction))
             return true;
 
         return false;
     }
 
-    public boolean shouldDrawRim(IBlockDisplayReader world, BlockPos pos, BlockState state,
+    public boolean shouldDrawRim(IWorld world, BlockPos pos, BlockState state,
                                  Direction direction) {
         if (!isOpenAt(state, direction))
             return false;

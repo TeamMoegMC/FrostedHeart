@@ -80,6 +80,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 
     protected void propagate(Direction from, SteamEnergyNetwork newNetwork, int lengthx) {
         if (isPathFinding) return;
+        System.out.println(from);
         try {
             isPathFinding = true;
             final SteamEnergyNetwork network = getNetwork();
@@ -236,7 +237,17 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 }
             }
         }
-        if (network != null)
-            network.drainHeat(network.getTemperatureLevel() * 0.15F);
+    	if(network != null&&network.drainHeat(network.getTemperatureLevel() * 0.15F)>=0.15) {
+    		if(!getIsActive())
+    			setActive(true);
+    	}else {
+    		if(getIsActive())
+    			setActive(false);
+    	}
     }
+
+	@Override
+	public boolean canConnectAt(Direction to) {
+		return true;
+	}
 }

@@ -24,4 +24,5 @@ public interface IConnectable {
     boolean disconnectAt(Direction to);
 
     boolean connectAt(Direction to);
+    boolean canConnectAt(Direction to);
 }

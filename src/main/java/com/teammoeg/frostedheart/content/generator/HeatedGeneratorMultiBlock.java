@@ -39,13 +39,6 @@ public class HeatedGeneratorMultiBlock extends NormalGeneratorMultiBlock impleme
 
 
     @Override
-    public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
-        if (dir == Direction.UP)
-            return true;
-        return false;
-    }
-
-    @Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);

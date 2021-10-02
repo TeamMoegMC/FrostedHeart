@@ -149,7 +149,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         if (tile.getIsActive()) {
             int offset = (int) ((1 - powerRatio) * 56);
             int bar = (int) (powerRatio * 56);
-            this.blit(transform, guiLeft + 146, guiTop + offset, 181, 30, 2, bar);
+            this.blit(transform, guiLeft + 146, guiTop + offset + 12, 181, 30, 2, bar);
         }
     }
 

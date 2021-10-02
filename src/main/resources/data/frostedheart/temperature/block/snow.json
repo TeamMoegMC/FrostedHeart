@@ -1,7 +1,7 @@
 {
   "id":"minecraft:snow",
   "temperature":-0.5,
-  "range":3,
+  "range":5,
   "level_divide": true,
   "must_lit": false
 

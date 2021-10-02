@@ -57,6 +57,9 @@ repositories {
         name = "theillusivec4 maven"
         url = "https://maven.theillusivec4.top/"
     }
+    maven {
+        url "https://cursemaven.com"
+    }
 }
 
 sourceSets {
@@ -156,6 +159,12 @@ dependencies {
 
     compile fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
     implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
+
+    compile fg.deobf("curse.maven:kiwi-303657:3377053")
+    implementation fg.deobf("curse.maven:kiwi-303657:3377053")
+
+    compile fg.deobf("curse.maven:snowrealmagic-308663:3295579")
+    implementation fg.deobf("curse.maven:snowrealmagic-308663:3295579")
 
     compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 

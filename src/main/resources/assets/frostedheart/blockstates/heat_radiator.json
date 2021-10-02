@@ -1,7 +1,23 @@
 {
   "variants": {
-    "": {
+      "facing=south": {
       "model": "frostedheart:block/heat_radiator",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=north": {
+      "model": "frostedheart:block/heat_radiator",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=west": {
+      "model": "frostedheart:block/heat_radiator",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=east": {
+      "model": "frostedheart:block/heat_radiator",
+      "y": 0,
       "uvlock": true
     }
   }

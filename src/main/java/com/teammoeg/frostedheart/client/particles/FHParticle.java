@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.MathHelper;
 public class FHParticle extends SpriteTexturedParticle {
-	private final float originalScale=1F;
+	private final float originalScale = 1.3F;
 	protected FHParticle(ClientWorld world, double x, double y, double z) {
 		super(world, x, y, z);
 	}

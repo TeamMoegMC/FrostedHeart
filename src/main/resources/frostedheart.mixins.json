@@ -6,12 +6,17 @@
   "mixins": [
     "immersiveengineering.HempBlockMixin",
     "jei.MixinCommandUtilServer",
+    "minecraft.BiomeMixin",
     "minecraft.CampfireMixin",
     "minecraft.CampfireTileEntityMixin",
+    "minecraft.IceMixin",
     "minecraft.PortalSizeMixin",
+    "minecraft.SnowMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
-    "rankine.AlloyTemplateItemMixin"
+    "rankine.AlloyTemplateItemMixin",
+    "snow.ModSnowBlockMixin",
+    "snow.ModUtilMixin"
   ],
   "client": [
   ],
