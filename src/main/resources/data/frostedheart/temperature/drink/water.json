@@ -1,4 +1,4 @@
 {
   "id":"minecraft:water",
-  "heat":0.3
+  "heat":-0.05
 }
