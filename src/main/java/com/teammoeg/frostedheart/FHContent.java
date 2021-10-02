@@ -41,7 +41,7 @@ import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.heating.*;
 import com.teammoeg.frostedheart.content.other.ProspectorPick;
 import com.teammoeg.frostedheart.content.other.SteelProspectorPick;
-import com.teammoeg.frostedheart.content.radiator.RadiatorBlock;
+import com.teammoeg.frostedheart.content.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineBlock;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineMultiblock;
@@ -111,13 +111,13 @@ public class FHContent {
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
                 .notSolid(), FHBlockItem::new);
-        public static Block radiator = new RadiatorBlock("heat_radiator", Properties
+       /* public static Block radiator = new RadiatorBlock("heat_radiator", Properties
                 .create(Material.ROCK)
                 .sound(SoundType.METAL)
                 .setRequiresTool()
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2.0F, 20.0F)
-                .notSolid(), FHBlockItem::new);
+                .notSolid(), FHBlockItem::new);*/
     }
 
     public static class FHItems {
@@ -163,13 +163,16 @@ public class FHContent {
         public static IETemplateMultiblock CRUCIBLE = new CrucibleMultiblock();
         public static IETemplateMultiblock STEAMTURBINE = new SteamTurbineMultiblock();
         public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
+        public static IETemplateMultiblock RADIATOR =new RadiatorMultiblock();
         public static Block generator = new NormalGeneratorMultiBlock("generator", FHTileTypes.GENERATOR_T1);
         public static Block generator_t2 = new HeatedGeneratorMultiBlock("generator_t2", FHTileTypes.GENERATOR_T2);
+        public static Block radiator=new UnlitHeatedGeneratorMultiBlock("heat_radiator", FHTileTypes.RADIATOR);
         public static Block crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
         public static Block steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
 
         public static void init() {
             MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
+            MultiblockHandler.registerMultiblock(FHMultiblocks.RADIATOR);
             MultiblockHandler.registerMultiblock(FHMultiblocks.CRUCIBLE);
             MultiblockHandler.registerMultiblock(FHMultiblocks.STEAMTURBINE);
             MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T2);
@@ -201,7 +204,7 @@ public class FHContent {
         );
 
         public static final RegistryObject<TileEntityType<RadiatorTileEntity>> RADIATOR = REGISTER.register(
-                "heat_radiator", makeType(() -> new RadiatorTileEntity(), () -> FHBlocks.radiator));
+                "heat_radiator", makeType(() -> new RadiatorTileEntity(), () -> FHMultiblocks.radiator));
 
         public static final RegistryObject<TileEntityType<T2GeneratorTileEntity>> GENERATOR_T2 = REGISTER.register(
                 "generator_t2", makeType(() -> new T2GeneratorTileEntity(1, 2, 1), () -> FHMultiblocks.generator_t2)

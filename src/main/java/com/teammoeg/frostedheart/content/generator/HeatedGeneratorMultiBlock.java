@@ -38,7 +38,12 @@ public class HeatedGeneratorMultiBlock extends NormalGeneratorMultiBlock impleme
     }
 
 
-    @Override
+    public HeatedGeneratorMultiBlock(String name, Properties props, RegistryObject type) {
+		super(name, props, type);
+	}
+
+
+	@Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);

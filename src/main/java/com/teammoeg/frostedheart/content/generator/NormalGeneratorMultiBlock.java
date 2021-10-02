@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.generator;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
 import net.minecraft.block.BlockState;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
@@ -36,7 +37,11 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
         super(name, type);
     }
 
-    @OnlyIn(Dist.CLIENT)
+    public NormalGeneratorMultiBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
+		super(name, props, type);
+	}
+
+	@OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         if (stateIn.get(LIT)) {
             if (rand.nextInt(5) == 0) {

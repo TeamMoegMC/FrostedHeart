@@ -18,18 +18,20 @@
 
 package com.teammoeg.frostedheart.content.radiator;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.content.generator.AbstractGenerator;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.steamenergy.EnergyNetworkProvider;
+import com.teammoeg.frostedheart.steamenergy.HeatPipeBlock;
+import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.SteamEnergyNetwork;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -38,10 +40,12 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidTank;
 
-public class RadiatorTileEntity extends IEBaseTileEntity implements
-        IConnectable, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
-    NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
+public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> implements
+        IConnectable, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
     public float power = 0;
     public int process = 0;
     public int processMax = 0;
@@ -50,7 +54,7 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
     public static final int OUTPUT_SLOT = 1;
 
     public RadiatorTileEntity() {
-        super(FHContent.FHTileTypes.RADIATOR.get());
+        super(FHContent.FHMultiblocks.RADIATOR, FHContent.FHTileTypes.RADIATOR.get(),false);
     }
 
     SteamEnergyNetwork network;
@@ -70,7 +74,7 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        ItemStackHelper.loadAllItems(nbt, inventory);
+        super.readCustomNBT(nbt, descPacket);
         power = nbt.getFloat("power");
         process = nbt.getInt("process");
         processMax = nbt.getInt("processMax");
@@ -80,7 +84,7 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        ItemStackHelper.saveAllItems(nbt, inventory);
+        super.writeCustomNBT(nbt, descPacket);
         nbt.putFloat("power", power);
         nbt.putInt("process", process);
         nbt.putInt("processMax", processMax);
@@ -103,11 +107,14 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean connectAt(Direction to) {
-        if (to == Direction.UP) return false;
+        if (this.offsetToMaster.getY()!=0) return false;
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof EnergyNetworkProvider) {
             last = to;
             network = ((EnergyNetworkProvider) te).getNetwork();
+            if(te instanceof HeatPipeTileEntity) {
+            	te.getBlockState().with(HeatPipeBlock.FACING_TO_PROPERTY_MAP.get(to.getOpposite()), true);
+            }
             return true;
         } else
             disconnectAt(to);
@@ -122,77 +129,11 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean canUseGui(PlayerEntity player) {
-        return true;
-    }
-
-    @Override
-    public NonNullList<ItemStack> getInventory() {
-        return inventory;
-    }
-
-    @Override
-    public boolean isStackValid(int slot, ItemStack stack) {
         return false;
     }
 
-    @Override
-    public int getSlotLimit(int slot) {
-        return 1;
-    }
-
-    @Override
-    public void doGraphicalUpdates(int slot) {
-    }
     public float getMaxPower() {
     	return 5000;
-    }
-    @Override
-    public void tick() {
-        if (world != null && world.isRemote && getIsActive() && world.rand.nextFloat() < 0.2) {
-            ClientUtils.spawnSteamParticles(world, this.getPos());
-        }
-        SteamEnergyNetwork network = getNetwork();
-        boolean isDirty = false;
-        if (network != null) {
-            float actual = network.drainHeat(Math.min(24,getMaxPower() - power));
-            if (actual > 0) {
-                power += actual;
-                isDirty = true;
-                //world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
-            }
-        }
-        boolean beforeState = this.getIsActive();
-        boolean afterState = false;
-        if (process > 0) {
-            if (network != null)
-                process -= network.getTemperatureLevel();
-            else
-                process-=tempLevelLast;
-            isDirty = true;
-            afterState = true;
-        } else if (network != null && power >= 4*160 * network.getTemperatureLevel()) {
-            power -= 4*160 * network.getTemperatureLevel();
-            process = (int) (160 * network.getTemperatureLevel());
-            processMax = (int) (160 * network.getTemperatureLevel());
-            isDirty = true;
-            afterState = true;
-        }
-        if (beforeState != afterState||(network!=null&&tempLevelLast!=network.getTemperatureLevel())) {
-        	
-            this.setActive(afterState);
-            if (afterState) {
-                if (network != null) {
-                	tempLevelLast=network.getTemperatureLevel();
-                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 5, (byte) (10 * network.getTemperatureLevel()));
-                }else
-                    ChunkData.addCubicTempAdjust(this.getWorld(), this.getPos(), 5, (byte) (10*tempLevelLast));
-            } else
-                ChunkData.removeTempAdjust(this.getWorld(), this.getPos());
-        }
-        if (isDirty) {
-            markDirty();
-            this.markContainingBlockForUpdate(null);
-        }
     }
 
     @Override
@@ -207,7 +148,87 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
 
 	@Override
 	public boolean canConnectAt(Direction to) {
-		return to == Direction.UP;
+		return this.offsetToMaster.getY()==0;
+	}
+
+	@Override
+	protected void onShutDown() {
+	}
+
+	@Override
+	protected void tickFuel() {
+        SteamEnergyNetwork network = getNetwork();
+        if (network != null) {
+            float actual = network.drainHeat(Math.min(24,getMaxPower() - power));
+            if (actual > 0) {
+                power += actual;
+           //world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
+            }
+        }
+        if (process > 0) {
+            if (network != null)
+                process -= network.getTemperatureLevel();
+            else
+                process-=tempLevelLast;
+        } else if (network != null && power >= 4*160 * network.getTemperatureLevel()) {
+            power -= 4*160 * network.getTemperatureLevel();
+            process = (int) (160 * network.getTemperatureLevel());
+            processMax = (int) (160 * network.getTemperatureLevel());
+            this.setActive(true);
+        }else {
+        	this.setActive(false);
+        }
+        if (network!=null&&tempLevelLast!=network.getTemperatureLevel()) {
+        	tempLevelLast=network.getTemperatureLevel();
+        	this.markChanged(true);
+        }
+	}
+
+	@Override
+	public boolean isWorking() {
+		return true;
+	}
+
+	@Override
+	public int getActualRange() {
+		return 5;
+	}
+
+	@Override
+	public int getActualTemp() {
+		return (int) (tempLevelLast*10);
+	}
+
+	@Override
+	protected void setAllActive(boolean state) {
+            for (int y = 0; y < 3; ++y) {
+                    BlockPos actualPos = getBlockPosForPos(new BlockPos(0, y, 0));
+                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                    if (te instanceof RadiatorTileEntity)
+                        ((RadiatorTileEntity) te).setActive(state);
+                }
+	}
+
+	@Override
+	protected void tickEffects(boolean isActive) {
+        if (world != null && world.isRemote && isActive && world.rand.nextFloat() < 0.2) {
+            ClientUtils.spawnSteamParticles(world, this.getPos());
+        }
+	}
+
+	@Override
+	protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
+		return null;
+	}
+
+	@Override
+	protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
+		return false;
+	}
+
+	@Override
+	protected boolean canDrainTankFrom(int iTank, Direction side) {
+		return false;
 	}
 
 }

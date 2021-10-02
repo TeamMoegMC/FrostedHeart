@@ -80,7 +80,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 
     protected void propagate(Direction from, SteamEnergyNetwork newNetwork, int lengthx) {
         if (isPathFinding) return;
-        System.out.println(from);
+        //System.out.println(from);
         try {
             isPathFinding = true;
             final SteamEnergyNetwork network = getNetwork();
@@ -209,12 +209,16 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 
         if (te instanceof HeatPipeTileEntity) {
             if (network != null)
-                if (dMaster != to)
+                if (dMaster != to) {
                     ((HeatPipeTileEntity) te).propagate(to.getOpposite(), network, length);
+                    this.getBlockState().with(HeatPipeBlock.FACING_TO_PROPERTY_MAP.get(to), true);
+                }
             return true;
         } else if (te instanceof IConnectable) {
-            if (network != null)
+            if (network != null) {
                 ((IConnectable) te).connectAt(to.getOpposite());
+                this.getBlockState().with(HeatPipeBlock.FACING_TO_PROPERTY_MAP.get(to), true);
+            }
             return true;
         } else {
             disconnectAt(to);
