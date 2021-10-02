@@ -16,7 +16,7 @@ public class ModUtilMixin {
      * @author yuesha-yc
      * @reason snow melting when chunk temp < 0
      */
-    @Overwrite
+    @Overwrite(remap = false)
     public static boolean shouldMelt(World world, BlockPos pos) {
         if (SnowCommonConfig.snowNeverMelt)
             return false;

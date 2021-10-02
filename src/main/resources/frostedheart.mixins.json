@@ -7,7 +7,7 @@
     "immersiveengineering.HempBlockMixin",
     "jei.MixinCommandUtilServer",
     "minecraft.BiomeMixin",
-    "minecraft.CampfireMixin",
+    "minecraft.CampfireBlockMixin",
     "minecraft.CampfireTileEntityMixin",
     "minecraft.IceMixin",
     "minecraft.PortalSizeMixin",
