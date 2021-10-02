@@ -113,8 +113,7 @@ public class FHContent {
         public static Block radiator = new RadiatorBlock("heat_radiator", Properties
                 .create(Material.ROCK)
                 .hardnessAndResistance(2.0F, 20.0F)
-                .notSolid()
-                .setLightLevel(FHUtils.getLightValueLit(15)), FHBlockItem::new);
+                .notSolid(), FHBlockItem::new);
     }
 
     public static class FHItems {

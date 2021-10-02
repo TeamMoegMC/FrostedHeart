@@ -96,9 +96,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
         ItemStack item = player.getHeldItem(hand);
         TileEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof ChargerTileEntity) {
-            //if(item.getItem() instanceof IChargable) {
             return ((ChargerTileEntity) te).onClick(player, item);
-            //}
         }
         return superResult;
     }

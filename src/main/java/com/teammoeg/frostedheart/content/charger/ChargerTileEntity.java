@@ -24,6 +24,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteract
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.steamenergy.IChargable;
 import com.teammoeg.frostedheart.steamenergy.IConnectable;
@@ -73,6 +74,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
     public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
         if (is != null) {
+            if (world != null && world.isRemote) {
+                ClientUtils.spawnSteamParticles(world, this.getPos());
+            }
             Item it = is.getItem();
             if (it instanceof IChargable) {
                 power -= ((IChargable) it).charge(is, power);

@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.content.radiator;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHGuiBlock;
 import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.ISteamEnergyBlock;
@@ -42,7 +43,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
-public class RadiatorBlock extends FHGuiBlock implements ISteamEnergyBlock {
+public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public RadiatorBlock(String name, Properties blockProps,

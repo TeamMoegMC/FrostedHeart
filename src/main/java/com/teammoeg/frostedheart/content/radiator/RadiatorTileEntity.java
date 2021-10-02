@@ -24,6 +24,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteract
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.steamenergy.EnergyNetworkProvider;
@@ -147,6 +148,9 @@ public class RadiatorTileEntity extends IEBaseTileEntity implements
     }
     @Override
     public void tick() {
+        if (world != null && world.isRemote && getIsActive() && world.rand.nextFloat() < 0.2) {
+            ClientUtils.spawnSteamParticles(world, this.getPos());
+        }
         SteamEnergyNetwork network = getNetwork();
         boolean isDirty = false;
         if (network != null) {
