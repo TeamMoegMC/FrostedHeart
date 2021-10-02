@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.steamenergy;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
@@ -38,6 +40,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import java.util.Random;
 import java.util.function.BiFunction;
 
 public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISteamEnergyBlock {
@@ -89,7 +93,9 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
 	}*/
 
 
-    @Override
+
+
+	@Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         //System.out.println(pos);

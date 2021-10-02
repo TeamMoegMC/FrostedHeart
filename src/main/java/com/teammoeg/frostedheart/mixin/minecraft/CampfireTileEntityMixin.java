@@ -57,7 +57,6 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
     }
 
     private void extinguishCampfire() {
-        24
         if (!this.world.isRemote) {
             this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
             this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));

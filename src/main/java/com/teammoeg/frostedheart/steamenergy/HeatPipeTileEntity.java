@@ -20,8 +20,13 @@ package com.teammoeg.frostedheart.steamenergy;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
+
+import java.util.Random;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -35,7 +40,6 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     private boolean networkinit;
     private boolean isPathFinding;
     private boolean requireRP;
-
     public HeatPipeTileEntity() {
         super(FHContent.FHTileTypes.HEATPIPE.get());
     }
@@ -242,11 +246,9 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
             }
         }
     	if(network != null&&network.drainHeat(network.getTemperatureLevel() * 0.15F)>=0.15) {
-    		if(!getIsActive())
-    			setActive(true);
+    		setActive(true);
     	}else {
-    		if(getIsActive())
-    			setActive(false);
+    		setActive(false);
     	}
     }
 
