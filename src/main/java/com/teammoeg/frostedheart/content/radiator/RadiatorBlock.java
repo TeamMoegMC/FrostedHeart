@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.content.radiator;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.block.FHGuiBlock;
 import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.ISteamEnergyBlock;
@@ -32,6 +33,7 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
@@ -42,7 +44,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
-public class RadiatorBlock extends FHGuiBlock implements ISteamEnergyBlock {
+public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public RadiatorBlock(String name, Properties blockProps,
@@ -50,6 +52,10 @@ public class RadiatorBlock extends FHGuiBlock implements ISteamEnergyBlock {
         super(name, blockProps, createItemBlock);
     }
 
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, IBlockReader reader, BlockPos pos) {
+        return Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 48.0D, 16.0D);
+    }
 
     @Nullable
     @Override
