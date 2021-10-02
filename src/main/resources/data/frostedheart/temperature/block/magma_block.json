@@ -1,0 +1,8 @@
+{
+  "id":"minecraft:magma_block",
+  "temperature":50,
+  "range":3,
+  "level_divide": false,
+  "must_lit": false
+
+}

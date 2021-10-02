@@ -1,8 +1,8 @@
 {
-  "id":"minecraft:snow",
+  "id":"minecraft:snow_block",
   "temperature":-0.5,
   "range":5,
-  "level_divide": true,
+  "level_divide": false,
   "must_lit": false
 
 }
