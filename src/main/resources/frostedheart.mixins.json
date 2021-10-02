@@ -9,6 +9,9 @@
     "minecraft.CampfireMixin",
     "minecraft.CampfireTileEntityMixin",
     "minecraft.PortalSizeMixin",
+    "minecraft.IceMixin",
+    "minecraft.SnowMixin",
+    "minecraft.BiomeMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "rankine.AlloyTemplateItemMixin"
