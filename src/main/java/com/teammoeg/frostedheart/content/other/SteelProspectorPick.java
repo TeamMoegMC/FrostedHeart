@@ -32,9 +32,9 @@ public class SteelProspectorPick extends FHBaseItem {
         if (player != null) {
             context.getItem().damageItem(1, player, (player2) -> player2.sendBreakAnimation(context.getHand()));
         }
-        for (int x2 = -8; x2 < 8; x2++)
-            for (int y2 = -4; y2 < 4; y2++)
-                for (int z2 = -8; z2 < 8; z2++) {
+        for (int x2 = -9; x2 < 9; x2++)
+            for (int y2 = -5; y2 < 5; y2++)
+                for (int z2 = -9; z2 < 9; z2++) {
                     int BlockX = x + x2;
                     int BlockY = y + y2;
                     int BlockZ = z + z2;
