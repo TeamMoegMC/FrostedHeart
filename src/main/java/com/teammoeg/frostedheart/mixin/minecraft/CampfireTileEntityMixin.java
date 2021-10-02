@@ -57,13 +57,14 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
     }
 
     private void extinguishCampfire() {
+        24
         if (!this.world.isRemote) {
             this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
             this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "tick()V")
+    @Inject(at = @At("RETURN"), method = "tick")
     private void tick(CallbackInfo ci) {
         if (world != null) {
                 if (CampfireBlock.isLit(world.getBlockState(getPos())))
@@ -76,14 +77,14 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
             }
         }
 
-    @Inject(at = @At("RETURN"), method = "read(Lnet/minecraft/block/BlockState;Lnet/minecraft/nbt/CompoundNBT;)V")
+    @Inject(at = @At("RETURN"), method = "read")
     private void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
         if (nbt.contains("LifeTime", 3)) {
             setLifeTime(nbt.getInt("LifeTime"));
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "write(Lnet/minecraft/nbt/CompoundNBT;)Lnet/minecraft/nbt/CompoundNBT;", cancellable = true)
+    @Inject(at = @At("RETURN"), method = "write", cancellable = true)
     private void writeAdditional(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
         CompoundNBT nbt = cir.getReturnValue();
         nbt.putInt("LifeTime", lifeTime);

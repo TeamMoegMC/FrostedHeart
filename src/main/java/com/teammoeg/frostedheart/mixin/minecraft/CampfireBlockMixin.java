@@ -56,20 +56,21 @@ import java.util.Optional;
 import java.util.Random;
 
 @Mixin(CampfireBlock.class)
-public abstract class CampfireMixin extends ContainerBlock {
+public abstract class CampfireBlockMixin extends ContainerBlock {
     private static boolean isSoul(BlockState state) {
         return (state.getBlock().getRegistryName().toString().indexOf("soul") != -1) || (state.getBlock().getRegistryName().toString().indexOf("ender") != -1);
     }
+
     @Shadow
     public static boolean isLit(BlockState state) {
         return false;
     }
 
-    protected CampfireMixin(Properties builder) {
+    protected CampfireBlockMixin(Properties builder) {
         super(builder);
     }
 
-    @Inject(at = @At("RETURN"), method = "getStateForPlacement(Lnet/minecraft/item/BlockItemUseContext;)Lnet/minecraft/block/BlockState;", cancellable = true)
+    @Inject(at = @At("RETURN"), method = "getStateForPlacement", cancellable = true)
     protected void getStateForPlacement(BlockItemUseContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
         if (isSoul(getDefaultState())) {
             callbackInfo.setReturnValue(callbackInfo.getReturnValue().with(CampfireBlock.LIT, callbackInfo.getReturnValue().get(CampfireBlock.LIT)));
@@ -78,7 +79,7 @@ public abstract class CampfireMixin extends ContainerBlock {
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "onEntityCollision(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/Entity;)V", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "onEntityCollision", cancellable = true)
     protected void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn, CallbackInfo callbackInfo) {
         if (entityIn instanceof ItemEntity) {
             int rawBurnTime = ForgeHooks.getBurnTime(((ItemEntity) entityIn).getItem());
