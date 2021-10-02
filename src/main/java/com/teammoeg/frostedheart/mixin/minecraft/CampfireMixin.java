@@ -91,20 +91,11 @@ public abstract class CampfireMixin extends ContainerBlock {
                         int burnTime = rawBurnTime * 3 * ((ItemEntity) entityIn).getItem().getCount();
                         CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
                         ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
-                        if (isSoul(state)) {
-                            if (lifeTime.getLifeTime() < 4000 && lifeTime.getLifeTime() >= 0) {
-                                lifeTime.addLifeTime(burnTime);
-                                if (((ItemEntity) entityIn).getItem().getItem() == Items.LAVA_BUCKET)
-                                    InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.BUCKET));
-                                entityIn.remove();
-                            }
-                        } else {
-                            if (lifeTime.getLifeTime() < 2147483647 && lifeTime.getLifeTime() >= 0) {
-                                lifeTime.addLifeTime(burnTime);
-                                if (((ItemEntity) entityIn).getItem().getItem() == Items.LAVA_BUCKET)
-                                    InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.BUCKET));
-                                entityIn.remove();
-                            }
+                        if (lifeTime.getLifeTime() < 14400 && lifeTime.getLifeTime() >= 0) {
+                            lifeTime.addLifeTime(burnTime);
+                            if (((ItemEntity) entityIn).getItem().getItem() == Items.LAVA_BUCKET)
+                                InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.BUCKET));
+                            entityIn.remove();
                         }
                     }
                 }
