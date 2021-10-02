@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.content.crucible.CrucibleScreen;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.content.radiator.RadiatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -54,7 +53,6 @@ public class FHClientModEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "radiator"), RadiatorScreen::new);
         // Register translucent render type
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutoutMipped());

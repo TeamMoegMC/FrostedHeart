@@ -42,7 +42,6 @@ import com.teammoeg.frostedheart.content.heating.*;
 import com.teammoeg.frostedheart.content.other.ProspectorPick;
 import com.teammoeg.frostedheart.content.other.SteelProspectorPick;
 import com.teammoeg.frostedheart.content.radiator.RadiatorBlock;
-import com.teammoeg.frostedheart.content.radiator.RadiatorContainer;
 import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineBlock;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineMultiblock;
@@ -95,23 +94,28 @@ public class FHContent {
         public static Block burning_chamber = new FHBaseBlock("burning_chamber", stoneDecoProps, FHBlockItem::new);
         public static Block rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
         public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
-        public static Block heat_pipe = new HeatPipeBlock("heat_pipe", stoneDecoProps, FHBlockItem::new);
+        public static Block heat_pipe = new HeatPipeBlock("heat_pipe",Block.Properties
+                .create(Material.ROCK).sound(SoundType.WOOD)
+                .harvestTool(ToolType.PICKAXE)
+                .notSolid(), FHBlockItem::new);
         public static Block debug_heater = new DebugHeaterBlock("debug_heater", Block.Properties
                 .create(Material.ROCK).sound(SoundType.STONE)
                 .setRequiresTool()
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
-                .notSolid()
-                .setLightLevel(s -> 15), FHBlockItem::new);
+                .notSolid(), FHBlockItem::new);
         public static Block charger = new ChargerBlock("charger", Block.Properties
                 .create(Material.ROCK)
-                .sound(SoundType.STONE)
+                .sound(SoundType.METAL)
                 .setRequiresTool()
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
                 .notSolid(), FHBlockItem::new);
         public static Block radiator = new RadiatorBlock("heat_radiator", Properties
                 .create(Material.ROCK)
+                .sound(SoundType.METAL)
+                .setRequiresTool()
+                .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2.0F, 20.0F)
                 .notSolid(), FHBlockItem::new);
     }
@@ -237,6 +241,5 @@ public class FHContent {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
         GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
-        GuiHandler.register(RadiatorTileEntity.class, new ResourceLocation(FHMain.MODID, "radiator"), RadiatorContainer::new);
     }
 }

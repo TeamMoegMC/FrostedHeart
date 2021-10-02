@@ -50,6 +50,7 @@ public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public RadiatorBlock(String name, Properties blockProps,
                          BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
     @Override
@@ -67,6 +68,7 @@ public class RadiatorBlock extends FHBaseBlock implements ISteamEnergyBlock {
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);
         builder.add(LIT);
+        builder.add(BlockStateProperties.FACING);
     }
 
     @Override

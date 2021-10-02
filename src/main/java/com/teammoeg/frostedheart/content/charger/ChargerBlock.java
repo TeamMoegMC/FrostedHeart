@@ -29,6 +29,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
@@ -48,10 +49,11 @@ import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
 public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
-
+	public static final BooleanProperty LIT = BlockStateProperties.LIT;
     public ChargerBlock(String name, Properties blockProps,
                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
 
@@ -63,8 +65,9 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
 
     @Override
     protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        builder.add(BlockStateProperties.FACING);
-        super.fillStateContainer(builder);
+    	super.fillStateContainer(builder);
+    	builder.add(BlockStateProperties.FACING);
+        builder.add(LIT);
     }
 
 
