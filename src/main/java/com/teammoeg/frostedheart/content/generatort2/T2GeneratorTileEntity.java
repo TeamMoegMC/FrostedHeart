@@ -68,7 +68,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         nbt.put("fluid", tankx);
     }
 
-    public FluidTank tank = new FluidTank(20 * FluidAttributes.BUCKET_VOLUME);
+    public FluidTank tank = new FluidTank(20 * FluidAttributes.BUCKET_VOLUME,f->GeneratorSteamRecipe.findRecipe(f)!=null);
 
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
@@ -129,10 +129,11 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
                 process -= 4;
             else
                 process--;
-            if(steam!=null)
+            if(steam!=null) {
             	this.power+=steam.power*this.getTemperatureLevel();
-            if(power>=getMaxPower())
-            	power=getMaxPower();
+	            if(power>=getMaxPower())
+	            	power=getMaxPower();
+            }
             this.markContainingBlockForUpdate(null);
         }
         // process not started yet
