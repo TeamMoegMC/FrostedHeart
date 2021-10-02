@@ -18,15 +18,15 @@ import net.minecraft.world.server.ServerWorld;
 
 @Mixin(SnowBlock.class)
 public abstract class SnowMixin{
-	   /**
-	    * Performs a random tick on a block.
-	    */
+	/**
+	 * @author khjxiaogu
+	 * @reason Performs a random tick on a block.
+	 */
 	   @Overwrite
 	   public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
 	      if (worldIn.getLightFor(LightType.BLOCK, pos) > 11||ChunkData.getTemperature(worldIn, pos)>0) {
 	         Block.spawnDrops(state, worldIn, pos);
 	         worldIn.removeBlock(pos, false);
 	      }
-
 	   }
 }
