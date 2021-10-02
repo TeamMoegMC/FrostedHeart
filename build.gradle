@@ -287,3 +287,6 @@ publishing {
         }
     }
 }
+mixin {
+    add sourceSets.main, "refmap.json"
+}

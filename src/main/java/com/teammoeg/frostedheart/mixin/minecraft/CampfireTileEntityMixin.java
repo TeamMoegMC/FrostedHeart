@@ -56,36 +56,33 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         super(tileEntityTypeIn.CAMPFIRE);
     }
 
-    private void extinguishCampfire() {
-        24
-        if (!this.world.isRemote) {
-            this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-            this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));
-        }
+    public void extinguishCampfire() {
+        this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));
     }
 
     @Inject(at = @At("RETURN"), method = "tick")
-    private void tick(CallbackInfo ci) {
-        if (world != null) {
-                if (CampfireBlock.isLit(world.getBlockState(getPos())))
-                    if (lifeTime > 0)
-                        lifeTime--;
-                    else {
-                        lifeTime = 0;
-                        extinguishCampfire();
-                        }
-            }
+    public void tick(CallbackInfo ci) {
+        if (!this.world.isRemote) {
+            if (CampfireBlock.isLit(world.getBlockState(getPos())))
+                if (lifeTime > 0)
+                    lifeTime--;
+                else {
+                    lifeTime = 0;
+                    extinguishCampfire();
+                }
         }
+    }
 
     @Inject(at = @At("RETURN"), method = "read")
-    private void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
+    public void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
         if (nbt.contains("LifeTime", 3)) {
             setLifeTime(nbt.getInt("LifeTime"));
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "write", cancellable = true)
-    private void writeAdditional(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
+    @Inject(at = @At("RETURN"), method = "write")
+    public void writeAdditional(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
         CompoundNBT nbt = cir.getReturnValue();
         nbt.putInt("LifeTime", lifeTime);
         cir.setReturnValue(nbt);

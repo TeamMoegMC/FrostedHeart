@@ -57,30 +57,22 @@ import java.util.Random;
 
 @Mixin(CampfireBlock.class)
 public abstract class CampfireBlockMixin extends ContainerBlock {
-    private static boolean isSoul(BlockState state) {
-        return (state.getBlock().getRegistryName().toString().indexOf("soul") != -1) || (state.getBlock().getRegistryName().toString().indexOf("ender") != -1);
-    }
-
     @Shadow
     public static boolean isLit(BlockState state) {
         return false;
     }
 
-    protected CampfireBlockMixin(Properties builder) {
+    public CampfireBlockMixin(Properties builder) {
         super(builder);
     }
 
-    @Inject(at = @At("RETURN"), method = "getStateForPlacement", cancellable = true)
-    protected void getStateForPlacement(BlockItemUseContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
-        if (isSoul(getDefaultState())) {
-            callbackInfo.setReturnValue(callbackInfo.getReturnValue().with(CampfireBlock.LIT, callbackInfo.getReturnValue().get(CampfireBlock.LIT)));
-        } else {
-            callbackInfo.setReturnValue(callbackInfo.getReturnValue().with(CampfireBlock.LIT, false));
-        }
+    @Inject(at = @At("RETURN"), method = "getStateForPlacement")
+    public void getStateForPlacement(BlockItemUseContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
+        callbackInfo.setReturnValue(callbackInfo.getReturnValue().with(CampfireBlock.LIT, false));
     }
 
-    @Inject(at = @At("HEAD"), method = "onEntityCollision", cancellable = true)
-    protected void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn, CallbackInfo callbackInfo) {
+    @Inject(at = @At("HEAD"), method = "onEntityCollision")
+    public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn, CallbackInfo callbackInfo) {
         if (entityIn instanceof ItemEntity) {
             int rawBurnTime = ForgeHooks.getBurnTime(((ItemEntity) entityIn).getItem());
             if (worldIn.isRemote && isLit(state) && rawBurnTime > 0)
@@ -104,9 +96,6 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
         }
     }
 
-    /**
-     * @author
-     */
     @Overwrite
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         TileEntity tileentity = worldIn.getTileEntity(pos);
