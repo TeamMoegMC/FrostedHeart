@@ -30,6 +30,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -87,7 +88,7 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
 
 
     @Override
-    public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
         return true;
     }
 }

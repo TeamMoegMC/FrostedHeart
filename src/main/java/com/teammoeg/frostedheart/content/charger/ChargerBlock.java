@@ -40,6 +40,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -111,7 +112,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
 
 
     @Override
-    public boolean canConnectFrom(IBlockDisplayReader world, BlockPos pos, BlockState state, Direction dir) {
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
         Direction bd = state.get(BlockStateProperties.FACING);
         return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
     }

@@ -220,4 +220,10 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         }
     }
 
+	@Override
+	public boolean canConnectAt(Direction dir) {
+		Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
+        return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
+	}
+
 }
