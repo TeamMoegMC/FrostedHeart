@@ -8,6 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IWorld;
 
@@ -49,9 +50,9 @@ public class SteelProspectorPick extends FHBaseItem {
                 }
         if (player != null) {
             if (ore_name != null) {
-                player.sendStatusMessage(GuiUtils.translateGui("vein_size.count", Integer.toString(count)).appendSibling(new TranslationTextComponent(ore_name)), true);
+                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.count", count).appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
             } else {
-                player.sendStatusMessage(new TranslationTextComponent("frostedheart.nothing"), true);
+                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
             }
         }
         return ActionResultType.SUCCESS;

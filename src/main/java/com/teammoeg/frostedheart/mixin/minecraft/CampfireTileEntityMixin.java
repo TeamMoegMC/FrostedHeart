@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 
 import com.teammoeg.frostedheart.bridge.ICampfireExtra;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.CampfireTileEntity;
@@ -29,7 +28,6 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -37,14 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(CampfireTileEntity.class)
 public abstract class CampfireTileEntityMixin extends TileEntity implements ICampfireExtra {
-    @Shadow
-    public abstract void dropAllItems();
-
-    private int lifeTime = -1337;
-
-    private static boolean isSoul(BlockState state) {
-        return (state.getBlock().getRegistryName().toString().indexOf("soul") != -1) || (state.getBlock().getRegistryName().toString().indexOf("ender") != -1);
-    }
+    public int lifeTime = 0;
 
     @Override
     public int getLifeTime() {
@@ -72,32 +63,18 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         }
     }
 
-    private void breakCampfire() {
-        this.dropAllItems();
-        if (!this.world.isRemote) {
-            this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-            this.world.setBlockState(this.pos, Blocks.AIR.getDefaultState());
-        }
-    }
-
     @Inject(at = @At("RETURN"), method = "tick()V")
     private void tick(CallbackInfo ci) {
         if (world != null) {
-            if (lifeTime != -1337) {
                 if (CampfireBlock.isLit(world.getBlockState(getPos())))
                     if (lifeTime > 0)
                         lifeTime--;
                     else {
                         lifeTime = 0;
-                        if (isSoul(this.getBlockState())) {
-                            extinguishCampfire();
-                        } else {
-                            extinguishCampfire();
+                        extinguishCampfire();
                         }
-                    }
             }
         }
-    }
 
     @Inject(at = @At("RETURN"), method = "read(Lnet/minecraft/block/BlockState;Lnet/minecraft/nbt/CompoundNBT;)V")
     private void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
