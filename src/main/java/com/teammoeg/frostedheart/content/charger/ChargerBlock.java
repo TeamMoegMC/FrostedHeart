@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.charger;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
@@ -46,6 +47,8 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import java.util.Random;
 import java.util.function.BiFunction;
 
 public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
@@ -69,6 +72,13 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     	builder.add(BlockStateProperties.FACING);
         builder.add(LIT);
     }
+    @Override
+	public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+		super.animateTick(stateIn, worldIn, pos, rand);
+		if(stateIn.get(LIT)) {
+			ClientUtils.spawnSteamParticles(worldIn, pos);
+		}
+	}
 
 
     @Override

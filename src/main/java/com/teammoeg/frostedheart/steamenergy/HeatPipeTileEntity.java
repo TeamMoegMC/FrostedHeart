@@ -20,8 +20,13 @@ package com.teammoeg.frostedheart.steamenergy;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
+
+import java.util.Random;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -35,7 +40,6 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     private boolean networkinit;
     private boolean isPathFinding;
     private boolean requireRP;
-
     public HeatPipeTileEntity() {
         super(FHContent.FHTileTypes.HEATPIPE.get());
     }
@@ -80,7 +84,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 
     protected void propagate(Direction from, SteamEnergyNetwork newNetwork, int lengthx) {
         if (isPathFinding) return;
-        System.out.println(from);
+        //System.out.println(from);
         try {
             isPathFinding = true;
             final SteamEnergyNetwork network = getNetwork();
@@ -209,12 +213,16 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 
         if (te instanceof HeatPipeTileEntity) {
             if (network != null)
-                if (dMaster != to)
+                if (dMaster != to) {
                     ((HeatPipeTileEntity) te).propagate(to.getOpposite(), network, length);
+                    this.getBlockState().with(HeatPipeBlock.FACING_TO_PROPERTY_MAP.get(to), true);
+                }
             return true;
         } else if (te instanceof IConnectable) {
-            if (network != null)
+            if (network != null) {
                 ((IConnectable) te).connectAt(to.getOpposite());
+                this.getBlockState().with(HeatPipeBlock.FACING_TO_PROPERTY_MAP.get(to), true);
+            }
             return true;
         } else {
             disconnectAt(to);
@@ -238,11 +246,9 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
             }
         }
     	if(network != null&&network.drainHeat(network.getTemperatureLevel() * 0.15F)>=0.15) {
-    		if(!getIsActive())
-    			setActive(true);
+    		setActive(true);
     	}else {
-    		if(getIsActive())
-    			setActive(false);
+    		setActive(false);
     	}
     }
 

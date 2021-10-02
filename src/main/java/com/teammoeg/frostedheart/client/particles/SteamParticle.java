@@ -12,6 +12,7 @@ public class SteamParticle extends FHParticle {
 		super(world,  x, y, z, motionX, motionY, motionZ);
         this.particleGravity = -0.1F;
         this.particleRed = this.particleGreen = this.particleBlue = (float) (Math.random() * 0.4) + 0.4f;
+        this.originalScale=0.25F;
         this.maxAge = (int) (12.0D / (Math.random() * 0.8D + 0.2D));
 	}
 

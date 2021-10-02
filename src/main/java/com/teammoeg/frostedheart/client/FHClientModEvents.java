@@ -61,7 +61,7 @@ public class FHClientModEvents {
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.steam_turbine, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.radiator, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();

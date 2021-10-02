@@ -214,19 +214,17 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
             float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
             if (actual > 0) {
                 power += actual * 0.8;
-                if(!this.getIsActive()) {
-                	this.setActive(true);
-                }
+                this.setActive(true);
+                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
                 markDirty();
                 this.markContainingBlockForUpdate(null);
-                
-                //world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
-            }else if(this.getIsActive()) {
+            }else
             	this.setActive(false);
-            }
-        }else if(this.getIsActive()) {
+        }else
         	this.setActive(false);
-        }
     }
 
 	@Override
