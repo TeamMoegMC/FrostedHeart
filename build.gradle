@@ -288,5 +288,5 @@ publishing {
     }
 }
 mixin {
-    add sourceSets.main, "refmap.json"
+    add sourceSets.main, "frostedheart.refmap.json"
 }
