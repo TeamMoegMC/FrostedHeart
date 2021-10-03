@@ -94,6 +94,9 @@ public class FHDataManager {
     public static BlockTempData getBlockData(Block b) {
         return blockData.get(b.getRegistryName());
     }
+    public static BlockTempData getBlockData(ItemStack b) {
+        return blockData.get(b.getItem().getRegistryName());
+    }
     public static float getDrinkHeat(FluidStack f) {
     	DrinkTempData dtd=drinkData.get(f.getFluid().getRegistryName());
     	if(dtd!=null)

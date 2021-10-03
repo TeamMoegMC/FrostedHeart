@@ -74,17 +74,15 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "read")
+    @Inject(at = @At("TAIL"), method = "read")
     public void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
         if (nbt.contains("LifeTime", 3)) {
             setLifeTime(nbt.getInt("LifeTime"));
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "write")
+    @Inject(at = @At("HEAD"), method = "write")
     public void writeAdditional(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
-        CompoundNBT nbt = cir.getReturnValue();
-        nbt.putInt("LifeTime", lifeTime);
-        cir.setReturnValue(nbt);
+        compound.putInt("LifeTime", lifeTime);
     }
 }

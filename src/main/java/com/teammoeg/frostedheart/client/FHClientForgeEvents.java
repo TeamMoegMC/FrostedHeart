@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
 
 import net.minecraft.client.Minecraft;
@@ -96,6 +97,17 @@ public class FHClientForgeEvents {
         } else {
             iwe = FHDataManager.getArmor(stack);
         }
+        BlockTempData btd=FHDataManager.getBlockData(stack);
+        if(btd!=null) {
+        	float temp=btd.getTemp();
+        	temp=(Math.round(temp*100))/100.0F;//round
+        	String temps=Float.toString(temp);
+        	if(temp!=0)
+        	if(temp>0)
+        		event.getToolTip().add(GuiUtils.translateTooltip("block_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
+        	else
+        		event.getToolTip().add(GuiUtils.translateTooltip("block_temp",temps).mergeStyle(TextFormatting.AQUA));
+        }
         if(itf!=null) {
         	float temp=itf.getHeat(stack);
         	temp=(Math.round(temp*1000))/1000.0F;//round
@@ -112,7 +124,7 @@ public class FHClientForgeEvents {
         	String temps=Float.toString(temp);
         	if(temp!=0)
         	if(temp>0)
-        		event.getToolTip().add(GuiUtils.translateTooltip("armor_warm","+"+temps).mergeStyle(TextFormatting.GOLD));
+        		event.getToolTip().add(GuiUtils.translateTooltip("armor_warm",temps).mergeStyle(TextFormatting.GOLD));
         	else
         		event.getToolTip().add(GuiUtils.translateTooltip("armor_warm",temps).mergeStyle(TextFormatting.AQUA));
         }

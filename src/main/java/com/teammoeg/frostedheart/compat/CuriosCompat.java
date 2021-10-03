@@ -65,7 +65,18 @@ public class CuriosCompat {
         return new Iterable<ItemStack>() {
             @Override
             public Iterator<ItemStack> iterator() {
-                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h -> new CuriosIterator(h.getCurios().values().iterator())).orElse(null);
+                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h -> new CuriosIterator(h.getCurios().values().iterator())).orElse(new CuriosIterator(null) {
+                    @Override
+                    public boolean hasNext() {
+                        return false;
+                    }
+
+                    @Override
+                    public ItemStack next() {
+                        return null;
+                    }
+                	
+                });
             }
         };
     }
