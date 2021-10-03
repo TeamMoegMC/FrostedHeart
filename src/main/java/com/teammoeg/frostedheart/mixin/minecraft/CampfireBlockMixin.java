@@ -66,7 +66,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
         super(builder);
     }
 
-    @Inject(at = @At("RETURN"), method = "getStateForPlacement")
+    @Inject(at = @At("RETURN"), method = "getStateForPlacement", cancellable = true)
     public void getStateForPlacement(BlockItemUseContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
         callbackInfo.setReturnValue(callbackInfo.getReturnValue().with(CampfireBlock.LIT, false));
     }
