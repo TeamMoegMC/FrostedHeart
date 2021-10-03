@@ -94,7 +94,9 @@
   "effect.frostedheart.hyperthermia": "高温",
 
   "death.attack.hyperthermia": "%s死于高温。",
+  "death.attack.hyperthermia.player": "%s死于高温。",
   "death.attack.hypothermia": "%s被冻成了冰棍儿。",
+  "death.attack.hypothermia.player": "%s被冻成了冰棍儿。",
 
   "gui.jei.category.frostedheart.crucible": "炼钢坩埚"
 }

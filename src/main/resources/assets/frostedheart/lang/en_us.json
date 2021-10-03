@@ -94,7 +94,9 @@
   "effect.frostedheart.hyperthermia": "Hyperthermia",
 
   "death.attack.hyperthermia": "%s died of hyperthermia.",
+  "death.attack.hyperthermia.player": "%s died of hyperthermia.",
   "death.attack.hypothermia": "%s turned into a frozen stick.",
+  "death.attack.hypothermia.player": "%s turned into a frozen stick.",
 
   "gui.jei.category.frostedheart.crucible": "Steel Mill Crucible"
 }
