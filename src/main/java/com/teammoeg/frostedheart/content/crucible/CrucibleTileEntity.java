@@ -149,6 +149,7 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
         return false;
     }
 
+
     @Override
     public int getSlotLimit(int slot) {
         return 64;
@@ -160,8 +161,8 @@ public class CrucibleTileEntity extends MultiblockPartTileEntity<CrucibleTileEnt
     }
 
     LazyOptional<IItemHandler> invHandler = registerConstantCap(
-            new IEInventoryHandler(4, this, 0, new boolean[]{true, false, true, true},
-                    new boolean[]{false, true, false, false})
+            new IEInventoryHandler(4, this, 0, new boolean[]{true, true, false, true},
+                    new boolean[]{false, false, true, false})
     );
 
     @Nonnull
