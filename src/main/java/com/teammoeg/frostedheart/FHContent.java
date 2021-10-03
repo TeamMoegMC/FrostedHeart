@@ -51,8 +51,6 @@ import com.teammoeg.frostedheart.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.util.FHFoods;
-import com.teammoeg.frostedheart.util.FHUtils;
-import net.minecraft.block.AbstractBlock.Properties;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -153,7 +151,7 @@ public class FHContent {
         public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
         public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
-        public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(32));
+        public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(48));
         public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(128));
         public static Item steel_pro_pick = new SteelProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(256));
     }
