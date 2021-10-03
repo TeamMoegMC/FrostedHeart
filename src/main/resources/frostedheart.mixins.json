@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "com.teammoeg.frostedheart.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "refmap.json",
+  "refmap": "frostedheart.refmap.json",
   "mixins": [
     "immersiveengineering.HempBlockMixin",
     "jei.MixinCommandUtilServer",
@@ -12,7 +12,6 @@
     "minecraft.CampfireTileEntityMixin",
     "minecraft.IceMixin",
     "minecraft.PortalSizeMixin",
-    "minecraft.SnowMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "rankine.AlloyTemplateItemMixin",
