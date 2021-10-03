@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.network;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -32,17 +33,22 @@ import java.util.function.Supplier;
 
 public class FHDataSyncPacket {
     private final CompoundNBT data;
+    int entityId;
+
 
     public FHDataSyncPacket(PlayerEntity pe) {
         this.data = TemperatureCore.getFHData(pe);
+        this.entityId = pe.getEntityId();
     }
 
     FHDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
+        entityId = buffer.readInt();
     }
 
     void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
+        buffer.writeInt(entityId);
     }
 
     void handle(Supplier<NetworkEvent.Context> context) {
@@ -50,9 +56,10 @@ public class FHDataSyncPacket {
             // Update client-side nbt
             World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
             if (world != null) {
-                // First, synchronize the chunk data in the capability and cache.
-                // Then, update the single data instance with the packet data
-                TemperatureCore.setFHData(ClientUtils.mc().player, data);
+                Entity entity = world.getEntityByID(entityId);
+                if (entity instanceof PlayerEntity) {
+                    TemperatureCore.setFHData((PlayerEntity) entity, data);
+                }
             }
         });
         context.get().setPacketHandled(true);
