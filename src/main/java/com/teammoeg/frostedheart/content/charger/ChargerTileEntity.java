@@ -209,9 +209,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
     @Override
     public void tick() {
-        SteamEnergyNetwork network = getNetwork();
-        float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
         if (!world.isRemote) {
+            SteamEnergyNetwork network = getNetwork();
+            float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
             if (actual > 0) {
                 power += actual * 0.8;
                 this.setActive(true);
@@ -219,7 +219,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                 this.markContainingBlockForUpdate(null);
             } else
                 this.setActive(false);
-        } else if (actual > 0) {
+        } else if (getIsActive()) {
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
