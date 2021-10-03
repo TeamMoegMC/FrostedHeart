@@ -1,6 +1,6 @@
 {
   "id": "minecraft:fire",
-  "temperature": 1,
+  "temperature": 2,
   "range": 2,
   "level_divide": false,
   "must_lit": false

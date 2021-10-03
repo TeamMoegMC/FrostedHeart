@@ -1,6 +1,6 @@
 {
   "id": "minecraft:blue_ice",
-  "temperature": -0.12,
+  "temperature": -0.2,
   "range": 5,
   "level_divide": false,
   "must_lit": false

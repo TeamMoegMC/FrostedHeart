@@ -211,15 +211,17 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     public void tick() {
         if (!world.isRemote) {
             SteamEnergyNetwork network = getNetwork();
-            float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
-            if (actual > 0) {
-                power += actual * 0.8;
-                this.setActive(true);
-                markDirty();
-                this.markContainingBlockForUpdate(null);
-            } else
-                this.setActive(false);
-        } else if (getIsActive()) {
+            if (network != null) {
+                float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
+                if (actual > 0) {
+                    power += actual * 0.8;
+                    this.setActive(true);
+                    markDirty();
+                    this.markContainingBlockForUpdate(null);
+                } else
+                    this.setActive(false);
+            } else this.setActive(false);
+        } else if (world.isRemote && getIsActive()) {
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
