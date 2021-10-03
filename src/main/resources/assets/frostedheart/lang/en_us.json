@@ -82,6 +82,7 @@
   "tooltip.frostedheart.meme.thermos": "Don't mess up with the server",
   "tooltip.frostedheart.meme.steam_bottle": "Cheers!",
   "tooltip.frostedheart.meme.thermometerbody": "Do not actually drink it.",
+  "tooltip.frostedheart.block_temp": "Temperature change:%s °C",
   "tooltip.frostedheart.food_temp": "Temperature apply:%s °C",
   "tooltip.frostedheart.armor_warm": "Warming Modifier:%s Percent",
   "tooltip.frostedheart.armor_heating": "Heating rate:%s °C/s",

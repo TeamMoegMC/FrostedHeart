@@ -83,6 +83,7 @@
   "tooltip.frostedheart.meme.steam_bottle": "是兄弟就干了这杯",
   "tooltip.frostedheart.meme.thermometerbody": "体温高于37.8°C禁止进入",
   "tooltip.frostedheart.food_temp": "使用后体温%s °C",
+  "tooltip.frostedheart.block_temp": "温度变化%s °C",
   "tooltip.frostedheart.armor_warm": "保暖指数：百分之%s",
   "tooltip.frostedheart.armor_heating": "加热功率：%s °C/s",
   "tooltip.frostedheart.steam_stored": "蒸汽:%s su",
