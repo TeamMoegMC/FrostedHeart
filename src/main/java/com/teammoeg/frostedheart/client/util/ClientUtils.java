@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.client.util;
 
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -33,6 +34,10 @@ public class ClientUtils {
 
     public static World getWorld() {
         return Minecraft.getInstance().world;
+    }
+
+    public static PlayerEntity getPlayer() {
+        return Minecraft.getInstance().player;
     }
 
     public static void spawnSmokeParticles(World worldIn, BlockPos pos) {
