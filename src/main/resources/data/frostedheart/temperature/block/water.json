@@ -1,8 +1,7 @@
 {
-  "id":"minecraft:water",
-  "temperature":-0.1,
-  "range":5,
+  "id": "minecraft:water",
+  "temperature": -0.02,
+  "range": 5,
   "level_divide": false,
   "must_lit": false
-
 }

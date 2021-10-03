@@ -1,8 +1,7 @@
 {
-  "id":"minecraft:packed_ice",
-  "temperature":-2,
-  "range":3,
+  "id": "minecraft:packed_ice",
+  "temperature": -0.08,
+  "range": 3,
   "level_divide": false,
   "must_lit": false
-
 }
