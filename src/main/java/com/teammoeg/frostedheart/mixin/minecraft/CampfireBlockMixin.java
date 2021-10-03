@@ -103,11 +103,10 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
             CampfireTileEntity campfiretileentity = (CampfireTileEntity) tileentity;
             ItemStack itemstack = player.getHeldItem(handIn);
             if (!player.getHeldItemMainhand().isEmpty()) {
-                if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
-                    if (CampfireBlock.canBeLit(state)) {
+                if (CampfireBlock.canBeLit(state)) {
+                    if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
                         Random rand = worldIn.rand;
                         player.swingArm(Hand.MAIN_HAND);
-
                         if (rand.nextFloat() < 0.33 && !worldIn.isRemote) {
                             worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
                         }
@@ -122,7 +121,21 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
 
                         }
                         return ActionResultType.SUCCESS;
+                    } else if (itemstack.getItem() == Items.FLINT_AND_STEEL) {
+                        worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
+
+                        worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + 10);
+
+                        if (worldIn.isRemote) {
+                            for (int i = 0; i < 5; i++) {
+                                worldIn.addParticle(ParticleTypes.SMOKE, player.getPosX() + player.getLookVec().getX() + 2, player.getPosY() + 0.5f + 2, player.getPosZ() + player.getLookVec().getZ() + 2, 0, 0.01, 0);
+                            }
+                            worldIn.addParticle(ParticleTypes.FLAME, player.getPosX() + player.getLookVec().getX() + 2, player.getPosY() + 0.5f + 2, player.getPosZ() + player.getLookVec().getZ() + 2, 0, 0.01, 0);
+
+                        }
+                        return ActionResultType.SUCCESS;
                     }
+
                 }
                 Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
                 if (optional.isPresent()) {
