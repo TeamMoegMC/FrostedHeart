@@ -221,7 +221,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                 } else
                     this.setActive(false);
             } else this.setActive(false);
-        } else if (world.isRemote && getIsActive()) {
+        } else if (getIsActive()) {
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
