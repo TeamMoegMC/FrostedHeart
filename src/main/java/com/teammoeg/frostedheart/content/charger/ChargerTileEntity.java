@@ -209,22 +209,22 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
     @Override
     public void tick() {
-        SteamEnergyNetwork network = getNetwork();
-        if (network != null) {
+        if (!world.isRemote) {
+            SteamEnergyNetwork network = getNetwork();
             float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
             if (actual > 0) {
                 power += actual * 0.8;
                 this.setActive(true);
-                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
-                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
-                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
-                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
                 markDirty();
                 this.markContainingBlockForUpdate(null);
-            }else
-            	this.setActive(false);
-        }else
-        	this.setActive(false);
+            } else
+                this.setActive(false);
+        } else if (getIsActive()) {
+            ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+            ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+            ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+            ClientUtils.spawnSteamParticles(this.getWorld(), pos);
+        }
     }
 
 	@Override

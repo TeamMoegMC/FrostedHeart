@@ -1,8 +1,7 @@
 {
-  "id":"minecraft:soul_lantern",
-  "temperature":5,
-  "range":5,
+  "id": "minecraft:soul_lantern",
+  "temperature": 0.2,
+  "range": 5,
   "level_divide": false,
   "must_lit": true
-
 }
