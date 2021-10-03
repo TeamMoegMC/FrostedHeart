@@ -1,6 +1,6 @@
 {
   "id": "minecraft:campfire",
-  "temperature": 5,
+  "temperature": 3,
   "range": 3,
   "level_divide": false,
   "must_lit": true
