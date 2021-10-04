@@ -52,7 +52,7 @@
   "item.frostedheart.copper_pro_pick": "铜探矿镐",
   "item.frostedheart.iron_pro_pick": "铁探矿镐",
   "item.frostedheart.steel_pro_pick": "钢探矿镐",
-
+  "item.frostedheart.soil_thermometer": "土壤温度计",
   "gui.frostedheart.generator.temperature.level": "温度增幅: ",
   "gui.frostedheart.generator.range.level": "增温范围: ",
   "gui.frostedheart.generator.power.level": "能量: ",
@@ -61,7 +61,6 @@
   "gui.frostedheart.generator.overdrive.on": "开启超频",
   "gui.frostedheart.generator.overdrive.off": "关闭超频",
   "gui.frostedheart.temperature.desc": "平均气温",
-
   "message.frostedheart.vein_size.nothing": "什么都没有",
   "message.frostedheart.vein_size.small": "少量的 ",
   "message.frostedheart.vein_size.medium": "中等的 ",
@@ -70,10 +69,10 @@
   "message.frostedheart.eaten_poisonous_food": "你不应该吃生肉！",
   "message.frostedheart.crop_not_growable": "这里的温度太低了，这株植物生长至少需要",
   "message.frostedheart.info.thermometerbody": "体温：%s °C",
+  "message.frostedheart.info.soil_thermometerbody": "土壤温度：%s °C",
   "message.frostedheart.campfire.forever": "这个篝火不会熄灭！",
   "message.frostedheart.campfire.remaining": "这个篝火还能燃烧%s秒",
   "message.frostedheart.campfire.fuel": "这个篝火没有燃料了！向篝火上扔任何熔炉燃料来增加燃烧时间，然后将其再次点燃",
-
   "tooltip.frostedheart.f3_average_temperature": "平均气温: %s°C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "区块数据不可用",
   "tooltip.frostedheart.survive_armor_temp_mod": "保暖指数：",

@@ -52,7 +52,7 @@
   "item.frostedheart.copper_pro_pick": "Copper Prospector Pick",
   "item.frostedheart.iron_pro_pick": "Iron Prospector Pick",
   "item.frostedheart.steel_pro_pick": "Steel Prospector Pick",
-
+  "item.frostedheart.soil_thermometer": "Soil Thermometer",
   "gui.frostedheart.generator.temperature.level": "Temperature Increment: ",
   "gui.frostedheart.generator.range.level": "Range: ",
   "gui.frostedheart.generator.power.level": "Power: ",
@@ -73,7 +73,7 @@
   "message.frostedheart.campfire.forever": "This campfire will burn forever!",
   "message.frostedheart.campfire.remaining": "This campfire will remain burning for %s seconds",
   "message.frostedheart.campfire.fuel": "Uh Oh! This campfire went out of fuel! Throw any furnace fuel onto the campfire to add its burning time and ignite it again!",
-
+  "message.frostedheart.info.soil_thermometerbody": "Soil Temperature：%s °C",
   "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s°C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "Invalid Chunk Data",
   "tooltip.frostedheart.survive_armor_temp_mod": "Armor Temperature Modifier: ",
