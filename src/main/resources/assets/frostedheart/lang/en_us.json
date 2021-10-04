@@ -61,7 +61,6 @@
   "gui.frostedheart.generator.overdrive.on": "Turn On Overdrive",
   "gui.frostedheart.generator.overdrive.off": "Turn Off Overdrive",
   "gui.frostedheart.temperature.desc": "Average Temperature",
-
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under ",
   "message.frostedheart.info.thermometerbody": "Body Temperature:%s °C",
@@ -72,6 +71,7 @@
   "message.frostedheart.vein_size.count": "Found %s ",
   "message.frostedheart.campfire.forever": "This campfire will burn forever!",
   "message.frostedheart.campfire.remaining": "This campfire will remain burning for %s seconds",
+  "message.frostedheart.campfire.ignition": "You can ignition the campfire!",
   "message.frostedheart.campfire.fuel": "Uh Oh! This campfire went out of fuel! Throw any furnace fuel onto the campfire to add its burning time and ignite it again!",
   "message.frostedheart.info.soil_thermometerbody": "Soil Temperature：%s °C",
   "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s°C",

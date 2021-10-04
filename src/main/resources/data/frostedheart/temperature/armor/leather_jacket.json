@@ -1,6 +1,6 @@
 {
-  "id": "frostedheart:hide_jacket",
-  "factor": 0.31,
+  "id": "minecraft:leather_chestplate",
+  "factor": 0.32,
   "fire": -0.25,
   "water": -0.4,
   "wet": -0.2,
