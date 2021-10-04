@@ -7,6 +7,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.UseAction;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -30,5 +31,18 @@ public class SoilThermometer extends FHBaseItem {
             entityplayer.sendMessage(GuiUtils.translateMessage("info.soil_thermometerbody", ChunkData.getTemperature(entityplayer.world, entityplayer.getPosition())), entityplayer.getUniqueID());
         }
         return stack;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 100;
+    }
+
+    /**
+     * returns the action that specifies what animation to play when the items is being used
+     */
+    @Override
+    public UseAction getUseAction(ItemStack stack) {
+        return UseAction.DRINK;
     }
 }
