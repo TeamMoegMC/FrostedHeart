@@ -129,12 +129,16 @@ public class TemperatureUpdate {
                             } else if (calculatedTarget <= 3) {
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
-                            } else {
-                                if (event.getEntityLiving().world.getRandom().nextFloat() < 0.5) {
+                            } else if (calculatedTarget <= 5) {
+                                if (event.getEntityLiving().world.getRandom().nextFloat() < 0.7) {
                                     player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 3)));
                                 }
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+                            } else {
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 50, (int) (calculatedTarget - 3)));
+                                player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 50, 2));
+                                player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 50, 0));
                             }
                         } else { // too cold
                             if (calculatedTarget >= -2) {
@@ -142,12 +146,16 @@ public class TemperatureUpdate {
                             } else if (calculatedTarget >= -3) {
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
-                            } else {
-                                if (event.getEntityLiving().world.getRandom().nextFloat() < 0.5) {
+                            } else if (calculatedTarget >= -5) {
+                                if (event.getEntityLiving().world.getRandom().nextFloat() < 0.7) {
                                     player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (Math.abs(calculatedTarget) - 3)));
                                 }
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+                            } else {
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 50, (int) (calculatedTarget - 3)));
+                                player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 50, 2));
+                                player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 50, 0));
                             }
                         }
                     }

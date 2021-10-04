@@ -165,7 +165,6 @@ public class FHClientForgeEvents {
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
         if (player != null && event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && TemperatureCore.getBodyTemperature(player) < -0.5) {
-            System.out.println(TemperatureCore.getBodyTemperature(player));
             if (!player.isCreative() && !player.isSpectator()) FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
         }
     }
