@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -28,23 +27,18 @@ import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -53,9 +47,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.List;
-
-import static net.minecraft.util.text.TextFormatting.*;
+import static net.minecraft.util.text.TextFormatting.DARK_RED;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class FHClientForgeEvents {
@@ -140,23 +132,6 @@ public class FHClientForgeEvents {
         		event.getToolTip().add(GuiUtils.translateTooltip("armor_heating",temps).mergeStyle(TextFormatting.AQUA));
         }
     }
-
-    @SubscribeEvent
-    public static void onRenderGameOverlayText(RenderGameOverlayEvent.Text event) {
-        Minecraft mc = Minecraft.getInstance();
-        List<String> list = event.getRight();
-        if (mc.world != null && mc.gameSettings.showDebugInfo) {
-            BlockPos pos = new BlockPos(mc.getRenderViewEntity().getPosX(), mc.getRenderViewEntity().getBoundingBox().minY, mc.getRenderViewEntity().getPosZ());
-            if (mc.world.chunkExists(pos.getX() >> 4, pos.getZ() >> 4)) {
-                list.add("");
-                list.add(AQUA + FHMain.MODNAME);
-                list.add(GRAY + I18n.format("tooltip.frostedheart.f3_average_temperature", WHITE + String.format("%.1f", ChunkData.getTemperature(mc.world, pos))));
-            } else {
-                list.add(GRAY + I18n.format("tooltip.frostedheart.f3_invalid_chunk_data"));
-            }
-        }
-    }
-
     @SubscribeEvent
     public static void onPostRenderOverlay(RenderGameOverlayEvent.Post event) {
         PlayerEntity player = FrostedHud.getRenderViewPlayer();
