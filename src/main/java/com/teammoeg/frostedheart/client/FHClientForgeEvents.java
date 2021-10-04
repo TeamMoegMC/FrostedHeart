@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
@@ -153,6 +154,18 @@ public class FHClientForgeEvents {
             } else {
                 list.add(GRAY + I18n.format("tooltip.frostedheart.f3_invalid_chunk_data"));
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPostRenderOverlay(RenderGameOverlayEvent.Post event) {
+        PlayerEntity player = FrostedHud.getRenderViewPlayer();
+        Minecraft mc = Minecraft.getInstance();
+        MatrixStack stack = event.getMatrixStack();
+        int anchorX = event.getWindow().getScaledWidth() / 2;
+        int anchorY = event.getWindow().getScaledHeight();
+        if (player != null && event.getType() == RenderGameOverlayEvent.ElementType.PORTAL && TemperatureCore.getBodyTemperature(player) < 0) {
+            if (!player.isCreative() && !player.isSpectator()) FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
         }
     }
 
