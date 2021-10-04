@@ -48,6 +48,7 @@ import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineMultiblock;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineTileEntity;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.steamenergy.DebugHeaterTileEntity;
+import com.teammoeg.frostedheart.steamenergy.HeatDebugItem;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.util.FHFoods;
@@ -155,6 +156,7 @@ public class FHContent {
         public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(48));
         public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(128));
         public static Item steel_pro_pick = new SteelProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(256));
+        public static Item heat_debuger = new HeatDebugItem("heat_debugger");
     }
 
     public static class FHMultiblocks {
