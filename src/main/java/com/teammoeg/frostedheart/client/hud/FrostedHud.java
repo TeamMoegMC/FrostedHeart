@@ -433,12 +433,12 @@ public class FrostedHud {
         mc.getProfiler().startSection("frostedheart_vignette");
         float temp = MathHelper.clamp(TemperatureCore.getBodyTemperature(player), -10, -1);
         // -10 < temp < 0 ===== 1 - 0
-        float opacityDelta = (Math.abs(temp)) / 10;
+        float opacityDelta = (Math.abs(temp) - 0.5F) / 9.5F;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
-        RenderSystem.color4f(1, 1, 1, (float) Math.max(opacityDelta + 0.5, 1));
+        RenderSystem.color4f(1, 1, 1, (float) Math.min(opacityDelta, 1));
         RenderSystem.disableAlphaTest();
         mc.getTextureManager().bindTexture(ICE_VIGNETTE);
         Tessellator tessellator = Tessellator.getInstance();
