@@ -174,7 +174,7 @@ public class FHClientForgeEvents {
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
-            FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, clientPlayer);
+            FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, renderViewPlayer);
         }
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {

@@ -47,6 +47,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.system.CallbackI;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -66,6 +67,11 @@ public class FrostedHud {
 
     public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hud_elements.png");
     public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
+    public static final ResourceLocation FROZEN_OVERLAY_1 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_1.png");
+    public static final ResourceLocation FROZEN_OVERLAY_2 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_2.png");
+    public static final ResourceLocation FROZEN_OVERLAY_3 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_3.png");
+    public static final ResourceLocation FROZEN_OVERLAY_4 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_4.png");
+    public static final ResourceLocation FROZEN_OVERLAY_5 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_5.png");
 //    public static final ResourceLocation LEFT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_half.png");
 //    public static final ResourceLocation RIGHT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/right_half.png");
 //    public static final ResourceLocation LEFT_THREEQUARTERS_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_threequarters.png");
@@ -384,15 +390,27 @@ public class FrostedHud {
         mc.getProfiler().endSection();
     }
 
-    public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
+    public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_frozen");
+        float temp = TemperatureCore.getBodyTemperature(player);
+        ResourceLocation texture;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.defaultBlendFunc();
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableAlphaTest();
-        mc.getTextureManager().bindTexture(FROZEN_OVERLAY_PATH);
+        if (temp >= -2) {
+            texture = FROZEN_OVERLAY_1;
+        } else if (temp >= -3) {
+            texture = FROZEN_OVERLAY_2;
+        } else if (temp >= -4) {
+            texture = FROZEN_OVERLAY_3;
+        } else if (temp >= -5) {
+            texture = FROZEN_OVERLAY_4;
+        } else {
+            texture = FROZEN_OVERLAY_5;
+        }
+        mc.getTextureManager().bindTexture(texture);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
@@ -405,7 +423,6 @@ public class FrostedHud {
         RenderSystem.enableDepthTest();
         RenderSystem.enableAlphaTest();
         RenderSystem.disableBlend();
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         mc.getProfiler().endSection();
     }
 
