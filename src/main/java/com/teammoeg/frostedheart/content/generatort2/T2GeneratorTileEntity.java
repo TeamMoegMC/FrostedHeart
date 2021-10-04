@@ -54,12 +54,17 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     }
 
     float power = 0;
-    SteamEnergyNetwork sen = new SteamEnergyNetwork(this.master());
-    GeneratorSteamRecipe steam;
+    SteamEnergyNetwork sen = null;
+   	float spowerMod;
+   	float srangeMod;
+   	float stempMod;
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         power = nbt.getFloat("steam_power");
+        srangeMod=nbt.getFloat("steam_range");
+        stempMod=nbt.getFloat("steam_temp");
+        spowerMod=nbt.getFloat("steam_product");
         tank.readFromNBT(nbt.getCompound("fluid"));
 
     }
@@ -70,6 +75,9 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         nbt.putFloat("steam_power", power);
         CompoundNBT tankx = new CompoundNBT();
         tank.writeToNBT(tankx);
+        nbt.putFloat("steam_range",srangeMod);
+        nbt.putFloat("steam_temp",stempMod);
+        nbt.putFloat("steam_product",spowerMod);
         nbt.put("fluid", tankx);
     }
 
@@ -97,6 +105,13 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     //we have to override all 
     @Override
     protected void tickFuel() {
+    	/*for(BlockPos nw:networkTile) {
+    		TileEntity te = Utils.getExistingTileEntity(world,this.getBlockPosForPos(nw));
+            if (te instanceof T2GeneratorTileEntity) {
+                ((T2GeneratorTileEntity) te).connectAt(Direction.DOWN);
+                //System.out.println(((T2GeneratorTileEntity) te).offsetToMaster.getY());
+            }
+    	}*/
         // just finished process or during process
         if (process > 0) {
             if (isOverdrive() && !isActualOverdrive()) {
@@ -116,13 +131,17 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
                         currentItem.setCount(4 * currentItem.getCount());
                         this.process += recipe.time * 4;
                         this.processMax += recipe.time * 4;
-                        this.steam=null;
+                        this.spowerMod=0;
+                        this.srangeMod=1;
+                        this.stempMod=1;
                         GeneratorSteamRecipe sgr=GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
                         if(sgr!=null) {
                         	int actualDrain=recipe.time*this.getTemperatureLevel()*sgr.input.getAmount();
                         	FluidStack fs=this.tank.drain(actualDrain,FluidAction.SIMULATE);
                         	if(fs.getAmount()>=actualDrain) {
-	                        	this.steam=sgr;
+	                        	this.spowerMod=sgr.power;
+	                        	this.srangeMod=sgr.rangeMod;
+	                        	this.stempMod=sgr.tempMod;
 	                        	this.tank.drain(actualDrain,FluidAction.EXECUTE);
                         	}
                         }
@@ -134,8 +153,8 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
                 process -= 4;
             else
                 process--;
-            if(steam!=null) {
-            	this.power+=steam.power*this.getTemperatureLevel();
+            if(spowerMod!=0) {
+            	this.power+=spowerMod*this.getTemperatureLevel();
 	            if(power>=getMaxPower())
 	            	power=getMaxPower();
             }
@@ -171,11 +190,17 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
                 	int actualDrain=recipe.time*this.getTemperatureLevel()*sgr.input.getAmount();
                 	FluidStack fs=this.tank.drain(actualDrain,FluidAction.SIMULATE);
                 	if(fs.getAmount()>=actualDrain) {
-                		if(this.steam!=sgr)
+                		if(this.stempMod!=sgr.tempMod||this.srangeMod!=sgr.rangeMod)
                 			this.markChanged(true);
-                    	this.steam=sgr;
+                    	this.spowerMod=sgr.power;
+                    	this.srangeMod=sgr.rangeMod;
+                    	this.stempMod=sgr.tempMod;
                     	this.tank.drain(actualDrain,FluidAction.EXECUTE);
                 	}
+                }else {
+                    this.spowerMod=0;
+                    this.srangeMod=1;
+                    this.stempMod=1;
                 }
                 setActive(true);
             } else {
@@ -221,15 +246,36 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
         }
     }
-
+    private static final BlockPos[] networkTile=new BlockPos[]{new BlockPos(1,0,0),new BlockPos(1,0,2),new BlockPos(0,0,1),new BlockPos(2,0,1)} ;
     @Override
     public SteamEnergyNetwork getNetwork() {
-        return master() != null ? master().sen : null;
+    	for(BlockPos nwt:networkTile) {
+            BlockPos actualPos = getBlockPosForPos(nwt);
+            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+            if (te instanceof T2GeneratorTileEntity) {
+                if(((T2GeneratorTileEntity) te).sen!=null) {
+                	sen=((T2GeneratorTileEntity) te).sen;
+                }
+            }
+        }
+    	if(sen==null) {
+        	sen=new SteamEnergyNetwork(this);
+        	for(BlockPos nwt:networkTile) {
+                BlockPos actualPos = getBlockPosForPos(nwt);
+                TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                if (te instanceof T2GeneratorTileEntity) {
+                    ((T2GeneratorTileEntity) te).sen=sen;
+                }
+            }
+        }
+        return sen;
     }
 
     @Override
     public float getMaxHeat() {
-        return power;
+    	if(master()!=null) 
+    		return master().power;
+    	return 0;
     }
 
     public float getMaxPower() {
@@ -238,23 +284,26 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public float drainHeat(float value) {
-        float actual = Math.min(value, power);
-        power -= actual;
-        return actual;
+    	if(master()!=null) {
+	        float actual = Math.min(value, master().power);
+	        master().power -= actual;
+	        return actual;
+    	}
+    	return 0;
     }
 
     @Override
     public int getTemperatureLevel() {
-    	if(master().steam!=null) {
-    		return (int) (master().steam.tempMod*super.getTemperatureLevel());
+    	if(master()!=null) {
+    		return (int) (master().stempMod*super.getTemperatureLevel());
     	}
         return super.getTemperatureLevel();
     }
 
     @Override
 	public int getRangeLevel() {
-    	if(master().steam!=null) {
-    		return (int) (master().steam.rangeMod*super.getRangeLevel());
+    	if(master()!=null) {
+    		return (int) (master().srangeMod*super.getRangeLevel());
     	}
 		return super.getRangeLevel();
 	}
@@ -270,9 +319,10 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public boolean connectAt(Direction to) {
-    	if (to != Direction.DOWN ||this.offsetToMaster.getY() != 0||(this.offsetToMaster.getX()!=0&&this.offsetToMaster.getZ()!=0)) return false;
+    	if (to != Direction.DOWN ||this.offsetToMaster.getY() != -1||(this.offsetToMaster.getX()!=0&&this.offsetToMaster.getZ()!=0)) return false;
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof IConnectable && !(te instanceof HeatProvider)) {
+        	//System.out.println("connecting");
             ((IConnectable) te).connectAt(to.getOpposite());
         }
         return true;

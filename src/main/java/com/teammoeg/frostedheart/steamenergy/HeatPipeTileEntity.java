@@ -92,7 +92,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
         try {
             isPathFinding = true;
             final SteamEnergyNetwork network = getNetwork();
-            if (network != null && newNetwork != null && network != newNetwork) {//network conflict
+            if (network != null&&network.isValid() && newNetwork != null && network != newNetwork) {//network conflict
                 return;//disconnect
             }
             if (newNetwork == null) {
@@ -100,7 +100,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 return;
             }
             //setActive(true);
-            if (length <= lengthx) return;
+            if (hasNetwork()&&length <= lengthx) return;
             length = lengthx;
             dMaster = from;
             if (network != newNetwork) {

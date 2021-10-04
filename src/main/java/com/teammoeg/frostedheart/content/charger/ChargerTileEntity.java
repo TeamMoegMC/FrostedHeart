@@ -75,12 +75,10 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
     public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
         if (is != null) {
-            if (world != null && world.isRemote) {
-                ClientUtils.spawnSteamParticles(world, this.getPos());
-            }
             Item it = is.getItem();
             if (it instanceof IChargable) {
                 power -= ((IChargable) it).charge(is, power);
+                drawEffect();
                 return ActionResultType.SUCCESS;
             }
             ChargerRecipe cr = ChargerRecipe.findRecipe(is);
@@ -93,6 +91,8 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                     if (!pe.inventory.addItemStackToInventory(gain)) {
                         pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(), pe.getPosX(), pe.getPosY(), pe.getPosZ(), gain));
                     }
+                    drawEffect();
+                    return ActionResultType.SUCCESS;
                 }
             }
             if (power >= 100) {
@@ -111,14 +111,19 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                         markDirty();
                         this.markContainingBlockForUpdate(null);
                         //}
+                        drawEffect();
                         return ActionResultType.SUCCESS;
                     }
                 }
             }
         }
-        return ActionResultType.FAIL;
+        return ActionResultType.PASS;
     }
-
+    public void drawEffect() {
+    	if (world != null && world.isRemote) {
+            ClientUtils.spawnSteamParticles(world, this.getPos());
+        }
+    }
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         ItemStackHelper.loadAllItems(nbt, inventory);
@@ -215,7 +220,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         if (!world.isRemote) {
             SteamEnergyNetwork network = getNetwork();
             if (network != null) {
-                float actual = network.drainHeat(Math.min(200, getMaxPower() - power));
+                float actual = network.drainHeat(Math.min(200, (getMaxPower() - power)/0.8F));
                 if (actual > 0) {
                     power += actual * 0.8;
                     this.setActive(true);

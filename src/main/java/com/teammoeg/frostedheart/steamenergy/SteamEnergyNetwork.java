@@ -34,7 +34,12 @@ public class SteamEnergyNetwork {
     public float getTemperatureLevel() {
         return provider.getTemperatureLevel();
     }
-    public boolean isValid() {
+    @Override
+	public String toString() {
+		return "SteamEnergyNetwork [provider=" + provider + ", isValid=" + isValid +(isValid()?(", temp="+this.getTemperatureLevel()+", power="+this.provider.getMaxHeat()):"")+ "]";
+	}
+
+	public boolean isValid() {
     	return isValid&&(provider instanceof TileEntity)&&(!((TileEntity)provider).isRemoved());
     }
     public void invalidate() {

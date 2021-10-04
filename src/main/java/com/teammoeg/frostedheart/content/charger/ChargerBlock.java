@@ -105,7 +105,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     @Override
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume())
+        if (superResult.isSuccessOrConsume()||player.isSneaking())
             return superResult;
         ItemStack item = player.getHeldItem(hand);
         TileEntity te = Utils.getExistingTileEntity(world, pos);
