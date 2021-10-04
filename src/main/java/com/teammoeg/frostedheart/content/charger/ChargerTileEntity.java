@@ -158,8 +158,11 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof EnergyNetworkProvider) {
             last = to;
-            network = ((EnergyNetworkProvider) te).getNetwork();
-            return true;
+            SteamEnergyNetwork nw = ((EnergyNetworkProvider) te).getNetwork();
+            if (nw != null) {
+                network = nw;
+                return true;
+            }
         } else
             disconnectAt(to);
         return false;

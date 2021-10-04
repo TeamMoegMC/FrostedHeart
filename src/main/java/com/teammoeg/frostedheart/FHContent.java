@@ -95,6 +95,7 @@ public class FHContent {
         public static Block heat_pipe = new HeatPipeBlock("heat_pipe",Block.Properties
                 .create(Material.ROCK).sound(SoundType.WOOD)
                 .harvestTool(ToolType.PICKAXE)
+                .hardnessAndResistance(1, 5)
                 .notSolid(), FHBlockItem::new);
         public static Block debug_heater = new DebugHeaterBlock("debug_heater", Block.Properties
                 .create(Material.ROCK).sound(SoundType.STONE)
