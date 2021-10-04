@@ -61,7 +61,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     Direction last;
 
     SteamEnergyNetwork getNetwork() {
-        if (network != null) return network;
+        if (network != null&&network.isValid()) return network;
         if (last == null) return null;
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(last));
         if (te instanceof EnergyNetworkProvider) {

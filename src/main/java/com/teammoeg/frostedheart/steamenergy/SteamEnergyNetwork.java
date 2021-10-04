@@ -18,9 +18,11 @@
 
 package com.teammoeg.frostedheart.steamenergy;
 
-public class SteamEnergyNetwork {
-    HeatProvider provider;
+import net.minecraft.tileentity.TileEntity;
 
+public class SteamEnergyNetwork {
+	private HeatProvider provider;
+    private boolean isValid=true;
     public SteamEnergyNetwork(HeatProvider provider) {
         this.provider = provider;
     }
@@ -31,5 +33,11 @@ public class SteamEnergyNetwork {
 
     public float getTemperatureLevel() {
         return provider.getTemperatureLevel();
+    }
+    public boolean isValid() {
+    	return isValid&&(provider instanceof TileEntity)&&(!((TileEntity)provider).isRemoved());
+    }
+    public void invalidate() {
+    	isValid=false;
     }
 }

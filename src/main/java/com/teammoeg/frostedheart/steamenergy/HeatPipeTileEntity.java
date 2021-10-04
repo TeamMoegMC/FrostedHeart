@@ -67,11 +67,11 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
         if (networkinit) return null;
         try {
             networkinit = true;//avoid recursive calling
-            if (network == null && dMaster != null) {
+            if (hasNetwork() && dMaster != null) {
                 TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(dMaster));
                 if (te instanceof EnergyNetworkProvider) {
                     SteamEnergyNetwork tnetwork = ((EnergyNetworkProvider) te).getNetwork();
-                    if (tnetwork != null) {
+                    if (tnetwork != null&&tnetwork.isValid()) {
                         network = tnetwork;
                     }
                 }
@@ -79,9 +79,13 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
         } finally {
             networkinit = false;
         }
-        return network;
+        if(hasNetwork())
+        	return network;
+        return null;
     }
-
+    protected boolean hasNetwork() {
+    	return network!=null&&network.isValid();
+    }
     protected void propagate(Direction from, SteamEnergyNetwork newNetwork, int lengthx) {
         if (isPathFinding) return;
         //System.out.println(from);

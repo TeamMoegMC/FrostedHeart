@@ -40,7 +40,14 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 import java.util.Random;
 
 public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity> implements HeatProvider, IConnectable {
-    public T2GeneratorTileEntity.GeneratorData guiData = new T2GeneratorTileEntity.GeneratorData();
+    @Override
+	public void disassemble() {
+    	if(sen!=null)
+    		sen.invalidate();
+		super.disassemble();
+	}
+
+	public T2GeneratorTileEntity.GeneratorData guiData = new T2GeneratorTileEntity.GeneratorData();
 
     public T2GeneratorTileEntity(int temperatureLevelIn, int overdriveBoostIn, int rangeLevelIn) {
         super(FHContent.FHMultiblocks.GENERATOR_T2, FHContent.FHTileTypes.GENERATOR_T2.get(), false, temperatureLevelIn, overdriveBoostIn, rangeLevelIn);
