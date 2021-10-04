@@ -47,6 +47,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.system.CallbackI;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -66,6 +68,13 @@ public class FrostedHud {
 
     public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hud_elements.png");
     public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
+    public static final ResourceLocation FROZEN_OVERLAY_1 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_1.png");
+    public static final ResourceLocation FROZEN_OVERLAY_2 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_2.png");
+    public static final ResourceLocation FROZEN_OVERLAY_3 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_3.png");
+    public static final ResourceLocation FROZEN_OVERLAY_4 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_4.png");
+    public static final ResourceLocation FROZEN_OVERLAY_5 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_5.png");
+    public static final ResourceLocation FIRE_VIGNETTE = new ResourceLocation(FHMain.MODID, "textures/gui/hud/fire_vignette.png");
+    public static final ResourceLocation ICE_VIGNETTE = new ResourceLocation(FHMain.MODID, "textures/gui/hud/ice_vignette.png");
 //    public static final ResourceLocation LEFT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_half.png");
 //    public static final ResourceLocation RIGHT_HALF_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/right_half.png");
 //    public static final ResourceLocation LEFT_THREEQUARTERS_MASK = new ResourceLocation(FHMain.MODID, "textures/gui/hud/mask/left_threequarters.png");
@@ -384,15 +393,27 @@ public class FrostedHud {
         mc.getProfiler().endSection();
     }
 
-    public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
+    public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_frozen");
+        float temp = TemperatureCore.getBodyTemperature(player);
+        ResourceLocation texture;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.defaultBlendFunc();
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableAlphaTest();
-        mc.getTextureManager().bindTexture(FROZEN_OVERLAY_PATH);
+        if (temp >= -2) {
+            texture = FROZEN_OVERLAY_1;
+        } else if (temp >= -3) {
+            texture = FROZEN_OVERLAY_2;
+        } else if (temp >= -4) {
+            texture = FROZEN_OVERLAY_3;
+        } else if (temp >= -5) {
+            texture = FROZEN_OVERLAY_4;
+        } else {
+            texture = FROZEN_OVERLAY_5;
+        }
+        mc.getTextureManager().bindTexture(texture);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
@@ -405,7 +426,34 @@ public class FrostedHud {
         RenderSystem.enableDepthTest();
         RenderSystem.enableAlphaTest();
         RenderSystem.disableBlend();
-//        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        mc.getProfiler().endSection();
+    }
+
+    public static void renderFrozenVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
+        mc.getProfiler().startSection("frostedheart_vignette");
+        float temp = MathHelper.clamp(TemperatureCore.getBodyTemperature(player), -10, -1);
+        // -10 < temp < 0 ===== 1 - 0
+        float opacityDelta = (Math.abs(temp) - 0.5F) / 9.5F;
+        RenderSystem.enableBlend();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        RenderSystem.color4f(1, 1, 1, (float) Math.min(opacityDelta, 1));
+        RenderSystem.disableAlphaTest();
+        mc.getTextureManager().bindTexture(ICE_VIGNETTE);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+        buffer.pos(0.0D, y, -90.0D).tex(0.0F, 1.0F).endVertex();
+        buffer.pos(x * 2, y, -90.0D).tex(1.0F, 1.0F).endVertex();
+        buffer.pos(x * 2, 0.0D, -90.0D).tex(1.0F, 0.0F).endVertex();
+        buffer.pos(0.0D, 0.0D, -90.0D).tex(0.0F, 0.0F).endVertex();
+        tessellator.draw();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableAlphaTest();
+        RenderSystem.color4f(1, 1, 1, 1);
+        RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
 

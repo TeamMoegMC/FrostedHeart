@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
@@ -157,6 +158,19 @@ public class FHClientForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onPostRenderOverlay(RenderGameOverlayEvent.Post event) {
+        PlayerEntity player = FrostedHud.getRenderViewPlayer();
+        Minecraft mc = Minecraft.getInstance();
+        MatrixStack stack = event.getMatrixStack();
+        int anchorX = event.getWindow().getScaledWidth() / 2;
+        int anchorY = event.getWindow().getScaledHeight();
+        if (player != null && event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && TemperatureCore.getBodyTemperature(player) < -0.5) {
+            System.out.println(TemperatureCore.getBodyTemperature(player));
+            if (!player.isCreative() && !player.isSpectator()) FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
+        }
+    }
+
+    @SubscribeEvent
     public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         ClientPlayerEntity clientPlayer = mc.player;
@@ -174,7 +188,7 @@ public class FHClientForgeEvents {
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
-            FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, clientPlayer);
+            FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, renderViewPlayer);
         }
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {

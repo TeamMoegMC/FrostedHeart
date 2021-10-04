@@ -96,6 +96,10 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
         }
     }
 
+    /**
+     * @author dashuaibia
+     * @reason ignition
+     */
     @Overwrite
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         TileEntity tileentity = worldIn.getTileEntity(pos);
