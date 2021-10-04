@@ -217,7 +217,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public SteamEnergyNetwork getNetwork() {
-        return master().sen;
+        return master().sen != null ? master().sen : null;
     }
 
     @Override
