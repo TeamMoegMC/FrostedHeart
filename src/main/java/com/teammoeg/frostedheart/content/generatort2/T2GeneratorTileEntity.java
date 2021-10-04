@@ -27,8 +27,6 @@ import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.steamenergy.HeatProvider;
 import com.teammoeg.frostedheart.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.steamenergy.SteamEnergyNetwork;
-
-import net.minecraft.block.Block;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;

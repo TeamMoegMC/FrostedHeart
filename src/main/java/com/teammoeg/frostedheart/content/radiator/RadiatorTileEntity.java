@@ -78,6 +78,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         power = nbt.getFloat("power");
         process = nbt.getInt("process");
         processMax = nbt.getInt("processMax");
+        tempLevelLast = nbt.getFloat("temp");
         if (nbt.contains("dir"))
             last = Direction.values()[nbt.getInt("dir")];
     }
@@ -88,6 +89,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         nbt.putFloat("power", power);
         nbt.putInt("process", process);
         nbt.putInt("processMax", processMax);
+        nbt.putFloat("temp",tempLevelLast);
         if (last != null)
             nbt.putInt("dir", last.ordinal());
     }
