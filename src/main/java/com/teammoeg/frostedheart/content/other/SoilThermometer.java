@@ -43,6 +43,6 @@ public class SoilThermometer extends FHBaseItem {
      */
     @Override
     public UseAction getUseAction(ItemStack stack) {
-        return UseAction.DRINK;
+        return UseAction.SPEAR;
     }
 }
