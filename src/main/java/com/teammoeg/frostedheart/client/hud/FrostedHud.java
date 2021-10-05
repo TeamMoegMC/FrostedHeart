@@ -245,10 +245,10 @@ public class FrostedHud {
         mc.ingameGUI.blit(stack, x + BasePos.left_threequarters.getA(), y + BasePos.left_threequarters.getB(), UV.left_threequarters_frame.x, UV.left_threequarters_frame.y, UV.left_threequarters_frame.w, UV.left_threequarters_frame.h);
         mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), UV.icon_health_normal.x, UV.icon_health_normal.y, UV.icon_health_normal.w, UV.icon_health_normal.h);
 
-        int health = MathHelper.ceil(player.getHealth());
-        ModifiableAttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
-        float healthMax = (float) attrMaxHealth.getValue();
-        float absorb = MathHelper.ceil(player.getAbsorptionAmount()); // let's say max is 20
+        float health = player.getHealth();
+        //ModifiableAttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
+        float healthMax =/* (float) attrMaxHealth.getValue()*/player.getMaxHealth();
+        float absorb =player.getAbsorptionAmount(); // let's say max is 20
 
         // range: [0, 99]
         int healthState = health == 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
