@@ -83,6 +83,10 @@ public class FHDataManager {
         //System.out.println(is.getItem().getRegistryName());
         return armorData.get(is.getItem().getRegistryName());
     }
+    public static IWarmKeepingEquipment getArmor(String is) {
+        //System.out.println(is.getItem().getRegistryName());
+        return armorData.get(new ResourceLocation(is));
+    }
 
     public static Byte getBiomeTemp(Biome b) {
         BiomeTempData data = biomeData.get(b.getRegistryName());

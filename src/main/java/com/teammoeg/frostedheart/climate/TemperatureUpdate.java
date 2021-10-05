@@ -24,6 +24,8 @@ import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHEffects;
+
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -97,7 +99,7 @@ public class TemperatureUpdate {
                 }
             }
             for (ItemStack is : player.getArmorInventoryList()) {
-                if (is == null)
+                if (is.isEmpty())
                     continue;
                 Item it = is.getItem();
                 if (it instanceof IHeatingEquipment)
@@ -105,7 +107,12 @@ public class TemperatureUpdate {
                 if (it instanceof IWarmKeepingEquipment) {
                     keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
                 } else {
-                    IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
+                	String s=ItemNBTHelper.getString(is,"inner_cover");
+                	IWarmKeepingEquipment iw=null;
+                	if(s.length()>0) {
+                		iw = FHDataManager.getArmor(s+"_"+it.getEquipmentSlot(is).getName());
+                	}else
+                		iw = FHDataManager.getArmor(is);
                     if (iw != null)
                         keepwarm += iw.getFactor(player, is);
                 }

@@ -135,6 +135,8 @@ public class FHContent {
         public static Item vegetable_soup = new FHSoupItem("vegetable_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
         public static Item steam_bottle = new SteamBottleItem("steam_bottle", new Item.Properties().group(FHMain.itemGroup).maxStackSize(1).containerItem(Items.GLASS_BOTTLE));
         public static Item raw_hide = new FHBaseItem("raw_hide", itemProps);
+        public static Item gambeson = new FHBaseItem("gambeson", itemProps);
+        public static Item buff_coat = new FHBaseItem("buff_coat", itemProps);
         public static Item hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, itemProps);
         public static Item hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, itemProps);
         public static Item hay_jacket = new FHBaseArmorItem("hay_jacket", FHArmorMaterial.HAY, EquipmentSlotType.CHEST, itemProps);
