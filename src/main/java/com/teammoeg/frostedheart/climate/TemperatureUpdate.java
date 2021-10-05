@@ -54,7 +54,17 @@ public class TemperatureUpdate {
             if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
                 return;
             if(player.isInWaterOrBubbleColumn()) {
-            	player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));
+            	boolean hasArmor=false;
+            	for(ItemStack is:player.getArmorInventoryList()) {
+            		if(!is.isEmpty()) {
+            			hasArmor=true;
+            			break;
+            		}
+            	}
+            	if(hasArmor)
+            		player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));//punish for wet clothes
+            	else
+            		player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
             }
             float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
