@@ -42,7 +42,7 @@ public enum FHArmorMaterial implements IArmorMaterial {
     HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
         return Ingredient.fromItems(ModList.get().isLoaded("charcoal_pit") ? ForgeRegistries.ITEMS.getValue(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT);
     }),
-    WOOL("wool", 8, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
+    WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
         return Ingredient.fromItems(Items.WHITE_WOOL);
     });
 
