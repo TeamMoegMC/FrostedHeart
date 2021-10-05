@@ -139,7 +139,7 @@ public class TemperatureUpdate {
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (calculatedTarget-2)));
+                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget-2)));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             }
