@@ -90,7 +90,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         //user set shutdown
         if (isUserOperated())
             if (!world.isRemote && formed && !isDummy() && !isWorking()) {
-                setActive(false);
+            	setAllActive(false);
                 onShutDown();
                 ChunkData.removeTempAdjust(world, getPos());
             }

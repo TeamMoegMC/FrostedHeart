@@ -24,6 +24,8 @@ import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHEffects;
+
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -40,7 +42,8 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
-
+	public static final float HEAT_EXCHANGE_CONSTANT=0.0012F;
+	public static final float SELF_HEATING_CONSTANT=0.05F;
     /**
      * Perform temperature tick logic
      * @param event fired every tick on player
@@ -54,11 +57,21 @@ public class TemperatureUpdate {
             if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
                 return;
             if(player.isInWaterOrBubbleColumn()) {
-            	player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));
+            	boolean hasArmor=false;
+            	for(ItemStack is:player.getArmorInventoryList()) {
+            		if(!is.isEmpty()) {
+            			hasArmor=true;
+            			break;
+            		}
+            	}
+            	if(hasArmor)
+            		player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));//punish for wet clothes
+            	else
+            		player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
             }
             float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
-                current += 0.05;
+                current += SELF_HEATING_CONSTANT;
             World world = player.getEntityWorld();
             BlockPos pos = player.getPosition();
             float envtemp = ChunkData.getTemperature(world, pos);
@@ -87,7 +100,7 @@ public class TemperatureUpdate {
                 }
             }
             for (ItemStack is : player.getArmorInventoryList()) {
-                if (is == null)
+                if (is.isEmpty())
                     continue;
                 Item it = is.getItem();
                 if (it instanceof IHeatingEquipment)
@@ -95,14 +108,19 @@ public class TemperatureUpdate {
                 if (it instanceof IWarmKeepingEquipment) {
                     keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
                 } else {
-                    IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
+                	String s=ItemNBTHelper.getString(is,"inner_cover");
+                	IWarmKeepingEquipment iw=null;
+                	if(s.length()>0) {
+                		iw = FHDataManager.getArmor(s+"_"+it.getEquipmentSlot(is).getName());
+                	}else
+                		iw = FHDataManager.getArmor(is);
                     if (iw != null)
                         keepwarm += iw.getFactor(player, is);
                 }
             }
             if (keepwarm > 1)
                 keepwarm = 1;
-            current += 0.0012 * (1 - keepwarm) * (envtemp - current);
+            current +=  HEAT_EXCHANGE_CONSTANT* (1 - keepwarm) * (envtemp - current);
             if (current < -10)
                 current = -10;
             else if (current > 10)
@@ -139,7 +157,7 @@ public class TemperatureUpdate {
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (calculatedTarget-2)));
+                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget-2)));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             }

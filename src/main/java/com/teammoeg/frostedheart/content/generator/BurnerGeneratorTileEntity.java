@@ -261,6 +261,7 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
     public void onShutDown() {
         process = 0;
         processMax = 0;
+        
         if (currentItem != null) {
             if (!inventory.get(OUTPUT_SLOT).isEmpty())
                 inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
