@@ -40,7 +40,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
-
+	public static final float HEAT_EXCHANGE_CONSTANT=0.0012F;
     /**
      * Perform temperature tick logic
      * @param event fired every tick on player
@@ -102,7 +102,7 @@ public class TemperatureUpdate {
             }
             if (keepwarm > 1)
                 keepwarm = 1;
-            current += 0.0012 * (1 - keepwarm) * (envtemp - current);
+            current +=  HEAT_EXCHANGE_CONSTANT* (1 - keepwarm) * (envtemp - current);
             if (current < -10)
                 current = -10;
             else if (current > 10)
