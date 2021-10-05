@@ -274,9 +274,9 @@ public class FrostedHud {
         mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), healthCol * UV.health_bar.w, healthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
         mc.getTextureManager().bindTexture(ABSORPTION);
         mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_outer.getA(), y + BarPos.left_threequarters_outer.getB(), absorbCol * UV.absorption_bar.w, absorbRow * UV.absorption_bar.h, UV.absorption_bar.w, UV.absorption_bar.h, 360, 360);
-
-        int offset = mc.fontRenderer.getStringWidth(String.valueOf((int)health)) / 2;
-        mc.fontRenderer.drawString(stack, String.valueOf((int)health), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
+        int ihealth=(int) Math.ceil(health);
+        int offset = mc.fontRenderer.getStringWidth(String.valueOf(ihealth)) / 2;
+        mc.fontRenderer.drawString(stack, String.valueOf(ihealth), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
 
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();

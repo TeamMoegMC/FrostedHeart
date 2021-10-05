@@ -43,11 +43,11 @@ public class HypothermiaEffect extends Effect {
     }
 
     public boolean isReady(int duration, int amplifier) {
-        int k = 40 >> amplifier;
-        if (k > 0) {
+    	if(amplifier<=1)return false;//0 or 1 does not damage
+        int k = 60 >> (amplifier-2);//2 or higher does damage
+        if (k > 1) {
             return duration % k == 0;
-        } else {
-            return true;
         }
+		return true;
     }
 }
