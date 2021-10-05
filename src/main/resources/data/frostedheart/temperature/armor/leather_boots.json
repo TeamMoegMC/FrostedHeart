@@ -1,6 +1,6 @@
 {
   "id": "minecraft:leather_boots",
-  "factor": 0.18,
+  "factor": 0.15,
   "fire": -0.1,
   "water": -0.3,
   "wet": -0.1,

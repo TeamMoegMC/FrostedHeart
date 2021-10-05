@@ -1,6 +1,6 @@
 {
   "id": "minecraft:leather_chestplate",
-  "factor": 0.32,
+  "factor": 0.30,
   "fire": -0.25,
   "water": -0.4,
   "wet": -0.2,
