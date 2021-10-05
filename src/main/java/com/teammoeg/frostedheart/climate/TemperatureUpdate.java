@@ -53,6 +53,9 @@ public class TemperatureUpdate {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
                 return;
+            if(player.isInWaterOrBubbleColumn()) {
+            	player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));
+            }
             float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
                 current += 0.05;

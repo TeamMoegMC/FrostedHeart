@@ -20,6 +20,8 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.util.FHEffects;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.biome.Biome.RainType;
@@ -44,7 +46,7 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
             else
                 base += this.getFloatOrDefault("rain", 0F);
         }
-        if (false) {//further implement wet
+        if (pe.isPotionActive(FHEffects.WET)) {//further implement wet
             base += this.getFloatOrDefault("wet", 0F);
         }
         float min = this.getFloatOrDefault("min",0F);

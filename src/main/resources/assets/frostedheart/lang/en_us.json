@@ -92,6 +92,7 @@
 
   "effect.frostedheart.hypothermia": "Hypothermia",
   "effect.frostedheart.hyperthermia": "Hyperthermia",
+  "effect.frostedheart.wet": "wet",
 
   "death.attack.hyperthermia": "%s died of hyperthermia.",
   "death.attack.hyperthermia.player": "%s died of hyperthermia.",
