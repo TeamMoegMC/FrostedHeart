@@ -220,7 +220,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 
 	@Override
 	protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
-		return null;
+		return new IFluidTank[0];
 	}
 
 	@Override
