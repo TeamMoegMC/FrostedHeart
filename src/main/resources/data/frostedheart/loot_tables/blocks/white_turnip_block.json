@@ -18,11 +18,11 @@
                   }
                 }
               ],
-              "name": "frostedheart:white_turnip"
+              "name": "frostedheart:white_turnip_block"
             },
             {
               "type": "minecraft:item",
-              "name": "frostedheart:white_turnip"
+              "name": "frostedheart:white_turnip_block"
             }
           ]
         }
@@ -44,7 +44,7 @@
               }
             }
           ],
-          "name": "frostedheart:white_turnip"
+          "name": "frostedheart:white_turnip_block"
         }
       ],
       "conditions": [
