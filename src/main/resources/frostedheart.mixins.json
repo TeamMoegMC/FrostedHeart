@@ -15,6 +15,7 @@
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "rankine.AlloyTemplateItemMixin",
+    "rankine.TapBarrelBlockMixin",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin"
   ],
