@@ -92,6 +92,7 @@
 
   "effect.frostedheart.hypothermia": "失温",
   "effect.frostedheart.hyperthermia": "中暑",
+  "effect.frostedheart.wet": "潮湿",
 
   "death.attack.hyperthermia": "%s中暑了。",
   "death.attack.hyperthermia.player": "%s死于高温。",
