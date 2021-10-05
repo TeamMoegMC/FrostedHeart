@@ -19,6 +19,9 @@
     "snow.ModUtilMixin"
   ],
   "client": [
+    "client.ForgeIngameGuiMixin",
+    "client.IngameGuiAccess",
+    "client.IngameGuiMixin"
   ],
   "injectors": {
     "defaultRequire": 1

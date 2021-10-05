@@ -41,6 +41,7 @@ import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.FoodStats;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
@@ -66,8 +67,8 @@ public class FrostedHud {
     public static boolean renderHypothermia = true;
     public static boolean renderFrozen = true;
 
-    public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hud_elements.png");
-    public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
+    public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements_duobus.png");
+//    public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
     public static final ResourceLocation FROZEN_OVERLAY_1 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_1.png");
     public static final ResourceLocation FROZEN_OVERLAY_2 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_2.png");
     public static final ResourceLocation FROZEN_OVERLAY_3 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_3.png");
@@ -224,15 +225,22 @@ public class FrostedHud {
         mc.getProfiler().endSection();
     }
 
+    private static int calculateHypoBarLength(double startTemp, double endTemp, PlayerEntity player) {
+        return (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), endTemp)) - Math.abs(startTemp)) / (Math.abs(endTemp) - Math.abs(startTemp)) * 182.0F);
+    }
+
     public static void renderHypothermia(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_hypothermia");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
-        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), -1)) - 0.5) / 0.5 * 181.0F);
-        mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA(), y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, k, UV.hypothermia_bar.h);
-
+//        double startTemp = -0.5, endTemp = -3.0;
+//        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), endTemp)) - Math.abs(startTemp)) / (Math.abs(endTemp) - Math.abs(startTemp)) * 181.0F);
+        int stage1length = calculateHypoBarLength(-0.5, -2.0, player);
+        int stage2length = calculateHypoBarLength(-2.0, -3.0, player);
+        mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA() + 1, y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, stage1length, UV.hypothermia_bar.h);
+        mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA() + 1, y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y + 6, stage2length, UV.hypothermia_bar.h);
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
@@ -267,8 +275,8 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(ABSORPTION);
         mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_outer.getA(), y + BarPos.left_threequarters_outer.getB(), absorbCol * UV.absorption_bar.w, absorbRow * UV.absorption_bar.h, UV.absorption_bar.w, UV.absorption_bar.h, 360, 360);
 
-        int offset = mc.fontRenderer.getStringWidth(String.valueOf(health)) / 2;
-        mc.fontRenderer.drawString(stack, String.valueOf(health), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
+        int offset = mc.fontRenderer.getStringWidth(String.valueOf((int)health)) / 2;
+        mc.fontRenderer.drawString(stack, String.valueOf((int)health), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
 
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
@@ -365,7 +373,7 @@ public class FrostedHud {
         Entity tmp = player.getRidingEntity();
         if (!(tmp instanceof LivingEntity)) return;
         LivingEntity mount = (LivingEntity) tmp;
-        int health = (int) Math.ceil(mount.getHealth());
+        int health = (int) mount.getHealth();
         float healthMax = mount.getMaxHealth();
         int healthState = MathHelper.ceil(health / healthMax * 100) - 1;
         int healthCol = healthState / 10;
@@ -457,7 +465,31 @@ public class FrostedHud {
         mc.getProfiler().endSection();
     }
 
-    private static class BasePos {
+    public static void renderAirBar(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
+        mc.getProfiler().startSection("frostedheart_air");
+        RenderSystem.enableBlend();
+        int air = player.getAir();
+        int maxAir = 300;
+        if (player.areEyesInFluid(FluidTags.WATER) || air < maxAir) {
+            mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
+
+            mc.ingameGUI.blit(stack, x + BasePos.right_half_3.getB().getA(), y + BasePos.right_half_3.getB().getB(), UV.right_half_frame.x, UV.right_half_frame.y, UV.right_half_frame.w, UV.right_half_frame.h);
+            if (air <= 30) {
+                mc.ingameGUI.blit(stack, x + IconPos.right_half_3.getB().getA(), y + IconPos.right_half_3.getB().getB(), UV.icon_oxygen_abnormal_white.x, UV.icon_oxygen_abnormal_white.y, UV.icon_oxygen_abnormal_white.w, UV.icon_oxygen_abnormal_white.h);
+            } else {
+                mc.ingameGUI.blit(stack, x + IconPos.right_half_3.getB().getA(), y + IconPos.right_half_3.getB().getB(), UV.icon_oxygen_normal.x, UV.icon_oxygen_normal.y, UV.icon_oxygen_normal.w, UV.icon_oxygen_normal.h);
+            }
+            int airState = MathHelper.ceil(air / (float) maxAir * 100) - 1;
+            int airCol = airState / 10;
+            int airRow = airState % 10;
+            mc.getTextureManager().bindTexture(OXYGEN);
+            mc.ingameGUI.blit(stack, x + BarPos.right_half_3.getB().getA(), y + BarPos.right_half_3.getB().getB(), airCol * UV.oxygen_bar.w, airRow * UV.oxygen_bar.h, UV.oxygen_bar.w, UV.oxygen_bar.h, 160, 320);
+        }
+        RenderSystem.disableBlend();
+        mc.getProfiler().endSection();
+    }
+
+    public static class BasePos {
         public static final Tuple<Integer, Integer> hotbar_1 = new Tuple<>(-90, -20);
         public static final Tuple<Integer, Integer> hotbar_2 = new Tuple<>(-70, -20);
         public static final Tuple<Integer, Integer> hotbar_3 = new Tuple<>(-50, -20);
@@ -480,7 +512,7 @@ public class FrostedHud {
         public static final Tuple<Tuple<Integer, Integer>, Tuple<Integer, Integer>> right_half_3 = new Tuple<>(new Tuple<>(96, -64), new Tuple<>(58, -64));
     }
 
-    private static class BarPos {
+    public static class BarPos {
         public static final Tuple<Integer, Integer> exp_bar = new Tuple<>(-112 + 19, -26);
         public static final Tuple<Integer, Integer> temp_orb = new Tuple<>(-22 + 3, -76 + 3);
         public static final Tuple<Integer, Integer> left_threequarters_inner = new Tuple<>(-57, -64);
@@ -495,7 +527,7 @@ public class FrostedHud {
         public static final Tuple<Tuple<Integer, Integer>, Tuple<Integer, Integer>> right_half_3 = new Tuple<>(new Tuple<>(103, -64), new Tuple<>(65, -64));
     }
 
-    private static class IconPos {
+    public static class IconPos {
         public static final Tuple<Integer, Integer> left_threequarters = new Tuple<>(-47, -56);
         public static final Tuple<Integer, Integer> right_threequarters = new Tuple<>(35, -56);
         public static final Tuple<Tuple<Integer, Integer>, Tuple<Integer, Integer>> left_half_1 = new Tuple<>(new Tuple<>(-71, -54), new Tuple<>(-33, -54));
@@ -506,7 +538,7 @@ public class FrostedHud {
         public static final Tuple<Tuple<Integer, Integer>, Tuple<Integer, Integer>> right_half_3 = new Tuple<>(new Tuple<>(99, -54), new Tuple<>(61, -54));
     }
 
-    private static class UV {
+    public static class UV {
         public static final UV4i hotbar_slot = new UV4i(1, 1, 20, 20);
         public static final UV4i off_hand_slot = new UV4i(22, 1, 22, 22);
         public static final UV4i selected = new UV4i(108, 109, 22, 22);

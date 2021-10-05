@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -38,6 +39,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
@@ -139,8 +142,13 @@ public class FHClientForgeEvents {
         MatrixStack stack = event.getMatrixStack();
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
-        if (player != null && event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && TemperatureCore.getBodyTemperature(player) < -0.5) {
-            if (!player.isCreative() && !player.isSpectator()) FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
+        if (event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && player != null && !player.isCreative() && !player.isSpectator() ) {
+            if (TemperatureCore.getBodyTemperature(player) <= -0.5) {
+                FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
+            }
+            if (TemperatureCore.getBodyTemperature(player) <= -1.0) {
+                FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, player);
+            }
         }
     }
 
@@ -161,9 +169,10 @@ public class FHClientForgeEvents {
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
-        if (event.getType() == RenderGameOverlayEvent.ElementType.HELMET && FrostedHud.renderFrozen) {
-            FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, renderViewPlayer);
-        }
+//        if (event.getType() == RenderGameOverlayEvent.ElementType.AIR && FrostedHud.renderHealth) {
+//            FrostedHud.renderAirBar(stack, anchorX, anchorY, mc, renderViewPlayer);
+//            event.setCanceled(true);
+//        }
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
             if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
