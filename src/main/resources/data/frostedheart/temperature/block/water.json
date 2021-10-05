@@ -1,6 +1,6 @@
 {
   "id": "minecraft:water",
-  "temperature": -0.02,
+  "temperature": -0.05,
   "range": 5,
   "level_divide": false,
   "must_lit": false
