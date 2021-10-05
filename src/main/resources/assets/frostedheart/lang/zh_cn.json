@@ -94,7 +94,7 @@
   "effect.frostedheart.hyperthermia": "中暑",
 
   "death.attack.hyperthermia": "%s中暑了。",
-  "death.attack.hyperthermia.player": "%s死于高温。",
+  "death.attack.hyperthermia.player": "%s被烤成了香肠。",
   "death.attack.hypothermia": "%s被冻成了冰棍儿。",
   "death.attack.hypothermia.player": "%s被冻成了冰棍儿。",
 
