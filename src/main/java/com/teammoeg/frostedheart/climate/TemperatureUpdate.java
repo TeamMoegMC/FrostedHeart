@@ -43,6 +43,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
 	public static final float HEAT_EXCHANGE_CONSTANT=0.0012F;
+	public static final float SELF_HEATING_CONSTANT=0.05F;
     /**
      * Perform temperature tick logic
      * @param event fired every tick on player
@@ -70,7 +71,7 @@ public class TemperatureUpdate {
             }
             float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
-                current += 0.05;
+                current += SELF_HEATING_CONSTANT;
             World world = player.getEntityWorld();
             BlockPos pos = player.getPosition();
             float envtemp = ChunkData.getTemperature(world, pos);
