@@ -26,7 +26,9 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHEffects;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
@@ -110,8 +112,9 @@ public class TemperatureUpdate {
                 } else {
                 	String s=ItemNBTHelper.getString(is,"inner_cover");
                 	IWarmKeepingEquipment iw=null;
-                	if(s.length()>0) {
-                		iw = FHDataManager.getArmor(s+"_"+it.getEquipmentSlot(is).getName());
+                	EquipmentSlotType aes=MobEntity.getSlotForItemStack(is);
+                	if(s.length()>0&&aes!=null) {
+                		iw = FHDataManager.getArmor(s+"_"+aes.getName());
                 	}else
                 		iw = FHDataManager.getArmor(is);
                     if (iw != null)
