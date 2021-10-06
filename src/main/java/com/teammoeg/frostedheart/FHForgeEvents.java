@@ -28,6 +28,9 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
+import com.teammoeg.frostedheart.network.FHDataSyncPacket;
+import com.teammoeg.frostedheart.network.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHNBT;
@@ -59,6 +62,7 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
@@ -70,6 +74,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
@@ -281,7 +286,11 @@ public class FHForgeEvents {
 //            }
 //        }
 //    }
-
+	@SubscribeEvent
+    public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
+		if(event.getEntity() instanceof ServerPlayerEntity)
+			PacketHandler.send(PacketDistributor.PLAYER.with(()->(ServerPlayerEntity)event.getPlayer()),new FHDatapackSyncPacket());
+	}
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
         if (FHConfig.SERVER.alwaysKeepInventory.get()) {

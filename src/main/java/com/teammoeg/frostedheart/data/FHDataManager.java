@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import net.minecraft.block.Block;
@@ -30,9 +31,10 @@ import net.minecraftforge.fluids.FluidStack;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class FHDataManager {
-    public static class ResourceMap<T> extends HashMap<ResourceLocation, T> {
+    public static class ResourceMap<T extends JsonDataHolder> extends HashMap<ResourceLocation, T> {
         public ResourceMap() {
             super();
         }
@@ -59,7 +61,8 @@ public class FHDataManager {
     public static final ResourceMap<BlockTempData> blockData = new ResourceMap<>();
     public static final ResourceMap<DrinkTempData> drinkData = new ResourceMap<>();
     public static final EnumMap<FHDataTypes, ResourceMap> datas = new EnumMap<>(FHDataTypes.class);
-
+    public static boolean synched=false;
+    private static final JsonParser parser = new JsonParser();
     static {
         datas.put(FHDataTypes.Armor, armorData);
         datas.put(FHDataTypes.Biome, biomeData);
@@ -68,6 +71,7 @@ public class FHDataManager {
         datas.put(FHDataTypes.Drink,drinkData);
     }
     public static final void reset() {
+    	synched=false;
     	for(ResourceMap rm:datas.values())
     		rm.clear();
     }
@@ -76,8 +80,31 @@ public class FHDataManager {
         JsonDataHolder jdh = dt.type.create(data);
         //System.out.println("registering "+dt.type.location+": "+jdh.getId());
         datas.get(dt).put(jdh.getId(), jdh);
+        synched=false;
     }
-
+    @SuppressWarnings("unchecked")
+	public static final void load(DataEntry[] entries) {
+    	reset();
+    	for(DataEntry de:entries) {
+	        JsonDataHolder jdh = de.type.type.create(parser.parse(de.data).getAsJsonObject());
+	        //System.out.println("registering "+dt.type.location+": "+jdh.getId());
+	        datas.get(de.type).put(jdh.getId(), jdh);
+    	}
+    }
+    public static final DataEntry[] save() {
+    	int tsize=0;
+    	for(ResourceMap map:datas.values()) {
+    		tsize+=map.size();
+    	}
+    	DataEntry[] entries=new DataEntry[tsize];
+    	int i=-1;
+    	for(Entry<FHDataTypes, ResourceMap> entry:datas.entrySet()) {
+    		for(Object jdh:entry.getValue().values()) {
+    			entries[++i]=new DataEntry(entry.getKey(),((JsonDataHolder)jdh).getData());
+    		}
+    	}
+    	return entries;
+    }
     public static ITempAdjustFood getFood(ItemStack is) {
         return foodData.get(is.getItem().getRegistryName());
     }
