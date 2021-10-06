@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.data;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.util.FHEffects;
-
+import com.teammoeg.frostedheart.util.FHisRainingAt;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.world.biome.Biome.RainType;
+import net.minecraft.world.biome.Biome;
 
 public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipment {
 
@@ -35,13 +35,13 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
     @Override
     public float getFactor(ServerPlayerEntity pe, ItemStack stack) {
         float base = this.getFloatOrDefault("factor", 0F);
-        if(pe==null)return base;
+        if (pe == null) return base;
         if (pe.isBurning())
             base += this.getFloatOrDefault("fire", 0F);
-        if (pe.isInWaterOrBubbleColumn())
-            base += this.getFloatOrDefault("water", 0F);
-        else if (pe.isInWaterRainOrBubbleColumn()) {
-            if (pe.getServerWorld().getBiome(pe.getPosition()).getPrecipitation() == RainType.SNOW)
+        if (FHisRainingAt.isWet(pe)) {
+            if (pe.isInWater())
+                base += this.getFloatOrDefault("water", 0F);
+            else if (pe.getServerWorld().getBiome(pe.getPosition()).getPrecipitation() == Biome.RainType.SNOW)
                 base += this.getFloatOrDefault("snow", 0F);
             else
                 base += this.getFloatOrDefault("rain", 0F);
@@ -49,7 +49,7 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
         if (pe.isPotionActive(FHEffects.WET)) {//further implement wet
             base += this.getFloatOrDefault("wet", 0F);
         }
-        float min = this.getFloatOrDefault("min",0F);
+        float min = this.getFloatOrDefault("min", 0F);
         if (base < min) {
             base = min;
         } else {

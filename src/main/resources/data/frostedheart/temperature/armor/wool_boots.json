@@ -1,11 +1,11 @@
 {
-  "id":"frostedheart:wool_boots",
-  "factor":0.16,
-  "fire":-0.1,
-  "water":-0.2,
-  "wet":-0.1,
-  "snow":-0.01,
-  "rain":-0.01,
-  "min":0,
-  "max":1
+  "id": "frostedheart:wool_boots",
+  "factor": 0.12,
+  "fire": -0.1,
+  "water": -0.2,
+  "wet": -0.1,
+  "snow": -0.06,
+  "rain": -0.06,
+  "min": 0,
+  "max": 1
 }

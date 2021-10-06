@@ -1,11 +1,11 @@
 {
   "id": "frostedheart:hide_boots",
-  "factor": 0.14,
+  "factor": 0.1,
   "fire": -0.1,
   "water": -0.1,
   "wet": -0.05,
-  "snow": -0.01,
-  "rain": -0.01,
+  "snow": -0.06,
+  "rain": -0.06,
   "min": 0,
   "max": 1
 }
