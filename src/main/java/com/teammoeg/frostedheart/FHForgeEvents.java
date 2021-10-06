@@ -19,16 +19,15 @@
 package com.teammoeg.frostedheart;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import com.teammoeg.frostedheart.climate.TemperatureCore;
-import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
+import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
-import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
@@ -62,7 +61,6 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
@@ -265,7 +263,7 @@ public class FHForgeEvents {
         }
     }
 
-//    @SubscribeEvent
+    //    @SubscribeEvent
 //    public static void addBaseNutritionOnFirstLogin(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
 //        CompoundNBT nbt = event.getPlayer().getPersistentData();
 //        CompoundNBT persistent;
@@ -286,11 +284,12 @@ public class FHForgeEvents {
 //            }
 //        }
 //    }
-	@SubscribeEvent
+    @SubscribeEvent
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
-		if(event.getEntity() instanceof ServerPlayerEntity)
-			PacketHandler.send(PacketDistributor.PLAYER.with(()->(ServerPlayerEntity)event.getPlayer()),new FHDatapackSyncPacket());
-	}
+        if (event.getEntity() instanceof ServerPlayerEntity)
+            PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()), new FHDatapackSyncPacket());
+    }
+
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
         if (FHConfig.SERVER.alwaysKeepInventory.get()) {

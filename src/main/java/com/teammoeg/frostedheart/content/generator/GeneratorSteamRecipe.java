@@ -21,8 +21,6 @@ package com.teammoeg.frostedheart.content.generator;
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
@@ -37,19 +35,18 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     public static RegistryObject<IERecipeSerializer<GeneratorSteamRecipe>> SERIALIZER;
 
     public GeneratorSteamRecipe(ResourceLocation id, FluidTagInput input,
-			float power, float tempMod, float rangeMod) {
-    	super(ItemStack.EMPTY, TYPE, id);
-		this.input = input;
-		this.power = power;
-		this.tempMod = tempMod;
-		this.rangeMod = rangeMod;
-	}
+                                float power, float tempMod, float rangeMod) {
+        super(ItemStack.EMPTY, TYPE, id);
+        this.input = input;
+        this.power = power;
+        this.tempMod = tempMod;
+        this.rangeMod = rangeMod;
+    }
 
-	public final FluidTagInput input;
+    public final FluidTagInput input;
     public final float power;
     public final float tempMod;
     public final float rangeMod;
-
 
 
     @Override
@@ -62,13 +59,13 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
 
     public static GeneratorSteamRecipe findRecipe(FluidStack input) {
         for (GeneratorSteamRecipe recipe : recipeList.values())
-            if(recipe.input.testIgnoringAmount(input))
+            if (recipe.input.testIgnoringAmount(input))
                 return recipe;
         return null;
     }
 
-	@Override
-	public ItemStack getRecipeOutput() {
-		return super.outputDummy;
-	}
+    @Override
+    public ItemStack getRecipeOutput() {
+        return super.outputDummy;
+    }
 }

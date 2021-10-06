@@ -23,8 +23,8 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -261,7 +261,7 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
     public void onShutDown() {
         process = 0;
         processMax = 0;
-        
+
         if (currentItem != null) {
             if (!inventory.get(OUTPUT_SLOT).isEmpty())
                 inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());

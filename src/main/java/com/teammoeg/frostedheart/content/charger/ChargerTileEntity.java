@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
-
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
@@ -49,7 +48,7 @@ import net.minecraft.util.NonNullList;
 import java.util.List;
 
 public class ChargerTileEntity extends IEBaseTileEntity implements
-        IConnectable, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity , FHBlockInterfaces.IActiveState{
+        IConnectable, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity, FHBlockInterfaces.IActiveState {
     NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public float power = 0;
     public static final int INPUT_SLOT = 0;
@@ -63,7 +62,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     Direction last;
 
     SteamEnergyNetwork getNetwork() {
-        if (network != null&&network.isValid()) return network;
+        if (network != null && network.isValid()) return network;
         if (last == null) return null;
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(last));
         if (te instanceof EnergyNetworkProvider) {
@@ -120,11 +119,13 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         }
         return ActionResultType.PASS;
     }
+
     public void drawEffect() {
-    	if (world != null && world.isRemote) {
+        if (world != null && world.isRemote) {
             ClientUtils.spawnSteamParticles(world, this.getPos());
         }
     }
+
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         ItemStackHelper.loadAllItems(nbt, inventory);
@@ -221,7 +222,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         if (!world.isRemote) {
             SteamEnergyNetwork network = getNetwork();
             if (network != null) {
-                float actual = network.drainHeat(Math.min(200, (getMaxPower() - power)/0.8F));
+                float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
                 if (actual > 0) {
                     power += actual * 0.8;
                     this.setActive(true);
@@ -235,10 +236,10 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         }
     }
 
-	@Override
-	public boolean canConnectAt(Direction dir) {
-		Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
+    @Override
+    public boolean canConnectAt(Direction dir) {
+        Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
         return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
-	}
+    }
 
 }

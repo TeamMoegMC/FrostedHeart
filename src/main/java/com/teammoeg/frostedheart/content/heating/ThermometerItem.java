@@ -36,7 +36,7 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-public class ThermometerItem extends FHBaseItem{
+public class ThermometerItem extends FHBaseItem {
 
 
     public ThermometerItem(String name, Properties properties) {
@@ -51,26 +51,28 @@ public class ThermometerItem extends FHBaseItem{
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
-        	entityplayer.sendMessage(GuiUtils.translateMessage("info.thermometerbody",getTemperature((ServerPlayerEntity) entityLiving)/10.0+37.0),entityplayer.getUniqueID());
+            entityplayer.sendMessage(GuiUtils.translateMessage("info.thermometerbody", getTemperature((ServerPlayerEntity) entityLiving) / 10.0 + 37.0), entityplayer.getUniqueID());
         }
 
         return stack;
     }
-    @Override
-	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-    	tooltip.add(GuiUtils.translateTooltip("meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
-	}
 
-	public int getTemperature(ServerPlayerEntity p) {
-    	return (int)( TemperatureCore.getBodyTemperature(p)*10);
+    @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        tooltip.add(GuiUtils.translateTooltip("meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
     }
+
+    public int getTemperature(ServerPlayerEntity p) {
+        return (int) (TemperatureCore.getBodyTemperature(p) * 10);
+    }
+
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         playerIn.setActiveHand(handIn);
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
     }
 
-	/**
+    /**
      * How long it takes to use or consume an item
      */
     @Override

@@ -79,9 +79,9 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
         return 3;
     }
 
-	@Override
-	public boolean canConnectAt(Direction to) {
-		return true;
-	}
+    @Override
+    public boolean canConnectAt(Direction to) {
+        return true;
+    }
 
 }

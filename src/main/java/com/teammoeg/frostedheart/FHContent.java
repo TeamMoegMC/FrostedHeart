@@ -39,11 +39,7 @@ import com.teammoeg.frostedheart.content.generatort2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.heating.*;
-import com.teammoeg.frostedheart.content.other.ProspectorPick;
-import com.teammoeg.frostedheart.content.other.RecipeInner;
-import com.teammoeg.frostedheart.content.other.RecipeInnerSerializer;
-import com.teammoeg.frostedheart.content.other.SoilThermometer;
-import com.teammoeg.frostedheart.content.other.SteelProspectorPick;
+import com.teammoeg.frostedheart.content.other.*;
 import com.teammoeg.frostedheart.content.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.*;
@@ -92,7 +88,7 @@ public class FHContent {
         public static Block burning_chamber = new FHBaseBlock("burning_chamber", stoneDecoProps, FHBlockItem::new);
         public static Block rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
         public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
-        public static Block heat_pipe = new HeatPipeBlock("heat_pipe",Block.Properties
+        public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
                 .create(Material.ROCK).sound(SoundType.WOOD)
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(1, 5)
@@ -128,7 +124,7 @@ public class FHContent {
         public static Item generator_ash = new FHBaseItem("generator_ash", itemProps);
         public static Item rye_flour = new FHBaseItem("rye_flour", itemProps);
         public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", itemProps);
-        public static Item mercury_body_thermometer=new ThermometerItem("mercury_body_thermometer",itemProps);
+        public static Item mercury_body_thermometer = new ThermometerItem("mercury_body_thermometer", itemProps);
         public static Item rye_bread = new FHBaseItem("rye_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
         public static Item black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.BLACK_BREAD));
         public static Item vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
@@ -166,10 +162,10 @@ public class FHContent {
         public static IETemplateMultiblock CRUCIBLE = new CrucibleMultiblock();
         public static IETemplateMultiblock STEAMTURBINE = new SteamTurbineMultiblock();
         public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
-        public static IETemplateMultiblock RADIATOR =new RadiatorMultiblock();
+        public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
         public static Block generator = new NormalGeneratorMultiBlock("generator", FHTileTypes.GENERATOR_T1);
         public static Block generator_t2 = new HeatedGeneratorMultiBlock("generator_t2", FHTileTypes.GENERATOR_T2);
-        public static Block radiator=new UnlitHeatedGeneratorMultiBlock("heat_radiator", FHTileTypes.RADIATOR);
+        public static Block radiator = new UnlitHeatedGeneratorMultiBlock("heat_radiator", FHTileTypes.RADIATOR);
         public static Block crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
         public static Block steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
 
@@ -232,7 +228,7 @@ public class FHContent {
             GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipeSerializer::new);
             CrucibleRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("crucible", CrucibleRecipeSerializer::new);
             GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipeSerializer::new);
-            RecipeInner.SERIALIZER=RECIPE_SERIALIZERS.register("recipe_inner",RecipeInnerSerializer::new);
+            RecipeInner.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", RecipeInnerSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
         }
 

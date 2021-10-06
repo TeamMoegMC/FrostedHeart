@@ -172,7 +172,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param tempMod the temperature added
      */
     public static void addCubicTempAdjust(IWorld world, BlockPos heatPos, int range, byte tempMod) {
-    	removeTempAdjust(world,heatPos);//remove current first
+        removeTempAdjust(world, heatPos);//remove current first
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
         // these are block position offset
@@ -202,9 +202,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param adj   adjust
      */
     public static void addTempAdjust(IWorld world, ITemperatureAdjust adj) {
-    	
+
         int sourceX = adj.getCenterX(), sourceZ = adj.getCenterZ();
-        removeTempAdjust(world,new BlockPos(sourceX,adj.getCenterY(),sourceZ));
+        removeTempAdjust(world, new BlockPos(sourceX, adj.getCenterY(), sourceZ));
         // these are block position offset
         int offsetN = sourceZ - adj.getRadius();
         int offsetS = sourceZ + adj.getRadius() + 1;
@@ -233,7 +233,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param tempMod the temperature added
      */
     public static void addSphericTempAdjust(IWorld world, BlockPos heatPos, int range, byte tempMod) {
-    	 removeTempAdjust(world,heatPos);
+        removeTempAdjust(world, heatPos);
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
         // these are block position offset
@@ -276,11 +276,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     public static void removeTempAdjust(IWorld world, BlockPos heatPos) {
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
-        ChunkData cd=ChunkData.get(world, heatPos);
-        ITemperatureAdjust oadj=cd.getAdjustAt(heatPos);
-        if(oadj==null) return;
-        int range=oadj.getRadius();
-        	
+        ChunkData cd = ChunkData.get(world, heatPos);
+        ITemperatureAdjust oadj = cd.getAdjustAt(heatPos);
+        if (oadj == null) return;
+        int range = oadj.getRadius();
+
         // these are block position offset
         int offsetN = sourceZ - range;
         int offsetS = sourceZ + range + 1;
@@ -292,7 +292,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
         int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
         int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
-        
+
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++)
                 removeChunkAdjust(world, new ChunkPos(x, z), heatPos);
@@ -334,13 +334,15 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
         reset();
     }
+
     public ITemperatureAdjust getAdjustAt(BlockPos pos) {
-    	for(ITemperatureAdjust adj:adjusters) {
-    		if(adj.getCenterX()==pos.getX()&&adj.getCenterY()==pos.getY()&&adj.getCenterZ()==pos.getZ())
-    			return adj;
-    	}
-    	return null;
+        for (ITemperatureAdjust adj : adjusters) {
+            if (adj.getCenterX() == pos.getX() && adj.getCenterY() == pos.getY() && adj.getCenterZ() == pos.getZ())
+                return adj;
+        }
+        return null;
     }
+
     public Collection<ITemperatureAdjust> getAdjusters() {
         return adjusters;
     }
@@ -370,6 +372,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         }
         return WorldClimate.getWorldTemperature(world, pos) + ret;
     }
+
     /**
      * @deprecated This does not consider world specific temperature<br>use {@link #getTemperature(IWorld, BlockPos)}
      */

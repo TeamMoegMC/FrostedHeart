@@ -19,10 +19,10 @@
 package com.teammoeg.frostedheart.content.heating;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
+import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
@@ -40,7 +40,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
 import java.util.List;
@@ -107,7 +106,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     }
 
 
-	/**
+    /**
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
@@ -150,9 +149,9 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
         return bodyTemp + this.extractEnergy(stack, 3, false) / 120;
     }
 
-	@Override
-	public float getMax(ItemStack stack) {
-		return 0.025F;
-	}
+    @Override
+    public float getMax(ItemStack stack) {
+        return 0.025F;
+    }
 
 }

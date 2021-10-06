@@ -21,10 +21,7 @@ package com.teammoeg.frostedheart.base.item;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.Food;
 import net.minecraft.item.Item;
-
-import javax.annotation.Nullable;
 
 public class FHBlockItem extends BlockItem {
     public FHBlockItem(Block block, Item.Properties props) {

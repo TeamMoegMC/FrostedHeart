@@ -38,10 +38,10 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
     }
 
     public NormalGeneratorMultiBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
-		super(name, props, type);
-	}
+        super(name, props, type);
+    }
 
-	@OnlyIn(Dist.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         if (stateIn.get(LIT)) {
             if (rand.nextInt(5) == 0) {
