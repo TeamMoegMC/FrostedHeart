@@ -67,7 +67,10 @@ public class FHDataManager {
         datas.put(FHDataTypes.Food, foodData);
         datas.put(FHDataTypes.Drink,drinkData);
     }
-
+    public static final void reset() {
+    	for(ResourceMap rm:datas.values())
+    		rm.clear();
+    }
     @SuppressWarnings("unchecked")
     public static final void register(FHDataTypes dt, JsonObject data) {
         JsonDataHolder jdh = dt.type.create(data);
