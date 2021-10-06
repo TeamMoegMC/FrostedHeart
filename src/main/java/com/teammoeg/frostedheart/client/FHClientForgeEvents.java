@@ -31,17 +31,22 @@ import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
+
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -91,7 +96,13 @@ public class FHClientForgeEvents {
         if (i instanceof IWarmKeepingEquipment) {
             iwe = (IWarmKeepingEquipment) i;
         } else {
-            iwe = FHDataManager.getArmor(stack);
+        	String s=ItemNBTHelper.getString(stack,"inner_cover");
+        	EquipmentSlotType aes=MobEntity.getSlotForItemStack(stack);
+        	if(s.length()>0&&aes!=null) {
+        		event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GRAY).appendSibling(new TranslationTextComponent("item."+s.replaceFirst(":","."))));
+        		iwe = FHDataManager.getArmor(s+"_"+aes.getName());
+        	}else
+        		iwe = FHDataManager.getArmor(stack);
         }
         BlockTempData btd=FHDataManager.getBlockData(stack);
         if(btd!=null) {

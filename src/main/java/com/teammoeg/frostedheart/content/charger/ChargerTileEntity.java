@@ -26,10 +26,11 @@ import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.steamenergy.EnergyNetworkProvider;
-import com.teammoeg.frostedheart.steamenergy.IChargable;
-import com.teammoeg.frostedheart.steamenergy.IConnectable;
-import com.teammoeg.frostedheart.steamenergy.SteamEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.IChargable;
+import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
+
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;

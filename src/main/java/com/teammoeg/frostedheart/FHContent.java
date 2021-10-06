@@ -40,14 +40,16 @@ import com.teammoeg.frostedheart.content.generatort2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.heating.*;
 import com.teammoeg.frostedheart.content.other.ProspectorPick;
+import com.teammoeg.frostedheart.content.other.RecipeInner;
+import com.teammoeg.frostedheart.content.other.RecipeInnerSerializer;
 import com.teammoeg.frostedheart.content.other.SoilThermometer;
 import com.teammoeg.frostedheart.content.other.SteelProspectorPick;
 import com.teammoeg.frostedheart.content.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.*;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineBlock;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineMultiblock;
 import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineTileEntity;
-import com.teammoeg.frostedheart.steamenergy.*;
 import com.teammoeg.frostedheart.util.FHFoods;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -230,6 +232,7 @@ public class FHContent {
             GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipeSerializer::new);
             CrucibleRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("crucible", CrucibleRecipeSerializer::new);
             GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipeSerializer::new);
+            RecipeInner.SERIALIZER=RECIPE_SERIALIZERS.register("recipe_inner",RecipeInnerSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
         }
 

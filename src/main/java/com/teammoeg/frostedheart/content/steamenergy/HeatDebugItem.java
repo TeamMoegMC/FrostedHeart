@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHFluids;

@@ -22,9 +22,10 @@ import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestModel;
+import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.steamenergy.IChargable;
+
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
