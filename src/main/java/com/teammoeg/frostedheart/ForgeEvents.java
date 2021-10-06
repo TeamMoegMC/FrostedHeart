@@ -78,7 +78,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class FHForgeEvents {
+public class ForgeEvents {
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
 

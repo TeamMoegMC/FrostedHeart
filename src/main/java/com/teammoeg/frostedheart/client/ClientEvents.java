@@ -54,7 +54,7 @@ import net.minecraftforge.fml.common.Mod;
 import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-public class FHClientForgeEvents {
+public class ClientEvents {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
