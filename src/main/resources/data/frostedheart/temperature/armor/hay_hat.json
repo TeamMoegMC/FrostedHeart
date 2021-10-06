@@ -1,11 +1,11 @@
 {
-  "id":"frostedheart:hay_hat",
-  "factor":0.1,
-  "fire":-0.15,
-  "water":-0.3,
-  "wet":-0.1,
-  "snow":-0.01,
-  "rain":-0.01,
-  "min":0,
-  "max":1
+  "id": "frostedheart:hay_hat",
+  "factor": 0.08,
+  "fire": -0.1,
+  "water": -0.4,
+  "wet": -0.2,
+  "snow": -0.04,
+  "rain": -0.04,
+  "min": 0,
+  "max": 1
 }

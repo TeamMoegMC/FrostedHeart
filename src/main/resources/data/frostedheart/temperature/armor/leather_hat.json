@@ -1,11 +1,11 @@
 {
   "id": "minecraft:leather_helmet",
-  "factor": 0.17,
+  "factor": 0.12,
   "fire": -0.15,
   "water": -0.3,
   "wet": -0.1,
-  "snow": -0.01,
-  "rain": -0.01,
+  "snow": -0.06,
+  "rain": -0.06,
   "min": 0,
   "max": 1
 }
