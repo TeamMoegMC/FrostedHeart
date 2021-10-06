@@ -20,6 +20,9 @@ package com.teammoeg.frostedheart.util;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 
 import java.util.function.ToIntFunction;
@@ -39,5 +42,17 @@ public class FHUtils {
         return (state) -> {
             return state.get(BlockStateProperties.LIT) ? lightValue : 0;
         };
+    }
+
+    public static boolean isRainingAt(BlockPos pos, World world) {
+        if (!world.isRaining()) {
+            return false;
+        } else if (!world.canSeeSky(pos)) {
+            return false;
+        } else if (world.getHeight(Heightmap.Type.MOTION_BLOCKING, pos).getY() > pos.getY()) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }
