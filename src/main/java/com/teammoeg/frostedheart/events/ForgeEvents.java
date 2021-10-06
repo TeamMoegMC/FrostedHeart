@@ -16,9 +16,12 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.WorldClimate;
