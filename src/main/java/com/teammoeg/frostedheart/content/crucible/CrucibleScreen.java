@@ -22,8 +22,6 @@ import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.content.crucible.CrucibleContainer;
-import com.teammoeg.frostedheart.content.crucible.CrucibleTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;

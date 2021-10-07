@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.mixin.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -46,7 +64,7 @@ public class IngameGuiMixin extends AbstractGui {
             j -= 1;
             // FH ENDS
 
-            int l = (int)((float)access.getRemainingHighlightTicks() * 256.0F / 10.0F);
+            int l = (int) ((float) access.getRemainingHighlightTicks() * 256.0F / 10.0F);
             if (l > 255) {
                 l = 255;
             }
@@ -58,10 +76,10 @@ public class IngameGuiMixin extends AbstractGui {
                 fill(matrixStack, j - 2, k - 2, j + i + 2, k + 9 + 2, mc.gameSettings.getChatBackgroundColor(0));
                 FontRenderer font = access.getHighlightingItemStack().getItem().getFontRenderer(access.getHighlightingItemStack());
                 if (font == null) {
-                    mc.fontRenderer.drawTextWithShadow(matrixStack, highlightTip, (float)j, (float)k, 16777215 + (l << 24));
+                    mc.fontRenderer.drawTextWithShadow(matrixStack, highlightTip, (float) j, (float) k, 16777215 + (l << 24));
                 } else {
                     j = (scaledWidth - font.getStringPropertyWidth(highlightTip)) / 2;
-                    font.drawTextWithShadow(matrixStack, highlightTip, (float)j, (float)k, 16777215 + (l << 24));
+                    font.drawTextWithShadow(matrixStack, highlightTip, (float) j, (float) k, 16777215 + (l << 24));
                 }
                 RenderSystem.disableBlend();
                 RenderSystem.popMatrix();

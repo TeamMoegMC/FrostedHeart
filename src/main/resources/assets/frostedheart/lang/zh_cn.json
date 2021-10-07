@@ -43,6 +43,7 @@
   "item.frostedheart.wool_hat": "羊毛帽子",
   "item.frostedheart.wool_jacket": "羊毛夹克",
   "item.frostedheart.wool_pants": "羊毛裤子",
+  "item.frostedheart.buff_coat": "内衬",
   "item.frostedheart.raw_hide": "兽皮",
   "item.frostedheart.steam_bottle": "蒸汽瓶",
   "item.frostedheart.heater_vest": "加热背心",
@@ -88,6 +89,7 @@
   "tooltip.frostedheart.armor_warm": "保暖指数：百分之%s",
   "tooltip.frostedheart.armor_heating": "加热功率：%s °C/s",
   "tooltip.frostedheart.steam_stored": "蒸汽:%s su",
+  "tooltip.frostedheart.inner": "内衬：",
   "tooltip.frostedheart.double_flint_ignition": "双手同时持燧石便可以当作起火器使用",
 
   "effect.frostedheart.hypothermia": "失温",

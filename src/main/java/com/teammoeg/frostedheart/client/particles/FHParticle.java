@@ -1,27 +1,47 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.client.particles;
 
 import com.mojang.blaze3d.vertex.IVertexBuilder;
-
 import net.minecraft.client.particle.IParticleRenderType;
 import net.minecraft.client.particle.SpriteTexturedParticle;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.MathHelper;
+
 public class FHParticle extends SpriteTexturedParticle {
-	protected float originalScale = 1.3F;
-	protected FHParticle(ClientWorld world, double x, double y, double z) {
-		super(world, x, y, z);
-	}
+    protected float originalScale = 1.3F;
 
-	public FHParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
-		super(world, x, y, z, motionX, motionY, motionZ);
-	}
+    protected FHParticle(ClientWorld world, double x, double y, double z) {
+        super(world, x, y, z);
+    }
 
-	public IParticleRenderType getRenderType() {
-		return IParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
-	}
+    public FHParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
+        super(world, x, y, z, motionX, motionY, motionZ);
+    }
+
+    public IParticleRenderType getRenderType() {
+        return IParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    }
+
     @Override
-    public void renderParticle(IVertexBuilder worldRendererIn,ActiveRenderInfo entityIn, float pt) {
+    public void renderParticle(IVertexBuilder worldRendererIn, ActiveRenderInfo entityIn, float pt) {
         float age = (this.age + pt) / maxAge * 32.0F;
 
         age = MathHelper.clamp(age, 0.0F, 1.0F);
@@ -29,7 +49,8 @@ public class FHParticle extends SpriteTexturedParticle {
         this.particleScale = originalScale * age;
         super.renderParticle(worldRendererIn, entityIn, pt);
     }
-	public void tick() {
+
+    public void tick() {
         this.prevPosX = posX;
         this.prevPosY = posY;
         this.prevPosZ = posZ;
@@ -53,7 +74,7 @@ public class FHParticle extends SpriteTexturedParticle {
             this.motionX *= 0.67D;
             this.motionZ *= 0.67D;
         }
-	}
+    }
 
 
 }

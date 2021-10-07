@@ -31,6 +31,7 @@ import net.minecraft.world.World;
 
 /**
  * The core of our dynamic body & environment temperature system
+ *
  * @author yuesha-yc
  * @author khjxiaogu
  */

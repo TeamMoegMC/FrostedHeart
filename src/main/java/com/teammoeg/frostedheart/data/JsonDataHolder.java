@@ -67,4 +67,8 @@ public class JsonDataHolder {
     public ResourceLocation getResourceLocation(String mem) {
         return JsonHelper.getResourceLocation(data, mem);
     }
+
+    public JsonObject getData() {
+        return data;
+    }
 }

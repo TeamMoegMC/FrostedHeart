@@ -47,12 +47,14 @@ public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
-    public FHStoneMultiblockBlock(String name,Properties props, RegistryObject<TileEntityType<T>> type) {
-        super(name,props);
+
+    public FHStoneMultiblockBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
+        super(name, props);
         this.type = type;
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
+
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);

@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.mixin.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -26,19 +44,16 @@ public class ForgeIngameGuiMixin extends IngameGui {
      * @reason change text position
      */
     @Overwrite(remap = false)
-    public void renderRecordOverlay(int width, int height, float partialTicks, MatrixStack mStack)
-    {
-        if (overlayMessageTime > 0)
-        {
+    public void renderRecordOverlay(int width, int height, float partialTicks, MatrixStack mStack) {
+        if (overlayMessageTime > 0) {
             mc.getProfiler().startSection("overlayMessage");
-            float hue = (float)overlayMessageTime - partialTicks;
-            int opacity = (int)(hue * 255.0F / 20.0F);
+            float hue = (float) overlayMessageTime - partialTicks;
+            int opacity = (int) (hue * 255.0F / 20.0F);
             if (opacity > 255) opacity = 255;
 
-            if (opacity > 8)
-            {
+            if (opacity > 8) {
                 RenderSystem.pushMatrix();
-                RenderSystem.translatef((float)(width / 2), (float)(height - 68), 0.0F);
+                RenderSystem.translatef((float) (width / 2), (float) (height - 68), 0.0F);
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
                 int color = (animateOverlayMessageColor ? MathHelper.hsvToRGB(hue / 50.0F, 0.7F, 0.6F) & 0xFFFFFF : 0xFFFFFF);
@@ -59,8 +74,7 @@ public class ForgeIngameGuiMixin extends IngameGui {
      * @reason change style
      */
     @Overwrite(remap = false)
-    public void renderAir(int width, int height, MatrixStack stack)
-    {
+    public void renderAir(int width, int height, MatrixStack stack) {
         PlayerEntity player = FrostedHud.getRenderViewPlayer();
         if (player == null) return;
         mc.getProfiler().startSection("air");

@@ -97,7 +97,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         }
 
         if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54) && tile.getIsActive()) {
-            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int)tile.power)));
+            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int) tile.power)));
         }
 
         if (!tooltip.isEmpty()) {

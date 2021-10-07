@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.content.generator;
 
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHContent;
 import net.minecraft.item.ItemStack;
@@ -38,21 +37,21 @@ public class GeneratorSteamRecipeSerializer extends IERecipeSerializer<Generator
 
     @Override
     public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-    	FluidTagInput input=FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
-        float power=JSONUtils.getFloat(json,"energy");
-        float tempMod=JSONUtils.getFloat(json,"temp_multiplier");
-        float rangeMod=JSONUtils.getFloat(json,"range_multiplier");
-        return new GeneratorSteamRecipe(recipeId,input,power,tempMod,rangeMod);
+        FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
+        float power = JSONUtils.getFloat(json, "energy");
+        float tempMod = JSONUtils.getFloat(json, "temp_multiplier");
+        float rangeMod = JSONUtils.getFloat(json, "range_multiplier");
+        return new GeneratorSteamRecipe(recipeId, input, power, tempMod, rangeMod);
     }
 
     @Nullable
     @Override
     public GeneratorSteamRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-    	FluidTagInput input=FluidTagInput.read(buffer);
-        float power=buffer.readFloat();
-        float tempMod=buffer.readFloat();
-        float rangeMod=buffer.readFloat();
-        return new GeneratorSteamRecipe(recipeId,input,power,tempMod,rangeMod);
+        FluidTagInput input = FluidTagInput.read(buffer);
+        float power = buffer.readFloat();
+        float tempMod = buffer.readFloat();
+        float rangeMod = buffer.readFloat();
+        return new GeneratorSteamRecipe(recipeId, input, power, tempMod, rangeMod);
     }
 
     @Override

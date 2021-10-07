@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
@@ -30,16 +30,17 @@ import net.minecraft.world.World;
 
 public interface ISteamEnergyBlock {
     public default boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-    	if(world instanceof World) {
-	    	TileEntity te = Utils.getExistingTileEntity((World) world, pos);
-	        if (te instanceof IConnectable) {
-	        	return ((IConnectable) te).canConnectAt(dir);
-	        }
-    	}
+        if (world instanceof World) {
+            TileEntity te = Utils.getExistingTileEntity((World) world, pos);
+            if (te instanceof IConnectable) {
+                return ((IConnectable) te).canConnectAt(dir);
+            }
+        }
         return false;
     }
+
     public default void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
-                                boolean isMoving) {
+                                        boolean isMoving) {
         TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);
         if (te instanceof IConnectable) {
             Vector3i vec = pos.subtract(fromPos);

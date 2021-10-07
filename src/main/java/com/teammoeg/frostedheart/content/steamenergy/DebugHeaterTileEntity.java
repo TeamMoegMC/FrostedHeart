@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -79,9 +79,9 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
         return 3;
     }
 
-	@Override
-	public boolean canConnectAt(Direction to) {
-		return true;
-	}
+    @Override
+    public boolean canConnectAt(Direction to) {
+        return true;
+    }
 
 }

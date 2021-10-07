@@ -16,13 +16,10 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy;
 
-import net.minecraft.util.Direction;
+import net.minecraft.item.ItemStack;
 
-public interface IConnectable {
-    boolean disconnectAt(Direction to);
-
-    boolean connectAt(Direction to);
-    boolean canConnectAt(Direction to);
+public interface IChargable {
+    float charge(ItemStack stack, float value);
 }

@@ -16,10 +16,8 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy;
 
-import net.minecraft.item.ItemStack;
-
-public interface IChargable {
-    float charge(ItemStack stack, float value);
+public interface EnergyNetworkProvider {
+    SteamEnergyNetwork getNetwork();
 }

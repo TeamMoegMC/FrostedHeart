@@ -19,15 +19,14 @@
 package com.teammoeg.frostedheart.content.generator;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.steamenergy.IConnectable;
-import com.teammoeg.frostedheart.steamenergy.ISteamEnergyBlock;
+import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -39,11 +38,11 @@ public class HeatedGeneratorMultiBlock extends NormalGeneratorMultiBlock impleme
 
 
     public HeatedGeneratorMultiBlock(String name, Properties props, RegistryObject type) {
-		super(name, props, type);
-	}
+        super(name, props, type);
+    }
 
 
-	@Override
+    @Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);

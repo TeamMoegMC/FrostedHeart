@@ -75,7 +75,7 @@ public class CuriosCompat {
                     public ItemStack next() {
                         return null;
                     }
-                	
+
                 });
             }
         };

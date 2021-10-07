@@ -16,17 +16,12 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
-
-import java.util.Random;
-
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -40,6 +35,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     private boolean networkinit;
     private boolean isPathFinding;
     private boolean requireRP;
+
     public HeatPipeTileEntity() {
         super(FHContent.FHTileTypes.HEATPIPE.get());
     }
@@ -71,7 +67,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(dMaster));
                 if (te instanceof EnergyNetworkProvider) {
                     SteamEnergyNetwork tnetwork = ((EnergyNetworkProvider) te).getNetwork();
-                    if (tnetwork != null&&tnetwork.isValid()) {
+                    if (tnetwork != null && tnetwork.isValid()) {
                         network = tnetwork;
                     }
                 }
@@ -79,20 +75,22 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
         } finally {
             networkinit = false;
         }
-        if(hasNetwork())
-        	return network;
+        if (hasNetwork())
+            return network;
         return null;
     }
+
     protected boolean hasNetwork() {
-    	return network!=null&&network.isValid();
+        return network != null && network.isValid();
     }
+
     protected void propagate(Direction from, SteamEnergyNetwork newNetwork, int lengthx) {
         if (isPathFinding) return;
         //System.out.println(from);
         try {
             isPathFinding = true;
             final SteamEnergyNetwork network = getNetwork();
-            if (network != null&&network.isValid() && newNetwork != null && network != newNetwork) {//network conflict
+            if (network != null && network.isValid() && newNetwork != null && network != newNetwork) {//network conflict
                 return;//disconnect
             }
             if (newNetwork == null) {
@@ -100,7 +98,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 return;
             }
             //setActive(true);
-            if (hasNetwork()&&length <= lengthx) return;
+            if (hasNetwork() && length <= lengthx) return;
             length = lengthx;
             dMaster = from;
             if (network != newNetwork) {
@@ -249,15 +247,15 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 }
             }
         }
-    	if(network != null&&network.drainHeat(network.getTemperatureLevel() * 0.15F)>=0.15) {
-    		setActive(true);
-    	}else {
-    		setActive(false);
-    	}
+        if (network != null && network.drainHeat(network.getTemperatureLevel() * 0.15F) >= 0.15) {
+            setActive(true);
+        } else {
+            setActive(false);
+        }
     }
 
-	@Override
-	public boolean canConnectAt(Direction to) {
-		return true;
-	}
+    @Override
+    public boolean canConnectAt(Direction to) {
+        return true;
+    }
 }

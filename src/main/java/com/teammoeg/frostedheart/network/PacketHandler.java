@@ -52,6 +52,7 @@ public class PacketHandler {
         });
         //CHANNEL.registerMessage(id++, TemperatureChangePacket.class, TemperatureChangePacket::encode, TemperatureChangePacket::new, TemperatureChangePacket::handle);
         CHANNEL.registerMessage(id++, FHDataSyncPacket.class, FHDataSyncPacket::encode, FHDataSyncPacket::new, FHDataSyncPacket::handle);
+        CHANNEL.registerMessage(id++, FHDatapackSyncPacket.class, FHDatapackSyncPacket::encode, FHDatapackSyncPacket::new, FHDatapackSyncPacket::handle);
     }
 
 }
