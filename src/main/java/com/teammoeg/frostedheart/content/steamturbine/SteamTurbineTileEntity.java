@@ -95,7 +95,7 @@ public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbin
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
             if (!presentOutputs.isEmpty() && EnergyHelper.distributeFlux(presentOutputs, 256, false) < 256) {
-                tanks[0].drain(10, IFluidHandler.FluidAction.EXECUTE);
+                tanks[0].drain(72, IFluidHandler.FluidAction.EXECUTE);
             }
         }
     }
