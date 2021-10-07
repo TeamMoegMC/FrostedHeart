@@ -17,7 +17,7 @@ public class LiningItemOverrideList extends ItemOverrideList {
     @Override
     public IBakedModel getOverrideModel(IBakedModel originalModel, ItemStack stack, @Nullable ClientWorld world, @Nullable LivingEntity entity)
     {
-        //TODO: Use lining nbt, this is jsut from example
+        //TODO: Use lining nbt, this is just from example
         int numberOfChessPieces = 0;
         if (stack != null) {
             numberOfChessPieces = stack.getCount();

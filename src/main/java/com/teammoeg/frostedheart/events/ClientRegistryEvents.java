@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.events;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
@@ -44,11 +45,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 import java.util.Map;
+
+import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
@@ -90,6 +94,7 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
+        //TODO: CHANGE TO ALL ARMOR
         ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation("minecraft:iron_chestplate", "inventory");
         IBakedModel existingModel = event.getModelRegistry().get(itemModelResourceLocation);
         if (existingModel == null) {
@@ -101,4 +106,13 @@ public class ClientRegistryEvents {
             event.getModelRegistry().put(itemModelResourceLocation, customModel);
         }
     }
+
+    @SubscribeEvent
+    public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
+        if (event.getMap().getTextureLocation() == LOCATION_BLOCKS_TEXTURE) {
+            event.addSprite(LiningFinalizedModel.buffCoatTorsoTexture);
+        }
+    }
+
+
 }
