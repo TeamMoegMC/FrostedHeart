@@ -51,7 +51,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbineTileEntity> implements IEBlockInterfaces.IBlockBounds {
-    public FluidTank[] tanks = new FluidTank[]{new FluidTank(24 * FluidAttributes.BUCKET_VOLUME)};
+    public FluidTank tanks = new FluidTank(24 * FluidAttributes.BUCKET_VOLUME);
     public boolean active = false;
     public static Fluid steam = ForgeRegistries.FLUIDS.getValue(new ResourceLocation("steampowered", "steam"));
 
@@ -63,7 +63,7 @@ public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbin
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        tanks[0].readFromNBT(nbt.getCompound("tank0"));
+        tanks.readFromNBT(nbt.getCompound("tank"));
         active = nbt.getBoolean("active");
 
     }
@@ -71,7 +71,7 @@ public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbin
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.put("tank0", tanks[0].writeToNBT(new CompoundNBT()));
+        nbt.put("tank0", tanks.writeToNBT(new CompoundNBT()));
         nbt.putBoolean("active", active);
     }
 
@@ -81,7 +81,7 @@ public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbin
         SteamTurbineTileEntity master = master();
         if (master != null && (posInMultiblock.getZ() == 0 && posInMultiblock.getY() == 1 && posInMultiblock.getX() == 2)
                 && (side == null || side == getFacing().getOpposite()))
-            return master.tanks;
+            return new FluidTank[]{master.tanks};
         return new FluidTank[0];
     }
 
@@ -89,13 +89,13 @@ public class SteamTurbineTileEntity extends MultiblockPartTileEntity<SteamTurbin
     public void tick() {
         checkForNeedlessTicking();
 
-        if (!world.isRemote && !isRSDisabled() && !tanks[0].getFluid().isEmpty()) {
+        if (!world.isRemote && !isRSDisabled() && !tanks.getFluid().isEmpty()) {
             List<IEnergyStorage> presentOutputs = outputs.stream()
                     .map(CapabilityReference::getNullable)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
             if (!presentOutputs.isEmpty() && EnergyHelper.distributeFlux(presentOutputs, 256, false) < 256) {
-                tanks[0].drain(10, IFluidHandler.FluidAction.EXECUTE);
+                tanks.drain(72, IFluidHandler.FluidAction.EXECUTE);
             }
         }
     }
