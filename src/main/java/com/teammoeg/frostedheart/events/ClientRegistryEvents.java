@@ -21,12 +21,14 @@ package com.teammoeg.frostedheart.events;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
 import com.teammoeg.frostedheart.content.crucible.CrucibleScreen;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.util.FHLogger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -34,10 +36,13 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -81,5 +86,19 @@ public class ClientRegistryEvents {
     @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
+    }
+
+    @SubscribeEvent
+    public static void onModelBake(ModelBakeEvent event) {
+        ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation("minecraft:iron_chestplate", "inventory");
+        IBakedModel existingModel = event.getModelRegistry().get(itemModelResourceLocation);
+        if (existingModel == null) {
+            FHLogger.warn("Did not find the expected vanilla baked model for Armor Model in registry");
+        } else if (existingModel instanceof LiningModel) {
+            FHLogger.warn("Tried to replace Armor Model twice");
+        } else {
+            LiningModel customModel = new LiningModel(existingModel);
+            event.getModelRegistry().put(itemModelResourceLocation, customModel);
+        }
     }
 }
