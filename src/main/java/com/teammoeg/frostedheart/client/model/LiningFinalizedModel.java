@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
@@ -22,14 +23,13 @@ import java.util.Random;
 
 public class LiningFinalizedModel implements IBakedModel {
 
-    private int num;
     private IBakedModel parentModel;
-    public static ResourceLocation buffCoatTorsoTexture = FHMain.rl("item/lining_overlay/buff_coat_torso");
+    private ResourceLocation overlay;
 
-    public LiningFinalizedModel(IBakedModel i_parentModel, int i_numberOfChessPieces)
+    public LiningFinalizedModel(IBakedModel i_parentModel, ResourceLocation texture)
     {
         parentModel = i_parentModel;
-        num = i_numberOfChessPieces;
+        overlay = texture;
     }
 
     /**
@@ -46,28 +46,26 @@ public class LiningFinalizedModel implements IBakedModel {
 
     @Override
     public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
-        // our chess pieces are only drawn when side is NULL.
+        // our texture are only drawn when side is NULL.
         if (side != null) {
             return parentModel.getQuads(state, side, rand);
         }
-
         List<BakedQuad> combinedQuadsList = new ArrayList(parentModel.getQuads(state, side, rand));
-        combinedQuadsList.addAll(getLiningQuads(num));
+        combinedQuadsList.addAll(getLiningQuads());
         return combinedQuadsList;
     }
 
-    //TODO
-    private List<BakedQuad> getLiningQuads(int numberOfPieces) {
-
+    private List<BakedQuad> getLiningQuads() {
         List<BakedQuad> returnList = new ArrayList<BakedQuad>(1);
-
-        ResourceLocation liningOverlay = FHMain.rl("item/lining_overlay/buff_coat_torso");
-        AtlasTexture blocksStitchedTextures = ModelLoader.instance().getSpriteMap().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-        TextureAtlasSprite liningOverlayTexture = blocksStitchedTextures.getSprite(liningOverlay);
-
-        BakedQuad liningQuad = createBakedQuadForFace(0.5F, 1.0F, 0.5F, 1.0F, 0.5F, 0, liningOverlayTexture, Direction.SOUTH);
+        TextureAtlasSprite liningOverlayTexture = getItemSprite(overlay);
+        BakedQuad liningQuad = createBakedQuadForFace(0.5F, 1.0F, 0.5F, 1.0F, -0.4375F, 0, liningOverlayTexture, Direction.SOUTH);
         returnList.add(liningQuad);
         return returnList;
+    }
+
+    private TextureAtlasSprite getItemSprite(ResourceLocation modelLocation) {
+        AtlasTexture blocksStitchedTextures = ModelLoader.instance().getSpriteMap().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+        return blocksStitchedTextures.getSprite(modelLocation);
     }
 
     @Override
@@ -288,4 +286,25 @@ public class LiningFinalizedModel implements IBakedModel {
         int z = ((byte)(zn * 127)) & 0xFF;
         return x | (y << 0x08) | (z << 0x10);
     }
+
+    public static ResourceLocation buffCoatFeetTexture = FHMain.rl("item/lining_overlay/buff_coat_feet");
+    public static ResourceLocation buffCoatHelmetTexture = FHMain.rl("item/lining_overlay/buff_coat_helmet");
+    public static ResourceLocation buffCoatLegsTexture = FHMain.rl("item/lining_overlay/buff_coat_legs");
+    public static ResourceLocation buffCoatTorsoTexture = FHMain.rl("item/lining_overlay/buff_coat_torso");
+
+    public static ResourceLocation gambesonFeetTexture = FHMain.rl("item/lining_overlay/gambeson_feet");
+    public static ResourceLocation gambesonHelmetTexture = FHMain.rl("item/lining_overlay/gambeson_helmet");
+    public static ResourceLocation gambesonLegsTexture = FHMain.rl("item/lining_overlay/gambeson_legs");
+    public static ResourceLocation gambesonTorsoTexture = FHMain.rl("item/lining_overlay/gambeson_torso");
+
+    public static ResourceLocation kelpLiningFeetTexture = FHMain.rl("item/lining_overlay/kelp_lining_feet");
+    public static ResourceLocation kelpLiningHelmetTexture = FHMain.rl("item/lining_overlay/kelp_lining_helmet");
+    public static ResourceLocation kelpLiningLegsTexture = FHMain.rl("item/lining_overlay/kelp_lining_legs");
+    public static ResourceLocation kelpLiningTorsoTexture = FHMain.rl("item/lining_overlay/kelp_lining_torso");
+
+    public static ResourceLocation strawLiningFeetTexture = FHMain.rl("item/lining_overlay/straw_lining_feet");
+    public static ResourceLocation strawLiningHelmetTexture = FHMain.rl("item/lining_overlay/straw_lining_helmet");
+    public static ResourceLocation strawLiningLegsTexture = FHMain.rl("item/lining_overlay/straw_lining_legs");
+    public static ResourceLocation strawLiningTorsoTexture = FHMain.rl("item/lining_overlay/straw_lining_torso");
+
 }

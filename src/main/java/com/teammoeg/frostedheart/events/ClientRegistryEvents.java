@@ -41,7 +41,10 @@ import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.item.ArmorItem;
+import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
@@ -49,6 +52,7 @@ import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Map;
 
@@ -94,23 +98,44 @@ public class ClientRegistryEvents {
 
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
-        //TODO: CHANGE TO ALL ARMOR
-        ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation("minecraft:iron_chestplate", "inventory");
-        IBakedModel existingModel = event.getModelRegistry().get(itemModelResourceLocation);
-        if (existingModel == null) {
-            FHLogger.warn("Did not find the expected vanilla baked model for Armor Model in registry");
-        } else if (existingModel instanceof LiningModel) {
-            FHLogger.warn("Tried to replace Armor Model twice");
-        } else {
-            LiningModel customModel = new LiningModel(existingModel);
-            event.getModelRegistry().put(itemModelResourceLocation, customModel);
+        for (ResourceLocation location : event.getModelRegistry().keySet()) {
+            // Now find all armors
+            ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
+            if (ForgeRegistries.ITEMS.getValue(item) instanceof ArmorItem) {
+                ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
+                IBakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
+                if (model == null) {
+                    FHLogger.warn("Did not find the expected vanilla baked model for " + item + " in registry");
+                } else if (model instanceof LiningModel) {
+                    FHLogger.warn("Tried to replace " + item + " twice");
+                } else {
+                    // Replace the model with our IBakedModel
+                    LiningModel customModel = new LiningModel(model);
+                    event.getModelRegistry().put(itemModelResourceLocation, customModel);
+                }
+            }
         }
     }
 
     @SubscribeEvent
     public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
         if (event.getMap().getTextureLocation() == LOCATION_BLOCKS_TEXTURE) {
+            event.addSprite(LiningFinalizedModel.buffCoatFeetTexture);
+            event.addSprite(LiningFinalizedModel.buffCoatLegsTexture);
+            event.addSprite(LiningFinalizedModel.buffCoatHelmetTexture);
             event.addSprite(LiningFinalizedModel.buffCoatTorsoTexture);
+            event.addSprite(LiningFinalizedModel.gambesonLegsTexture);
+            event.addSprite(LiningFinalizedModel.gambesonFeetTexture);
+            event.addSprite(LiningFinalizedModel.gambesonHelmetTexture);
+            event.addSprite(LiningFinalizedModel.gambesonTorsoTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningLegsTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningFeetTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningHelmetTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningTorsoTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningLegsTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningFeetTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningHelmetTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningTorsoTexture);
         }
     }
 
