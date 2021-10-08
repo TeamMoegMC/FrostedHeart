@@ -261,7 +261,8 @@ public class FrostedHud {
         // range: [0, 99]
         int healthState = health == 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
         int absorbState = absorb == 0 ? 0 : MathHelper.ceil(absorb / 20 * 100) - 1;
-
+        if(healthState>99)
+        	healthState=99;
         // range: [0, 9]
         int healthCol = healthState / 10;
         int absorbCol = absorbState / 10;
