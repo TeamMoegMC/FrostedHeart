@@ -177,11 +177,6 @@ public class ClientEvents {
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 
-//        if (event.getType() == RenderGameOverlayEvent.ElementType.AIR && FrostedHud.renderHealth) {
-//            FrostedHud.renderAirBar(stack, anchorX, anchorY, mc, renderViewPlayer);
-//            event.setCanceled(true);
-//        }
-
         if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
             if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
                 mc.ingameGUI.getSpectatorGui().func_238528_a_(stack, partialTicks);
