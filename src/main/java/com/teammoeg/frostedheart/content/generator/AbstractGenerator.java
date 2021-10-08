@@ -20,8 +20,8 @@ package com.teammoeg.frostedheart.content.generator;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 
@@ -90,7 +90,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         //user set shutdown
         if (isUserOperated())
             if (!world.isRemote && formed && !isDummy() && !isWorking()) {
-            	setAllActive(false);
+                setAllActive(false);
                 onShutDown();
                 ChunkData.removeTempAdjust(world, getPos());
             }

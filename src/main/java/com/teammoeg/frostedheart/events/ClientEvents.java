@@ -16,10 +16,10 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.client;
+package com.teammoeg.frostedheart.events;
 
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -31,8 +31,6 @@ import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
@@ -43,8 +41,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameType;
@@ -55,10 +51,10 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import static net.minecraft.util.text.TextFormatting.DARK_RED;
+import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-public class FHClientForgeEvents {
+public class ClientEvents {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
@@ -77,7 +73,7 @@ public class FHClientForgeEvents {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
         if (i == Items.FLINT) {
-            event.getToolTip().add(GuiUtils.translateTooltip("double_flint_ignition").mergeStyle(DARK_RED));
+            event.getToolTip().add(GuiUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
         }
     }
 
@@ -85,9 +81,9 @@ public class FHClientForgeEvents {
     @SubscribeEvent
     public static void addItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-        Item i=stack.getItem();
-        ITempAdjustFood itf=null;
-        IWarmKeepingEquipment iwe=null;
+        Item i = stack.getItem();
+        ITempAdjustFood itf = null;
+        IWarmKeepingEquipment iwe = null;
         if (i instanceof ITempAdjustFood) {
             itf = (ITempAdjustFood) i;
         } else {
@@ -96,56 +92,57 @@ public class FHClientForgeEvents {
         if (i instanceof IWarmKeepingEquipment) {
             iwe = (IWarmKeepingEquipment) i;
         } else {
-        	String s=ItemNBTHelper.getString(stack,"inner_cover");
-        	EquipmentSlotType aes=MobEntity.getSlotForItemStack(stack);
-        	if(s.length()>0&&aes!=null) {
-        		event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GRAY).appendSibling(new TranslationTextComponent("item."+s.replaceFirst(":","."))));
-        		iwe = FHDataManager.getArmor(s+"_"+aes.getName());
-        	}else
-        		iwe = FHDataManager.getArmor(stack);
+            String s = ItemNBTHelper.getString(stack, "inner_cover");
+            EquipmentSlotType aes = MobEntity.getSlotForItemStack(stack);
+            if (s.length() > 0 && aes != null) {
+                event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GRAY).appendSibling(new TranslationTextComponent("item." + s.replaceFirst(":", "."))));
+                iwe = FHDataManager.getArmor(s + "_" + aes.getName());
+            } else
+                iwe = FHDataManager.getArmor(stack);
         }
-        BlockTempData btd=FHDataManager.getBlockData(stack);
-        if(btd!=null) {
-        	float temp=btd.getTemp();
-        	temp=(Math.round(temp*100))/100.0F;//round
-        	String temps=Float.toString(temp);
-        	if(temp!=0)
-        	if(temp>0)
-        		event.getToolTip().add(GuiUtils.translateTooltip("block_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
-        	else
-        		event.getToolTip().add(GuiUtils.translateTooltip("block_temp",temps).mergeStyle(TextFormatting.AQUA));
+        BlockTempData btd = FHDataManager.getBlockData(stack);
+        if (btd != null) {
+            float temp = btd.getTemp();
+            temp = (Math.round(temp * 100)) / 100.0F;//round
+            String temps = Float.toString(temp);
+            if (temp != 0)
+                if (temp > 0)
+                    event.getToolTip().add(GuiUtils.translateTooltip("block_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
+                else
+                    event.getToolTip().add(GuiUtils.translateTooltip("block_temp", temps).mergeStyle(TextFormatting.AQUA));
         }
-        if(itf!=null) {
-        	float temp=itf.getHeat(stack);
-        	temp=(Math.round(temp*1000))/1000.0F;//round
-        	String temps=Float.toString(temp);
-        	if(temp!=0)
-        	if(temp>0)
-        		event.getToolTip().add(GuiUtils.translateTooltip("food_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
-        	else
-        		event.getToolTip().add(GuiUtils.translateTooltip("food_temp",temps).mergeStyle(TextFormatting.AQUA));
+        if (itf != null) {
+            float temp = itf.getHeat(stack);
+            temp = (Math.round(temp * 1000)) / 1000.0F;//round
+            String temps = Float.toString(temp);
+            if (temp != 0)
+                if (temp > 0)
+                    event.getToolTip().add(GuiUtils.translateTooltip("food_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
+                else
+                    event.getToolTip().add(GuiUtils.translateTooltip("food_temp", temps).mergeStyle(TextFormatting.AQUA));
         }
-        if(iwe!=null) {
-        	float temp=iwe.getFactor(null, stack);
-        	temp=Math.round(temp*100);
-        	String temps=Float.toString(temp);
-        	if(temp!=0)
-        	if(temp>0)
-        		event.getToolTip().add(GuiUtils.translateTooltip("armor_warm",temps).mergeStyle(TextFormatting.GOLD));
-        	else
-        		event.getToolTip().add(GuiUtils.translateTooltip("armor_warm",temps).mergeStyle(TextFormatting.AQUA));
+        if (iwe != null) {
+            float temp = iwe.getFactor(null, stack);
+            temp = Math.round(temp * 100);
+            String temps = Float.toString(temp);
+            if (temp != 0)
+                if (temp > 0)
+                    event.getToolTip().add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.GOLD));
+                else
+                    event.getToolTip().add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.AQUA));
         }
-        if(i instanceof IHeatingEquipment) {
-        	float temp=((IHeatingEquipment) i).getMax(stack);
-        	temp=(Math.round(temp*2000))/1000.0F;
-        	String temps=Float.toString(temp);
-        	if(temp!=0)
-        	if(temp>0)
-        		event.getToolTip().add(GuiUtils.translateTooltip("armor_heating","+"+temps).mergeStyle(TextFormatting.GOLD));
-        	else
-        		event.getToolTip().add(GuiUtils.translateTooltip("armor_heating",temps).mergeStyle(TextFormatting.AQUA));
+        if (i instanceof IHeatingEquipment) {
+            float temp = ((IHeatingEquipment) i).getMax(stack);
+            temp = (Math.round(temp * 2000)) / 1000.0F;
+            String temps = Float.toString(temp);
+            if (temp != 0)
+                if (temp > 0)
+                    event.getToolTip().add(GuiUtils.translateTooltip("armor_heating", "+" + temps).mergeStyle(TextFormatting.GOLD));
+                else
+                    event.getToolTip().add(GuiUtils.translateTooltip("armor_heating", temps).mergeStyle(TextFormatting.AQUA));
         }
     }
+
     @SubscribeEvent
     public static void onPostRenderOverlay(RenderGameOverlayEvent.Post event) {
         PlayerEntity player = FrostedHud.getRenderViewPlayer();
@@ -153,7 +150,7 @@ public class FHClientForgeEvents {
         MatrixStack stack = event.getMatrixStack();
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
-        if (event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && player != null && !player.isCreative() && !player.isSpectator() ) {
+        if (event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && player != null && !player.isCreative() && !player.isSpectator()) {
             if (TemperatureCore.getBodyTemperature(player) <= -0.5) {
                 FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
             }
@@ -179,11 +176,6 @@ public class FHClientForgeEvents {
         float partialTicks = event.getPartialTicks();
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
-
-//        if (event.getType() == RenderGameOverlayEvent.ElementType.AIR && FrostedHud.renderHealth) {
-//            FrostedHud.renderAirBar(stack, anchorX, anchorY, mc, renderViewPlayer);
-//            event.setCanceled(true);
-//        }
 
         if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
             if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {

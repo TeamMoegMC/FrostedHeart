@@ -27,7 +27,7 @@ public enum FHDataTypes {
     Biome(new DataType<>(BiomeTempData.class, "biome")),
     Food(new DataType<>(FoodTempData.class, "food")),
     Block(new DataType<>(BlockTempData.class, "block")),
-    Drink(new DataType<>(DrinkTempData.class,"drink"));
+    Drink(new DataType<>(DrinkTempData.class, "drink"));
 
     static class DataType<T extends JsonDataHolder> {
         final Class<T> dataCls;

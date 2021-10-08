@@ -25,7 +25,6 @@ import com.teammoeg.frostedheart.content.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.crucible.CrucibleRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
@@ -95,7 +94,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         GeneratorRecipe.recipeList = filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         CrucibleRecipe.recipeList = filterRecipes(recipes, CrucibleRecipe.class, CrucibleRecipe.TYPE);
         ChargerRecipe.recipeList = filterRecipes(recipes, ChargerRecipe.class, ChargerRecipe.TYPE);
-        GeneratorSteamRecipe.recipeList=filterRecipes(recipes,GeneratorSteamRecipe.class,GeneratorSteamRecipe.TYPE);
+        GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {

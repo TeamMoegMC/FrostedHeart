@@ -39,10 +39,11 @@ public interface IHeatingEquipment {
      * @return returns new body temperature
      */
     float compute(ItemStack stack, float bodyTemp, float environmentTemp);
+
     /**
      * get max temperature delta.<br>
      *
-     * @param stack           the stack<br>
+     * @param stack the stack<br>
      * @return returns max temperature delta
      */
     float getMax(ItemStack stack);

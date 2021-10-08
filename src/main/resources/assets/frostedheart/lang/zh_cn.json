@@ -43,7 +43,10 @@
   "item.frostedheart.wool_hat": "羊毛帽子",
   "item.frostedheart.wool_jacket": "羊毛夹克",
   "item.frostedheart.wool_pants": "羊毛裤子",
-  "item.frostedheart.buff_coat": "内衬",
+  "item.frostedheart.buff_coat": "皮革内衬",
+  "item.frostedheart.gambeson": "羊毛内衬",
+  "item.frostedheart.kelp_lining": "海带内衬",
+  "item.frostedheart.straw_lining": "干草内衬",
   "item.frostedheart.raw_hide": "兽皮",
   "item.frostedheart.steam_bottle": "蒸汽瓶",
   "item.frostedheart.heater_vest": "加热背心",
@@ -54,6 +57,7 @@
   "item.frostedheart.iron_pro_pick": "铁探矿镐",
   "item.frostedheart.steel_pro_pick": "钢探矿镐",
   "item.frostedheart.soil_thermometer": "土壤温度计",
+
   "gui.frostedheart.generator.temperature.level": "温度增幅: ",
   "gui.frostedheart.generator.range.level": "增温范围: ",
   "gui.frostedheart.generator.power.level": "能量: ",
@@ -62,6 +66,7 @@
   "gui.frostedheart.generator.overdrive.on": "开启超频",
   "gui.frostedheart.generator.overdrive.off": "关闭超频",
   "gui.frostedheart.temperature.desc": "平均气温",
+
   "message.frostedheart.vein_size.nothing": "什么都没有",
   "message.frostedheart.vein_size.small": "少量的 ",
   "message.frostedheart.vein_size.medium": "中等的 ",

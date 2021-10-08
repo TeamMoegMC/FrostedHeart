@@ -16,8 +16,9 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.events;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -33,7 +34,7 @@ import net.minecraftforge.fml.common.Mod;
 import static com.teammoeg.frostedheart.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class FHRegistryEvents {
+public class RegistryEvents {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         for (Block block : registeredFHBlocks) {

@@ -20,14 +20,10 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.network.PacketHandler;
-
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +36,7 @@ public class FHDataReloadManager implements IResourceManagerReloadListener {
 
     @Override
     public void onResourceManagerReload(IResourceManager manager) {
-    	FHDataManager.reset();
+        FHDataManager.reset();
         for (FHDataTypes dat : FHDataTypes.values()) {
             for (ResourceLocation rl : manager.getAllResourceLocations(dat.type.getLocation(), (s) -> s.endsWith(".json"))) {
                 try {

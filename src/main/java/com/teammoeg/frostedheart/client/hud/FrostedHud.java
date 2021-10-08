@@ -23,7 +23,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
-import com.teammoeg.frostedheart.util.FHLogger;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -36,8 +35,6 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.settings.AttackIndicatorStatus;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
@@ -49,7 +46,6 @@ import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.system.CallbackI;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -68,7 +64,7 @@ public class FrostedHud {
     public static boolean renderFrozen = true;
 
     public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements_duobus.png");
-//    public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
+    //    public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
     public static final ResourceLocation FROZEN_OVERLAY_1 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_1.png");
     public static final ResourceLocation FROZEN_OVERLAY_2 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_2.png");
     public static final ResourceLocation FROZEN_OVERLAY_3 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_3.png");
@@ -256,7 +252,7 @@ public class FrostedHud {
         float health = player.getHealth();
         //ModifiableAttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         float healthMax =/* (float) attrMaxHealth.getValue()*/player.getMaxHealth();
-        float absorb =player.getAbsorptionAmount(); // let's say max is 20
+        float absorb = player.getAbsorptionAmount(); // let's say max is 20
 
         // range: [0, 99]
         int healthState = health == 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
@@ -275,7 +271,7 @@ public class FrostedHud {
         mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), healthCol * UV.health_bar.w, healthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
         mc.getTextureManager().bindTexture(ABSORPTION);
         mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_outer.getA(), y + BarPos.left_threequarters_outer.getB(), absorbCol * UV.absorption_bar.w, absorbRow * UV.absorption_bar.h, UV.absorption_bar.w, UV.absorption_bar.h, 360, 360);
-        int ihealth=(int) Math.ceil(health);
+        int ihealth = (int) Math.ceil(health);
         int offset = mc.fontRenderer.getStringWidth(String.valueOf(ihealth)) / 2;
         mc.fontRenderer.drawString(stack, String.valueOf(ihealth), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
 

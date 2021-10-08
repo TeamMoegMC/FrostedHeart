@@ -18,14 +18,13 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHEffects;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -44,10 +43,12 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
-	public static final float HEAT_EXCHANGE_CONSTANT=0.0012F;
-	public static final float SELF_HEATING_CONSTANT=0.05F;
+    public static final float HEAT_EXCHANGE_CONSTANT = 0.0012F;
+    public static final float SELF_HEATING_CONSTANT = 0.05F;
+
     /**
      * Perform temperature tick logic
+     *
      * @param event fired every tick on player
      */
     @SubscribeEvent
@@ -58,18 +59,18 @@ public class TemperatureUpdate {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
             if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
                 return;
-            if(player.isInWaterOrBubbleColumn()) {
-            	boolean hasArmor=false;
-            	for(ItemStack is:player.getArmorInventoryList()) {
-            		if(!is.isEmpty()) {
-            			hasArmor=true;
-            			break;
-            		}
-            	}
-            	if(hasArmor)
-            		player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));//punish for wet clothes
-            	else
-            		player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
+            if (player.isInWaterOrBubbleColumn()) {
+                boolean hasArmor = false;
+                for (ItemStack is : player.getArmorInventoryList()) {
+                    if (!is.isEmpty()) {
+                        hasArmor = true;
+                        break;
+                    }
+                }
+                if (hasArmor)
+                    player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));//punish for wet clothes
+                else
+                    player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
             }
             float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
@@ -110,20 +111,20 @@ public class TemperatureUpdate {
                 if (it instanceof IWarmKeepingEquipment) {
                     keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
                 } else {
-                	String s=ItemNBTHelper.getString(is,"inner_cover");
-                	IWarmKeepingEquipment iw=null;
-                	EquipmentSlotType aes=MobEntity.getSlotForItemStack(is);
-                	if(s.length()>0&&aes!=null) {
-                		iw = FHDataManager.getArmor(s+"_"+aes.getName());
-                	}else
-                		iw = FHDataManager.getArmor(is);
+                    String s = ItemNBTHelper.getString(is, "inner_cover");
+                    IWarmKeepingEquipment iw = null;
+                    EquipmentSlotType aes = MobEntity.getSlotForItemStack(is);
+                    if (s.length() > 0 && aes != null) {
+                        iw = FHDataManager.getArmor(s + "_" + aes.getName());
+                    } else
+                        iw = FHDataManager.getArmor(is);
                     if (iw != null)
                         keepwarm += iw.getFactor(player, is);
                 }
             }
             if (keepwarm > 1)
                 keepwarm = 1;
-            current +=  HEAT_EXCHANGE_CONSTANT* (1 - keepwarm) * (envtemp - current);
+            current += HEAT_EXCHANGE_CONSTANT * (1 - keepwarm) * (envtemp - current);
             if (current < -10)
                 current = -10;
             else if (current > 10)
@@ -136,6 +137,7 @@ public class TemperatureUpdate {
 
     /**
      * Perform temperature effect
+     *
      * @param event fired every tick on player
      */
     @SubscribeEvent
@@ -149,35 +151,35 @@ public class TemperatureUpdate {
                     if (!player.isPotionActive(FHEffects.HYPERTHERMIA) && !player.isPotionActive(FHEffects.HYPOTHERMIA)) {
                         if (calculatedTarget > 1) { // too hot
                             if (calculatedTarget <= 2) {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 0));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 0));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else if (calculatedTarget <= 3) {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 1));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 1));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else if (calculatedTarget <= 5) {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 2));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget-2)));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 2)));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             }
                         } else { // too cold
                             if (calculatedTarget >= -2) {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 0));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 0));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else if (calculatedTarget >= -3) {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 1));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 1));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else if (calculatedTarget >= -5) {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 2));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             } else {
-                            	player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (-calculatedTarget-2)));
+                                player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (-calculatedTarget - 2)));
                                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
                                 player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
                             }

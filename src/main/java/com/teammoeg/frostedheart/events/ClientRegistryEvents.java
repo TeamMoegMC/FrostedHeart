@@ -16,17 +16,20 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.client;
+package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
+import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
 import com.teammoeg.frostedheart.content.crucible.CrucibleScreen;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.util.FHLogger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -34,19 +37,29 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.item.ArmorItem;
+import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Map;
 
+import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-public class FHClientModEvents {
+public class ClientRegistryEvents {
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
@@ -82,4 +95,49 @@ public class FHClientModEvents {
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
     }
+
+    @SubscribeEvent
+    public static void onModelBake(ModelBakeEvent event) {
+        for (ResourceLocation location : event.getModelRegistry().keySet()) {
+            // Now find all armors
+            ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
+            if (ForgeRegistries.ITEMS.getValue(item) instanceof ArmorItem) {
+                ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
+                IBakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
+                if (model == null) {
+                    FHLogger.warn("Did not find the expected vanilla baked model for " + item + " in registry");
+                } else if (model instanceof LiningModel) {
+                    FHLogger.warn("Tried to replace " + item + " twice");
+                } else {
+                    // Replace the model with our IBakedModel
+                    LiningModel customModel = new LiningModel(model);
+                    event.getModelRegistry().put(itemModelResourceLocation, customModel);
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onTextureStitchEvent(TextureStitchEvent.Pre event) {
+        if (event.getMap().getTextureLocation() == LOCATION_BLOCKS_TEXTURE) {
+            event.addSprite(LiningFinalizedModel.buffCoatFeetTexture);
+            event.addSprite(LiningFinalizedModel.buffCoatLegsTexture);
+            event.addSprite(LiningFinalizedModel.buffCoatHelmetTexture);
+            event.addSprite(LiningFinalizedModel.buffCoatTorsoTexture);
+            event.addSprite(LiningFinalizedModel.gambesonLegsTexture);
+            event.addSprite(LiningFinalizedModel.gambesonFeetTexture);
+            event.addSprite(LiningFinalizedModel.gambesonHelmetTexture);
+            event.addSprite(LiningFinalizedModel.gambesonTorsoTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningLegsTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningFeetTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningHelmetTexture);
+            event.addSprite(LiningFinalizedModel.kelpLiningTorsoTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningLegsTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningFeetTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningHelmetTexture);
+            event.addSprite(LiningFinalizedModel.strawLiningTorsoTexture);
+        }
+    }
+
+
 }

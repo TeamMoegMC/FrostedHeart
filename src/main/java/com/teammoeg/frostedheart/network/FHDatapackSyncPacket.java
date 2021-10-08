@@ -20,37 +20,39 @@ package com.teammoeg.frostedheart.network;
 
 import com.teammoeg.frostedheart.data.DataEntry;
 import com.teammoeg.frostedheart.data.FHDataManager;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
 public class FHDatapackSyncPacket {
-	DataEntry[] entries;
+    DataEntry[] entries;
+
     public FHDatapackSyncPacket() {
-    	entries=FHDataManager.save();
+        entries = FHDataManager.save();
     }
 
     FHDatapackSyncPacket(PacketBuffer buffer) {
-    	decode(buffer);
+        decode(buffer);
     }
+
     void decode(PacketBuffer buffer) {
-    	entries=new DataEntry[buffer.readVarInt()];
-    	for(int i=0;i<entries.length;i++) {
-    		entries[i]=new DataEntry(buffer);
-    	}
+        entries = new DataEntry[buffer.readVarInt()];
+        for (int i = 0; i < entries.length; i++) {
+            entries[i] = new DataEntry(buffer);
+        }
     }
+
     void encode(PacketBuffer buffer) {
         buffer.writeVarInt(entries.length);
-        for(DataEntry de:entries)
-        	de.encode(buffer);
+        for (DataEntry de : entries)
+            de.encode(buffer);
     }
 
     void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-           FHDataManager.load(entries);
+            FHDataManager.load(entries);
         });
         context.get().setPacketHandled(true);
     }

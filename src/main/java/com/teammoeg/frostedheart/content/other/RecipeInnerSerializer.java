@@ -19,13 +19,11 @@
 package com.teammoeg.frostedheart.content.other;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHContent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
@@ -39,18 +37,18 @@ public class RecipeInnerSerializer extends IERecipeSerializer<RecipeInner> {
     @Override
     public RecipeInner readFromJson(ResourceLocation recipeId, JsonObject json) {
         Ingredient input = Ingredient.deserialize(json.get("input"));
-        return new RecipeInner(recipeId,input);
+        return new RecipeInner(recipeId, input);
     }
 
     @Nullable
     @Override
     public RecipeInner read(ResourceLocation recipeId, PacketBuffer buffer) {
         Ingredient input = Ingredient.read(buffer);
-        return new RecipeInner(recipeId,input);
+        return new RecipeInner(recipeId, input);
     }
 
     @Override
-    public void write(PacketBuffer buffer,RecipeInner recipe) {
+    public void write(PacketBuffer buffer, RecipeInner recipe) {
         recipe.type.write(buffer);
     }
 }

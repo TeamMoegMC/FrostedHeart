@@ -1,70 +1,48 @@
+/*
+ * Copyright (c) 2021 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHFluids;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-import com.teammoeg.frostedheart.data.FHDataManager;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import blusunrize.immersiveengineering.common.util.Utils;
-import gloridifice.watersource.WaterSource;
-import gloridifice.watersource.common.capability.WaterLevelCapability;
-import gloridifice.watersource.helper.FluidHelper;
-import gloridifice.watersource.registry.ItemRegistry;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
+import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.UseAction;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.stats.Stats;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.tags.ITag;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import net.minecraftforge.fluids.capability.ItemFluidContainer;
-import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-import java.util.Optional;
 
-import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
-
-public class HeatDebugItem extends Item  {
+public class HeatDebugItem extends Item {
     public HeatDebugItem(String name) {
         super(new Properties().maxStackSize(1).setNoRepair().group(FHMain.itemGroup));
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
-        
+
     }
 
     public int getUseDuration(ItemStack stack) {
@@ -76,28 +54,27 @@ public class HeatDebugItem extends Item  {
     }
 
 
-
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
-		if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
-		    BlockPos blockpos = ((BlockRayTraceResult)raytraceresult).getPos();
-		    TileEntity te=Utils.getExistingTileEntity(worldIn,blockpos);
-		    if(te instanceof HeatProvider) {
-		    	playerIn.sendMessage(new StringTextComponent("HeatProvider network="+((HeatProvider) te).getNetwork()),playerIn.getUniqueID());
-		    }else if(te instanceof EnergyNetworkProvider) {
-		    	playerIn.sendMessage(new StringTextComponent("EnergyNetworkProvider network="+((EnergyNetworkProvider) te).getNetwork()),playerIn.getUniqueID());
-		    }
-		    try {
-				if(te!=null&&te.getClass().getMethod("getNetwork")!=null) {
-					Object nw=te.getClass().getMethod("getNetwork").invoke(te);
-					playerIn.sendMessage(new StringTextComponent("Other tile network="+nw),playerIn.getUniqueID());
-				}
-			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-				// TODO Auto-generated catch block
-			}
-		    return ActionResult.resultSuccess(itemstack);
-		}
-		return ActionResult.resultFail(itemstack);
+        if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
+            BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
+            TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
+            if (te instanceof HeatProvider) {
+                playerIn.sendMessage(new StringTextComponent("HeatProvider network=" + ((HeatProvider) te).getNetwork()), playerIn.getUniqueID());
+            } else if (te instanceof EnergyNetworkProvider) {
+                playerIn.sendMessage(new StringTextComponent("EnergyNetworkProvider network=" + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
+            }
+            try {
+                if (te != null && te.getClass().getMethod("getNetwork") != null) {
+                    Object nw = te.getClass().getMethod("getNetwork").invoke(te);
+                    playerIn.sendMessage(new StringTextComponent("Other tile network=" + nw), playerIn.getUniqueID());
+                }
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                // TODO Auto-generated catch block
+            }
+            return ActionResult.resultSuccess(itemstack);
+        }
+        return ActionResult.resultFail(itemstack);
     }
 }

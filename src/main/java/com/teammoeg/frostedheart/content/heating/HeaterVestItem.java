@@ -20,12 +20,11 @@ package com.teammoeg.frostedheart.content.heating;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestModel;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
-import com.teammoeg.frostedheart.climate.IHeatingEquipment;
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
-
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -36,7 +35,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -112,9 +110,9 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
         return this.receiveEnergy(stack, (int) value, false);
     }
 
-	@Override
-	public float getMax(ItemStack stack) {
-		return 0.25F;
-	}
+    @Override
+    public float getMax(ItemStack stack) {
+        return 0.25F;
+    }
 
 }

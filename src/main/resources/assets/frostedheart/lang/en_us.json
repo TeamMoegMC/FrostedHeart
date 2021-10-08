@@ -35,6 +35,10 @@
   "item.frostedheart.wool_hat": "Wool Hat",
   "item.frostedheart.wool_jacket": "Wool Jacket",
   "item.frostedheart.wool_pants": "Wool Pants",
+  "item.frostedheart.buff_coat": "Buff Coat",
+  "item.frostedheart.gambeson": "Gambeson",
+  "item.frostedheart.kelp_lining": "Kelp Lining",
+  "item.frostedheart.straw_lining": "Straw Lining",
   "item.frostedheart.raw_hide": "Raw Hide",
   "item.frostedheart.raw_rye_bread": "Raw Rye Bread",
   "item.frostedheart.rye_flour": "Rye Flour",
@@ -53,6 +57,7 @@
   "item.frostedheart.iron_pro_pick": "Iron Prospector Pick",
   "item.frostedheart.steel_pro_pick": "Steel Prospector Pick",
   "item.frostedheart.soil_thermometer": "Soil Thermometer",
+
   "gui.frostedheart.generator.temperature.level": "Temperature Increment: ",
   "gui.frostedheart.generator.range.level": "Range: ",
   "gui.frostedheart.generator.power.level": "Power: ",
@@ -61,6 +66,7 @@
   "gui.frostedheart.generator.overdrive.on": "Turn On Overdrive",
   "gui.frostedheart.generator.overdrive.off": "Turn Off Overdrive",
   "gui.frostedheart.temperature.desc": "Average Temperature",
+
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under ",
   "message.frostedheart.info.thermometerbody": "Body Temperature:%s °C",
