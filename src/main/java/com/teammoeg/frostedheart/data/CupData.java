@@ -19,24 +19,13 @@
 package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
-import net.minecraft.network.PacketBuffer;
 
-public class DataEntry {
-    FHDataType type;
-    String data;
+public class CupData extends JsonDataHolder {
 
-    public DataEntry(FHDataType type, JsonObject data) {
-        this.type = type;
-        this.data = data.toString();
+    public CupData(JsonObject data) {
+        super(data);
     }
-
-    public DataEntry(PacketBuffer buffer) {
-        this.type = FHDataType.values()[buffer.readVarInt()];
-        this.data = buffer.readString();
-    }
-
-    public void encode(PacketBuffer buffer) {
-        buffer.writeVarInt(type.ordinal());
-        buffer.writeString(data);
+    public Float getEfficiency() {
+        return this.getFloat("efficiency");
     }
 }

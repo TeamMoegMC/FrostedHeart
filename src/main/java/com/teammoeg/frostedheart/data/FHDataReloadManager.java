@@ -37,7 +37,7 @@ public class FHDataReloadManager implements IResourceManagerReloadListener {
     @Override
     public void onResourceManagerReload(IResourceManager manager) {
         FHDataManager.reset();
-        for (FHDataTypes dat : FHDataTypes.values()) {
+        for (FHDataType dat : FHDataType.values()) {
             for (ResourceLocation rl : manager.getAllResourceLocations(dat.type.getLocation(), (s) -> s.endsWith(".json"))) {
                 try {
                     try (IResource rc = manager.getResource(rl);

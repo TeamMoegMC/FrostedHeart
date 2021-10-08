@@ -5,6 +5,7 @@
     "watersource:purified_water",
     "watersource:coconut_milk",
     "watersource:soul_water",
-    "frostedheart:hot_water"
+    "frostedheart:hot_water",
+    "minecraft:lava"
   ]
 }

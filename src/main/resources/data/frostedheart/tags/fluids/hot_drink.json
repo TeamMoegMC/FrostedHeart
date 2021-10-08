@@ -1,6 +1,7 @@
 {
     "replace": false,
     "values": [
-      "frostedheart:hot_water"
+      "frostedheart:hot_water",
+      "minecraft:lava"
     ]
 }

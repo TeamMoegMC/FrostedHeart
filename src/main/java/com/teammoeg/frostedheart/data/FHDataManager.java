@@ -26,7 +26,10 @@ import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -60,29 +63,31 @@ public class FHDataManager {
     public static final ResourceMap<BiomeTempData> biomeData = new ResourceMap<>();
     public static final ResourceMap<BlockTempData> blockData = new ResourceMap<>();
     public static final ResourceMap<DrinkTempData> drinkData = new ResourceMap<>();
-    public static final EnumMap<FHDataTypes, ResourceMap> datas = new EnumMap<>(FHDataTypes.class);
+    public static final ResourceMap<CupData> cupData = new ResourceMap<>();
+    public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
     public static boolean synched = false;
     private static final JsonParser parser = new JsonParser();
 
     static {
-        datas.put(FHDataTypes.Armor, armorData);
-        datas.put(FHDataTypes.Biome, biomeData);
-        datas.put(FHDataTypes.Block, blockData);
-        datas.put(FHDataTypes.Food, foodData);
-        datas.put(FHDataTypes.Drink, drinkData);
+        ALL_DATA.put(FHDataType.Armor, armorData);
+        ALL_DATA.put(FHDataType.Biome, biomeData);
+        ALL_DATA.put(FHDataType.Block, blockData);
+        ALL_DATA.put(FHDataType.Food, foodData);
+        ALL_DATA.put(FHDataType.Drink, drinkData);
+        ALL_DATA.put(FHDataType.Cup, cupData);
     }
 
     public static final void reset() {
         synched = false;
-        for (ResourceMap rm : datas.values())
+        for (ResourceMap rm : ALL_DATA.values())
             rm.clear();
     }
 
     @SuppressWarnings("unchecked")
-    public static final void register(FHDataTypes dt, JsonObject data) {
+    public static final void register(FHDataType dt, JsonObject data) {
         JsonDataHolder jdh = dt.type.create(data);
         //System.out.println("registering "+dt.type.location+": "+jdh.getId());
-        datas.get(dt).put(jdh.getId(), jdh);
+        ALL_DATA.get(dt).put(jdh.getId(), jdh);
         synched = false;
     }
 
@@ -92,18 +97,18 @@ public class FHDataManager {
         for (DataEntry de : entries) {
             JsonDataHolder jdh = de.type.type.create(parser.parse(de.data).getAsJsonObject());
             //System.out.println("registering "+dt.type.location+": "+jdh.getId());
-            datas.get(de.type).put(jdh.getId(), jdh);
+            ALL_DATA.get(de.type).put(jdh.getId(), jdh);
         }
     }
 
     public static final DataEntry[] save() {
         int tsize = 0;
-        for (ResourceMap map : datas.values()) {
+        for (ResourceMap map : ALL_DATA.values()) {
             tsize += map.size();
         }
         DataEntry[] entries = new DataEntry[tsize];
         int i = -1;
-        for (Entry<FHDataTypes, ResourceMap> entry : datas.entrySet()) {
+        for (Entry<FHDataType, ResourceMap> entry : ALL_DATA.entrySet()) {
             for (Object jdh : entry.getValue().values()) {
                 entries[++i] = new DataEntry(entry.getKey(), ((JsonDataHolder) jdh).getData());
             }
@@ -112,6 +117,10 @@ public class FHDataManager {
     }
 
     public static ITempAdjustFood getFood(ItemStack is) {
+    	CupData data=cupData.get(is.getItem().getRegistryName());
+    	if(data!=null) {
+    		return new CupTempAdjustProxy(data.getEfficiency(),foodData.get(is.getItem().getRegistryName()));
+    	}
         return foodData.get(is.getItem().getRegistryName());
     }
 
@@ -135,7 +144,6 @@ public class FHDataManager {
     public static BlockTempData getBlockData(Block b) {
         return blockData.get(b.getRegistryName());
     }
-
     public static BlockTempData getBlockData(ItemStack b) {
         return blockData.get(b.getItem().getRegistryName());
     }

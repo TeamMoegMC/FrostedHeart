@@ -22,12 +22,13 @@ import com.google.gson.JsonObject;
 
 import java.lang.reflect.InvocationTargetException;
 
-public enum FHDataTypes {
+public enum FHDataType {
     Armor(new DataType<>(ArmorTempData.class, "armor")),
     Biome(new DataType<>(BiomeTempData.class, "biome")),
     Food(new DataType<>(FoodTempData.class, "food")),
     Block(new DataType<>(BlockTempData.class, "block")),
-    Drink(new DataType<>(DrinkTempData.class, "drink"));
+    Drink(new DataType<>(DrinkTempData.class, "drink")),
+    Cup(new DataType<>(CupData.class,"cup"));
 
     static class DataType<T extends JsonDataHolder> {
         final Class<T> dataCls;
@@ -55,7 +56,7 @@ public enum FHDataTypes {
 
     public final DataType type;
 
-    private FHDataTypes(DataType type) {
+    private FHDataType(DataType type) {
         this.type = type;
     }
 

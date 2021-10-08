@@ -95,7 +95,7 @@ public class ClientEvents {
             String s = ItemNBTHelper.getString(stack, "inner_cover");
             EquipmentSlotType aes = MobEntity.getSlotForItemStack(stack);
             if (s.length() > 0 && aes != null) {
-                event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GRAY).appendSibling(new TranslationTextComponent("item." + s.replaceFirst(":", "."))));
+                event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GREEN).appendSibling(new TranslationTextComponent("item." + s.replaceFirst(":", "."))));
                 iwe = FHDataManager.getArmor(s + "_" + aes.getName());
             } else
                 iwe = FHDataManager.getArmor(stack);
