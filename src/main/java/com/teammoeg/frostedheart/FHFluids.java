@@ -41,8 +41,19 @@ public class FHFluids {
         return new ForgeFlowingFluid.Flowing(FHFluids.HOT_WATER_PROPERTIES);
     });
 
+    public static RegistryObject<FlowingFluid> STEAM = FLUIDS.register("steam", () -> {
+        return new ForgeFlowingFluid.Source(FHFluids.STEAM_PROPERTIES);
+    });
+    public static RegistryObject<FlowingFluid> STEAM_FLOWING = FLUIDS.register("steam_flowing", () -> {
+        return new ForgeFlowingFluid.Flowing(FHFluids.STEAM_PROPERTIES);
+    });
+
     public static ForgeFlowingFluid.Properties HOT_WATER_PROPERTIES =
             new ForgeFlowingFluid.Properties(HOT_WATER, HOT_WATER_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
                     .color(0x3ABDFF).viscosity(1000))
                     .slopeFindDistance(3).explosionResistance(100F);
+    public static ForgeFlowingFluid.Properties STEAM_PROPERTIES =
+            new ForgeFlowingFluid.Properties(STEAM, STEAM_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
+                    .color(0xFFFFFF).viscosity(1000))
+                    .slopeFindDistance(1).explosionResistance(100F);
 }

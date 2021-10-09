@@ -55,10 +55,11 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     float power = 0;
     SteamEnergyNetwork sen = null;
-    float spowerMod;
-    float srangeMod;
-    float stempMod;
+    float spowerMod=0;
+    float srangeMod=1;
+    float stempMod=1;
     int liquidtick=0;
+    int noliquidtick=0;
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
@@ -84,7 +85,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         nbt.put("fluid", tankx);
     }
 
-    public FluidTank tank = new FluidTank(1024 * FluidAttributes.BUCKET_VOLUME, f -> GeneratorSteamRecipe.findRecipe(f) != null);
+    public FluidTank tank = new FluidTank(20 * FluidAttributes.BUCKET_VOLUME, f -> GeneratorSteamRecipe.findRecipe(f) != null);
 
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
@@ -106,116 +107,54 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         return false;
     }
 
-    //we have to override all
-    @Override
-    protected void tickFuel() {
-    	/*for(BlockPos nw:networkTile) {
-    		TileEntity te = Utils.getExistingTileEntity(world,this.getBlockPosForPos(nw));
-            if (te instanceof T2GeneratorTileEntity) {
-                ((T2GeneratorTileEntity) te).connectAt(Direction.DOWN);
-                //System.out.println(((T2GeneratorTileEntity) te).offsetToMaster.getY());
-            }
-    	}*/
-        // just finished process or during process
-        if (process > 0) {
-            if (isOverdrive() && !isActualOverdrive()) {
-                GeneratorRecipe recipe = getRecipe();
-                if (recipe != null) {
-                    int count = recipe.input.getCount();
-                    if (inventory.get(INPUT_SLOT).getCount() >= 4 * count) {
-                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -4 * count);
-                        if (currentItem != null) {
-                            if (!inventory.get(OUTPUT_SLOT).isEmpty())
-                                inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
-                            else
-                                inventory.set(OUTPUT_SLOT, currentItem);
-                            currentItem = null;
-                        }
-                        currentItem = recipe.output.copy();
-                        currentItem.setCount(4 * currentItem.getCount());
-                        this.process += recipe.time * 4;
-                        this.processMax += recipe.time * 4;
-                        this.spowerMod = 0;
-                        this.srangeMod = 1;
-                        this.stempMod = 1;
-                        GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
-                        if (sgr != null) {
-                            int actualDrain = recipe.time * this.getTemperatureLevel() * sgr.input.getAmount();
-                            FluidStack fs = this.tank.drain(actualDrain, FluidAction.SIMULATE);
-                            if (fs.getAmount() >= actualDrain) {
-                                this.spowerMod = sgr.power;
-                                this.srangeMod = sgr.rangeMod;
-                                this.stempMod = sgr.tempMod;
-                                this.tank.drain(actualDrain, FluidAction.EXECUTE);
-                            }
-                        }
-                        setActualOverdrive(true);
-                    }
-                }
-            }
-            if (isActualOverdrive())
-                process -= 4;
-            else
-                process--;
-            if (spowerMod != 0) {
-                this.power += spowerMod * this.getTemperatureLevel();
-                if (power >= getMaxPower())
-                    power = getMaxPower();
-            }
-            this.markContainingBlockForUpdate(null);
-        }
-        // process not started yet
-        else {
-            if (currentItem != null) {
-                if (!inventory.get(OUTPUT_SLOT).isEmpty())
-                    inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
-                else
-                    inventory.set(OUTPUT_SLOT, currentItem);
-                currentItem = null;
-            }
-            GeneratorRecipe recipe = getRecipe();
-            if (recipe != null) {
-                int modifier = 1;
-                if (isOverdrive() && inventory.get(INPUT_SLOT).getCount() >= 4 * recipe.input.getCount()) {
-                    if (!isActualOverdrive())
-                        this.setActualOverdrive(true);
-                    modifier = 4;
-                } else if (isActualOverdrive()) {
-                    this.setActualOverdrive(false);
-                }
-                int count = recipe.input.getCount() * modifier;
-                Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
-                currentItem = recipe.output.copy();
-                currentItem.setCount(currentItem.getCount() * modifier);
-                this.process = recipe.time * modifier;
-                this.processMax = process;
-                GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
-                if (sgr != null) {
-                    int actualDrain = recipe.time * this.getTemperatureLevel() * sgr.input.getAmount();
-                    FluidStack fs = this.tank.drain(actualDrain, FluidAction.SIMULATE);
-                    if (fs.getAmount() >= actualDrain) {
-                        if (this.stempMod != sgr.tempMod || this.srangeMod != sgr.rangeMod)
-                            this.markChanged(true);
-                        this.spowerMod = sgr.power;
-                        this.srangeMod = sgr.rangeMod;
-                        this.stempMod = sgr.tempMod;
-                        this.tank.drain(actualDrain, FluidAction.EXECUTE);
-                    }
-                } else {
-                    this.spowerMod = 0;
-                    this.srangeMod = 1;
-                    this.stempMod = 1;
-                }
-                setActive(true);
-            } else {
-                this.process = 0;
-                processMax = 0;
-                setActive(false);
+    protected void tickLiquid() {
+    	if(!this.getIsActive())return;
+    	int rt=this.getTemperatureLevel();
+    	if(rt==0) {
+            this.spowerMod = 0;
+            this.srangeMod = 1;
+            this.stempMod = 1;
+    	}
+    	if(noliquidtick>0) {
+    		noliquidtick--;
+    	}
+    	if(liquidtick>=rt) {
+    		liquidtick-=rt;
+    		
+    		this.power+=this.spowerMod*rt;
+    		if(this.power>=this.getMaxPower())
+    			this.power=this.getMaxPower();
+    		return;
+    	}
+        GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
+        if (sgr != null) {
+        	int rdrain=(int) (20 * super.getTemperatureLevel()*sgr.tempMod);
+            int actualDrain =  rdrain* sgr.input.getAmount();
+            FluidStack fs = this.tank.drain(actualDrain, FluidAction.SIMULATE);
+            if (fs.getAmount() >= actualDrain) {
+            	if (this.stempMod != sgr.tempMod || this.srangeMod != sgr.rangeMod)
+                    this.markChanged(true);
+                this.spowerMod = sgr.power;
+                this.srangeMod = sgr.rangeMod;
+                this.stempMod = sgr.tempMod;
+                this.liquidtick=rdrain;
+                this.tank.drain(actualDrain, FluidAction.EXECUTE);
+                return;
             }
         }
+        noliquidtick=40;
+        this.spowerMod = 0;
+        this.srangeMod = 1;
+        this.stempMod = 1;
     }
 
     @Override
+	protected void tickFuel() {
+		super.tickFuel();
+		this.tickLiquid();
+	}
+
+	@Override
     protected void setAllActive(boolean state) {
         for (int x = 0; x < 3; ++x)
             for (int y = 0; y < 7; ++y)

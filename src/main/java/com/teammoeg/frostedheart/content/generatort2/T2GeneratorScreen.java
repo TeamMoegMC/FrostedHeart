@@ -92,11 +92,14 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
             tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(Integer.toString(tile.getActualTemp())));
         }
 
-        if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54) && tile.getIsActive()) {
-            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+        if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {
+        	if(tile.getIsActive())
+        		tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+        	else
+        		tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(0)));
         }
 
-        if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54) && tile.getIsActive()) {
+        if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54)) {
             tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int) tile.power)));
         }
 
@@ -146,11 +149,9 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         }
 
         // power
-        if (tile.getIsActive()) {
-            int offset = (int) ((1 - powerRatio) * 56);
-            int bar = (int) (powerRatio * 56);
-            this.blit(transform, guiLeft + 146, guiTop + offset + 12, 181, 30, 2, bar);
-        }
+        int offset = (int) ((1 - powerRatio) * 56);
+        int bar = (int) (powerRatio * 56);
+        this.blit(transform, guiLeft + 146, guiTop + offset + 12, 181, 30, 2, bar);
     }
 
     @Override
