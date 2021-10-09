@@ -44,7 +44,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
     public static final float HEAT_EXCHANGE_CONSTANT = 0.0012F;
-    public static final float SELF_HEATING_CONSTANT = 0.05F;
+    public static final float SELF_HEATING_CONSTANT = 0.024F;
 
     /**
      * Perform temperature tick logic
