@@ -68,6 +68,7 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue alwaysKeepInventory;
         public final ForgeConfigSpec.BooleanValue fixEssJeiIssue;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> developers;
+        public final ForgeConfigSpec.EnumValue<FHDifficulty> tdiffculty;
 
         Server(ForgeConfigSpec.Builder builder) {
             alwaysKeepInventory = builder
@@ -81,6 +82,8 @@ public class FHConfig {
             developers = builder
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
+            tdiffculty=builder.comment("Temperature System difficulty","Easy=Strong body","Normal=Average","Hard=Reality","Hardcore=Sick body")
+            		.defineEnum("temperatureDifficulty",FHDifficulty.Normal);
         }
     }
 

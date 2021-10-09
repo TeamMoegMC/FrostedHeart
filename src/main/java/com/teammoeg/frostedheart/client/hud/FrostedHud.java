@@ -233,10 +233,12 @@ public class FrostedHud {
         mc.ingameGUI.blit(stack, x + BasePos.exp_bar.getA(), y + BasePos.exp_bar.getB(), UV.exp_bar_frame.x, UV.exp_bar_frame.y, UV.exp_bar_frame.w, UV.exp_bar_frame.h);
 //        double startTemp = -0.5, endTemp = -3.0;
 //        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), endTemp)) - Math.abs(startTemp)) / (Math.abs(endTemp) - Math.abs(startTemp)) * 181.0F);
-        int stage1length = calculateHypoBarLength(-0.5, -2.0, player);
+        int stage1length = calculateHypoBarLength(-0.5, -1.0, player);
         int stage2length = calculateHypoBarLength(-2.0, -3.0, player);
-        mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA() + 1, y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, stage1length, UV.hypothermia_bar.h);
-        mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA() + 1, y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y + 6, stage2length, UV.hypothermia_bar.h);
+        if(stage1length>0)
+        	mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA() + 1, y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y, stage1length, UV.hypothermia_bar.h);
+        if(stage2length>0)
+        	mc.ingameGUI.blit(stack, x + BarPos.exp_bar.getA() + 1, y + BarPos.exp_bar.getB(), UV.hypothermia_bar.x, UV.hypothermia_bar.y + 6, stage2length, UV.hypothermia_bar.h);
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }

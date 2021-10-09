@@ -19,6 +19,8 @@
 package com.teammoeg.frostedheart.climate;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
@@ -35,9 +37,12 @@ import net.minecraft.potion.Effects;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.network.PacketDistributor;
 
@@ -52,11 +57,12 @@ public class TemperatureUpdate {
      * @param event fired every tick on player
      */
     @SubscribeEvent
-    public static void updateTemperature(LivingEvent.LivingUpdateEvent event) {
-        if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
-                && event.getEntityLiving() instanceof ServerPlayerEntity) {
+    public static void updateTemperature(PlayerTickEvent event) {
+        if (event.side==LogicalSide.SERVER&&event.phase==Phase.START
+                && event.player instanceof ServerPlayerEntity) {
 
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
+            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+            
             if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
                 return;
             if (player.isInWaterOrBubbleColumn()) {
@@ -74,7 +80,7 @@ public class TemperatureUpdate {
             }
             float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
-                current += SELF_HEATING_CONSTANT;
+                current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player);
             World world = player.getEntityWorld();
             BlockPos pos = player.getPosition();
             float envtemp = ChunkData.getTemperature(world, pos);
@@ -141,10 +147,10 @@ public class TemperatureUpdate {
      * @param event fired every tick on player
      */
     @SubscribeEvent
-    public static void regulateTemperature(LivingUpdateEvent event) {
-        if (event.getEntityLiving() != null && !(event.getEntityLiving()).world.isRemote
-                && event.getEntityLiving() instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
+    public static void regulateTemperature(PlayerTickEvent event) {
+    	if (event.side==LogicalSide.SERVER&&event.phase==Phase.END
+                && event.player instanceof ServerPlayerEntity){
+            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             double calculatedTarget = TemperatureCore.getBodyTemperature(player);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
