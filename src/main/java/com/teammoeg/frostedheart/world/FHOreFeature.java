@@ -136,7 +136,6 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
                                             Block b = worldIn.getBlockState(blockpos$mutable).getBlock();
                                             ResourceLocation rs = b.getRegistryName();
                                             if (config.target.test(worldIn.getBlockState(blockpos$mutable), random)) {
-                                                if (config.state.getBlock() instanceof RankineOreBlock) {
                                                     if (rs.getNamespace().equals("rankine")) {
                                                         switch (rs.getPath()) {
                                                             case "gray_granite":
@@ -311,7 +310,6 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
                                                         ++i;
                                                     }
                                                 }
-                                            }
                                         }
                                     }
                                 }
