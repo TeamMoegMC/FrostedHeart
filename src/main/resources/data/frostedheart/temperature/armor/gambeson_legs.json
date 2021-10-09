@@ -1,0 +1,11 @@
+{
+  "id": "frostedheart:gambeson_legs",
+  "factor": 0.2,
+  "fire": -0.23,
+  "water": -0.3,
+  "wet": -0.2,
+  "snow": -0.1,
+  "rain": -0.1,
+  "min": 0,
+  "max": 1
+}
