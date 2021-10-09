@@ -58,7 +58,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     float spowerMod;
     float srangeMod;
     float stempMod;
-
+    int liquidtick=0;
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
@@ -66,6 +66,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         srangeMod = nbt.getFloat("steam_range");
         stempMod = nbt.getFloat("steam_temp");
         spowerMod = nbt.getFloat("steam_product");
+        liquidtick=nbt.getInt("liquid_tick");
         tank.readFromNBT(nbt.getCompound("fluid"));
 
     }
@@ -79,6 +80,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         nbt.putFloat("steam_range", srangeMod);
         nbt.putFloat("steam_temp", stempMod);
         nbt.putFloat("steam_product", spowerMod);
+        nbt.putFloat("liquid_tick",liquidtick);
         nbt.put("fluid", tankx);
     }
 
