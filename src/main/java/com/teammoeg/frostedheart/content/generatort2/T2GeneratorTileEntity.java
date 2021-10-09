@@ -82,7 +82,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         nbt.put("fluid", tankx);
     }
 
-    public FluidTank tank = new FluidTank(20 * FluidAttributes.BUCKET_VOLUME, f -> GeneratorSteamRecipe.findRecipe(f) != null);
+    public FluidTank tank = new FluidTank(1024 * FluidAttributes.BUCKET_VOLUME, f -> GeneratorSteamRecipe.findRecipe(f) != null);
 
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
