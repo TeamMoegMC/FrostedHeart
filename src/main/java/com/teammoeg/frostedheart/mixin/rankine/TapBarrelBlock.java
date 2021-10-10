@@ -35,7 +35,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 @Mixin(TapBarrelBlock.class)
 class TapBarrelBlockMixin {
     /**
-     * @author
+     * @author dashuaibia
+     * @reason fix bug
      */
     @Overwrite
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
