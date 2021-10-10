@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.climate;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -39,8 +38,6 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
@@ -65,7 +62,7 @@ public class TemperatureUpdate {
             
             if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
                 return;
-            if (player.isInWaterOrBubbleColumn()) {
+            if (player.isInWater()) {
                 boolean hasArmor = false;
                 for (ItemStack is : player.getArmorInventoryList()) {
                     if (!is.isEmpty()) {
