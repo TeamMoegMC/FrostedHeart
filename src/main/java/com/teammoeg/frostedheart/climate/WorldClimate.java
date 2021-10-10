@@ -46,10 +46,10 @@ public class WorldClimate {
      * @param w the world<br>
      * @return world temperature<br>
      */
-    public static byte getWorldTemperature(IWorldReader w, BlockPos pos) {
-        Byte temp = FHDataManager.getBiomeTemp(w.getBiome(pos));
+    public static float getWorldTemperature(IWorldReader w, BlockPos pos) {
+        Float temp = FHDataManager.getBiomeTemp(w.getBiome(pos));
         if (temp != null)
-            return (byte) MathHelper.clamp(WORLD_TEMPERATURE + temp, -127, 127);
+            return  MathHelper.clamp(WORLD_TEMPERATURE + temp, -127, 127);
         return WORLD_TEMPERATURE;
     }
 }

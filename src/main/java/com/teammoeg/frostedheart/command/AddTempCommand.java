@@ -28,7 +28,7 @@ public class AddTempCommand {
         			ChunkData.addCubicTempAdjust(ct.getSource().getWorld(),
         					BlockPosArgument.getBlockPos(ct,"position"),
         					IntegerArgumentType.getInteger(ct,"range"),
-        					(byte)IntegerArgumentType.getInteger(ct,"temperature"));
+        					IntegerArgumentType.getInteger(ct,"temperature"));
         			return Command.SINGLE_SUCCESS;
         }))));
         dispatcher.register(Commands.literal(FHMain.MODID)

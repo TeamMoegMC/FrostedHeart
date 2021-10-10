@@ -26,13 +26,10 @@ import net.minecraft.util.math.BlockPos;
  * Spheric Temperature Adjust, would adjust temperature in a ball.
  */
 public class SphericTemperatureAdjust extends CubicTemperatureAdjust {
-    public SphericTemperatureAdjust(BlockPos heatPos, int range, byte tempMod) {
-        super(heatPos, range, tempMod);
-    }
 
     long r2;
 
-    public SphericTemperatureAdjust(int cx, int cy, int cz, int r, byte value) {
+    public SphericTemperatureAdjust(int cx, int cy, int cz, int r, int value) {
         super(cx, cy, cz, r, value);
         r2 = r * r;
     }
@@ -47,7 +44,12 @@ public class SphericTemperatureAdjust extends CubicTemperatureAdjust {
         r2 = r * r;
     }
 
-    @Override
+    public SphericTemperatureAdjust(BlockPos heatPos, int range, int tempMod) {
+    	super(heatPos,range,tempMod);
+    	r2=r*r;
+	}
+
+	@Override
     public boolean isEffective(int x, int y, int z) {
         long l = (long) Math.pow(x - cx, 2);
         l += (long) Math.pow(y - cy, 2);

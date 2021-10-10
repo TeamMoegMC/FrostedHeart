@@ -171,7 +171,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param range   the distance from the heatPos to the boundary
      * @param tempMod the temperature added
      */
-    public static void addCubicTempAdjust(IWorld world, BlockPos heatPos, int range, byte tempMod) {
+    public static void addCubicTempAdjust(IWorld world, BlockPos heatPos, int range, int tempMod) {
         removeTempAdjust(world, heatPos);//remove current first
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
@@ -232,7 +232,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param range   the distance from the heatPos to the boundary
      * @param tempMod the temperature added
      */
-    public static void addSphericTempAdjust(IWorld world, BlockPos heatPos, int range, byte tempMod) {
+    public static void addSphericTempAdjust(IWorld world, BlockPos heatPos, int range, int tempMod) {
         removeTempAdjust(world, heatPos);
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 

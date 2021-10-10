@@ -102,7 +102,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
                 if (activeAfterTick) {
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), (byte) getActualTemp());
+                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(),getActualTemp());
                 } else {
                     ChunkData.removeTempAdjust(world, getPos());
                 }
@@ -111,7 +111,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
                 if (isChanged() || !initialized) {
                     initialized = true;
                     markChanged(false);
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), (byte) getActualTemp());
+                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(),getActualTemp());
                 }
             }
         }

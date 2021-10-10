@@ -36,7 +36,7 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
      * @param z the locate z<br>
      * @return temperature value at location<br>
      */
-    byte getTemperatureAt(int x, int y, int z);
+    int getTemperatureAt(int x, int y, int z);
 
     /**
      * Get temperature at location, would check if it is in range.
@@ -44,7 +44,7 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
      * @param pos the location<br>
      * @return temperature value at location<br>
      */
-    default byte getTemperatureAt(BlockPos pos) {
+    default int getTemperatureAt(BlockPos pos) {
         return getTemperatureAt(pos.getX(), pos.getY(), pos.getZ());
     }
 
@@ -150,5 +150,5 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
      */
     float getValueAt(BlockPos pos);
 
-    void setValue(byte value);
+    void setValue(int value);
 }

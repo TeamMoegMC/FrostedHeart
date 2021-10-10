@@ -134,10 +134,10 @@ public class FHDataManager {
         return armorData.get(new ResourceLocation(is));
     }
 
-    public static Byte getBiomeTemp(Biome b) {
+    public static Float getBiomeTemp(Biome b) {
         BiomeTempData data = biomeData.get(b.getRegistryName());
         if (data != null)
-            return data.getTemp().byteValue();
+            return data.getTemp();
         return null;
     }
 

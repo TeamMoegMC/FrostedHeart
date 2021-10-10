@@ -29,8 +29,9 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
     int cx;
     int cy;
     int cz;
-
-    public CubicTemperatureAdjust(int cx, int cy, int cz, int r, byte value) {
+    int r;
+    int value;
+    public CubicTemperatureAdjust(int cx, int cy, int cz, int r, int value) {
         this.cx = cx;
         this.cy = cy;
         this.cz = cz;
@@ -46,12 +47,11 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
         deserializeNBT(nc);
     }
 
-    public CubicTemperatureAdjust(BlockPos heatPos, int range, byte tempMod) {
+    public CubicTemperatureAdjust(BlockPos heatPos, int range, int tempMod) {
         this(heatPos.getX(), heatPos.getY(), heatPos.getZ(), range, tempMod);
     }
 
-    int r;
-    byte value;
+
 
     @Override
     public CompoundNBT serializeNBT() {
@@ -64,7 +64,7 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
         CompoundNBT nbt = new CompoundNBT();
         nbt.putIntArray("location", new int[]{cx, cy, cz});
         nbt.putInt("range", r);
-        nbt.putByte("value", value);
+        nbt.putInt("value", value);
         return nbt;
     }
 
@@ -84,7 +84,7 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
         return r;
     }
 
-    public byte getValue() {
+    public int getValue() {
         return value;
     }
 
@@ -95,11 +95,11 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
         cy = loc[1];
         cz = loc[2];
         r = nbt.getInt("range");
-        value = nbt.getByte("value");
+        value = nbt.getInt("value");
     }
 
     @Override
-    public byte getTemperatureAt(int x, int y, int z) {
+    public int getTemperatureAt(int x, int y, int z) {
         if (isEffective(x, y, z))
             return value;
         return 0;
@@ -141,7 +141,7 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
     }
 
     @Override
-    public void setValue(byte value) {
+    public void setValue(int value) {
         this.value = value;
     }
 
