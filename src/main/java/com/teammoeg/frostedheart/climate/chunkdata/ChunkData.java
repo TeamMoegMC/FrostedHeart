@@ -34,6 +34,8 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,9 +49,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     /**
      * Called to get temperature when a world context is available.
-     * If on client, will query capability, falling back to cache, and send request
-     * packets if necessary
-     * If on server, will either query capability falling back to cache, or query
+     * on server, will either query capability falling back to cache, or query
      * provider to generate the data.
      * This method directly get temperature at any positions.
      *
@@ -57,6 +57,17 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     public static float getTemperature(IWorldReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
+    }
+    /**
+     * Called to get temperature adjusts at location when a world context is available.
+     * on server, will either query capability falling back to cache, or query
+     * provider to generate the data.
+     * This method directly get temperature adjusts at any positions.
+     */
+    public static Collection<ITemperatureAdjust> getAdjust(IWorldReader world, BlockPos pos) {
+    	ArrayList<ITemperatureAdjust> al=new ArrayList<>(get(world, new ChunkPos(pos)).getAdjusters());
+        al.removeIf(adj->!adj.isEffective(pos));
+        return al;
     }
 
     /**
