@@ -2,10 +2,10 @@
   "id": "frostedheart:kelp_lining_feet",
   "factor": 0.06,
   "fire": -0.1,
-  "water": -0.4,
+  "water": -0.05,
   "wet": -0.05,
-  "snow": -0.04,
-  "rain": -0.04,
+  "snow": 0,
+  "rain": 0,
   "min": 0,
   "max": 1
 }

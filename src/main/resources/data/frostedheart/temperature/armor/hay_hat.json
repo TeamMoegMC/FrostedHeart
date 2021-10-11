@@ -2,10 +2,10 @@
   "id": "frostedheart:hay_hat",
   "factor": 0.08,
   "fire": -0.1,
-  "water": -0.4,
-  "wet": -0.2,
-  "snow": -0.04,
-  "rain": -0.04,
+  "water": -0.1,
+  "wet": -0.1,
+  "snow": -0.08,
+  "rain": -0.08,
   "min": 0,
   "max": 1
 }

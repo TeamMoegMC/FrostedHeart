@@ -2,10 +2,10 @@
   "id": "frostedheart:wool_jacket",
   "factor": 0.24,
   "fire": -0.25,
-  "water": -0.4,
+  "water": -0.1,
   "wet": -0.2,
-  "snow": -0.1,
-  "rain": -0.1,
+  "snow": -0.08,
+  "rain": -0.08,
   "min": 0,
   "max": 1
 }

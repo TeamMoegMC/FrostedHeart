@@ -2,10 +2,10 @@
   "id": "frostedheart:kelp_lining_chest",
   "factor": 0.14,
   "fire": -0.1,
-  "water": -0.4,
+  "water": -0.05,
   "wet": -0.05,
-  "snow": -0.08,
-  "rain": -0.08,
+  "snow": 0,
+  "rain": 0,
   "min": 0,
   "max": 1
 }
