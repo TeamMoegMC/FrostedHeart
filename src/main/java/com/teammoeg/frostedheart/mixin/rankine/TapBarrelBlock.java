@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.mixin.rankine;
 
 import com.cannolicatfish.rankine.blocks.tap.TapBarrelBlock;
+import com.cannolicatfish.rankine.init.RankineItems;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -43,6 +44,23 @@ class TapBarrelBlockMixin {
         Item handItem = player.getHeldItemMainhand().getItem();
         if (handItem == Items.BUCKET) {
             Item bucket = null;
+            switch (state.get(TapBarrelBlock.FLUID)) {
+                case SAP:
+                    bucket = RankineItems.SAP_BUCKET.get();
+                    break;
+                case MAPLE_SAP:
+                    bucket = RankineItems.SAP_BUCKET.get();
+                    break;
+                case RESIN:
+                    bucket = RankineItems.RESIN_BUCKET.get();
+                    break;
+                case LATEX:
+                    bucket = RankineItems.LATEX_BUCKET.get();
+                    break;
+                case JUGLONE:
+                    bucket = RankineItems.JUGLONE_BUCKET.get();
+                    break;
+            }
             if (bucket != null && state.get(TapBarrelBlock.LEVEL) > 0) {
                 player.getHeldItemMainhand().shrink(1);
                 player.addItemStackToInventory(new ItemStack(bucket, 1));
