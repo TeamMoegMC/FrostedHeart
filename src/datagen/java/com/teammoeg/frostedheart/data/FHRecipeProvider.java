@@ -41,7 +41,7 @@ public class FHRecipeProvider extends RecipeProvider {
 
     @Override
     protected void registerRecipes(@Nonnull Consumer<IFinishedRecipe> out) {
-        recipesGenerator(out);
+       // recipesGenerator(out);
     }
 
     private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out) {
