@@ -205,16 +205,16 @@ public class ForgeEvents {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(growTemp + "°C"), false);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",growTemp), false);
                 }
             } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                 if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.HEMP_GROW_TEMPERATURE + "°C"), false);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",WorldClimate.HEMP_GROW_TEMPERATURE), false);
                 }
             } else {
                 event.setCanceled(true);
-                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable").appendString(WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE + "°C"), false);
+                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), false);
             }
         }
     }

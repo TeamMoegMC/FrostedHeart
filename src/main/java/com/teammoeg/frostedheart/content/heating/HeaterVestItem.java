@@ -78,6 +78,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
+        list.add(GuiUtils.translateTooltip("charger.heat_vest").mergeStyle(TextFormatting.GRAY));
         list.add(GuiUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
     }
 

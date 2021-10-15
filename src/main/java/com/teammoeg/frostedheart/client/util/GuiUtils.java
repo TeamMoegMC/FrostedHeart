@@ -35,7 +35,6 @@ public class GuiUtils {
     public static TranslationTextComponent translateTooltip(String name, Object... args) {
         return new TranslationTextComponent("tooltip." + FHMain.MODID + "." + name, args);
     }
-
     public static TranslationTextComponent translateMessage(String name, Object... args) {
         return new TranslationTextComponent("message." + FHMain.MODID + "." + name, args);
     }
