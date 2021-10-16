@@ -43,6 +43,7 @@ public class SteelProspectorPick extends FHBaseItem {
         int x = blockpos.getX();
         int y = blockpos.getY();
         int z = blockpos.getZ();
+        BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
         int count = 0;
         Block ore;
         String ore_name = null;
@@ -56,7 +57,7 @@ public class SteelProspectorPick extends FHBaseItem {
                     int BlockX = x + x2;
                     int BlockY = y + y2;
                     int BlockZ = z + z2;
-                    ore = world.getBlockState(new BlockPos(BlockX, BlockY, BlockZ)).getBlock();
+                    ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
                     if (ore.getTags().contains(ProspectorPick.tag)) {
                         count += 1;
                         if (!found) ;
