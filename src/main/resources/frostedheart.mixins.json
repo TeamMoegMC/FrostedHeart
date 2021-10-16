@@ -14,6 +14,7 @@
     "minecraft.PortalSizeMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
+    "projecte.MixinPhilosopherStone",
     "projecte.MixinTransmutationStone",
     "rankine.AlloyTemplateItemMixin",
     "rankine.TapBarrelBlockMixin",

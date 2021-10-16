@@ -80,7 +80,8 @@
   "message.frostedheart.campfire.remaining": "这个篝火还能燃烧%s秒",
   "message.frostedheart.campfire.ignition": "你可以点燃篝火了!",
   "message.frostedheart.campfire.fuel": "这个篝火没有燃料了！向篝火上扔任何熔炉燃料来增加燃烧时间，然后将其再次点燃",
-  "message.frostedheart.too_cold_to_transmute": "贤者已冬眠。",
+  "message.frostedheart.too_cold_to_transmute": "贤者之石失去了力量。",
+  "message.frostedheart.magical_backslash": "愚昧的人啊，你可知炼金术反噬的后果...",
 
   "tooltip.frostedheart.f3_average_temperature": "平均气温: %s°C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "区块数据不可用",

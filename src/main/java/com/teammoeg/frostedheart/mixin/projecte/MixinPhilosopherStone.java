@@ -2,43 +2,42 @@ package com.teammoeg.frostedheart.mixin.projecte;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.util.FHUtils;
-import moze_intel.projecte.gameObjs.blocks.TransmutationStone;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntitySpawnPlacementRegistry;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
+import moze_intel.projecte.gameObjs.items.PhilosophersStone;
+import net.minecraft.entity.*;
+import net.minecraft.entity.monster.WitchEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.STitlePacket;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.TextComponentUtils;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import javax.annotation.Nonnull;
+@Mixin(PhilosophersStone.class)
+public class MixinPhilosopherStone {
+    @Inject(method = "onItemUse", at = @At(value = "HEAD"), remap = false, cancellable = true)
+    public void hibernation(ItemUseContext ctx, CallbackInfoReturnable<ActionResultType> cir) {
+        World world = ctx.getWorld();
+        PlayerEntity player = ctx.getPlayer();
+        BlockPos pos = ctx.getPos();
 
-@Mixin(TransmutationStone.class)
-public class MixinTransmutationStone {
-
-    @Inject(method = "onBlockActivated", at = @At(value = "HEAD"), remap = false, cancellable = true)
-    public void hibernation(@Nonnull BlockState state, World world, @Nonnull BlockPos pos, @Nonnull PlayerEntity player, @Nonnull Hand hand,
-                                 @Nonnull BlockRayTraceResult rtr, CallbackInfoReturnable<ActionResultType> cir) {
-        if (!world.isRemote) {
-            ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
+        if (!world.isRemote && player != null) {
             ServerWorld serverWorld = (ServerWorld) world;
-            serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.BLINDNESS, (int) (1000 * (world.rand.nextDouble() + 0.5)), 3));
+            ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
+
+            serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.BLINDNESS, (int) (100 * (world.rand.nextDouble() + 0.5)), 3));
             serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.NAUSEA, (int) (1000 * (world.rand.nextDouble() + 0.5)), 5));
+
             serverPlayerEntity.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE, GuiUtils.translateMessage("too_cold_to_transmute")));
             serverPlayerEntity.connection.sendPacket(new STitlePacket(STitlePacket.Type.SUBTITLE, GuiUtils.translateMessage("magical_backslash")));
 

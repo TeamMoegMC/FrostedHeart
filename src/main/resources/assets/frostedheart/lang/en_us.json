@@ -80,7 +80,8 @@
   "message.frostedheart.campfire.ignition": "You can ignition the campfire!",
   "message.frostedheart.campfire.fuel": "Uh Oh! This campfire went out of fuel! Throw any furnace fuel onto the campfire to add its burning time and ignite it again!",
   "message.frostedheart.info.soil_thermometerbody": "Soil Temperature：%s °C",
-  "message.frostedheart.too_cold_to_transmute": "The Philosopher is hibernating.",
+  "message.frostedheart.too_cold_to_transmute": "The Philosopher Stone lost its power.",
+  "message.frostedheart.magical_backslash": "Backslash is approaching...",
 
   "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s °C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "Invalid Chunk Data",

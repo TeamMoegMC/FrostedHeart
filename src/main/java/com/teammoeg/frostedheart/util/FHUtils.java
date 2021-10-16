@@ -19,10 +19,14 @@
 package com.teammoeg.frostedheart.util;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.*;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 
 import java.util.function.ToIntFunction;
@@ -53,6 +57,25 @@ public class FHUtils {
             return false;
         } else {
             return true;
+        }
+    }
+
+    public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
+        if (World.isInvalidPosition(blockpos)) {
+            CompoundNBT compoundnbt = nbt.copy();
+            compoundnbt.putString("id", type.toString());
+            Entity entity = EntityType.loadEntityAndExecute(compoundnbt, world, (p_218914_1_) -> {
+                p_218914_1_.setLocationAndAngles(blockpos.getX(), blockpos.getY(), blockpos.getZ(), p_218914_1_.rotationYaw, p_218914_1_.rotationPitch);
+                return p_218914_1_;
+            });
+            if (entity != null) {
+                if (entity instanceof MobEntity) {
+                    ((MobEntity)entity).onInitialSpawn(world, world.getDifficultyForLocation(entity.getPosition()), SpawnReason.NATURAL, (ILivingEntityData)null, (CompoundNBT)null);
+                }
+                if (!world.addEntityAndUniquePassengers(entity)) {
+                    return;
+                }
+            }
         }
     }
 }
