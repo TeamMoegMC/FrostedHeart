@@ -24,7 +24,8 @@
   "client": [
     "client.ForgeIngameGuiMixin",
     "client.IngameGuiAccess",
-    "client.IngameGuiMixin"
+    "client.IngameGuiMixin",
+    "client.ToastGuiMixin"
   ],
   "injectors": {
     "defaultRequire": 1
