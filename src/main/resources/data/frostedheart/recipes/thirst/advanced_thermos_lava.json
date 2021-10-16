@@ -1,0 +1,10 @@
+{
+    "type": "watersource:thirst_fluid",
+    "ingredient": {
+        "item": "frostedheart:advanced_thermos"
+    },
+	"fluid": "minecraft:lava",
+	"duration": 1600,
+	"amplifier": 3,
+	"probability": 100
+}
