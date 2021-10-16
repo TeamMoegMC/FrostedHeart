@@ -80,6 +80,8 @@
   "message.frostedheart.campfire.ignition": "You can ignition the campfire!",
   "message.frostedheart.campfire.fuel": "Uh Oh! This campfire went out of fuel! Throw any furnace fuel onto the campfire to add its burning time and ignite it again!",
   "message.frostedheart.info.soil_thermometerbody": "Soil Temperature：%s °C",
+  "message.frostedheart.too_cold_to_transmute": "The Philosopher is hibernating.",
+
   "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s °C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "Invalid Chunk Data",
   "tooltip.frostedheart.survive_armor_temp_mod": "Armor Temperature Modifier: ",
@@ -94,6 +96,7 @@
   "tooltip.frostedheart.armor_warm": "Warming Modifier:%s %%",
   "tooltip.frostedheart.armor_heating": "Heating rate:%s °C/s",
   "tooltip.frostedheart.steam_stored": "Steam:%s su",
+  "tooltip.frostedheart.inner": "Inner Lining: ",
   "tooltip.frostedheart.double_flint_ignition": "Hold two flints on each hand to use them as a fire starter",
   "tooltip.frostedheart.charger.steam_bottle":"Use Glass Bottle on Steam Charger",
   "tooltip.frostedheart.charger.activated_charcoal":"Use Charcoal on Steam Charger",
