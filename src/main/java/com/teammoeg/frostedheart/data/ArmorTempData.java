@@ -37,17 +37,18 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
         if (pe == null) return base;
         if (pe.isBurning())
             base += this.getFloatOrDefault("fire", 0F);
-        if (pe.isInWater())
+        if (pe.isInWater())//does not apply twice
             base += this.getFloatOrDefault("water", 0F);
+        else if (pe.isPotionActive(FHEffects.WET)) {
+            base += this.getFloatOrDefault("wet", 0F);
+        }
         if (FHUtils.isRainingAt(pe.getPosition(), pe.world)) {
 //            if (pe.getServerWorld().getBiome(pe.getPosition()).getPrecipitation() == Biome.RainType.SNOW)
             base += this.getFloatOrDefault("snow", 0F);
 //            else
 //                base += this.getFloatOrDefault("rain", 0F);
         }
-        if (pe.isPotionActive(FHEffects.WET)) {//further implement wet
-            base += this.getFloatOrDefault("wet", 0F);
-        }
+        
         float min = this.getFloatOrDefault("min", 0F);
         if (base < min) {
             base = min;
