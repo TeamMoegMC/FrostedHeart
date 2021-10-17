@@ -30,8 +30,6 @@ public class MixinPhilosopherStone {
         World world = ctx.getWorld();
         PlayerEntity player = ctx.getPlayer();
         BlockPos pos = ctx.getPos();
-        if(player.isCreative())
-        	return;
         if (!world.isRemote && player != null) {
             ServerWorld serverWorld = (ServerWorld) world;
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;

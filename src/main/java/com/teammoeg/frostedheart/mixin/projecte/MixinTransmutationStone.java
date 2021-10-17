@@ -34,8 +34,6 @@ public class MixinTransmutationStone {
     @Inject(method = "onBlockActivated", at = @At(value = "HEAD"), remap = true, cancellable = true)
     public void hibernation(@Nonnull BlockState state, World world, @Nonnull BlockPos pos, @Nonnull PlayerEntity player, @Nonnull Hand hand,
                                  @Nonnull BlockRayTraceResult rtr, CallbackInfoReturnable<ActionResultType> cir) {
-        if(player.isCreative())
-        	return;
     	if (!world.isRemote) {
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
 
