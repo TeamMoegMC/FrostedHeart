@@ -31,11 +31,14 @@ import javax.annotation.Nonnull;
 @Mixin(TransmutationStone.class)
 public class MixinTransmutationStone {
 
-    @Inject(method = "onBlockActivated", at = @At(value = "HEAD"), remap = false, cancellable = true)
+    @Inject(method = "onBlockActivated", at = @At(value = "HEAD"), remap = true, cancellable = true)
     public void hibernation(@Nonnull BlockState state, World world, @Nonnull BlockPos pos, @Nonnull PlayerEntity player, @Nonnull Hand hand,
                                  @Nonnull BlockRayTraceResult rtr, CallbackInfoReturnable<ActionResultType> cir) {
-        if (!world.isRemote) {
+        if(player.isCreative())
+        	return;
+    	if (!world.isRemote) {
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
+
             ServerWorld serverWorld = (ServerWorld) world;
             serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.BLINDNESS, (int) (1000 * (world.rand.nextDouble() + 0.5)), 3));
             serverPlayerEntity.addPotionEffect(new EffectInstance(Effects.NAUSEA, (int) (1000 * (world.rand.nextDouble() + 0.5)), 5));

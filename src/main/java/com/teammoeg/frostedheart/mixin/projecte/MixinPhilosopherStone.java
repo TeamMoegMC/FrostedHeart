@@ -25,12 +25,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PhilosophersStone.class)
 public class MixinPhilosopherStone {
-    @Inject(method = "onItemUse", at = @At(value = "HEAD"), remap = false, cancellable = true)
+    @Inject(method = "onItemUse", at = @At(value = "HEAD"), remap = true, cancellable = true)
     public void hibernation(ItemUseContext ctx, CallbackInfoReturnable<ActionResultType> cir) {
         World world = ctx.getWorld();
         PlayerEntity player = ctx.getPlayer();
         BlockPos pos = ctx.getPos();
-
+        if(player.isCreative())
+        	return;
         if (!world.isRemote && player != null) {
             ServerWorld serverWorld = (ServerWorld) world;
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
