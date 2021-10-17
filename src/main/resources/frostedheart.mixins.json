@@ -19,7 +19,8 @@
     "rankine.AlloyTemplateItemMixin",
     "rankine.TapBarrelBlockMixin",
     "snow.ModSnowBlockMixin",
-    "snow.ModUtilMixin"
+    "snow.ModUtilMixin",
+    "MixinTransmutationTablet"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",
