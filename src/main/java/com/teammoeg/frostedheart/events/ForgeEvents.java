@@ -212,7 +212,7 @@ public class ForgeEvents {
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",WorldClimate.HEMP_GROW_TEMPERATURE), false);
                 }
-            } else if(temp>=WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE){
+            } else if(temp<WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE){
                 event.setCanceled(true);
                 player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), false);
             }
@@ -240,7 +240,7 @@ public class ForgeEvents {
                         event.setCanceled(true);
                         player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",WorldClimate.HEMP_GROW_TEMPERATURE), false);
                     }
-                } else if(temp>=WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE){
+                } else if(temp<WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE){
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), false);
                 }
