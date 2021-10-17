@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -33,7 +34,7 @@ import net.minecraftforge.fml.network.NetworkHooks;
 @Mixin(TransmutationTablet.class)
 public class MixinTransmutationTablet {
 	@Inject(method = "onItemRightClick", at = @At(value = "HEAD"), remap = true, cancellable = true)
-	public void onItemRightClick(World world,PlayerEntity player,Hand hand,CallbackInfo cbi) {
+	public void onItemRightClick(World world,PlayerEntity player,Hand hand,CallbackInfoReturnable cbi) {
     	if (!world.isRemote) {
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
 
