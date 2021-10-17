@@ -35,7 +35,7 @@ import net.minecraftforge.fml.network.NetworkHooks;
 @Mixin(TransmutationTablet.class)
 public class MixinTransmutationTablet {
 	@Inject(method = "onItemRightClick", at = @At(value = "HEAD"), remap = true, cancellable = true)
-	public void onItemRightClick(World world,PlayerEntity player,Hand hand,CallbackInfoReturnable cbi) {
+	public void onItemRightClick(World world,PlayerEntity player,Hand hand,CallbackInfoReturnable<ActionResult> cbi) {
     	if (!world.isRemote) {
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
 
@@ -53,6 +53,6 @@ public class MixinTransmutationTablet {
                 FHUtils.spawnMob(serverWorld, new BlockPos(posX, posY, posZ), new CompoundNBT(), new ResourceLocation("minecraft", "witch"));
             }
         }
-    	cbi.setReturnValue(ActionResultType.SUCCESS);
+    	cbi.setReturnValue(ActionResult.resultConsume(player.getHeldItem(hand)));
 	}
 }
