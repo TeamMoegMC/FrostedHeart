@@ -27,7 +27,7 @@ public class FHNBT {
     public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
 
     public static ItemStack ArmorNBT(ItemStack stack) {
-        stack.getOrCreateTag().putString("inner_cover", "buff_coat");
+        stack.getOrCreateTag().putString("inner_cover", "frostedheart:gambeson");
         return stack;
     }
 }
