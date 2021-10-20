@@ -19,10 +19,8 @@
 package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
@@ -261,10 +259,10 @@ public class ForgeEvents {
         if (!persistent.contains(FHNBT.FIRST_LOGIN_GIVE_MANUAL)) {
             persistent.putBoolean(FHNBT.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
-            event.getPlayer().inventory.armorInventory.set(3, new ItemStack(FHContent.FHItems.wool_hat));
-            event.getPlayer().inventory.armorInventory.set(2, new ItemStack(FHContent.FHItems.wool_jacket));
-            event.getPlayer().inventory.armorInventory.set(1, new ItemStack(FHContent.FHItems.wool_pants));
-            event.getPlayer().inventory.armorInventory.set(0, new ItemStack(FHContent.FHItems.wool_boots));
+            event.getPlayer().inventory.armorInventory.set(3, FHNBT.ArmorNBT(new ItemStack(Items.IRON_HELMET)));
+            event.getPlayer().inventory.armorInventory.set(2, FHNBT.ArmorNBT(new ItemStack(Items.IRON_CHESTPLATE)));
+            event.getPlayer().inventory.armorInventory.set(1, FHNBT.ArmorNBT(new ItemStack(Items.IRON_HELMET)));
+            event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorNBT(new ItemStack(Items.IRON_HELMET)));
             ItemStack breads = new ItemStack(Items.BREAD);
             breads.setCount(16);
             event.getPlayer().inventory.addItemStackToInventory(breads);

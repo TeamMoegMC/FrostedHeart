@@ -4,7 +4,7 @@
     "item": "frostedheart:generator_ash"
   },
   "input": {
-    "item": "immersiveengineering:coal_coke"
+    "tag": "forge:coal_coke"
   },
   "time": 3200
 }

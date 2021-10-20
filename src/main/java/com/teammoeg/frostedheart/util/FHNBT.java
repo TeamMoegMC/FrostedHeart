@@ -19,9 +19,15 @@
 package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.FHMain;
+import net.minecraft.item.ItemStack;
 
 public class FHNBT {
     public static final String FIRST_LOGIN_GIVE_MANUAL = "first";
     public static final String FIRST_LOGIN_GIVE_NUTRITION = FHMain.MODID + "first_login_give_nutrition";
     public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
+
+    public static ItemStack ArmorNBT(ItemStack stack) {
+        stack.getOrCreateTag().putString("inner_cover", "buff_coat");
+        return stack;
+    }
 }
