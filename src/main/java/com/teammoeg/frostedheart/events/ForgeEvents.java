@@ -261,8 +261,8 @@ public class ForgeEvents {
             event.getPlayer().inventory.addItemStackToInventory(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
             event.getPlayer().inventory.armorInventory.set(3, FHNBT.ArmorNBT(new ItemStack(Items.IRON_HELMET)));
             event.getPlayer().inventory.armorInventory.set(2, FHNBT.ArmorNBT(new ItemStack(Items.IRON_CHESTPLATE)));
-            event.getPlayer().inventory.armorInventory.set(1, FHNBT.ArmorNBT(new ItemStack(Items.IRON_HELMET)));
-            event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorNBT(new ItemStack(Items.IRON_HELMET)));
+            event.getPlayer().inventory.armorInventory.set(1, FHNBT.ArmorNBT(new ItemStack(Items.IRON_LEGGINGS)));
+            event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorNBT(new ItemStack(Items.IRON_BOOTS)));
             ItemStack breads = new ItemStack(Items.BREAD);
             breads.setCount(16);
             event.getPlayer().inventory.addItemStackToInventory(breads);
