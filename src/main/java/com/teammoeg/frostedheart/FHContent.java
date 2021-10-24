@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.content.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.charger.ChargerRecipeSerializer;
 import com.teammoeg.frostedheart.content.charger.ChargerTileEntity;
-import com.teammoeg.frostedheart.content.crucible.*;
 import com.teammoeg.frostedheart.content.generator.*;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorMultiblock;
@@ -43,9 +42,6 @@ import com.teammoeg.frostedheart.content.other.*;
 import com.teammoeg.frostedheart.content.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.*;
-import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineBlock;
-import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineMultiblock;
-import com.teammoeg.frostedheart.content.steamturbine.SteamTurbineTileEntity;
 import com.teammoeg.frostedheart.util.FHFoods;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -84,8 +80,6 @@ public class FHContent {
         public static Block generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
         public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
-        public static Block burning_chamber_core = new FHBaseBlock("burning_chamber_core", stoneDecoProps, FHBlockItem::new);
-        public static Block burning_chamber = new FHBaseBlock("burning_chamber", stoneDecoProps, FHBlockItem::new);
         public static Block rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
         public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
         public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
@@ -161,21 +155,15 @@ public class FHContent {
 
     public static class FHMultiblocks {
         public static IETemplateMultiblock GENERATOR = new T1GeneratorMultiblock();
-        public static IETemplateMultiblock CRUCIBLE = new CrucibleMultiblock();
-        public static IETemplateMultiblock STEAMTURBINE = new SteamTurbineMultiblock();
         public static IETemplateMultiblock GENERATOR_T2 = new T2GeneratorMultiblock();
         public static IETemplateMultiblock RADIATOR = new RadiatorMultiblock();
         public static Block generator = new NormalGeneratorMultiBlock("generator", FHTileTypes.GENERATOR_T1);
         public static Block generator_t2 = new HeatedGeneratorMultiBlock("generator_t2", FHTileTypes.GENERATOR_T2);
         public static Block radiator = new UnlitHeatedGeneratorMultiBlock("heat_radiator", FHTileTypes.RADIATOR);
-        public static Block crucible = new CrucibleBlock("crucible", FHTileTypes.CRUCIBLE);
-        public static Block steam_turbine = new SteamTurbineBlock("steam_turbine", FHTileTypes.STEAMTURBINE);
 
         public static void init() {
             MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR);
             MultiblockHandler.registerMultiblock(FHMultiblocks.RADIATOR);
-            MultiblockHandler.registerMultiblock(FHMultiblocks.CRUCIBLE);
-            MultiblockHandler.registerMultiblock(FHMultiblocks.STEAMTURBINE);
             MultiblockHandler.registerMultiblock(FHMultiblocks.GENERATOR_T2);
         }
     }
@@ -186,12 +174,6 @@ public class FHContent {
 
         public static final RegistryObject<TileEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
                 "generator", makeType(() -> new T1GeneratorTileEntity(1, 2, 1), () -> FHMultiblocks.generator)
-        );
-        public static final RegistryObject<TileEntityType<CrucibleTileEntity>> CRUCIBLE = REGISTER.register(
-                "crucible", makeType(() -> new CrucibleTileEntity(), () -> FHMultiblocks.crucible)
-        );
-        public static final RegistryObject<TileEntityType<SteamTurbineTileEntity>> STEAMTURBINE = REGISTER.register(
-                "steam_turbine", makeType(() -> new SteamTurbineTileEntity(), () -> FHMultiblocks.steam_turbine)
         );
 
         public static final RegistryObject<TileEntityType<HeatPipeTileEntity>> HEATPIPE = REGISTER.register(
@@ -228,7 +210,6 @@ public class FHContent {
 
         static {
             GeneratorRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("generator", GeneratorRecipeSerializer::new);
-            CrucibleRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("crucible", CrucibleRecipeSerializer::new);
             GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipeSerializer::new);
             RecipeInner.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", RecipeInnerSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
@@ -237,7 +218,6 @@ public class FHContent {
         public static void registerRecipeTypes() {
             GeneratorRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":generator");
             GeneratorSteamRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":steam_generator");
-            CrucibleRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":crucible");
             ChargerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":charger");
         }
     }
@@ -245,6 +225,5 @@ public class FHContent {
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
-        GuiHandler.register(CrucibleTileEntity.class, new ResourceLocation(FHMain.MODID, "crucible"), CrucibleContainer::new);
     }
 }

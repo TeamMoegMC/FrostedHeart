@@ -18,10 +18,7 @@
 
 package com.teammoeg.frostedheart.compat;
 
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.content.crucible.CrucibleCategory;
-import com.teammoeg.frostedheart.content.crucible.CrucibleRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -31,12 +28,10 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -47,7 +42,7 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.burning_chamber), CrucibleCategory.UID);
+
 
     }
 
@@ -57,15 +52,13 @@ public class JEICompat implements IModPlugin {
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
 
-        registration.addRecipes(new ArrayList<>(CrucibleRecipe.recipeList.values()), CrucibleCategory.UID);
+
     }
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
-        registration.addRecipeCategories(
-                new CrucibleCategory(guiHelper)
-        );
+
     }
 
     @Override
