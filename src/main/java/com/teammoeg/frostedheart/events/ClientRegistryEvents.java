@@ -25,7 +25,6 @@ import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
-import com.teammoeg.frostedheart.content.crucible.CrucibleScreen;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.heatervest.HeaterVestRenderer;
@@ -42,9 +41,7 @@ import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.ArmorItem;
-import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
@@ -65,14 +62,11 @@ public class ClientRegistryEvents {
         // Register screens
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "crucible"), CrucibleScreen::new);
         // Register translucent render type
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.crucible, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.steam_turbine, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());
