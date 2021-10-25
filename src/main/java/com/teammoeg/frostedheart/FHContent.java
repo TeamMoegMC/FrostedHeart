@@ -146,7 +146,7 @@ public class FHContent {
         public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
         public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
-        public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(48));
+        public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(64));
         public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(128));
         public static Item steel_pro_pick = new SteelProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(256));
         public static Item soil_thermometer = new SoilThermometer("soil_thermometer", itemProps);
