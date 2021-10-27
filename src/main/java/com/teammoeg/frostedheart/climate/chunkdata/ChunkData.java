@@ -81,13 +81,13 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     public static ChunkData get(IWorldReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
-        ChunkData data = ChunkDataCache.get(world).get(pos);
-        if (data == null) {
+        //ChunkData data = ChunkDataCache.get(world).get(pos);
+        //if (data == null) {
             //System.out.println("no cache at"+pos);
             return getCapability(world.chunkExists(pos.x, pos.z) ? world.getChunk(pos.asBlockPos()) : null)
                     .orElse(ChunkData.EMPTY);
-        }
-        return data;
+        //}
+        //return data;
     }
 
     /**
@@ -110,13 +110,12 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void addChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adjx) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
-            ChunkData data = ChunkData.getCapability(chunk).map(dataIn -> {
-                ChunkDataCache.SERVER.update(chunkPos, dataIn);
-                return dataIn;
-            }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
-                    && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
-            data.adjusters.add(adjx);
+            ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
+            if(data!=null) {
+	            data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
+	                    && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
+	            data.adjusters.add(adjx);
+            }
             //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
@@ -131,11 +130,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, BlockPos src) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
-            ChunkData data = ChunkData.getCapability(chunk).map(dataIn -> {
-                ChunkDataCache.SERVER.update(chunkPos, dataIn);
-                return dataIn;
-            }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
+            ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
+            if(data!=null)
+            	data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
                     && adj.getCenterZ() == src.getZ());
             //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
@@ -151,11 +148,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adj) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
-            ChunkData data = ChunkData.getCapability(chunk).map(dataIn -> {
-                ChunkDataCache.SERVER.update(chunkPos, dataIn);
-                return dataIn;
-            }).orElseGet(() -> ChunkDataCache.SERVER.getOrCreate(chunkPos));
-            data.adjusters.remove(adj);
+            ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
+            if(data!=null)
+            	data.adjusters.remove(adj);
             //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }

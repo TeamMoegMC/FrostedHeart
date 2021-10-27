@@ -64,7 +64,6 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
         createMultiblock(FHContent.FHMultiblocks.generator, split(obj("block/multiblocks/generator.obj"), FHContent.FHMultiblocks.GENERATOR));
 //        createMultiblock(FHBlocks.Multi.crucible, split(obj("block/multiblocks/crucible.obj"), FHMultiblocks.CRUCIBLE));
         createMultiblock(FHContent.FHMultiblocks.generator_t2,split(obj("block/multiblocks/generator_t2.obj"), FHContent.FHMultiblocks.GENERATOR_T2));
-        createMultiblock(FHContent.FHMultiblocks.steam_turbine, split(obj("block/multiblocks/steam_turbine.obj"), FHContent.FHMultiblocks.STEAMTURBINE));
     }
 
     @Nonnull

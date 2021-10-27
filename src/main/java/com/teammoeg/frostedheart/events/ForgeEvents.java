@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCache;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -131,15 +130,16 @@ public class ForgeEvents {
                 // if (data == null) {
                 //    data = new ChunkData(chunkPos);
                 // }
-                data = ChunkDataCache.SERVER.getOrCreate(chunkPos);
-                event.addCapability(ChunkDataCapabilityProvider.KEY, data);
-            }
+               // data = ChunkDataCache.SERVER.getOrCreate(chunkPos);
+            	if(!event.getCapabilities().containsKey(ChunkDataCapabilityProvider.KEY))
+            		event.addCapability(ChunkDataCapabilityProvider.KEY,new ChunkData(chunkPos));
+            }	
 
         }
     }
 
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (!event.getWorld().isRemote() && !(event.getChunk() instanceof EmptyChunk)) {
             ChunkPos pos = event.getChunk().getPos();
@@ -157,7 +157,7 @@ public class ForgeEvents {
         if (!event.getWorld().isRemote() && !(event.getChunk() instanceof EmptyChunk)) {
             ChunkDataCache.SERVER.remove(event.getChunk().getPos());
         }
-    }
+    }*/
 
 
     @SubscribeEvent
