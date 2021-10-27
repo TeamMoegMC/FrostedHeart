@@ -54,7 +54,7 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
 	        IWorld world = context.getWorld();
 	        BlockPos blockpos = context.getPos();
 	        if(world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
-	        	player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()), true);
+	        	player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD), true);
 	        	 return ActionResultType.SUCCESS;
 	        }
 	        int x = blockpos.getX();
