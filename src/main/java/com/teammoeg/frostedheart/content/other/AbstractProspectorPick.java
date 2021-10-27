@@ -36,6 +36,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeManager;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
 
 public abstract class AbstractProspectorPick extends FHBaseItem {
@@ -51,7 +54,7 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
     public ActionResultType onItemUse(ItemUseContext context) {
         PlayerEntity player = context.getPlayer();
         if (player != null&&(!(player instanceof FakePlayer))) {//fake players does not deserve XD
-	        IWorld world = context.getWorld();
+	        World world = context.getWorld();
 	        BlockPos blockpos = context.getPos();
 	        if(world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
 	        	player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD), true);
@@ -61,51 +64,54 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
 	        int y = blockpos.getY();
 	        int z = blockpos.getZ();
 	        context.getItem().damageItem(1, player, (player2) -> player2.sendBreakAnimation(context.getHand()));
-	        Random rnd=new Random(BlockPos.pack(x, y, z));//randomize
-	        if(rnd.nextInt(10)!=0) {//mistaken rate 10%
-		        BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
-		        Block ore;
-		        HashMap<String,Integer> founded=new HashMap<>();
-		        int rseed=0;
-		        int hrange=this.getHorizonalRange(context.getItem());
-		        int vrange=this.getVerticalRange(context.getItem());
-		        for (int x2 = -hrange; x2 < hrange; x2++)
-		            for (int y2 = -vrange; y2 < vrange; y2++)
-		                for (int z2 = -hrange; z2 < hrange; z2++) {
-		                    int BlockX = x + x2;
-		                    int BlockY = y + y2;
-		                    int BlockZ = z + z2;
-		                    ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
-		                    if (ore.getTags().contains(tag)) {
-		                        founded.merge(ore.getTranslationKey(),1,(a,b)->a+b);
-		                        rseed++;
-		                    }
-		                }
-	        
-	            if (!founded.isEmpty()) {
-	            	rseed=rnd.nextInt(founded.size());
-	            	String ore_name=null;
-	            	int count=0;
-	            	for(Map.Entry<String,Integer> me:founded.entrySet()) {
-	            		if(rseed<=0) {
-	            			ore_name=me.getKey();
-	            			count=me.getValue();
-	            		}
-	            		rseed--;
-	            	}
-	            	if(ore_name!=null) {
-		                if (count < 20)
-		                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-		                else if (count < 40)
-		                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-		                else {
-		                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-		                }
-		                return ActionResultType.SUCCESS;
-	            	}
-	            }
+	        if(!world.isRemote) {
+		        Random rnd=new Random(BlockPos.pack(x, y, z));//randomize
+		        //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this. 
+		        if(rnd.nextInt(10)!=0) {//mistaken rate 10%
+			        BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
+			        Block ore;
+			        HashMap<String,Integer> founded=new HashMap<>();
+			        int rseed=0;
+			        int hrange=this.getHorizonalRange(context.getItem());
+			        int vrange=this.getVerticalRange(context.getItem());
+			        for (int x2 = -hrange; x2 < hrange; x2++)
+			            for (int y2 = -vrange; y2 < vrange; y2++)
+			                for (int z2 = -hrange; z2 < hrange; z2++) {
+			                    int BlockX = x + x2;
+			                    int BlockY = y + y2;
+			                    int BlockZ = z + z2;
+			                    ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
+			                    if (ore.getTags().contains(tag)) {
+			                        founded.merge(ore.getTranslationKey(),1,(a,b)->a+b);
+			                        rseed++;
+			                    }
+			                }
+		        
+		            if (!founded.isEmpty()) {
+		            	rseed=rnd.nextInt(founded.size());
+		            	String ore_name=null;
+		            	int count=0;
+		            	for(Map.Entry<String,Integer> me:founded.entrySet()) {
+		            		if(rseed<=0) {
+		            			ore_name=me.getKey();
+		            			count=me.getValue();
+		            		}
+		            		rseed--;
+		            	}
+		            	if(ore_name!=null) {
+			                if (count < 20)
+			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+			                else if (count < 40)
+			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+			                else {
+			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+			                }
+			                return ActionResultType.SUCCESS;
+		            	}
+		            }
+		        }
+	            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
 	        }
-            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
         }
         return ActionResultType.SUCCESS;
     }
