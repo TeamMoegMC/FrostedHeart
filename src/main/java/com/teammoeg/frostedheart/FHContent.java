@@ -49,6 +49,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeType;
@@ -146,9 +147,24 @@ public class FHContent {
         public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
         public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
-        public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(64));
-        public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(128));
-        public static Item steel_pro_pick = new SteelProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(256));
+        public static Item copper_pro_pick = new AbstractProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(128)) {
+			@Override
+			public int getHorizonalRange(ItemStack item) {return 8;}
+			@Override
+			public int getVerticalRange(ItemStack item) {return 4;}
+		};
+        public static Item iron_pro_pick = new AbstractProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(256)) {
+			@Override
+			public int getHorizonalRange(ItemStack item) {return 8;}
+			@Override
+			public int getVerticalRange(ItemStack item) {return 4;}
+		};
+        public static Item steel_pro_pick = new AbstractProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(512)) {
+			@Override
+			public int getHorizonalRange(ItemStack item) {return 9;}
+			@Override
+			public int getVerticalRange(ItemStack item) {return 5;}
+		};
         public static Item soil_thermometer = new SoilThermometer("soil_thermometer", itemProps);
         public static Item heat_debuger = new HeatDebugItem("heat_debugger");
     }

@@ -1,7 +1,7 @@
 {
     "type": "watersource:water_level_fluid",
     "ingredient": {
-        "item": "wooden_cup_hot_water.json"
+        "item": "watersource:leather_water_bag"
     },
 	"fluid": "frostedheart:hot_water",
 	"waterLevel": 4,

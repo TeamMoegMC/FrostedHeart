@@ -19,10 +19,15 @@
 package com.teammoeg.frostedheart.content.other;
 
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.ResourceLocation;
@@ -31,14 +36,16 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IWorld;
 
-public class ProspectorPick extends FHBaseItem {
+public abstract class AbstractProspectorPick extends FHBaseItem {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
 
-    public ProspectorPick(String name, Properties properties) {
+    public AbstractProspectorPick(String name, Properties properties) {
         super(name, properties);
     }
-
-    @Override
+    public abstract int getHorizonalRange(ItemStack item);
+    public abstract int getVerticalRange(ItemStack item);
+    @SuppressWarnings("resource")
+	@Override
     public ActionResultType onItemUse(ItemUseContext context) {
         PlayerEntity player = context.getPlayer();
         IWorld world = context.getWorld();
@@ -47,41 +54,51 @@ public class ProspectorPick extends FHBaseItem {
         int y = blockpos.getY();
         int z = blockpos.getZ();
         BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
-        int count = 0;
         Block ore;
-        String ore_name = null;
+        HashMap<String,Integer> founded=new HashMap<>();
         boolean found = false;
         if (player != null) {
             context.getItem().damageItem(1, player, (player2) -> player2.sendBreakAnimation(context.getHand()));
         }
-        for (int x2 = -8; x2 < 8; x2++)
-            for (int y2 = -3; y2 < 3; y2++)
-                for (int z2 = -8; z2 < 8; z2++) {
+        int rseed=0;
+        int hrange=this.getHorizonalRange(context.getItem());
+        int vrange=this.getVerticalRange(context.getItem());
+        for (int x2 = -hrange; x2 < hrange; x2++)
+            for (int y2 = -vrange; y2 < vrange; y2++)
+                for (int z2 = -hrange; z2 < hrange; z2++) {
                     int BlockX = x + x2;
                     int BlockY = y + y2;
                     int BlockZ = z + z2;
                     ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
                     if (ore.getTags().contains(tag)) {
-                        count += 1;
-                        if (!found) ;
-                        {
-                            ore_name = ore.getTranslationKey();
-                            found = true;
-                        }
+                        founded.merge(ore.getTranslationKey(),1,(a,b)->a+b);
+                        rseed++;
                     }
                 }
         if (player != null) {
-            if (ore_name != null) {
-                if (count < 20)
-                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-                else if (count < 40)
-                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-                else {
-                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-                }
-            } else {
-                player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
+            if (!founded.isEmpty()) {
+            	rseed%=founded.size();//TODO may we add miss rate?
+            	String ore_name=null;
+            	int count=0;
+            	for(Map.Entry<String,Integer> me:founded.entrySet()) {
+            		if(rseed<=0) {
+            			ore_name=me.getKey();
+            			count=me.getValue();
+            		}
+            		rseed--;
+            	}
+            	if(ore_name!=null) {
+	                if (count < 20)
+	                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+	                else if (count < 40)
+	                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+	                else {
+	                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+	                }
+	                return ActionResultType.SUCCESS;
+            	}
             }
+            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
         }
         return ActionResultType.SUCCESS;
     }
