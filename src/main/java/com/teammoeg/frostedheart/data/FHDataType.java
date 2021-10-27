@@ -23,20 +23,22 @@ import com.google.gson.JsonObject;
 import java.lang.reflect.InvocationTargetException;
 
 public enum FHDataType {
-    Armor(new DataType<>(ArmorTempData.class, "armor")),
-    Biome(new DataType<>(BiomeTempData.class, "biome")),
-    Food(new DataType<>(FoodTempData.class, "food")),
-    Block(new DataType<>(BlockTempData.class, "block")),
-    Drink(new DataType<>(DrinkTempData.class, "drink")),
-    Cup(new DataType<>(CupData.class,"cup"));
+    Armor(new DataType<>(ArmorTempData.class,"temperature", "armor")),
+    Biome(new DataType<>(BiomeTempData.class,"temperature", "biome")),
+    Food(new DataType<>(FoodTempData.class,"temperature", "food")),
+    Block(new DataType<>(BlockTempData.class,"temperature", "block")),
+    Drink(new DataType<>(DrinkTempData.class,"temperature", "drink")),
+    Cup(new DataType<>(CupData.class,"temperature","cup"));
 
     static class DataType<T extends JsonDataHolder> {
         final Class<T> dataCls;
         final String location;
+        final String domain;
 
-        public DataType(Class<T> dataCls, String location) {
+        public DataType(Class<T> dataCls,String domain, String location) {
             this.location = location;
             this.dataCls = dataCls;
+            this.domain = domain;
         }
 
         public T create(JsonObject jo) {
@@ -50,7 +52,7 @@ public enum FHDataType {
         }
 
         public String getLocation() {
-            return "temperature/" + location;
+            return domain+"/"+location;
         }
     }
 
