@@ -50,6 +50,10 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
         PlayerEntity player = context.getPlayer();
         IWorld world = context.getWorld();
         BlockPos blockpos = context.getPos();
+        if(world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {
+        	player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()), true);
+        	 return ActionResultType.SUCCESS;
+        }
         int x = blockpos.getX();
         int y = blockpos.getY();
         int z = blockpos.getZ();
