@@ -1,10 +1,10 @@
 modLoader = "javafml" #mandatory
 loaderVersion = "[36,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 license = "GPLv3"
-issueTrackerURL = "https://github.com/TeamMoegMC/Frosted-Heart/issues"
+issueTrackerURL = "https://github.com/TeamMoegMC/FrostedHeart/issues"
 [[mods]] #mandatory
 modId = "frostedheart" #mandatory
-version = "1.16.5-0.4.4" #mandatory
+version = "1.16.5-0.4.5" #mandatory
 displayName = "TWR Frosted Heart" #mandatory
 authors = "[TeamMoeg] YueSha, dashuaibia, khjxiaogu, duck_egg, Lyuuke, gomou_g"
 description = '''
