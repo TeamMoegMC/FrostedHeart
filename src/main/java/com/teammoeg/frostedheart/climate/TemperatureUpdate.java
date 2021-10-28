@@ -77,7 +77,7 @@ public class TemperatureUpdate {
             }
             float current = TemperatureCore.getBodyTemperature(player);
             if (current < 0)
-                current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player);
+                current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player)*FHConfig.SERVER.tempSpeed.get();
             World world = player.getEntityWorld();
             BlockPos pos = player.getPosition();
             float envtemp = ChunkData.getTemperature(world, pos);
@@ -127,7 +127,7 @@ public class TemperatureUpdate {
             }
             if (keepwarm > 1)
                 keepwarm = 1;
-            current += HEAT_EXCHANGE_CONSTANT * (1 - keepwarm) * (envtemp - current);
+            current += HEAT_EXCHANGE_CONSTANT * FHConfig.SERVER.tempSpeed.get() * (1 - keepwarm) * (envtemp - current);
             if (current < -10)
                 current = -10;
             else if (current > 10)
