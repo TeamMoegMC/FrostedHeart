@@ -206,7 +206,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void doGraphicalUpdates() {
+    public void doGraphicalUpdates(int slot) {
     }
 
     public float getMaxPower() {
