@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
+import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
@@ -77,6 +78,8 @@ public class FHMain {
         FHContent.FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
+
+        CreateCompat.init();
     }
 
     public void setup(final FMLCommonSetupEvent event) {
