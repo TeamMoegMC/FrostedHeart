@@ -73,7 +73,7 @@
   "gui.frostedheart.generator.overdrive.off": "关闭超频",
   "gui.frostedheart.temperature.desc": "平均气温",
 
-  "message.frostedheart.vein_size.nothing": "什么都没有",
+  "message.frostedheart.vein_size.nothing": "什么都没有。",
   "message.frostedheart.vein_size.small": "少量的 ",
   "message.frostedheart.vein_size.medium": "中等的 ",
   "message.frostedheart.vein_size.large": "大量的 ",

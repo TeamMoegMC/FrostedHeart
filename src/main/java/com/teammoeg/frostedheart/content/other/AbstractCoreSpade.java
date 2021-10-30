@@ -48,7 +48,7 @@ import net.minecraftforge.common.util.FakePlayer;
 
 public abstract class AbstractCoreSpade extends FHBaseItem {
     public static ResourceLocation otag = new ResourceLocation("forge:ores");
-    public static ResourceLocation stag = new ResourceLocation("forge:stones");
+    public static ResourceLocation stag = new ResourceLocation("forge:stone");
     public AbstractCoreSpade(String name, Properties properties) {
         super(name, properties);
     }
