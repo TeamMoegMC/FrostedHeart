@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -33,6 +34,7 @@ import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IWorld;
@@ -84,15 +86,22 @@ public abstract class AbstractGeologistsHammer extends FHBaseItem {
 			                        founded.merge(ore.getTranslationKey(),1,(a,b)->a+b);
 			                    }
 			                }
-		        
 		            if (!founded.isEmpty()) {
-	            		for(Map.Entry<String,Integer> me:founded.entrySet())
-	            			if(rnd.nextInt(me.getValue())!=0)
-	            				player.sendStatusMessage(GuiUtils.translateMessage("vein_size.count",me.getValue()).appendSibling(new TranslationTextComponent(me.getKey())).mergeStyle(TextFormatting.GOLD), true);
-		                return ActionResultType.SUCCESS;
+		            	int count=0;
+		            	IFormattableTextComponent s=GuiUtils.translateMessage("vein_size.found");
+		            	for(Entry<String, Integer> f:founded.entrySet()) {
+		            		if(rnd.nextInt(f.getValue())!=0) {
+		            			s=s.appendSibling(new TranslationTextComponent("vein_size.count",f.getValue()).appendSibling(new TranslationTextComponent(f.getKey()).mergeStyle(TextFormatting.GREEN)).appendString(" "));
+		            			count++;
+		            		}
+		            	}
+		            	if(count>0) {
+		            		player.sendMessage(s,player.getUniqueID());
+		            		return ActionResultType.SUCCESS;
+		            	}
 		            }
 		        }
-	            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
+	            player.sendMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GRAY),player.getUniqueID());
 	        }
         }
         return ActionResultType.SUCCESS;

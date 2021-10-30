@@ -18,34 +18,26 @@
 
 package com.teammoeg.frostedheart.content.oilburner;
 
-import java.util.List;
+import java.util.Random;
 import java.util.function.BiFunction;
 
-import com.simibubi.create.foundation.item.TooltipHelper;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.steampowered.content.boiler.BoilerTileEntity;
-import com.simibubi.create.foundation.item.ItemDescription.Palette;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ILiquidContainer;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -78,7 +70,7 @@ public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
 
     @Override
     public void onEntityWalk(World w, BlockPos p, Entity e) {
-        if (w.getBlockState(p).get(LIT) == true)
+        if (w.getBlockState(p).get(LIT))
             if (e instanceof LivingEntity)
                 e.setFire(60);
     }
@@ -93,6 +85,17 @@ public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
     	return false;
 
 	}
+    @Override
+    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+        super.animateTick(stateIn, worldIn, pos, rand);
+        if (stateIn.get(LIT)) {
+            for (int i = 0; i < rand.nextInt(2) + 2; ++i) {
+                ClientUtils.spawnSmokeParticles(worldIn, pos.up());
+                ClientUtils.spawnFireParticles(worldIn, pos.up());
+            }
+        }
+    }
+
 	@Override
 	public boolean receiveFluid(IWorld w, BlockPos p, BlockState s, FluidState f) {
 		TileEntity te=w.getTileEntity(p);

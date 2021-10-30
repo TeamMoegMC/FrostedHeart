@@ -107,7 +107,7 @@ public abstract class AbstractCoreSpade extends FHBaseItem {
 		            	}
 		            }
 		        }
-	            player.sendMessage(GuiUtils.translateMessage("corespade.nothing").mergeStyle(TextFormatting.GOLD),player.getUniqueID());
+	            player.sendMessage(GuiUtils.translateMessage("corespade.nothing").mergeStyle(TextFormatting.GRAY),player.getUniqueID());
 	        }
         }
         return ActionResultType.SUCCESS;

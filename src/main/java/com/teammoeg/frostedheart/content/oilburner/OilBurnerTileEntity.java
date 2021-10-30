@@ -18,35 +18,23 @@
 
 package com.teammoeg.frostedheart.content.oilburner;
 
-import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.fluid.Fluids;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-import java.util.List;
-
 public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveState, ITickableTileEntity {
 	ResourceLocation burnable=new ResourceLocation("forge","creosote");
-    FluidTank input = new FluidTank(10000,s->s.getFluid().getTags().contains(burnable)) {
-    };
+    FluidTank input = new FluidTank(10000,s->s.getFluid().getTags().contains(burnable));
     private LazyOptional<IFluidHandler> holder = LazyOptional.of(() -> input);
 
     public OilBurnerTileEntity() {
@@ -67,9 +55,8 @@ public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveStat
 
     @Override
     public void tick() {
-        //debug
         if (this.world != null && !this.world.isRemote) {
-            if(input.drain(1000,FluidAction.EXECUTE).getAmount()>=100) {
+            if(input.drain(1000,FluidAction.EXECUTE).getAmount()>=10) {
             	this.setActive(true);
             }else
             	this.setActive(false);

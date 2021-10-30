@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "particle": "frostedheart:block/smoke_dispenser_i_sagittal",
+    "bottom": "frostedheart:block/stone_block_bottom",
+    "top": "frostedheart:block/smoke_dispenser_i_top",
+    "side": "frostedheart:block/smoke_dispenser_i_sagittal"
+  }
+}
