@@ -41,10 +41,10 @@ import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
 
-public abstract class AbstractProspectorPick extends FHBaseItem {
+public abstract class AbstractGeologistsHammer extends FHBaseItem {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
 
-    public AbstractProspectorPick(String name, Properties properties) {
+    public AbstractGeologistsHammer(String name, Properties properties) {
         super(name, properties);
     }
     public abstract int getHorizonalRange(ItemStack item);
@@ -65,13 +65,12 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
 	        int z = blockpos.getZ();
 	        context.getItem().damageItem(1, player, (player2) -> player2.sendBreakAnimation(context.getHand()));
 	        if(!world.isRemote) {
-		        Random rnd=new Random(BlockPos.pack(x, y, z)^0xf64128086dd425ffL);//randomize
+		        Random rnd=new Random(BlockPos.pack(x, y, z)^0xebd763e5b71a0128L);//randomize
 		        //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this. 
 		        if(rnd.nextInt(10)!=0) {//mistaken rate 10%
 			        BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
 			        Block ore;
 			        HashMap<String,Integer> founded=new HashMap<>();
-			        int rseed=0;
 			        int hrange=this.getHorizonalRange(context.getItem());
 			        int vrange=this.getVerticalRange(context.getItem());
 			        for (int x2 = -hrange; x2 < hrange; x2++)
@@ -83,31 +82,14 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
 			                    ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
 			                    if (ore.getTags().contains(tag)) {
 			                        founded.merge(ore.getTranslationKey(),1,(a,b)->a+b);
-			                        rseed++;
 			                    }
 			                }
 		        
 		            if (!founded.isEmpty()) {
-		            	rseed=rnd.nextInt(founded.size());
-		            	String ore_name=null;
-		            	int count=0;
-		            	for(Map.Entry<String,Integer> me:founded.entrySet()) {
-		            		if(rseed<=0) {
-		            			ore_name=me.getKey();
-		            			count=me.getValue();
-		            		}
-		            		rseed--;
-		            	}
-		            	if(ore_name!=null) {
-			                if (count < 20)
-			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-			                else if (count < 40)
-			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-			                else {
-			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
-			                }
-			                return ActionResultType.SUCCESS;
-		            	}
+	            		for(Map.Entry<String,Integer> me:founded.entrySet())
+	            			if(rnd.nextInt(me.getValue())!=0)
+	            				player.sendStatusMessage(GuiUtils.translateMessage("vein_size.count",me.getValue()).appendSibling(new TranslationTextComponent(me.getKey())).mergeStyle(TextFormatting.GOLD), true);
+		                return ActionResultType.SUCCESS;
 		            }
 		        }
 	            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
