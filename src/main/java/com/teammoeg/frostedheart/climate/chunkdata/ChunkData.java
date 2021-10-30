@@ -19,6 +19,8 @@
 package com.teammoeg.frostedheart.climate.chunkdata;
 
 import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.crash.ClimateCrash;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -411,6 +413,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
         ListNBT nl = new ListNBT();
+        ClimateCrash.Last=this.getPos();
         for (ITemperatureAdjust adj : adjusters)
             nl.add(adj.serializeNBT());
         nbt.put("temperature", nl);
@@ -421,6 +424,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public void deserializeNBT(CompoundNBT nbt) {
         if (nbt != null) {
             // chunkMatrix.deserializeNBT(nbt.getCompound("temperature"));
+        	ClimateCrash.Last=this.getPos();
             ListNBT nl = nbt.getList("temperature", 10);
             for (INBT nc : nl) {
                 adjusters.add(ITemperatureAdjust.valueOf((CompoundNBT) nc));

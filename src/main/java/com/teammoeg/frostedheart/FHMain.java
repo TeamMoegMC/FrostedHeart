@@ -22,6 +22,7 @@ import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
+import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHProps;
@@ -30,6 +31,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -83,8 +85,10 @@ public class FHMain {
     }
 
     public void setup(final FMLCommonSetupEvent event) {
+    	
         MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapabilityProvider.setup();
+        CrashReportExtender.registerCrashCallable(new ClimateCrash());
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
