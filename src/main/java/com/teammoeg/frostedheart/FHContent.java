@@ -38,6 +38,8 @@ import com.teammoeg.frostedheart.content.generatort2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generatort2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.heating.*;
+import com.teammoeg.frostedheart.content.oilburner.OilBurnerBlock;
+import com.teammoeg.frostedheart.content.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.other.*;
 import com.teammoeg.frostedheart.content.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.radiator.RadiatorTileEntity;
@@ -97,6 +99,13 @@ public class FHContent {
         public static Block charger = new ChargerBlock("charger", Block.Properties
                 .create(Material.ROCK)
                 .sound(SoundType.METAL)
+                .setRequiresTool()
+                .harvestTool(ToolType.PICKAXE)
+                .hardnessAndResistance(2, 10)
+                .notSolid(), FHBlockItem::new);
+        public static Block oilburner=new OilBurnerBlock("oil_burner", Block.Properties
+                .create(Material.ROCK)
+                .sound(SoundType.STONE)
                 .setRequiresTool()
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
@@ -243,6 +252,9 @@ public class FHContent {
 
         public static final RegistryObject<TileEntityType<T2GeneratorTileEntity>> GENERATOR_T2 = REGISTER.register(
                 "generator_t2", makeType(() -> new T2GeneratorTileEntity(1, 2, 1), () -> FHMultiblocks.generator_t2)
+        );
+        public static final RegistryObject<TileEntityType<OilBurnerTileEntity>> OIL_BURNER = REGISTER.register(
+                "generator_t2", makeType(() -> new OilBurnerTileEntity(), () -> FHBlocks.oilburner)
         );
 
         private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
