@@ -91,7 +91,12 @@ public abstract class AbstractGeologistsHammer extends FHBaseItem {
 		            	IFormattableTextComponent s=GuiUtils.translateMessage("vein_size.found");
 		            	for(Entry<String, Integer> f:founded.entrySet()) {
 		            		if(rnd.nextInt(f.getValue())!=0) {
-		            			s=s.appendSibling(GuiUtils.translateMessage("vein_size.count",f.getValue()).appendSibling(new TranslationTextComponent(f.getKey()).mergeStyle(TextFormatting.GREEN)).appendString(" "));
+		            			int rval=f.getValue();
+		            			if(rval>=5) {
+			            			int err=rval/5;
+			            			rval+=rnd.nextInt(err*2)-err;
+		            			}
+		            			s=s.appendSibling(GuiUtils.translateMessage("vein_size.count",rval).appendSibling(new TranslationTextComponent(f.getKey()).mergeStyle(TextFormatting.GREEN)).appendString(" "));
 		            			count++;
 		            		}
 		            	}
