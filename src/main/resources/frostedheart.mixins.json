@@ -12,6 +12,7 @@
     "minecraft.CampfireTileEntityMixin",
     "minecraft.IceMixin",
     "minecraft.PortalSizeMixin",
+    "minecraft.VillagerMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

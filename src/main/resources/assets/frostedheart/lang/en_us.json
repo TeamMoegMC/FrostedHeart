@@ -82,6 +82,7 @@
   "message.frostedheart.info.soil_thermometerbody": "Soil Temperature At Your Location: %s °C",
   "message.frostedheart.too_cold_to_transmute": "The Philosopher Stone lost its power.",
   "message.frostedheart.magical_backslash": "Backslash is approaching...",
+  "message.frostedheart.village.unknown": "hmmmmm...hmm?",
 
   "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s °C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "Invalid Chunk Data",
