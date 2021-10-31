@@ -165,19 +165,19 @@ public class FHContent {
 			@Override
 			public int getVerticalRange(ItemStack item) {return 4;}
 		};
-        public static Item iron_pro_pick = new AbstractProspectorPick("iron_pro_pick",createProps().defaultMaxDamage(256)) {
+        public static Item iron_pro_pick = new AbstractProspectorPick("iron_pro_pick",createProps().defaultMaxDamage(192)) {
 			@Override
 			public int getHorizonalRange(ItemStack item) {return 8;}
 			@Override
 			public int getVerticalRange(ItemStack item) {return 4;}
 		};
-        public static Item steel_pro_pick = new AbstractProspectorPick("steel_pro_pick", createProps().defaultMaxDamage(512)) {
+        public static Item steel_pro_pick = new AbstractProspectorPick("steel_pro_pick", createProps().defaultMaxDamage(256)) {
 			@Override
 			public int getHorizonalRange(ItemStack item) {return 9;}
 			@Override
 			public int getVerticalRange(ItemStack item) {return 5;}
 		};
-        public static Item copper_core_spade = new AbstractCoreSpade("copper_core_spade", createProps().defaultMaxDamage(64)) {
+        public static Item copper_core_spade = new AbstractCoreSpade("copper_core_spade", createProps().defaultMaxDamage(96)) {
 			@Override
 			public int getHorizonalRange(ItemStack item) {return 1;}
 			@Override
@@ -194,7 +194,7 @@ public class FHContent {
                 return 64;
             }
 		};
-        public static Item steel_core_spade = new AbstractCoreSpade("steel_core_spade", createProps().defaultMaxDamage(256)) {
+        public static Item steel_core_spade = new AbstractCoreSpade("steel_core_spade", createProps().defaultMaxDamage(160)) {
 			@Override
             public int getHorizonalRange(ItemStack item) {
                 return 4;
@@ -205,7 +205,7 @@ public class FHContent {
                 return 72;
             }
 		};
-        public static Item copper_geologists_hammer = new AbstractGeologistsHammer("copper_geologists_hammer", createProps().defaultMaxDamage(64)) {
+        public static Item copper_geologists_hammer = new AbstractGeologistsHammer("copper_geologists_hammer", createProps().defaultMaxDamage(96)) {
 			@Override
 			public int getHorizonalRange(ItemStack item) {return 4;}
 			@Override
@@ -214,29 +214,30 @@ public class FHContent {
         public static Item iron_geologists_hammer = new AbstractGeologistsHammer("iron_geologists_hammer", createProps().defaultMaxDamage(128)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
-                return 6;
+                return 5;
             }
 
             @Override
             public int getVerticalRange(ItemStack item) {
-                return 6;
+                return 5;
             }
 		};
-        public static Item steel_geologists_hammer = new AbstractGeologistsHammer("steel_geologists_hammer", createProps().defaultMaxDamage(256)) {
+        public static Item steel_geologists_hammer = new AbstractGeologistsHammer("steel_geologists_hammer", createProps().defaultMaxDamage(160)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
-                return 8;
+                return 6;
             }
 
             @Override
             public int getVerticalRange(ItemStack item) {
-                return 8;
+                return 6;
             }
-		};
+        };
         public static Item soil_thermometer = new SoilThermometer("soil_thermometer", itemProps);
         public static Item heat_debuger = new HeatDebugItem("heat_debugger");
         public static Item red_mushroombed=new MushroomBed("straw_briquette_red_mushroom",createProps().defaultMaxDamage(4800));
         public static Item brown_mushroombed=new MushroomBed("straw_briquette_brown_mushroom",createProps().defaultMaxDamage(4800));
+        public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", itemProps);
     }
 
     public static class FHMultiblocks {

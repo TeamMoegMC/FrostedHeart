@@ -1,0 +1,9 @@
+{
+  "parent": "forge:item/default",
+  "textures": {
+    "base": "frostedheart:item/ceramic_bucket",
+    "fluid": "forge:item/mask/bucket_fluid_drip"
+  },
+  "loader": "forge:bucket",
+  "fluid": "empty"
+}

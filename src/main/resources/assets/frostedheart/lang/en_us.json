@@ -18,7 +18,7 @@
   "block.frostedheart.debug_heater": "Debug Heater",
   "block.frostedheart.charger": "Steam Charger",
   "block.frostedheart.heat_radiator": "Steam Radiator",
-
+  "block.frostedheart.oil_burner": "Oil Burner",
   "item.frostedheart.rye": "Rye Ears",
   "item.frostedheart.rye_bread": "Rye Bread",
   "item.frostedheart.energy_core": "Energy Core",
@@ -63,6 +63,7 @@
   "item.frostedheart.copper_core_spade":"Copper Core Spade",
   "item.frostedheart.iron_core_spade":"Iron Core Spade",
   "item.frostedheart.steel_core_spade":"Steel Core Spade",
+  "item.frostedheart.ceramic_bucket": "Ceramic Bucket",
   "item.frostedheart.straw_briquette_brown_mushroom":"Brown Fungus Bed",
   "item.frostedheart.straw_briquette_red_mushroom":"Red Fungus Bed",
 
