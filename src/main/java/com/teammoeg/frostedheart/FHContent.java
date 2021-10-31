@@ -188,9 +188,14 @@ public class FHContent {
 		};
         public static Item steel_core_spade = new AbstractCoreSpade("steel_core_spade", itemProps.defaultMaxDamage(256)) {
 			@Override
-			public int getHorizonalRange(ItemStack item) {return 9;}
-			@Override
-			public int getVerticalRange(ItemStack item) {return 128;}
+            public int getHorizonalRange(ItemStack item) {
+                return 4;
+            }
+
+            @Override
+            public int getVerticalRange(ItemStack item) {
+                return 128;
+            }
 		};
         public static Item copper_geologists_hammer = new AbstractGeologistsHammer("copper_geologists_hammer", itemProps.defaultMaxDamage(64)) {
 			@Override
@@ -199,16 +204,26 @@ public class FHContent {
 			public int getVerticalRange(ItemStack item) {return 4;}
 		};
         public static Item iron_geologists_hammer = new AbstractGeologistsHammer("iron_geologists_hammer", itemProps.defaultMaxDamage(128)) {
-			@Override
-			public int getHorizonalRange(ItemStack item) {return 6;}
-			@Override
-			public int getVerticalRange(ItemStack item) {return 6;}
+            @Override
+            public int getHorizonalRange(ItemStack item) {
+                return 5;
+            }
+
+            @Override
+            public int getVerticalRange(ItemStack item) {
+                return 5;
+            }
 		};
         public static Item steel_geologists_hammer = new AbstractGeologistsHammer("steel_geologists_hammer", itemProps.defaultMaxDamage(256)) {
-			@Override
-			public int getHorizonalRange(ItemStack item) {return 8;}
-			@Override
-			public int getVerticalRange(ItemStack item) {return 8;}
+            @Override
+            public int getHorizonalRange(ItemStack item) {
+                return 6;
+            }
+
+            @Override
+            public int getVerticalRange(ItemStack item) {
+                return 6;
+            }
 		};
         public static Item soil_thermometer = new SoilThermometer("soil_thermometer", itemProps);
         public static Item heat_debuger = new HeatDebugItem("heat_debugger");
