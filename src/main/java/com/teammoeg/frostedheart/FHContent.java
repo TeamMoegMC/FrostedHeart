@@ -188,7 +188,7 @@ public class FHContent {
 
             @Override
             public int getVerticalRange(ItemStack item) {
-                return 48;
+                return 64;
             }
 		};
         public static Item steel_core_spade = new AbstractCoreSpade("steel_core_spade", itemProps.defaultMaxDamage(256)) {
@@ -199,7 +199,7 @@ public class FHContent {
 
             @Override
             public int getVerticalRange(ItemStack item) {
-                return 64;
+                return 72;
             }
 		};
         public static Item copper_geologists_hammer = new AbstractGeologistsHammer("copper_geologists_hammer", itemProps.defaultMaxDamage(64)) {
@@ -211,23 +211,23 @@ public class FHContent {
         public static Item iron_geologists_hammer = new AbstractGeologistsHammer("iron_geologists_hammer", itemProps.defaultMaxDamage(128)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
-                return 5;
+                return 6;
             }
 
             @Override
             public int getVerticalRange(ItemStack item) {
-                return 5;
+                return 6;
             }
 		};
         public static Item steel_geologists_hammer = new AbstractGeologistsHammer("steel_geologists_hammer", itemProps.defaultMaxDamage(256)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
-                return 6;
+                return 8;
             }
 
             @Override
             public int getVerticalRange(ItemStack item) {
-                return 6;
+                return 8;
             }
 		};
         public static Item soil_thermometer = new SoilThermometer("soil_thermometer", itemProps);
