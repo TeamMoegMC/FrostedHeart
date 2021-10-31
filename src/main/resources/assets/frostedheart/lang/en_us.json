@@ -63,6 +63,8 @@
   "item.frostedheart.copper_core_spade":"Copper Core Spade",
   "item.frostedheart.iron_core_spade":"Iron Core Spade",
   "item.frostedheart.steel_core_spade":"Steel Core Spade",
+  "item.frostedheart.straw_briquette_brown_mushroom":"Brown Fungus Bed",
+  "item.frostedheart.straw_briquette_red_mushroom":"Red Fungus Bed",
 
   "gui.frostedheart.generator.temperature.level": "Temperature Increment: ",
   "gui.frostedheart.generator.range.level": "Range: ",
@@ -99,6 +101,7 @@
   "tooltip.frostedheart.meme.steam_bottle": "Cheers!",
   "tooltip.frostedheart.meme.thermometerbody": "Do not actually drink it.",
   "tooltip.frostedheart.meme.core_spade": "Tool for tomb raiders",
+  "tooltip.frostedheart.meme.mushroom":"Warm it up with your body for your dinner!",
   "tooltip.frostedheart.block_temp": "Temperature change:%s °C",
   "tooltip.frostedheart.food_temp": "Temperature apply:%s °C",
   "tooltip.frostedheart.armor_warm": "Warming Modifier:%s %%",

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "frostedheart:item/straw_briquette_red_mushroom_0"
+  }
+}

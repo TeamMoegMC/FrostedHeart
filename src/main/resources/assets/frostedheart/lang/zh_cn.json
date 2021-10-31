@@ -63,6 +63,8 @@
   "item.frostedheart.iron_core_spade":"铁探铲",
   "item.frostedheart.steel_core_spade":"钢探铲",
   "item.frostedheart.soil_thermometer": "土壤温度计",
+  "item.frostedheart.straw_briquette_brown_mushroom":"棕蘑菇菌床",
+  "item.frostedheart.straw_briquette_red_mushroom":"红蘑菇菌床",
 
   "gui.frostedheart.generator.temperature.level": "温度增幅: ",
   "gui.frostedheart.generator.range.level": "增温范围: ",
@@ -103,6 +105,7 @@
   "tooltip.frostedheart.meme.steam_bottle": "是兄弟就干了这杯",
   "tooltip.frostedheart.meme.thermometerbody": "体温高于37.8°C禁止进入",
   "tooltip.frostedheart.meme.core_spade": "洛阳铲",
+  "tooltip.frostedheart.meme.mushroom":"用你的身体加热它",
   "tooltip.frostedheart.food_temp": "使用后体温%s °C",
   "tooltip.frostedheart.block_temp": "温度变化%s °C",
   "tooltip.frostedheart.armor_warm": "保暖指数：%s %%",
