@@ -106,6 +106,7 @@
   "tooltip.frostedheart.meme.thermometerbody": "体温高于37.8°C禁止进入",
   "tooltip.frostedheart.meme.core_spade": "洛阳铲",
   "tooltip.frostedheart.meme.mushroom":"用你的身体加热它",
+  "tooltip.frostedheart.mushroom":"单手拿刀，另一只手使用以切割",
   "tooltip.frostedheart.food_temp": "使用后体温%s °C",
   "tooltip.frostedheart.block_temp": "温度变化%s °C",
   "tooltip.frostedheart.armor_warm": "保暖指数：%s %%",

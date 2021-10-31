@@ -103,6 +103,7 @@
   "tooltip.frostedheart.meme.thermometerbody": "Do not actually drink it.",
   "tooltip.frostedheart.meme.core_spade": "Tool for tomb raiders",
   "tooltip.frostedheart.meme.mushroom":"Warm it up with your body for your dinner!",
+  "tooltip.frostedheart.mushroom":"Hold knife in one hand and use this to cut down. ",
   "tooltip.frostedheart.block_temp": "Temperature change:%s °C",
   "tooltip.frostedheart.food_temp": "Temperature apply:%s °C",
   "tooltip.frostedheart.armor_warm": "Warming Modifier:%s %%",
