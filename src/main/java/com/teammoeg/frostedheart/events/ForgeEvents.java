@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHNBT;
+import com.teammoeg.frostedheart.util.FHTags;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -57,10 +58,10 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -70,7 +71,6 @@ import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -348,9 +348,20 @@ public class ForgeEvents {
             }
         }
     }
+
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
         AddTempCommand.register(dispatcher);
+    }
+
+    @SubscribeEvent
+    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+        ToolType Tool = event.getState().getHarvestTool();
+        if (Tool != null) {
+            if (!FHTags.Blocks.ALWAYS_BREAKABLE.contains(event.getState().getBlock()))
+                if (event.getPlayer().getHeldItemMainhand().getHarvestLevel(Tool, event.getPlayer(), event.getState()) == -1)
+                    event.setNewSpeed(0);
+        }
     }
 }

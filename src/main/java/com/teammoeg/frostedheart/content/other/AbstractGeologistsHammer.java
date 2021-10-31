@@ -69,14 +69,14 @@ public abstract class AbstractGeologistsHammer extends FHBaseItem {
 	        if(!world.isRemote) {
 		        Random rnd=new Random(BlockPos.pack(x, y, z)^0xebd763e5b71a0128L);//randomize
 		        //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this. 
-		        if(rnd.nextInt(10)!=0) {//mistaken rate 10%
+		        if(rnd.nextInt(20)!=0) {//mistaken rate 5%
 			        BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
 			        Block ore;
 			        HashMap<String,Integer> founded=new HashMap<>();
 			        int hrange=this.getHorizonalRange(context.getItem());
 			        int vrange=this.getVerticalRange(context.getItem());
 			        for (int x2 = -hrange; x2 < hrange; x2++)
-			            for (int y2 = -vrange; y2 < vrange; y2++)
+			            for (int y2 = -Math.min(y,vrange); y2 < vrange; y2++)
 			                for (int z2 = -hrange; z2 < hrange; z2++) {
 			                    int BlockX = x + x2;
 			                    int BlockY = y + y2;
