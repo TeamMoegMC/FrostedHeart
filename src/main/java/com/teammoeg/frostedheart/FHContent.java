@@ -182,9 +182,14 @@ public class FHContent {
 		};
         public static Item iron_core_spade = new AbstractCoreSpade("iron_core_spade", itemProps.defaultMaxDamage(128)) {
 			@Override
-			public int getHorizonalRange(ItemStack item) {return 2;}
-			@Override
-			public int getVerticalRange(ItemStack item) {return 64;}
+            public int getHorizonalRange(ItemStack item) {
+                return 2;
+            }
+
+            @Override
+            public int getVerticalRange(ItemStack item) {
+                return 48;
+            }
 		};
         public static Item steel_core_spade = new AbstractCoreSpade("steel_core_spade", itemProps.defaultMaxDamage(256)) {
 			@Override
@@ -194,7 +199,7 @@ public class FHContent {
 
             @Override
             public int getVerticalRange(ItemStack item) {
-                return 128;
+                return 64;
             }
 		};
         public static Item copper_geologists_hammer = new AbstractGeologistsHammer("copper_geologists_hammer", itemProps.defaultMaxDamage(64)) {
