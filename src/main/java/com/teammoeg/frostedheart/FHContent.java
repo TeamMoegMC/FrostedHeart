@@ -156,7 +156,7 @@ public class FHContent {
         public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
         public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
-        public static Item copper_pro_pick = new AbstractProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(96)) {
+        public static Item copper_pro_pick = new AbstractProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(128)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 8;
@@ -167,7 +167,7 @@ public class FHContent {
                 return 4;
             }
         };
-        public static Item iron_pro_pick = new AbstractProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(128)) {
+        public static Item iron_pro_pick = new AbstractProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(192)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 8;
@@ -178,7 +178,7 @@ public class FHContent {
                 return 4;
             }
         };
-        public static Item steel_pro_pick = new AbstractProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(156)) {
+        public static Item steel_pro_pick = new AbstractProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(256)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 9;
@@ -189,7 +189,7 @@ public class FHContent {
                 return 5;
             }
         };
-        public static Item copper_core_spade = new AbstractCoreSpade("copper_core_spade", itemProps.defaultMaxDamage(64)) {
+        public static Item copper_core_spade = new AbstractCoreSpade("copper_core_spade", itemProps.defaultMaxDamage(96)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 1;
@@ -200,7 +200,7 @@ public class FHContent {
                 return 48;
             }
         };
-        public static Item iron_core_spade = new AbstractCoreSpade("iron_core_spade", itemProps.defaultMaxDamage(96)) {
+        public static Item iron_core_spade = new AbstractCoreSpade("iron_core_spade", itemProps.defaultMaxDamage(128)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 2;
@@ -211,7 +211,7 @@ public class FHContent {
                 return 64;
             }
         };
-        public static Item steel_core_spade = new AbstractCoreSpade("steel_core_spade", itemProps.defaultMaxDamage(128)) {
+        public static Item steel_core_spade = new AbstractCoreSpade("steel_core_spade", itemProps.defaultMaxDamage(160)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 4;
@@ -222,7 +222,7 @@ public class FHContent {
                 return 72;
             }
         };
-        public static Item copper_geologists_hammer = new AbstractGeologistsHammer("copper_geologists_hammer", itemProps.defaultMaxDamage(64)) {
+        public static Item copper_geologists_hammer = new AbstractGeologistsHammer("copper_geologists_hammer", itemProps.defaultMaxDamage(96)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 4;
@@ -233,7 +233,7 @@ public class FHContent {
                 return 4;
             }
         };
-        public static Item iron_geologists_hammer = new AbstractGeologistsHammer("iron_geologists_hammer", itemProps.defaultMaxDamage(96)) {
+        public static Item iron_geologists_hammer = new AbstractGeologistsHammer("iron_geologists_hammer", itemProps.defaultMaxDamage(128)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 5;
@@ -244,7 +244,7 @@ public class FHContent {
                 return 5;
             }
         };
-        public static Item steel_geologists_hammer = new AbstractGeologistsHammer("steel_geologists_hammer", itemProps.defaultMaxDamage(128)) {
+        public static Item steel_geologists_hammer = new AbstractGeologistsHammer("steel_geologists_hammer", itemProps.defaultMaxDamage(160)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 6;
