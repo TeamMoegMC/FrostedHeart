@@ -232,6 +232,7 @@ public class FHContent {
 		};
         public static Item soil_thermometer = new SoilThermometer("soil_thermometer", itemProps);
         public static Item heat_debuger = new HeatDebugItem("heat_debugger");
+        public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", itemProps);
     }
 
     public static class FHMultiblocks {
