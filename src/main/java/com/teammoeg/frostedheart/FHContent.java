@@ -156,19 +156,29 @@ public class FHContent {
         public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
         public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
-        public static Item copper_pro_pick = new AbstractProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(128)) {
-			@Override
-			public int getHorizonalRange(ItemStack item) {return 8;}
-			@Override
-			public int getVerticalRange(ItemStack item) {return 4;}
-		};
-        public static Item iron_pro_pick = new AbstractProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(256)) {
-			@Override
-			public int getHorizonalRange(ItemStack item) {return 8;}
-			@Override
-			public int getVerticalRange(ItemStack item) {return 4;}
-		};
-        public static Item steel_pro_pick = new AbstractProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(512)) {
+        public static Item copper_pro_pick = new AbstractProspectorPick("copper_pro_pick", itemProps.defaultMaxDamage(96)) {
+            @Override
+            public int getHorizonalRange(ItemStack item) {
+                return 8;
+            }
+
+            @Override
+            public int getVerticalRange(ItemStack item) {
+                return 4;
+            }
+        };
+        public static Item iron_pro_pick = new AbstractProspectorPick("iron_pro_pick", itemProps.defaultMaxDamage(128)) {
+            @Override
+            public int getHorizonalRange(ItemStack item) {
+                return 8;
+            }
+
+            @Override
+            public int getVerticalRange(ItemStack item) {
+                return 4;
+            }
+        };
+        public static Item steel_pro_pick = new AbstractProspectorPick("steel_pro_pick", itemProps.defaultMaxDamage(256)) {
             @Override
             public int getHorizonalRange(ItemStack item) {
                 return 9;
