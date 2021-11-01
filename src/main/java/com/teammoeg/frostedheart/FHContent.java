@@ -30,6 +30,8 @@ import com.teammoeg.frostedheart.content.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.charger.ChargerRecipeSerializer;
 import com.teammoeg.frostedheart.content.charger.ChargerTileEntity;
+import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
+import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
 import com.teammoeg.frostedheart.content.generator.*;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.generatort1.T1GeneratorMultiblock;
@@ -78,7 +80,8 @@ public class FHContent {
     public static List<Fluid> registeredFHFluids = new ArrayList<>();
 
     public static class FHBlocks {
-        public static void init() {
+        public static Block cmupdate = new CMUpdateBlock("cmupdate",Block.Properties.create(Material.ROCK), FHBlockItem::new);
+		public static void init() {
         }
 
         public static Block generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
@@ -281,6 +284,10 @@ public class FHContent {
         );
         public static final RegistryObject<TileEntityType<OilBurnerTileEntity>> OIL_BURNER = REGISTER.register(
                 "oil_burner", makeType(() -> new OilBurnerTileEntity(), () -> FHBlocks.oilburner)
+        );
+
+		public static final RegistryObject<TileEntityType<CMUpdateTileEntity>> CMUPDATE = REGISTER.register(
+                "cm_update", makeType(() -> new CMUpdateTileEntity(), () -> FHBlocks.cmupdate)
         );
 
         private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
