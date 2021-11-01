@@ -355,13 +355,13 @@ public class ForgeEvents {
         AddTempCommand.register(dispatcher);
     }
 
-    @SubscribeEvent
-    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
-        ToolType Tool = event.getState().getHarvestTool();
-        if (Tool != null) {
-            if (!FHTags.Blocks.ALWAYS_BREAKABLE.contains(event.getState().getBlock()))
-                if (event.getPlayer().getHeldItemMainhand().getHarvestLevel(Tool, event.getPlayer(), event.getState()) == -1)
-                    event.setNewSpeed(0);
-        }
-    }
+//    @SubscribeEvent
+//    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+//        ToolType Tool = event.getState().getHarvestTool();
+//        if (Tool != null) {
+//            if (!FHTags.Blocks.ALWAYS_BREAKABLE.contains(event.getState().getBlock()))
+//                if (event.getPlayer().getHeldItemMainhand().getHarvestLevel(Tool, event.getPlayer(), event.getState()) == -1)
+//                    event.setNewSpeed(0);
+//        }
+//    }
 }

@@ -18,10 +18,14 @@ public abstract class VillagerMixin extends AbstractVillagerEntity {
 		super(type, worldIn);
 	}
 	@Shadow
-	abstract void shakeHead();
+	protected abstract void shakeHead();
+	/**
+	 * @author khjxiaogu
+	 * @reason disable villager trade for our system
+	 */
 	@Overwrite
 	private void displayMerchantGui(PlayerEntity player) {
 		this.shakeHead();
-		player.sendMessage(GuiUtils.translateMessage("village.unknown"),super.getUniqueID());
+		player.sendStatusMessage(GuiUtils.translateMessage("village.unknown"), false);
 	}
 }
