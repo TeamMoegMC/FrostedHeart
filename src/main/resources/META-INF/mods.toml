@@ -44,3 +44,17 @@ Some heat in the cold...
     versionRange="[1.1.33-beta-1.16.5,)"
     ordering="BEFORE"
     side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="create"
+    mandatory=true
+    versionRange="[v0.3.2d,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="flywheel"
+    mandatory=true
+    versionRange="[1.16-0.2.3,1.16-0.3)"
+    ordering="AFTER"
+    side="BOTH"

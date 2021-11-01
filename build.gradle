@@ -239,10 +239,10 @@ curseforge {
                 requiredDependency 'create'
                 requiredDependency 'flywheel'
                 requiredDependency 'immersive-engineering'
-                requiredDependency 'project-rankine'
-                requiredDependency 'snow-real-magic'
-                requiredDependency 'kiwi'
-                requiredDependency 'primal-winter'
+//                requiredDependency 'project-rankine'
+//                requiredDependency 'snow-real-magic'
+//                requiredDependency 'kiwi'
+//                requiredDependency 'primal-winter'
             }
         }
     }

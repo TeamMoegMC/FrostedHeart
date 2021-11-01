@@ -60,6 +60,8 @@ public class FHMain {
     }
 
     public FHMain() {
+        CreateCompat.init();
+
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
 
         mod.addListener(this::setup);
@@ -81,7 +83,6 @@ public class FHMain {
         FHParticleTypes.REGISTER.register(mod);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
 
-        CreateCompat.init();
     }
 
     public void setup(final FMLCommonSetupEvent event) {

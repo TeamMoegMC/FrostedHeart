@@ -47,7 +47,10 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
         this.resultType=resultType;
     }
 
-
+	@Override
+	public boolean isEnchantable(ItemStack stack) {
+		return false;
+	}
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
