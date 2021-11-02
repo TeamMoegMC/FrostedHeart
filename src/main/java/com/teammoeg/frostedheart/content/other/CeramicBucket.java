@@ -27,6 +27,7 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class CeramicBucket extends FHBaseItem {
@@ -158,7 +159,13 @@ public class CeramicBucket extends FHBaseItem {
 
     @Override
     public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, @Nullable net.minecraft.nbt.CompoundNBT nbt) {
-        return new FluidHandlerItemStackSimple(stack, 1000);
+        return new FluidHandlerItemStackSimple(stack, 1000) {
+            @Override
+            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+            	if(stack.getFluid().getAttributes().isGaseous())return false;
+                return true;
+            }
+        };
     }
 
     private Fluid getFluid(ItemStack stack) {

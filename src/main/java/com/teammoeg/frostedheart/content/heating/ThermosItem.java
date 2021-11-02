@@ -66,7 +66,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     final int unit;
 
     public ThermosItem(String name, int capacity, int unit) {
-        super(new Properties().maxStackSize(1).setNoRepair().maxDamage(capacity).setNoRepair().group(FHMain.itemGroup), capacity);
+        super(new Properties().maxStackSize(1).setNoRepair().maxDamage(capacity).group(FHMain.itemGroup), capacity);
         this.unit = unit;
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
