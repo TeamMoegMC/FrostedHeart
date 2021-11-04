@@ -9,7 +9,7 @@
           "children": [
             {
               "type": "minecraft:item",
-              "name": "frostedheart:generator_core_t1"
+              "name": "frostedheart:oil_burner"
             }
           ]
         }
