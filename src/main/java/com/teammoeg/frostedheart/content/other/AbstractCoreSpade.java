@@ -67,10 +67,10 @@ public abstract class AbstractCoreSpade extends FHBaseItem {
 			World world = context.getWorld();
 			BlockPos blockpos = context.getPos();
 			if (world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
-				player.sendStatusMessage(
+				player.sendMessage(
 						new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey())
 								.mergeStyle(TextFormatting.GOLD),
-						true);
+								player.getUniqueID());
 				return ActionResultType.SUCCESS;
 			}
 			int x = blockpos.getX();

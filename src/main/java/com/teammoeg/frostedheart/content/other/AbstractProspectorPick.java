@@ -57,7 +57,7 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
 	        World world = context.getWorld();
 	        BlockPos blockpos = context.getPos();
 	        if(world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
-	        	player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD), true);
+	        	player.sendMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
 	        	 return ActionResultType.SUCCESS;
 	        }
 	        int x = blockpos.getX();
@@ -100,11 +100,11 @@ public abstract class AbstractProspectorPick extends FHBaseItem {
 		            	}
 		            	if(ore_name!=null) {
 			                if (count < 20)
-			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+			                    player.sendMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
 			                else if (count < 40)
-			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+			                    player.sendMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
 			                else {
-			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD), true);
+			                    player.sendMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
 			                }
 			                return ActionResultType.SUCCESS;
 		            	}
