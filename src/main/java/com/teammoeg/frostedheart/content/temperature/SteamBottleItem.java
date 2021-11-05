@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.heating;
+package com.teammoeg.frostedheart.content.temperature;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
