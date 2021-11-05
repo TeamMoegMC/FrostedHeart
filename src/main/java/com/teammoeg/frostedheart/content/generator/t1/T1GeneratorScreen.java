@@ -16,12 +16,11 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.generatort2;
+package com.teammoeg.frostedheart.content.generator.t1;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
-import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -34,11 +33,11 @@ import net.minecraft.util.text.ITextComponent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
-    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generator_t2");
-    private T2GeneratorTileEntity tile;
+public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
+    private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generator_t1");
+    private T1GeneratorTileEntity tile;
 
-    public T2GeneratorScreen(T2GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
+    public T1GeneratorScreen(T1GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);
         this.tile = container.tile;
         clearIntArray(tile.guiData);
@@ -70,7 +69,6 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
     public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
         List<ITextComponent> tooltip = new ArrayList<>();
-        GuiHelper.handleGuiTank(transform, tile.tank, guiLeft + 30, guiTop + 16, 16, 47, 177, 86, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
 
         if (isMouseIn(mouseX, mouseY, 57, 36, 19, 10)) {
             if (tile.isWorking()) {
@@ -88,22 +86,12 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
             }
         }
 
-        if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
-        	if(tile.getIsActive())
-        		tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(Integer.toString(tile.getActualTemp())));
-        	else
-        		tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(Integer.toString(0)));
+        if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54) && tile.getIsActive()) {
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(Integer.toString(tile.getActualTemp())));
         }
 
-        if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {
-        	if(tile.getIsActive())
-        		tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
-        	else
-        		tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(0)));
-        }
-
-        if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int) tile.power)));
+        if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54) && tile.getIsActive()) {
+            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
 
         if (!tooltip.isEmpty()) {
@@ -115,7 +103,6 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
     protected void drawGuiContainerBackgroundLayer(MatrixStack transform, float partial, int x, int y) {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
-        GuiHelper.handleGuiTank(transform, tile.tank, guiLeft + 30, guiTop + 16, 16, 47, 177, 86, 20, 51, x, y, TEXTURE, null);
 
         // recipe progress icon
         if (tile.processMax > 0 && tile.process > 0) {
@@ -135,7 +122,6 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
 
         int tempLevel = tile.getTemperatureLevel();
         int rangeLevel = tile.getRangeLevel();
-        float powerRatio = tile.power / tile.getMaxPower(); // (0, 1)
 
         // temperature bar (182, 30)
         if (tile.getIsActive()) {
@@ -150,11 +136,6 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
             int bar = (rangeLevel - 1) * 14;
             this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
         }
-
-        // power
-        int offset = (int) ((1 - powerRatio) * 56);
-        int bar = (int) (powerRatio * 56);
-        this.blit(transform, guiLeft + 146, guiTop + offset + 12, 181, 30, 2, bar);
     }
 
     @Override

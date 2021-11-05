@@ -16,7 +16,7 @@
  * along with Steam Powered. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.oilburner;
+package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import java.util.Random;
 import java.util.function.BiFunction;

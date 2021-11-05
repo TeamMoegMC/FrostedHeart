@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.generatort2;
+package com.teammoeg.frostedheart.content.generator.t1;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHContent;
@@ -28,11 +28,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-public class T2GeneratorMultiblock extends FHBaseMultiblock {
-    public T2GeneratorMultiblock() {
-        super(new ResourceLocation(FHMain.MODID, "multiblocks/generator_t2"),
-                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 7, 3),
-                () -> FHContent.FHMultiblocks.generator_t2.getDefaultState());
+public class T1GeneratorMultiblock extends FHBaseMultiblock {
+    public T1GeneratorMultiblock() {
+        super(new ResourceLocation(FHMain.MODID, "multiblocks/generator"),
+                new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3),
+                () -> FHContent.FHMultiblocks.generator.getDefaultState());
     }
 
     @Override

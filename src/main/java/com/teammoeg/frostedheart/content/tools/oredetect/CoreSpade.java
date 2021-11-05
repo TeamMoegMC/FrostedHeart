@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.oredetect;
+package com.teammoeg.frostedheart.content.tools.oredetect;
 
 import java.util.HashMap;
 import java.util.List;

@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.generatort1;
+package com.teammoeg.frostedheart.content.generator.t2;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
@@ -25,10 +25,10 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 
-public class T1GeneratorContainer extends IEBaseContainer<T1GeneratorTileEntity> {
-    public T1GeneratorTileEntity.GeneratorData data;
+public class T2GeneratorContainer extends IEBaseContainer<T2GeneratorTileEntity> {
+    public T2GeneratorTileEntity.GeneratorData data;
 
-    public T1GeneratorContainer(int id, PlayerInventory inventoryPlayer, T1GeneratorTileEntity tile) {
+    public T2GeneratorContainer(int id, PlayerInventory inventoryPlayer, T2GeneratorTileEntity tile) {
         super(inventoryPlayer, tile, id);
 
         this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {

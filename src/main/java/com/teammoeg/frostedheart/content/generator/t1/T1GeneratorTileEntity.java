@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.generatort1;
+package com.teammoeg.frostedheart.content.generator.t1;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;

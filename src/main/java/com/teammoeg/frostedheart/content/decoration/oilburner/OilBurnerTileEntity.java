@@ -16,7 +16,7 @@
  * along with Steam Powered. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.oilburner;
+package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;

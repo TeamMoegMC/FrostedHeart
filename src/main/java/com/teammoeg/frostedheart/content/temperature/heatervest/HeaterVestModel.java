@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.heatervest;
+package com.teammoeg.frostedheart.content.temperature.heatervest;
 
 import blusunrize.immersiveengineering.mixin.accessors.client.ModelAccess;
 import com.mojang.blaze3d.matrix.MatrixStack;

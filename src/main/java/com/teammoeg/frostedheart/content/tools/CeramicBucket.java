@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.content.other;
+package com.teammoeg.frostedheart.content.tools;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import net.minecraft.advancements.CriteriaTriggers;
