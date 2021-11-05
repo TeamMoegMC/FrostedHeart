@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
+import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
 import com.teammoeg.frostedheart.content.generator.*;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorMultiblock;
@@ -113,6 +114,13 @@ public class FHContent {
                 .hardnessAndResistance(2, 10)
                 .notSolid(), FHBlockItem::new);
         public static Block oilburner=new OilBurnerBlock("oil_burner", Block.Properties
+                .create(Material.ROCK)
+                .sound(SoundType.STONE)
+                .setRequiresTool()
+                .harvestTool(ToolType.PICKAXE)
+                .hardnessAndResistance(2, 10)
+                .notSolid(), FHBlockItem::new);
+        public static Block smoket1=new SmokeBlockT1("smoke_block_t1", Block.Properties
                 .create(Material.ROCK)
                 .sound(SoundType.STONE)
                 .setRequiresTool()
