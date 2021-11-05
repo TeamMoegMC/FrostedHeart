@@ -21,9 +21,11 @@ package com.teammoeg.frostedheart.resources;
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
-import com.teammoeg.frostedheart.content.charger.ChargerRecipe;
+
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
