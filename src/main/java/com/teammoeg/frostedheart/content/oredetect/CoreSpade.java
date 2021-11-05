@@ -19,9 +19,7 @@
 package com.teammoeg.frostedheart.content.oredetect;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
@@ -34,6 +32,7 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.Item.Properties;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -41,23 +40,26 @@ import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeManager;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
 
-public abstract class AbstractCoreSpade extends FHBaseItem {
+public class CoreSpade extends FHBaseItem {
 	public static ResourceLocation otag = new ResourceLocation("forge:ores");
 	public static ResourceLocation stag = new ResourceLocation("forge:stone");
 
-	public AbstractCoreSpade(String name, Properties properties) {
-		super(name, properties);
-	}
-
-	public abstract int getHorizonalRange(ItemStack item);
-
-	public abstract int getVerticalRange(ItemStack item);
+	public CoreSpade(String name, int hrange, int vrange, Properties properties) {
+        super(name, properties);
+        this.vrange=vrange;
+        this.hrange=hrange;
+    }
+    private int vrange;
+    private int hrange;
+    public int getHorizonalRange(ItemStack item) {
+    	return hrange;
+    }
+    public int getVerticalRange(ItemStack item) {
+    	return vrange;
+    }
 
 	@SuppressWarnings("resource")
 	@Override
