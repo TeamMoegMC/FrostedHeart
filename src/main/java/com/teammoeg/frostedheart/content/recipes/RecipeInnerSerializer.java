@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.other;
+package com.teammoeg.frostedheart.content.recipes;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonObject;

@@ -41,6 +41,8 @@ import com.teammoeg.frostedheart.content.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.content.other.*;
+import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.RecipeInnerSerializer;
 import com.teammoeg.frostedheart.content.steamenergy.*;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
