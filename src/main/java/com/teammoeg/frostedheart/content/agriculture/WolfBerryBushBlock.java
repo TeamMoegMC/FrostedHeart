@@ -16,8 +16,8 @@ import net.minecraft.world.World;
 
 public class WolfBerryBushBlock extends FHBerryBushBlock{
 
-    public WolfBerryBushBlock(String name, int growTemperature, Properties properties ) {
-        super(name, growTemperature, properties);
+    public WolfBerryBushBlock(String name, int growTemperature, Properties properties , int growSpeed) {
+        super(name, growTemperature, properties, growSpeed);
     }
 
     public ItemStack getItem(IBlockReader worldIn, BlockPos pos, BlockState state) {

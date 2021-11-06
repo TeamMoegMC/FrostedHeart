@@ -21,6 +21,8 @@ import java.util.Random;
 public class FHBerryBushBlock extends SweetBerryBushBlock {
     public final String name;
     private int growTemperature;
+    protected int growSpeed = 100;//0<growSpeed<100,100growSpeed相当于原版浆果丛的生长速度
+
     public FHBerryBushBlock(String name, int growTemperature, Properties properties) {
         super(properties);
         this.name = name;
@@ -28,7 +30,15 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         FHContent.registeredFHBlocks.add(this);
         ResourceLocation registryName = createRegistryName();
         setRegistryName(registryName);
-
+    }//if you don't want to set growSpeed
+    public FHBerryBushBlock(String name, int growTemperature, Properties properties, int growSpeed) {
+        super(properties);
+        this.name = name;
+        this.growTemperature = growTemperature;
+        FHContent.registeredFHBlocks.add(this);
+        ResourceLocation registryName = createRegistryName();
+        setRegistryName(registryName);
+        this.growSpeed = growSpeed;
     }
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
@@ -46,12 +56,12 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
             //我也不知道这玩意干啥用的，我看FHCropBlock里有就加上了
-        }else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state,random.nextInt(5) == 0)) {
+        }else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state,random.nextInt(5) == 0) && this.growSpeed > random.nextInt(100)) {
             worldIn.setBlockState(pos, state.with(AGE, Integer.valueOf(i + 1)), 2);
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
         }
-
     }
+
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
         float temp = ChunkData.getTemperature(worldIn, pos);
