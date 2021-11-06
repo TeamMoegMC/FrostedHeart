@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.*;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
+import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
@@ -94,6 +95,7 @@ public class FHContent {
         public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
         public static Block rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
+        public static Block wolfberry_bush_block = new WolfBerryBushBlock("wolfberry_bush_block",0,berryBushBlocks, 10);
         public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
         public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
                 .create(Material.ROCK).sound(SoundType.WOOD)
@@ -143,6 +145,7 @@ public class FHContent {
         	return new Item.Properties().group(FHMain.itemGroup);
         }
         public static Item energy_core = new FHBaseItem("energy_core", itemProps);
+        public static Item wolfberries = new FoodBlockItem(FHBlocks.wolfberry_bush_block, itemProps, FHFoods.WOLFBERRIES, "wolfberries");
         public static Item rye = new FHBaseItem("rye", itemProps);
         public static Item generator_ash = new FHBaseItem("generator_ash", itemProps);
         public static Item rye_flour = new FHBaseItem("rye_flour", itemProps);

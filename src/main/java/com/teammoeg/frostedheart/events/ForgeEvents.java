@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
+import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
@@ -205,6 +206,12 @@ public class ForgeEvents {
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",growTemp), false);
                 }
+            } else if (growBlock instanceof FHBerryBushBlock) {
+                int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
+                if (temp < growTemp) {
+                    event.setCanceled(true);
+                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",growTemp), false);
+                }
             } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                 if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
                     event.setCanceled(true);
@@ -229,6 +236,12 @@ public class ForgeEvents {
                     //TODO: allow planting trees now, maybe i will add some restrictions in the future
                 } else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                    if (temp < growTemp) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",growTemp), false);
+                    }
+                } else if (growBlock instanceof FHBerryBushBlock){
+                    int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
                         player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",growTemp), false);

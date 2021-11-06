@@ -67,7 +67,7 @@ public class FHCropBlock extends CropsBlock {
     }
 
     public int getGrowTemperature() {
-        return growTemperature;
+        return this.growTemperature;
     }
 
     @Override

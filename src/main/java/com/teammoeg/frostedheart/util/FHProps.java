@@ -42,4 +42,5 @@ public class FHProps {
             .zeroHardnessAndResistance()
             .sound(SoundType.CROP);
     public static final Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
+    public static final AbstractBlock.Properties berryBushBlocks = AbstractBlock.Properties.create(Material.PLANTS).tickRandomly().doesNotBlockMovement().sound(SoundType.SWEET_BERRY_BUSH);
 }
