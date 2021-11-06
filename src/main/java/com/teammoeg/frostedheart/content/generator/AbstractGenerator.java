@@ -52,17 +52,17 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        setWorking(nbt.getBoolean("isWorking"));
-        setOverdrive(nbt.getBoolean("isOverdrive"));
-        setActualOverdrive(nbt.getBoolean("Overdriven"));
+        isWorking=nbt.getBoolean("isWorking");
+        isOverdrive=nbt.getBoolean("isOverdrive");
+        isActualOverdrive=nbt.getBoolean("Overdriven");
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.putBoolean("isWorking", isWorking());
-        nbt.putBoolean("isOverdrive", isOverdrive());
-        nbt.putBoolean("Overdriven", isActualOverdrive());
+        nbt.putBoolean("isWorking",isWorking);
+        nbt.putBoolean("isOverdrive",isOverdrive);
+        nbt.putBoolean("Overdriven",isActualOverdrive);
 
     }
 

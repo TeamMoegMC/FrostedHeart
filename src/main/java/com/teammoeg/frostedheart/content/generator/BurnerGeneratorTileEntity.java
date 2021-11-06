@@ -223,7 +223,7 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
     }
 
     @Override
-    public void doGraphicalUpdates(int slot) {
+    public void doGraphicalUpdates() {
 
     }
 

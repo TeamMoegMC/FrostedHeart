@@ -205,9 +205,6 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         return 1;
     }
 
-    @Override
-    public void doGraphicalUpdates(int slot) {
-    }
 
     public float getMaxPower() {
         return 20000F;
@@ -241,5 +238,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
         return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
     }
+
+	@Override
+	public void doGraphicalUpdates() {
+	}
 
 }
