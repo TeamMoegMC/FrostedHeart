@@ -25,7 +25,10 @@ import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.IBlockReader;
 
 public class CMUpdateBlock extends FHBaseBlock {
@@ -45,4 +48,8 @@ public class CMUpdateBlock extends FHBaseBlock {
         return true;
     }
 
+    @Override
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+
+    }
 }
