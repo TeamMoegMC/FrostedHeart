@@ -2,14 +2,16 @@ package com.teammoeg.frostedheart.research;
 
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
- * The base definition of Research.
+ * Only Definition of research.
  * Part of Research Category {@link ResearchCategory}
  *
  */
@@ -19,8 +21,10 @@ public class Research {
     private TranslationTextComponent desc;
     private Item icon;
     private HashSet<Research> parents = new HashSet<>();
+    private HashSet<IClue> clues=new HashSet<>();
     private ResearchCategory category;
-    private boolean completed;
+    private ArrayList<ItemStack> requireItems=new ArrayList<>();
+    private int points;
 
     public Research(String path, Research... parents) {
         this(new ResourceLocation(FHMain.MODID, path), Items.GRASS_BLOCK, parents);
@@ -37,37 +41,6 @@ public class Research {
         this.desc = new TranslationTextComponent("research."+id.getNamespace() + "." + id.getPath() + ".desc");
         this.icon = icon;
     }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public void complete() {
-        this.completed = true;
-    }
-
-    public boolean isUnlocked() {
-        if (!this.parents.isEmpty()) {
-            for (Research research : parents) {
-                if (!research.isCompleted()) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public boolean isHidden() {
-        if (!this.parents.isEmpty()) {
-            for (Research research : parents) {
-                if (!research.isUnlocked()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public ResourceLocation getId() {
         return id;
     }
