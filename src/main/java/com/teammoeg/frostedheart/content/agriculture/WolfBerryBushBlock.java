@@ -20,22 +20,22 @@ public class WolfBerryBushBlock extends FHBerryBushBlock{
         super(name, growTemperature, properties, growSpeed);
     }
 
-//    public ItemStack getItem(IBlockReader worldIn, BlockPos pos, BlockState state) {
-//        return new ItemStack(FHContent.FHItems.wolfberries);
-//    }
-//    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-//        int i = state.get(AGE);
-//        boolean flag = i == 3;
-//        if (!flag && player.getHeldItem(handIn).getItem() == Items.BONE_MEAL) {
-//            return ActionResultType.PASS;
-//        } else if (i > 1) {
-//            int j = 1 + worldIn.rand.nextInt(2);
-//            spawnAsEntity(worldIn, pos, new ItemStack(FHContent.FHItems.wolfberries, j + (flag ? 1 : 0)));
-//            worldIn.playSound((PlayerEntity)null, pos, SoundEvents.ITEM_SWEET_BERRIES_PICK_FROM_BUSH, SoundCategory.BLOCKS, 1.0F, 0.8F + worldIn.rand.nextFloat() * 0.4F);
-//            worldIn.setBlockState(pos, state.with(AGE, Integer.valueOf(1)), 2);
-//            return ActionResultType.func_233537_a_(worldIn.isRemote);
-//        } else {
-//            return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
-//        }
-//    }
+    public ItemStack getItem(IBlockReader worldIn, BlockPos pos, BlockState state) {
+        return new ItemStack(FHContent.FHItems.wolfberries);
+    }
+    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        int i = state.get(AGE);
+        boolean flag = i == 3;
+        if (!flag && player.getHeldItem(handIn).getItem() == Items.BONE_MEAL) {
+            return ActionResultType.PASS;
+        } else if (i > 1) {
+            int j = 1 + worldIn.rand.nextInt(2);
+            spawnAsEntity(worldIn, pos, new ItemStack(FHContent.FHItems.wolfberries, j + (flag ? 1 : 0)));
+            worldIn.playSound((PlayerEntity)null, pos, SoundEvents.ITEM_SWEET_BERRIES_PICK_FROM_BUSH, SoundCategory.BLOCKS, 1.0F, 0.8F + worldIn.rand.nextFloat() * 0.4F);
+            worldIn.setBlockState(pos, state.with(AGE, Integer.valueOf(1)), 2);
+            return ActionResultType.func_233537_a_(worldIn.isRemote);
+        } else {
+            return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+        }
+    }
 }
