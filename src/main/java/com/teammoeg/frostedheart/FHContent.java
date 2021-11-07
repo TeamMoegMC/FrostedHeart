@@ -53,6 +53,8 @@ import com.teammoeg.frostedheart.content.tools.*;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
+import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
+import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.util.FHFoods;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -61,7 +63,6 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.Properties;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeType;
@@ -122,6 +123,13 @@ public class FHContent {
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
                 .notSolid(), FHBlockItem::new);
+        public static Block drawing_desk=new DrawingDeskBlock("drawing_desk", Block.Properties
+                .create(Material.ROCK)
+                .sound(SoundType.STONE)
+                .setRequiresTool()
+                .harvestTool(ToolType.PICKAXE)
+                .hardnessAndResistance(2, 10)
+                .notSolid(), FHBlockItem::new);
         public static Block smoket1=new SmokeBlockT1("smoke_block_t1", Block.Properties
                 .create(Material.ROCK)
                 .sound(SoundType.STONE)
@@ -129,13 +137,6 @@ public class FHContent {
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
                 .notSolid(), FHBlockItem::new);
-       /* public static Block radiator = new RadiatorBlock("heat_radiator", Properties
-                .create(Material.ROCK)
-                .sound(SoundType.METAL)
-                .setRequiresTool()
-                .harvestTool(ToolType.PICKAXE)
-                .hardnessAndResistance(2.0F, 20.0F)
-                .notSolid(), FHBlockItem::new);*/
     }
 
     public static class FHItems {
@@ -239,6 +240,10 @@ public class FHContent {
 
 		public static final RegistryObject<TileEntityType<CMUpdateTileEntity>> CMUPDATE = REGISTER.register(
                 "cm_update", makeType(() -> new CMUpdateTileEntity(), () -> FHBlocks.cmupdate)
+        );
+
+        public static final RegistryObject<TileEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
+                "drawing_desk", makeType(() -> new DrawingDeskTileEntity(), () -> FHBlocks.drawing_desk)
         );
 
         private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {

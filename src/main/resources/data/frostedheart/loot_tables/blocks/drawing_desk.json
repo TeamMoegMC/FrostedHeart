@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+		    "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "frostedheart:drawing_desk",
+              "properties": {
+                "not_multi_main": "false"
+              }
+            }
+          ],
+          "name": "frostedheart:drawing_desk"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ]
+    }
+  ]
+}

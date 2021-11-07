@@ -1,0 +1,9 @@
+{
+  "parent": "block/block",
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/drawing_desk.obj",
+  "flip-v": true,
+  "textures": {
+    "particle": "frostedheart:block/obj/drawing_desk"
+  }
+}
