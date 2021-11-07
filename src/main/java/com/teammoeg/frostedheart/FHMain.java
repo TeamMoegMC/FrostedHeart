@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.research.DefaultResearches;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHProps;
 import net.minecraft.item.ItemGroup;
@@ -83,6 +84,7 @@ public class FHMain {
         FHParticleTypes.REGISTER.register(mod);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
 
+        DefaultResearches.init();
     }
 
     public void setup(final FMLCommonSetupEvent event) {

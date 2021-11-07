@@ -10,7 +10,7 @@ import java.util.HashSet;
 
 /**
  * The base definition of Research.
- * Part of Research Line {@link ResearchLine}
+ * Part of Research Category {@link ResearchCategory}
  *
  */
 public class Research {
@@ -19,7 +19,7 @@ public class Research {
     private TranslationTextComponent desc;
     private Item icon;
     private HashSet<Research> parents = new HashSet<>();
-    private ResearchLine line;
+    private ResearchCategory category;
     private boolean completed;
 
     public Research(String path, Research... parents) {
@@ -98,12 +98,12 @@ public class Research {
         return desc;
     }
 
-    public ResearchLine getLine() {
-        return line;
+    public ResearchCategory getCategory() {
+        return category;
     }
 
-    public void setLine(ResearchLine line) {
-        this.line = line;
+    public void setCategory(ResearchCategory category) {
+        this.category = category;
     }
 
     public String toString() {

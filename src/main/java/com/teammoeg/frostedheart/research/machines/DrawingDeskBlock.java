@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.research.machines;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.research.ResearchScreen;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -145,8 +146,9 @@ public class DrawingDeskBlock extends FHBaseBlock {
             if (state.get(IS_NOT_MAIN)) {
                 pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
             }
-            //TODO: open gui
         }
+        ResearchScreen screen = new ResearchScreen(player);
+        screen.openGui();
         return ActionResultType.SUCCESS;
     }
 

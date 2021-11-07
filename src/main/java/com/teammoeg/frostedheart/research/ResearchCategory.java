@@ -19,28 +19,26 @@
 package com.teammoeg.frostedheart.research;
 
 import com.teammoeg.frostedheart.FHMain;
-import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class ResearchLine {
+public class ResearchCategory {
+
     private ResourceLocation id;
     private TranslationTextComponent name;
     private TranslationTextComponent desc;
-    private Item icon;
+    private ResourceLocation icon;
+    private ResourceLocation background;
 
-    public ResearchLine(String path, Item icon) {
-        this(new ResourceLocation(FHMain.MODID, path), icon);
-    }
-
-    public ResearchLine(ResourceLocation id, Item icon) {
+    public ResearchCategory(ResourceLocation id, ResourceLocation icon, ResourceLocation background) {
         this.id = id;
         this.name = new TranslationTextComponent("research_line."+id.getNamespace() + "." + id.getPath() + ".name");
         this.desc = new TranslationTextComponent("research_line."+id.getNamespace() + "." + id.getPath() + ".desc");
         this.icon = icon;
+        this.background = background;
     }
 
-    public Item getIcon() {
+    public ResourceLocation getIcon() {
         return icon;
     }
 
