@@ -30,7 +30,7 @@ import java.util.ArrayList;
 public class FHFeatures {
     public static final Feature<FHOreFeatureConfig> FHORE = new FHOreFeature(FHOreFeatureConfig.CODEC);
     public static ArrayList<ConfiguredFeature> FH_ORES = new ArrayList();
-    public static final ConfiguredFeature<?, ?> ore_magnetite = register("ore_magnetite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.magnetite, RankineBlocks.MAGNETITE_ORE.get().getStateContainer().getBaseState(), 40)).range(64).square().chance(3));
+    public static final ConfiguredFeature<?, ?> ore_magnetite = register("ore_magnetite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.magnetite, RankineBlocks.MAGNETITE_ORE.get().getStateContainer().getBaseState(), 40)).range(64).square().chance(4));
     public static final ConfiguredFeature<?, ?> ore_pyrite = register("ore_pyrite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.PYRITE_ORE.get().getStateContainer().getBaseState(), 40)).range(35).square().chance(4));
     public static final ConfiguredFeature<?, ?> ore_native_copper = register("ore_native_copper", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.native_copper, RankineBlocks.NATIVE_COPPER_ORE.get().getStateContainer().getBaseState(), 40)).range(65).square()).chance(2);
     public static final ConfiguredFeature<?, ?> ore_malachite = register("ore_malachite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.malachite, RankineBlocks.MALACHITE_ORE.get().getStateContainer().getBaseState(), 45)).range(65).square().chance(2));
