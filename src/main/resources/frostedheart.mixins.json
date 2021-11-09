@@ -22,13 +22,22 @@
     "rankine.TapBarrelBlockMixin",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin",
-    "create.MixinProcessingScenes"
+    "create.MixinProcessingScenes",
+    "create.MixinSmartTileEntity",
+    "create.MixinGantryShaftTileEntity",
+    "create.MixinGantryContraptionEntity",
+    "create.MixinCartAssemblerTileEntity",
+    "create.HandCrankBlockMixin",
+    "create.MixinAbstractContraption",
+    "create.MixinPulleyTileEntity",
+    "create.MixinClockworkBearingTileEntity"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",
     "client.IngameGuiAccess",
     "client.IngameGuiMixin",
-    "client.ToastGuiMixin"
+    "client.ToastGuiMixin",
+    "client.MixinClientEvents"
   ],
   "injectors": {
     "defaultRequire": 1
