@@ -1,12 +1,14 @@
 package com.teammoeg.frostedheart.mixin.create;
 
+import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.bearing.ClockworkBearingTileEntity;
 
 import net.minecraft.tileentity.TileEntityType;
-
+@Mixin(ClockworkBearingTileEntity.class)
 public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity {
 
 	public MixinClockworkBearingTileEntity(TileEntityType<?> typeIn) {
@@ -18,7 +20,7 @@ public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity 
 	protected ControlledContraptionEntity minuteHand;
 	@Override
 	public float calculateStressApplied() {
-		float stress=0;
+		float stress=1;
 		if(hourHand!=null) {
 			stress+= hourHand.getContraption().getBlocks().size()*0.25F+hourHand.getContraption().getActors().size()*3.75F;
 		}
