@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.research;
 
 import net.minecraft.util.text.ITextComponent;
 
-public abstract class AbstractClue implements IClue{
+public abstract class AbstractClue extends FHRegisteredItem implements IClue{
 	float contribution;
 	String ID;
 	ITextComponent name;

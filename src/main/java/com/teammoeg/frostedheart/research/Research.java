@@ -15,7 +15,7 @@ import java.util.HashSet;
  * Part of Research Category {@link ResearchCategory}
  *
  */
-public class Research {
+public class Research extends FHRegisteredItem{
     private ResourceLocation id;
     private TranslationTextComponent name;
     private TranslationTextComponent desc;
