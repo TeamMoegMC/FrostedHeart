@@ -35,6 +35,8 @@ public class ClueCopy extends AbstractClue {
 	public ITextComponent getHint() {
 		return super.hint==null?parent.getHint():super.hint;
 	}
+
+
 	
 
 }

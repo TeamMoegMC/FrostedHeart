@@ -82,4 +82,9 @@ public class Research extends FHRegisteredItem{
     public String toString() {
         return "Research[" + id + "]";
     }
+
+	@Override
+	public String getLId() {
+		return id.toString();
+	}
 }

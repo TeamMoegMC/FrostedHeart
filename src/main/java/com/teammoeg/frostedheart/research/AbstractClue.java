@@ -47,5 +47,8 @@ public abstract class AbstractClue extends FHRegisteredItem implements IClue{
 	public ITextComponent getHint() {
 		return hint;
 	}
-	
+	@Override
+	public String getLId() {
+		return ID;
+	}
 }

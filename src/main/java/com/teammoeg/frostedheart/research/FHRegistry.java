@@ -10,7 +10,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 
 public abstract class FHRegistry<T extends FHRegisteredItem> {
-	private List<T> items=new ArrayList<>();
+	private ArrayList<T> items=new ArrayList<>();
 	private List<String> rnames=new ArrayList<>();
 	public FHRegistry() {
 		
@@ -39,6 +39,7 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 		return null;
 	}
 	public void ensure() {
+		items.ensureCapacity(rnames.size());
 		while(items.size()<rnames.size())
 			items.add(null);
 	}
@@ -48,6 +49,7 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 		return cn;
 	}
 	void deserialize(ListNBT load) {
+		rnames.clear();
 		rnames.addAll(load.stream().map(INBT::getString).collect(Collectors.toList()));
 		ensure();
 	}
