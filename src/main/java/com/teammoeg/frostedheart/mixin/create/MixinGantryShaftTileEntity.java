@@ -28,7 +28,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity{
 			Vector3d currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
 			BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
 			if(gantryShaftPos.equals(this.pos)) {
-				this.lastStressApplied = currentComp.getContraption().getBlocks().size()*0.25F+currentComp.getContraption().getActors().size()*3.75F+1;
+				this.lastStressApplied = currentComp.getContraption().getBlocks().size()*0.25F+currentComp.getContraption().getActors().size()*4+1;
 				return lastStressApplied;
 			}
 		}
