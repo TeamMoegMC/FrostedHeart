@@ -22,10 +22,10 @@ public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity 
 	public float calculateStressApplied() {
 		float stress=1;
 		if(hourHand!=null) {
-			stress+= hourHand.getContraption().getBlocks().size()*0.25F+hourHand.getContraption().getActors().size()*3.75F;
+			stress+= hourHand.getContraption().getBlocks().size()*0.25F+hourHand.getContraption().getActors().size()*4F;
 		}
 		if(minuteHand!=null) {
-			stress+= minuteHand.getContraption().getBlocks().size()*0.25F+minuteHand.getContraption().getActors().size()*3.75F;
+			stress+= minuteHand.getContraption().getBlocks().size()*0.25F+minuteHand.getContraption().getActors().size()*4F;
 		}
 		this.lastStressApplied =stress;
 		return lastStressApplied;
