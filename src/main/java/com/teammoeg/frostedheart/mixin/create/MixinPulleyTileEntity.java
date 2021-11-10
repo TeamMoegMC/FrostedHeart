@@ -15,7 +15,7 @@ public abstract class MixinPulleyTileEntity extends LinearActuatorTileEntity {
 	@Override
 	public float calculateStressApplied() {
 		if(super.movedContraption!=null) {
-			this.lastStressApplied = movedContraption.getContraption().getBlocks().size()*0.25F+movedContraption.getContraption().getActors().size()*3.75F+1;
+			this.lastStressApplied = movedContraption.getContraption().getBlocks().size()*0.25F+movedContraption.getContraption().getActors().size()*4F+1;
 			return lastStressApplied;
 		}
 		return 1;
