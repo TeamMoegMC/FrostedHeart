@@ -1,7 +1,9 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.frostedheart.research.DefaultResearches;
+import com.teammoeg.frostedheart.research.ResearchCategory;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;

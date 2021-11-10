@@ -26,6 +26,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 @Mixin(ProcessingScenes.class)
 public class MixinProcessingScenes {
+	/**
+	 * @author khjxiaogu
+	 * @reason change mechanical press scene to fit TWR
+	 */
 	@Overwrite(remap=false)
 	public static void pressing(SceneBuilder scene, SceneBuildingUtil util) {
 		scene.title("mechanical_press", "Processing Items with the Mechanical Press");

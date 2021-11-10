@@ -14,6 +14,11 @@ public abstract class MixinSmartTileEntity extends TileEntity {
 	public MixinSmartTileEntity(TileEntityType<?> tileEntityTypeIn) {
 		super(tileEntityTypeIn);
 	}
+
+	/**
+	 * @author khjxiaogu
+	 * @reason reality contraption cost
+	 */
 	@Overwrite(remap=false)
 	public World getWorld() {
 		return super.world;

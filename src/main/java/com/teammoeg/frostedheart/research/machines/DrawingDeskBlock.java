@@ -19,7 +19,7 @@
 package com.teammoeg.frostedheart.research.machines;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.research.ResearchScreen;
+import com.teammoeg.frostedheart.research.screen.ResearchScreen;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
