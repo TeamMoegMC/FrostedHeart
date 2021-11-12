@@ -5,6 +5,7 @@ import net.minecraft.util.ResourceLocation;
 
 public class CreateCompat {
     public static void init() {
-        BlockStressDefaults.setDefaultImpact(new ResourceLocation("create","gantry_shaft"),32.0);
+        BlockStressDefaults.setDefaultImpact(new ResourceLocation("create","mechanical_harvester"),4.0);
+        BlockStressDefaults.setDefaultImpact(new ResourceLocation("create","mechanical_plough"),4.0);
     }
 }

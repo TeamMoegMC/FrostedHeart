@@ -17,10 +17,10 @@ public abstract class MixinSmartTileEntity extends TileEntity {
 
 	/**
 	 * @author khjxiaogu
-	 * @reason reality contraption cost
+	 * @reason fixed crash in dev environment.
 	 */
 	@Overwrite(remap=false)
 	public World getWorld() {
-		return super.world;
+		return world;
 	}
 }

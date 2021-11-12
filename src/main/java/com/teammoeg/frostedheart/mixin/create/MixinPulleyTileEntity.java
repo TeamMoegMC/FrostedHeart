@@ -4,6 +4,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import com.simibubi.create.content.contraptions.components.structureMovement.piston.LinearActuatorTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.pulley.PulleyTileEntity;
+import com.teammoeg.frostedheart.util.ContraptionCostUtils;
 
 import net.minecraft.tileentity.TileEntityType;
 @Mixin(PulleyTileEntity.class)
@@ -15,7 +16,8 @@ public abstract class MixinPulleyTileEntity extends LinearActuatorTileEntity {
 	@Override
 	public float calculateStressApplied() {
 		if(super.movedContraption!=null) {
-			this.lastStressApplied = movedContraption.getContraption().getBlocks().size()*0.25F+movedContraption.getContraption().getActors().size()*4F+1;
+			this.lastStressApplied = ContraptionCostUtils.getCost(super.movedContraption);
+			
 			return lastStressApplied;
 		}
 		return 1;

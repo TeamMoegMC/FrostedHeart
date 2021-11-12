@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.mixin.create;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.mounted.MountedContraption;
+import com.teammoeg.frostedheart.util.ContraptionCostUtils;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -40,6 +41,7 @@ public abstract class MixinAbstractContraption extends Entity{
 	}
 
 	boolean shoulddisb = false;
+	float calculatedCost=-1;
     @Shadow(remap = false)
     protected Contraption contraption;
 
@@ -52,7 +54,12 @@ public abstract class MixinAbstractContraption extends Entity{
     	if(!world.isRemote)
             compound.putInt("spinst", 2);
     }
-
+    public float getStressCost() {
+    	if(!this.isAlive())return 0;
+    	if(calculatedCost==-1)
+    		calculatedCost=ContraptionCostUtils.calculateStressApply(contraption);
+    	return calculatedCost;
+    }
     @Shadow(remap = false)
     public abstract void disassemble();
 
