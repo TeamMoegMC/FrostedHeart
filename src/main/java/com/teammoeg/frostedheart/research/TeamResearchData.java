@@ -1,6 +1,9 @@
 package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
+import net.minecraft.nbt.ByteNBT;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 
 public class TeamResearchData {
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
@@ -27,5 +30,41 @@ public class TeamResearchData {
 				return true;
 		}
 		return false;
+	}
+	public void ensureResearch(int len) {
+		rdata.ensureCapacity(len);
+		while(rdata.size()<len)
+			rdata.add(null);
+	}
+	public ResearchData getData(int id) {
+		ensureResearch(id);
+		ResearchData rnd=rdata.get(id-1);
+		if(rnd==null) {
+			rnd=new ResearchData();
+			rdata.set(id-1,rnd);
+		}
+		return rnd;
+	}
+	public ResearchData getData(Research rs) {
+		return getData(rs.getRId());
+	}
+	public ResearchData getData(String lid) {
+		return getData(FHResearch.researches.getByName(lid));
+	}
+	public CompoundNBT serialize() {
+		CompoundNBT nbt=new CompoundNBT();
+		ListNBT cl=new ListNBT();
+		clueComplete.stream().map(ByteNBT::valueOf).forEach(e->cl.add(e));
+		nbt.put("clues",cl);
+		ListNBT rs=new ListNBT();
+		rdata.stream().map(e->e!=null?e.serialize():ByteNBT.ZERO).forEach(e->rs.add(e));
+		nbt.put("researches",rs);
+		return nbt;
+	}
+	public void deserialize(CompoundNBT data) {
+		clueComplete.clear();
+		rdata.clear();
+		data.getList("clues",0).stream().map(e->((ByteNBT)e).getByte()!=0).forEach(e->clueComplete.add(e));
+		data.getList("researches",0).stream().map(e->e.getId()==10?new ResearchData((CompoundNBT) e):null).forEach(e->rdata.add(e));;
 	}
 }

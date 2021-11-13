@@ -45,12 +45,12 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 	}
 	ListNBT serialize() {
 		ListNBT cn=new ListNBT();
-		cn.addAll(rnames.stream().map(StringNBT::valueOf).collect(Collectors.toList()));
+		rnames.stream().map(StringNBT::valueOf).forEach(e->cn.add(e));
 		return cn;
 	}
 	void deserialize(ListNBT load) {
 		rnames.clear();
-		rnames.addAll(load.stream().map(INBT::getString).collect(Collectors.toList()));
+		load.stream().map(INBT::getString).forEach(e->rnames.add(e));
 		ensure();
 	}
 	public int getSize() {
