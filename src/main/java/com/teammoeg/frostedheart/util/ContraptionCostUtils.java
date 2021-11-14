@@ -15,7 +15,7 @@ public class ContraptionCostUtils {
 	public static float calculateStressApply(Contraption cont) {
 		float movecost = 0;
 		for(BlockInfo bi:cont.getBlocks().values()) {
-			if(bi.state.getBlock().getCollisionShape(bi.state,cont.getContraptionWorld(),bi.pos)==VoxelShapes.fullCube()) {
+			if(bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos)==VoxelShapes.fullCube()) {
 				movecost+=0.125F;
 			}else
 				movecost+=0.075F;
@@ -34,7 +34,7 @@ public class ContraptionCostUtils {
 			double dX=bi.pos.getX();
 			double dY=bi.pos.getY();
 			double distance=Math.sqrt((dX*dX)+(dY*dY));
-			if(bi.state.getBlock().getCollisionShape(bi.state,cont.getContraptionWorld(),bi.pos)==VoxelShapes.fullCube()) {
+			if(bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos)==VoxelShapes.fullCube()) {
 				movecost+=0.125F*2.5F*distance;
 			}else
 				movecost+=0.075F*2.5F*distance;
