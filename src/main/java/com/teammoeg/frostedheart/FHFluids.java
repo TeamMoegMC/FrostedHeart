@@ -18,7 +18,6 @@
 
 package com.teammoeg.frostedheart;
 
-import gloridifice.watersource.WaterSource;
 import net.minecraft.fluid.FlowingFluid;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.util.ResourceLocation;
@@ -29,8 +28,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHFluids {
-    public static final ResourceLocation STILL_FLUID_TEXTURE = new ResourceLocation(WaterSource.MODID, "block/fluid/water_still");
-    public static final ResourceLocation FLOWING_FLUID_TEXTURE = new ResourceLocation(WaterSource.MODID, "block/fluid/water_flow");
+    public static final ResourceLocation STILL_FLUID_TEXTURE = new ResourceLocation("block/water_still");
+    public static final ResourceLocation FLOWING_FLUID_TEXTURE =new ResourceLocation("block/water_flow");
     public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(ForgeRegistries.FLUIDS, FHMain.MODID);
 
 
@@ -50,10 +49,10 @@ public class FHFluids {
 
     public static ForgeFlowingFluid.Properties HOT_WATER_PROPERTIES =
             new ForgeFlowingFluid.Properties(HOT_WATER, HOT_WATER_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
-                    .color(0x3ABDFF).viscosity(1000))
+                    .color(0x3ABDFF).temperature(333))
                     .slopeFindDistance(3).explosionResistance(100F);
     public static ForgeFlowingFluid.Properties STEAM_PROPERTIES =
             new ForgeFlowingFluid.Properties(STEAM, STEAM_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
-                    .color(0xFFFFFF).viscosity(1000))
+                    .color(0xFFFFFF).viscosity(-1))
                     .slopeFindDistance(1).explosionResistance(100F);
 }
