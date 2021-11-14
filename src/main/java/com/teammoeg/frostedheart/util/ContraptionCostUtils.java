@@ -65,7 +65,7 @@ public class ContraptionCostUtils {
 			return (float) ace.getClass().getMethod("getActorCost").invoke(ace);
 		} catch (Exception e) {//may we ignore and just calculate?
 			if(ace.isAlive())
-				return calculateRotationStressApply(ace.getContraption())+ calculateActorStressApply(ace.getContraption());
+				return calculateActorStressApply(ace.getContraption());
 			return 0;
 		}
 	}
