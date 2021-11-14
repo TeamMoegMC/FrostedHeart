@@ -42,6 +42,8 @@ public abstract class MixinAbstractContraption extends Entity{
 
 	boolean shoulddisb = false;
 	float calculatedCost=-1;
+	float actorCost=-1;
+	float calculatedRotationCost=-1;
     @Shadow(remap = false)
     protected Contraption contraption;
 
@@ -56,9 +58,25 @@ public abstract class MixinAbstractContraption extends Entity{
     }
     public float getStressCost() {
     	if(!this.isAlive())return 0;
+    	if(actorCost==-1)
+    		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
     	if(calculatedCost==-1)
     		calculatedCost=ContraptionCostUtils.calculateStressApply(contraption);
-    	return calculatedCost;
+    	return calculatedCost+actorCost;
+    }
+    public float getRotationStressCost() {
+    	if(!this.isAlive())return 0;
+    	if(actorCost==-1)
+    		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
+    	if(calculatedRotationCost==-1)
+    		calculatedRotationCost=ContraptionCostUtils.calculateRotationStressApply(contraption);
+    	return calculatedRotationCost+actorCost;
+    }
+    public float getActorCost() {
+    	if(!this.isAlive())return 0;
+    	if(actorCost==-1)
+    		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
+    	return actorCost;
     }
     @Shadow(remap = false)
     public abstract void disassemble();
