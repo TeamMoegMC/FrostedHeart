@@ -49,10 +49,10 @@ public class FHFluids {
 
     public static ForgeFlowingFluid.Properties HOT_WATER_PROPERTIES =
             new ForgeFlowingFluid.Properties(HOT_WATER, HOT_WATER_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
-                    .color(0x3ABDFF).temperature(333))
+                    .color(0xFF3ABDFF).temperature(333)).block(null)
                     .slopeFindDistance(3).explosionResistance(100F);
     public static ForgeFlowingFluid.Properties STEAM_PROPERTIES =
             new ForgeFlowingFluid.Properties(STEAM, STEAM_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
-                    .color(0xFFFFFF).viscosity(-1))
+                    .color(0xFFFFFFFF).viscosity(-1))
                     .slopeFindDistance(1).explosionResistance(100F);
 }
