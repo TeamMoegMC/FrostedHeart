@@ -30,7 +30,8 @@
     "create.HandCrankBlockMixin",
     "create.MixinAbstractContraption",
     "create.MixinPulleyTileEntity",
-    "create.MixinClockworkBearingTileEntity"
+    "create.MixinClockworkBearingTileEntity",
+    "create.MixinMechanicalBearingTileEntity"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",

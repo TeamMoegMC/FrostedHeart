@@ -203,7 +203,7 @@ artifacts {
     archives sourcesJar
     archives deobfJar
 }
-processResources {
+jar {
    with copySpec {
       from 'src/main/resources/frostedheart.mixins.json' 
       filter{l -> l.replaceAll('"create.MixinSmartTileEntity",','')}; 
