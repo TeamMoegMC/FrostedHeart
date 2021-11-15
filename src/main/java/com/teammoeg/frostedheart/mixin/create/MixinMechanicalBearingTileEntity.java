@@ -27,7 +27,7 @@ public abstract class MixinMechanicalBearingTileEntity extends GeneratingKinetic
 		if(movedContraption!=null) {
 			this.lastStressApplied =ContraptionCostUtils.getRotationCost(movedContraption)+1;
 		}else
-			this.lastStressApplied=0.5;
+			this.lastStressApplied=0.5F;
 		return lastStressApplied;
 	}
 }
