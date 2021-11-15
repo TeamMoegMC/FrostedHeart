@@ -13,6 +13,7 @@
     "minecraft.IceMixin",
     "minecraft.PortalSizeMixin",
     "minecraft.VillagerMixin",
+    "minecraft.MixinServerWorld",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
