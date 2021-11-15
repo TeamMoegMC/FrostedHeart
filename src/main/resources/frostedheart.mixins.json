@@ -20,6 +20,7 @@
     "projecte.MixinTransmutationTablet",
     "rankine.AlloyTemplateItemMixin",
     "rankine.TapBarrelBlockMixin",
+    "rankine.MixinDryMortarItemEntity",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin",
     "create.MixinProcessingScenes",
@@ -38,7 +39,9 @@
     "client.IngameGuiAccess",
     "client.IngameGuiMixin",
     "client.ToastGuiMixin",
-    "client.MixinClientEvents"
+    "client.MixinClientEvents",
+    "rankine.MixinDryMortarItem",
+    "rankine.MixinMortarItem"
   ],
   "injectors": {
     "defaultRequire": 1

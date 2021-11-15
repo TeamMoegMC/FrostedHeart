@@ -119,6 +119,7 @@
   "tooltip.frostedheart.charger.steam_bottle":"Use Glass Bottle on Steam Charger",
   "tooltip.frostedheart.charger.activated_charcoal":"Use Charcoal on Steam Charger",
   "tooltip.frostedheart.charger.heat_vest":"Use on Steam Charger to recharge",
+  "tooltip.frostedheart.rankine.dry_mortar":"Soak in water for a while to get mortar",
 
   "effect.frostedheart.hypothermia": "Hypothermia",
   "effect.frostedheart.hyperthermia": "Hyperthermia",

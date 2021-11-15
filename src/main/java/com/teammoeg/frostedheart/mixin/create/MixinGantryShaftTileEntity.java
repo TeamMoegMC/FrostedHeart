@@ -1,18 +1,24 @@
 package com.teammoeg.frostedheart.mixin.create;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
 import com.teammoeg.frostedheart.util.ContraptionCostUtils;
 
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 @Mixin(GantryShaftTileEntity.class)
-public abstract class MixinGantryShaftTileEntity extends KineticTileEntity{
+public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements ITickableTileEntity{
 	public MixinGantryShaftTileEntity(TileEntityType<?> typeIn) {
 		super(typeIn);
 	}
@@ -30,5 +36,12 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity{
 			}
 		}
 		return 0;
+	}
+	@Override
+	public void tick() {
+		super.tick();
+		if(!world.isRemote&&currentComp!=null) {
+			this.getOrCreateNetwork().updateStressFor(this,calculateStressApplied());
+		}
 	}
 }

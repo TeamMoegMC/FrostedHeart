@@ -122,6 +122,7 @@
   "tooltip.frostedheart.charger.steam_bottle":"手持玻璃瓶对充气机使用以获取",
   "tooltip.frostedheart.charger.activated_charcoal":"手持木炭对充气机使用以获取",
   "tooltip.frostedheart.charger.heat_vest":"对充气机使用以充能",
+  "tooltip.frostedheart.rankine.dry_mortar":"在水中浸泡一段时间以获得砂浆",
 
   "effect.frostedheart.hypothermia": "失温",
   "effect.frostedheart.hyperthermia": "中暑",

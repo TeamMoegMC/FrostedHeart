@@ -32,15 +32,14 @@ public abstract class MixinGantryContraptionEntity extends AbstractContraptionEn
 
 		TileEntity te = world.getTileEntity(gantryShaftPos);
 		if (te instanceof GantryShaftTileEntity) {
-			if (world.isRemote) {
-				GantryShaftTileEntity gte=(GantryShaftTileEntity) te;
-				try {
-					GantryShaftTileEntity.class.getField("currentComp").set(gte,this);
-				} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-						| SecurityException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			GantryShaftTileEntity gte=(GantryShaftTileEntity) te;
+			try {
+				GantryShaftTileEntity.class.getField("currentComp").set(gte,this);
+				gte.networkDirty=true;
+			} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+					| SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			return;
 		}
