@@ -31,6 +31,12 @@ public class TeamResearchData {
 		}
 		return false;
 	}
+	public boolean isClueTriggered(AbstractClue clue){
+		return isClueTriggered(clue.getRId());
+	}
+	public boolean isClueTriggered(String lid){
+		return isClueTriggered(FHResearch.clues.getByName(lid));
+	}
 	public void ensureResearch(int len) {
 		rdata.ensureCapacity(len);
 		while(rdata.size()<len)

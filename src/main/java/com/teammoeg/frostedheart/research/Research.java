@@ -9,6 +9,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.UUID;
 
 /**
  * Only Definition of research.
@@ -74,7 +75,9 @@ public class Research extends FHRegisteredItem{
     public ResearchCategory getCategory() {
         return category;
     }
-
+    public ResearchData getData(UUID team) {
+    	return ResearchDataManager.INSTANCE.getData(team).getData(this);
+    }
     public void setCategory(ResearchCategory category) {
         this.category = category;
     }

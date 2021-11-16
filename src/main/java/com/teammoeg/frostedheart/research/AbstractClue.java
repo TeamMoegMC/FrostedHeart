@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.research;
 
+import java.util.UUID;
+
 import net.minecraft.util.text.ITextComponent;
 
 public abstract class AbstractClue extends FHRegisteredItem implements IClue{
@@ -22,7 +24,9 @@ public abstract class AbstractClue extends FHRegisteredItem implements IClue{
 		this.hint = hint;
 		this.pend=isPend;
 	}
-
+	public boolean isCompleted(UUID team) {
+		return ResearchDataManager.INSTANCE.getData(team).isClueTriggered(this);
+	}
 	@Override
 	public boolean isPendingAtStart() {
 		return pend;
