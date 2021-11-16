@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHTags;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -348,6 +349,10 @@ public class ForgeEvents {
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
                 float heat = adj.getHeat(event.getItem());
+                if(heat>1)
+                	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA,(heat)*2);
+                else if(heat<-1) 
+                	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA,(heat)*2);
                 if (heat > 0) {
                     if (current >= max) return;
                     current += heat;
