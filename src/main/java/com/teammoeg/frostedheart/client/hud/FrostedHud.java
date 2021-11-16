@@ -303,6 +303,8 @@ public class FrostedHud {
         FoodStats stats = mc.player.getFoodStats();
         int foodLevel = stats.getFoodLevel();
         int foodLevelState = MathHelper.ceil(foodLevel / 20.0F * 100) - 1;
+        if(foodLevelState>99)
+        	foodLevelState=99;
         int hungerCol = foodLevelState / 10;
         int hungerRow = foodLevelState % 10;
         mc.getTextureManager().bindTexture(HUNGER);
@@ -329,6 +331,8 @@ public class FrostedHud {
         player.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(data -> {
             int waterLevel = data.getWaterLevel();
             int waterLevelState = MathHelper.ceil(waterLevel / 20.0F * 100) - 1;
+            if(waterLevelState>99)
+            	waterLevelState=99;
             int waterCol = waterLevelState / 10;
             int waterRow = waterLevelState % 10;
             mc.ingameGUI.blit(stack, x + BarPos.right_half_2.getB().getA(), y + BarPos.right_half_2.getB().getB(), waterCol * UV.thirst_bar.w, waterRow * UV.thirst_bar.h, UV.thirst_bar.w, UV.thirst_bar.h, 160, 320);
@@ -365,6 +369,8 @@ public class FrostedHud {
         mc.ingameGUI.blit(stack, x + IconPos.left_half_1.getA().getA(), y + IconPos.left_half_1.getA().getB(), UV.icon_defence_normal.x, UV.icon_defence_normal.y, UV.icon_defence_normal.w, UV.icon_defence_normal.h);
         int armorValue = player.getTotalArmorValue();
         int armorValueState = MathHelper.ceil(armorValue / 20.0F * 100) - 1;
+        if(armorValueState>99)
+        	armorValueState=99;
         int armorCol = armorValueState / 10;
         int armorRow = armorValueState % 10;
         mc.getTextureManager().bindTexture(DEFENCE);
@@ -387,6 +393,8 @@ public class FrostedHud {
         int health = (int) mount.getHealth();
         float healthMax = mount.getMaxHealth();
         int healthState = MathHelper.ceil(health / healthMax * 100) - 1;
+        if(healthState>99)
+        	healthState=99;
         int healthCol = healthState / 10;
         int healthRow = healthState % 10;
         mc.getTextureManager().bindTexture(HORSEHP);
@@ -403,6 +411,8 @@ public class FrostedHud {
 
         float jumpPower = player.getHorseJumpPower();
         int jumpState = MathHelper.ceil(jumpPower * 100) - 1;
+        if(jumpState>99)
+        	jumpState=99;
         int jumpCol = jumpState / 10;
         int jumpRow = jumpState % 10;
         mc.getTextureManager().bindTexture(JUMP);
@@ -491,6 +501,8 @@ public class FrostedHud {
                 mc.ingameGUI.blit(stack, x + IconPos.right_half_3.getB().getA(), y + IconPos.right_half_3.getB().getB(), UV.icon_oxygen_normal.x, UV.icon_oxygen_normal.y, UV.icon_oxygen_normal.w, UV.icon_oxygen_normal.h);
             }
             int airState = MathHelper.ceil(air / (float) maxAir * 100) - 1;
+            if(airState>99)
+            	airState=99;
             int airCol = airState / 10;
             int airRow = airState % 10;
             mc.getTextureManager().bindTexture(OXYGEN);
