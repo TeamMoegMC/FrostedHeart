@@ -35,8 +35,7 @@
     "create.MixinPulleyTileEntity",
     "create.MixinClockworkBearingTileEntity",
     "create.MixinMechanicalBearingTileEntity",
-    "watersource.WaterBagItemMixin",
-    "watersource.WoodenCupItemMixin"
+    "forge.FluidHandlerItemStackMixin"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",
