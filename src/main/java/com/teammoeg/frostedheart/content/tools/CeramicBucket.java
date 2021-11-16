@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.content.tools;
 
+import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.Block;
@@ -165,6 +166,11 @@ public class CeramicBucket extends FHBaseItem {
             	if(stack.getFluid().getAttributes().isGaseous())return false;
                 return true;
             }
+			@Override
+			public boolean canFillFluidType(FluidStack fluid) {
+				return isFluidValid(0,fluid);
+			}
+            
         };
     }
 
