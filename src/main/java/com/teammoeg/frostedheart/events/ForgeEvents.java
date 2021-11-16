@@ -352,7 +352,7 @@ public class ForgeEvents {
                 if(heat>1)
                 	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA,(heat)*2);
                 else if(heat<-1) 
-                	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA,(heat)*2);
+                	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPOTHERMIA,(heat)*2);
                 if (heat > 0) {
                     if (current >= max) return;
                     current += heat;
