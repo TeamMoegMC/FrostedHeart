@@ -15,8 +15,8 @@ import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 @Mixin(BigTree.class)
 public abstract class BigTreeMixin extends Tree {
-	@Inject(at=@At("HEAD"),method="placeMega",cancellable=true)
-	public void btmplaceMega(ServerWorld p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, Random p_235678_5_, int p_235678_6_, int p_235678_7_,CallbackInfoReturnable<Boolean> cr) {
+	@Inject(at=@At("HEAD"),method="growBigTree",cancellable=true)
+	public void placeMega(ServerWorld p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, Random p_235678_5_, int p_235678_6_, int p_235678_7_,CallbackInfoReturnable<Boolean> cr) {
 		if(p_235678_5_.nextInt(8)!=0)
 			cr.setReturnValue(false);
 	}
