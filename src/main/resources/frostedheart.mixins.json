@@ -16,6 +16,7 @@
     "minecraft.MixinServerWorld",
     "minecraft.BeeHiveMixin",
     "minecraft.BigTreeMixin",
+    "minecraft.MixinSwampHutPiece",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
