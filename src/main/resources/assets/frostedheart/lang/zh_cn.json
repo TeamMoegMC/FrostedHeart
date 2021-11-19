@@ -82,6 +82,7 @@
   "gui.frostedheart.temperature.desc": "平均气温",
   "gui.jei.category.frostedheart.generator_fuel":"能量塔燃料",
   "gui.jei.category.frostedheart.generator_steam":"能量塔热介质",
+  "gui.jei.category.frostedheart.charger":"蒸汽加工",
 
   "message.frostedheart.vein_size.nothing": "什么都没有。",
   "message.frostedheart.vein_size.small": "少量的 ",
@@ -122,8 +123,6 @@
   "tooltip.frostedheart.steam_stored": "蒸汽:%s su",
   "tooltip.frostedheart.inner": "内衬：",
   "tooltip.frostedheart.double_flint_ignition": "双手同时持燧石便可以当作起火器使用",
-  "tooltip.frostedheart.charger.steam_bottle":"手持玻璃瓶对充气机使用以获取",
-  "tooltip.frostedheart.charger.activated_charcoal":"手持木炭对充气机使用以获取",
   "tooltip.frostedheart.charger.heat_vest":"对充气机使用以充能",
   "tooltip.frostedheart.rankine.dry_mortar":"在水中浸泡一段时间以获得砂浆",
 

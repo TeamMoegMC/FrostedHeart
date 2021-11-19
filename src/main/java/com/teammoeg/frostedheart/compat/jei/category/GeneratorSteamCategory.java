@@ -16,7 +16,7 @@
  * along with Immersive Industry. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.compat.jei;
+package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.ArrayList;
 import java.util.List;

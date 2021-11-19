@@ -16,16 +16,18 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.compat;
+package com.teammoeg.frostedheart.compat.jei;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.compat.jei.GeneratorFuelCategory;
-import com.teammoeg.frostedheart.compat.jei.GeneratorSteamCategory;
+import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
+import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
+import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
+import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -55,11 +57,13 @@ public class JEICompat implements IModPlugin {
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator), GeneratorFuelCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.charger), ChargerCategory.UID);
     }
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
         registration.addRecipes(new ArrayList<>(GeneratorRecipe.recipeList.values()), GeneratorFuelCategory.UID);
         registration.addRecipes(new ArrayList<>(GeneratorSteamRecipe.recipeList.values()),GeneratorSteamCategory.UID);
+        registration.addRecipes(new ArrayList<>(ChargerRecipe.recipeList.values()),ChargerCategory.UID);
     }
 
     @Override
@@ -67,7 +71,8 @@ public class JEICompat implements IModPlugin {
         IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
         registration.addRecipeCategories(
                 new GeneratorFuelCategory(guiHelper),
-                new GeneratorSteamCategory(guiHelper)
+                new GeneratorSteamCategory(guiHelper),
+                new ChargerCategory(guiHelper)
         );
     }
 

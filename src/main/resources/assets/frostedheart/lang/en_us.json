@@ -83,6 +83,7 @@
   "gui.frostedheart.temperature.desc": "Average Temperature",
   "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
   "gui.jei.category.frostedheart.generator_steam":"Generator Heat Medium",
+  "gui.jei.category.frostedheart.charger":"Steam Processing",
 
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under %s °C",
@@ -119,8 +120,6 @@
   "tooltip.frostedheart.steam_stored": "Steam:%s su",
   "tooltip.frostedheart.inner": "Inner Lining: ",
   "tooltip.frostedheart.double_flint_ignition": "Hold two flints on each hand to use them as a fire starter",
-  "tooltip.frostedheart.charger.steam_bottle":"Use Glass Bottle on Steam Charger",
-  "tooltip.frostedheart.charger.activated_charcoal":"Use Charcoal on Steam Charger",
   "tooltip.frostedheart.charger.heat_vest":"Use on Steam Charger to recharge",
   "tooltip.frostedheart.rankine.dry_mortar":"Soak in water for a while to get mortar",
 

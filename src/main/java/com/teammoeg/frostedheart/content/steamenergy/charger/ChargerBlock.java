@@ -55,7 +55,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public ChargerBlock(String name, Properties blockProps,
                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING,Direction.SOUTH));
     }
 
 
