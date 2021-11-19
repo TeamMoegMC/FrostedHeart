@@ -68,6 +68,7 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
+import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 
 public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
@@ -183,11 +184,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
     @Override
     public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundNBT nbt) {
-        return new FluidHandlerItemStackSimple(stack, capacity) {
-            @Override
-            public int fill(FluidStack resource, FluidAction doFill) {
-                return super.fill(resource, doFill);
-            }
+        return new FluidHandlerItemStack(stack, capacity) {
 			@Override
 			public boolean canFillFluidType(FluidStack fluid) {
 				return isFluidValid(0,fluid);
