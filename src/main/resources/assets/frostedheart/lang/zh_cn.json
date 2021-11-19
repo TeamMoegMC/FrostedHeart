@@ -2,6 +2,7 @@
   "itemGroup.frostedheart": "冰冻之心",
 
   "fluid.frostedheart.hot_water": "热水",
+  "fluid.frostedheart.steam": "任意蒸汽",
 
   "block.frostedheart.generator_brick": "能量塔砖",
   "block.frostedheart.generator_core_t1": "能量塔核心",
@@ -81,9 +82,6 @@
   "gui.frostedheart.temperature.desc": "平均气温",
   "gui.jei.category.frostedheart.generator_fuel":"能量塔燃料",
   "gui.jei.category.frostedheart.generator_steam":"能量塔热介质",
-  "gui.jei.category.frostedheart.generator_steam.temp":"温度调整:",
-  "gui.jei.category.frostedheart.generator_steam.range":"范围调整:",
-  "gui.jei.category.frostedheart.generator_steam.power":"输出调整:",
 
   "message.frostedheart.vein_size.nothing": "什么都没有。",
   "message.frostedheart.vein_size.small": "少量的 ",

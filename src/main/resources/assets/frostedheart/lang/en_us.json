@@ -2,6 +2,7 @@
   "itemGroup.frostedheart": "Frosted Heart",
 
   "fluid.frostedheart.hot_water": "Hot Water",
+  "fluid.frostedheart.steam": "Any Steam",
 
   "block.frostedheart.generator_brick": "Generator Brick",
   "block.frostedheart.generator_core_t1": "Generator Core",
@@ -81,6 +82,7 @@
   "gui.frostedheart.generator.overdrive.off": "Turn Off Overdrive",
   "gui.frostedheart.temperature.desc": "Average Temperature",
   "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
+  "gui.jei.category.frostedheart.generator_steam":"Generator Heat Medium",
 
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under %s °C",
