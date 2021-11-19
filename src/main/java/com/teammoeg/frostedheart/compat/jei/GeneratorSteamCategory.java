@@ -139,7 +139,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     public void setRecipe(IRecipeLayout recipeLayout, GeneratorSteamRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
         IGuiFluidStackGroup guiFluidStacks = recipeLayout.getFluidStacks();
-		guiFluidStacks.init(0,true,26, 12, 16, 47, FluidAttributes.BUCKET_VOLUME/2, false,TANK);
+		guiFluidStacks.init(0,true,26, 12, 16, 47,recipe.input.getAmount()*5, false,TANK);
 		guiFluidStacks.set(ingredients);
 		guiItemStacks.init(0,true,75,7);
 		guiItemStacks.init(1,false,75,46);
