@@ -350,10 +350,10 @@ public class ForgeEvents {
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
                 float heat = adj.getHeat(event.getItem());
-                if(heat>1)
-                	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA,(heat)*2);
-                else if(heat<-1) 
-                	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPOTHERMIA,(heat)*2);
+                if(heat>1) {
+                	event.getEntityLiving().attackEntityFrom(FHDamageSources.hyperthermiaFrom(event.getEntityLiving()),(heat)*2);
+                }else if(heat<-1) 
+                	event.getEntityLiving().attackEntityFrom(FHDamageSources.hypothermiaFrom(event.getEntityLiving()),(heat)*2);
                 if (heat > 0) {
                     if (current >= max) return;
                     current += heat*tspeed;

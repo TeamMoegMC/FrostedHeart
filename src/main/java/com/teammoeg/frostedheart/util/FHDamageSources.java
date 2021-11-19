@@ -18,9 +18,30 @@
 
 package com.teammoeg.frostedheart.util;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.util.DamageSource;
 
 public class FHDamageSources {
     public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).setDamageBypassesArmor().setDifficultyScaled();
     public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).setDamageBypassesArmor().setDifficultyScaled();
+    public static DamageSource hypothermiaFrom(Entity e) {
+    	return (new DamageSource("hypothermia") {
+
+			@Override
+			public Entity getTrueSource() {
+				return e;
+			}
+    		
+    	}).setDamageBypassesArmor();
+    }
+    public static DamageSource hyperthermiaFrom(Entity e) {
+    	return (new DamageSource("hyperthermia") {
+
+			@Override
+			public Entity getTrueSource() {
+				return e;
+			}
+    		
+    	}).setDamageBypassesArmor();
+    }
 }
