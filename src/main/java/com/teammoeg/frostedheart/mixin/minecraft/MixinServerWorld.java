@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.world.DimensionType;

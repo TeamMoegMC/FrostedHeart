@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
+
 import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;

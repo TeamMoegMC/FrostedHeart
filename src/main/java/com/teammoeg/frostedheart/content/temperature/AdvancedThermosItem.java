@@ -18,8 +18,12 @@
 
 package com.teammoeg.frostedheart.content.temperature;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -28,9 +32,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class AdvancedThermosItem extends ThermosItem {
 

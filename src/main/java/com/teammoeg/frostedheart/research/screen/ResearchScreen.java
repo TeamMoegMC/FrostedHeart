@@ -1,16 +1,18 @@
 package com.teammoeg.frostedheart.research.screen;
 
+import java.util.ArrayList;
+
+import javax.annotation.Nullable;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.research.DefaultResearches;
 import com.teammoeg.frostedheart.research.ResearchCategory;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import net.minecraft.entity.player.PlayerEntity;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
 
 public class ResearchScreen extends BaseScreen {
 

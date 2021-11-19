@@ -18,23 +18,21 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.biome.Biome;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
+
+import net.minecraft.block.Block;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fluids.FluidStack;
 
 public class FHDataManager {
     public static class ResourceMap<T extends JsonDataHolder> extends HashMap<ResourceLocation, T> {

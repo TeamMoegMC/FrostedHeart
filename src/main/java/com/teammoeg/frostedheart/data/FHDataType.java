@@ -18,9 +18,9 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.google.gson.JsonObject;
-
 import java.lang.reflect.InvocationTargetException;
+
+import com.google.gson.JsonObject;
 
 public enum FHDataType {
     Armor(new DataType<>(ArmorTempData.class,"temperature", "armor")),

@@ -18,6 +18,13 @@
 
 package com.teammoeg.frostedheart.climate.chunkdata;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 
@@ -34,13 +41,6 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
-
-import javax.annotation.Nullable;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 
 public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public static final ChunkData EMPTY = new Immutable();

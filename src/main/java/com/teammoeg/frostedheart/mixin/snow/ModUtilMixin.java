@@ -18,13 +18,15 @@
 
 package com.teammoeg.frostedheart.mixin.snow;
 
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import snownee.snow.ModUtil;
 import snownee.snow.SnowCommonConfig;
 

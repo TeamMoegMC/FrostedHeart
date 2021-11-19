@@ -18,10 +18,10 @@
 
 package com.teammoeg.frostedheart.util;
 
-import net.minecraftforge.fml.ModList;
-
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import net.minecraftforge.fml.ModList;
 
 public enum Mods {
     DIET,

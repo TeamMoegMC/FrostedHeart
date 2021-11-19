@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 
-import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -44,7 +43,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 
 public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRecipe> {
@@ -129,7 +127,8 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         return ICON;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void setIngredients(GeneratorSteamRecipe recipe, IIngredients ingredients) {
         ingredients.setInputLists(VanillaTypes.FLUID,Lists.<List<FluidStack>>asList(recipe.input.getMatchingFluidStacks(),new ArrayList[0]));
     }

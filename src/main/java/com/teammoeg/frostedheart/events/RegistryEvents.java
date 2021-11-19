@@ -18,10 +18,15 @@
 
 package com.teammoeg.frostedheart.events;
 
+import static com.teammoeg.frostedheart.FHContent.registeredFHBlocks;
+import static com.teammoeg.frostedheart.FHContent.registeredFHFluids;
+import static com.teammoeg.frostedheart.FHContent.registeredFHItems;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
+
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
@@ -30,8 +35,6 @@ import net.minecraft.world.gen.feature.Feature;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-
-import static com.teammoeg.frostedheart.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RegistryEvents {

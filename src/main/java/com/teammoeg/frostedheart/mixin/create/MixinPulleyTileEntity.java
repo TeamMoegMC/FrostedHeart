@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.mixin.create;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.At;
 
 import com.simibubi.create.content.contraptions.components.structureMovement.piston.LinearActuatorTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.pulley.PulleyTileEntity;

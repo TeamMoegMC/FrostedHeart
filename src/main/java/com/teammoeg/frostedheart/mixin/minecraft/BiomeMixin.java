@@ -18,7 +18,11 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FlowingFluidBlock;
 import net.minecraft.fluid.FluidState;
@@ -27,8 +31,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Biome.class)
 public abstract class BiomeMixin {

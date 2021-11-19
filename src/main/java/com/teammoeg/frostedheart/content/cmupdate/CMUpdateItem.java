@@ -21,13 +21,10 @@ package com.teammoeg.frostedheart.content.cmupdate;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.UseAction;
 import net.minecraft.util.ActionResult;

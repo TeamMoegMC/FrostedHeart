@@ -1,16 +1,14 @@
 package com.teammoeg.frostedheart.mixin.create;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraptionEntity;
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
-
-import org.spongepowered.asm.mixin.injection.At;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.tileentity.TileEntity;

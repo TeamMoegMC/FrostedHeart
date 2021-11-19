@@ -18,10 +18,11 @@
 
 package com.teammoeg.frostedheart.util;
 
-import com.teammoeg.frostedheart.FHMain;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.teammoeg.frostedheart.FHMain;
 
 public class FHLogger {
     public static boolean debug = false;

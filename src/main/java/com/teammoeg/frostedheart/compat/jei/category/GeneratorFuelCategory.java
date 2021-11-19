@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -89,7 +90,8 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
         return ICON;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void setIngredients(GeneratorRecipe recipe, IIngredients ingredients) {
         ingredients.setInputLists(VanillaTypes.ITEM,Lists.<List<ItemStack>>asList(Arrays.asList(recipe.input.getMatchingStacks()),new ArrayList[0]));
         ingredients.setOutput(VanillaTypes.ITEM, recipe.output);

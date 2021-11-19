@@ -18,11 +18,8 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.block.Block;
 import net.minecraft.item.Food;
-import net.minecraft.item.Item;
 
 public class FoodBlockItem extends FHBlockItem {
     public FoodBlockItem(Block block, Properties props, Food food) {

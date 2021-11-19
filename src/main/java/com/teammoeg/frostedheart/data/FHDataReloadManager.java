@@ -18,16 +18,17 @@
 
 package com.teammoeg.frostedheart.data;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 
 public class FHDataReloadManager implements IResourceManagerReloadListener {

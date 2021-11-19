@@ -18,7 +18,6 @@
 
 package com.teammoeg.frostedheart.research;
 
-import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 

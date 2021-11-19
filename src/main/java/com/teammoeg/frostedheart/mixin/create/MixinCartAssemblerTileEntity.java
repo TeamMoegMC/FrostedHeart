@@ -18,17 +18,19 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity;
-import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
-import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity;
+import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
+
+import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 @Mixin(CartAssemblerTileEntity.class)
 public abstract class MixinCartAssemblerTileEntity extends SmartTileEntity {

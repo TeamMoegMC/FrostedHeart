@@ -18,14 +18,19 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.radiator;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.AbstractGenerator;
-import com.teammoeg.frostedheart.content.steamenergy.*;
+import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
+
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;

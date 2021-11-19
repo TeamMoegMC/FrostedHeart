@@ -4,7 +4,6 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 
 import net.minecraft.block.Blocks;
-import net.minecraft.util.ResourceLocation;
 
 public class CreateCompat {
     public static void init() {

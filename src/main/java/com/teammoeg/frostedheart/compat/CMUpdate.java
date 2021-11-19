@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.compat;
 
 import com.teammoeg.frostedheart.FHContent.FHBlocks;
 import com.teammoeg.frostedheart.FHContent.FHTileTypes;
+
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;

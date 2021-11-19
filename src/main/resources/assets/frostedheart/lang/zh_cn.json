@@ -83,6 +83,7 @@
   "gui.jei.category.frostedheart.generator_fuel":"能量塔燃料",
   "gui.jei.category.frostedheart.generator_steam":"能量塔热介质",
   "gui.jei.category.frostedheart.charger":"蒸汽加工",
+  "gui.jei.category.frostedheart.charger_cooking":"蒸",
 
   "message.frostedheart.vein_size.nothing": "什么都没有。",
   "message.frostedheart.vein_size.small": "少量的 ",

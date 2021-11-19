@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 @Mixin(FluidHandlerItemStackSimple.class)
 public abstract class FluidHandlerItemStackSimpleMixin implements IFluidHandlerItem, ICapabilityProvider {

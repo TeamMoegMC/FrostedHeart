@@ -24,13 +24,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
-import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -40,18 +40,23 @@ import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.crafting.SmokingRecipe;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge");
+public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
+    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge_cooking");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
     private StaticBlock charger = new StaticBlock(FHBlocks.charger.getDefaultState().with(BlockStateProperties.FACING,Direction.EAST));
-    public ChargerCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHContent.FHBlocks.charger));
+    /**
+	 * @param guiHelper  
+	 */
+    public ChargerCookingCategory(IGuiHelper guiHelper) {
+        this.ICON = new DoubleItemIcon(()->new ItemStack(FHContent.FHBlocks.charger),()->new ItemStack(Items.COOKED_BEEF));
         this.BACKGROUND = new EmptyBackground(177,70);
     }
 
@@ -61,16 +66,16 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     }
 
     @Override
-    public Class<? extends ChargerRecipe> getRecipeClass() {
-        return ChargerRecipe.class;
+    public Class<? extends SmokingRecipe> getRecipeClass() {
+        return SmokingRecipe.class;
     }
 
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger").getString());
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger_cooking").getString());
     }
 	@Override
-	public void draw(ChargerRecipe recipe, MatrixStack transform, double mouseX, double mouseY)
+	public void draw(SmokingRecipe recipe, MatrixStack transform, double mouseX, double mouseY)
 	{
 		AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
 		AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
@@ -94,14 +99,14 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
 
     @SuppressWarnings("unchecked")
 	@Override
-    public void setIngredients(ChargerRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM,Lists.<List<ItemStack>>asList(Arrays.asList(recipe.input.getMatchingStacks()),new ArrayList[0]));
-        ingredients.setOutput(VanillaTypes.ITEM, recipe.output);
+    public void setIngredients(SmokingRecipe recipe, IIngredients ingredients) {
+        ingredients.setInputLists(VanillaTypes.ITEM,Lists.<List<ItemStack>>asList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks()),new ArrayList[0]));
+        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
     }
 
 
     @Override
-    public void setRecipe(IRecipeLayout recipeLayout, ChargerRecipe recipe, IIngredients ingredients) {
+    public void setRecipe(IRecipeLayout recipeLayout,SmokingRecipe recipe, IIngredients ingredients) {
 		IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
 		itemStacks.init(0, true, 43, 4);
 		

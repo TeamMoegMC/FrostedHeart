@@ -18,15 +18,17 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.Random;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
-import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProvider;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -36,8 +38,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
-
-import java.util.Random;
 
 public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity> implements HeatProvider, IConnectable {
     @Override

@@ -1,15 +1,16 @@
 package com.teammoeg.frostedheart.research;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.UUID;
+
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.UUID;
 
 /**
  * Only Definition of research.

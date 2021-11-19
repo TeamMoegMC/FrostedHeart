@@ -84,6 +84,7 @@
   "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
   "gui.jei.category.frostedheart.generator_steam":"Generator Heat Medium",
   "gui.jei.category.frostedheart.charger":"Steam Processing",
+  "gui.jei.category.frostedheart.charger_cooking":"Steaming",
 
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under %s °C",

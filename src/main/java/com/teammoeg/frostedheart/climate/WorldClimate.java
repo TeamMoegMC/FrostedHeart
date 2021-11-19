@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.data.FHDataManager;
+
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorldReader;

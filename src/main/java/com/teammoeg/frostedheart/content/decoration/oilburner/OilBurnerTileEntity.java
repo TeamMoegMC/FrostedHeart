@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
+
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;

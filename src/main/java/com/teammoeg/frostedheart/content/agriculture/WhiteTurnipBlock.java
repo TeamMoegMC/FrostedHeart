@@ -18,7 +18,10 @@
 
 package com.teammoeg.frostedheart.content.agriculture;
 
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.FHContent;
+
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -33,8 +36,6 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
-
-import java.util.function.BiFunction;
 
 public class WhiteTurnipBlock extends FHCropBlock {
     public static final IntegerProperty WhiteTurnip_AGE = BlockStateProperties.AGE_0_7;

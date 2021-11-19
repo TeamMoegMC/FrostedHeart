@@ -18,7 +18,8 @@
 
 package com.teammoeg.frostedheart.events;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import javax.annotation.Nonnull;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
@@ -38,8 +39,9 @@ import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
-import com.teammoeg.frostedheart.util.FHTags;
 import com.teammoeg.frostedheart.world.FHFeatures;
+
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
@@ -63,7 +65,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -81,8 +82,6 @@ import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {

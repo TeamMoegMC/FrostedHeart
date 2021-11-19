@@ -7,14 +7,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.bearing.IBearingTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.bearing.MechanicalBearingTileEntity;
 import com.teammoeg.frostedheart.util.ContraptionCostUtils;
 
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
 @Mixin(MechanicalBearingTileEntity.class)
 public abstract class MixinMechanicalBearingTileEntity extends GeneratingKineticTileEntity
 		implements IBearingTileEntity {

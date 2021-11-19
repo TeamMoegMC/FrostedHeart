@@ -18,12 +18,23 @@
 
 package com.teammoeg.frostedheart;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
+import static com.teammoeg.frostedheart.util.FHProps.cropProps;
+import static com.teammoeg.frostedheart.util.FHProps.itemProps;
+import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.item.*;
+import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
+import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
+import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.base.item.FHBlockItem;
+import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
@@ -32,7 +43,13 @@ import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
-import com.teammoeg.frostedheart.content.generator.*;
+import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.generator.GeneratorRecipeSerializer;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipeSerializer;
+import com.teammoeg.frostedheart.content.generator.HeatedGeneratorMultiBlock;
+import com.teammoeg.frostedheart.content.generator.NormalGeneratorMultiBlock;
+import com.teammoeg.frostedheart.content.generator.UnlitHeatedGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorContainer;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
@@ -41,21 +58,36 @@ import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerSerializer;
-import com.teammoeg.frostedheart.content.steamenergy.*;
+import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
+import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipeSerializer;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
-import com.teammoeg.frostedheart.content.temperature.*;
-import com.teammoeg.frostedheart.content.tools.*;
+import com.teammoeg.frostedheart.content.temperature.AdvancedThermosItem;
+import com.teammoeg.frostedheart.content.temperature.FHSoupItem;
+import com.teammoeg.frostedheart.content.temperature.HeaterVestItem;
+import com.teammoeg.frostedheart.content.temperature.MushroomBed;
+import com.teammoeg.frostedheart.content.temperature.SoilThermometer;
+import com.teammoeg.frostedheart.content.temperature.SteamBottleItem;
+import com.teammoeg.frostedheart.content.temperature.ThermometerItem;
+import com.teammoeg.frostedheart.content.temperature.ThermosItem;
+import com.teammoeg.frostedheart.content.tools.CeramicBucket;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.util.FHFoods;
+
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -73,13 +105,6 @@ import net.minecraftforge.common.ToolType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Supplier;
-
-import static com.teammoeg.frostedheart.util.FHProps.*;
 
 public class FHContent {
 

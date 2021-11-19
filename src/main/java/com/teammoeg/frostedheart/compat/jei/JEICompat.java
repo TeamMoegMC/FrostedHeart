@@ -18,9 +18,14 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
+import java.util.ArrayList;
+
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
+import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
 import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
 import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
@@ -39,12 +44,9 @@ import mezz.jei.api.registration.IRecipeRegistration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.ArrayList;
-
-import javax.annotation.Nullable;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -57,13 +59,17 @@ public class JEICompat implements IModPlugin {
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator), GeneratorFuelCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.charger), ChargerCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.charger), ChargerCategory.UID,ChargerCookingCategory.UID);
     }
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
+    	 ClientWorld world = Minecraft.getInstance().world;
+         checkNotNull(world, "minecraft world");
+         RecipeManager recipeManager = world.getRecipeManager();
         registration.addRecipes(new ArrayList<>(GeneratorRecipe.recipeList.values()), GeneratorFuelCategory.UID);
         registration.addRecipes(new ArrayList<>(GeneratorSteamRecipe.recipeList.values()),GeneratorSteamCategory.UID);
         registration.addRecipes(new ArrayList<>(ChargerRecipe.recipeList.values()),ChargerCategory.UID);
+        registration.addRecipes(recipeManager.getRecipesForType(IRecipeType.SMOKING),ChargerCookingCategory.UID);
     }
 
     @Override
@@ -72,7 +78,8 @@ public class JEICompat implements IModPlugin {
         registration.addRecipeCategories(
                 new GeneratorFuelCategory(guiHelper),
                 new GeneratorSteamCategory(guiHelper),
-                new ChargerCategory(guiHelper)
+                new ChargerCategory(guiHelper),
+                new ChargerCookingCategory(guiHelper)
         );
     }
 

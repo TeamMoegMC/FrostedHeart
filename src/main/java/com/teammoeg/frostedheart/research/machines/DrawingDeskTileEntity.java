@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.machines;
 
 import com.teammoeg.frostedheart.FHContent;
+
 import net.minecraft.tileentity.TileEntity;
 
 public class DrawingDeskTileEntity extends TileEntity {
