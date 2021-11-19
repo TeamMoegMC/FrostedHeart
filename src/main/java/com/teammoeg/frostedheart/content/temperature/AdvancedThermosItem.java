@@ -51,7 +51,7 @@ public class AdvancedThermosItem extends ThermosItem {
 
             @Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                for (Fluid fluid : FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID, "hot_drink")).getAllElements()) {
+                for (Fluid fluid : FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID, "drink")).getAllElements()) {
                     if (fluid == stack.getFluid()) {
                         return true;
                     }
