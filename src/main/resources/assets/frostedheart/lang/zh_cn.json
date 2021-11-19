@@ -79,6 +79,11 @@
   "gui.frostedheart.generator.overdrive.on": "开启超频",
   "gui.frostedheart.generator.overdrive.off": "关闭超频",
   "gui.frostedheart.temperature.desc": "平均气温",
+  "gui.jei.category.frostedheart.generator_fuel":"能量塔燃料",
+  "gui.jei.category.frostedheart.generator_steam":"能量塔热介质",
+  "gui.jei.category.frostedheart.generator_steam.temp":"温度调整:",
+  "gui.jei.category.frostedheart.generator_steam.range":"范围调整:",
+  "gui.jei.category.frostedheart.generator_steam.power":"输出调整:",
 
   "message.frostedheart.vein_size.nothing": "什么都没有。",
   "message.frostedheart.vein_size.small": "少量的 ",

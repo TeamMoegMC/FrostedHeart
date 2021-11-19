@@ -80,6 +80,7 @@
   "gui.frostedheart.generator.overdrive.on": "Turn On Overdrive",
   "gui.frostedheart.generator.overdrive.off": "Turn Off Overdrive",
   "gui.frostedheart.temperature.desc": "Average Temperature",
+  "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
 
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under %s °C",
