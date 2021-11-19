@@ -85,7 +85,7 @@ public class FHConfig {
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
             tdiffculty=builder.comment("Temperature System difficulty","Easy=Strong body","Normal=Average","Hard=Reality","Hardcore=Sick body")
             		.defineEnum("temperatureDifficulty",FHDifficulty.Normal);
-            tempSpeed=builder.comment("Modifier of body temperature change speed, This does not affect items or hypothermia temperature.")
+            tempSpeed=builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
             		.defineInRange("temperatureChangeRate",0.5,0,20);
             
         }

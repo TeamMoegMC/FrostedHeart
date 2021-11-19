@@ -338,6 +338,7 @@ public class ForgeEvents {
             Item it = event.getItem().getItem();
             ITempAdjustFood adj = null;
             //System.out.println(it.getRegistryName());
+            double tspeed=FHConfig.SERVER.tempSpeed.get();
             if (it instanceof ITempAdjustFood) {
                 adj = (ITempAdjustFood) it;
             } else {
@@ -354,11 +355,11 @@ public class ForgeEvents {
                 	event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPOTHERMIA,(heat)*2);
                 if (heat > 0) {
                     if (current >= max) return;
-                    current += heat;
+                    current += heat*tspeed;
                     if (current > max) current = max;
                 } else {
                     if (current <= min) return;
-                    current += heat;
+                    current += heat*tspeed;
                     if (current <= min) return;
                 }
                 TemperatureCore.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(), current);

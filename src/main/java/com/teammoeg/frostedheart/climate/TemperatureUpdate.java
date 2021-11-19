@@ -73,12 +73,13 @@ public class TemperatureUpdate {
                 }
                 if (hasArmor)
                     player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));//punish for wet clothes
-                else
+                else if(player.getActivePotionEffect(FHEffects.WET).getDuration()<100)
                     player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
             }
             float current = TemperatureCore.getBodyTemperature(player);
+            double tspeed=FHConfig.SERVER.tempSpeed.get();
             if (current < 0)
-                current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player)*FHConfig.SERVER.tempSpeed.get();
+                current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player)*tspeed;
             World world = player.getEntityWorld();
             BlockPos pos = player.getPosition();
             float envtemp = ChunkData.getTemperature(world, pos);
@@ -97,7 +98,7 @@ public class TemperatureUpdate {
                     continue;
                 Item it = is.getItem();
                 if (it instanceof IHeatingEquipment)
-                    current = ((IHeatingEquipment) it).compute(is, current, envtemp);
+                    current += ((IHeatingEquipment) it).compute(is, current, envtemp)*tspeed;
                 if (it instanceof IWarmKeepingEquipment) {
                     keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
                 } else {
@@ -111,7 +112,7 @@ public class TemperatureUpdate {
                     continue;
                 Item it = is.getItem();
                 if (it instanceof IHeatingEquipment)
-                    current = ((IHeatingEquipment) it).compute(is, current, envtemp);
+                    current += ((IHeatingEquipment) it).compute(is, current, envtemp)*tspeed;
                 if (it instanceof IWarmKeepingEquipment) {
                     keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
                 } else {
@@ -128,7 +129,7 @@ public class TemperatureUpdate {
             }
             if (keepwarm > 1)
                 keepwarm = 1;
-            current += HEAT_EXCHANGE_CONSTANT * FHConfig.SERVER.tempSpeed.get() * (1 - keepwarm) * (envtemp - current);
+            current += HEAT_EXCHANGE_CONSTANT * tspeed * (1 - keepwarm) * (envtemp - current);
             if (current < -10)
                 current = -10;
             else if (current > 10)

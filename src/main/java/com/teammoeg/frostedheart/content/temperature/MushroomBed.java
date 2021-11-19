@@ -68,10 +68,10 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     	if(stack.getDamage()>0) {
 	        if (bodyTemp > -1) {
 	            this.setDamage(stack,this.getDamage(stack)-1);
-	            bodyTemp += this.getMax(stack);
+	            return this.getMax(stack);
 	        }
     	}
-        return bodyTemp;
+        return 0;
     }
 
 

@@ -36,7 +36,7 @@ public interface IHeatingEquipment {
      * @param stack           the stack<br>
      * @param bodyTemp        the body temp<br>
      * @param environmentTemp the environment temp<br>
-     * @return returns new body temperature
+     * @return returns body temperature change
      */
     float compute(ItemStack stack, float bodyTemp, float environmentTemp);
 

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.events;
 import static net.minecraft.util.text.TextFormatting.GRAY;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -85,6 +86,7 @@ public class ClientEvents {
         Item i = stack.getItem();
         ITempAdjustFood itf = null;
         IWarmKeepingEquipment iwe = null;
+        float tspeed=(float)(double)FHConfig.SERVER.tempSpeed.get();
         if (i instanceof ITempAdjustFood) {
             itf = (ITempAdjustFood) i;
         } else {
@@ -113,7 +115,7 @@ public class ClientEvents {
                     event.getToolTip().add(GuiUtils.translateTooltip("block_temp", temps).mergeStyle(TextFormatting.AQUA));
         }
         if (itf != null) {
-            float temp = itf.getHeat(stack);
+            float temp = itf.getHeat(stack)*tspeed;
             temp = (Math.round(temp * 1000)) / 1000.0F;//round
             String temps = Float.toString(temp);
             if (temp != 0)
@@ -133,7 +135,7 @@ public class ClientEvents {
                     event.getToolTip().add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.AQUA));
         }
         if (i instanceof IHeatingEquipment) {
-            float temp = ((IHeatingEquipment) i).getMax(stack);
+            float temp = ((IHeatingEquipment) i).getMax(stack)*tspeed;
             temp = (Math.round(temp * 2000)) / 1000.0F;
             String temps = Float.toString(temp);
             if (temp != 0)

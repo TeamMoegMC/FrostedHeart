@@ -147,7 +147,7 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
 
     @Override
     public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-        return bodyTemp + this.extractEnergy(stack, 3, false) / 120;
+        return this.extractEnergy(stack, 3, false) / 120;
     }
 
     @Override
