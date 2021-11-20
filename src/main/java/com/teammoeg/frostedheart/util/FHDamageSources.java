@@ -22,8 +22,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.DamageSource;
 
 public class FHDamageSources {
-    public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).setDamageBypassesArmor().setDifficultyScaled();
-    public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).setDamageBypassesArmor().setDifficultyScaled();
+    public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).setDamageBypassesArmor();
+    public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).setDamageBypassesArmor();
     public static DamageSource hypothermiaFrom(Entity e) {
     	return (new DamageSource("hypothermia") {
 
