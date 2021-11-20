@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.FHContent;
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
@@ -77,7 +78,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 
     @Override
     public float getTemperatureLevel() {
-        return 3;
+        return this.getBlockState().get(BlockStateProperties.LEVEL_0_15);
     }
 
     @Override
