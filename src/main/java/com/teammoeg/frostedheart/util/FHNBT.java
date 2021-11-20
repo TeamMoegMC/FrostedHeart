@@ -32,4 +32,8 @@ public class FHNBT {
         stack.setDamage(72);
         return stack;
     }
+    public static ItemStack Damage(ItemStack stack,int dmg) {
+        stack.setDamage(dmg);
+        return stack;
+    }
 }

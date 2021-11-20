@@ -101,7 +101,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, GeneratorRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
-
+       
         guiItemStacks.init(0, true, 55, 8);
         guiItemStacks.init(1, false, 55, 47);
         guiItemStacks.set(ingredients);
