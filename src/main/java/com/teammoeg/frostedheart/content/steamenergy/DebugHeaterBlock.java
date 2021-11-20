@@ -94,7 +94,7 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     @Override
     protected void fillStateContainer(Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);
-        builder.add(BlockStateProperties.LEVEL_0_15);
+        builder.add(BlockStateProperties.LEVEL_1_8);
     }
 
     @Override
@@ -105,9 +105,9 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
             return superResult;
         ItemStack item = player.getHeldItem(hand);
         if (item.getItem().equals(Item.getItemFromBlock(this))) {
-        	state=state.cycleValue(BlockStateProperties.LEVEL_0_15);
+        	state=state.cycleValue(BlockStateProperties.LEVEL_1_8);
         	world.setBlockState(pos, state);
-        	player.sendStatusMessage(new StringTextComponent(String.valueOf(state.get(BlockStateProperties.LEVEL_0_15))),true);
+        	player.sendStatusMessage(new StringTextComponent(String.valueOf(state.get(BlockStateProperties.LEVEL_1_8))),true);
             return ActionResultType.SUCCESS;
         }
         return superResult;

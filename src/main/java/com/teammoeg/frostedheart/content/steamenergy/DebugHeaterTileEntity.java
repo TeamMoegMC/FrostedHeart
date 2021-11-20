@@ -78,7 +78,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 
     @Override
     public float getTemperatureLevel() {
-        return this.getBlockState().get(BlockStateProperties.LEVEL_0_15);
+        return this.getBlockState().get(BlockStateProperties.LEVEL_1_8);
     }
 
     @Override
