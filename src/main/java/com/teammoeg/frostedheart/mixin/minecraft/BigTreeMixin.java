@@ -7,6 +7,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.trees.BigTree;
 import net.minecraft.block.trees.Tree;
@@ -17,7 +19,9 @@ import net.minecraft.world.server.ServerWorld;
 public abstract class BigTreeMixin extends Tree {
 	@Inject(at=@At("HEAD"),method="growBigTree",cancellable=true)
 	public void placeMega(ServerWorld p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, Random p_235678_5_, int p_235678_6_, int p_235678_7_,CallbackInfoReturnable<Boolean> cr) {
-		if(p_235678_5_.nextInt(36)!=0)
+		int i=16;
+		i-=ChunkData.getTemperature(p_235678_1_, p_235678_3_);
+		if(i>0&&p_235678_5_.nextInt(i)!=0)
 			cr.setReturnValue(false);
 	}
 }

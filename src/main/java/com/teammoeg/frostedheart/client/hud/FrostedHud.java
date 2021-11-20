@@ -65,7 +65,7 @@ public class FrostedHud {
     public static boolean renderHypothermia = true;
     public static boolean renderFrozen = true;
 
-    public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements_tribus.png");
+    public static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements.png");
     //    public static final ResourceLocation FROZEN_OVERLAY_PATH = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
     public static final ResourceLocation FROZEN_OVERLAY_1 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_1.png");
     public static final ResourceLocation FROZEN_OVERLAY_2 = new ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_stage_2.png");
