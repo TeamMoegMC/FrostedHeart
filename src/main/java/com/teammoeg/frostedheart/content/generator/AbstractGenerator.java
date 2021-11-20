@@ -43,7 +43,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     }
 
     public int getActualRange() {
-        return 8 + (getRangeLevel() - 1) * 4;
+        return (int) (8 + (getRangeLevel() - 1) * 4);
     }
 
     public int getActualTemp() {
@@ -169,13 +169,13 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         }
     }
 
-    public int getTemperatureLevel() {
+    public float getTemperatureLevel() {
         if (master() != null)
             return master().temperatureLevel * (isActualOverdrive() ? master().overdriveBoost : 1);
         return 1;
     }
 
-    public int getRangeLevel() {
+    public float getRangeLevel() {
         if (master() != null)
             return master().rangeLevel;
         return 1;

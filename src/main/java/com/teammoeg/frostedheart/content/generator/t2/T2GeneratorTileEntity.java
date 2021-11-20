@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProvider;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
@@ -60,6 +61,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     float stempMod=1;
     int liquidtick=0;
     int noliquidtick=0;
+    private int refreshTimer;
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
@@ -109,7 +111,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     protected void tickLiquid() {
     	if(!this.getIsActive())return;
-    	int rt=this.getTemperatureLevel();
+    	float rt=this.getTemperatureLevel();
     	if(rt==0) {
             this.spowerMod = 0;
             this.srangeMod = 1;
@@ -152,6 +154,17 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	protected void tickFuel() {
 		super.tickFuel();
 		this.tickLiquid();
+		refreshTimer--;
+		if(refreshTimer<=0) {
+			refreshTimer=20;
+			for (BlockPos nwt : networkTile) {
+                BlockPos actualPos = getBlockPosForPos(nwt);
+                TileEntity te = Utils.getExistingTileEntity(world, actualPos.down());
+                if (te instanceof HeatPipeTileEntity) {
+                    ((HeatPipeTileEntity) te).doTestConnect(Direction.UP);
+                }
+            }
+		}
 	}
 
 	@Override
@@ -238,7 +251,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     }
 
     @Override
-    public int getTemperatureLevel() {
+    public float getTemperatureLevel() {
         if (master() != null) {
             return (int) (master().stempMod * super.getTemperatureLevel());
         }
@@ -246,7 +259,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     }
 
     @Override
-    public int getRangeLevel() {
+    public float getRangeLevel() {
         if (master() != null) {
             return (int) (master().srangeMod * super.getRangeLevel());
         }
