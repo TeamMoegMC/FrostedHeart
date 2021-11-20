@@ -142,7 +142,7 @@ public class FHDataManager {
         return null;
     }
     public static Float getWorldTemp(World w) {
-        WorldTempData data = worldData.get(w.getDimensionKey().getRegistryName());
+        WorldTempData data = worldData.get(w.getDimensionKey().getLocation());
         if (data != null)
             return data.getTemp();
         return null;
