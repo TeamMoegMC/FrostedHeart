@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.data.FHDataManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorldReader;
+import net.minecraft.world.World;
 
 public class WorldClimate {
 
@@ -49,8 +50,14 @@ public class WorldClimate {
      */
     public static float getWorldTemperature(IWorldReader w, BlockPos pos) {
         Float temp = FHDataManager.getBiomeTemp(w.getBiome(pos));
+        float wt=WORLD_TEMPERATURE;
+        if(w instanceof World) {
+        	Float fw=FHDataManager.getWorldTemp((World) w);
+        	if(fw!=null)
+        		wt=fw;
+        }
         if (temp != null)
-            return  MathHelper.clamp(WORLD_TEMPERATURE + temp, -127, 127);
-        return WORLD_TEMPERATURE;
+            return MathHelper.clamp(wt + temp, -127, 127);
+        return wt;
     }
 }

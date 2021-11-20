@@ -25,10 +25,11 @@ import com.google.gson.JsonObject;
 public enum FHDataType {
     Armor(new DataType<>(ArmorTempData.class,"temperature", "armor")),
     Biome(new DataType<>(BiomeTempData.class,"temperature", "biome")),
-    Food(new DataType<>(FoodTempData.class,"temperature", "food")),
+    Food (new DataType<>( FoodTempData.class,"temperature", "food" )),
     Block(new DataType<>(BlockTempData.class,"temperature", "block")),
     Drink(new DataType<>(DrinkTempData.class,"temperature", "drink")),
-    Cup(new DataType<>(CupData.class,"temperature","cup"));
+    Cup  (new DataType<>(      CupData.class,"temperature", "cup"  )),
+    World(new DataType<>(WorldTempData.class,"temperature", "world"));
 
     static class DataType<T extends JsonDataHolder> {
         final Class<T> dataCls;

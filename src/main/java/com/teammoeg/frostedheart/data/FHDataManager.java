@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -56,11 +57,12 @@ public class FHDataManager {
     private FHDataManager() {
     }
 
-    public static final ResourceMap<FoodTempData> foodData = new ResourceMap<>();
+    public static final ResourceMap<FoodTempData>  foodData  = new ResourceMap<>();
     public static final ResourceMap<ArmorTempData> armorData = new ResourceMap<>();
     public static final ResourceMap<BiomeTempData> biomeData = new ResourceMap<>();
     public static final ResourceMap<BlockTempData> blockData = new ResourceMap<>();
     public static final ResourceMap<DrinkTempData> drinkData = new ResourceMap<>();
+    public static final ResourceMap<WorldTempData> worldData = new ResourceMap<>();
     public static final ResourceMap<CupData> cupData = new ResourceMap<>();
     public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
     public static boolean synched = false;
@@ -72,6 +74,7 @@ public class FHDataManager {
         ALL_DATA.put(FHDataType.Block, blockData);
         ALL_DATA.put(FHDataType.Food, foodData);
         ALL_DATA.put(FHDataType.Drink, drinkData);
+        ALL_DATA.put(FHDataType.World, worldData);
         ALL_DATA.put(FHDataType.Cup, cupData);
     }
 
@@ -138,7 +141,12 @@ public class FHDataManager {
             return data.getTemp();
         return null;
     }
-
+    public static Float getWorldTemp(World w) {
+        WorldTempData data = worldData.get(w.getDimensionKey().getRegistryName());
+        if (data != null)
+            return data.getTemp();
+        return null;
+    }
     public static BlockTempData getBlockData(Block b) {
         return blockData.get(b.getRegistryName());
     }
