@@ -76,7 +76,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
 
 
     @Override
-    public int getTemperatureLevel() {
+    public float getTemperatureLevel() {
         return 3;
     }
 

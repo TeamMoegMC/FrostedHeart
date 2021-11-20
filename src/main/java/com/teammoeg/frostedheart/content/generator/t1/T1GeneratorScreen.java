@@ -121,20 +121,20 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
             this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
         }
 
-        int tempLevel = tile.getTemperatureLevel();
-        int rangeLevel = tile.getRangeLevel();
+        float tempLevel = tile.getTemperatureLevel();
+        float rangeLevel = tile.getRangeLevel();
 
         // temperature bar (182, 30)
         if (tile.getIsActive()) {
-            int offset = (4 - tempLevel) * 14;
-            int bar = (tempLevel - 1) * 14;
+            int offset = (int) ((4 - tempLevel) * 14);
+            int bar = (int) ((tempLevel - 1) * 14);
             this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
         }
 
         // range bar
         if (tile.getIsActive()) {
-            int offset = (4 - rangeLevel) * 14;
-            int bar = (rangeLevel - 1) * 14;
+            int offset = (int) ((4 - rangeLevel) * 14);
+            int bar = (int) ((rangeLevel - 1) * 14);
             this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
         }
     }
