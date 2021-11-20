@@ -29,7 +29,7 @@ public class WolfBerryBushBlock extends FHBerryBushBlock{
         boolean flag = i == 3;
         if (!flag && player.getHeldItem(handIn).getItem() == Items.BONE_MEAL) {
             return ActionResultType.PASS;
-        } else if (i > 1) {
+        } else if (i > 2) {
             int j = 1 + worldIn.rand.nextInt(2);
             spawnAsEntity(worldIn, pos, new ItemStack(FHContent.FHItems.wolfberries, j + (flag ? 1 : 0)));
             worldIn.playSound((PlayerEntity)null, pos, SoundEvents.ITEM_SWEET_BERRIES_PICK_FROM_BUSH, SoundCategory.BLOCKS, 1.0F, 0.8F + worldIn.rand.nextFloat() * 0.4F);
