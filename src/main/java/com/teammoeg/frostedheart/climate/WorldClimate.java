@@ -57,7 +57,7 @@ public class WorldClimate {
         		wt=fw;
         }
         if (temp != null)
-            return MathHelper.clamp(wt + temp, -127, 127);
+            return wt + temp;
         return wt;
     }
 }
