@@ -22,11 +22,12 @@ import java.util.ArrayList;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
 
+import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.FHContent;
+import net.minecraft.block.Blocks;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.Feature;
-import net.minecraft.world.gen.feature.IFeatureConfig;
+import net.minecraft.world.gen.feature.*;
 
 public class FHFeatures {
     public static final Feature<FHOreFeatureConfig> FHORE = new FHOreFeature(FHOreFeatureConfig.CODEC);
@@ -39,7 +40,7 @@ public class FHFeatures {
     public static final ConfiguredFeature<?, ?> ore_native_tin = register("ore_native_tin", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.native_tin, RankineBlocks.NATIVE_TIN_ORE.get().getStateContainer().getBaseState(), 40)).range(65).square().chance(2));
     public static final ConfiguredFeature<?, ?> ore_cassiterite = register("ore_cassiterite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.cassiterite, RankineBlocks.CASSITERITE_ORE.get().getStateContainer().getBaseState(), 45)).range(65).square().chance(2));
     public static final ConfiguredFeature<?, ?> ore_bituminous = register("ore_bituminous", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bituminous, RankineBlocks.BITUMINOUS_ORE.get().getStateContainer().getBaseState(), 55)).range(80).square().chance(12));
-    public static final ConfiguredFeature<?, ?> ore_lignite = register("ore_lignite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.lignite, RankineBlocks.LIGNITE_ORE.get().getStateContainer().getBaseState(), 40)).range(80).square().chance(2));
+    public static final ConfiguredFeature<?, ?> ore_lignite = register("ore_lignite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.lignite, RankineBlocks.LIGNITE_ORE.get().getStateContainer().getBaseState(), 50)).range(80).square().chance(2));
     public static final ConfiguredFeature<?, ?> ore_bauxite = register("ore_bauxite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bauxite, RankineBlocks.BAUXITE_ORE.get().getStateContainer().getBaseState(), 50)).range(60).square().chance(2));
     public static final ConfiguredFeature<?, ?> ore_stibnite = register("ore_stibnite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.stibnite, RankineBlocks.STIBNITE_ORE.get().getStateContainer().getBaseState(), 35)).range(65).square().chance(12));
     public static final ConfiguredFeature<?, ?> ore_cinnabar = register("ore_cinnabar", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.CINNABAR_ORE.get().getStateContainer().getBaseState(), 40)).range(30).square().chance(6));
@@ -51,6 +52,7 @@ public class FHFeatures {
     public static final ConfiguredFeature<?, ?> ore_gold = register("ore_gold", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_GOLD_ORE.get().getStateContainer().getBaseState(), 35)).range(30).square().chance(12));
     public static final ConfiguredFeature<?, ?> ore_sphalerite = register("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getStateContainer().getBaseState(), 40)).range(65).square().chance(4));
 
+    public static final ConfiguredFeature<?, ?> copper_gravel = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "copper_gravel" ,Feature.DISK.withConfiguration(new SphereReplaceConfig(FHContent.FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 1), 1, ImmutableList.of(Blocks.GRAVEL.getDefaultState(),Blocks.SAND.getDefaultState()))).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
     private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> register(String key, ConfiguredFeature<FC, ?> configuredFeature) {
         FH_ORES.add(configuredFeature);
         return Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, key, configuredFeature);
