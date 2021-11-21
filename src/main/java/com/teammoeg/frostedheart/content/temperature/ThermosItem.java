@@ -25,6 +25,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.simibubi.create.content.contraptions.fluids.potion.PotionFluidHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -241,6 +242,8 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         if (stack.getChildTag(FLUID_NBT_KEY) != null) {
             FluidUtil.getFluidHandler(stack).ifPresent(f -> {
                 tooltip.add(((TextComponent) f.getFluidInTank(0).getDisplayName()).appendString(String.format(": %d / %dmB", f.getFluidInTank(0).getAmount(), capacity)).mergeStyle(TextFormatting.GRAY));
+                if(f.getFluidInTank(0).getFluid() instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid)
+                	PotionFluidHandler.addPotionTooltip(f.getFluidInTank(0),tooltip,1);
                 tooltip.add(new TranslationTextComponent("tooltip.watersource.drink_unit").appendString(" : " + this.getUnit() + "mB").mergeStyle(TextFormatting.GRAY));
             });
         }
