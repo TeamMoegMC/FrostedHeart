@@ -203,7 +203,7 @@ public class FHContent {
         public static Item hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, itemProps);
         public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
-        public static Item advanced_thermos = new AdvancedThermosItem("advanced_thermos", 3000, 250);
+        public static Item advanced_thermos = new ThermosItem("advanced_thermos", 3000, 250);
         public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick",8,4,createProps().defaultMaxDamage(128));
         public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick",8,4,createProps().defaultMaxDamage(192));
         public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick",9,5, createProps().defaultMaxDamage(256));

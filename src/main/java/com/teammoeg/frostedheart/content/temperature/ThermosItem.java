@@ -25,6 +25,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.simibubi.create.content.contraptions.fluids.potion.PotionFluid;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -37,10 +38,13 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.UseAction;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.PotionUtils;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ITag;
@@ -99,11 +103,17 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
-            data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
+            FluidStack fs=data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
             if (entityplayer != null) {
                 entityplayer.addStat(Stats.ITEM_USED.get(this));
+                Fluid f=fs.getFluid();
+                if(f instanceof PotionFluid) {
+                	for(EffectInstance ei:PotionUtils.getEffectsFromTag(fs.getOrCreateTag()))
+                	entityplayer.addPotionEffect(ei);
+                }
             }
         });
+        
         updateDamage(stack);
         return stack;
     }
@@ -181,7 +191,9 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     public SoundEvent getDrinkSound() {
         return SoundEvents.ENTITY_GENERIC_DRINK;
     }
-
+    public Item getEmptyContainer() {
+    	return this;
+    }
     @Override
     public ICapabilityProvider initCapabilities(@Nonnull ItemStack stack, @Nullable CompoundNBT nbt) {
         return new FluidHandlerItemStack(stack, capacity) {
@@ -194,11 +206,14 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             @Override
             @SuppressWarnings("deprecation")
             public ItemStack getContainer() {
-                return getFluid().isEmpty() ? new ItemStack(FHContent.FHItems.thermos) : this.container;
+                return getFluid().isEmpty() ? new ItemStack(getEmptyContainer()) : this.container;
             }
 
             @Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+            	if(stack.getFluid() instanceof PotionFluid) {
+            		return true;
+            	}
                 for (Fluid fluid : FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID, "drink")).getAllElements()) {
                     if (fluid == stack.getFluid()) {
                         return true;
