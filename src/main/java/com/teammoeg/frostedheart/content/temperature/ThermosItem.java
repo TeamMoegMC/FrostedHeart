@@ -242,8 +242,12 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         if (stack.getChildTag(FLUID_NBT_KEY) != null) {
             FluidUtil.getFluidHandler(stack).ifPresent(f -> {
                 tooltip.add(((TextComponent) f.getFluidInTank(0).getDisplayName()).appendString(String.format(": %d / %dmB", f.getFluidInTank(0).getAmount(), capacity)).mergeStyle(TextFormatting.GRAY));
-                if(f.getFluidInTank(0).getFluid() instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid)
-                	PotionFluidHandler.addPotionTooltip(f.getFluidInTank(0),tooltip,1);
+                FluidStack fs=f.getFluidInTank(0);
+                Fluid ft=fs.getFluid();
+                if(ft instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid)
+                	PotionFluidHandler.addPotionTooltip(fs,tooltip,1);
+                else if(ft instanceof PotionFluid) 
+                	((PotionFluid) ft).addInformation(fs, tooltip);
                 tooltip.add(new TranslationTextComponent("tooltip.watersource.drink_unit").appendString(" : " + this.getUnit() + "mB").mergeStyle(TextFormatting.GRAY));
             });
         }
