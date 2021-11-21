@@ -52,6 +52,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -163,7 +164,7 @@ public class ClientEvents {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         ClientPlayerEntity clientPlayer = mc.player;
