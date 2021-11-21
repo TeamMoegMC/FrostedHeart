@@ -42,6 +42,12 @@ public class FHProps {
             .tickRandomly()
             .zeroHardnessAndResistance()
             .sound(SoundType.CROP);
+    public static final AbstractBlock.Properties ore_gravel = AbstractBlock.Properties
+            .create(Material.SAND)
+            .sound(SoundType.SAND)
+            .setRequiresTool()
+            .harvestTool(ToolType.SHOVEL)
+            .hardnessAndResistance(1.5F, 5);
     public static final Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
     public static final AbstractBlock.Properties berryBushBlocks = AbstractBlock.Properties.create(Material.PLANTS).tickRandomly().doesNotBlockMovement().sound(SoundType.SWEET_BERRY_BUSH);
 }

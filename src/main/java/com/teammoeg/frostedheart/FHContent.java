@@ -18,11 +18,6 @@
 
 package com.teammoeg.frostedheart;
 
-import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
-import static com.teammoeg.frostedheart.util.FHProps.cropProps;
-import static com.teammoeg.frostedheart.util.FHProps.itemProps;
-import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -87,6 +82,7 @@ import com.teammoeg.frostedheart.util.FHFoods;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -105,6 +101,8 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import static com.teammoeg.frostedheart.util.FHProps.*;
+
 public class FHContent {
 
     public static List<Block> registeredFHBlocks = new ArrayList<>();
@@ -122,6 +120,7 @@ public class FHContent {
         public static Block rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
         public static Block wolfberry_bush_block = new WolfBerryBushBlock("wolfberry_bush_block",0,berryBushBlocks, 10);
         public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
+        public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel,FHBlockItem::new );
         public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
                 .create(Material.ROCK).sound(SoundType.WOOD)
                 .harvestTool(ToolType.PICKAXE)
