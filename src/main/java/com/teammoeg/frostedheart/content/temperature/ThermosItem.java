@@ -92,11 +92,11 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 	}
 
 	public int getUseDuration(ItemStack stack) {
-        return hasLiquid(stack) ? 40 : 0;
+        return canDrink(stack) ? 40 : 0;
     }
 
     public UseAction getUseAction(ItemStack stack) {
-        return hasLiquid(stack) ? UseAction.DRINK : UseAction.NONE;
+        return canDrink(stack) ? UseAction.DRINK : UseAction.NONE;
     }
 
     @Override
@@ -143,7 +143,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
             playerIn.setActiveHand(handIn);
-            return canDrink(playerIn, playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
+            return canDrink(playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
         }
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
             BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
@@ -158,7 +158,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
                 }
             }
             playerIn.setActiveHand(handIn);
-            return canDrink(playerIn, playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
+            return canDrink(playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
         }
         return ActionResult.resultFail(itemstack);
     }
@@ -180,16 +180,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         }
     }
 
-    public boolean canDrink(PlayerEntity playerIn, ItemStack stack) {
-       /* canDrink = false;
-        if (this.getDamage(stack) <= this.getMaxDamage(stack) - getUnit()){
-            playerIn.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(data -> {
-                canDrink = data.getWaterLevel() < 20;
-            });
-            
-        }*/
-        return true;
-    }
+
 
     public SoundEvent getDrinkSound() {
         return SoundEvents.ENTITY_GENERIC_DRINK;
@@ -253,10 +244,10 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         }
     }
 
-    public boolean hasLiquid(ItemStack is) {
+    public boolean canDrink(ItemStack is) {
         LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
         if (ih.isPresent())
-            return !ih.resolve().get().getFluidInTank(0).isEmpty();
+            return (ih.resolve().get().getFluidInTank(0).getAmount()>=unit);
         return false;
     }
 
