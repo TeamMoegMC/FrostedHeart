@@ -25,13 +25,13 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.simibubi.create.content.contraptions.fluids.potion.PotionFluid;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.data.FHDataManager;
 
+import blusunrize.immersiveengineering.common.util.fluids.PotionFluid;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -73,7 +73,6 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStackSimple;
 
 public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     final int unit;
@@ -107,9 +106,12 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
             if (entityplayer != null) {
                 entityplayer.addStat(Stats.ITEM_USED.get(this));
                 Fluid f=fs.getFluid();
-                if(f instanceof PotionFluid) {
+                if(f instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid) {
                 	for(EffectInstance ei:PotionUtils.getEffectsFromTag(fs.getOrCreateTag()))
-                	entityplayer.addPotionEffect(ei);
+                		entityplayer.addPotionEffect(ei);
+                }else if(f instanceof PotionFluid) {
+                	for(EffectInstance ei:PotionFluid.getType(fs).getEffects())
+                		entityplayer.addPotionEffect(ei);
                 }
             }
         });
@@ -211,7 +213,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
             @Override
             public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-            	if(stack.getFluid() instanceof PotionFluid) {
+            	if(stack.getFluid() instanceof PotionFluid||stack.getFluid() instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid) {
             		return true;
             	}
                 for (Fluid fluid : FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID, "drink")).getAllElements()) {
