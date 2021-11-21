@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.events;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -65,6 +68,9 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.gen.settings.StructureSeparationSettings;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -75,6 +81,7 @@ import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -367,7 +374,15 @@ public class ForgeEvents {
             }
         }
     }
+    @SubscribeEvent
+    public static void removeVanillaVillages(WorldEvent.CreateSpawnPosition event) {
+        if (event.getWorld() instanceof ServerWorld) {
+        	ServerWorld serverWorld = (ServerWorld)event.getWorld();
+            serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet().remove(Structure.VILLAGE);
+            
+        }
 
+      }
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
