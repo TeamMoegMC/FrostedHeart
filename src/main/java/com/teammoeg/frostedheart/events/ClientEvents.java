@@ -179,44 +179,45 @@ public class ClientEvents {
         float partialTicks = event.getPartialTicks();
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
-
-        if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
-            if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
-                mc.ingameGUI.getSpectatorGui().func_238528_a_(stack, partialTicks);
-            } else {
-                FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
-            }
-            event.setCanceled(true);
-        }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience) {
-            if (FrostedHud.renderHypothermia) {
-                FrostedHud.renderHypothermia(stack, anchorX, anchorY, mc, clientPlayer);
-            } else {
-                FrostedHud.renderExperience(stack, anchorX, anchorY, mc, clientPlayer);
-            }
-            event.setCanceled(true);
-        }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTH && FrostedHud.renderHealth) {
-            FrostedHud.renderHealth(stack, anchorX, anchorY, mc, renderViewPlayer);
-            event.setCanceled(true);
-        }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
-            if (FrostedHud.renderFood) FrostedHud.renderFood(stack, anchorX, anchorY, mc, renderViewPlayer);
-            if (FrostedHud.renderThirst) FrostedHud.renderThirst(stack, anchorX, anchorY, mc, renderViewPlayer);
-            if (FrostedHud.renderHealth) FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
-            event.setCanceled(true);
-        }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.ARMOR && FrostedHud.renderArmor) {
-            FrostedHud.renderArmor(stack, anchorX, anchorY, mc, clientPlayer);
-            event.setCanceled(true);
-        }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTHMOUNT && FrostedHud.renderHealthMount) {
-            FrostedHud.renderMountHealth(stack, anchorX, anchorY, mc, clientPlayer);
-            event.setCanceled(true);
-        }
-        if (event.getType() == RenderGameOverlayEvent.ElementType.JUMPBAR && FrostedHud.renderJumpBar) {
-            FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
-            event.setCanceled(true);
+        if(FHConfig.CLIENT.enableUI.get()) {
+	        if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
+	            if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
+	                mc.ingameGUI.getSpectatorGui().func_238528_a_(stack, partialTicks);
+	            } else {
+	                FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
+	            }
+	            event.setCanceled(true);
+	        }
+	        if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience) {
+	            if (FrostedHud.renderHypothermia) {
+	                FrostedHud.renderHypothermia(stack, anchorX, anchorY, mc, clientPlayer);
+	            } else {
+	                FrostedHud.renderExperience(stack, anchorX, anchorY, mc, clientPlayer);
+	            }
+	            event.setCanceled(true);
+	        }
+	        if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTH && FrostedHud.renderHealth) {
+	            FrostedHud.renderHealth(stack, anchorX, anchorY, mc, renderViewPlayer);
+	            event.setCanceled(true);
+	        }
+	        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
+	            if (FrostedHud.renderFood) FrostedHud.renderFood(stack, anchorX, anchorY, mc, renderViewPlayer);
+	            if (FrostedHud.renderThirst) FrostedHud.renderThirst(stack, anchorX, anchorY, mc, renderViewPlayer);
+	            if (FrostedHud.renderHealth) FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
+	            event.setCanceled(true);
+	        }
+	        if (event.getType() == RenderGameOverlayEvent.ElementType.ARMOR && FrostedHud.renderArmor) {
+	            FrostedHud.renderArmor(stack, anchorX, anchorY, mc, clientPlayer);
+	            event.setCanceled(true);
+	        }
+	        if (event.getType() == RenderGameOverlayEvent.ElementType.HEALTHMOUNT && FrostedHud.renderHealthMount) {
+	            FrostedHud.renderMountHealth(stack, anchorX, anchorY, mc, clientPlayer);
+	            event.setCanceled(true);
+	        }
+	        if (event.getType() == RenderGameOverlayEvent.ElementType.JUMPBAR && FrostedHud.renderJumpBar) {
+	            FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
+	            event.setCanceled(true);
+	        }
         }
     }
 }

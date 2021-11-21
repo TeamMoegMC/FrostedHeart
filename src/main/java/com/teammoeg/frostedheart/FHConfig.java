@@ -35,14 +35,19 @@ public class FHConfig {
 
     public static class Client {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureOrb;
+        public final ForgeConfigSpec.BooleanValue enableUI;
         public final ForgeConfigSpec.IntValue tempOrbOffsetX;
         public final ForgeConfigSpec.IntValue tempOrbOffsetY;
         public final ForgeConfigSpec.EnumValue<TempOrbPos> tempOrbPosition;
 
         Client(ForgeConfigSpec.Builder builder) {
+        	enableUI = builder
+                    .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE,DISABLING IS NOT RECOMMEND. ")
+                    .define("enableHUD", true);
             enablesTemperatureOrb = builder
                     .comment("Enables the temperature orb overlay. ")
                     .define("enableTemperatureOrb", true);
+            
 
             tempOrbPosition = builder
                     .comment("Position of the temperature orb in game screen. ")
