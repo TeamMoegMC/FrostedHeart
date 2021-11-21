@@ -379,9 +379,14 @@ public class ForgeEvents {
         if (event.getWorld() instanceof ServerWorld) {
         	ServerWorld serverWorld = (ServerWorld)event.getWorld();
             serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet().remove(Structure.VILLAGE);
-            
         }
-
+      }
+    @SubscribeEvent
+    public static void removeVanillaVillages(WorldEvent.Load event) {
+        if (event.getWorld() instanceof ServerWorld) {
+        	ServerWorld serverWorld = (ServerWorld)event.getWorld();
+            serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet().remove(Structure.VILLAGE);
+        }
       }
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
