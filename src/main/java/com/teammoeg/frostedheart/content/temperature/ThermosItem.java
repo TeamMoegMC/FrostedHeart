@@ -256,7 +256,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     public boolean hasLiquid(ItemStack is) {
         LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
         if (ih.isPresent())
-            return !ih.resolve().get().getFluidInTank(0).isEmpty();
+            return (ih.resolve().get().getFluidInTank(0).getAmount()>=unit);
         return false;
     }
 
