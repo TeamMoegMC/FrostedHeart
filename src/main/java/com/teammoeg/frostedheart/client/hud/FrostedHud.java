@@ -45,6 +45,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.FoodStats;
 import net.minecraft.util.HandSide;
@@ -263,13 +264,20 @@ public class FrostedHud {
         RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.left_threequarters.getA(), y + BasePos.left_threequarters.getB(), UV.left_threequarters_frame.x, UV.left_threequarters_frame.y, UV.left_threequarters_frame.w, UV.left_threequarters_frame.h);
-        mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), UV.icon_health_normal.x, UV.icon_health_normal.y, UV.icon_health_normal.w, UV.icon_health_normal.h);
+        
+        
 
         float health = player.getHealth();
         //ModifiableAttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         float healthMax =/* (float) attrMaxHealth.getValue()*/player.getMaxHealth();
         float absorb = player.getAbsorptionAmount(); // let's say max is 20
-
+        if(mc.player.getActivePotionEffect(Effects.WITHER)!=null) {
+        	mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), UV.icon_health_abnormal_black.x, UV.icon_health_abnormal_black.y, UV.icon_health_abnormal_black.w, UV.icon_health_abnormal_black.h);
+        }else if(mc.player.getActivePotionEffect(Effects.POISON)!=null) {
+        	mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), UV.icon_health_abnormal_green.x, UV.icon_health_abnormal_green.y, UV.icon_health_abnormal_green.w, UV.icon_health_abnormal_green.h);
+        }else{
+        	mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), UV.icon_health_normal.x, UV.icon_health_normal.y, UV.icon_health_normal.w, UV.icon_health_normal.h);
+        }
         // range: [0, 99]
         int healthState = health == 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
         int absorbState = absorb == 0 ? 0 : MathHelper.ceil(absorb / 20 * 100) - 1;
@@ -301,7 +309,13 @@ public class FrostedHud {
         RenderSystem.enableBlend();
 
         mc.ingameGUI.blit(stack, x + BasePos.right_half_1.getB().getA(), y + BasePos.right_half_1.getB().getB(), UV.right_half_frame.x, UV.right_half_frame.y, UV.right_half_frame.w, UV.right_half_frame.h);
-        mc.ingameGUI.blit(stack, x + IconPos.right_half_1.getB().getA(), y + IconPos.right_half_1.getB().getB(), UV.icon_hunger_normal.x, UV.icon_hunger_normal.y, UV.icon_hunger_normal.w, UV.icon_hunger_normal.h);
+        EffectInstance effectInstance = mc.player.getActivePotionEffect(Effects.HUNGER);
+        boolean isHunger = effectInstance != null;
+        if (isHunger) {
+            mc.ingameGUI.blit(stack, x + IconPos.right_half_2.getB().getA(), y + IconPos.right_half_2.getB().getB(), UV.icon_hunger_abnormal_green.x, UV.icon_hunger_abnormal_green.y, UV.icon_hunger_abnormal_green.w, UV.icon_hunger_abnormal_green.h);
+        } else {
+        	mc.ingameGUI.blit(stack, x + IconPos.right_half_1.getB().getA(), y + IconPos.right_half_1.getB().getB(), UV.icon_hunger_normal.x, UV.icon_hunger_normal.y, UV.icon_hunger_normal.w, UV.icon_hunger_normal.h);
+        }
         FoodStats stats = mc.player.getFoodStats();
         int foodLevel = stats.getFoodLevel();
         int foodLevelState = MathHelper.ceil(foodLevel / 20.0F * 100) - 1;
