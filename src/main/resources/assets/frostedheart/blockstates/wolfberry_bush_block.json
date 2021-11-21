@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "frostedheart:block/berrybush/wolfberry_bush_block_stage0"
+    },
+    "age=1": {
+      "model": "frostedheart:block/berrybush/wolfberry_bush_block_stage1"
+    },
+    "age=2": {
+      "model": "frostedheart:block/berrybush/wolfberry_bush_block_stage2"
+    },
+    "age=3": {
+      "model": "frostedheart:block/berrybush/wolfberry_bush_block_stage3"
+    }
+  }
+}
