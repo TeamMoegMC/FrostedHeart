@@ -52,7 +52,7 @@ public class FHFeatures {
     public static final ConfiguredFeature<?, ?> ore_gold = register("ore_gold", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_GOLD_ORE.get().getStateContainer().getBaseState(), 35)).range(30).square().chance(12));
     public static final ConfiguredFeature<?, ?> ore_sphalerite = register("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getStateContainer().getBaseState(), 40)).range(65).square().chance(4));
 
-    public static final ConfiguredFeature<?, ?> copper_gravel = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "copper_gravel" ,Feature.DISK.withConfiguration(new SphereReplaceConfig(FHContent.FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 1), 1, ImmutableList.of(Blocks.GRAVEL.getDefaultState(),Blocks.SAND.getDefaultState()))).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
+    public static final ConfiguredFeature<?, ?> copper_gravel = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "copper_gravel" ,Feature.DISK.withConfiguration(new SphereReplaceConfig(FHContent.FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 1), 1, ImmutableList.of(Blocks.GRAVEL.getDefaultState(),Blocks.SAND.getDefaultState(),Blocks.DIRT.getDefaultState()))).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
     private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> register(String key, ConfiguredFeature<FC, ?> configuredFeature) {
         FH_ORES.add(configuredFeature);
         return Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, key, configuredFeature);
