@@ -172,10 +172,10 @@ public class ForgeEvents {
     @SubscribeEvent
     public static void addOreGenFeatures(BiomeLoadingEvent event) {
         if (event.getName() != null) {
-            if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH){
-                event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES,FHFeatures.copper_gravel);
-            }
              if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
+                 if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH){
+                     event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES,FHFeatures.copper_gravel);
+                 }
                     for (ConfiguredFeature feature : FHFeatures.FH_ORES)
                         event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
                 }
