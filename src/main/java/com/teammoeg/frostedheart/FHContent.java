@@ -69,7 +69,6 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipeSerial
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorMultiblock;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
-import com.teammoeg.frostedheart.content.temperature.AdvancedThermosItem;
 import com.teammoeg.frostedheart.content.temperature.FHSoupItem;
 import com.teammoeg.frostedheart.content.temperature.HeaterVestItem;
 import com.teammoeg.frostedheart.content.temperature.MushroomBed;
