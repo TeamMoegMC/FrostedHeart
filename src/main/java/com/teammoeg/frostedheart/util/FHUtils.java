@@ -18,7 +18,12 @@
 
 package com.teammoeg.frostedheart.util;
 
+import java.util.Random;
 import java.util.function.ToIntFunction;
+
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -63,7 +68,12 @@ public class FHUtils {
             return true;
         }
     }
-
+    public static void canBigTreeGenerate(World w,BlockPos p,Random r,CallbackInfoReturnable<Boolean> cr) {
+		int i=35;
+		i-=ChunkData.getTemperature(w, p)/2;
+		if(i>0&&r.nextInt(i)!=0)
+			cr.setReturnValue(false);
+    }
     public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
         if (World.isInvalidPosition(blockpos)) {
             CompoundNBT compoundnbt = nbt.copy();
