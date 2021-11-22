@@ -36,7 +36,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
 	@Override
 	public void tick() {
 		super.tick();
-		if(!world.isRemote&&currentComp!=null) {
+		if(!world.isRemote&&super.hasNetwork()&&currentComp!=null) {
 			this.getOrCreateNetwork().updateStressFor(this,calculateStressApplied());
 		}
 	}
