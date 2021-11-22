@@ -69,10 +69,14 @@ public class FHUtils {
         }
     }
     public static void canBigTreeGenerate(World w,BlockPos p,Random r,CallbackInfoReturnable<Boolean> cr) {
+		if(!canBigTreeGenerate(w,p,r))
+			cr.setReturnValue(false);
+    }
+    public static boolean canBigTreeGenerate(World w,BlockPos p,Random r) {
 		int i=35;
 		i-=ChunkData.getTemperature(w, p)/2;
-		if(i>0&&r.nextInt(i)!=0)
-			cr.setReturnValue(false);
+		return i<=0||r.nextInt(i)!=0;
+			
     }
     public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
         if (World.isInvalidPosition(blockpos)) {
