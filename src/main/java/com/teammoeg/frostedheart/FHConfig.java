@@ -42,7 +42,7 @@ public class FHConfig {
 
         Client(ForgeConfigSpec.Builder builder) {
         	enableUI = builder
-                    .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE,DISABLING IS NOT RECOMMEND. ")
+                    .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
                     .define("enableHUD", true);
             enablesTemperatureOrb = builder
                     .comment("Enables the temperature orb overlay. ")

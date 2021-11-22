@@ -19,8 +19,8 @@ import net.minecraft.world.server.ServerWorld;
 public abstract class BigTreeMixin extends Tree {
 	@Inject(at=@At("HEAD"),method="growBigTree",cancellable=true)
 	public void placeMega(ServerWorld p_235678_1_, ChunkGenerator p_235678_2_, BlockPos p_235678_3_, BlockState p_235678_4_, Random p_235678_5_, int p_235678_6_, int p_235678_7_,CallbackInfoReturnable<Boolean> cr) {
-		int i=25;
-		i-=ChunkData.getTemperature(p_235678_1_, p_235678_3_);
+		int i=35;
+		i-=ChunkData.getTemperature(p_235678_1_, p_235678_3_)/2;
 		if(i>0&&p_235678_5_.nextInt(i)!=0)
 			cr.setReturnValue(false);
 	}
