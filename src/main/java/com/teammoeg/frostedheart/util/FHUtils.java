@@ -75,7 +75,7 @@ public class FHUtils {
     public static boolean canBigTreeGenerate(World w,BlockPos p,Random r) {
 		int i=35;
 		i-=ChunkData.getTemperature(w, p)/2;
-		return i<=0||r.nextInt(i)!=0;
+		return i<=0||r.nextInt(i)==0;
 			
     }
     public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
