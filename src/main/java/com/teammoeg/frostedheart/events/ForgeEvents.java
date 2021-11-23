@@ -382,14 +382,18 @@ public class ForgeEvents {
     public static void removeVanillaVillages(WorldEvent.CreateSpawnPosition event) {
         if (event.getWorld() instanceof ServerWorld) {
         	ServerWorld serverWorld = (ServerWorld)event.getWorld();
+try{
             serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet().remove(Structure.VILLAGE);
+}catch(UnsupportedOperationException e){}
         }
       }
     @SubscribeEvent
     public static void removeVanillaVillages(WorldEvent.Load event) {
         if (event.getWorld() instanceof ServerWorld) {
         	ServerWorld serverWorld = (ServerWorld)event.getWorld();
+try{
             serverWorld.getChunkProvider().generator.func_235957_b_().func_236195_a_().keySet().remove(Structure.VILLAGE);
+}catch(UnsupportedOperationException e){}
         }
       }
     @SubscribeEvent
