@@ -37,6 +37,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     private boolean isPathFinding;
     private boolean requireRP;
     private boolean testConnect=true;
+    private int testCooldown=0;
     private Direction testDirection;
     public HeatPipeTileEntity() {
         super(FHContent.FHTileTypes.HEATPIPE.get());
@@ -124,6 +125,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     protected void testConnect() {
         if (isPathFinding) return;
         //System.out.println(from);
+        testCooldown=20;
         try {
             isPathFinding = true;
             final SteamEnergyNetwork network = getNetwork();
@@ -227,7 +229,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     public void doTestConnect(Direction from) {
     	if(getNetwork()==null){
     		connectAt(from);
-    	}else {
+    	}else if(testCooldown<=0){
 	    	testConnect=true;
 	    	testDirection=from;
     	}
@@ -277,6 +279,8 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 }
             }
         }
+        if(testCooldown>0)
+            testCooldown--;
         if(testConnect)
         	testConnect();
         if (network != null && network.drainHeat(network.getTemperatureLevel() * 0.15F) >= 0.15) {
