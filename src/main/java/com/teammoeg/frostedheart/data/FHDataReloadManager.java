@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.util.StructureUtils;
 
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
@@ -38,6 +39,7 @@ public class FHDataReloadManager implements IResourceManagerReloadListener {
     @Override
     public void onResourceManagerReload(IResourceManager manager) {
         FHDataManager.reset();
+        StructureUtils.addBanedBlocks();
         for (FHDataType dat : FHDataType.values()) {
             for (ResourceLocation rl : manager.getAllResourceLocations(dat.type.getLocation(), (s) -> s.endsWith(".json"))) {
                 try {

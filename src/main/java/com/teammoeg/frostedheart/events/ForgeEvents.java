@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
+import com.teammoeg.frostedheart.util.StructureUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
@@ -94,8 +95,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
 	@SubscribeEvent
-	public void onServerStarting(FMLServerStartingEvent event) {
-
+	public void onServerStarted(FMLServerStartedEvent event) {
+		
 	}
 
 	@SubscribeEvent

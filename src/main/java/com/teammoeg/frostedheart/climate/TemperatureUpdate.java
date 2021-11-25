@@ -71,9 +71,10 @@ public class TemperatureUpdate {
                         break;
                     }
                 }
+                EffectInstance current=player.getActivePotionEffect(FHEffects.WET);
                 if (hasArmor)
                     player.addPotionEffect(new EffectInstance(FHEffects.WET, 400, 0));//punish for wet clothes
-                else if(player.getActivePotionEffect(FHEffects.WET).getDuration()<100)
+                else if(current==null||current.getDuration()<100)
                     player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
             }
             float current = TemperatureCore.getBodyTemperature(player);

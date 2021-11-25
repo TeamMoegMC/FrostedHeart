@@ -135,7 +135,9 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
 
     }
 
-    @Override
+
+
+	@Override
     public int getMaxEnergyStored(ItemStack container) {
         return 240;
     }
