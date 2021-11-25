@@ -20,6 +20,8 @@
     "minecraft.MixinSwampHutPiece",
     "minecraft.SingleJigsawPieceMixin",
     "minecraft.MixinStructurePiece",
+    "minecraft.MixinIglooPiece",
+    "minecraft.MixinOceanRuinPiece",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
