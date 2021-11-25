@@ -77,7 +77,6 @@ public class FHMain {
         FHContent.FHItems.init();
         FHContent.FHBlocks.init();
         FHContent.FHMultiblocks.init();
-
         FHContent.registerContainers();
         FHContent.FHTileTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
