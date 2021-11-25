@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:block/crop",
+  "parent": "minecraft:block/cross",
   "textures": {
-    "cross": "frostedheart:block/berrybush/wolfberry_bush_block_stage2"
+    "cross": "frostedheart:block/berrybush/test_draw_new"
   }
 }
