@@ -37,7 +37,7 @@ import net.minecraft.util.SoundEvents;
 
 @Mixin(CampfireTileEntity.class)
 public abstract class CampfireTileEntityMixin extends TileEntity implements ICampfireExtra {
-    public int lifeTime = 0;
+    public int lifeTime;
 
     @Override
     public int getLifeTime() {
@@ -62,7 +62,11 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
         this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));
     }
-
+    @Inject(at = @At("RETURN"), method = "<init>()V")
+    private void init(CallbackInfo ci)
+    {
+        lifeTime = 0;
+    }
     @Inject(at = @At("RETURN"), method = "tick")
     public void tick(CallbackInfo ci) {
         if (!this.world.isRemote) {
