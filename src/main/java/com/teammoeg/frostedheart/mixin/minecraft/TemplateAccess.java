@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(Template.class)
 public interface TemplateAccess {
-    @Accessor(remap = false)
+    @Accessor
     List<Template.Palette> getBlocks();
 
 }
