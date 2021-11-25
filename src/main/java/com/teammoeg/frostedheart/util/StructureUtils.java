@@ -23,6 +23,7 @@ public class StructureUtils {
 		baned.add(Blocks.SMOKER);
 		baned.add(Blocks.BLAST_FURNACE);
 		RemapRL(Blocks.CHEST,new ResourceLocation("stone_age","stone_chest"));
+		System.out.println("frostedheart structure reloaded");
 	}
 	public static Block getChest() {
 		Block b=ForgeRegistries.BLOCKS.getValue(new ResourceLocation("stone_age","stone_chest"));
@@ -37,12 +38,14 @@ public class StructureUtils {
 		remap.put(org,ForgeRegistries.BLOCKS.getValue(dest));
 	}
 	public static void handlePalette(List<Template.Palette> p) {
+		
 		p.forEach(q->q.func_237157_a_().replaceAll(r->{
 			
-			if(baned.contains(r.state.getBlock()))
+			if(baned.contains(r.state.getBlock())) {
 				return new BlockInfo(r.pos,Blocks.AIR.getDefaultState(),null);
-			else if(remap.containsKey(r.state.getBlock()))
+			}else if(remap.containsKey(r.state.getBlock())) {
 				return new BlockInfo(r.pos,remap.get(r.state.getBlock()).getDefaultState(),r.nbt);
+			}
 			return r;
 		}));
 	}

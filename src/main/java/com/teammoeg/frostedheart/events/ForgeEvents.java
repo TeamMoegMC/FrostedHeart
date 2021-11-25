@@ -96,7 +96,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class ForgeEvents {
 	@SubscribeEvent
 	public void onServerStarted(FMLServerStartedEvent event) {
-		StructureUtils.addBanedBlocks();
+		
 	}
 
 	@SubscribeEvent
