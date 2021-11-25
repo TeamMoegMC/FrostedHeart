@@ -22,12 +22,8 @@ import net.minecraft.world.World;
 
 public class WolfBerryBushBlock extends FHBerryBushBlock{
     public static final IntegerProperty AGE = BlockStateProperties.AGE_0_3;
-    //private static final VoxelShape BUSHLING_SHAPE = Block.makeCuboidShape(3.0D, 0.0D, 3.0D, 13.0D, 8.0D, 13.0D);
-    //private static final VoxelShape GROWING_SHAPE_1 = Block.makeCuboidShape(3.0D, 0.0D, 1.0D, 10.0D, 10.0D, 10.0D);
-    //private static final VoxelShape GROWING_SHAPE_2 = Block.makeCuboidShape(1.0D, 0.0D, 1.0D, 15.0D, 16.0D, 15.0D);
-    private static final VoxelShape BUSHLING_SHAPE = Block.makeCuboidShape(3.0D, 0.0D, 3.0D, 13.0D, 8.0D, 13.0D);
+/*    private static final VoxelShape BUSHLING_SHAPE = Block.makeCuboidShape(3.0D, 0.0D, 3.0D, 13.0D, 8.0D, 13.0D);
     private static final VoxelShape GROWING_SHAPE = Block.makeCuboidShape(1.0D, 0.0D, 1.0D, 15.0D, 15.0D, 15.0D);
-
 
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
         if (state.get(AGE) == 0) {
@@ -37,7 +33,8 @@ public class WolfBerryBushBlock extends FHBerryBushBlock{
         } else {
             return state.get(AGE) < 3 ? GROWING_SHAPE : super.getShape(state, worldIn, pos, context);
         }
-    }
+    }*/
+
     public WolfBerryBushBlock(String name, int growTemperature, Properties properties , int growSpeed) {
         super(name, growTemperature, properties, growSpeed);
     }
