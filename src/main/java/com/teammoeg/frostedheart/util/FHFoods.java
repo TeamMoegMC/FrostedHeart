@@ -26,7 +26,8 @@ public class FHFoods {
     public static final Food RYE_BREAD = buildStew(6);
     public static final Food BLACK_BREAD = buildStew(5, 0.0F);
     public static final Food WHITE_TURNIP = buildStew(3, 0.5F);
-    public static final Food WOLFBERRIES = buildStew(1, 0.3F);
+    public static final Food WOLFBERRIES = buildStew(2, 0.0F);
+    public static final Food DRIED_WOLFBERRIES = buildStew(1);
 
     private static Food buildStew(int hunger, float saturation) {
         return (new Food.Builder()).hunger(hunger).saturation(saturation).build();

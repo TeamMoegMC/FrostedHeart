@@ -170,6 +170,7 @@ public class FHContent {
         }
         public static Item energy_core = new FHBaseItem("energy_core", itemProps);
         public static Item wolfberries = new FoodBlockItem(FHBlocks.wolfberry_bush_block, itemProps, FHFoods.WOLFBERRIES, "wolfberries");
+        public static Item dried_wolfberries = new FHBaseItem("dried_wolfberries", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.DRIED_WOLFBERRIES));
         public static Item rye = new FHBaseItem("rye", itemProps);
         public static Item generator_ash = new FHBaseItem("generator_ash", itemProps);
         public static Item rye_flour = new FHBaseItem("rye_flour", itemProps);
