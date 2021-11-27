@@ -119,6 +119,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     	}
     	if(noliquidtick>0) {
     		noliquidtick--;
+    		return;
     	}
     	if(liquidtick>=rt) {
     		liquidtick-=rt;
