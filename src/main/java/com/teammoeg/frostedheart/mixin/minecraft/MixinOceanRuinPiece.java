@@ -20,6 +20,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tileentity.ChestTileEntity;
+import net.minecraft.tileentity.LockableLootTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MutableBoundingBox;
@@ -44,11 +45,11 @@ public abstract class MixinOceanRuinPiece extends TemplateStructurePiece {
         if ("chest".equals(function)) {
         BlockState chest=StructureUtils.getChest().getDefaultState();
         if(chest.hasProperty(BlockStateProperties.WATERLOGGED))
-        	chest=chest.with(ChestBlock.WATERLOGGED, Boolean.valueOf(worldIn.getFluidState(pos).isTagged(FluidTags.WATER)));
+        	chest=chest.with(BlockStateProperties.WATERLOGGED, Boolean.valueOf(worldIn.getFluidState(pos).isTagged(FluidTags.WATER)));
            worldIn.setBlockState(pos,chest , 2);
            TileEntity tileentity = worldIn.getTileEntity(pos);
-           if (tileentity instanceof ChestTileEntity) {
-              ((ChestTileEntity)tileentity).setLootTable(this.isLarge ? LootTables.CHESTS_UNDERWATER_RUIN_BIG : LootTables.CHESTS_UNDERWATER_RUIN_SMALL, rand.nextLong());
+           if (tileentity instanceof LockableLootTileEntity) {
+              ((LockableLootTileEntity)tileentity).setLootTable(this.isLarge ? LootTables.CHESTS_UNDERWATER_RUIN_BIG : LootTables.CHESTS_UNDERWATER_RUIN_SMALL, rand.nextLong());
            }
         } else if ("drowned".equals(function)) {
            DrownedEntity drownedentity = EntityType.DROWNED.create(worldIn.getWorld());

@@ -32,7 +32,7 @@ public class MixinStructurePiece {
 	@Overwrite
 	protected boolean generateChest(IServerWorld worldIn, MutableBoundingBox boundsIn, Random rand, BlockPos posIn,
 			ResourceLocation resourceLocationIn, @Nullable BlockState p_191080_6_) {
-		if (boundsIn.isVecInside(posIn) && !worldIn.getBlockState(posIn).matchesBlock(Blocks.CHEST)) {
+		if (boundsIn.isVecInside(posIn) && !worldIn.getBlockState(posIn).matchesBlock(StructureUtils.getChest())) {
 			if (p_191080_6_ == null) {
 				p_191080_6_ = StructurePiece.correctFacing(worldIn, posIn,StructureUtils.getChest().getDefaultState());
 			}

@@ -14,7 +14,7 @@ import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.util.ResourceLocation;
 
 @Mixin(TemplateManager.class)
-public abstract class SingleJigsawPieceMixin {
+public abstract class TemplateManagerMixin {
 	@Shadow
 	private Map<ResourceLocation, Template> templates;
 

@@ -18,7 +18,7 @@
     "minecraft.BigTreeMixin",
     "minecraft.TemplateAccess",
     "minecraft.MixinSwampHutPiece",
-    "minecraft.SingleJigsawPieceMixin",
+    "minecraft.TemplateManagerMixin",
     "minecraft.MixinStructurePiece",
     "minecraft.MixinIglooPiece",
     "minecraft.MixinOceanRuinPiece",
