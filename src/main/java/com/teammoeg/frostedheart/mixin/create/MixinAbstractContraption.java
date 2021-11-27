@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.teammoeg.frostedheart.util.ContraptionCostUtils;
+import com.teammoeg.frostedheart.util.IStressContraption;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -34,7 +35,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
 
 @Mixin(AbstractContraptionEntity.class)
-public abstract class MixinAbstractContraption extends Entity{
+public abstract class MixinAbstractContraption extends Entity implements IStressContraption{
     public MixinAbstractContraption(EntityType<?> p_i48580_1_, World p_i48580_2_) {
 		super(p_i48580_1_, p_i48580_2_);
 	}
@@ -55,7 +56,8 @@ public abstract class MixinAbstractContraption extends Entity{
     	if(!world.isRemote)
             compound.putInt("spinst", 2);
     }
-    public float getStressCost() {
+    @Override
+	public float getStressCost() {
     	if(!this.isAlive())return 0;
     	if(actorCost==-1)
     		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
@@ -63,7 +65,8 @@ public abstract class MixinAbstractContraption extends Entity{
     		calculatedCost=ContraptionCostUtils.calculateStressApply(contraption);
     	return calculatedCost+actorCost;
     }
-    public float getRotationStressCost() {
+    @Override
+	public float getRotationStressCost() {
     	if(!this.isAlive())return 0;
     	if(actorCost==-1)
     		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
@@ -71,7 +74,8 @@ public abstract class MixinAbstractContraption extends Entity{
     		calculatedRotationCost=ContraptionCostUtils.calculateRotationStressApply(contraption);
     	return calculatedRotationCost+actorCost;
     }
-    public float getActorCost() {
+    @Override
+	public float getActorCost() {
     	if(!this.isAlive())return 0;
     	if(actorCost==-1)
     		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);

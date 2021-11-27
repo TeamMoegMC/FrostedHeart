@@ -14,10 +14,14 @@ public class ContraptionCostUtils {
 	public static float calculateStressApply(Contraption cont) {
 		float movecost = 0;
 		for(BlockInfo bi:cont.getBlocks().values()) {
-			if(bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos)!=VoxelShapes.empty()) {
+			try {
+				if(bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos)!=VoxelShapes.empty()) {
+					movecost+=0.125F;
+				}else
+					movecost+=0.075F;
+			}catch(Throwable t) {
 				movecost+=0.125F;
-			}else
-				movecost+=0.075F;
+			}
 		}
 		return movecost;
 	}
@@ -33,39 +37,46 @@ public class ContraptionCostUtils {
 			double dX=bi.pos.getX();
 			double dY=bi.pos.getY();
 			double distance=Math.sqrt((dX*dX)+(dY*dY));
-			if(bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos)!=VoxelShapes.empty()) {
+			try {
+				if(bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos)!=VoxelShapes.empty()) {
+					movecost+=0.125F*2.5F*distance;
+				}else
+					movecost+=0.075F*2.5F*distance;
+			}catch(Throwable t) {
 				movecost+=0.125F*2.5F*distance;
-			}else
-				movecost+=0.075F*2.5F*distance;
+			}
 		}
 
 		return movecost;
 	}
 	public static float getCost(AbstractContraptionEntity ace) {
 		try {
-			return (float) ace.getClass().getMethod("getStressCost").invoke(ace);
-		} catch (Exception e) {//may we ignore and just calculate?
+			if(ace instanceof IStressContraption)
+				return ((IStressContraption)ace).getStressCost();
+		} catch (Throwable e) {//may we ignore and just calculate?
 			if(ace.isAlive())
 				return calculateStressApply(ace.getContraption())+ calculateActorStressApply(ace.getContraption());
-			return 0;
 		}
+		return 0;
 	}
 	public static float getRotationCost(AbstractContraptionEntity ace) {
 		try {
-			return (float) ace.getClass().getMethod("getRotationStressCost").invoke(ace);
-		} catch (Exception e) {//may we ignore and just calculate?
+			if(ace instanceof IStressContraption)
+				return ((IStressContraption)ace).getRotationStressCost();
+		} catch (Throwable e) {//may we ignore and just calculate?
 			if(ace.isAlive())
 				return calculateRotationStressApply(ace.getContraption())+ calculateActorStressApply(ace.getContraption());
-			return 0;
 		}
+		return 0;
 	}
 	public static float getActorCost(AbstractContraptionEntity ace) {
 		try {
-			return (float) ace.getClass().getMethod("getActorCost").invoke(ace);
-		} catch (Exception e) {//may we ignore and just calculate?
+			if(ace instanceof IStressContraption)
+				return ((IStressContraption)ace).getActorCost();
+		} catch (Throwable e) {//may we ignore and just calculate?
 			if(ace.isAlive())
 				return calculateActorStressApply(ace.getContraption());
-			return 0;
 		}
+		return 0;
 	}
 }
