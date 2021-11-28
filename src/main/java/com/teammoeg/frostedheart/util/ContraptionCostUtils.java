@@ -49,6 +49,11 @@ public class ContraptionCostUtils {
 
 		return movecost;
 	}
+	public static void setSpeed(AbstractContraptionEntity ace,int speed) {
+		Contraption c=ace.getContraption();
+		if(c instanceof ISpeedContraption)
+			((ISpeedContraption) c).setSpeed(speed);
+	}
 	public static float getCost(AbstractContraptionEntity ace) {
 		try {
 			if(ace instanceof IStressContraption)
@@ -61,7 +66,7 @@ public class ContraptionCostUtils {
 	}
 	public static float getRotationCost(AbstractContraptionEntity ace) {
 		try {
-			if(ace instanceof IStressContraption)
+			if(ace instanceof IStressContraption) 
 				return ((IStressContraption)ace).getRotationStressCost();
 		} catch (Throwable e) {//may we ignore and just calculate?
 			if(ace.isAlive())
