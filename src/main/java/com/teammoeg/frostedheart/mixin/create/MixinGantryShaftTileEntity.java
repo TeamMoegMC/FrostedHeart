@@ -7,6 +7,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Abs
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
 import com.teammoeg.frostedheart.util.ContraptionCostUtils;
+import com.teammoeg.frostedheart.util.IGantryShaft;
 
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -14,7 +15,11 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 @Mixin(GantryShaftTileEntity.class)
-public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements ITickableTileEntity{
+public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements ITickableTileEntity,IGantryShaft{
+	@Override
+	public void setEntity(AbstractContraptionEntity comp) {
+		currentComp=comp;
+	}
 	public MixinGantryShaftTileEntity(TileEntityType<?> typeIn) {
 		super(typeIn);
 	}

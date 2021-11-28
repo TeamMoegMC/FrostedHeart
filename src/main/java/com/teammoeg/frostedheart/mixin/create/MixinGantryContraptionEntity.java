@@ -9,6 +9,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Abs
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraptionEntity;
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
+import com.teammoeg.frostedheart.util.IGantryShaft;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.tileentity.TileEntity;
@@ -29,16 +30,10 @@ public abstract class MixinGantryContraptionEntity extends AbstractContraptionEn
 		BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
 
 		TileEntity te = world.getTileEntity(gantryShaftPos);
-		if (te instanceof GantryShaftTileEntity) {
+		if (te instanceof IGantryShaft) {
 			GantryShaftTileEntity gte=(GantryShaftTileEntity) te;
-			try {
-				GantryShaftTileEntity.class.getField("currentComp").set(gte,this);
-				gte.networkDirty=true;
-			} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-					| SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			((IGantryShaft)gte).setEntity(this);
+			gte.networkDirty=true;
 			return;
 		}
 	}
