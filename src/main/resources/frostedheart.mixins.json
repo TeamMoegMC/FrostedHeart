@@ -44,6 +44,8 @@
     "create.MixinPulleyTileEntity",
     "create.MixinClockworkBearingTileEntity",
     "create.MixinMechanicalBearingTileEntity",
+    "create.MixinBlockBreakingMovementBehaviour",
+    "create.MixinContraption",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin"
   ],
