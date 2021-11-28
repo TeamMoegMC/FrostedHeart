@@ -54,7 +54,7 @@ public class WolfBerryBushBlock extends FHBerryBushBlock{
             worldIn.setBlockState(pos, state.with(AGE, Integer.valueOf(1)), 2);
             return ActionResultType.func_233537_a_(worldIn.isRemote);
         } else {
-            return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+            return ActionResultType.PASS;
         }
     }
 }
