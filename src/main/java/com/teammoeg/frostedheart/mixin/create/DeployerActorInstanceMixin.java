@@ -41,6 +41,7 @@ public abstract class DeployerActorInstanceMixin extends ActorInstance{
 			MovementContext context) {
 		super(materialManager, world, context);
 	}
+    int fhan$timer;
 	/**
 	 * @author khjxiaogu
 	 * @reason change speed of deployer animation
@@ -51,16 +52,14 @@ public abstract class DeployerActorInstanceMixin extends ActorInstance{
         if (context.contraption.stalled || context.position == null || context.data.contains("StationaryTimer")) {
         	Contraption cont=context.contraption;
         	if(cont instanceof ISpeedContraption) {
-        		int tim=context.data.getInt("Timer");
-        		if(tim==0)tim=1000;
-        		tim-=Math.abs(((ISpeedContraption) cont).getSpeed());
-        		if(tim<0)tim=0;
-                factor =(1-Math.abs(tim-500)/500F) * .5f;
-                context.data.putInt("Timer",tim);
+        		if(fhan$timer==0)fhan$timer=1000;
+        		fhan$timer-=Math.abs(((ISpeedContraption) cont).getSpeed());
+        		if(fhan$timer<0)fhan$timer=0;
+                factor =(1F-Math.abs(fhan$timer-500)/500F) * .5f;
         	}else
         		factor = MathHelper.sin(AnimationTickHolder.getRenderTime() * .1f) * .25f + .25f;
         } else {
-        	context.data.putInt("Timer",0);
+        	fhan$timer=0;
             Vector3d center = VecHelper.getCenterOf(new BlockPos(context.position));
             double distance = context.position.distanceTo(center);
             double nextDistance = context.position.add(context.motion)
