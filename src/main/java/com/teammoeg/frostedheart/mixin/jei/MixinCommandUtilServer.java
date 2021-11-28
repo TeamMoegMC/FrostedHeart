@@ -38,29 +38,26 @@ public class MixinCommandUtilServer {
      * @author yuesha-yc
      * @reason I must do this hack because EssentialsX and Bukkit does not compat with JEI
      */
-    @Overwrite(remap = false)
+    @SuppressWarnings("resource")
+	@Overwrite(remap = false)
     public static boolean hasPermission(PlayerEntity sender) {
         if (sender.isCreative()) {
             return true;
-        } else {
-            if (FHConfig.SERVER.fixEssJeiIssue.get()) {
-                return FHConfig.SERVER.developers.get().contains(sender.getDisplayName().getString());
-            } else {
-                CommandNode<CommandSource> giveCommand = getGiveCommand(sender);
-                CommandSource commandSource = sender.getCommandSource();
-                if (giveCommand != null) {
-                    return giveCommand.canUse(commandSource);
-                } else {
-                    MinecraftServer minecraftServer = sender.getServer();
-                    if (minecraftServer == null) {
-                        return false;
-                    } else {
-                        int opPermissionLevel = minecraftServer.getOpPermissionLevel();
-                        return commandSource.hasPermissionLevel(opPermissionLevel);
-                    }
-                }
-            }
         }
+		if (FHConfig.SERVER.fixEssJeiIssue.get()) {
+		    return FHConfig.SERVER.developers.get().contains(sender.getDisplayName().getString());
+		}
+		CommandNode<CommandSource> giveCommand = getGiveCommand(sender);
+		CommandSource commandSource = sender.getCommandSource();
+		if (giveCommand != null) {
+		    return giveCommand.canUse(commandSource);
+		}
+		MinecraftServer minecraftServer = sender.getServer();
+		if (minecraftServer == null) {
+		    return false;
+		}
+		int opPermissionLevel = minecraftServer.getOpPermissionLevel();
+		return commandSource.hasPermissionLevel(opPermissionLevel);
     }
 
     private static CommandNode<CommandSource> getGiveCommand(PlayerEntity sender) {

@@ -26,7 +26,10 @@ public abstract class MixinIglooPiece extends TemplateStructurePiece {
 	public MixinIglooPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
 		super(structurePieceTypeIn, nbt);
 	}
-
+	/**
+	 * @author khjxiaogu
+	 * @reason fix chest type to fit our structure system
+	 */
 	@Overwrite
     protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
         if ("chest".equals(function)) {

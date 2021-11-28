@@ -45,6 +45,7 @@
     "create.MixinClockworkBearingTileEntity",
     "create.MixinMechanicalBearingTileEntity",
     "create.MixinBlockBreakingMovementBehaviour",
+    "create.MixinDeployerMovementBehaviour",
     "create.MixinContraption",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin"
@@ -56,6 +57,7 @@
     "client.ToastGuiMixin",
     "client.MixinClientEvents",
     "rankine.MixinDryMortarItem",
+    "create.DeployerActorInstanceMixin",
     "rankine.MixinMortarItem"
   ],
   "injectors": {

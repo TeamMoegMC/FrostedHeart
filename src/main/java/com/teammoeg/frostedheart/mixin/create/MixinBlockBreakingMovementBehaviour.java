@@ -21,6 +21,10 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 @Mixin(BlockBreakingMovementBehaviour.class)
 public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehaviour {
+	/**
+	 * @author khjxiaogu
+	 * @reason further repair breaking speed
+	 */
 	@Overwrite(remap=false)
 	public void tickBreaker(MovementContext context) {
 		CompoundNBT data = context.data;

@@ -39,7 +39,10 @@ public abstract class MixinOceanRuinPiece extends TemplateStructurePiece {
 	public MixinOceanRuinPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
 		super(structurePieceTypeIn, nbt);
 	}
-
+	/**
+	 * @author khjxiaogu
+	 * @reason fix chest type to fit our structure system
+	 */
 	@Overwrite
     protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
         if ("chest".equals(function)) {
