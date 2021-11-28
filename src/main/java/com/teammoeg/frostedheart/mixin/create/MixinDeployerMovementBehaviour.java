@@ -22,7 +22,7 @@ public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
 		return 1000;
 	}
 	
-	@Inject(method="tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V",remap=false,
+	@Inject(method="tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V",
 			at=@At(value = "INVOKE",
 			target="Lnet/minecraft/nbt/CompoundNBT;putInt(Ljava/lang/String;I)V",
 			ordinal=0
