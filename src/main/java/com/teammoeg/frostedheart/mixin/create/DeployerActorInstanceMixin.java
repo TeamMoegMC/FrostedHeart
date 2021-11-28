@@ -50,6 +50,7 @@ public abstract class DeployerActorInstanceMixin extends ActorInstance{
         double factor;
         if (context.contraption.stalled || context.position == null || context.data.contains("StationaryTimer")) {
         	Contraption cont=context.contraption;
+        	//TODO: change to ModifyConstant
         	if(cont instanceof ISpeedContraption) {
         		factor =  MathHelper.sin(AnimationTickHolder.getRenderTime()* .5f) * .05f + .45f;
         	}else

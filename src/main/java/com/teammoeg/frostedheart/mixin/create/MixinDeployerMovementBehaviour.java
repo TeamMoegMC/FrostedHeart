@@ -17,12 +17,12 @@ import com.teammoeg.frostedheart.util.ISpeedContraption;
 import net.minecraft.util.math.MathHelper;
 @Mixin(DeployerMovementBehaviour.class)
 public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
-	@ModifyConstant(method="tick",remap=false,constant=@Constant(intValue=20,ordinal=0))
+	@ModifyConstant(method="tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V",remap=false,constant=@Constant(intValue=20,ordinal=0))
 	public int getTimerTick(int in) {
 		return 1000;
 	}
 	
-	@Inject(method="tick",remap=false,
+	@Inject(method="tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V",remap=false,
 			at=@At(value = "INVOKE",
 			target="Lnet/minecraft/nbt/CompoundNBT;putInt(Ljava/lang/String;I)V",
 			ordinal=0
