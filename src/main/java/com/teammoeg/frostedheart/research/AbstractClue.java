@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.research;
 import java.util.UUID;
 
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public abstract class AbstractClue extends FHRegisteredItem{
 	float contribution;
@@ -23,8 +25,19 @@ public abstract class AbstractClue extends FHRegisteredItem{
 		this.hint = hint;
 		this.pend=isPend;
 	}
+	public void setCompleted(UUID team,boolean trig) {
+		ResearchDataManager.INSTANCE.getData(team).setClueTriggered(this,trig);;
+	}
+	@OnlyIn(Dist.CLIENT)
+	public void setCompleted(boolean trig) {
+		TeamResearchData.INSTANCE.setClueTriggered(this, trig);;
+	}
 	public boolean isCompleted(UUID team) {
 		return ResearchDataManager.INSTANCE.getData(team).isClueTriggered(this);
+	}
+	@OnlyIn(Dist.CLIENT)
+	public boolean isCompleted() {
+		return TeamResearchData.INSTANCE.isClueTriggered(this);
 	}
 	public boolean isPendingAtStart() {
 		return pend;

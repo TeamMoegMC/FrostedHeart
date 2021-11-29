@@ -23,6 +23,16 @@ public class TeamResearchData {
 	public void triggerClue(String lid) {
 		triggerClue(FHResearch.clues.getByName(lid));
 	}
+	public void setClueTriggered(int id,boolean trig) {
+		ensureClue(id);
+		clueComplete.set(id-1,trig);
+	}
+	public void setClueTriggered(AbstractClue clue,boolean trig) {
+		setClueTriggered(clue.getRId(),trig);
+	}
+	public void setClueTriggered(String lid,boolean trig) {
+		setClueTriggered(FHResearch.clues.getByName(lid),trig);
+	}
 	public void ensureClue(int len) {
 		clueComplete.ensureCapacity(len);
 		while(clueComplete.size()<len)

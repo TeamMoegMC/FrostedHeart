@@ -11,6 +11,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Only Definition of research.
@@ -23,7 +25,7 @@ public class Research extends FHRegisteredItem{
     private TranslationTextComponent desc;
     private Item icon;
     private HashSet<Research> parents = new HashSet<>();
-    private HashSet<IClue> clues=new HashSet<>();
+    private HashSet<AbstractClue> clues=new HashSet<>();
     private ResearchCategory category;
     private ArrayList<ItemStack> requireItems=new ArrayList<>();
     private int points;
@@ -78,6 +80,10 @@ public class Research extends FHRegisteredItem{
     }
     public ResearchData getData(UUID team) {
     	return ResearchDataManager.INSTANCE.getData(team).getData(this);
+    }
+    @OnlyIn(Dist.CLIENT)
+    public ResearchData getData() {
+    	return TeamResearchData.INSTANCE.getData(this);
     }
     public void setCategory(ResearchCategory category) {
         this.category = category;
