@@ -26,7 +26,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
 	public AbstractContraptionEntity currentComp;
 	@Override
 	public float calculateStressApplied() {
-		if(currentComp!=null) {
+		if(currentComp!=null&&currentComp.isAlive()) {
 			//float impact = currentComp.getContraption().getBlocks().size()*4;
 			Direction facing = ((GantryContraption)currentComp.getContraption()).getFacing();
 			Vector3d currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
@@ -37,6 +37,7 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
 				return lastStressApplied;
 			}
 		}
+		currentComp=null;
 		return 0;
 	}
 	@Override
