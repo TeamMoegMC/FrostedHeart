@@ -37,6 +37,8 @@ import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.network.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
@@ -46,6 +48,7 @@ import com.teammoeg.frostedheart.util.StructureUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
@@ -341,9 +344,14 @@ public class ForgeEvents {
 //    }
 	@SubscribeEvent
 	public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
-		if (event.getEntity() instanceof ServerPlayerEntity)
+		if (event.getEntity() instanceof ServerPlayerEntity) {
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHDatapackSyncPacket());
+			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+					new FHResearchRegistrtySyncPacket());
+			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+					new FHResearchDataSyncPacket(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
+		}
 	}
 
 	@SubscribeEvent

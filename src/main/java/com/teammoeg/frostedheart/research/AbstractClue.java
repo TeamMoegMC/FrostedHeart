@@ -2,9 +2,16 @@ package com.teammoeg.frostedheart.research;
 
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.network.FHClueProgressSyncPacket;
+import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
+import com.teammoeg.frostedheart.network.PacketHandler;
+
+import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 public abstract class AbstractClue extends FHRegisteredItem{
 	float contribution;
@@ -39,6 +46,11 @@ public abstract class AbstractClue extends FHRegisteredItem{
 	public boolean isCompleted() {
 		return TeamResearchData.INSTANCE.isClueTriggered(this);
 	}
+	public void sendProgressPacket(Team team) {
+    	FHClueProgressSyncPacket packet=new FHClueProgressSyncPacket(team.getId(),this);
+    	for(ServerPlayerEntity spe:team.getOnlineMembers())
+    		PacketHandler.send(PacketDistributor.PLAYER.with(()->spe),packet);
+    }
 	public boolean isPendingAtStart() {
 		return pend;
 	}

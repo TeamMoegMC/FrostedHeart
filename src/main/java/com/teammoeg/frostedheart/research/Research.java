@@ -5,7 +5,13 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
+import com.teammoeg.frostedheart.network.PacketHandler;
 
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -13,6 +19,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * Only Definition of research.
@@ -84,6 +91,11 @@ public class Research extends FHRegisteredItem{
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
     	return TeamResearchData.INSTANCE.getData(this);
+    }
+    public void sendProgressPacket(Team team) {
+    	FHResearchProgressSyncPacket packet=new FHResearchProgressSyncPacket(team.getId(),this);
+    	for(ServerPlayerEntity spe:team.getOnlineMembers())
+    		PacketHandler.send(PacketDistributor.PLAYER.with(()->spe),packet);
     }
     public void setCategory(ResearchCategory category) {
         this.category = category;
