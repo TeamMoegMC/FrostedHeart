@@ -114,7 +114,7 @@ public class CoreSpade extends FHBaseItem {
 					for (Entry<String, Integer> f : founded.entrySet()) {
 						if (rnd.nextInt(f.getValue()) != 0) {
 							s = s.appendSibling(new TranslationTextComponent(f.getKey())
-									.mergeStyle(TextFormatting.GREEN).appendString(" "));
+									.mergeStyle(TextFormatting.GREEN).appendString(","));
 							count++;
 						}
 					}

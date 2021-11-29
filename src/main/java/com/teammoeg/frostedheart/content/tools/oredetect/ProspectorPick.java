@@ -116,7 +116,7 @@ public class ProspectorPick extends FHBaseItem {
 		            	}
 		            }
 		        }
-	            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), true);
+	            player.sendMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), player.getUniqueID());
 	        }
         }
         return ActionResultType.SUCCESS;
