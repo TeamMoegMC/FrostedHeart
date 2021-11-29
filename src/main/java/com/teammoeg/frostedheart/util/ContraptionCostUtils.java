@@ -43,7 +43,7 @@ public class ContraptionCostUtils {
 				}else
 					movecost+=0.075F*2.56F*distance;
 			}catch(Throwable t) {
-				movecost+=0.125F*2.5F*distance;
+				movecost+=0.125F*2.56F*distance;
 			}
 		}
 
