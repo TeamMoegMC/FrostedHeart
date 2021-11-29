@@ -18,11 +18,14 @@
 
 package com.teammoeg.frostedheart.network;
 
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.ResearchDataManager;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -32,14 +35,14 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 // send when player join
-public class FHResearchRegistrtySyncPacket {
+public class FHResearchDataSyncPacket {
     private final CompoundNBT data;
 
-    public FHResearchRegistrtySyncPacket() {
-        this.data = FHResearch.save(new CompoundNBT());
+    public FHResearchDataSyncPacket(UUID team) {
+        this.data = ResearchDataManager.INSTANCE.getData(team).serialize();
     }
 
-    FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
+    FHResearchDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
     }
 
@@ -49,7 +52,7 @@ public class FHResearchRegistrtySyncPacket {
 
     void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHResearch.load(data);
+        	TeamResearchData.INSTANCE.deserialize(data);
         });
         context.get().setPacketHandled(true);
     }

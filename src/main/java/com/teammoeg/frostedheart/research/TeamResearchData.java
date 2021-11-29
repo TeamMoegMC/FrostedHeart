@@ -5,8 +5,12 @@ import java.util.ArrayList;
 import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class TeamResearchData {
+	@OnlyIn(Dist.CLIENT)
+	public static TeamResearchData INSTANCE=new TeamResearchData();
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
 	ArrayList<ResearchData> rdata=new ArrayList<>();
 	public void triggerClue(int id) {
