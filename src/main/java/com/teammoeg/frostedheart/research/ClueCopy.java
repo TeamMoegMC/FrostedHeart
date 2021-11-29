@@ -12,11 +12,6 @@ public class ClueCopy extends AbstractClue {
 	}
 
 	@Override
-	public boolean onClueEvent(ClueMessage cm) {
-		return parent.onClueEvent(cm);
-	}
-
-	@Override
 	public float getResearchContribution() {
 		return super.contribution==0?parent.getResearchContribution():super.contribution;
 	}

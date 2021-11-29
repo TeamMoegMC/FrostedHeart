@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.DefaultResearches;
+import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHProps;
 
@@ -34,6 +35,7 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.fml.DeferredWorkQueue;
@@ -41,6 +43,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(FHMain.MODID)
@@ -89,7 +92,9 @@ public class FHMain {
 
     public void setup(final FMLCommonSetupEvent event) {
     	
-        MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
+    	MinecraftForge.EVENT_BUS.addListener(this::serverStart);
+    	MinecraftForge.EVENT_BUS.addListener(this::serverSave);
+    	MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
         ChunkDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
     }
@@ -97,7 +102,13 @@ public class FHMain {
     private void enqueueIMC(final InterModEnqueueEvent event) {
         CuriosCompat.sendIMCS();
     }
-
+    private void serverStart(final FMLServerAboutToStartEvent event) {
+    	new ResearchDataManager(event.getServer()).load();
+    }
+    private void serverSave(final WorldEvent.Save event) {
+    	if(ResearchDataManager.INSTANCE!=null)
+    		ResearchDataManager.INSTANCE.save();
+    }
     private void processIMC(final InterModProcessEvent event) {
 
     }

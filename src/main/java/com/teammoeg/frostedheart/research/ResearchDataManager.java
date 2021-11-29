@@ -16,7 +16,8 @@ import net.minecraft.world.storage.FolderName;
 public class ResearchDataManager {
 	MinecraftServer server;
 	Path local;
-	static final FolderName fn=new FolderName("tmresearch");
+	File regfile;
+	static final FolderName dataFolder=new FolderName("fhresearch");
 	public static ResearchDataManager INSTANCE;
 	private Map<UUID,TeamResearchData> data=new HashMap<>();
 	public ResearchDataManager(MinecraftServer s) {
@@ -33,7 +34,19 @@ public class ResearchDataManager {
 
 	}
 	public void load() {
-		local=server.func_240776_a_(fn);
+		local=server.func_240776_a_(dataFolder);
+		regfile=new File(local.toFile().getParentFile(),"fhregistries.dat");
+		if(regfile.exists()) {
+			try {
+				FHResearch.load(CompressedStreamTools.readCompressed(regfile));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.out.println("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+				
+			}
+		}
+		local.toFile().mkdirs();
 		for(File f:local.toFile().listFiles((f)->f.getName().endsWith(".nbt"))) {
 			try {
 				UUID tud=UUID.fromString(f.getName().split("\\.")[0]);
@@ -51,10 +64,18 @@ public class ResearchDataManager {
 		}
 	}
 	public void save() {
+		try {
+			CompressedStreamTools.writeCompressed(FHResearch.save(new CompoundNBT()),regfile);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			System.out.println("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+		}
 		for(Entry<UUID, TeamResearchData> entry:data.entrySet()) {
 			File f=local.resolve(entry.getKey().toString()+".nbt").toFile();
 			try {
 				CompressedStreamTools.writeCompressed(entry.getValue().serialize(),f);
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.out.println("Unable to save data file for team "+entry.getKey().toString()+", ignoring...");
