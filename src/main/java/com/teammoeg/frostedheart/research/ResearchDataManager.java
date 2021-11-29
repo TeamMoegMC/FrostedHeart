@@ -25,11 +25,7 @@ public class ResearchDataManager {
 		INSTANCE=this;
 	}
 	public TeamResearchData getData(UUID id) {
-		TeamResearchData cn=data.get(id);
-		if(cn==null) {
-			cn=new TeamResearchData();
-			data.put(id,cn);
-		}
+		TeamResearchData cn=data.computeIfAbsent(id,c->new TeamResearchData());
 		return cn;
 
 	}
