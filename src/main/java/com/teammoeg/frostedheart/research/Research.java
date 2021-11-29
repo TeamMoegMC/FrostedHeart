@@ -5,11 +5,9 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
