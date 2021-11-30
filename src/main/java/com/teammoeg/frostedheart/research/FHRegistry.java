@@ -12,14 +12,30 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraftforge.common.util.LazyOptional;
 
+/**
+ * Class FHRegistry.
+ *
+ * @author khjxiaogu
+ * @param <T> the generic type of registry
+ */
 public abstract class FHRegistry<T extends FHRegisteredItem> {
 	private ArrayList<T> items=new ArrayList<>();//registered objects
 	private List<String> rnames=new ArrayList<>();//registry mappings
 	private Map<String,LazyOptional<T>> cache=new HashMap<>();//object cache
 	private final Function<String,LazyOptional<T>> cacheGen=(n)->LazyOptional.of(()->getByName(n));
+	
+	/**
+	 * Instantiates a new FHRegistry.<br>
+	 */
 	public FHRegistry() {
 		
 	}
+	
+	/**
+	 * Register a new item.
+	 *
+	 * @param item the item<br>
+	 */
 	public void register(T item) {
 		if(item.getRId()==0) {
 			String lid=item.getLId();
@@ -34,13 +50,31 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 			}
 		}
 	}
+	
+	/**
+	 * Prepare to reload.
+	 */
 	public void prepareReload() {
 		items.clear();
 		cache.clear();
 	}
+	
+	/**
+	 * Get by numeric id.
+	 *
+	 * @param id the id<br>
+	 * @return by id<br>
+	 */
 	public T getById(int id) {
 		return items.get(id-1);
 	}
+	
+	/**
+	 * Get by name.
+	 *
+	 * @param lid the lid<br>
+	 * @return by name<br>
+	 */
 	public T getByName(String lid){
 		int index=rnames.indexOf(lid);
 		if(index!=-1)
@@ -48,23 +82,63 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 		return null;
 	}
 	
+	/**
+	 * Get a LazyOptional for item by name.<br>
+	 *
+	 * @param id the id<br>
+	 * @return returns LazyOptional for name
+	 */
 	public LazyOptional<T> lazyGet(String id) {
 		return cache.computeIfAbsent(id,cacheGen);
 	}
+	
+	/**
+	 * Get a Supplier with buffer for item by name.<br>
+	 *
+	 * @param id the id<br>
+	 * @return returns Supplier of item
+	 */
 	public Supplier<T> get(String id) {
 		return ()->lazyGet(id).orElse(null);
 	}
+	
+	/**
+	 * Get all non-null items.<br>
+	 * Remove all null(missing) items before return, should not used to calculate item numeric id.
+	 * @return returns all non-null items
+	 */
+	public List<T> all(){
+		List<T> r=new ArrayList<>(items);
+		r.removeIf(e->e==null);
+		return r;
+	}
+	
+	/**
+	 * Ensure Capacity.
+	 */
 	public void ensure() {
 		items.ensureCapacity(rnames.size());
 		while(items.size()<rnames.size())
 			items.add(null);
 	}
-	ListNBT serialize() {
+	
+	/**
+	 * Serialize.<br>
+	 *
+	 * @return returns serialize
+	 */
+	public ListNBT serialize() {
 		ListNBT cn=new ListNBT();
 		rnames.stream().map(StringNBT::valueOf).forEach(e->cn.add(e));
 		return cn;
 	}
-	void deserialize(ListNBT load) {
+	
+	/**
+	 * Deserialize.
+	 *
+	 * @param load the load<br>
+	 */
+	public void deserialize(ListNBT load) {
 		rnames.clear();
 		load.stream().map(INBT::getString).forEach(e->rnames.add(e));
 		if(!items.isEmpty()) {//reset registries
@@ -76,6 +150,12 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 		}
 		
 	}
+	
+	/**
+	 * Get count of items, including missing.
+	 *
+	 * @return size<br>
+	 */
 	public int getSize() {
 		return rnames.size();
 	}
