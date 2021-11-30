@@ -15,7 +15,7 @@ public class ContraptionCostUtils {
 		float movecost = 0;
 		for(BlockInfo bi:cont.getBlocks().values()) {
 			try {
-				if(bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos)!=VoxelShapes.empty()) {
+				if(!bi.state.getCollisionShape(cont.getContraptionWorld(),bi.pos).isEmpty()) {
 					movecost+=0.125F;
 				}else
 					movecost+=0.075F;
