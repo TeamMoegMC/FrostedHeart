@@ -49,7 +49,7 @@ public class ContraptionCostUtils {
 
 		return movecost;
 	}
-	public static void setSpeed(AbstractContraptionEntity ace,int speed) {
+	public static void setSpeed(AbstractContraptionEntity ace,float speed) {
 		Contraption c=ace.getContraption();
 		if(c instanceof ISpeedContraption)
 			((ISpeedContraption) c).setSpeed(speed);

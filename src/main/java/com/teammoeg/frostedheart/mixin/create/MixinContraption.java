@@ -6,14 +6,14 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Con
 import com.teammoeg.frostedheart.util.ISpeedContraption;
 @Mixin(Contraption.class)
 public abstract class MixinContraption implements ISpeedContraption{
-	int speed;
+	float speed;
 	@Override
-	public int getSpeed() {
+	public float getSpeed() {
 		return speed;
 	}
 
 	@Override
-	public void setSpeed(int spd) {
+	public void setSpeed(float spd) {
 		speed=spd;
 	}
 

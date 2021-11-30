@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.util;
 
 public interface ISpeedContraption {
-	int getSpeed();
-	void setSpeed(int spd);
+	float getSpeed();
+	void setSpeed(float spd);
 }
