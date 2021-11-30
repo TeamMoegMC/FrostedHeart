@@ -74,9 +74,12 @@ public class TeamResearchData {
 	}
 	public CompoundNBT serialize() {
 		CompoundNBT nbt=new CompoundNBT();
-		ListNBT cl=new ListNBT();
-		clueComplete.stream().map(ByteNBT::valueOf).forEach(e->cl.add(e));
-		nbt.put("clues",cl);
+		byte[] cl=new byte[clueComplete.size()];
+		int i=-1;
+		for(Boolean b:clueComplete) {
+			cl[++i]=(byte) (b==null?0:(b?1:0));
+		}
+		nbt.putByteArray("clues",cl);
 		ListNBT rs=new ListNBT();
 		rdata.stream().map(e->e!=null?e.serialize():ByteNBT.ZERO).forEach(e->rs.add(e));
 		nbt.put("researches",rs);
@@ -85,7 +88,10 @@ public class TeamResearchData {
 	public void deserialize(CompoundNBT data) {
 		clueComplete.clear();
 		rdata.clear();
-		data.getList("clues",0).stream().map(e->((ByteNBT)e).getByte()!=0).forEach(e->clueComplete.add(e));
+		byte[] ba=data.getByteArray("clues");
+		ensureClue(ba.length);
+		for(int i=0;i<ba.length;i++)
+			clueComplete.set(i,ba[i]!=0);
 		data.getList("researches",0).stream().map(e->e.getId()==10?new ResearchData((CompoundNBT) e):null).forEach(e->rdata.add(e));;
 	}
 }
