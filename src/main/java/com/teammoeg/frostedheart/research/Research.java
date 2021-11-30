@@ -84,8 +84,8 @@ public class Research extends FHRegisteredItem{
     public ResearchCategory getCategory() {
         return category;
     }
-    public ResearchData getData(UUID team) {
-    	return ResearchDataManager.INSTANCE.getData(team).getData(this);
+    public ResearchData getData(Team team) {
+    	return ResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
     }
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
@@ -105,7 +105,7 @@ public class Research extends FHRegisteredItem{
 	public String getLId() {
 		return id.toString();
 	}
-
+	@OnlyIn(Dist.CLIENT)
 	public boolean isUnlocked() {
         for (Research parent : this.getParents()) {
             if (!parent.getData().isCompleted()) {

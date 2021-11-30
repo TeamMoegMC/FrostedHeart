@@ -31,15 +31,16 @@ public abstract class AbstractClue extends FHRegisteredItem{
 		this.hint = hint;
 		this.pend=isPend;
 	}
-	public void setCompleted(UUID team,boolean trig) {
-		ResearchDataManager.INSTANCE.getData(team).setClueTriggered(this,trig);;
+	public void setCompleted(Team team,boolean trig) {
+		ResearchDataManager.INSTANCE.getData(team.getId()).setClueTriggered(this,trig);
+		this.sendProgressPacket(team);
 	}
 	@OnlyIn(Dist.CLIENT)
 	public void setCompleted(boolean trig) {
 		TeamResearchData.INSTANCE.setClueTriggered(this, trig);;
 	}
-	public boolean isCompleted(UUID team) {
-		return ResearchDataManager.INSTANCE.getData(team).isClueTriggered(this);
+	public boolean isCompleted(Team team) {
+		return ResearchDataManager.INSTANCE.getData(team.getId()).isClueTriggered(this);
 	}
 	@OnlyIn(Dist.CLIENT)
 	public boolean isCompleted() {
