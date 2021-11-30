@@ -26,7 +26,9 @@ import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.research.DefaultResearches;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHProps;
@@ -87,7 +89,12 @@ public class FHMain {
         FHParticleTypes.REGISTER.register(mod);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
 
-        DefaultResearches.init();
+        FHResearch.researches.register(new Research("generator_t1", ResearchCategories.HEATING));
+        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.HEATING, FHResearch.researches.getByName("generator_t1")));
+        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.HEATING, FHResearch.researches.getByName("generator_t2")));
+        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.HEATING, FHResearch.researches.getByName("generator_t3")));
+
+        ResearchCategories.init();
     }
 
     public void setup(final FMLCommonSetupEvent event) {

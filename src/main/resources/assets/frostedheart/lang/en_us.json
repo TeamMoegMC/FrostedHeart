@@ -137,5 +137,20 @@
   "death.attack.hypothermia": "%s turned into a frozen stick.",
   "death.attack.hypothermia.player": "%s turned into a frozen stick.",
 
-  "gui.jei.category.frostedheart.crucible": "Steel Mill Crucible"
+  "gui.jei.category.frostedheart.crucible": "Steel Mill Crucible",
+
+  "research.category.frostedheart.heating": "Heating",
+  "research.category.desc.frostedheart.heating": "Shield you from the life threatening winter.",
+
+  "research.category.frostedheart.living": "Living",
+  "research.category.desc.frostedheart.living": "Survival is important.",
+
+  "research.category.frostedheart.resource": "Resource",
+  "research.category.desc.frostedheart.resource": "Gather the essential stuff.",
+
+  "research.category.frostedheart.industry": "Industry",
+  "research.category.desc.frostedheart.industry": "Build the base that supports you.",
+
+  "research.category.frostedheart.exploration": "Exploration",
+  "research.category.desc.frostedheart.exploration": "Explore the world and find clues to unveil the mystery."
 }

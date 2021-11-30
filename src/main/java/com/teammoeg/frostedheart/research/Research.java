@@ -35,20 +35,21 @@ public class Research extends FHRegisteredItem{
     private ArrayList<ItemStack> requireItems=new ArrayList<>();
     private int points;
 
-    public Research(String path, Research... parents) {
-        this(new ResourceLocation(FHMain.MODID, path), Items.GRASS_BLOCK, parents);
+    public Research(String path, ResearchCategory category, Research... parents) {
+        this(new ResourceLocation(FHMain.MODID, path), category, Items.GRASS_BLOCK, parents);
     }
 
-    public Research(String path, Item icon, Research... parents) {
-        this(new ResourceLocation(FHMain.MODID, path), icon, parents);
+    public Research(String path, ResearchCategory category, Item icon, Research... parents) {
+        this(new ResourceLocation(FHMain.MODID, path), category, icon, parents);
     }
 
-    public Research(ResourceLocation id, Item icon, Research... parents) {
+    public Research(ResourceLocation id, ResearchCategory category, Item icon, Research... parents) {
         this.id = id;
         for (Research parent : parents) this.parents.add(parent);
         this.name = new TranslationTextComponent("research."+id.getNamespace() + "." + id.getPath() + ".name");
         this.desc = new TranslationTextComponent("research."+id.getNamespace() + "." + id.getPath() + ".desc");
         this.icon = icon;
+        this.category = category;
     }
     public ResourceLocation getId() {
         return id;
@@ -95,9 +96,6 @@ public class Research extends FHRegisteredItem{
     	for(ServerPlayerEntity spe:team.getOnlineMembers())
     		PacketHandler.send(PacketDistributor.PLAYER.with(()->spe),packet);
     }
-    public void setCategory(ResearchCategory category) {
-        this.category = category;
-    }
 
     public String toString() {
         return "Research[" + id + "]";
@@ -107,4 +105,13 @@ public class Research extends FHRegisteredItem{
 	public String getLId() {
 		return id.toString();
 	}
+
+	public boolean isUnlocked() {
+        for (Research parent : this.getParents()) {
+            if (!parent.getData().isCompleted()) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

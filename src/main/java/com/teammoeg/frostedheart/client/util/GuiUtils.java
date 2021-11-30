@@ -43,4 +43,16 @@ public class GuiUtils {
     public static TranslationTextComponent translateJeiCategory(String name, Object... args) {
         return new TranslationTextComponent("gui.jei.category." + FHMain.MODID + "." + name, args);
     }
+
+    public static TranslationTextComponent translateResearchLevel(String name, Object... args) {
+        return new TranslationTextComponent("research.level." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateResearchCategoryName(String name, Object... args) {
+        return new TranslationTextComponent("research.category." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateResearchCategoryDesc(String name, Object... args) {
+        return new TranslationTextComponent("research.category.desc." + FHMain.MODID + "." + name, args);
+    }
 }

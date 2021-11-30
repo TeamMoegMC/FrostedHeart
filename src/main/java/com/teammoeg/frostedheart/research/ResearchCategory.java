@@ -18,6 +18,8 @@
 
 package com.teammoeg.frostedheart.research;
 
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -29,12 +31,12 @@ public class ResearchCategory {
     private ResourceLocation icon;
     private ResourceLocation background;
 
-    public ResearchCategory(ResourceLocation id, ResourceLocation icon, ResourceLocation background) {
-        this.id = id;
-        this.name = new TranslationTextComponent("research_line."+id.getNamespace() + "." + id.getPath() + ".name");
-        this.desc = new TranslationTextComponent("research_line."+id.getNamespace() + "." + id.getPath() + ".desc");
-        this.icon = icon;
-        this.background = background;
+    public ResearchCategory(String id) {
+        this.id = FHMain.rl(id);
+        this.name = GuiUtils.translateResearchCategoryName(id);
+        this.desc = GuiUtils.translateResearchCategoryDesc(id);
+        this.icon = FHMain.rl("textures/gui/research/category/" + id + ".png");
+        this.background = FHMain.rl("textures/gui/research/category/background/" + id + ".png");
     }
 
     public ResourceLocation getIcon() {

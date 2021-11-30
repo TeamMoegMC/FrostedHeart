@@ -23,6 +23,7 @@ import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.research.ResearchLevel;
 import com.teammoeg.frostedheart.research.screen.ResearchScreen;
 
 import net.minecraft.block.Block;
@@ -153,7 +154,7 @@ public class DrawingDeskBlock extends FHBaseBlock {
                 pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
             }
         }
-        ResearchScreen screen = new ResearchScreen(player);
+        ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK);
         screen.openGui();
         return ActionResultType.SUCCESS;
     }
