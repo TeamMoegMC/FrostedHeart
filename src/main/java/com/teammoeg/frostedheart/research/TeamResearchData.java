@@ -61,7 +61,7 @@ public class TeamResearchData {
 		ensureResearch(id);
 		ResearchData rnd=rdata.get(id-1);
 		if(rnd==null) {
-			rnd=new ResearchData();
+			rnd=new ResearchData(FHResearch.getResearch(id));
 			rdata.set(id-1,rnd);
 		}
 		return rnd;

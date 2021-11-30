@@ -101,7 +101,10 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 	public Supplier<T> get(String id) {
 		return ()->lazyGet(id).orElse(null);
 	}
-	
+	public Supplier<T> get(int id) {
+		String name=rnames.get(id-1);
+		return ()->lazyGet(name).orElse(null);
+	}
 	/**
 	 * Get all non-null items.<br>
 	 * Remove all null(missing) items before return, should not used to calculate item numeric id.

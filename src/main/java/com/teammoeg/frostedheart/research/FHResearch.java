@@ -32,6 +32,12 @@ public class FHResearch {
 	public static Supplier<AbstractClue> getClue(String id) {
 		return clues.get(id);
 	}
+	public static Supplier<Research> getResearch(int id) {
+		return researches.get(id);
+	}
+	public static Supplier<AbstractClue> getClue(int id) {
+		return clues.get(id);
+	}
 	public static List<Research> getAllResearch(String id) {
 		return allResearches.resolve().get();
 	}

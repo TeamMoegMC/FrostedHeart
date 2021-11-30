@@ -5,18 +5,28 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 public class ResearchData {
-	public ResearchData(){}
-	public ResearchData(CompoundNBT cn) {
-		deserialize(cn);
+	boolean active;
+	Supplier<Research> rs;
+	public ResearchData(Supplier<Research> r){
+		this.rs=r;
+	}
+	public ResearchData(CompoundNBT nc){
+		deserialize(nc);
+	}
+	public Research getResearch() {
+		return rs.get();
 	}
 	public CompoundNBT serialize() {
-		return new CompoundNBT();
+		CompoundNBT cnbt=new CompoundNBT();
+		cnbt.putInt("research",getResearch().getRId());
+		return cnbt;
 		
 	}
 	public void deserialize(CompoundNBT cn) {
-		
+		rs=FHResearch.getResearch(cn.getInt("research"));
 	}
 
 	public boolean isCompleted() {
