@@ -102,8 +102,12 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 		return ()->lazyGet(id).orElse(null);
 	}
 	public Supplier<T> get(int id) {
-		String name=rnames.get(id-1);
-		return ()->lazyGet(name).orElse(null);
+		if(rnames.size()>id) {
+			String name=rnames.get(id-1);
+			if(name!=null)
+				return ()->lazyGet(name).orElse(null);
+		}
+		return ()->items.get(id-1);
 	}
 	/**
 	 * Get all non-null items.<br>
