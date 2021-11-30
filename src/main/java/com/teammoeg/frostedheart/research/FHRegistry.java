@@ -1,15 +1,22 @@
 package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
+import net.minecraftforge.common.util.LazyOptional;
 
 public abstract class FHRegistry<T extends FHRegisteredItem> {
 	private ArrayList<T> items=new ArrayList<>();//registered objects
 	private List<String> rnames=new ArrayList<>();//registry mappings
+	private Map<String,LazyOptional<T>> cache=new HashMap<>();//object cache
+	private final Function<String,LazyOptional<T>> cacheGen=(n)->LazyOptional.of(()->getByName(n));
 	public FHRegistry() {
 		
 	}
@@ -29,6 +36,7 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 	}
 	public void prepareReload() {
 		items.clear();
+		cache.clear();
 	}
 	public T getById(int id) {
 		return items.get(id-1);
@@ -38,6 +46,13 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 		if(index!=-1)
 			return items.get(index);
 		return null;
+	}
+	
+	public LazyOptional<T> lazyGet(String id) {
+		return cache.computeIfAbsent(id,cacheGen);
+	}
+	public Supplier<T> get(String id) {
+		return ()->lazyGet(id).orElse(null);
 	}
 	public void ensure() {
 		items.ensureCapacity(rnames.size());

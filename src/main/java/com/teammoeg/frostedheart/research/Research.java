@@ -37,12 +37,14 @@ public class Research extends FHRegisteredItem{
     private ResearchCategory category;
     private ArrayList<ItemStack> requireItems=new ArrayList<>();
     private int points;
-    public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
+    @SafeVarargs
+	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
         this(path, category, Items.GRASS_BLOCK, parents);
     }
 
 
-    public Research(String id, ResearchCategory category, Item icon, Supplier<Research>... parents) {
+    @SafeVarargs
+	public Research(String id, ResearchCategory category, Item icon, Supplier<Research>... parents) {
         this.id = id;
         this.parents.addAll(Arrays.asList(parents));
         this.name = new TranslationTextComponent("research."+id+ ".name");
