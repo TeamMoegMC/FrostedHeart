@@ -90,9 +90,9 @@ public class FHMain {
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
 
         FHResearch.researches.register(new Research("generator_t1", ResearchCategories.HEATING));
-        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.HEATING, FHResearch.researches.getByName("generator_t1")));
-        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.HEATING, FHResearch.researches.getByName("generator_t2")));
-        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.HEATING, FHResearch.researches.getByName("generator_t3")));
+        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.HEATING, FHResearch.getResearch("generator_t1")));
+        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.HEATING, FHResearch.getResearch("generator_t2")));
+        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.HEATING, FHResearch.getResearch("generator_t3")));
 
         ResearchCategories.init();
     }
