@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.util.FHEffects;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -42,7 +43,12 @@ public abstract class ItemStackMixin implements IInventory, INameable {
 		if (p_234563_2_ > 0) {
 			if (player.world.isRemote||!(player instanceof ServerPlayerEntity))
 				return;
+			ServerPlayerEntity player= (ServerPlayerEntity) this.player;
 			p_234563_2_ = p_234563_2_ / 4.0F;
+			if(p_234563_1_.isFireDamage()||player.isPotionActive(FHEffects.WET))//fire or wet damage more
+				p_234563_2_ *=2;
+			else if(p_234563_1_.isExplosion())//explode add a lot
+				p_234563_2_ *=4;
 			if (p_234563_2_ < 1.0F) {
 				p_234563_2_ = 1.0F;
 			}
