@@ -18,6 +18,11 @@
 
 package com.teammoeg.frostedheart;
 
+import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
+import static com.teammoeg.frostedheart.util.FHProps.cropProps;
+import static com.teammoeg.frostedheart.util.FHProps.ore_gravel;
+import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -82,7 +87,6 @@ import com.teammoeg.frostedheart.util.FHFoods;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -100,8 +104,6 @@ import net.minecraftforge.common.ToolType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import static com.teammoeg.frostedheart.util.FHProps.*;
 
 public class FHContent {
 

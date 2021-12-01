@@ -21,13 +21,18 @@ package com.teammoeg.frostedheart.world;
 import java.util.ArrayList;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
-
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHContent;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.gen.feature.*;
+import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.feature.FeatureSpread;
+import net.minecraft.world.gen.feature.Features;
+import net.minecraft.world.gen.feature.IFeatureConfig;
+import net.minecraft.world.gen.feature.SphereReplaceConfig;
 
 public class FHFeatures {
     public static final Feature<FHOreFeatureConfig> FHORE = new FHOreFeature(FHOreFeatureConfig.CODEC);

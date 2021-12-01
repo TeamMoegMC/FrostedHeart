@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.base.Optional;
-import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
