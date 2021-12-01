@@ -37,7 +37,7 @@ public abstract class ItemStackMixin implements IInventory, INameable {
 				return;
 			ServerPlayerEntity player= (ServerPlayerEntity) this.player;
 			p_234563_2_ = p_234563_2_ / 4.0F;
-			if(p_234563_1_.isFireDamage()||player.isPotionActive(FHEffects.WET))//fire or wet damage more
+			if(p_234563_1_.isFireDamage())//fire damage more
 				p_234563_2_ *=2;
 			else if(p_234563_1_.isExplosion())//explode add a lot
 				p_234563_2_ *=4;
