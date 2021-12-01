@@ -29,7 +29,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 
 @Mixin(PlayerInventory.class)
-public abstract class ItemStackMixin implements IInventory, INameable {
+public abstract class PlayerInventoryMixin implements IInventory, INameable {
 	@Shadow
 	public NonNullList<ItemStack> armorInventory;
 	@Shadow
