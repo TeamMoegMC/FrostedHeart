@@ -103,15 +103,17 @@ public class ClientEvents {
             if (s.length() > 0 && aes != null) {
                 event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GREEN).appendSibling(new TranslationTextComponent("item." + s.replaceFirst(":", "."))));
                 if(!ItemNBTHelper.getBoolean(stack,"inner_bounded")) {
-                	int damage=ItemNBTHelper.getInt(stack,"inner_cover_damage");
-                	if(damage!=0) {
-                		RecipeInner ri=RecipeInner.recipeList.get(new ResourceLocation(s));
-                		if(ri!=null) {
-	                		int maxDmg=ri.getDurability();
-	                        float temp = damage*1.0F/maxDmg;
-	                        String temps = Integer.toString((Math.round(temp * 100)));
-	                		event.getToolTip().add(GuiUtils.translateTooltip("inner_damage",temps));
-                		}
+                	if(stack.hasTag()&&stack.getTag().contains("inner_cover_tag")) {
+	                	int damage=stack.getTag().getCompound("inner_cover_tag").getInt("Damage");
+	                	if(damage!=0) {
+	                		RecipeInner ri=RecipeInner.recipeList.get(new ResourceLocation(s));
+	                		if(ri!=null) {
+		                		int maxDmg=ri.getDurability();
+		                        float temp = damage*1.0F/maxDmg;
+		                        String temps = Integer.toString((Math.round(temp * 100)));
+		                		event.getToolTip().add(GuiUtils.translateTooltip("inner_damage",temps));
+	                		}
+	                	}
                 	}
                 }
                 iwe = FHDataManager.getArmor(s + "_" + aes.getName());

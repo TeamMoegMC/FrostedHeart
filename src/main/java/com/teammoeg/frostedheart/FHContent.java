@@ -57,6 +57,8 @@ import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantle;
+import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantleSerializer;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerSerializer;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
@@ -186,10 +188,10 @@ public class FHContent {
         public static Item vegetable_soup = new FHSoupItem("vegetable_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
         public static Item steam_bottle = new SteamBottleItem("steam_bottle", new Item.Properties().group(FHMain.itemGroup).maxStackSize(1));
         public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
-        public static Item buff_coat = new FHBaseItem("buff_coat", createProps());
-        public static Item gambeson = new FHBaseItem("gambeson", createProps());
-        public static Item kelp_lining = new FHBaseItem("kelp_lining", createProps());
-        public static Item straw_lining = new FHBaseItem("straw_lining", createProps());
+        public static Item buff_coat = new FHBaseItem("buff_coat", createProps().defaultMaxDamage(384)).setRepairItem(raw_hide);
+        public static Item gambeson = new FHBaseItem("gambeson", createProps().defaultMaxDamage(384)).setRepairItem(Items.WHITE_WOOL);
+        public static Item kelp_lining = new FHBaseItem("kelp_lining", createProps().defaultMaxDamage(256)).setRepairItem(Items.KELP);
+        public static Item straw_lining = new FHBaseItem("straw_lining", createProps().defaultMaxDamage(256));
         public static Item hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, createProps());
         public static Item hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, createProps());
         public static Item hay_jacket = new FHBaseArmorItem("hay_jacket", FHArmorMaterial.HAY, EquipmentSlotType.CHEST, createProps());
@@ -292,6 +294,7 @@ public class FHContent {
             GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipeSerializer::new);
             RecipeInner.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", RecipeInnerSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
+            RecipeInnerDismantle.SERIALIZER=RECIPE_SERIALIZERS.register("recipe_inner_dismantle",RecipeInnerDismantleSerializer::new);
         }
 
         public static void registerRecipeTypes() {

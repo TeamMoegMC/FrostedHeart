@@ -32,6 +32,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.SpecialRecipe;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
@@ -103,6 +105,8 @@ public class RecipeInner extends SpecialRecipe {
         if (!armoritem.isEmpty() && !buffstack.isEmpty()) {
             ItemStack ret = armoritem.copy();
             ItemNBTHelper.putString(ret, "inner_cover", buffstack.getItem().getRegistryName().toString());
+            INBT nbt=buffstack.getTag();
+            ret.getTag().put("inner_cover_tag",nbt!=null?nbt:new CompoundNBT());
             return ret;
         }
         return ItemStack.EMPTY;
