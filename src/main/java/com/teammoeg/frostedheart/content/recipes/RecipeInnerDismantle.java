@@ -66,7 +66,22 @@ public class RecipeInnerDismantle extends SpecialRecipe {
 		}
 		return hasArmor;
 	}
-
+	public static ItemStack getDismantledResult(ItemStack armoritem) {
+		if(armoritem.hasTag()) {
+			CompoundNBT tags = armoritem.getTag();
+			if(!tags.getBoolean("inner_bounded")) {
+				ResourceLocation item = new ResourceLocation(tags.getString("inner_cover"));
+				CompoundNBT tag = tags.getCompound("inner_cover_tag");
+				Item buff = ForgeRegistries.ITEMS.getValue(item);
+				if (buff == null)
+					return ItemStack.EMPTY;
+				ItemStack buffitem = new ItemStack(buff);
+				buffitem.setTag(tag);
+				return buffitem;
+			}
+		}
+		return ItemStack.EMPTY;
+	}
 	/**
 	 * Returns an Item that is the result of this recipe
 	 */
@@ -91,16 +106,7 @@ public class RecipeInnerDismantle extends SpecialRecipe {
 		}
 
 		if (!armoritem.isEmpty()) {
-			ItemStack ret = armoritem.copy();
-			CompoundNBT tags = ret.getTag();
-			ResourceLocation item = new ResourceLocation(tags.getString("inner_cover"));
-			CompoundNBT tag = tags.getCompound("inner_cover_tag");
-			Item buff = ForgeRegistries.ITEMS.getValue(item);
-			if (buff == null)
-				return ItemStack.EMPTY;
-			ItemStack buffitem = new ItemStack(buff);
-			buffitem.setTag(tag);
-			return buffitem;
+			return getDismantledResult(armoritem);
 		}
 		return ItemStack.EMPTY;
 	}
