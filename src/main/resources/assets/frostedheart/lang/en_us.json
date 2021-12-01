@@ -124,6 +124,7 @@
   "tooltip.frostedheart.armor_heating": "Heating rate:%s °C/s",
   "tooltip.frostedheart.steam_stored": "Steam:%s su",
   "tooltip.frostedheart.inner": "Inner Lining: ",
+  "tooltip.frostedheart.inner_damage": "Inner Lining Damage: %s %%",
   "tooltip.frostedheart.double_flint_ignition": "Hold two flints on each hand to use them as a fire starter",
   "tooltip.frostedheart.charger.heat_vest":"Use on Steam Charger to recharge",
   "tooltip.frostedheart.rankine.dry_mortar":"Soak in water for a while to get mortar",

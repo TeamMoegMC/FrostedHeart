@@ -18,6 +18,12 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
+import java.util.Collections;
+import java.util.Map;
+
+import com.google.common.base.Optional;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
@@ -43,7 +49,9 @@ public class RecipeInner extends SpecialRecipe {
     public int getDurability() {
 		return durability;
 	}
-
+    public ResourceLocation getBuffType() {
+    	return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e->e.getItem().getRegistryName()).or(new ResourceLocation("minecraft","air"));
+    }
 	Ingredient type;
     int durability;
     /**
@@ -100,7 +108,7 @@ public class RecipeInner extends SpecialRecipe {
         }
         return ItemStack.EMPTY;
     }
-
+    public static Map<ResourceLocation, RecipeInner> recipeList = Collections.emptyMap();
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */

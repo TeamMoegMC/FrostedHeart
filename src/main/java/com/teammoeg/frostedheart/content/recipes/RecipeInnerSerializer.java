@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.recipes;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.data.JsonHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
@@ -33,7 +33,7 @@ import net.minecraft.util.ResourceLocation;
 public class RecipeInnerSerializer extends IERecipeSerializer<RecipeInner> {
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(FHContent.FHMultiblocks.generator);
+        return new ItemStack(FHItems.buff_coat);
     }
 
     @Override

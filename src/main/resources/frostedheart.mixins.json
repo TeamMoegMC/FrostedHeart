@@ -22,6 +22,7 @@
     "minecraft.MixinStructurePiece",
     "minecraft.MixinIglooPiece",
     "minecraft.MixinOceanRuinPiece",
+    "minecraft.ItemStackMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

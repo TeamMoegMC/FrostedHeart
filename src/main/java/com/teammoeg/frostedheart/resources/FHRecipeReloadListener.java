@@ -19,14 +19,18 @@
 package com.teammoeg.frostedheart.resources;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
@@ -95,11 +99,21 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         GeneratorRecipe.recipeList = filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         ChargerRecipe.recipeList = filterRecipes(recipes, ChargerRecipe.class, ChargerRecipe.TYPE);
         GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
+        RecipeInner.recipeList=recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass()==RecipeInner.class)
+                .map(e->(RecipeInner)e)
+                .collect(Collectors.<RecipeInner,ResourceLocation,RecipeInner>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {
         return recipes.stream()
                 .filter(iRecipe -> iRecipe.getType() == recipeType)
+                .map(recipeClass::cast)
+                .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
+    }
+    static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass) {
+        return recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass()==recipeClass)
                 .map(recipeClass::cast)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }

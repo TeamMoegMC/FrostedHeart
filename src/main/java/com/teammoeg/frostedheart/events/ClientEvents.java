@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
@@ -45,6 +46,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameType;
@@ -100,6 +102,18 @@ public class ClientEvents {
             EquipmentSlotType aes = MobEntity.getSlotForItemStack(stack);
             if (s.length() > 0 && aes != null) {
                 event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GREEN).appendSibling(new TranslationTextComponent("item." + s.replaceFirst(":", "."))));
+                if(!ItemNBTHelper.getBoolean(stack,"inner_bounded")) {
+                	int damage=ItemNBTHelper.getInt(stack,"inner_cover_damage");
+                	if(damage!=0) {
+                		RecipeInner ri=RecipeInner.recipeList.get(new ResourceLocation(s));
+                		if(ri!=null) {
+	                		int maxDmg=ri.getDurability();
+	                        float temp = damage*1.0F/maxDmg;
+	                        String temps = Integer.toString((Math.round(temp * 100)));
+	                		event.getToolTip().add(GuiUtils.translateTooltip("inner_damage",temps));
+                		}
+                	}
+                }
                 iwe = FHDataManager.getArmor(s + "_" + aes.getName());
             } else
                 iwe = FHDataManager.getArmor(stack);
