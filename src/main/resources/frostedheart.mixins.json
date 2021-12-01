@@ -48,6 +48,7 @@
     "create.MixinBlockBreakingMovementBehaviour",
     "create.MixinDeployerMovementBehaviour",
     "create.MixinContraption",
+    "create.MixinToolboxInventory",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin"
   ],

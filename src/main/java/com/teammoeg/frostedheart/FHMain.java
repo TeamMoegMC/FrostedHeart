@@ -31,8 +31,10 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.FHProps;
 
+import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -87,6 +89,7 @@ public class FHMain {
         FHFluids.FLUIDS.register(mod);
         FHContent.FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
+        ItemPredicate.register(new ResourceLocation(MODID,"blacklist"),BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
 
         FHResearch.researches.register(new Research("generator_t1", ResearchCategories.HEATING));
