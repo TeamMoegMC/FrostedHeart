@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.data.JsonHelper;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.ItemStack;
@@ -38,18 +39,21 @@ public class RecipeInnerSerializer extends IERecipeSerializer<RecipeInner> {
     @Override
     public RecipeInner readFromJson(ResourceLocation recipeId, JsonObject json) {
         Ingredient input = Ingredient.deserialize(json.get("input"));
-        return new RecipeInner(recipeId, input);
+        int dura=JsonHelper.getIntOrDefault(json,"durable",100);
+        return new RecipeInner(recipeId, input,dura);
     }
 
     @Nullable
     @Override
     public RecipeInner read(ResourceLocation recipeId, PacketBuffer buffer) {
         Ingredient input = Ingredient.read(buffer);
-        return new RecipeInner(recipeId, input);
+        int dura=buffer.readVarInt();
+        return new RecipeInner(recipeId, input,dura);
     }
 
     @Override
     public void write(PacketBuffer buffer, RecipeInner recipe) {
         recipe.type.write(buffer);
+        buffer.writeVarInt(recipe.durability);
     }
 }

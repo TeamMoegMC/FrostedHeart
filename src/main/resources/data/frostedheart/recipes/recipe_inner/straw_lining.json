@@ -2,5 +2,6 @@
   "type": "frostedheart:recipe_inner",
   "input": {
     "item": "frostedheart:straw_lining"
-  }
+  },
+  "durable":128
 }

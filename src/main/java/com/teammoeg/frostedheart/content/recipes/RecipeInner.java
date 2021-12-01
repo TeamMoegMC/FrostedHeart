@@ -34,13 +34,18 @@ import net.minecraftforge.fml.RegistryObject;
 public class RecipeInner extends SpecialRecipe {
     public static RegistryObject<IERecipeSerializer<RecipeInner>> SERIALIZER;
 
-    protected RecipeInner(ResourceLocation id, Ingredient t) {
+    protected RecipeInner(ResourceLocation id, Ingredient t,int d) {
         super(id);
         type = t;
+        durability=d;
     }
 
-    Ingredient type;
+    public int getDurability() {
+		return durability;
+	}
 
+	Ingredient type;
+    int durability;
     /**
      * Used to check if a recipe matches current crafting inventory
      */
