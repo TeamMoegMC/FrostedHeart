@@ -26,11 +26,11 @@ public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity 
 	public float calculateStressApplied() {
 		float stress=1;
 		if(hourHand!=null) {
-			ContraptionCostUtils.setSpeed(hourHand,speed/2F);
+			ContraptionCostUtils.setSpeed(hourHand,speed/4F);
 			stress+= ContraptionCostUtils.getRotationCost(hourHand);
 		}
 		if(minuteHand!=null) {
-			ContraptionCostUtils.setSpeed(minuteHand,speed/2F);
+			ContraptionCostUtils.setSpeed(minuteHand,speed/4F);
 			stress+= ContraptionCostUtils.getRotationCost(minuteHand);
 		}
 		

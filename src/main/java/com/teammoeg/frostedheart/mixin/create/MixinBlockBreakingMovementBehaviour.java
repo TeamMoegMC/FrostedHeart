@@ -66,10 +66,10 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
 			breakSpeed = MathHelper.clamp(Math.abs(((ISpeedContraption) context.contraption).getSpeed()) / 100f, 1 / 256f, 16f);
 		else
 			breakSpeed = MathHelper.clamp(Math.abs(context.getAnimationSpeed()) / 500f, 1 / 128f, 16f);
-		destroyProgress += MathHelper.clamp((int) (breakSpeed / blockHardness), 1, 10 - destroyProgress);
+		destroyProgress += MathHelper.clamp((int) (breakSpeed*100F / blockHardness), 1, 1000 - destroyProgress);
 		world.playSound(null, breakingPos, stateToBreak.getSoundType().getHitSound(), SoundCategory.NEUTRAL, .25f, 1);
 
-		if (destroyProgress >= 10) {
+		if (destroyProgress >= 1000) {
 			world.sendBlockBreakProgress(id, breakingPos, -1);
 
 			// break falling blocks from top to bottom
