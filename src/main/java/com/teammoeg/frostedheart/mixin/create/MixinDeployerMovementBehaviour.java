@@ -18,7 +18,7 @@ import net.minecraft.util.math.MathHelper;
 public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
 	@ModifyConstant(method="tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V",remap=false,constant=@Constant(intValue=20,ordinal=0))
 	public int getTimerTick(int in) {
-		return 1000;
+		return 10000;
 	}
 	
 	@Inject(method="tick(Lcom/simibubi/create/content/contraptions/components/structureMovement/MovementContext;)V",
@@ -31,7 +31,7 @@ public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {
 		Contraption c=m.contraption;
 		if(c instanceof ISpeedContraption) {
 			int timer=m.data.getInt("Timer");
-			timer+=MathHelper.clamp(Math.abs(((ISpeedContraption) c).getSpeed()),4,256);
+			timer+=MathHelper.clamp(Math.abs(((ISpeedContraption) c).getSpeed())*10,1,2560);
 			m.data.putInt("Timer", timer);
 			cbi.cancel();
 		}
