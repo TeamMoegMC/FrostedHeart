@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;

@@ -18,9 +18,6 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.annotation.Nonnull;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -44,7 +41,6 @@ import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
-import com.teammoeg.frostedheart.util.StructureUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
@@ -62,7 +58,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -72,9 +67,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.StructureFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
-import net.minecraft.world.gen.settings.StructureSeparationSettings;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -91,7 +84,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -315,6 +307,7 @@ public class ForgeEvents {
 					.setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_leg"))));
 			event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorNBT(new ItemStack(Items.IRON_BOOTS)
 					.setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_foot"))));
+			
 			ItemStack breads = new ItemStack(Items.BREAD);
 			breads.setCount(16);
 			event.getPlayer().inventory.addItemStackToInventory(breads);

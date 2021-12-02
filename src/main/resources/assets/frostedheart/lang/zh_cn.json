@@ -128,6 +128,7 @@
   "tooltip.frostedheart.armor_heating": "加热功率：%s °C/s",
   "tooltip.frostedheart.steam_stored": "蒸汽:%s su",
   "tooltip.frostedheart.inner": "内衬：",
+  "tooltip.frostedheart.inner_damage": "内衬损坏：%s %%",
   "tooltip.frostedheart.double_flint_ignition": "双手同时持燧石便可以当作起火器使用",
   "tooltip.frostedheart.charger.heat_vest":"对充气机使用以充能",
   "tooltip.frostedheart.rankine.dry_mortar":"在水中浸泡一段时间以获得砂浆",

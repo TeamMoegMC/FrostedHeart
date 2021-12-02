@@ -2,5 +2,6 @@
   "type": "frostedheart:recipe_inner",
   "input": {
     "item": "frostedheart:kelp_lining"
-  }
+  },
+  "durable":256
 }

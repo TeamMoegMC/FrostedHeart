@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import com.simibubi.create.content.contraptions.components.deployer.DeployerMovementBehaviour;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;

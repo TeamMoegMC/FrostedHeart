@@ -18,6 +18,11 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
+import java.util.Collections;
+import java.util.Map;
+
+import com.google.common.base.Optional;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
@@ -27,6 +32,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.SpecialRecipe;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
@@ -34,13 +41,20 @@ import net.minecraftforge.fml.RegistryObject;
 public class RecipeInner extends SpecialRecipe {
     public static RegistryObject<IERecipeSerializer<RecipeInner>> SERIALIZER;
 
-    protected RecipeInner(ResourceLocation id, Ingredient t) {
+    protected RecipeInner(ResourceLocation id, Ingredient t,int d) {
         super(id);
         type = t;
+        durability=d;
     }
 
-    Ingredient type;
-
+    public int getDurability() {
+		return durability;
+	}
+    public ResourceLocation getBuffType() {
+    	return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e->e.getItem().getRegistryName()).or(new ResourceLocation("minecraft","air"));
+    }
+	Ingredient type;
+    int durability;
     /**
      * Used to check if a recipe matches current crafting inventory
      */
@@ -91,11 +105,13 @@ public class RecipeInner extends SpecialRecipe {
         if (!armoritem.isEmpty() && !buffstack.isEmpty()) {
             ItemStack ret = armoritem.copy();
             ItemNBTHelper.putString(ret, "inner_cover", buffstack.getItem().getRegistryName().toString());
+            INBT nbt=buffstack.getTag();
+            ret.getTag().put("inner_cover_tag",nbt!=null?nbt:new CompoundNBT());
             return ret;
         }
         return ItemStack.EMPTY;
     }
-
+    public static Map<ResourceLocation, RecipeInner> recipeList = Collections.emptyMap();
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */

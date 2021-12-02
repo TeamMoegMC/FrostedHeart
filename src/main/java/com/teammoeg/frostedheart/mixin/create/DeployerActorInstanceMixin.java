@@ -8,7 +8,6 @@ import com.jozufozu.flywheel.backend.material.MaterialManager;
 import com.jozufozu.flywheel.core.materials.ModelData;
 import com.jozufozu.flywheel.util.transform.MatrixTransformStack;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.simibubi.create.content.contraptions.base.RotatingData;
 import com.simibubi.create.content.contraptions.components.deployer.DeployerActorInstance;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;

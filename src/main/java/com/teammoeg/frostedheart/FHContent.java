@@ -18,6 +18,11 @@
 
 package com.teammoeg.frostedheart;
 
+import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
+import static com.teammoeg.frostedheart.util.FHProps.cropProps;
+import static com.teammoeg.frostedheart.util.FHProps.ore_gravel;
+import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +57,8 @@ import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantle;
+import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantleSerializer;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerSerializer;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
@@ -82,7 +89,6 @@ import com.teammoeg.frostedheart.util.FHFoods;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -100,8 +106,6 @@ import net.minecraftforge.common.ToolType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import static com.teammoeg.frostedheart.util.FHProps.*;
 
 public class FHContent {
 
@@ -168,14 +172,14 @@ public class FHContent {
         static Properties createProps() {
         	return new Item.Properties().group(FHMain.itemGroup);
         }
-        public static Item energy_core = new FHBaseItem("energy_core", itemProps);
-        public static Item wolfberries = new FoodBlockItem(FHBlocks.wolfberry_bush_block, itemProps, FHFoods.WOLFBERRIES, "wolfberries");
+        public static Item energy_core = new FHBaseItem("energy_core", createProps());
+        public static Item wolfberries = new FoodBlockItem(FHBlocks.wolfberry_bush_block, createProps(), FHFoods.WOLFBERRIES, "wolfberries");
         public static Item dried_wolfberries = new FHBaseItem("dried_wolfberries", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.DRIED_WOLFBERRIES));
-        public static Item rye = new FHBaseItem("rye", itemProps);
-        public static Item generator_ash = new FHBaseItem("generator_ash", itemProps);
-        public static Item rye_flour = new FHBaseItem("rye_flour", itemProps);
-        public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", itemProps);
-        public static Item mercury_body_thermometer = new ThermometerItem("mercury_body_thermometer", itemProps);
+        public static Item rye = new FHBaseItem("rye", createProps());
+        public static Item generator_ash = new FHBaseItem("generator_ash", createProps());
+        public static Item rye_flour = new FHBaseItem("rye_flour", createProps());
+        public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", createProps());
+        public static Item mercury_body_thermometer = new ThermometerItem("mercury_body_thermometer", createProps());
         public static Item rye_bread = new FHBaseItem("rye_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
         public static Item black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.BLACK_BREAD));
         public static Item vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
@@ -183,24 +187,24 @@ public class FHContent {
         public static Item rye_porridge = new FHSoupItem("rye_porridge", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
         public static Item vegetable_soup = new FHSoupItem("vegetable_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
         public static Item steam_bottle = new SteamBottleItem("steam_bottle", new Item.Properties().group(FHMain.itemGroup).maxStackSize(1));
-        public static Item raw_hide = new FHBaseItem("raw_hide", itemProps);
-        public static Item buff_coat = new FHBaseItem("buff_coat", itemProps);
-        public static Item gambeson = new FHBaseItem("gambeson", itemProps);
-        public static Item kelp_lining = new FHBaseItem("kelp_lining", itemProps);
-        public static Item straw_lining = new FHBaseItem("straw_lining", itemProps);
-        public static Item hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, itemProps);
-        public static Item hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, itemProps);
-        public static Item hay_jacket = new FHBaseArmorItem("hay_jacket", FHArmorMaterial.HAY, EquipmentSlotType.CHEST, itemProps);
-        public static Item hay_pants = new FHBaseArmorItem("hay_pants", FHArmorMaterial.HAY, EquipmentSlotType.LEGS, itemProps);
-        public static Item wool_boots = new FHBaseArmorItem("wool_boots", FHArmorMaterial.WOOL, EquipmentSlotType.FEET, itemProps);
-        public static Item wool_hat = new FHBaseArmorItem("wool_hat", FHArmorMaterial.WOOL, EquipmentSlotType.HEAD, itemProps);
-        public static Item wool_jacket = new FHBaseArmorItem("wool_jacket", FHArmorMaterial.WOOL, EquipmentSlotType.CHEST, itemProps);
-        public static Item wool_pants = new FHBaseArmorItem("wool_pants", FHArmorMaterial.WOOL, EquipmentSlotType.LEGS, itemProps);
-        public static Item hide_boots = new FHBaseArmorItem("hide_boots", FHArmorMaterial.HIDE, EquipmentSlotType.FEET, itemProps);
-        public static Item hide_hat = new FHBaseArmorItem("hide_hat", FHArmorMaterial.HIDE, EquipmentSlotType.HEAD, itemProps);
-        public static Item hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, itemProps);
-        public static Item hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, itemProps);
-        public static Item heater_vest = new HeaterVestItem("heater_vest", itemProps);
+        public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
+        public static Item buff_coat = new FHBaseItem("buff_coat", createProps().defaultMaxDamage(384)).setRepairItem(raw_hide);
+        public static Item gambeson = new FHBaseItem("gambeson", createProps().defaultMaxDamage(384)).setRepairItem(Items.WHITE_WOOL);
+        public static Item kelp_lining = new FHBaseItem("kelp_lining", createProps().defaultMaxDamage(256)).setRepairItem(Items.KELP);
+        public static Item straw_lining = new FHBaseItem("straw_lining", createProps().defaultMaxDamage(256));
+        public static Item hay_boots = new FHBaseArmorItem("hay_boots", FHArmorMaterial.HAY, EquipmentSlotType.FEET, createProps());
+        public static Item hay_hat = new FHBaseArmorItem("hay_hat", FHArmorMaterial.HAY, EquipmentSlotType.HEAD, createProps());
+        public static Item hay_jacket = new FHBaseArmorItem("hay_jacket", FHArmorMaterial.HAY, EquipmentSlotType.CHEST, createProps());
+        public static Item hay_pants = new FHBaseArmorItem("hay_pants", FHArmorMaterial.HAY, EquipmentSlotType.LEGS, createProps());
+        public static Item wool_boots = new FHBaseArmorItem("wool_boots", FHArmorMaterial.WOOL, EquipmentSlotType.FEET, createProps());
+        public static Item wool_hat = new FHBaseArmorItem("wool_hat", FHArmorMaterial.WOOL, EquipmentSlotType.HEAD, createProps());
+        public static Item wool_jacket = new FHBaseArmorItem("wool_jacket", FHArmorMaterial.WOOL, EquipmentSlotType.CHEST, createProps());
+        public static Item wool_pants = new FHBaseArmorItem("wool_pants", FHArmorMaterial.WOOL, EquipmentSlotType.LEGS, createProps());
+        public static Item hide_boots = new FHBaseArmorItem("hide_boots", FHArmorMaterial.HIDE, EquipmentSlotType.FEET, createProps());
+        public static Item hide_hat = new FHBaseArmorItem("hide_hat", FHArmorMaterial.HIDE, EquipmentSlotType.HEAD, createProps());
+        public static Item hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, createProps());
+        public static Item hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, createProps());
+        public static Item heater_vest = new HeaterVestItem("heater_vest", createProps());
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
         public static Item advanced_thermos = new ThermosItem("advanced_thermos", 3000, 250);
         public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick",8,4,createProps().defaultMaxDamage(128));
@@ -212,11 +216,11 @@ public class FHContent {
         public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer",4,4, createProps().defaultMaxDamage(96));
         public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer",5,5, createProps().defaultMaxDamage(128));
         public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer",6,6, createProps().defaultMaxDamage(160));
-        public static Item soil_thermometer = new SoilThermometer("soil_thermometer", itemProps);
+        public static Item soil_thermometer = new SoilThermometer("soil_thermometer", createProps());
         public static Item heat_debuger = new HeatDebugItem("heat_debugger");
         public static Item red_mushroombed=new MushroomBed("straw_briquette_red_mushroom",Items.RED_MUSHROOM,createProps().defaultMaxDamage(4800));
         public static Item brown_mushroombed=new MushroomBed("straw_briquette_brown_mushroom",Items.BROWN_MUSHROOM,createProps().defaultMaxDamage(4800));
-        public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", itemProps);
+        public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", createProps());
     }
 
     public static class FHMultiblocks {
@@ -290,6 +294,7 @@ public class FHContent {
             GeneratorSteamRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("steam_generator", GeneratorSteamRecipeSerializer::new);
             RecipeInner.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", RecipeInnerSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
+            RecipeInnerDismantle.SERIALIZER=RECIPE_SERIALIZERS.register("recipe_inner_dismantle",RecipeInnerDismantleSerializer::new);
         }
 
         public static void registerRecipeTypes() {

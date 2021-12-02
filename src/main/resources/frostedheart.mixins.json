@@ -22,6 +22,7 @@
     "minecraft.MixinStructurePiece",
     "minecraft.MixinIglooPiece",
     "minecraft.MixinOceanRuinPiece",
+    "minecraft.PlayerInventoryMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
@@ -47,6 +48,7 @@
     "create.MixinBlockBreakingMovementBehaviour",
     "create.MixinDeployerMovementBehaviour",
     "create.MixinContraption",
+    "create.MixinToolboxInventory",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin"
   ],

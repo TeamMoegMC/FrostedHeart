@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.research;
 
-import java.util.UUID;
-
 import com.teammoeg.frostedheart.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
