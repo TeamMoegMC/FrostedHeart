@@ -26,15 +26,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
@@ -96,4 +100,19 @@ public class FHUtils {
             }
         }
     }
+
+	public static int getEnchantmentLevel(Enchantment enchID,CompoundNBT tags) {
+		ResourceLocation resourcelocation = Registry.ENCHANTMENT.getKey(enchID);
+		ListNBT listnbt = tags.getList("Enchantments", 10);
+	
+		for (int i = 0; i < listnbt.size(); ++i) {
+			CompoundNBT compoundnbt = listnbt.getCompound(i);
+			ResourceLocation resourcelocation1 = ResourceLocation.tryCreate(compoundnbt.getString("id"));
+			if (resourcelocation1 != null && resourcelocation1.equals(resourcelocation)) {
+				return MathHelper.clamp(compoundnbt.getInt("lvl"), 0, 255);
+			}
+		}
+	
+		return 0;
+	}
 }

@@ -37,7 +37,7 @@ public class ResearchScreen extends BaseScreen {
 
     @Override
     public void addWidgets() {
-        researchCategoryPanel.setPosAndSize(PADDING, PADDING, CAT_PANEL_WIDTH, CAT_PANEL_HEIGHT);
+        researchCategoryPanel.setPosAndSize(PADDING, PADDING, this.width-PADDING*2, CAT_PANEL_HEIGHT);
         add(researchCategoryPanel);
         researchListPanel.setPosAndSize(getX() + PADDING,getY() + PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING + CAT_PANEL_HEIGHT + PADDING + PADDING + PADDING));
         add(researchListPanel);

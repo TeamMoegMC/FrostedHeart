@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.util.FHEffects;
+import com.teammoeg.frostedheart.util.FHUtils;
 
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -20,13 +20,10 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.INameable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.Registry;
 
 @Mixin(PlayerInventory.class)
 public abstract class PlayerInventoryMixin implements IInventory, INameable {
@@ -58,7 +55,7 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
 					String inner = cn.getString("inner_cover");
 					if (inner == null || cn.getBoolean("inner_bounded"))
 						return;
-					int i = getEnchantmentLevel(Enchantments.UNBREAKING,cn);
+					int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING,cn);
 					int j = 0;
 
 					for (int k = 0; i > 0 && k < amount; ++k) {
@@ -91,21 +88,6 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
 			}
 
 		}
-	}
-
-	public static int getEnchantmentLevel(Enchantment enchID,CompoundNBT tags) {
-		ResourceLocation resourcelocation = Registry.ENCHANTMENT.getKey(enchID);
-		ListNBT listnbt = tags.getList("Enchantments", 10);
-
-		for (int i = 0; i < listnbt.size(); ++i) {
-			CompoundNBT compoundnbt = listnbt.getCompound(i);
-			ResourceLocation resourcelocation1 = ResourceLocation.tryCreate(compoundnbt.getString("id"));
-			if (resourcelocation1 != null && resourcelocation1.equals(resourcelocation)) {
-				return MathHelper.clamp(compoundnbt.getInt("lvl"), 0, 255);
-			}
-		}
-
-		return 0;
 	}
 
 }
