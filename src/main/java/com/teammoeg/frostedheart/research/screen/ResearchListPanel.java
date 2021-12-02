@@ -77,6 +77,11 @@ public class ResearchListPanel extends Panel {
     }
 
     @Override
+	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+		theme.drawPanelBackground(matrixStack, x, y, w, h);
+	}
+
+	@Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
     }

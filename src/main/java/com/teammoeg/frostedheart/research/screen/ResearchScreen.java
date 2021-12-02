@@ -17,7 +17,7 @@ import net.minecraft.entity.player.PlayerEntity;
 
 public class ResearchScreen extends BaseScreen {
 
-    public static final int PADDING = 10;
+    public static final int PADDING = 2;
     private PlayerEntity player;
     public ResearchCategoryPanel researchCategoryPanel;
     public ResearchListPanel researchListPanel;
@@ -37,17 +37,21 @@ public class ResearchScreen extends BaseScreen {
 
     @Override
     public void addWidgets() {
-        researchCategoryPanel.setPosAndSize(2,2, this.width-PADDING*2, CAT_PANEL_HEIGHT);
+        
         add(researchCategoryPanel);
-        researchListPanel.setPosAndSize(posX + PADDING,posY+ PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING + CAT_PANEL_HEIGHT + PADDING + PADDING + PADDING));
+     
         add(researchListPanel);
-        researchHierarchyPanel.setPosAndSize(getX() + PADDING + IN_PROGRESS_WIDTH + PADDING,getY() + PADDING + CAT_PANEL_HEIGHT + PADDING, width - (PADDING + IN_PROGRESS_WIDTH + PADDING + PADDING), height - (PADDING + CAT_PANEL_HEIGHT + PADDING + PADDING));
+        
         add(researchHierarchyPanel);
     }
 
     @Override
     public boolean onInit() {
-        return setFullscreen();
+    	setFullscreen();
+    	researchCategoryPanel.setPosAndSize(PADDING,PADDING, this.width-PADDING*2, CAT_PANEL_HEIGHT);
+    	researchListPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING*5 + CAT_PANEL_HEIGHT + IN_PROGRESS_HEIGHT));
+    	researchHierarchyPanel.setPosAndSize(PADDING + RESEARCH_LIST_WIDTH + PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, width - (PADDING*5 + RESEARCH_LIST_WIDTH), height - (PADDING*4 + CAT_PANEL_HEIGHT));
+        return true;
     }
 
     public void selectCategory(@Nullable ResearchCategory category) {
@@ -64,7 +68,7 @@ public class ResearchScreen extends BaseScreen {
         }
     }
 
-    public static final int IN_PROGRESS_WIDTH = 80, IN_PROGRESS_HEIGHT = 80;
+    public static final int IN_PROGRESS_HEIGHT = 80;
     public static final int RESEARCH_LIST_WIDTH = 220;
 
     @Override
