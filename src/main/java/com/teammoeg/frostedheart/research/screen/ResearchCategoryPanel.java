@@ -20,9 +20,9 @@ public class ResearchCategoryPanel extends Panel {
 
 	public ResearchScreen researchScreen;
 
-	public ResearchCategoryPanel(Panel panel) {
+	public ResearchCategoryPanel(ResearchScreen panel) {
 		super(panel);
-		researchScreen = (ResearchScreen) panel.getGui();
+		researchScreen = panel;
 	}
 
 	public static class CategoryButton extends Button {
@@ -30,10 +30,10 @@ public class ResearchCategoryPanel extends Panel {
 		ResearchCategory category;
 		ResearchCategoryPanel categoryPanel;
 
-		public CategoryButton(Panel panel, ResearchCategory category) {
+		public CategoryButton(ResearchCategoryPanel panel, ResearchCategory category) {
 			super(panel, category.getName(), Icon.getIcon(category.getIcon()));
 			this.category = category;
-			this.categoryPanel = (ResearchCategoryPanel) panel;
+			this.categoryPanel = panel;
 		}
 
 		@Override

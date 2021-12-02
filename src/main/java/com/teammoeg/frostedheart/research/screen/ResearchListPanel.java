@@ -7,6 +7,7 @@ import com.teammoeg.frostedheart.research.Research;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
@@ -17,21 +18,48 @@ public class ResearchListPanel extends Panel {
     public static final int RES_PANEL_WIDTH = 80;
 
     public ResearchScreen researchScreen;
-
-    public ResearchListPanel(Panel panel) {
+    public PanelScrollBar scroll;
+    public ResearchList rl;
+    public ResearchListPanel(ResearchScreen panel) {
         super(panel);
-        researchScreen = (ResearchScreen) panel.getGui();
+        researchScreen = panel;
     }
+    public static class ResearchList extends Panel{
+    	public ResearchScreen researchScreen;
+		public ResearchList(ResearchListPanel panel) {
+			super(panel);
+			researchScreen=panel.researchScreen;
+			this.setWidth(RESEARCH_WIDTH);
+		}
 
+		@Override
+		public void addWidgets() {
+	        int offset = 0;
+
+	        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory)) {
+	        	
+	            ResearchButton button = new ResearchButton(this, r);
+	            add(button);
+	            button.setPos(0,offset);
+	            offset += (RESEARCH_HEIGHT + 4);
+	        }
+	        this.setHeight(offset);
+		}
+
+		@Override
+		public void alignWidgets() {
+		}
+    	
+    }
     public static class ResearchButton extends Button {
 
         Research research;
-        ResearchListPanel listPanel;
+        ResearchList listPanel;
 
-        public ResearchButton(Panel panel, Research research) {
+        public ResearchButton(ResearchList panel, Research research) {
             super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
             this.research = research;
-            this.listPanel = (ResearchListPanel) panel;
+            this.listPanel =  panel;
             setSize(RESEARCH_WIDTH, RESEARCH_HEIGHT);
         }
 
@@ -59,16 +87,12 @@ public class ResearchListPanel extends Panel {
 
     @Override
     public void addWidgets() {
-        int offset = 0;
-
-        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory)) {
-        	
-            ResearchButton button = new ResearchButton(this, r);
-            add(button);
-            button.setPos(0,offset);
-            System.out.println(button);
-            offset += (RESEARCH_HEIGHT + 4);
-        }
+    	rl=new ResearchList(this);
+    	scroll=new PanelScrollBar(this,rl);
+    	add(rl);
+    	add(scroll);
+    	scroll.setX(RESEARCH_WIDTH);
+    	scroll.setSize(10,height);
     }
 
     @Override

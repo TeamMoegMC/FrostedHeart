@@ -8,9 +8,9 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 public class ResearchHierarchyPanel extends Panel {
     public ResearchScreen researchScreen;
 
-    public ResearchHierarchyPanel(Panel panel) {
+    public ResearchHierarchyPanel(ResearchScreen panel) {
         super(panel);
-        researchScreen = (ResearchScreen) panel.getGui();
+        researchScreen = panel;
     }
 
     @Override

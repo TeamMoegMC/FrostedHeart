@@ -65,7 +65,7 @@ public class ResearchScreen extends BaseScreen {
     }
 
     public static final int IN_PROGRESS_HEIGHT = 80;
-    public static final int RESEARCH_LIST_WIDTH = 220;
+    public static final int RESEARCH_LIST_WIDTH = 210;
 
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
