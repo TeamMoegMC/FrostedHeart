@@ -47,6 +47,13 @@ public class FHFluids {
         return new ForgeFlowingFluid.Flowing(FHFluids.STEAM_PROPERTIES);
     });
 
+    public static RegistryObject<FlowingFluid> WOLFBERRY_TEA = FLUIDS.register("wolfberry_tea", () -> {
+        return new ForgeFlowingFluid.Source(FHFluids.WOLFBERRY_TEA_PROPERTIES);
+    });
+    public static RegistryObject<FlowingFluid> WOLFBERRY_TEA_FLOWING = FLUIDS.register("wolfberry_tea_flowing", () -> {
+        return new ForgeFlowingFluid.Flowing(FHFluids.WOLFBERRY_TEA_PROPERTIES);
+    });
+
     public static ForgeFlowingFluid.Properties HOT_WATER_PROPERTIES =
             new ForgeFlowingFluid.Properties(HOT_WATER, HOT_WATER_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
                     .color(0xFF3ABDFF).temperature(333)).block(null)
@@ -55,4 +62,8 @@ public class FHFluids {
             new ForgeFlowingFluid.Properties(STEAM, STEAM_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
                     .color(0xFFFFFFFF).viscosity(-1))
                     .slopeFindDistance(1).explosionResistance(100F);
+    public static ForgeFlowingFluid.Properties WOLFBERRY_TEA_PROPERTIES =
+            new ForgeFlowingFluid.Properties(WOLFBERRY_TEA, WOLFBERRY_TEA_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
+                    .color(0xFF6ABDFF).temperature(333)).block(null)
+                    .slopeFindDistance(3).explosionResistance(100F);
 }
