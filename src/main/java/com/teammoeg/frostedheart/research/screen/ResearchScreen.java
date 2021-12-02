@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.research.screen;
 
 import static com.teammoeg.frostedheart.research.screen.ResearchCategoryPanel.CAT_PANEL_HEIGHT;
-import static com.teammoeg.frostedheart.research.screen.ResearchCategoryPanel.CAT_PANEL_WIDTH;
 
 import javax.annotation.Nullable;
 
@@ -37,11 +36,8 @@ public class ResearchScreen extends BaseScreen {
 
     @Override
     public void addWidgets() {
-        
         add(researchCategoryPanel);
-     
         add(researchListPanel);
-        
         add(researchHierarchyPanel);
     }
 
