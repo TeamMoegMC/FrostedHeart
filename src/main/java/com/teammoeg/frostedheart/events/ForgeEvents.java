@@ -87,6 +87,7 @@ import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -105,7 +106,7 @@ public class ForgeEvents {
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
 
 	}
-	@SubscribeEvent
+	@SubscribeEvent(receiveCanceled=true,priority=EventPriority.HIGHEST)
 	public static void onArmorDamage(LivingHurtEvent event) {
 		if(event.getEntityLiving() instanceof PlayerEntity) {
 			PlayerEntity player=(PlayerEntity) event.getEntityLiving();
