@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
+import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.network.FHDatapackSyncPacket;
@@ -41,6 +42,7 @@ import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
@@ -49,6 +51,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.enchantment.UnbreakingEnchantment;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
@@ -58,6 +63,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -74,6 +80,7 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
@@ -98,7 +105,65 @@ public class ForgeEvents {
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
 
 	}
+	@SubscribeEvent
+	public static void onArmorDamage(LivingHurtEvent event) {
+		if(event.getEntityLiving() instanceof PlayerEntity) {
+			PlayerEntity player=(PlayerEntity) event.getEntityLiving();
+			float p_234563_2_=event.getAmount();
+			DamageSource p_234563_1_=event.getSource();
+			if (p_234563_2_ > 0) {
+				p_234563_2_ = p_234563_2_ / 4.0F;
+				if (p_234563_1_.isFireDamage())// fire damage more
+					p_234563_2_ *= 2;
+				else if (p_234563_1_.isExplosion())// explode add a lot
+					p_234563_2_ *= 4;
+				if (p_234563_2_ < 1.0F) {
+					p_234563_2_ = 1.0F;
+				}
+				int amount = (int) p_234563_2_;
+				for (ItemStack itemstack : player.getArmorInventoryList()) {
+					CompoundNBT cn = itemstack.getTag();
+					if (cn == null)
+						return;
+					if (amount > 0) {
+						String inner = cn.getString("inner_cover");
+						if (inner == null || cn.getBoolean("inner_bounded"))
+							return;
+						int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING,cn);
+						int j = 0;
+						if(i>0)
+							for (int k = 0; i > 0 && k < amount; ++k) {
+								if (UnbreakingEnchantment.negateDamage(itemstack, i, player.getRNG())) {
+									++j;
+								}
+							}
 
+						amount -= j;
+						if (amount <= 0) {
+							return;
+						}
+						CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
+						if (cnbt == null)
+							cnbt = new CompoundNBT();
+						int crdmg = cnbt.getInt("Damage");
+						crdmg += amount;
+						RecipeInner ri = RecipeInner.recipeList.get(new ResourceLocation(inner));
+
+						if (ri != null && ri.getDurability() <= crdmg) {// damaged
+							cn.remove("inner_cover");
+							cn.remove("inner_cover_tag");
+							cn.remove("inner_bounded");
+							player.sendBreakAnimation(MobEntity.getSlotForItemStack(itemstack));
+						} else {
+							cnbt.putInt("Damage", crdmg);
+							cn.put("inner_cover_tag", cnbt);
+						}
+					}
+				}
+
+			}
+		}
+	}
 	@SubscribeEvent
 	public static void addReloadListeners(AddReloadListenerEvent event) {
 		DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
