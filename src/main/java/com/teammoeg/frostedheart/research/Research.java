@@ -104,6 +104,10 @@ public class Research extends FHRegisteredItem{
 		return id.toString();
 	}
 	@OnlyIn(Dist.CLIENT)
+	public boolean isCompleted() {
+        return getData().isCompleted();
+    }
+	@OnlyIn(Dist.CLIENT)
 	public boolean isUnlocked() {
         for (Research parent : this.getParents()) {
             if (!parent.getData().isCompleted()) {

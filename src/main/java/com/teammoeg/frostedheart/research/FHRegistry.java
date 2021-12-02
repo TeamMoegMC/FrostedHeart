@@ -147,13 +147,15 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 	 */
 	public void deserialize(ListNBT load) {
 		rnames.clear();
+		ArrayList<T> temp=new ArrayList<>(items);
 		load.stream().map(INBT::getString).forEach(e->rnames.add(e));
-		if(!items.isEmpty()) {//reset registries
-			ArrayList<T> temp=new ArrayList<>(items);
+		if(!temp.isEmpty()) {//reset registries
 			items.clear();
 			ensure();
-			for(T t:temp)
+			for(T t:temp) {
+				t.setRId(0);
 				register(t);
+			}
 		}
 		
 	}

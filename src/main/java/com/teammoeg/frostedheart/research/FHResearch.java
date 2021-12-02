@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.research;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -38,10 +39,23 @@ public class FHResearch {
 	public static Supplier<AbstractClue> getClue(int id) {
 		return clues.get(id);
 	}
-	public static List<Research> getAllResearch(String id) {
+	public static List<Research> getAllResearch() {
 		return allResearches.resolve().get();
 	}
-	public static List<AbstractClue> getAllClue(String id) {
+	public static List<Research> getResearchesForRender(ResearchCategory cate){
+		List<Research> all= getAllResearch();
+		ArrayList<Research> available=new ArrayList<>();
+		ArrayList<Research> unlocked=new ArrayList<>();
+		for(Research r:all) {
+			if(r.getCategory()!=cate)continue;
+			if(r.isCompleted())unlocked.add(r);
+			else if(r.isUnlocked())available.add(r);
+		}
+		available.ensureCapacity(available.size()+unlocked.size());
+		available.addAll(unlocked);
+		return available;
+	}
+	public static List<AbstractClue> getAllClue() {
 		return allClues.resolve().get();
 	}
 }

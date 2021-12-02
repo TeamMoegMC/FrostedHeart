@@ -118,10 +118,9 @@ public class ForgeEvents {
 					p_234563_2_ *= 2;
 				else if (p_234563_1_.isExplosion())// explode add a lot
 					p_234563_2_ *= 4;
-				if (p_234563_2_ < 1.0F) {
-					p_234563_2_ = 1.0F;
-				}
 				int amount = (int) p_234563_2_;
+				amount+=player.getRNG().nextDouble()<(p_234563_2_-amount)?1:0;
+				if (amount <=0)return;
 				for (ItemStack itemstack : player.getArmorInventoryList()) {
 					CompoundNBT cn = itemstack.getTag();
 					if (cn == null)

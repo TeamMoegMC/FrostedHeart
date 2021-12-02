@@ -37,9 +37,9 @@ public class ResearchScreen extends BaseScreen {
 
     @Override
     public void addWidgets() {
-        researchCategoryPanel.setPosAndSize(PADDING, PADDING, this.width-PADDING*2, CAT_PANEL_HEIGHT);
+        researchCategoryPanel.setPosAndSize(2,2, this.width-PADDING*2, CAT_PANEL_HEIGHT);
         add(researchCategoryPanel);
-        researchListPanel.setPosAndSize(getX() + PADDING,getY() + PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING + CAT_PANEL_HEIGHT + PADDING + PADDING + PADDING));
+        researchListPanel.setPosAndSize(posX + PADDING,posY+ PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING + CAT_PANEL_HEIGHT + PADDING + PADDING + PADDING));
         add(researchListPanel);
         researchHierarchyPanel.setPosAndSize(getX() + PADDING + IN_PROGRESS_WIDTH + PADDING,getY() + PADDING + CAT_PANEL_HEIGHT + PADDING, width - (PADDING + IN_PROGRESS_WIDTH + PADDING + PADDING), height - (PADDING + CAT_PANEL_HEIGHT + PADDING + PADDING));
         add(researchHierarchyPanel);
@@ -65,7 +65,7 @@ public class ResearchScreen extends BaseScreen {
     }
 
     public static final int IN_PROGRESS_WIDTH = 80, IN_PROGRESS_HEIGHT = 80;
-    public static final int RESEARCH_LIST_WIDTH = 80;
+    public static final int RESEARCH_LIST_WIDTH = 220;
 
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {

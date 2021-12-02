@@ -12,7 +12,7 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 
 public class ResearchListPanel extends Panel {
-    public static final int RESEARCH_WIDTH = 80, RESEARCH_HEIGHT = 18;
+    public static final int RESEARCH_WIDTH = 200, RESEARCH_HEIGHT = 18;
     public static final int RES_ICON_WIDTH = 16, RES_ICON_HEIGHT = 16;
     public static final int RES_PANEL_WIDTH = 80;
 
@@ -47,9 +47,12 @@ public class ResearchListPanel extends Panel {
 
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            super.draw(matrixStack, theme, x, y, w, h);
+			super.drawBackground(matrixStack, theme, x, y, w, h);
+            //theme.drawHorizontalTab(matrixStack, x, y, w, h, categoryPanel.researchScreen.selectedCategory == category);
+			
+			this.drawIcon(matrixStack, theme, x + 2, y + 2, RES_ICON_WIDTH, RES_ICON_HEIGHT);
 //            theme.drawHorizontalTab(matrixStack, x, y, w, h, listPanel.researchScreen.selectedResearch == research);
-            this.drawIcon(matrixStack, theme, x + 2, y + 2, RES_ICON_WIDTH, RES_ICON_HEIGHT);
+//            this.drawIcon(matrixStack, theme, x + 2, y + 2, RES_ICON_WIDTH, RES_ICON_HEIGHT);
             theme.drawString(matrixStack, research.getName(), x + RES_ICON_WIDTH + 4, y + RES_ICON_HEIGHT /2 - 4);
         }
     }
@@ -58,46 +61,13 @@ public class ResearchListPanel extends Panel {
     public void addWidgets() {
         int offset = 0;
 
-        for (int k = 0; k < FHResearch.researches.getSize(); k++) {
-            Research research = FHResearch.researches.getById(k);
-            if (research.getCategory() == researchScreen.selectedCategory) {
-                if (research.isUnlocked()) {
-                    // first show in progress researches
-                    if (research.getData().isInProgress()) {
-                        ResearchButton button = new ResearchButton(this, research);
-                        button.setPos(getX(), getY() + k * (RESEARCH_WIDTH + 4));
-                        add(button);
-                    }
-                }
-            }
-            offset = k;
-        }
-
-        for (int k = 0; k < FHResearch.researches.getSize(); k++) {
-            Research research = FHResearch.researches.getById(k);
-            if (research.getCategory() == researchScreen.selectedCategory) {
-                if (research.isUnlocked()) {
-                    // then show unlocked but not in progress researches
-                    if (!research.getData().isInProgress()) {
-                        ResearchButton button = new ResearchButton(this, research);
-                        button.setPos(getX(), getY() + (offset + k) * (RESEARCH_WIDTH + 4));
-                        add(button);
-                    }
-                }
-            }
-            offset += k;
-        }
-
-        for (int k = 0; k < FHResearch.researches.getSize(); k++) {
-            Research research = FHResearch.researches.getById(k);
-            if (research.getCategory() == researchScreen.selectedCategory) {
-                // show the rest researches
-                if (!research.isUnlocked()) {
-                    ResearchButton button = new ResearchButton(this, research);
-                    button.setPos(getX(), getY() + (offset + k) * (RESEARCH_WIDTH + 4));
-                    add(button);
-                }
-            }
+        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory)) {
+        	
+            ResearchButton button = new ResearchButton(this, r);
+            add(button);
+            button.setPos(0,offset);
+            System.out.println(button);
+            offset += (RESEARCH_HEIGHT + 4);
         }
     }
 
@@ -109,9 +79,6 @@ public class ResearchListPanel extends Panel {
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
-        for (int k = 0; k < widgets.size(); k++) {
-            widgets.get(k).draw(matrixStack, theme, x, y+ k * (RESEARCH_WIDTH + 4), w, h);
-        }
     }
 }
 

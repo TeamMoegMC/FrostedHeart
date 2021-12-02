@@ -91,13 +91,13 @@ public class FHMain {
         FHParticleTypes.REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID,"blacklist"),BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
-
+        ResearchCategories.init();
         FHResearch.researches.register(new Research("generator_t1", ResearchCategories.HEATING));
         FHResearch.researches.register(new Research("generator_t2", ResearchCategories.HEATING, FHResearch.getResearch("generator_t1")));
         FHResearch.researches.register(new Research("generator_t3", ResearchCategories.HEATING, FHResearch.getResearch("generator_t2")));
         FHResearch.researches.register(new Research("generator_t4", ResearchCategories.HEATING, FHResearch.getResearch("generator_t3")));
 
-        ResearchCategories.init();
+       
     }
 
     public void setup(final FMLCommonSetupEvent event) {

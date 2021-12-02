@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.research;
 
 public abstract class FHRegisteredItem {
-	private int id;
+	private int id=0;
 	public int getRId() {
 		return id;
 	}
