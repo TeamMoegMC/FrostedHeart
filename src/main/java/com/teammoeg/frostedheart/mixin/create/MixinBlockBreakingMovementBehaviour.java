@@ -63,10 +63,10 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
 		}
 		float breakSpeed;
 		if(context.contraption instanceof ISpeedContraption)
-			breakSpeed = MathHelper.clamp(Math.abs(((ISpeedContraption) context.contraption).getSpeed()) / 100f, 1 / 256f, 16f);
+			breakSpeed = MathHelper.clamp(Math.abs(((ISpeedContraption) context.contraption).getSpeed())*10,2, 16000f);
 		else
 			breakSpeed = MathHelper.clamp(Math.abs(context.getAnimationSpeed()) / 500f, 1 / 128f, 16f);
-		destroyProgress += MathHelper.clamp((int) (breakSpeed*1000F / blockHardness), 1, 10000 - destroyProgress);
+		destroyProgress += MathHelper.clamp((int) (breakSpeed / blockHardness), 1, 10000 - destroyProgress);
 		world.playSound(null, breakingPos, stateToBreak.getSoundType().getHitSound(), SoundCategory.NEUTRAL, .25f, 1);
 
 		if (destroyProgress >= 10000) {
