@@ -9,7 +9,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class TeamResearchData {
-	@OnlyIn(Dist.CLIENT)
 	public static TeamResearchData INSTANCE=new TeamResearchData();
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
 	ArrayList<ResearchData> rdata=new ArrayList<>();
