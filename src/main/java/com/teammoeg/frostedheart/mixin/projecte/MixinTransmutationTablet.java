@@ -27,7 +27,7 @@ import net.minecraft.world.server.ServerWorld;
 
 @Mixin(TransmutationTablet.class)
 public class MixinTransmutationTablet {
-	@Inject(method = "onItemRightClick", at = @At(value = "HEAD"), remap = true, cancellable = true)
+	@Inject(method = "onItemRightClick", at = @At("HEAD"), remap = true, cancellable = true)
 	public void onItemRightClick(World world,PlayerEntity player,Hand hand,CallbackInfoReturnable<ActionResult> cbi) {
     	if (!world.isRemote) {
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
