@@ -56,6 +56,8 @@ import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
+import com.teammoeg.frostedheart.content.recipes.DefrostRecipeSerializer;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantle;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantleSerializer;
@@ -177,6 +179,7 @@ public class FHContent {
         public static Item dried_wolfberries = new FHBaseItem("dried_wolfberries", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.DRIED_WOLFBERRIES));
         public static Item rye = new FHBaseItem("rye", createProps());
         public static Item generator_ash = new FHBaseItem("generator_ash", createProps());
+        public static Item frozen_seeds = new FHBaseItem("frozen_seeds", createProps());
         public static Item rye_flour = new FHBaseItem("rye_flour", createProps());
         public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", createProps());
         public static Item mercury_body_thermometer = new ThermometerItem("mercury_body_thermometer", createProps());
@@ -295,6 +298,7 @@ public class FHContent {
             RecipeInner.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", RecipeInnerSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
             RecipeInnerDismantle.SERIALIZER=RECIPE_SERIALIZERS.register("recipe_inner_dismantle",RecipeInnerDismantleSerializer::new);
+            DefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_campfire",DefrostRecipeSerializer::new);
         }
 
         public static void registerRecipeTypes() {

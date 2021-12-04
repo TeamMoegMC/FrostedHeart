@@ -29,12 +29,14 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
 import com.teammoeg.frostedheart.compat.jei.category.CuttingCategory;
+import com.teammoeg.frostedheart.compat.jei.category.DefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
 import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
+import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.util.FHNBT;
 
@@ -45,6 +47,7 @@ import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
@@ -65,6 +68,7 @@ public class JEICompat implements IModPlugin {
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator), GeneratorFuelCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.charger), ChargerCategory.UID,ChargerCookingCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE),DefrostCategory.UID);
     }
     @Override
     public void registerRecipes(IRecipeRegistration registration) {
@@ -75,6 +79,7 @@ public class JEICompat implements IModPlugin {
         registration.addRecipes(new ArrayList<>(GeneratorSteamRecipe.recipeList.values()),GeneratorSteamCategory.UID);
         registration.addRecipes(new ArrayList<>(ChargerRecipe.recipeList.values()),ChargerCategory.UID);
         registration.addRecipes(recipeManager.getRecipesForType(IRecipeType.SMOKING),ChargerCookingCategory.UID);
+        registration.addRecipes(new ArrayList<>(DefrostRecipe.recipeList.values()),DefrostCategory.UID);
         registration.addRecipes(Arrays.asList(
         		new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.red_mushroombed),0),new ItemStack(Items.RED_MUSHROOM,10)),
         		new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.brown_mushroombed),0),new ItemStack(Items.BROWN_MUSHROOM,10))
@@ -89,7 +94,8 @@ public class JEICompat implements IModPlugin {
                 new GeneratorSteamCategory(guiHelper),
                 new ChargerCategory(guiHelper),
                 new ChargerCookingCategory(guiHelper),
-                new CuttingCategory(guiHelper)
+                new CuttingCategory(guiHelper),
+                new DefrostCategory(guiHelper)
         );
     }
 

@@ -146,6 +146,8 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
             }
         }
         noliquidtick=40;
+        if(this.stempMod!=1)
+        	this.markChanged(true);
         this.spowerMod = 0;
         this.srangeMod = 1;
         this.stempMod = 1;

@@ -90,10 +90,9 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
         return ICON;
     }
 
-    @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public void setIngredients(GeneratorRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM,Lists.<List<ItemStack>>asList(Arrays.asList(recipe.input.getMatchingStacks()),new ArrayList[0]));
+        ingredients.setInputLists(VanillaTypes.ITEM,Arrays.asList(Arrays.asList(recipe.input.getMatchingStacks())));
         ingredients.setOutput(VanillaTypes.ITEM, recipe.output);
     }
 

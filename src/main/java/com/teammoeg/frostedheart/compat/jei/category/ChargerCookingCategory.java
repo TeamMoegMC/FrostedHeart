@@ -97,10 +97,9 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
         return ICON;
     }
 
-    @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public void setIngredients(SmokingRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM,Lists.<List<ItemStack>>asList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks()),new ArrayList[0]));
+        ingredients.setInputLists(VanillaTypes.ITEM,Arrays.asList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks())));
         ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
     }
 

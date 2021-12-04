@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.compat.jei.category;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -127,10 +128,9 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         return ICON;
     }
 
-    @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public void setIngredients(GeneratorSteamRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID,Lists.<List<FluidStack>>asList(recipe.input.getMatchingFluidStacks(),new ArrayList[0]));
+        ingredients.setInputLists(VanillaTypes.FLUID,Arrays.asList(recipe.input.getMatchingFluidStacks()));
     }
 
 
