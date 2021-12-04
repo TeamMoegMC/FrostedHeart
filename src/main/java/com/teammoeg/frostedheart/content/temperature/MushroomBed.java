@@ -79,6 +79,7 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
     	if (this.isInGroup(group)) {
     		ItemStack is=new ItemStack(this);
+    		items.add(is);
     		is.setDamage(is.getMaxDamage());
     		items.add(is);
     	}
