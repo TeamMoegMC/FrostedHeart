@@ -56,12 +56,16 @@ import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipeSerializer;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipeSerializer;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantle;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantleSerializer;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerSerializer;
+import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
+import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipeSerializer;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
@@ -182,6 +186,7 @@ public class FHContent {
         public static Item frozen_seeds = new FHBaseItem("frozen_seeds", createProps());
         public static Item rye_flour = new FHBaseItem("rye_flour", createProps());
         public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", createProps());
+        public static Item random_seeds = new FHBaseItem("random_seeds", createProps());
         public static Item mercury_body_thermometer = new ThermometerItem("mercury_body_thermometer", createProps());
         public static Item rye_bread = new FHBaseItem("rye_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
         public static Item black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.BLACK_BREAD));
@@ -298,7 +303,8 @@ public class FHContent {
             RecipeInner.SERIALIZER = RECIPE_SERIALIZERS.register("recipe_inner", RecipeInnerSerializer::new);
             ChargerRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("charger", ChargerRecipeSerializer::new);
             RecipeInnerDismantle.SERIALIZER=RECIPE_SERIALIZERS.register("recipe_inner_dismantle",RecipeInnerDismantleSerializer::new);
-            DefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_campfire",DefrostRecipeSerializer::new);
+            CampfireDefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_campfire",CampfireDefrostRecipeSerializer::new);
+            SmokingDefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_smoking",SmokingDefrostRecipeSerializer::new);
         }
 
         public static void registerRecipeTypes() {

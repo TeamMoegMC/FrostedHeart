@@ -18,23 +18,15 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
-import com.simibubi.create.compat.jei.EmptyBackground;
-import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHContent.FHBlocks;
 import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
@@ -51,15 +43,11 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.SmokingRecipe;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class DefrostCategory implements IRecipeCategory<DefrostRecipe> {
-    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_campfire");
+public class SmokingDefrostCategory implements IRecipeCategory<DefrostRecipe> {
+    public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_smoking");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
 	private LoadingCache<Integer, IDrawableAnimated> cachedArrows;
@@ -68,8 +56,8 @@ public class DefrostCategory implements IRecipeCategory<DefrostRecipe> {
     /**
 	 * @param guiHelper  
 	 */
-    public DefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(()->new ItemStack(Blocks.CAMPFIRE),()->new ItemStack(FHItems.frozen_seeds));
+    public SmokingDefrostCategory(IGuiHelper guiHelper) {
+        this.ICON = new DoubleItemIcon(()->new ItemStack(Blocks.SMOKER),()->new ItemStack(FHItems.frozen_seeds));
         this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
     			.addPadding(0, 10, 0, 0)
     			.build();
@@ -98,7 +86,7 @@ public class DefrostCategory implements IRecipeCategory<DefrostRecipe> {
 
 
     public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_campfire").getString());
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_smoking").getString());
     }
 	@Override
 	public void draw(DefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY)

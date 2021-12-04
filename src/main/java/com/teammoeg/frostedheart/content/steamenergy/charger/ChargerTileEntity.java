@@ -85,13 +85,17 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
             ChargerRecipe cr = ChargerRecipe.findRecipe(is);
             if (cr != null) {
                 if (power >= cr.cost && is.getCount() >= cr.input.getCount()) {
-                    power -= cr.cost;
-                    is.setCount(is.getCount() - cr.input.getCount());
-                    ItemStack gain = cr.output.copy();
-
-                    if (!pe.inventory.addItemStackToInventory(gain)) {
-                        pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(), pe.getPosX(), pe.getPosY(), pe.getPosZ(), gain));
-                    }
+                	if(!world.isRemote) {
+	                    power -= cr.cost;
+	                    is.setCount(is.getCount() - cr.input.getCount());
+	                    ItemStack gain = cr.output.copy();
+	
+	                    if (!pe.inventory.addItemStackToInventory(gain)) {
+	                        pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(), pe.getPosX(), pe.getPosY(), pe.getPosZ(), gain));
+	                    }
+	                    markDirty();
+	                    this.markContainingBlockForUpdate(null);
+                	}
                     drawEffect();
                     return ActionResultType.SUCCESS;
                 }
@@ -100,18 +104,18 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                 List<SmokingRecipe> irs = this.world.getRecipeManager().getRecipesForType(IRecipeType.SMOKING);
                 for (SmokingRecipe sr : irs) {
                     if (sr.getIngredients().iterator().next().test(is)) {
-                        //if(pe instanceof ServerPlayerEntity) {
-                        power -= sr.getCookTime() / 20;
-                        pe.giveExperiencePoints((int) sr.getExperience());
-                        is.setCount(is.getCount() - 1);
-                        ItemStack gain = sr.getRecipeOutput().copy();
-
-                        if (!pe.inventory.addItemStackToInventory(gain)) {
-                            pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(), pe.getPosX(), pe.getPosY(), pe.getPosZ(), gain));
+                    	if(!world.isRemote) {
+	                        power -= sr.getCookTime() / 20;
+	                        pe.giveExperiencePoints((int) sr.getExperience());
+	                        is.setCount(is.getCount() - 1);
+	                        ItemStack gain = sr.getCraftingResult(null).copy();
+	
+	                        if (!pe.inventory.addItemStackToInventory(gain)) {
+	                            pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(), pe.getPosX(), pe.getPosY(), pe.getPosZ(), gain));
+	                        }
+	                        markDirty();
+	                        this.markContainingBlockForUpdate(null);
                         }
-                        markDirty();
-                        this.markContainingBlockForUpdate(null);
-                        //}
                         drawEffect();
                         return ActionResultType.SUCCESS;
                     }

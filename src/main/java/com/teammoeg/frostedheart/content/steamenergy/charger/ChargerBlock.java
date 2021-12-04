@@ -110,6 +110,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
         if (superResult.isSuccessOrConsume() || player.isSneaking())
             return superResult;
         ItemStack item = player.getHeldItem(hand);
+        
         TileEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof ChargerTileEntity) {
             return ((ChargerTileEntity) te).onClick(player, item);

@@ -27,8 +27,10 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
@@ -101,8 +103,12 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .filter(iRecipe -> iRecipe.getClass()==RecipeInner.class)
                 .map(e->(RecipeInner)e)
                 .collect(Collectors.<RecipeInner,ResourceLocation,RecipeInner>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
-        DefrostRecipe.recipeList=recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass()==DefrostRecipe.class)
+        CampfireDefrostRecipe.recipeList=recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass()==CampfireDefrostRecipe.class)
+                .map(e->(DefrostRecipe)e)
+                .collect(Collectors.<DefrostRecipe,ResourceLocation,DefrostRecipe>toMap(recipe -> recipe.getId(), recipe -> recipe));
+        SmokingDefrostRecipe.recipeList=recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass()==SmokingDefrostRecipe.class)
                 .map(e->(DefrostRecipe)e)
                 .collect(Collectors.<DefrostRecipe,ResourceLocation,DefrostRecipe>toMap(recipe -> recipe.getId(), recipe -> recipe));
     }

@@ -24,8 +24,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHContent.FHItems;
-import com.teammoeg.frostedheart.data.JsonHelper;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
@@ -35,38 +33,58 @@ import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 
-public class DefrostRecipeSerializer extends IERecipeSerializer<DefrostRecipe> {
-	@Override
-	public ItemStack getIcon() {
-		return new ItemStack(FHItems.dried_wolfberries);
+public class DefrostRecipeSerializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
+	@FunctionalInterface
+	public interface DRFactory<T extends DefrostRecipe>{
+		T create(ResourceLocation p_i50030_1_, String p_i50030_2_, Ingredient p_i50030_3_,ItemStack[] results, float p_i50030_5_, int p_i50030_6_);
+	}
+	DRFactory<T> factory;
+	public DefrostRecipeSerializer(DRFactory<T> factory) {
+		this.factory = factory;
 	}
 
 	@Override
-	public DefrostRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+	public ItemStack getIcon() {
+		return new ItemStack(FHItems.frozen_seeds);
+	}
+
+	public ItemStack readOutput(JsonElement json) {
+		if (json.isJsonObject())
+			return ShapedRecipe.deserializeItem(json.getAsJsonObject());
+		String s1 = json.getAsString();
+		ResourceLocation resourcelocation = new ResourceLocation(s1);
+		return new ItemStack(Registry.ITEM.getOptional(resourcelocation).orElseThrow(() -> {
+			return new IllegalStateException("Item: " + s1 + " does not exist");
+		}));
+	}
+
+	@Override
+	public T readFromJson(ResourceLocation recipeId, JsonObject json) {
 		String s = JSONUtils.getString(json, "group", "");
-		JsonElement jsonelement = JSONUtils.isJsonArray(json, "ingredient")
-				? JSONUtils.getJsonArray(json, "ingredient")
+		JsonElement jsonelement = JSONUtils.isJsonArray(json, "ingredient") ? JSONUtils.getJsonArray(json, "ingredient")
 				: JSONUtils.getJsonObject(json, "ingredient");
 		Ingredient ingredient = Ingredient.deserialize(jsonelement);
 		ItemStack[] itemstacks = null;
-		
-		if (json.get("results")!=null&&json.get("results").isJsonArray()) {
-			JsonArray ja=json.get("results").getAsJsonArray();
-			itemstacks=new ItemStack[ja.size()];
-			int i=-1;
-			for(JsonElement je:ja)
-				itemstacks[++i]=readOutput(je);
-		}else if (json.get("result")!=null) {
-			itemstacks=new ItemStack[1];
-			itemstacks[0]=readOutput(json.get("result"));
-		}else throw new com.google.gson.JsonSyntaxException("Missing result, expected to find a string or object");
+
+		if (json.get("results") != null && json.get("results").isJsonArray()) {
+			JsonArray ja = json.get("results").getAsJsonArray();
+			itemstacks = new ItemStack[ja.size()];
+			int i = -1;
+			for (JsonElement je : ja)
+				itemstacks[++i] = readOutput(je);
+		} else if (json.get("result") != null) {
+			itemstacks = new ItemStack[1];
+			itemstacks[0] = readOutput(json.get("result"));
+		} else
+			throw new com.google.gson.JsonSyntaxException("Missing result, expected to find a string or object");
 		float f = JSONUtils.getFloat(json, "experience", 0.0F);
 		int i = JSONUtils.getInt(json, "cookingtime", 100);
-		return new DefrostRecipe(recipeId, s, ingredient, itemstacks!=null?itemstacks:new ItemStack[0], f, i);
+		return factory.create(recipeId, s, ingredient, itemstacks != null ? itemstacks : new ItemStack[0], f, i);
 	}
+
 	@Nullable
 	@Override
-	public DefrostRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+	public T read(ResourceLocation recipeId, PacketBuffer buffer) {
 		String s = buffer.readString();
 		Ingredient ingredient = Ingredient.read(buffer);
 		int itemlen = buffer.readVarInt();
@@ -75,7 +93,7 @@ public class DefrostRecipeSerializer extends IERecipeSerializer<DefrostRecipe> {
 			itemstacks[i] = buffer.readItemStack();
 		float f = buffer.readFloat();
 		int i = buffer.readVarInt();
-		return new DefrostRecipe(recipeId, s, ingredient, itemstacks, f, i);
+		return factory.create(recipeId, s, ingredient, itemstacks, f, i);
 	}
 
 	@Override
