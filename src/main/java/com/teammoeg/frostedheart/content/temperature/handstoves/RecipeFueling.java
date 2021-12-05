@@ -38,6 +38,12 @@ public class RecipeFueling extends SpecialRecipe {
     }
 	Ingredient type;
     int fuel;
+    public Ingredient getIngredient() {
+    	return type;
+    }
+    public int getFuel() {
+    	return fuel;
+    }
     /**
      * Used to check if a recipe matches current crafting inventory
      */

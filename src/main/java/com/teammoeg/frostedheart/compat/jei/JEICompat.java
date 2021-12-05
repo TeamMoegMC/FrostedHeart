@@ -33,14 +33,18 @@ import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
 import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
 import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
+import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
+import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
+import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
+import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
 import com.teammoeg.frostedheart.util.FHNBT;
 
 import mezz.jei.api.IModPlugin;
@@ -50,6 +54,7 @@ import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
@@ -106,6 +111,12 @@ public class JEICompat implements IModPlugin {
     }
 
     @Override
+	public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
+    	registration.getCraftingCategory().addCategoryExtension(RecipeFueling.class,FuelingExtension::new);
+    	registration.getCraftingCategory().addCategoryExtension(RecipeInner.class,InnerExtension::new);
+	}
+
+	@Override
     public void registerGuiHandlers(IGuiHandlerRegistration registry) {
         registry.addRecipeClickArea(T1GeneratorScreen.class,84, 35,9,12, GeneratorFuelCategory.UID);
         registry.addRecipeClickArea(T2GeneratorScreen.class,84, 35,9,12, GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
