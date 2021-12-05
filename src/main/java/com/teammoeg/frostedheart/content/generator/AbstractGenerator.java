@@ -85,7 +85,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         ChunkData.removeTempAdjust(world, getPos());
     }
     public void unregist() {
-    	CompoundNBT vars=ResearchDataAPI.getData(owner).getVariants();
+    	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
     	if(!vars.contains("generator_loc"))return;
         long pos=vars.getLong("generator_loc");
         BlockPos bp=BlockPos.fromLong(pos);
@@ -93,7 +93,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         	vars.remove("generator_loc");
     }
     public void regist() {
-    	CompoundNBT vars=ResearchDataAPI.getData(owner).getVariants();
+    	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
         vars.putLong("generator_loc",master().pos.toLong());
     }
     public void setOwner(UUID onwer){
@@ -101,7 +101,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     }
     public boolean shouldWork() {
     	if(owner==null)return false;
-    	CompoundNBT vars=ResearchDataAPI.getData(owner).getVariants();
+    	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
     	if(!vars.contains("generator_loc")) {
     		vars.putLong("generator_loc",master().pos.toLong());
     		return true;
