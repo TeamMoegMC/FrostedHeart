@@ -26,7 +26,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
-	public final int max_fuel=3200;
+	public final static int max_fuel=800;
 	public CoalHandStove(String name, Properties properties) {
 		super(name, properties);
 	}
@@ -39,20 +39,20 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
 		list.add(GuiUtils.translateTooltip("handstove.add_fuel").mergeStyle(TextFormatting.GRAY));
 		list.add(GuiUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.GRAY));
-		list.add(GuiUtils.translateTooltip("handstove.ash",this.getAshAmount(stack)/1600).mergeStyle(TextFormatting.GRAY));
-		list.add(GuiUtils.translateTooltip("handstove.fuel",this.getFuelAmount(stack),max_fuel).mergeStyle(TextFormatting.GRAY));
+		list.add(GuiUtils.translateTooltip("handstove.ash",getAshAmount(stack)/1600).mergeStyle(TextFormatting.GRAY));
+		list.add(GuiUtils.translateTooltip("handstove.fuel",getFuelAmount(stack),max_fuel).mergeStyle(TextFormatting.GRAY));
     }
 
     @Override
     public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-		int fuel=this.getFuelAmount(stack);
+		int fuel=getFuelAmount(stack);
 		if(fuel>=2) {
-			int ash=this.getAshAmount(stack);
-			if(ash<=max_fuel) {
+			int ash=getAshAmount(stack);
+			if(ash<=max_fuel*2) {
 				fuel-=2;
 				ash+=2;
-				this.setFuelAmount(stack, fuel);
-				this.setAshAmount(stack, ash);
+				setFuelAmount(stack, fuel);
+				setAshAmount(stack, ash);
 		        if (bodyTemp > 0) {
 		            return this.getMax(stack);
 		        }
@@ -61,21 +61,27 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
         return 0;
     }
 
-    public int getAshAmount(ItemStack is) {
+    public static int getAshAmount(ItemStack is) {
     	return is.getOrCreateTag().getInt("ash");
     }
-    public int getFuelAmount(ItemStack is) {
+    public static int getFuelAmount(ItemStack is) {
     	return is.getOrCreateTag().getInt("fuel");
     }
-    public void setAshAmount(ItemStack is,int v) {
+    public static void setAshAmount(ItemStack is,int v) {
     	is.getOrCreateTag().putInt("ash",v);
+    	if(v>=max_fuel*2)
+    		is.getTag().putInt("CustomModelData", 2);
     }
-    public void setFuelAmount(ItemStack is,int v) {
+    public static void setFuelAmount(ItemStack is,int v) {
     	is.getOrCreateTag().putInt("fuel",v);
+    	if(v<2)
+    		is.getTag().putInt("CustomModelData", 0);
+    	else
+    		is.getTag().putInt("CustomModelData", 1);
     }
     @Override
 	public double getDurabilityForDisplay(ItemStack stack) {
-		return this.getFuelAmount(stack)*1.0D/max_fuel;
+		return getFuelAmount(stack)*1.0D/max_fuel;
 	}
 	@Override
 	public UseAction getUseAction(ItemStack stack) {
@@ -86,7 +92,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
 		ItemStack stack = playerIn.getHeldItem(handIn);
 		ActionResult<ItemStack> FAIL = new ActionResult<>(ActionResultType.FAIL,stack);
-		if(this.getAshAmount(playerIn.getHeldItem(handIn))>=1600) {
+		if(getAshAmount(playerIn.getHeldItem(handIn))>=1600) {
 			playerIn.setActiveHand(handIn);
 			return new ActionResult<>(ActionResultType.SUCCESS, stack);
 		}
@@ -94,10 +100,10 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	}
 	@Override
 	public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-		int ash=this.getAshAmount(stack);
+		int ash=getAshAmount(stack);
 		if(ash>=1600) {
 			ITag<Item> item=TagCollectionManager.getManager().getItemTags().get(ashitem);
-			this.setAshAmount(stack,ash-1600);
+			setAshAmount(stack,ash-1600);
 			if(item!=null&&entityLiving instanceof PlayerEntity&&!item.getAllElements().isEmpty()) {
 				ItemStack ret=new ItemStack(item.getAllElements().get(0));
 				if(!((PlayerEntity)entityLiving).addItemStackToInventory(ret)) 
@@ -115,6 +121,6 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	}
 	@Override
     public float getMax(ItemStack stack) {
-        return this.getFuelAmount(stack)>0?0.01F:0;
+        return getFuelAmount(stack)>0?0.01F:0;
     }
 }

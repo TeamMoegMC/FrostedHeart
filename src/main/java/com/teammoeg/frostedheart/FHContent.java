@@ -83,6 +83,9 @@ import com.teammoeg.frostedheart.content.temperature.SoilThermometer;
 import com.teammoeg.frostedheart.content.temperature.SteamBottleItem;
 import com.teammoeg.frostedheart.content.temperature.ThermometerItem;
 import com.teammoeg.frostedheart.content.temperature.ThermosItem;
+import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
+import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
+import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFuelingSerializer;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.tools.CeramicBucket;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
@@ -178,6 +181,9 @@ public class FHContent {
         static Properties createProps() {
         	return new Item.Properties().group(FHMain.itemGroup);
         }
+        public static Item hand_stove=new CoalHandStove("hand_stove",createProps());
+        public static Item coal_stick = new FHBaseItem("coal_stick", createProps());
+        public static Item charcoal_stick = new FHBaseItem("charcoal_stick", createProps());
         public static Item energy_core = new FHBaseItem("energy_core", createProps());
         public static Item wolfberries = new FoodBlockItem(FHBlocks.wolfberry_bush_block, createProps(), FHFoods.WOLFBERRIES, "wolfberries");
         public static Item dried_wolfberries = new FHBaseItem("dried_wolfberries", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.DRIED_WOLFBERRIES));
@@ -305,6 +311,7 @@ public class FHContent {
             RecipeInnerDismantle.SERIALIZER=RECIPE_SERIALIZERS.register("recipe_inner_dismantle",RecipeInnerDismantleSerializer::new);
             CampfireDefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_campfire",CampfireDefrostRecipeSerializer::new);
             SmokingDefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_smoking",SmokingDefrostRecipeSerializer::new);
+            RecipeFueling.SERIALIZER=RECIPE_SERIALIZERS.register("fuel_stove",RecipeFuelingSerializer::new);
         }
 
         public static void registerRecipeTypes() {
