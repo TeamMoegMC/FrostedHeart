@@ -79,6 +79,7 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
@@ -119,16 +120,18 @@ public class ForgeEvents {
 				else if (p_234563_1_.isExplosion())// explode add a lot
 					p_234563_2_ *= 4;
 				int amount = (int) p_234563_2_;
+				if(amount!=p_234563_2_)
 				amount+=player.getRNG().nextDouble()<(p_234563_2_-amount)?1:0;
 				if (amount <=0)return;
 				for (ItemStack itemstack : player.getArmorInventoryList()) {
+					if(itemstack.isEmpty())continue;
 					CompoundNBT cn = itemstack.getTag();
 					if (cn == null)
-						return;
+						continue;
 					if (amount > 0) {
 						String inner = cn.getString("inner_cover");
 						if (inner == null || cn.getBoolean("inner_bounded"))
-							return;
+							continue;
 						int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING,cn);
 						int j = 0;
 						if(i>0)
@@ -139,12 +142,9 @@ public class ForgeEvents {
 							}
 
 						amount -= j;
-						if (amount <= 0) {
-							return;
-						}
+						if (amount <= 0)
+							continue;
 						CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
-						if (cnbt == null)
-							cnbt = new CompoundNBT();
 						int crdmg = cnbt.getInt("Damage");
 						crdmg += amount;
 						RecipeInner ri = RecipeInner.recipeList.get(new ResourceLocation(inner));

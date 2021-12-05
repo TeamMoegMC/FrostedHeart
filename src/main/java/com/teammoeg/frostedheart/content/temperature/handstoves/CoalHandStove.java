@@ -85,7 +85,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	}
 	@Override
 	public UseAction getUseAction(ItemStack stack) {
-		return UseAction.NONE;
+		return UseAction.EAT;
 	}
 	ResourceLocation ashitem=new ResourceLocation("frostedheart","ash");
 	@Override
