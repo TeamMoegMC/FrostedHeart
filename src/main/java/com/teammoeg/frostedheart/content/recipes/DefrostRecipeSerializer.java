@@ -103,7 +103,6 @@ public class DefrostRecipeSerializer<T extends DefrostRecipe> extends IERecipeSe
 		buffer.writeVarInt(recipe.getIss().length);
 		for (int i = 0; i < recipe.getIss().length; i++)
 			buffer.writeItemStack(recipe.getIss()[i]);
-		buffer.writeFloat(recipe.getExperience());
-		buffer.writeVarInt(recipe.getCookTime());
+
 	}
 }

@@ -28,6 +28,7 @@ import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
+import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -46,7 +47,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class SmokingDefrostCategory implements IRecipeCategory<DefrostRecipe> {
+public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_smoking");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
@@ -80,8 +81,8 @@ public class SmokingDefrostCategory implements IRecipeCategory<DefrostRecipe> {
     }
 
     @Override
-    public Class<? extends DefrostRecipe> getRecipeClass() {
-        return DefrostRecipe.class;
+    public Class<? extends SmokingDefrostRecipe> getRecipeClass() {
+        return SmokingDefrostRecipe.class;
     }
 
 
@@ -89,21 +90,21 @@ public class SmokingDefrostCategory implements IRecipeCategory<DefrostRecipe> {
         return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_smoking").getString());
     }
 	@Override
-	public void draw(DefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY)
+	public void draw(SmokingDefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY)
 	{
 		animatedFlame.draw(transform, 1, 20);
 		IDrawableAnimated arrow = getArrow(recipe);
 		arrow.draw(transform, 24, 8);
 		drawCookTime(recipe, transform, 35);
 	}
-	protected IDrawableAnimated getArrow(DefrostRecipe recipe) {
+	protected IDrawableAnimated getArrow(SmokingDefrostRecipe recipe) {
 		int cookTime = recipe.getCookTime();
 		if (cookTime <= 0) {
 			cookTime = 100;
 		}
 		return this.cachedArrows.getUnchecked(cookTime);
 	}
-	protected void drawCookTime(DefrostRecipe recipe, MatrixStack matrixStack, int y) {
+	protected void drawCookTime(SmokingDefrostRecipe recipe, MatrixStack matrixStack, int y) {
 		int cookTime = recipe.getCookTime();
 		if (cookTime > 0) {
 			int cookTimeSeconds = cookTime / 20;
@@ -126,14 +127,14 @@ public class SmokingDefrostCategory implements IRecipeCategory<DefrostRecipe> {
     }
 
     @Override
-    public void setIngredients(DefrostRecipe recipe, IIngredients ingredients) {
+    public void setIngredients(SmokingDefrostRecipe recipe, IIngredients ingredients) {
         ingredients.setInputLists(VanillaTypes.ITEM,Arrays.asList(Arrays.asList(recipe.getIngredient().getMatchingStacks())));
         ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIss())));
     }
 
 
     @Override
-    public void setRecipe(IRecipeLayout recipeLayout,DefrostRecipe recipe, IIngredients ingredients) {
+    public void setRecipe(IRecipeLayout recipeLayout,SmokingDefrostRecipe recipe, IIngredients ingredients) {
 		IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
 
 		guiItemStacks.init(0, true, 0, 0);

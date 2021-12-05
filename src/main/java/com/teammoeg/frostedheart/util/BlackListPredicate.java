@@ -12,8 +12,6 @@ public class BlackListPredicate extends ItemPredicate {
 	ItemPredicate white;
 	public BlackListPredicate(JsonObject jo) {
 		JsonElement intern=new JsonParser().parse(jo.toString());
-		new Exception().printStackTrace();
-		System.out.println("init");	
 		intern.getAsJsonObject().remove("type");
 		white=ItemPredicate.deserialize(intern);
 	}
