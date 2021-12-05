@@ -18,6 +18,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.radiator;
 
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -198,16 +200,6 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     }
 
     @Override
-    protected void setAllActive(boolean state) {
-        for (int y = 0; y < 3; ++y) {
-            BlockPos actualPos = getBlockPosForPos(new BlockPos(0, y, 0));
-            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-            if (te instanceof RadiatorTileEntity)
-                ((RadiatorTileEntity) te).setActive(state);
-        }
-    }
-
-    @Override
     protected void tickEffects(boolean isActive) {
         if (world != null && world.isRemote && isActive && world.rand.nextFloat() < 0.2) {
             ClientUtils.spawnSteamParticles(world, this.getPos());
@@ -228,5 +220,19 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     protected boolean canDrainTankFrom(int iTank, Direction side) {
         return false;
     }
+	@Override
+	public void forEachBlock(Consumer<RadiatorTileEntity> consumer) {
+        for (int y = 0; y < 3; ++y) {
+            BlockPos actualPos = getBlockPosForPos(new BlockPos(0, y, 0));
+            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+            if (te instanceof RadiatorTileEntity)
+               consumer.accept((RadiatorTileEntity) te);
+        }
+	}
+
+	@Override
+	public boolean shouldUnique() {
+		return false;
+	}
 
 }

@@ -26,7 +26,7 @@
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
     "projecte.MixinTransmutationStone",
-    "projecte.MixinTransmutationTablet",
+
     "rankine.AlloyTemplateItemMixin",
     "rankine.TapBarrelBlockMixin",
     "rankine.MixinDryMortarItemEntity",

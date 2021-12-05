@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.content.generator.t2;
 
 import java.util.Random;
+import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -171,17 +172,16 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	}
 
 	@Override
-    protected void setAllActive(boolean state) {
-        for (int x = 0; x < 3; ++x)
+	public void forEachBlock(Consumer<T2GeneratorTileEntity> consumer) {
+		for (int x = 0; x < 3; ++x)
             for (int y = 0; y < 7; ++y)
                 for (int z = 0; z < 3; ++z) {
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
                     TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                    if (te instanceof BurnerGeneratorTileEntity)
-                        ((BurnerGeneratorTileEntity) te).setActive(state);
+                    if (te instanceof T2GeneratorTileEntity)
+                        consumer.accept((T2GeneratorTileEntity) te);
                 }
-    }
-
+	}
     @Override
     protected void tickEffects(boolean isActive) {
         if (isActive) {

@@ -12,6 +12,7 @@ public class TeamResearchData {
 	public static TeamResearchData INSTANCE=new TeamResearchData();
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
 	ArrayList<ResearchData> rdata=new ArrayList<>();
+	CompoundNBT variants=new CompoundNBT();
 	public void triggerClue(int id) {
 		ensureClue(id);
 		clueComplete.set(id-1,true);
@@ -79,16 +80,21 @@ public class TeamResearchData {
 			cl[++i]=(byte) (b==null?0:(b?1:0));
 		}
 		nbt.putByteArray("clues",cl);
+		nbt.put("vars",variants);
 		ListNBT rs=new ListNBT();
 		rdata.stream().map(e->e!=null?e.serialize():ByteNBT.ZERO).forEach(e->rs.add(e));
 		nbt.put("researches",rs);
 		return nbt;
+	}
+	public CompoundNBT getVariants() {
+		return variants;
 	}
 	public void deserialize(CompoundNBT data) {
 		clueComplete.clear();
 		rdata.clear();
 		byte[] ba=data.getByteArray("clues");
 		ensureClue(ba.length);
+		variants=data.getCompound("vars");
 		for(int i=0;i<ba.length;i++)
 			clueComplete.set(i,ba[i]!=0);
 		data.getList("researches",0).stream().map(e->e.getId()==10?new ResearchData((CompoundNBT) e):null).forEach(e->rdata.add(e));;

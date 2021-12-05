@@ -21,10 +21,10 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 public class PEEvents {
 	public static void onRC(PlayerInteractEvent.RightClickItem rci) {
-		if (rci.getItemStack().getItem().getRegistryName().getNamespace().equals("projecte")) {
+		if (!rci.getWorld().isRemote&&rci.getItemStack().getItem().getRegistryName().getNamespace().equals("projecte")) {
 			rci.setCancellationResult(ActionResultType.SUCCESS);
 			rci.setCanceled(true);
-			
+			System.out.println("faq");
 			World world = rci.getWorld();
 			PlayerEntity player = rci.getPlayer();
 			BlockPos pos = rci.getPos();

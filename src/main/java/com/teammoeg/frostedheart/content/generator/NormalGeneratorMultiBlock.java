@@ -23,11 +23,17 @@ import java.util.Random;
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -50,5 +56,22 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
             }
         }
     }
+
+	@Override
+	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
+			Hand hand, BlockRayTraceResult hit) {
+		if(!world.isRemote) {
+			TileEntity te=Utils.getExistingTileEntity(world, pos);
+			if(te instanceof AbstractGenerator&&((AbstractGenerator) te).shouldUnique()) {
+				if(((AbstractGenerator) te).owner==null) {
+					((AbstractGenerator) te).owner=player.getUniqueID();
+					((AbstractGenerator) te).setOwner(player.getUniqueID());
+					((AbstractGenerator) te).regist();
+					System.out.println("registered");
+				}
+			}
+		}
+		return super.onBlockActivated(state, world, pos, player, hand, hit);
+	}
 
 }

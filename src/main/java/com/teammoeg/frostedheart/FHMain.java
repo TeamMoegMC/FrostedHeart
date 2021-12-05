@@ -18,13 +18,20 @@
 
 package com.teammoeg.frostedheart;
 
+import java.io.InputStreamReader;
+
 import javax.annotation.Nonnull;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
+import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.PEEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.FHResearch;
@@ -33,6 +40,7 @@ import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
+import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 
 import net.minecraft.advancements.criterion.ItemPredicate;
@@ -100,7 +108,14 @@ public class FHMain {
         FHResearch.researches.register(new Research("generator_t3", ResearchCategories.HEATING, FHResearch.getResearch("generator_t2")));
         FHResearch.researches.register(new Research("generator_t4", ResearchCategories.HEATING, FHResearch.getResearch("generator_t3")));
 
-       
+    	JsonParser gs=new JsonParser();
+    	JsonObject jo=gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID+".mixins.json"))).getAsJsonObject();
+    	JsonArray mixins=jo.get("mixins").getAsJsonArray();
+    	
+        if(!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone"))||
+        !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))||
+        !mixins.contains(new JsonPrimitive( "projecte.MixinTransmutationTablet")))
+        	throw new ChException.作弊者禁止进入();
     }
 
     public void setup(final FMLCommonSetupEvent event) {
@@ -108,10 +123,15 @@ public class FHMain {
     	MinecraftForge.EVENT_BUS.addListener(this::serverStart);
     	MinecraftForge.EVENT_BUS.addListener(this::serverSave);
     	MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
+    	
     	if(ModList.get().isLoaded("projecte")) {
     		MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
     		System.out.println("pe loaded");
-    	}
+    	}else
+    	try {
+    		Class.forName("moze_intel.projecte.PECore");
+    		MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
+    	}catch(Exception ignored){}
         ChunkDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
     }

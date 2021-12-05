@@ -23,7 +23,8 @@ apply plugin: 'maven-publish'
 group = 'com.teammoeg'
 version = "${minecraft_version}-${mod_version}"
 archivesBaseName = 'frostedheart'
-
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {

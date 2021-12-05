@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.content.generator;
 
 import java.util.Random;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -52,10 +53,15 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> extends AbstractGenerator<T> implements IIEInventory,
+public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> extends AbstractGenerator<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
-    public static final int INPUT_SLOT = 0;
+    @Override
+	public boolean shouldUnique() {
+		return true;
+	}
+
+	public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     public int process = 0;
     public int processMax = 0;
@@ -302,6 +308,7 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
                 process -= 4;
             else
                 process--;
+            this.setActive(true);
             this.markContainingBlockForUpdate(null);
         }
         // process not started yet
@@ -338,17 +345,7 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
         }
     }
 
-    @Override
-    protected void setAllActive(boolean state) {
-        for (int x = 0; x < 3; ++x)
-            for (int y = 0; y < 4; ++y)
-                for (int z = 0; z < 3; ++z) {
-                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                    if (te instanceof BurnerGeneratorTileEntity)
-                        ((BurnerGeneratorTileEntity) te).setActive(state);
-                }
-    }
+
 
     @Override
     protected void tickEffects(boolean isActive) {
@@ -363,4 +360,6 @@ public class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> e
             }
         }
     }
+
+
 }

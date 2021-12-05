@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.generator;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -31,7 +32,7 @@ import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
 
-public class HeatedGeneratorMultiBlock extends NormalGeneratorMultiBlock implements ISteamEnergyBlock {
+public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends NormalGeneratorMultiBlock<T> implements ISteamEnergyBlock {
 
     public HeatedGeneratorMultiBlock(String name, RegistryObject type) {
         super(name, type);

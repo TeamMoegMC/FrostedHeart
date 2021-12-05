@@ -18,13 +18,18 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.math.BlockPos;
 
 public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState {
 
@@ -37,7 +42,9 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     boolean isOverdrive;
     boolean isActualOverdrive;
     boolean isDirty;//mark if temperature change required
-
+    boolean isLocked=false;
+    private int checkInterval=0;
+    UUID owner;//owner bind
     public AbstractGenerator(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
     }
@@ -56,6 +63,8 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         isWorking=nbt.getBoolean("isWorking");
         isOverdrive=nbt.getBoolean("isOverdrive");
         isActualOverdrive=nbt.getBoolean("Overdriven");
+        if(nbt.contains("Owner"))
+        owner=nbt.getUniqueId("Owner");
     }
 
     @Override
@@ -64,22 +73,52 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         nbt.putBoolean("isWorking",isWorking);
         nbt.putBoolean("isOverdrive",isOverdrive);
         nbt.putBoolean("Overdriven",isActualOverdrive);
-
+        if(owner!=null)
+        nbt.putUniqueId("Owner",owner);
     }
 
     @Override
     public void disassemble() {
         super.disassemble();
+        if(shouldUnique())
+        master().unregist();
         ChunkData.removeTempAdjust(world, getPos());
     }
-
+    public void unregist() {
+    	CompoundNBT vars=ResearchDataAPI.getData(owner).getVariants();
+    	if(!vars.contains("generator_loc"))return;
+        long pos=vars.getLong("generator_loc");
+        BlockPos bp=BlockPos.fromLong(pos);
+        if(bp.equals(this.pos))
+        	vars.remove("generator_loc");
+    }
+    public void regist() {
+    	CompoundNBT vars=ResearchDataAPI.getData(owner).getVariants();
+        vars.putLong("generator_loc",master().pos.toLong());
+    }
+    public void setOwner(UUID onwer){
+    	forEachBlock(s->s.owner=owner);
+    }
+    public boolean shouldWork() {
+    	if(owner==null)return false;
+    	CompoundNBT vars=ResearchDataAPI.getData(owner).getVariants();
+    	if(!vars.contains("generator_loc")) {
+    		vars.putLong("generator_loc",master().pos.toLong());
+    		return true;
+    	}
+    	long pos=vars.getLong("generator_loc");
+    	BlockPos bp=BlockPos.fromLong(pos);
+        if(bp.equals(this.pos))
+        	return true;
+        return false;
+    }
     protected abstract void onShutDown();
 
     protected abstract void tickFuel();
 
-    protected abstract void setAllActive(boolean state);
-
     protected abstract void tickEffects(boolean isActive);
+    
+    public abstract boolean shouldUnique();
 
     @Override
     public void tick() {
@@ -96,8 +135,18 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
                 ChunkData.removeTempAdjust(world, getPos());
             }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
+        	if(shouldUnique()) {
+        		if(checkInterval<=0) {
+        			if(owner!=null)
+        				checkInterval=10;
+        			isLocked=!shouldWork();
+        		}else checkInterval--;
+        	}
             final boolean activeBeforeTick = getIsActive();
-            tickFuel();
+            if(!isLocked)
+            	tickFuel();	
+            else
+            	this.setActive(false);
             // set activity status
             final boolean activeAfterTick = getIsActive();
             if (activeBeforeTick != activeAfterTick) {
@@ -191,5 +240,8 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         if (master() != null)
             master().isUserOperated = isUserOperated;
     }
-
+    protected void setAllActive(boolean state) {
+        forEachBlock(s->s.setActive(state));
+    }
+    public abstract void forEachBlock(Consumer<T> consumer);
 }
