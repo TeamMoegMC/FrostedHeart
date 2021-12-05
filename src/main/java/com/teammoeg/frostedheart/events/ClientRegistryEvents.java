@@ -67,14 +67,6 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class ClientRegistryEvents {
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
-    	JsonParser gs=new JsonParser();
-    	JsonObject jo=gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID+".mixins.json"))).getAsJsonObject();
-    	JsonArray mixins=jo.get("mixins").getAsJsonArray();
-    	
-        if(!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone"))||
-        !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))||
-        !mixins.contains(new JsonPrimitive( "projecte.MixinTransmutationTablet")))
-        	throw new ChException.作弊者禁止进入();
         // Register screens
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
