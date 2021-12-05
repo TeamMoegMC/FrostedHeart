@@ -83,7 +83,7 @@ public class RecipeFueling extends SpecialRecipe {
             }
         }
 
-        if (!armoritem.isEmpty() && !buffstack.isEmpty()&&CoalHandStove.getAshAmount(armoritem)<1600) {
+        if (!armoritem.isEmpty() && !buffstack.isEmpty()&&CoalHandStove.getAshAmount(armoritem)<800&&CoalHandStove.getFuelAmount(armoritem)+fuel<=CoalHandStove.max_fuel) {
             ItemStack ret = armoritem.copy();
             CoalHandStove.setFuelAmount(ret,CoalHandStove.getFuelAmount(ret)+fuel);
             return ret;

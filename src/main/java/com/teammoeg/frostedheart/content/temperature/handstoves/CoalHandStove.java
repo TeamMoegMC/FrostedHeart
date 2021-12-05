@@ -38,9 +38,9 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
 		list.add(GuiUtils.translateTooltip("handstove.add_fuel").mergeStyle(TextFormatting.GRAY));
-		list.add(GuiUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.GRAY));
-		list.add(GuiUtils.translateTooltip("handstove.ash",getAshAmount(stack)/1600).mergeStyle(TextFormatting.GRAY));
-		list.add(GuiUtils.translateTooltip("handstove.fuel",getFuelAmount(stack),max_fuel).mergeStyle(TextFormatting.GRAY));
+		if(getAshAmount(stack)>=800)
+		list.add(GuiUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.RED));
+		list.add(GuiUtils.translateTooltip("handstove.fuel",getFuelAmount(stack)/2).mergeStyle(TextFormatting.GRAY));
     }
 
     @Override
@@ -48,12 +48,12 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 		int fuel=getFuelAmount(stack);
 		if(fuel>=2) {
 			int ash=getAshAmount(stack);
-			if(ash<=max_fuel*2) {
+			if(ash<=800) {
 				fuel-=2;
 				ash+=2;
 				setFuelAmount(stack, fuel);
 				setAshAmount(stack, ash);
-		        if (bodyTemp > 0) {
+		        if (bodyTemp < 0) {
 		            return this.getMax(stack);
 		        }
 			}
@@ -69,7 +69,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     }
     public static void setAshAmount(ItemStack is,int v) {
     	is.getOrCreateTag().putInt("ash",v);
-    	if(v>=max_fuel*2)
+    	if(v>=max_fuel)
     		is.getTag().putInt("CustomModelData", 2);
     }
     public static void setFuelAmount(ItemStack is,int v) {
@@ -85,14 +85,14 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	}
 	@Override
 	public UseAction getUseAction(ItemStack stack) {
-		return UseAction.BLOCK;
+		return UseAction.NONE;
 	}
 	ResourceLocation ashitem=new ResourceLocation("frostedheart","ash");
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
 		ItemStack stack = playerIn.getHeldItem(handIn);
 		ActionResult<ItemStack> FAIL = new ActionResult<>(ActionResultType.FAIL,stack);
-		if(getAshAmount(playerIn.getHeldItem(handIn))>=1600) {
+		if(getAshAmount(playerIn.getHeldItem(handIn))>=800) {
 			playerIn.setActiveHand(handIn);
 			return new ActionResult<>(ActionResultType.SUCCESS, stack);
 		}
@@ -101,9 +101,9 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	@Override
 	public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
 		int ash=getAshAmount(stack);
-		if(ash>=1600) {
+		if(ash>=800) {
 			ITag<Item> item=TagCollectionManager.getManager().getItemTags().get(ashitem);
-			setAshAmount(stack,ash-1600);
+			setAshAmount(stack,ash-800);
 			if(item!=null&&entityLiving instanceof PlayerEntity&&!item.getAllElements().isEmpty()) {
 				ItemStack ret=new ItemStack(item.getAllElements().get(0));
 				if(!((PlayerEntity)entityLiving).addItemStackToInventory(ret)) 
@@ -121,6 +121,10 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	}
 	@Override
     public float getMax(ItemStack stack) {
-        return getFuelAmount(stack)>0?0.01F:0;
+        return getFuelAmount(stack)>0?0.012F:0;
     }
+	@Override
+	public boolean canHandHeld() {
+		return true;
+	}
 }

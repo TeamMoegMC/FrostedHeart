@@ -181,7 +181,7 @@ public class FHContent {
         static Properties createProps() {
         	return new Item.Properties().group(FHMain.itemGroup);
         }
-        public static Item hand_stove=new CoalHandStove("hand_stove",createProps());
+        public static Item hand_stove=new CoalHandStove("hand_stove",createProps().defaultMaxDamage(10));
         public static Item coal_stick = new FHBaseItem("coal_stick", createProps());
         public static Item charcoal_stick = new FHBaseItem("charcoal_stick", createProps());
         public static Item energy_core = new FHBaseItem("energy_core", createProps());

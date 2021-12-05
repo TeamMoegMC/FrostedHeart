@@ -124,7 +124,7 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 	}
 	@Override
     public float getMax(ItemStack stack) {
-        return stack.getDamage()>0?0.005F:0;
+        return stack.getDamage()>0?0.001F:0;
     }
 
 }
