@@ -29,7 +29,8 @@ public enum FHDataType {
     Block(new DataType<>(BlockTempData.class,"temperature", "block")),
     Drink(new DataType<>(DrinkTempData.class,"temperature", "drink")),
     Cup  (new DataType<>(      CupData.class,"temperature", "cup"  )),
-    World(new DataType<>(WorldTempData.class,"temperature", "world"));
+    World(new DataType<>(WorldTempData.class,"temperature", "world")),
+	ResearchRecipe(new DataType<>(ResearchRecipe.class,"research", "crafting"));
 
     static class DataType<T extends JsonDataHolder> {
         final Class<T> dataCls;

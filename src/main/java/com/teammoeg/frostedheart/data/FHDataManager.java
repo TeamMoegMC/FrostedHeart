@@ -29,7 +29,9 @@ import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -63,6 +65,7 @@ public class FHDataManager {
     public static final ResourceMap<BlockTempData> blockData = new ResourceMap<>();
     public static final ResourceMap<DrinkTempData> drinkData = new ResourceMap<>();
     public static final ResourceMap<WorldTempData> worldData = new ResourceMap<>();
+    public static final ResourceMap<ResearchRecipe> researchCraftData = new ResourceMap<>();
     public static final ResourceMap<CupData> cupData = new ResourceMap<>();
     public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
     public static boolean synched = false;
@@ -76,6 +79,7 @@ public class FHDataManager {
         ALL_DATA.put(FHDataType.Drink, drinkData);
         ALL_DATA.put(FHDataType.World, worldData);
         ALL_DATA.put(FHDataType.Cup, cupData);
+        ALL_DATA.put(FHDataType.ResearchRecipe, researchCraftData);
     }
 
     public static final void reset() {
@@ -159,5 +163,11 @@ public class FHDataManager {
         if (dtd != null)
             return dtd.getHeat();
         return -0.3f;
+    }
+    public static boolean testRecipe(IRecipe<?> recipe,PlayerEntity pe) {
+        ResearchRecipe dtd = researchCraftData.get(recipe.getId());
+        if (dtd != null)
+            return dtd.test(pe);
+        return true;
     }
 }
