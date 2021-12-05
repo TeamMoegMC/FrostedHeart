@@ -104,6 +104,10 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 		if(ash>=800) {
 			ITag<Item> item=TagCollectionManager.getManager().getItemTags().get(ashitem);
 			setAshAmount(stack,ash-800);
+	    	if(getFuelAmount(stack)<2)
+	    		stack.getTag().putInt("CustomModelData", 0);
+	    	else
+	    		stack.getTag().putInt("CustomModelData", 1);
 			if(item!=null&&entityLiving instanceof PlayerEntity&&!item.getAllElements().isEmpty()) {
 				ItemStack ret=new ItemStack(item.getAllElements().get(0));
 				if(!((PlayerEntity)entityLiving).addItemStackToInventory(ret)) 
