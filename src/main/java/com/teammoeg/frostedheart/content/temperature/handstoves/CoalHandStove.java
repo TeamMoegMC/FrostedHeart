@@ -121,7 +121,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	}
 	@Override
     public float getMax(ItemStack stack) {
-        return getFuelAmount(stack)>0?0.012F:0;
+        return getFuelAmount(stack)>0?0.015F:0;
     }
 	@Override
 	public boolean canHandHeld() {
