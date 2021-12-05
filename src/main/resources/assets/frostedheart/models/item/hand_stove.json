@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "frostedheart:item/hand_warmer_copper_off"
+  },
+  "overrides":[
+  	{"predicate":{"custom_model_data":1},"model":"frostedheart:item/hand_stove_on"},
+  	{"predicate":{"custom_model_data":2},"model":"frostedheart:item/hand_stove_ash"}
+  ]
+}
