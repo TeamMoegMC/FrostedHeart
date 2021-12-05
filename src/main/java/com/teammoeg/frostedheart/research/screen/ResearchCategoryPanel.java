@@ -12,6 +12,7 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.util.text.StringTextComponent;
 
 public class ResearchCategoryPanel extends Panel {
 	public static final int CATEGORY_WIDTH = 100, CATEGORY_HEIGHT = 22;
@@ -99,6 +100,8 @@ public class ResearchCategoryPanel extends Panel {
 		if (renderInside) {
 			GuiHelper.popScissor(getScreen());
 		}
+
+		theme.drawString(matrixStack, new StringTextComponent("Current: ").appendSibling(researchScreen.selectedCategory.getName()), w - 100, y + 30);
 	}
 
 }

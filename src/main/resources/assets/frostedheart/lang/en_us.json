@@ -87,6 +87,9 @@
   "gui.frostedheart.generator.overdrive.on": "Turn On Overdrive",
   "gui.frostedheart.generator.overdrive.off": "Turn Off Overdrive",
   "gui.frostedheart.temperature.desc": "Average Temperature",
+  "gui.frostedheart.research_progress": "Research Progress",
+  "gui.frostedheart.research_time_left": "Time Remaining: %s Minutes",
+  "gui.frostedheart.research_hierarchy": "Research Relationship",
   "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
   "gui.jei.category.frostedheart.generator_steam":"Generator Heat Medium",
   "gui.jei.category.frostedheart.charger":"Steam Processing",
@@ -158,5 +161,8 @@
   "research.category.desc.frostedheart.industry": "Build the base that supports you.",
 
   "research.category.frostedheart.exploration": "Exploration",
-  "research.category.desc.frostedheart.exploration": "Explore the world and find clues to unveil the mystery."
+  "research.category.desc.frostedheart.exploration": "Explore the world and find clues to unveil the mystery.",
+
+  "research.generator_t1.name": "Generator T1",
+  "research.generator_t1.desc": "Your first soil heating device."
 }

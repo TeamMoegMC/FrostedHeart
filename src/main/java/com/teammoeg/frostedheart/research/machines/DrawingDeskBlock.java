@@ -23,6 +23,7 @@ import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchLevel;
 import com.teammoeg.frostedheart.research.screen.ResearchScreen;
 
@@ -154,7 +155,8 @@ public class DrawingDeskBlock extends FHBaseBlock {
                 pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
             }
         }
-        ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK);
+        //todo: actually add some server-side functions in TE to provide the level and in progress research
+        ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t1"));
         screen.openGui();
         return ActionResultType.SUCCESS;
     }
