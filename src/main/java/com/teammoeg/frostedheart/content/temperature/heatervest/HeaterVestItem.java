@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.temperature;
+package com.teammoeg.frostedheart.content.temperature.heatervest;
 
 import java.util.List;
 
@@ -27,7 +27,6 @@ import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
-import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestModel;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.client.renderer.entity.model.BipedModel;
@@ -56,7 +55,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
 
     @Override
     public int getMaxEnergyStored(ItemStack container) {
-        return 15000;
+        return 30000;
     }
 
     @Nullable

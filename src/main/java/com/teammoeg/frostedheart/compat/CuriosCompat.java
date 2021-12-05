@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.compat;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-import com.teammoeg.frostedheart.content.temperature.HeaterVestItem;
+import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
