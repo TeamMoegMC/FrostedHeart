@@ -35,6 +35,11 @@ public class Research extends FHRegisteredItem{
     private ResearchCategory category;
     private ArrayList<ItemStack> requireItems=new ArrayList<>();
     private int points;
+    private int requiredTicks;
+    private int finishedTicks;
+    // the time required to complete research after starting research
+    // with required items are consumed and clues are found and other requirements satisfied
+
     @SafeVarargs
 	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
         this(path, category, Items.GRASS_BLOCK, parents);
@@ -49,6 +54,8 @@ public class Research extends FHRegisteredItem{
         this.desc = new TranslationTextComponent("research."+id + ".desc");
         this.icon = icon;
         this.category = category;
+        this.requiredTicks = 1200;
+        this.finishedTicks = 600;
     }
     public String getId() {
         return id;
@@ -82,6 +89,19 @@ public class Research extends FHRegisteredItem{
     public ResearchCategory getCategory() {
         return category;
     }
+
+    public int getRequiredTicks() {
+        return requiredTicks;
+    }
+
+    public int getFinishedTicks() {
+        return finishedTicks;
+    }
+
+    public float getProgressFraction() {
+        return (float) finishedTicks / requiredTicks;
+    }
+
     public ResearchData getData(Team team) {
     	return ResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
     }

@@ -5,10 +5,7 @@ import static com.teammoeg.frostedheart.research.screen.ResearchCategoryPanel.CA
 import javax.annotation.Nullable;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchCategories;
-import com.teammoeg.frostedheart.research.ResearchCategory;
-import com.teammoeg.frostedheart.research.ResearchLevel;
+import com.teammoeg.frostedheart.research.*;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -21,17 +18,22 @@ public class ResearchScreen extends BaseScreen {
     public ResearchCategoryPanel researchCategoryPanel;
     public ResearchListPanel researchListPanel;
     public ResearchHierarchyPanel researchHierarchyPanel;
+    public ResearchProgressPanel progressPanel;
     public ResearchCategory selectedCategory;
     public ResearchLevel researchLevel;
     public Research selectedResearch;
+    public Research inProgressResearch;
 
-    public ResearchScreen(PlayerEntity player, ResearchLevel level) {
+    public ResearchScreen(PlayerEntity player, ResearchLevel level, Research progress) {
         this.player = player;
         this.researchLevel = level;
         researchCategoryPanel = new ResearchCategoryPanel(this);
         researchListPanel = new ResearchListPanel(this);
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
+        progressPanel = new ResearchProgressPanel(this);
         selectCategory(ResearchCategories.HEATING);
+        inProgressResearch = progress; // nullable
+        selectedResearch = FHResearch.researches.getByName("generator_t1");
     }
 
     @Override
@@ -39,6 +41,7 @@ public class ResearchScreen extends BaseScreen {
         add(researchCategoryPanel);
         add(researchListPanel);
         add(researchHierarchyPanel);
+        add(progressPanel);
     }
 
     @Override
@@ -47,6 +50,7 @@ public class ResearchScreen extends BaseScreen {
     	researchCategoryPanel.setPosAndSize(PADDING,PADDING, this.width-PADDING*2, CAT_PANEL_HEIGHT);
     	researchListPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING*5 + CAT_PANEL_HEIGHT + IN_PROGRESS_HEIGHT));
     	researchHierarchyPanel.setPosAndSize(PADDING + RESEARCH_LIST_WIDTH + PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, width - (PADDING*5 + RESEARCH_LIST_WIDTH), height - (PADDING*4 + CAT_PANEL_HEIGHT));
+        progressPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, 80);
         return true;
     }
 
@@ -62,6 +66,14 @@ public class ResearchScreen extends BaseScreen {
             selectedResearch = research;
             researchCategoryPanel.refreshWidgets();
         }
+    }
+
+    public Research getInProgressResearch() {
+        return inProgressResearch;
+    }
+
+    public void setInProgressResearch(Research research) {
+        inProgressResearch = research;
     }
 
     public static final int IN_PROGRESS_HEIGHT = 80;
