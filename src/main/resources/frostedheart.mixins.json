@@ -6,6 +6,7 @@
   "refmap": "frostedheart.refmap.json",
   "mixins": [
     "immersiveengineering.HempBlockMixin",
+    "immersiveengineering.RotationUtilMixin",
     "jei.MixinCommandUtilServer",
     "minecraft.BiomeMixin",
     "minecraft.CampfireBlockMixin",

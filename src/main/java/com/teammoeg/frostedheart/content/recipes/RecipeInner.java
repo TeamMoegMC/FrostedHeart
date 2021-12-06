@@ -82,7 +82,7 @@ public class RecipeInner extends SpecialRecipe {
 				if (hasArmor)
 					return false;
 				EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
-				if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+				if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND&&!ItemNBTHelper.getString(itemstack,"inner_cover").isEmpty());
 					hasArmor = true;
 			}
 		}
@@ -120,7 +120,7 @@ public class RecipeInner extends SpecialRecipe {
 		if (!armoritem.isEmpty() && !buffstack.isEmpty()) {
 			ItemStack ret = armoritem.copy();
 			ItemNBTHelper.putString(ret, "inner_cover", buffstack.getItem().getRegistryName().toString());
-			INBT nbt = buffstack.getTag();
+			CompoundNBT nbt = buffstack.getTag();
 			ret.getTag().put("inner_cover_tag", nbt != null ? nbt : new CompoundNBT());
 			return ret;
 		}
