@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -110,8 +111,7 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 	    		stack.getTag().putInt("CustomModelData", 1);
 			if(item!=null&&entityLiving instanceof PlayerEntity&&!item.getAllElements().isEmpty()) {
 				ItemStack ret=new ItemStack(item.getAllElements().get(0));
-				if(!((PlayerEntity)entityLiving).addItemStackToInventory(ret)) 
-					worldIn.addEntity(new ItemEntity(worldIn,entityLiving.getPosition().getX(),entityLiving.getPosition().getY(),entityLiving.getPosition().getZ(),ret));
+				FHUtils.giveItem((PlayerEntity) entityLiving, ret);
 			}
 		}
 		return stack;

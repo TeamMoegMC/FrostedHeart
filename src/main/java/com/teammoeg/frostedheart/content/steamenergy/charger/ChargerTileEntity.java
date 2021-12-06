@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
@@ -89,10 +90,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 	                    power -= cr.cost;
 	                    is.setCount(is.getCount() - cr.input.getCount());
 	                    ItemStack gain = cr.output.copy();
-	
-	                    if (!pe.inventory.addItemStackToInventory(gain)) {
-	                        pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(), pe.getPosX(), pe.getPosY(), pe.getPosZ(), gain));
-	                    }
+	                    FHUtils.giveItem(pe, gain);
 	                    markDirty();
 	                    this.markContainingBlockForUpdate(null);
                 	}
@@ -109,10 +107,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 	                        pe.giveExperiencePoints((int) sr.getExperience());
 	                        is.setCount(is.getCount() - 1);
 	                        ItemStack gain = sr.getCraftingResult(null).copy();
-	
-	                        if (!pe.inventory.addItemStackToInventory(gain)) {
-	                            pe.getEntityWorld().addEntity(new ItemEntity(pe.getEntityWorld(), pe.getPosX(), pe.getPosY(), pe.getPosZ(), gain));
-	                        }
+	                        FHUtils.giveItem(pe, gain);
 	                        markDirty();
 	                        this.markContainingBlockForUpdate(null);
                         }

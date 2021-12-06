@@ -11,6 +11,10 @@ import net.minecraft.world.World;
 @Mixin(RotationUtil.class)
 public class RotationUtilMixin {
 	private final static ResourceLocation tag=new ResourceLocation("immersiveengineering","no_rotation");
+    /**
+     * @author khjxiaogu
+     * @reason fix some rotation bug
+     */
 	@Overwrite(remap=false)
 	public static boolean rotateBlock(World world, BlockPos pos, boolean inverse)
 	{

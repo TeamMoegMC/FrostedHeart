@@ -66,6 +66,14 @@ public class RecipeInnerDismantle extends SpecialRecipe {
 		}
 		return hasArmor;
 	}
+	public static ItemStack tryDismantle(ItemStack item) {
+		EquipmentSlotType type = MobEntity.getSlotForItemStack(item);
+		if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
+			if(item.hasTag()&&!item.getTag().getString("inner_cover").isEmpty())
+				return RecipeInnerDismantle.getDismantledResult(item);
+		}
+		return ItemStack.EMPTY;
+	}
 	public static ItemStack getDismantledResult(ItemStack armoritem) {
 		if(armoritem.hasTag()) {
 			CompoundNBT tags = armoritem.getTag();

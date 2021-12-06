@@ -34,6 +34,7 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.SpecialRecipe;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
@@ -82,7 +83,10 @@ public class RecipeInner extends SpecialRecipe {
 				if (hasArmor)
 					return false;
 				EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
-				if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND&&!ItemNBTHelper.getString(itemstack,"inner_cover").isEmpty());
+				if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+					if(itemstack.hasTag()) {
+						if(!itemstack.getTag().getString("inner_cover").isEmpty())return false;
+					}
 					hasArmor = true;
 			}
 		}
@@ -112,6 +116,9 @@ public class RecipeInner extends SpecialRecipe {
 						return ItemStack.EMPTY;
 					EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
 					if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+						if(itemstack.hasTag()) {
+							if(!itemstack.getTag().getString("inner_cover").isEmpty())return ItemStack.EMPTY;
+						}
 						armoritem = itemstack;
 				}
 			}
@@ -125,6 +132,12 @@ public class RecipeInner extends SpecialRecipe {
 			return ret;
 		}
 		return ItemStack.EMPTY;
+	}
+
+	@Override
+	public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
+		NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
+		return nonnulllist;
 	}
 
 	public static Map<ResourceLocation, RecipeInner> recipeList = Collections.emptyMap();

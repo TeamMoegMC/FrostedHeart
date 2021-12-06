@@ -8,6 +8,7 @@
     "immersiveengineering.HempBlockMixin",
     "immersiveengineering.RotationUtilMixin",
     "jei.MixinCommandUtilServer",
+    "minecraft.ItemStackMixin",
     "minecraft.BiomeMixin",
     "minecraft.CampfireBlockMixin",
     "minecraft.CampfireTileEntityMixin",

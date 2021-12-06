@@ -32,6 +32,9 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -48,7 +51,10 @@ public class FHUtils {
     public static <T> T notNull() {
         return null;
     }
-
+    public static void giveItem(PlayerEntity pe,ItemStack is) {
+		if(!pe.addItemStackToInventory(is)) 
+			pe.world.addEntity(new ItemEntity(pe.world,pe.getPosition().getX(),pe.getPosition().getY(),pe.getPosition().getZ(),is));
+    }
     public static void registerSimpleCapability(Class<?> clazz) {
         CapabilityManager.INSTANCE.register(clazz, new NoopStorage<>(), () -> {
             throw new UnsupportedOperationException("Creating default instances is not supported. Why would you ever do this");
