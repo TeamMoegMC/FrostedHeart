@@ -30,7 +30,7 @@ public class FHNBT {
     public static ItemStack ArmorNBT(ItemStack stack) {
         stack.getOrCreateTag().putString("inner_cover", "frostedheart:gambeson");
         stack.getTag().putBoolean("inner_bounded",true);//bound lining to armor
-        stack.setDamage(72);
+        stack.setDamage(stack.getMaxDamage()-100);
         return stack;
     }
     public static ItemStack Damage(ItemStack stack,int dmg) {

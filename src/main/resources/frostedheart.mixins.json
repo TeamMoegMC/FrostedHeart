@@ -51,6 +51,8 @@
     "create.MixinDeployerMovementBehaviour",
     "create.MixinContraption",
     "create.MixinToolboxInventory",
+    "create.MixinSawTileEntity",
+    "create.MixinSawMovementBehaviour",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin"
   ],
