@@ -63,5 +63,6 @@ public class FHOreFeatureConfig implements IFeatureConfig {
         public static final FHRuleTest stibnite = new FHRuleTest(new Block[]{RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get(), RankineBlocks.GRANODIORITE.get(), RankineBlocks.GRAY_GRANITE.get()});
         public static final FHRuleTest magnesite = new FHRuleTest(new Block[]{RankineBlocks.CHALK.get(), RankineBlocks.CARBONACEOUS_SHALE.get(), RankineBlocks.DOLOSTONE.get(), RankineBlocks.TUFA_LIMESTONE.get(), RankineBlocks.WHITE_MARBLE.get()});
         public static final FHRuleTest gold = new FHRuleTest(new Block[]{Blocks.DIORITE, RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), Blocks.GRANITE, RankineBlocks.PEGMATITE.get()});
+        public static final FHRuleTest anthracite = new FHRuleTest(new Block[]{RankineBlocks.WHITE_MARBLE.get(), RankineBlocks.SLATE.get(), RankineBlocks.CARBONACEOUS_SHALE.get()});
     }
 }
