@@ -48,7 +48,7 @@ public class ResearchListPanel extends Panel {
 	            ResearchButton button = new ResearchButton(this, r);
 	            add(button);
 	            button.setPos(0,offset);
-	            offset += (RESEARCH_HEIGHT + 4);
+	            offset += (RESEARCH_HEIGHT);
 	        }
 	        this.setHeight(offset);
 		}
