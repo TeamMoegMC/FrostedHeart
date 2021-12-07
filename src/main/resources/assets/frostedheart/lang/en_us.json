@@ -142,6 +142,7 @@
   "tooltip.frostedheart.handstove.add_fuel":"Craft with any coal sticks to fuel.",
   "tooltip.frostedheart.handstove.trash_ash":"Full of ash!Click and hold at ground to deplet ash.",
   "tooltip.frostedheart.handstove.fuel":"Burn time remaining:%s s",
+  "tooltip.frostedheart.research_is_locked":"Research is locked! Finish all of its prerequisites first: ",
 
   "effect.frostedheart.hypothermia": "Hypothermia",
   "effect.frostedheart.hyperthermia": "Hyperthermia",

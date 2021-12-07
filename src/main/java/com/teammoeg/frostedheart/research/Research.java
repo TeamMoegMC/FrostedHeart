@@ -78,7 +78,7 @@ public class Research extends FHRegisteredItem{
     	children.add(child);
     }
     public Set<Research> getChildren() {
-        return parents.stream().map(r->r.get()).collect(Collectors.toSet());
+        return children.stream().map(r->r.get()).collect(Collectors.toSet());
     }
     public Set<Research> getParents() {
         return parents.stream().map(r->r.get()).collect(Collectors.toSet());
