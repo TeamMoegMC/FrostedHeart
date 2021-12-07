@@ -96,7 +96,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
         vars.putLong("generator_loc",master().pos.toLong());
     }
-    public void setOwner(UUID onwer){
+    public void setOwner(UUID owner){
     	forEachBlock(s->s.owner=owner);
     }
     public boolean shouldWork() {
