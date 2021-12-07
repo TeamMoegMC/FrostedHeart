@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -17,11 +18,22 @@ public class FHResearch {
 		cnbt.put("researches", researches.serialize());
 		return cnbt;
 	}
-	public void prepareReload() {
+	public static void register(Research t) {
+		researches.register(t);
+	}
+	public static void register(AbstractClue t) {
+		clues.register(t);
+	}
+	//called before reload
+	public static void prepareReload() {
 		researches.prepareReload();
 		clues.prepareReload();
 		allResearches=LazyOptional.of(()->researches.all());
 		allClues=LazyOptional.of(()->clues.all());
+	}
+	//called after reload
+	public static void indexResearches() {
+		allResearches.orElse(Collections.emptyList()).forEach(c->c.doIndex());
 	}
 	public static void load(CompoundNBT cnbt) {
 		clues.deserialize(cnbt.getList("clues",0));
