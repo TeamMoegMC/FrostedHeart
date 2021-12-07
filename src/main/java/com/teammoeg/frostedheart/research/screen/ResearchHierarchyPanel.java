@@ -28,7 +28,15 @@ public class ResearchHierarchyPanel extends Panel {
         for (Research parent : researchScreen.selectedResearch.getParents()) {
             ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
             add(parentButton);
-            parentButton.setPos((width / 2 - 32 * k) / 2 + (k - 1) * 32, (height / 2 - 24 / 2));
+            parentButton.setPos((width / 2 - 34 * k) / 2 + (k - 1) * 34, (height / 2 - 24) / 2);
+            k++;
+        }
+
+        k = 1;
+        for (Research child : researchScreen.selectedResearch.getChildren()) {
+            ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
+            add(childButton);
+            childButton.setPos((width / 2 - 34 * k) / 2 + (k - 1) * 34, (height / 2 - 24) / 2 + height / 2);
             k++;
         }
     }
