@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.research.screen;
 
+import java.util.Set;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -30,22 +32,37 @@ public class ResearchHierarchyPanel extends Panel {
         ResearchDetailButton button = new ResearchDetailButton(this, researchScreen.selectedResearch);
         add(button);
         button.setPos((width - 64) / 2, (height - 48) / 2);
-
+        int jointx=button.posX+button.width/2;
+        int upjointy=button.posY;
+        int downjointy=upjointy+button.height;
         int k = 0;
-        for (Research parent : researchScreen.selectedResearch.getParents()) {
+        Set<Research> parents=researchScreen.selectedResearch.getParents();
+        int psize=parents.size()>4?5:parents.size();
+        for (Research parent : parents) {
             if (k > 4) break;
             ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
             add(parentButton);
-            parentButton.setPos((width - 34 * researchScreen.selectedResearch.getParents().size()) / 2 + k * 34, (height / 2 - 24) / 2);
+            parentButton.setPos((width - 34 * psize) / 2 + k * 34, (height / 2 - 24) / 2);
+            Line l=new Line(this);
+            l.color=0xFFFF0000;//TODO: for debug use
+            add(l);
+            l.setPosAndSize(jointx,upjointy,parentButton.posX+parentButton.width/2-jointx,parentButton.posY+parentButton.height-upjointy);
             k++;
         }
 
         k = 0;
-        for (Research child : researchScreen.selectedResearch.getChildren()) {
+        Set<Research> children=researchScreen.selectedResearch.getChildren();
+        int csize=children.size()>4?5:children.size();
+        for (Research child : children) {
             if (k > 4) break;
             ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
             add(childButton);
-            childButton.setPos((width - 34 * researchScreen.selectedResearch.getChildren().size()) / 2 + k * 34, (height / 2 - 24) / 2 + height / 2);
+            childButton.setPos((width - 34 * csize) / 2 + k * 34, (height / 2 - 24) / 2 + height / 2);
+            Line l=new Line(this);
+            add(l);
+            l.color=0xFF00FF00;//TODO: for debug use
+            l.setPosAndSize(jointx,downjointy,childButton.posX+childButton.width/2-jointx,childButton.posY-downjointy);
+            
             k++;
         }
     }
@@ -66,7 +83,6 @@ public class ResearchHierarchyPanel extends Panel {
         // title
         theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 10, y + 10);
         // horizontal line
-        FHGuiHelper.drawLine(matrixStack,0xFF000000, (width - 64) / 2, (height - 48) / 2,0,0);
         //GuiHelper.drawRectWithShade(matrixStack, x + 10, y + (w - 64) / 2 - 5, w - 20, 2, Color4I.BLACK, 128);
 
     }
@@ -98,7 +114,6 @@ public class ResearchHierarchyPanel extends Panel {
             super.drawBackground(matrixStack, theme, x, y, w, h);
             this.drawIcon(matrixStack, theme, x + 16, y, 32, 32);
             theme.drawString(matrixStack, research.getName(), x + (w - theme.getStringWidth(research.getName())) / 2, y + 32);
-            GuiHelper.drawRectWithShade(matrixStack, x + 31, y - 5, 2, 5, Color4I.BLACK, 128);
 
         }
     }
@@ -139,7 +154,6 @@ public class ResearchHierarchyPanel extends Panel {
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
             super.drawBackground(matrixStack, theme, x, y, w, h);
             this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y, 16, 16);
-            GuiHelper.drawRectWithShade(matrixStack, x + (w - 16) / 2 + 16/2 - 1, y + 16 + 5, 2, 5, Color4I.BLACK, 128);
         }
     }
 }

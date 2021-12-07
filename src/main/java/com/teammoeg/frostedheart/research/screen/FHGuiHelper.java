@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3d;
@@ -27,7 +28,7 @@ public class FHGuiHelper {
 	public static class RenderStateAccess extends RenderState {
 		public static RenderType.State getState() {
 			return RenderType.State.getBuilder().line(new RenderState.LineState(OptionalDouble.of(4)))//this is line width
-					.layer(VIEW_OFFSET_Z_LAYERING).target(ITEM_ENTITY_TARGET).writeMask(COLOR_DEPTH_WRITE).build(true);
+					.layer(VIEW_OFFSET_Z_LAYERING).target(MAIN_TARGET).writeMask(COLOR_DEPTH_WRITE).build(true);
 		}
 
 		public RenderStateAccess(String p_i225973_1_, Runnable p_i225973_2_, Runnable p_i225973_3_) {
