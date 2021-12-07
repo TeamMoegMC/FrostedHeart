@@ -78,10 +78,10 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 
     @Override
     public void disassemble() {
+        ChunkData.removeTempAdjust(world, getPos());
         super.disassemble();
         if(shouldUnique())
         	master().unregist();
-        ChunkData.removeTempAdjust(world, getPos());
     }
     public void unregist() {
     	if(owner==null)return;
