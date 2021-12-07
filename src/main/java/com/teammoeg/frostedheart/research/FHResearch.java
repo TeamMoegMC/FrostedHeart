@@ -1,11 +1,11 @@
 package com.teammoeg.frostedheart.research;
 
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.common.util.LazyOptional;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.common.util.LazyOptional;
 
 public class FHResearch {
 	public static ResearchRegistry researches=new ResearchRegistry();

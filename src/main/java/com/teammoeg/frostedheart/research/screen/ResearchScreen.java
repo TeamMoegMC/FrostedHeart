@@ -1,15 +1,14 @@
 package com.teammoeg.frostedheart.research.screen;
 
-import static com.teammoeg.frostedheart.research.screen.ResearchCategoryPanel.CAT_PANEL_HEIGHT;
-
-import javax.annotation.Nullable;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.*;
-
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import net.minecraft.entity.player.PlayerEntity;
+
+import javax.annotation.Nullable;
+
+import static com.teammoeg.frostedheart.research.screen.ResearchCategoryPanel.CAT_PANEL_HEIGHT;
 
 public class ResearchScreen extends BaseScreen {
 

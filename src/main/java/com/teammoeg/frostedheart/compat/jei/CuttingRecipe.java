@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.compat.jei;
 
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;

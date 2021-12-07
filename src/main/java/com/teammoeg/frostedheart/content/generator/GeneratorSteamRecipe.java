@@ -18,9 +18,6 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import java.util.Collections;
-import java.util.Map;
-
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
@@ -29,6 +26,9 @@ import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
+
+import java.util.Collections;
+import java.util.Map;
 
 public class GeneratorSteamRecipe extends IESerializableRecipe {
     public static IRecipeType<GeneratorSteamRecipe> TYPE;

@@ -18,21 +18,13 @@
 
 package com.teammoeg.frostedheart.content.temperature;
 
-import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
-
-import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.fluids.PotionFluid;
 import com.simibubi.create.content.contraptions.fluids.potion.PotionFluidHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.data.FHDataManager;
-
-import blusunrize.immersiveengineering.common.util.fluids.PotionFluid;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -49,13 +41,7 @@ import net.minecraft.potion.PotionUtils;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ITag;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
@@ -74,6 +60,12 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
+
+import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
 
 public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     final int unit;

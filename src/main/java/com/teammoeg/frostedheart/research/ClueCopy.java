@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.research;
 
-import javax.annotation.Nonnull;
-
 import net.minecraft.util.text.ITextComponent;
+
+import javax.annotation.Nonnull;
 
 public class ClueCopy extends AbstractClue {
 	AbstractClue parent;

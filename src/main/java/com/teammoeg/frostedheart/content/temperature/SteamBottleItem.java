@@ -18,15 +18,12 @@
 
 package com.teammoeg.frostedheart.content.temperature;
 
-import java.util.List;
-
+import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.FHDamageSources;
-
-import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -44,6 +41,8 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+
+import java.util.List;
 
 public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, ITempAdjustFood, EnergyHelper.IIEEnergyItem {
 

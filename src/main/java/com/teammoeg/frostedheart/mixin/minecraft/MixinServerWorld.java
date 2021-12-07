@@ -1,16 +1,15 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import java.util.function.Supplier;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.ISpawnWorldInfo;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+
+import java.util.function.Supplier;
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World {
 

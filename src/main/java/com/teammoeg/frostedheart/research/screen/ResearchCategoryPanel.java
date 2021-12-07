@@ -3,13 +3,10 @@ package com.teammoeg.frostedheart.research.screen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.StringTextComponent;
@@ -17,9 +14,7 @@ import net.minecraft.util.text.StringTextComponent;
 import static com.teammoeg.frostedheart.research.screen.ResearchScreen.PADDING;
 
 public class ResearchCategoryPanel extends Panel {
-	public static final int CATEGORY_WIDTH = 100, CATEGORY_HEIGHT = 22;
-	public static final int CAT_ICON_WIDTH = 18, CAT_ICON_HEIGHT = 18;
-	public static final int CAT_PANEL_WIDTH = 374, CAT_PANEL_HEIGHT = 40;
+	public static final int CAT_PANEL_HEIGHT = 40;
 
 	public ResearchScreen researchScreen;
 

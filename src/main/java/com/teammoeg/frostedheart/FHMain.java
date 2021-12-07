@@ -18,10 +18,6 @@
 
 package com.teammoeg.frostedheart;
 
-import java.io.InputStreamReader;
-
-import javax.annotation.Nonnull;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -42,7 +38,6 @@ import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
-
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -53,13 +48,15 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.CrashReportExtender;
 import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+
+import javax.annotation.Nonnull;
+import java.io.InputStreamReader;
 
 @Mod(FHMain.MODID)
 public class FHMain {

@@ -18,11 +18,10 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
-import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
-
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;

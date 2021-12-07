@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.Arrays;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -28,8 +26,6 @@ import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -46,6 +42,8 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+
+import java.util.Arrays;
 
 public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_campfire");

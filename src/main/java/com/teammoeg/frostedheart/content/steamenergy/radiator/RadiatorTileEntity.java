@@ -18,21 +18,14 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.radiator;
 
-import java.util.function.Consumer;
-
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.AbstractGenerator;
-import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
-import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
-import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
-import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
-import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
-
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.content.steamenergy.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
@@ -41,6 +34,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
+
+import java.util.function.Consumer;
 
 public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> implements
         IConnectable, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {

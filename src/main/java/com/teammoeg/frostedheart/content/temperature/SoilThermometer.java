@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.temperature;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;

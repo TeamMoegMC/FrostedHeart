@@ -22,7 +22,6 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHUtils;
-
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 

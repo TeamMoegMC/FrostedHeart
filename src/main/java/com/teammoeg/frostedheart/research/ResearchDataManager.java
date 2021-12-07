@@ -1,5 +1,10 @@
 package com.teammoeg.frostedheart.research;
 
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.storage.FolderName;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -7,11 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.storage.FolderName;
 
 public class ResearchDataManager {
 	MinecraftServer server;

@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.research.screen;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
-
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;

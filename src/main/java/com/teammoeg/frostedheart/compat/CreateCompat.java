@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.compat;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
-
 import net.minecraft.block.Blocks;
 
 public class CreateCompat {

@@ -18,13 +18,7 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.simibubi.create.content.contraptions.components.crank.HandCrankBlock;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ActionResultType;
@@ -33,6 +27,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(HandCrankBlock.class)
 public class HandCrankBlockMixin {

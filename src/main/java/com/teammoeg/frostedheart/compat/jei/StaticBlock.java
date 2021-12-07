@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.compat.jei;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.vector.Vector3f;
 //borrowed from create

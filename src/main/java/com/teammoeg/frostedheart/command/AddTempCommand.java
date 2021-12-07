@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.command;
 
-import java.util.Collection;
-
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -9,11 +7,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
-
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.BlockPosArgument;
 import net.minecraft.util.text.StringTextComponent;
+
+import java.util.Collection;
 
 public class AddTempCommand {
 	public static void register(CommandDispatcher<CommandSource> dispatcher) {

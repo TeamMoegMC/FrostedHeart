@@ -18,15 +18,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.function.BiFunction;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -45,6 +39,10 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.function.BiFunction;
 
 public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public DebugHeaterBlock(String name, Properties blockProps,

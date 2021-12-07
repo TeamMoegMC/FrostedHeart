@@ -18,17 +18,16 @@
 
 package com.teammoeg.frostedheart.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.HyperthermiaEffect;
 import com.teammoeg.frostedheart.climate.HypothermiaEffect;
 import com.teammoeg.frostedheart.climate.WetEffect;
-
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
 import net.minecraftforge.registries.IForgeRegistry;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FHEffects {
     public static List<Effect> EFFECTS = new ArrayList<Effect>();

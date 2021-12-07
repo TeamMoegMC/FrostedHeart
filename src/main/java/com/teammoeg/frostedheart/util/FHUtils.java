@@ -18,20 +18,10 @@
 
 package com.teammoeg.frostedheart.util;
 
-import java.util.Random;
-import java.util.function.ToIntFunction;
-
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.*;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -46,6 +36,10 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Random;
+import java.util.function.ToIntFunction;
 
 public class FHUtils {
     public static <T> T notNull() {

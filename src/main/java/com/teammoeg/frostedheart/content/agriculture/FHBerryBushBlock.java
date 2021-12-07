@@ -1,11 +1,8 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
-import java.util.Random;
-
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SweetBerryBushBlock;
 import net.minecraft.entity.Entity;
@@ -17,6 +14,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+
+import java.util.Random;
 
 public class FHBerryBushBlock extends SweetBerryBushBlock {
     public final String name;

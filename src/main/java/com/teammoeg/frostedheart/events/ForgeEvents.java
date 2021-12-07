@@ -18,8 +18,7 @@
 
 package com.teammoeg.frostedheart.events;
 
-import javax.annotation.Nonnull;
-
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
@@ -44,8 +43,6 @@ import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
-
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -79,7 +76,6 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
@@ -95,6 +91,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {

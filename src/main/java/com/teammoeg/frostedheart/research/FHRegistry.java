@@ -1,16 +1,16 @@
 package com.teammoeg.frostedheart.research;
 
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
+import net.minecraftforge.common.util.LazyOptional;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraftforge.common.util.LazyOptional;
 
 /**
  * Class FHRegistry.

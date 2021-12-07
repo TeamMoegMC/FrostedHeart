@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -25,8 +26,6 @@ import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHEffects;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;

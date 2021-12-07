@@ -18,16 +18,15 @@
 
 package com.teammoeg.frostedheart.content.cmupdate;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.teammoeg.frostedheart.FHContent;
-
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import com.teammoeg.frostedheart.FHContent;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class CMUpdateTileEntity extends IEBaseTileEntity implements ITickableTileEntity {
 	ResourceLocation registry;

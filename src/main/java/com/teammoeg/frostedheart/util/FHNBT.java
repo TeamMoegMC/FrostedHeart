@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.item.ItemStack;
 
 public class FHNBT {

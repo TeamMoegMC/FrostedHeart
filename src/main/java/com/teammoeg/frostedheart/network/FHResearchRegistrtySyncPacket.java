@@ -18,13 +18,12 @@
 
 package com.teammoeg.frostedheart.network;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.research.FHResearch;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.function.Supplier;
 // send when player join
 public class FHResearchRegistrtySyncPacket {
     private final CompoundNBT data;

@@ -18,17 +18,16 @@
 
 package com.teammoeg.frostedheart.network;
 
-import java.util.UUID;
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.UUID;
+import java.util.function.Supplier;
 // send when player join
 public class FHResearchProgressSyncPacket {
     private final CompoundNBT data;

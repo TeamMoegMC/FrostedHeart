@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-
 import net.minecraft.item.ItemStack;
 
 public class FoodTempData extends JsonDataHolder implements ITempAdjustFood {

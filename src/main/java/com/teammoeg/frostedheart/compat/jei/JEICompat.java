@@ -18,21 +18,10 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import javax.annotation.Nullable;
-
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
-import com.teammoeg.frostedheart.compat.jei.category.CuttingCategory;
-import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
-import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
-import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
-import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
+import com.teammoeg.frostedheart.compat.jei.category.*;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
@@ -40,21 +29,15 @@ import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
 import com.teammoeg.frostedheart.util.FHNBT;
-
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.helpers.IGuiHelper;
-import mezz.jei.api.registration.IGuiHandlerRegistration;
-import mezz.jei.api.registration.IRecipeCatalystRegistration;
-import mezz.jei.api.registration.IRecipeCategoryRegistration;
-import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
+import mezz.jei.api.registration.*;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
@@ -63,6 +46,10 @@ import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {

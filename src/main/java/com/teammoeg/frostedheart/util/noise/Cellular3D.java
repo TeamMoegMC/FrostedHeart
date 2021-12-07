@@ -19,10 +19,7 @@
 package com.teammoeg.frostedheart.util.noise;
 
 
-import static com.teammoeg.frostedheart.util.noise.NoiseUtil.PRIME_X;
-import static com.teammoeg.frostedheart.util.noise.NoiseUtil.PRIME_Y;
-import static com.teammoeg.frostedheart.util.noise.NoiseUtil.PRIME_Z;
-import static com.teammoeg.frostedheart.util.noise.NoiseUtil.RANDOM_VECTORS_3D;
+import static com.teammoeg.frostedheart.util.noise.NoiseUtil.*;
 
 public class Cellular3D implements INoise3D {
     private final int seed;

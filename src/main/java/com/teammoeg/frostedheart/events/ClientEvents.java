@@ -18,8 +18,7 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.util.text.TextFormatting.GRAY;
-
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
@@ -34,8 +33,6 @@ import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
@@ -57,6 +54,8 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {

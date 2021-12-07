@@ -18,16 +18,8 @@
 
 package com.teammoeg.frostedheart.content.tools.oredetect;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Random;
-import java.util.Set;
-import java.util.function.Predicate;
-
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
@@ -42,6 +34,13 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Set;
+import java.util.function.Predicate;
 
 public class CoreSpade extends FHBaseItem {
 	public static ResourceLocation otag = new ResourceLocation("forge:ores");

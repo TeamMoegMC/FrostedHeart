@@ -18,8 +18,11 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
-import java.util.List;
-
+import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.util.Utils;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -28,13 +31,6 @@ import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 import com.teammoeg.frostedheart.util.FHUtils;
-
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.util.Utils;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
@@ -48,6 +44,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
+
+import java.util.List;
 
 public class ChargerTileEntity extends IEBaseTileEntity implements
         IConnectable, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity, FHBlockInterfaces.IActiveState {
