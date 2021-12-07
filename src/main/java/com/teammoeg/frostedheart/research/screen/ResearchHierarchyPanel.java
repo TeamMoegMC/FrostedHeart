@@ -66,7 +66,8 @@ public class ResearchHierarchyPanel extends Panel {
         // title
         theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 10, y + 10);
         // horizontal line
-        GuiHelper.drawRectWithShade(matrixStack, x + 10, y + (w - 64) / 2 - 5, w - 20, 2, Color4I.BLACK, 128);
+        FHGuiHelper.drawLine(matrixStack,0xFF000000, (width - 64) / 2, (height - 48) / 2,0,0);
+        //GuiHelper.drawRectWithShade(matrixStack, x + 10, y + (w - 64) / 2 - 5, w - 20, 2, Color4I.BLACK, 128);
 
     }
 

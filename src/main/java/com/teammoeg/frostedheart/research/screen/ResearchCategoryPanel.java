@@ -47,7 +47,13 @@ public class ResearchCategoryPanel extends Panel {
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			setSize(w, h);
-			super.drawBackground(matrixStack, theme, x, y, w, h);
+			
+			//theme.drawHorizontalTab(matrixStack, x, y, w, h,categoryPanel.researchScreen.selectedCategory==category);
+			if(categoryPanel.researchScreen.selectedCategory==category)
+				Extrawidgets.TAB_V_SELECTED.draw(matrixStack, x, y-3, w, h+2);
+			else
+				Extrawidgets.TAB_V_UNSELECTED.draw(matrixStack, x, y-3, w, h);
+			//super.drawBackground(matrixStack, theme, x, y, w, h);
 			this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y + 4, 16, 16);
 			theme.drawString(matrixStack, category.getName(), x + (w - theme.getStringWidth(category.getName())) / 2, y + 24);
 		}
