@@ -44,8 +44,9 @@ public class ResearchListPanel extends Panel {
 		public void addWidgets() {
 	        int offset = 0;
 
+            System.out.println(this.researchScreen.selectedCategory.getName());
 	        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory)) {
-	        	
+                System.out.println(r.getName());
 	            ResearchButton button = new ResearchButton(this, r);
 	            add(button);
 	            button.setPos(0,offset);

@@ -24,9 +24,12 @@ public class ResearchHierarchyPanel extends Panel {
         add(button);
         button.setPos((width - 64) / 2, (height - 48) / 2);
 
+        int k = 1;
         for (Research parent : researchScreen.selectedResearch.getParents()) {
-            // todo: draw a small button
-            // todo: draw a connection line
+            ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
+            add(parentButton);
+            parentButton.setPos((width / 2 - 32 * k) / 2 + (k - 1) * 32, (height / 2 - 24 / 2));
+            k++;
         }
     }
 
@@ -74,6 +77,36 @@ public class ResearchHierarchyPanel extends Panel {
             super.drawBackground(matrixStack, theme, x, y, w, h);
             this.drawIcon(matrixStack, theme, x + 16, y, 32, 32);
             theme.drawString(matrixStack, researchScreen.selectedResearch.getName(), x, y + 32);
+        }
+    }
+
+    public static class ResearchSimpleButton extends Button {
+
+        ResearchScreen researchScreen;
+        Research research;
+
+        public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
+            super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
+            this.research = research;
+            this.researchScreen = panel.researchScreen;
+            setSize(32, 24);
+        }
+
+        @Override
+        public void onClicked(MouseButton mouseButton) {
+            // todo: open research detail gui
+        }
+
+        @Override
+        public void addMouseOverText(TooltipList list) {
+            list.add(research.getDesc());
+        }
+
+        @Override
+        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            super.drawBackground(matrixStack, theme, x, y, w, h);
+            this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y, 16, 16);
+            theme.drawString(matrixStack, researchScreen.selectedResearch.getName(), x, y + 16);
         }
     }
 }

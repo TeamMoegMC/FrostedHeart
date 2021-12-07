@@ -56,14 +56,14 @@ public class ResearchScreen extends BaseScreen {
     public void selectCategory(@Nullable ResearchCategory category) {
         if (selectedCategory != category) {
             selectedCategory = category;
-            researchCategoryPanel.refreshWidgets();
+            this.refreshWidgets();
         }
     }
 
     public void selectResearch(@Nullable Research research) {
         if (selectedResearch != research) {
             selectedResearch = research;
-            researchCategoryPanel.refreshWidgets();
+            this.refreshWidgets();
         }
     }
 

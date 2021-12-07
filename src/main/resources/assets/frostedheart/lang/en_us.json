@@ -154,19 +154,19 @@
 
   "gui.jei.category.frostedheart.crucible": "Steel Mill Crucible",
 
-  "research.category.frostedheart.rescue": "Rescue",
-  "research.category.desc.frostedheart.rescue": "The journey starts here.",
+  "research.category.frostedheart.rescue": "Eripiens",
+  "research.category.desc.frostedheart.rescue": "The rescue journey starts here.",
 
-  "research.category.frostedheart.living": "Living",
+  "research.category.frostedheart.living": "Supervivens",
   "research.category.desc.frostedheart.living": "Survive before thrive.",
 
-  "research.category.frostedheart.production": "Production",
+  "research.category.frostedheart.production": "Fabricatio",
   "research.category.desc.frostedheart.production": "Build the base that supports you.",
 
   "research.category.frostedheart.ars": "Ars",
   "research.category.desc.frostedheart.ars": "Techniques and artistry",
 
-  "research.category.frostedheart.exploration": "Exploration",
+  "research.category.frostedheart.exploration": "Explorans",
   "research.category.desc.frostedheart.exploration": "Explore the world and find clues to unveil the mystery.",
 
   "research.generator_t1.name": "Generator T1",

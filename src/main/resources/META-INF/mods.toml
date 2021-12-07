@@ -58,3 +58,10 @@ Some heat in the cold...
     versionRange="[1.16-0.2.3,1.16-0.3)"
     ordering="AFTER"
     side="BOTH"
+
+[[dependencies.frostedheart]]
+    modId="rankine"
+    mandatory=true
+    versionRange="[1.2,1.4)"
+    ordering="AFTER"
+    side="BOTH"

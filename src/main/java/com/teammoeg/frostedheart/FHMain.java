@@ -18,10 +18,12 @@
 
 package com.teammoeg.frostedheart;
 
+import com.cannolicatfish.rankine.init.RankineItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
@@ -39,6 +41,7 @@ import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -99,15 +102,6 @@ public class FHMain {
         FHParticleTypes.REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID,"blacklist"),BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
-        ResearchCategories.init();
-        FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING));
-        FHResearch.researches.register(new Research("snow_boots", ResearchCategories.EXPLORATION));
-        FHResearch.researches.register(new Research("steam_cannon", ResearchCategories.ARS));
-        FHResearch.researches.register(new Research("aluminum_extraction", ResearchCategories.PRODUCTION));
-        FHResearch.researches.register(new Research("generator_t1", ResearchCategories.RESCUE));
-        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t1")));
-        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t2")));
-        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t3")));
 
     	JsonParser gs=new JsonParser();
     	JsonObject jo=gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID+".mixins.json"))).getAsJsonObject();
@@ -135,6 +129,22 @@ public class FHMain {
     	}catch(Exception ignored){}
         ChunkDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
+
+        ResearchCategories.init();
+        FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING, FHContent.FHItems.hand_stove));
+        FHResearch.researches.register(new Research("snow_boots", ResearchCategories.EXPLORATION, RankineItems.SNOWSHOES.get()));
+        FHResearch.researches.register(new Research("mechanics", ResearchCategories.ARS, AllItems.GOGGLES.get()));
+        FHResearch.researches.register(new Research("steam_properties", ResearchCategories.ARS, FHContent.FHItems.steam_bottle));
+        FHResearch.researches.register(new Research("steam_cannon", ResearchCategories.ARS, AllItems.POTATO_CANNON.get(),
+                FHResearch.getResearch("mechanics"), FHResearch.getResearch("steam_properties")));
+        FHResearch.researches.register(new Research("sulfuric_acid", ResearchCategories.PRODUCTION, RankineItems.SULFUR.get()));
+        FHResearch.researches.register(new Research("aluminum_extraction", ResearchCategories.PRODUCTION, RankineItems.ALUMINUM_INGOT.get(),
+                FHResearch.getResearch("sulfuric_acid")));
+        FHResearch.researches.register(new Research("generator_t1", ResearchCategories.RESCUE,  FHContent.FHItems.energy_core));
+        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t1")));
+        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t2")));
+        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t3")));
+
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
