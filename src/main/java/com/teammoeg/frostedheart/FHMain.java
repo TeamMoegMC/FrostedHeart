@@ -102,7 +102,6 @@ public class FHMain {
         FHParticleTypes.REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID,"blacklist"),BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
-
     	JsonParser gs=new JsonParser();
     	JsonObject jo=gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID+".mixins.json"))).getAsJsonObject();
     	JsonArray mixins=jo.get("mixins").getAsJsonArray();
@@ -144,6 +143,7 @@ public class FHMain {
         FHResearch.researches.register(new Research("generator_t2", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t1")));
         FHResearch.researches.register(new Research("generator_t3", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t2")));
         FHResearch.researches.register(new Research("generator_t4", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t3")));
+        FHResearch.indexResearches();
 
     }
 

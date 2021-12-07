@@ -80,10 +80,11 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public void disassemble() {
         super.disassemble();
         if(shouldUnique())
-        master().unregist();
+        	master().unregist();
         ChunkData.removeTempAdjust(world, getPos());
     }
     public void unregist() {
+    	if(owner==null)return;
     	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
     	if(!vars.contains("generator_loc"))return;
         long pos=vars.getLong("generator_loc");
@@ -95,7 +96,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
         vars.putLong("generator_loc",master().pos.toLong());
     }
-    public void setOwner(UUID onwer){
+    public void setOwner(UUID owner){
     	forEachBlock(s->s.owner=owner);
     }
     public boolean shouldWork() {

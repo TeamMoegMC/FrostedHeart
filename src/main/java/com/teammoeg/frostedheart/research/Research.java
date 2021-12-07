@@ -30,6 +30,7 @@ public class Research extends FHRegisteredItem{
     private TranslationTextComponent desc;
     private Item icon;
     private HashSet<Supplier<Research>> parents = new HashSet<>();
+    private HashSet<Supplier<Research>> children = new HashSet<>();
     private HashSet<Supplier<AbstractClue>> clues=new HashSet<>();
     private ResearchCategory category;
     private ArrayList<ItemStack> requireItems=new ArrayList<>();
@@ -63,7 +64,22 @@ public class Research extends FHRegisteredItem{
     public void setId(String id) {
         this.id = id;
     }
-
+    public Supplier<Research> getSupplier(){
+		return FHResearch.getResearch(this.getLId());
+    	
+    }
+    public void doIndex() {
+    	Supplier<Research> objthis=getSupplier();
+    	for(Supplier<Research> r:this.parents) {
+    		r.get().populateChild(objthis);
+    	}
+    }
+    public void populateChild(Supplier<Research> child) {
+    	children.add(child);
+    }
+    public Set<Research> getChildren() {
+        return parents.stream().map(r->r.get()).collect(Collectors.toSet());
+    }
     public Set<Research> getParents() {
         return parents.stream().map(r->r.get()).collect(Collectors.toSet());
     }
