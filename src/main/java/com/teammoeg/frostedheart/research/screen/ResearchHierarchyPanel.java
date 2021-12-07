@@ -51,19 +51,21 @@ public class ResearchHierarchyPanel extends Panel {
         }
 
         k = 0;
-        Set<Research> children=researchScreen.selectedResearch.getChildren();
-        int csize=children.size()>4?5:children.size();
-        for (Research child : children) {
-            if (k > 4) break;
-            ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
-            add(childButton);
-            childButton.setPos((width - 34 * csize) / 2 + k * 34, (height / 2 - 24) / 2 + height / 2);
-            Line l=new Line(this);
-            add(l);
-            l.color=0xFF00FF00;//TODO: for debug use
-            l.setPosAndSize(jointx,downjointy,childButton.posX+childButton.width/2-jointx,childButton.posY-downjointy);
-            
-            k++;
+        if(researchScreen.selectedResearch.isUnlocked()) {
+	        Set<Research> children=researchScreen.selectedResearch.getChildren();
+	        int csize=children.size()>4?5:children.size();
+	        for (Research child : children) {
+	            if (k > 4) break;
+	            ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
+	            add(childButton);
+	            childButton.setPos((width - 34 * csize) / 2 + k * 34, (height / 2 - 24) / 2 + height / 2);
+	            Line l=new Line(this);
+	            add(l);
+	            l.color=0xFF00FF00;//TODO: for debug use
+	            l.setPosAndSize(jointx,downjointy,childButton.posX+childButton.width/2-jointx,childButton.posY-downjointy);
+	            
+	            k++;
+	        }
         }
     }
 
@@ -132,9 +134,7 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void onClicked(MouseButton mouseButton) {
-            if (research.isUnlocked()) {
                 researchScreen.selectResearch(research);
-            }
         }
 
         @Override
