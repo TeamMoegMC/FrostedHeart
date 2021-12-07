@@ -14,6 +14,8 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.StringTextComponent;
 
+import static com.teammoeg.frostedheart.research.screen.ResearchScreen.PADDING;
+
 public class ResearchCategoryPanel extends Panel {
 	public static final int CATEGORY_WIDTH = 100, CATEGORY_HEIGHT = 22;
 	public static final int CAT_ICON_WIDTH = 18, CAT_ICON_HEIGHT = 18;
@@ -49,13 +51,10 @@ public class ResearchCategoryPanel extends Panel {
 
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-			w=theme.getStringWidth(category.getName())+CAT_ICON_WIDTH+6;
-			setWidth(w);
+			setSize(w, h);
 			super.drawBackground(matrixStack, theme, x, y, w, h);
-            //theme.drawHorizontalTab(matrixStack, x, y, w, h, categoryPanel.researchScreen.selectedCategory == category);
-			
-			this.drawIcon(matrixStack, theme, x + 2, y + 2, CAT_ICON_WIDTH, CAT_ICON_HEIGHT);
-			theme.drawString(matrixStack, category.getName(), x + CAT_ICON_WIDTH+4, y + (CATEGORY_HEIGHT-theme.getFontHeight())/ 2);
+			this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y + 4, 16, 16);
+			theme.drawString(matrixStack, category.getName(), x + (w - theme.getStringWidth(category.getName())) / 2, y + 24);
 		}
 	}
 
@@ -63,7 +62,7 @@ public class ResearchCategoryPanel extends Panel {
 	public void addWidgets() {
 		for (int k = 0; k < ResearchCategories.ALL.size(); k++) {
 			CategoryButton button = new CategoryButton(this, ResearchCategories.ALL.get(k));
-			button.setPosAndSize(posX + k * (CATEGORY_WIDTH + 4),posY, CATEGORY_WIDTH, CATEGORY_HEIGHT);
+			button.setPosAndSize(posX + k * (width / 5), posY, width / 5, height - PADDING * 2);
 			add(button);
 		}
 	}
@@ -75,33 +74,9 @@ public class ResearchCategoryPanel extends Panel {
 
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		boolean renderInside = getOnlyRenderWidgetsInside();
-
+		super.draw(matrixStack, theme, x, y, w, h);
+		theme.drawString(matrixStack, new StringTextComponent("Current: ").appendSibling(researchScreen.selectedCategory.getName()), w * 4 / 5, y);
 		drawBackground(matrixStack, theme, x, y, w, h);
-
-		if (renderInside) {
-			GuiHelper.pushScissor(getScreen(), x, y, w, h);
-		}
-
-		setOffset(true);
-		drawOffsetBackground(matrixStack, theme, x, y, w, h);
-		int currentX=widgets.get(0).posX;
-		for (int i = 0; i < widgets.size(); i++) {
-			Widget widget = widgets.get(i);
-			widget.setX(currentX);
-			if (widget.shouldDraw() && (!renderInside || widget.collidesWith(x, y, w, h))) {
-				drawWidget(matrixStack, theme, widget, i, x, y, w, h);
-				currentX+=widget.width;
-			}
-		}
-
-		setOffset(false);
-
-		if (renderInside) {
-			GuiHelper.popScissor(getScreen());
-		}
-
-		theme.drawString(matrixStack, new StringTextComponent("Current: ").appendSibling(researchScreen.selectedCategory.getName()), w - 100, y + 30);
 	}
 
 }
