@@ -154,21 +154,29 @@
 
   "gui.jei.category.frostedheart.crucible": "Steel Mill Crucible",
 
-  "research.category.frostedheart.heating": "Heating",
-  "research.category.desc.frostedheart.heating": "Shield you from the life threatening winter.",
+  "research.category.frostedheart.rescue": "Rescue",
+  "research.category.desc.frostedheart.rescue": "The journey starts here.",
 
   "research.category.frostedheart.living": "Living",
-  "research.category.desc.frostedheart.living": "Survival is important.",
+  "research.category.desc.frostedheart.living": "Survive before thrive.",
 
-  "research.category.frostedheart.resource": "Resource",
-  "research.category.desc.frostedheart.resource": "Gather the essential stuff.",
+  "research.category.frostedheart.production": "Production",
+  "research.category.desc.frostedheart.production": "Build the base that supports you.",
 
-  "research.category.frostedheart.industry": "Industry",
-  "research.category.desc.frostedheart.industry": "Build the base that supports you.",
+  "research.category.frostedheart.ars": "Ars",
+  "research.category.desc.frostedheart.ars": "Techniques and artistry",
 
   "research.category.frostedheart.exploration": "Exploration",
   "research.category.desc.frostedheart.exploration": "Explore the world and find clues to unveil the mystery.",
 
   "research.generator_t1.name": "Generator T1",
-  "research.generator_t1.desc": "Your first soil heating device."
+  "research.generator_t1.desc": "Your first soil heating device.",
+  "research.coal_hand_stove.name": "Coal Hand Stove",
+  "research.coal_hand_stove.desc": "A good travel buddy.",
+  "research.snow_boots.name": "Snow Boots",
+  "research.snow_boots.desc": "Travel faster on snowy ground.",
+  "research.steam_cannon.name": "Steam Cannon",
+  "research.steam_cannon.desc": "A decent long range weapon.",
+  "research.aluminum_extraction.name": "Aluminum Extraction",
+  "research.aluminum_extraction.desc": "Make your bauxite useful with chemistry."
 }

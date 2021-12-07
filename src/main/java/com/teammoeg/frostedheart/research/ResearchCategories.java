@@ -4,19 +4,19 @@ import java.util.ArrayList;
 
 public class ResearchCategories {
     public static ArrayList<ResearchCategory> ALL = new ArrayList<>();
-    public static ResearchCategory HEATING, LIVING, RESOURCE, INDUSTRY, EXPLORATION;
+    public static ResearchCategory RESCUE, LIVING, PRODUCTION, ARS, EXPLORATION;
 
     public static void init() {
-        HEATING = new ResearchCategory("heating");
+        RESCUE = new ResearchCategory("rescue");
         LIVING = new ResearchCategory("living");
-        RESOURCE = new ResearchCategory("resource");
-        INDUSTRY = new ResearchCategory("industry");
+        PRODUCTION = new ResearchCategory("production");
+        ARS = new ResearchCategory("ars");
         EXPLORATION = new ResearchCategory("exploration");
 
-        ALL.add(HEATING);
+        ALL.add(RESCUE);
         ALL.add(LIVING);
-        ALL.add(RESOURCE);
-        ALL.add(INDUSTRY);
+        ALL.add(PRODUCTION);
+        ALL.add(ARS);
         ALL.add(EXPLORATION);
     }
 }

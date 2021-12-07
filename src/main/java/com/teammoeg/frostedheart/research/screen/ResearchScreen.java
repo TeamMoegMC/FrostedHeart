@@ -44,7 +44,7 @@ public class ResearchScreen extends BaseScreen {
     @Override
     public boolean onInit() {
     	setFullscreen();
-        selectCategory(ResearchCategories.HEATING);
+        selectCategory(ResearchCategories.RESCUE);
         selectedResearch = FHResearch.researches.getByName("generator_t1");
     	researchCategoryPanel.setPosAndSize(PADDING,PADDING, this.width-PADDING*2, CAT_PANEL_HEIGHT);
     	researchListPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING*5 + CAT_PANEL_HEIGHT + IN_PROGRESS_HEIGHT));

@@ -100,10 +100,14 @@ public class FHMain {
         ItemPredicate.register(new ResourceLocation(MODID,"blacklist"),BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
         ResearchCategories.init();
-        FHResearch.researches.register(new Research("generator_t1", ResearchCategories.HEATING));
-        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.HEATING, FHResearch.getResearch("generator_t1")));
-        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.HEATING, FHResearch.getResearch("generator_t2")));
-        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.HEATING, FHResearch.getResearch("generator_t3")));
+        FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING));
+        FHResearch.researches.register(new Research("snow_boots", ResearchCategories.EXPLORATION));
+        FHResearch.researches.register(new Research("steam_cannon", ResearchCategories.ARS));
+        FHResearch.researches.register(new Research("aluminum_extraction", ResearchCategories.PRODUCTION));
+        FHResearch.researches.register(new Research("generator_t1", ResearchCategories.RESCUE));
+        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t1")));
+        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t2")));
+        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t3")));
 
     	JsonParser gs=new JsonParser();
     	JsonObject jo=gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID+".mixins.json"))).getAsJsonObject();
