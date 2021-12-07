@@ -66,7 +66,6 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
 					((AbstractGenerator) te).owner=player.getUniqueID();
 					((AbstractGenerator) te).setOwner(player.getUniqueID());
 					((AbstractGenerator) te).regist();
-					System.out.println("registered");
 				}
 			}
 		}
