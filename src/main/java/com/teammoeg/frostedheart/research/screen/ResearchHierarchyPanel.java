@@ -1,14 +1,21 @@
 package com.teammoeg.frostedheart.research.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
 
 public class ResearchHierarchyPanel extends Panel {
     public ResearchScreen researchScreen;
@@ -24,19 +31,21 @@ public class ResearchHierarchyPanel extends Panel {
         add(button);
         button.setPos((width - 64) / 2, (height - 48) / 2);
 
-        int k = 1;
+        int k = 0;
         for (Research parent : researchScreen.selectedResearch.getParents()) {
+            if (k > 4) break;
             ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
             add(parentButton);
-            parentButton.setPos((width / 2 - 34 * k) / 2 + (k - 1) * 34, (height / 2 - 24) / 2);
+            parentButton.setPos((width - 34 * researchScreen.selectedResearch.getParents().size()) / 2 + k * 34, (height / 2 - 24) / 2);
             k++;
         }
 
-        k = 1;
+        k = 0;
         for (Research child : researchScreen.selectedResearch.getChildren()) {
+            if (k > 4) break;
             ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
             add(childButton);
-            childButton.setPos((width / 2 - 34 * k) / 2 + (k - 1) * 34, (height / 2 - 24) / 2 + height / 2);
+            childButton.setPos((width - 34 * researchScreen.selectedResearch.getChildren().size()) / 2 + k * 34, (height / 2 - 24) / 2 + height / 2);
             k++;
         }
     }
@@ -56,6 +65,9 @@ public class ResearchHierarchyPanel extends Panel {
         super.draw(matrixStack, theme, x, y, w, h);
         // title
         theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 10, y + 10);
+        // horizontal line
+        GuiHelper.drawRectWithShade(matrixStack, x + 10, y + (w - 64) / 2 - 5, w - 20, 2, Color4I.BLACK, 128);
+
     }
 
     public static class ResearchDetailButton extends Button {
@@ -84,7 +96,9 @@ public class ResearchHierarchyPanel extends Panel {
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
             super.drawBackground(matrixStack, theme, x, y, w, h);
             this.drawIcon(matrixStack, theme, x + 16, y, 32, 32);
-            theme.drawString(matrixStack, researchScreen.selectedResearch.getName(), x, y + 32);
+            theme.drawString(matrixStack, research.getName(), x + (w - theme.getStringWidth(research.getName())) / 2, y + 32);
+            GuiHelper.drawRectWithShade(matrixStack, x + 31, y - 5, 2, 5, Color4I.BLACK, 128);
+
         }
     }
 
@@ -102,19 +116,29 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void onClicked(MouseButton mouseButton) {
-            // todo: open research detail gui
+            if (research.isUnlocked()) {
+                researchScreen.selectResearch(research);
+            }
         }
 
         @Override
         public void addMouseOverText(TooltipList list) {
-            list.add(research.getDesc());
+            list.add(research.getName().mergeStyle(TextFormatting.BOLD));
+            if (!research.isUnlocked()) {
+                list.add(GuiUtils.translateTooltip("research_is_locked").mergeStyle(TextFormatting.RED));
+                for (Research parent : research.getParents()) {
+                    if (!parent.isCompleted()) {
+                        list.add(parent.getName().mergeStyle(TextFormatting.GRAY));
+                    }
+                }
+            }
         }
 
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
             super.drawBackground(matrixStack, theme, x, y, w, h);
             this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y, 16, 16);
-            theme.drawString(matrixStack, researchScreen.selectedResearch.getName(), x, y + 16);
+            GuiHelper.drawRectWithShade(matrixStack, x + (w - 16) / 2 + 16/2 - 1, y + 16 + 5, 2, 5, Color4I.BLACK, 128);
         }
     }
 }

@@ -54,17 +54,20 @@ public class FHResearch {
 	public static List<Research> getAllResearch() {
 		return allResearches.resolve().get();
 	}
-	public static List<Research> getResearchesForRender(ResearchCategory cate){
+	public static List<Research> getResearchesForRender(ResearchCategory cate, boolean showLocked){
 		List<Research> all= getAllResearch();
+		ArrayList<Research> locked=new ArrayList<>();
 		ArrayList<Research> available=new ArrayList<>();
 		ArrayList<Research> unlocked=new ArrayList<>();
 		for(Research r:all) {
 			if(r.getCategory()!=cate)continue;
 			if(r.isCompleted())unlocked.add(r);
 			else if(r.isUnlocked())available.add(r);
+			else locked.add(r);
 		}
-		available.ensureCapacity(available.size()+unlocked.size());
+		available.ensureCapacity(available.size()+unlocked.size()+locked.size());
 		available.addAll(unlocked);
+		if (showLocked) available.addAll(locked);
 		return available;
 	}
 	public static List<AbstractClue> getAllClue() {
