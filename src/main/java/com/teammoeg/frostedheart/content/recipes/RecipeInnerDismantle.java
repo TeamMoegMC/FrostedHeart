@@ -84,7 +84,8 @@ public class RecipeInnerDismantle extends SpecialRecipe {
 				if (buff == null)
 					return ItemStack.EMPTY;
 				ItemStack buffitem = new ItemStack(buff);
-				buffitem.setTag(tag);
+				if(tag!=null)
+					buffitem.setTag(tag);
 				return buffitem;
 			}
 		}

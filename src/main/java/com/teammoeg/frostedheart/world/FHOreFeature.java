@@ -41,25 +41,25 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
     @Override
     public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, FHOreFeatureConfig config) {
         float f = rand.nextFloat() * (float) Math.PI;
-        float f1 = (float) config.size / 8.0F;
-        int i = MathHelper.ceil(((float) config.size / 16.0F * 2.0F + 1.0F) / 2.0F);
-        double d0 = (double) pos.getX() + Math.sin((double) f) * (double) f1;
-        double d1 = (double) pos.getX() - Math.sin((double) f) * (double) f1;
-        double d2 = (double) pos.getZ() + Math.cos((double) f) * (double) f1;
-        double d3 = (double) pos.getZ() - Math.cos((double) f) * (double) f1;
+        float f1 = config.size / 8.0F;
+        int i = MathHelper.ceil((config.size / 16.0F * 2.0F + 1.0F) / 2.0F);
+        double maxX = pos.getX() + Math.sin(f) * f1;
+        double minX = pos.getX() - Math.sin(f) * f1;
+        double maxZ = pos.getZ() + Math.cos(f) * f1;
+        double minZ = pos.getZ() - Math.cos(f) * f1;
         int j = 2;
-        double d4 = (double) (pos.getY() + rand.nextInt(3) - 2);
-        double d5 = (double) (pos.getY() + rand.nextInt(3) - 2);
-        int k = pos.getX() - MathHelper.ceil(f1) - i;
-        int l = pos.getY() - 2 - i;
-        int i1 = pos.getZ() - MathHelper.ceil(f1) - i;
-        int j1 = 2 * (MathHelper.ceil(f1) + i);
-        int k1 = 2 * (2 + i);
+        double maxY = pos.getY() + rand.nextInt(3) - 2;
+        double minY = pos.getY() + rand.nextInt(3) - 2;
+        int startX = pos.getX() - MathHelper.ceil(f1) - i;
+        int startY = pos.getY() - 2 - i;
+        int startZ = pos.getZ() - MathHelper.ceil(f1) - i;
+        int maxSizeXZ = 2 * (MathHelper.ceil(f1) + i);
+        int maxSizeY = 2 * (2 + i);
 
-        for (int l1 = k; l1 <= k + j1; ++l1) {
-            for (int i2 = i1; i2 <= i1 + j1; ++i2) {
-                if (l <= reader.getHeight(Heightmap.Type.OCEAN_FLOOR_WG, l1, i2)) {
-                    return this.func_207803_a(reader, rand, config, d0, d1, d2, d3, d4, d5, k, l, i1, j1, k1);
+        for (int l1 = startX; l1 <= startX + maxSizeXZ; ++l1) {
+            for (int i2 = startZ; i2 <= startZ + maxSizeXZ; ++i2) {
+                if (startY <= reader.getHeight(Heightmap.Type.OCEAN_FLOOR_WG, l1, i2)) {
+                    return this.generate(reader, rand, config, maxX, minX, maxZ, minZ, maxY, minY, startX, startY, startZ, maxSizeXZ, maxSizeY);
                 }
             }
         }
@@ -67,39 +67,40 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
         return false;
     }
 
-    protected boolean func_207803_a(IWorld worldIn, Random random, FHOreFeatureConfig config, double p_207803_4_, double p_207803_6_, double p_207803_8_, double p_207803_10_, double p_207803_12_, double p_207803_14_, int p_207803_16_, int p_207803_17_, int p_207803_18_, int p_207803_19_, int p_207803_20_) {
-        int i = 0;
-        BitSet bitset = new BitSet(p_207803_19_ * p_207803_20_ * p_207803_19_);
+    protected boolean generate(IWorld worldIn, Random random, FHOreFeatureConfig config, double maxX, double minX,
+    		double maxZ, double minZ, double maxY, double minY, int startX, int startY, int startZ, int maxSizeXZ, int maxSizeY) {
+        int totalGenerated = 0;
+        BitSet generated = new BitSet(maxSizeXZ * maxSizeY * maxSizeXZ);
         BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable();
-        int j = config.size;
-        double[] adouble = new double[j * 4];
+        int size = config.size;
+        double[] boxes = new double[size * 4];
 
-        for (int k = 0; k < j; ++k) {
-            float f = (float) k / (float) j;
-            double d0 = MathHelper.lerp((double) f, p_207803_4_, p_207803_6_);
-            double d2 = MathHelper.lerp((double) f, p_207803_12_, p_207803_14_);
-            double d4 = MathHelper.lerp((double) f, p_207803_8_, p_207803_10_);
-            double d6 = random.nextDouble() * (double) j / 16.0D;
-            double d7 = ((double) (MathHelper.sin((float) Math.PI * f) + 1.0F) * d6 + 1.0D) / 2.0D;
-            adouble[k * 4 + 0] = d0;
-            adouble[k * 4 + 1] = d2;
-            adouble[k * 4 + 2] = d4;
-            adouble[k * 4 + 3] = d7;
+        for (int k = 0; k < size; ++k) {
+            float sizeRatio = (float) k / (float) size;
+            double rX = MathHelper.lerp(sizeRatio, maxX, minX);
+            double rY = MathHelper.lerp(sizeRatio, maxY, minY);
+            double rZ = MathHelper.lerp(sizeRatio, maxZ, minZ);
+            double genSize = random.nextDouble() * size / 16.0D;
+            double genAmount = ((MathHelper.sin((float) Math.PI * sizeRatio) + 1.0F) * genSize + 1.0D) / 2.0D;
+            boxes[k * 4 + 0] = rX;
+            boxes[k * 4 + 1] = rY;
+            boxes[k * 4 + 2] = rZ;
+            boxes[k * 4 + 3] = genAmount;
         }
 
-        for (int i3 = 0; i3 < j - 1; ++i3) {
-            if (!(adouble[i3 * 4 + 3] <= 0.0D)) {
-                for (int k3 = i3 + 1; k3 < j; ++k3) {
-                    if (!(adouble[k3 * 4 + 3] <= 0.0D)) {
-                        double d12 = adouble[i3 * 4 + 0] - adouble[k3 * 4 + 0];
-                        double d13 = adouble[i3 * 4 + 1] - adouble[k3 * 4 + 1];
-                        double d14 = adouble[i3 * 4 + 2] - adouble[k3 * 4 + 2];
-                        double d15 = adouble[i3 * 4 + 3] - adouble[k3 * 4 + 3];
-                        if (d15 * d15 > d12 * d12 + d13 * d13 + d14 * d14) {
-                            if (d15 > 0.0D) {
-                                adouble[k3 * 4 + 3] = -1.0D;
-                            } else {
-                                adouble[i3 * 4 + 3] = -1.0D;
+        for (int i = 0; i < size - 1; ++i) {
+            if (boxes[i * 4 + 3] > 0.0D) {//has generation amount
+                for (int j = i + 1; j < size; ++j) {
+                    if (boxes[j * 4 + 3] > 0.0D) {//has generation amount
+                        double d12 = boxes[i * 4 + 0] - boxes[j * 4 + 0];//delta X
+                        double d13 = boxes[i * 4 + 1] - boxes[j * 4 + 1];//delta Y
+                        double d14 = boxes[i * 4 + 2] - boxes[j * 4 + 2];//delta Z
+                        double d15 = boxes[i * 4 + 3] - boxes[j * 4 + 3];//delta gen amount
+                        if (d15 * d15 > d12 * d12 + d13 * d13 + d14 * d14) {//generation difference too large
+                            if (d15 > 0.0D) {//outer slice too much
+                                boxes[j * 4 + 3] = -1D;//inner slice no gen
+                            } else {//inner slice too much
+                                boxes[i * 4 + 3] = -1D;//outer slice no gen
                             }
                         }
                     }
@@ -107,32 +108,32 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
             }
         }
 
-        for (int j3 = 0; j3 < j; ++j3) {
-            double d11 = adouble[j3 * 4 + 3];
-            if (!(d11 < 0.0D)) {
-                double d1 = adouble[j3 * 4 + 0];
-                double d3 = adouble[j3 * 4 + 1];
-                double d5 = adouble[j3 * 4 + 2];
-                int l = Math.max(MathHelper.floor(d1 - d11), p_207803_16_);
-                int l3 = Math.max(MathHelper.floor(d3 - d11), p_207803_17_);
-                int i1 = Math.max(MathHelper.floor(d5 - d11), p_207803_18_);
-                int j1 = Math.max(MathHelper.floor(d1 + d11), l);
-                int k1 = Math.max(MathHelper.floor(d3 + d11), l3);
-                int l1 = Math.max(MathHelper.floor(d5 + d11), i1);
+        for (int iSlice = 0; iSlice < size; ++iSlice) {
+            double genAmount = boxes[iSlice * 4 + 3];//amount
+            if (genAmount >= 0D) {
+                double sX = boxes[iSlice * 4 + 0];
+                double sY = boxes[iSlice * 4 + 1];
+                double sZ = boxes[iSlice * 4 + 2];
+                int genBeginX = Math.max(MathHelper.floor(sX - genAmount), startX);
+                int genBeginY = Math.max(MathHelper.floor(sY - genAmount), startY);
+                int genBeginZ = Math.max(MathHelper.floor(sZ - genAmount), startZ);
+                int genEndX = Math.max(MathHelper.floor(sX + genAmount), genBeginX);
+                int genEndY = Math.max(MathHelper.floor(sY + genAmount), genBeginY);
+                int genEndZ = Math.max(MathHelper.floor(sZ + genAmount), genBeginZ);
 
-                for (int i2 = l; i2 <= j1; ++i2) {
-                    double d8 = ((double) i2 + 0.5D - d1) / d11;
-                    if (d8 * d8 < 1.0D) {
-                        for (int j2 = l3; j2 <= k1; ++j2) {
-                            double d9 = ((double) j2 + 0.5D - d3) / d11;
-                            if (d8 * d8 + d9 * d9 < 1.0D) {
-                                for (int k2 = i1; k2 <= l1; ++k2) {
-                                    double d10 = ((double) k2 + 0.5D - d5) / d11;
-                                    if (d8 * d8 + d9 * d9 + d10 * d10 < 1.0D) {
-                                        int l2 = i2 - p_207803_16_ + (j2 - p_207803_17_) * p_207803_19_ + (k2 - p_207803_18_) * p_207803_19_ * p_207803_20_;
-                                        if (!bitset.get(l2)) {
-                                            bitset.set(l2);
-                                            blockpos$mutable.setPos(i2, j2, k2);
+                for (int dx = genBeginX; dx <= genEndX; ++dx) {
+                    double xAmount = (dx + 0.5D - sX) / genAmount;
+                    if (xAmount * xAmount < 1.0D) {
+                        for (int dy = genBeginY; dy <= genEndY; ++dy) {
+                            double yAmount = (dy + 0.5D - sY) / genAmount;
+                            if (xAmount * xAmount + yAmount * yAmount < 1.0D) {
+                                for (int dz = genBeginZ; dz <= genEndZ; ++dz) {
+                                    double zAmount = (dz + 0.5D - sZ) / genAmount;
+                                    if (xAmount * xAmount + yAmount * yAmount + zAmount * zAmount < 1.0D) {
+                                        int packedLocation = dx - startX + (dy - startY) * maxSizeXZ + (dz - startZ) * maxSizeXZ * maxSizeY;
+                                        if (!generated.get(packedLocation)) {//do not overwrite
+                                            generated.set(packedLocation);
+                                            blockpos$mutable.setPos(dx, dy, dz);
                                             Block b = worldIn.getBlockState(blockpos$mutable).getBlock();
                                             ResourceLocation rs = b.getRegistryName();
                                             if (config.target.test(worldIn.getBlockState(blockpos$mutable), random)) {
@@ -273,7 +274,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
                                                             default:
                                                                 worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 0), 2);
                                                         }
-                                                        ++i;
+                                                        ++totalGenerated;
                                                     } else if (rs.getNamespace().equals("minecraft")) {
                                                         switch (rs.getPath()) {
                                                             case "granite":
@@ -307,7 +308,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
                                                                 worldIn.setBlockState(blockpos$mutable, config.state.with(RankineOreBlock.TYPE, 10), 2);
                                                                 break;
                                                         }
-                                                        ++i;
+                                                        ++totalGenerated;
                                                     }
                                                 }
                                         }
@@ -319,6 +320,6 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
                 }
             }
         }
-        return i > 0;
+        return totalGenerated > 0;
     }
 }
