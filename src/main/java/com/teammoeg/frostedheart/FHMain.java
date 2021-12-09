@@ -25,6 +25,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
+import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -128,6 +129,8 @@ public class FHMain {
     	}catch(Exception ignored){}
         ChunkDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
+
+        ClimateData.setup();
 
         ResearchCategories.init();
         FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING, FHContent.FHItems.hand_stove));

@@ -57,7 +57,8 @@ public class PacketHandler {
         CHANNEL.registerMessage(id++, FHResearchDataSyncPacket.class, FHResearchDataSyncPacket::encode, FHResearchDataSyncPacket::new, FHResearchDataSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHResearchProgressSyncPacket.class, FHResearchProgressSyncPacket::encode, FHResearchProgressSyncPacket::new, FHResearchProgressSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHClueProgressSyncPacket.class, FHClueProgressSyncPacket::encode, FHClueProgressSyncPacket::new, FHClueProgressSyncPacket::handle);
-        
+        CHANNEL.registerMessage(id++, FHClimatePacket.class, FHClimatePacket::encode, FHClimatePacket::new, FHClimatePacket::handle);
+
     }
 
 }
