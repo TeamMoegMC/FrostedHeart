@@ -98,9 +98,9 @@ import javax.annotation.Nonnull;
 public class ForgeEvents {
 	@SubscribeEvent
 	public void onServerStarted(FMLServerStartedEvent event) {
-		for (ServerWorld world : event.getServer().getWorlds()) {
-			world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, event.getServer());
-		}
+//		for (ServerWorld world : event.getServer().getWorlds()) {
+//			world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, event.getServer());
+//		}
 	}
 
 	@SubscribeEvent
