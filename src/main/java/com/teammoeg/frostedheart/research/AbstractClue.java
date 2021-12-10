@@ -15,6 +15,7 @@ public abstract class AbstractClue extends FHRegisteredItem{
 	ITextComponent name;
 	ITextComponent desc;
 	ITextComponent hint;
+	
 	boolean pend;
 	public float getResearchContribution() {
 		return contribution;
