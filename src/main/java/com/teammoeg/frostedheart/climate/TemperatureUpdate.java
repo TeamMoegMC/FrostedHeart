@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHEffects;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -141,7 +142,12 @@ public class TemperatureUpdate {
 			}
 			if (keepwarm > 1)
 				keepwarm = 1;
-			current += HEAT_EXCHANGE_CONSTANT * tspeed * (1 - keepwarm) * (envtemp - current);
+			float dheat= HEAT_EXCHANGE_CONSTANT  * (1 - keepwarm) * (envtemp - current);
+			if(dheat>0.1)
+				player.attackEntityFrom(FHDamageSources.HYPERTHERMIA,(dheat)*20);
+			else if(dheat<-0.1)
+				player.attackEntityFrom(FHDamageSources.HYPERTHERMIA,(-dheat)*20);
+			current +=dheat* tspeed;
 			if (current < -10)
 				current = -10;
 			else if (current > 10)

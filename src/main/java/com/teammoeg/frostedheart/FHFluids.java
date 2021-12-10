@@ -39,6 +39,12 @@ public class FHFluids {
     public static RegistryObject<FlowingFluid> HOT_WATER_FLOWING = FLUIDS.register("hot_water_flowing", () -> {
         return new ForgeFlowingFluid.Flowing(FHFluids.HOT_WATER_PROPERTIES);
     });
+    public static RegistryObject<FlowingFluid> FLUORINE = FLUIDS.register("fluorine", () -> {
+        return new ForgeFlowingFluid.Source(FHFluids.FLUORINE_PROPERTIES);
+    });
+    public static RegistryObject<FlowingFluid> FLUORINE_FLOWING = FLUIDS.register("fluorine_flowing", () -> {
+        return new ForgeFlowingFluid.Flowing(FHFluids.FLUORINE_PROPERTIES);
+    });
 
     public static RegistryObject<FlowingFluid> STEAM = FLUIDS.register("steam", () -> {
         return new ForgeFlowingFluid.Source(FHFluids.STEAM_PROPERTIES);
@@ -65,5 +71,8 @@ public class FHFluids {
     public static ForgeFlowingFluid.Properties WOLFBERRY_TEA_PROPERTIES =
             new ForgeFlowingFluid.Properties(WOLFBERRY_TEA, WOLFBERRY_TEA_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
                     .color(0xFF6ABDFF).temperature(333)).block(null)
+                    .slopeFindDistance(3).explosionResistance(100F);
+    public static ForgeFlowingFluid.Properties FLUORINE_PROPERTIES=new ForgeFlowingFluid.Properties(FLUORINE, FLUORINE_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
+                    .color(0xFF00AA00).density(-1).gaseous().viscosity(-1)).block(null)
                     .slopeFindDistance(3).explosionResistance(100F);
 }

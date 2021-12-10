@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.network.FHClimatePacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.util.FHGameRule;
+
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.world.DimensionType;
@@ -48,7 +50,8 @@ public abstract class MixinServerWorld extends World {
 	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;hasSkyLight()Z"))
 	private void tick(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
 		final ClimateData cap = this.getCapability(ClimateData.CAPABILITY,null).orElseThrow(() -> new IllegalStateException("Expected Climate Data to exist on World " + this.getDimensionKey() + " / " + this.getDimensionType()));
-
+		if(!((FHGameRule)this.getGameRules()).isWeatherCycle())//vanilla rules
+			return;
 		// vanilla weather params
 		int clearTime = this.serverWorldInfo.getClearWeatherTime();
 		int thunderTime = this.serverWorldInfo.getThunderTime();
