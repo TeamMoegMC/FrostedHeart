@@ -1,9 +1,11 @@
 package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.NoopStorage;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
@@ -16,12 +18,20 @@ import javax.annotation.Nullable;
 
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     @CapabilityInject(ClimateData.class)
-    public static final Capability<ClimateData> CAPABILITY = FHUtils.notNull();
+    public static Capability<ClimateData> CAPABILITY;
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
 
     public static void setup() {
-        CapabilityManager.INSTANCE.register(ClimateData.class, new NoopStorage<>(), () -> {
-            throw new UnsupportedOperationException();
+        CapabilityManager.INSTANCE.register(ClimateData.class, new Capability.IStorage<ClimateData>() {
+            public INBT writeNBT(Capability<ClimateData> capability,ClimateData instance, Direction side) {
+                return instance.serializeNBT();
+            }
+
+            public void readNBT(Capability<ClimateData> capability,ClimateData instance, Direction side, INBT nbt) {
+                instance.deserializeNBT((CompoundNBT) nbt);
+            }
+        }, () -> {
+            return new ClimateData();
         });
     }
 

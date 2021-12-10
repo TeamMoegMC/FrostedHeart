@@ -47,7 +47,7 @@ public abstract class MixinServerWorld extends World {
 	 */
 	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;hasSkyLight()Z"))
 	private void tick(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
-		final ClimateData cap = this.getCapability(ClimateData.CAPABILITY).orElseThrow(() -> new IllegalStateException("Expected Climate Data to exist on World " + this.getDimensionKey() + " / " + this.getDimensionType()));
+		final ClimateData cap = this.getCapability(ClimateData.CAPABILITY,null).orElseThrow(() -> new IllegalStateException("Expected Climate Data to exist on World " + this.getDimensionKey() + " / " + this.getDimensionType()));
 
 		// vanilla weather params
 		int clearTime = this.serverWorldInfo.getClearWeatherTime();

@@ -179,7 +179,14 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
+		if (!event.getObject().isRemote) {
+			World world = event.getObject();
+			if (!world.isRemote) {
+				if (!event.getCapabilities().containsKey(ClimateData.ID))
+					event.addCapability(ClimateData.ID, new ClimateData());
+			}
 
+		}
 	}
 
 	@SubscribeEvent
