@@ -19,23 +19,29 @@
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.util.Utils;
+
+import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveState, ITickableTileEntity {
-	ResourceLocation burnable=new ResourceLocation("forge","creosote");
+	ResourceLocation burnable=new ResourceLocation("frostedheart","flammable_fluid");
     FluidTank input = new FluidTank(10000,s->s.getFluid().getTags().contains(burnable));
-    private LazyOptional<IFluidHandler> holder = LazyOptional.of(() -> input);
+    private LazyOptional<IFluidHandler> holder=LazyOptional.empty();
 
     public OilBurnerTileEntity() {
     	super(FHContent.FHTileTypes.OIL_BURNER.get());
@@ -56,7 +62,30 @@ public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveStat
     @Override
     public void tick() {
         if (this.world != null && !this.world.isRemote) {
-            if(input.drain(1000,FluidAction.EXECUTE).getAmount()>=10) {
+        	TileEntity down=Utils.getExistingTileEntity(world, pos.offset(Direction.DOWN));
+        	if(down!=null) {
+        		LazyOptional<IFluidHandler> cap=down.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,Direction.UP);
+        		if(cap.isPresent()) {
+        			IFluidHandler ifh=cap.resolve().orElse(null);
+        			if(ifh!=null) {
+        				if(!input.isEmpty()) {
+        					FluidStack fs=ifh.drain(FluidHelper.copyStackWithAmount(input.getFluid(),5),FluidAction.EXECUTE);
+        					if(!fs.isEmpty())
+        						input.fill(fs,FluidAction.EXECUTE);
+        				}else 
+        				for(int i=0;i<ifh.getTanks();i++) {
+        					if(input.isFluidValid(ifh.getFluidInTank(i))) {
+        						FluidStack fs=ifh.drain(FluidHelper.copyStackWithAmount(ifh.getFluidInTank(i),5),FluidAction.EXECUTE);
+            					if(!fs.isEmpty()) {
+            						input.fill(fs,FluidAction.EXECUTE);
+            						break;
+            					}
+        					}
+        				}
+        			}
+        		}
+        	}
+            if(input.drain(1000,FluidAction.EXECUTE).getAmount()>=5) {
             	this.setActive(true);
             }else
             	this.setActive(false);
@@ -74,9 +103,45 @@ public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveStat
 
     private void refreshCapability() {
         LazyOptional<IFluidHandler> oldCap = this.holder;
-        this.holder = LazyOptional.of(() -> {
-            return this.input;
-        });
+        this.holder = LazyOptional.of(() -> new IFluidHandler() {
+			@Override
+			public int fill(FluidStack resource, FluidAction action) {
+				return input.fill(resource, action);
+			}
+
+			@Override
+			public FluidStack drain(int maxDrain, FluidAction action) {
+				return FluidStack.EMPTY;
+			}
+
+			@Override
+			public FluidStack drain(FluidStack resource, FluidAction action) {
+				return FluidStack.EMPTY;
+			}
+
+			@Override
+			public int getTanks() {
+				return input.getTanks();
+			}
+
+			@Override
+			public FluidStack getFluidInTank(int tank) {
+				return input.getFluidInTank(tank);
+			}
+
+			@Override
+			public int getTankCapacity(int tank) {
+				return input.getCapacity();
+			}
+
+			@Override
+			public boolean isFluidValid(int tank, FluidStack stack) {
+				return input.isFluidValid(tank, stack);
+			}
+        	
+        }
+            
+        );
         oldCap.invalidate();
     }
 }
