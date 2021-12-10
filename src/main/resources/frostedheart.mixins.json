@@ -67,6 +67,7 @@
     "client.IngameGuiMixin",
     "client.MixinClientEvents",
     "client.ToastGuiMixin",
+    "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
     "rankine.MixinDryMortarItem",
     "rankine.MixinMortarItem"

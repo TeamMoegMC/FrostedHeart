@@ -22,6 +22,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -33,10 +34,7 @@ import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
-import com.teammoeg.frostedheart.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.network.FHResearchRegistrtySyncPacket;
-import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.*;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHDamageSources;
@@ -64,6 +62,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.Dimension;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -98,9 +97,7 @@ import javax.annotation.Nonnull;
 public class ForgeEvents {
 	@SubscribeEvent
 	public void onServerStarted(FMLServerStartedEvent event) {
-//		for (ServerWorld world : event.getServer().getWorlds()) {
-//			world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, event.getServer());
-//		}
+
 	}
 
 	@SubscribeEvent
@@ -192,48 +189,12 @@ public class ForgeEvents {
 			ChunkPos chunkPos = event.getObject().getPos();
 			ChunkData data;
 			if (!world.isRemote) {
-				// Chunk was created on server thread.
-				// 1. If this was due to world gen, it won't have any cap data. This is where we
-				// clear the world gen cache and attach it to the chunk
-				// 2. If this was due to chunk loading, the caps will be deserialized from NBT
-				// after this event is posted. Attach empty data here
-				// 下面这段代码导致每次attach到Chunk的data都是new出来的默认值。
-				// 因为我们没有世界生成阶段的温度生成，所以暂且注掉
-				// data = ChunkDataCache.WORLD_GEN.remove(chunkPos);
-				// if (data == null) {
-				// data = new ChunkData(chunkPos);
-				// }
-				// data = ChunkDataCache.SERVER.getOrCreate(chunkPos);
 				if (!event.getCapabilities().containsKey(ChunkDataCapabilityProvider.KEY))
 					event.addCapability(ChunkDataCapabilityProvider.KEY, new ChunkData(chunkPos));
 			}
 
 		}
 	}
-
-	/*
-	 * @SubscribeEvent
-	 * public static void onChunkLoad(ChunkEvent.Load event) {
-	 * if (!event.getWorld().isRemote() && !(event.getChunk() instanceof
-	 * EmptyChunk)) {
-	 * ChunkPos pos = event.getChunk().getPos();
-	 * ChunkData.getCapability(event.getChunk()).ifPresent(data -> {
-	 * ChunkDataCache.SERVER.update(pos, data);
-	 * // ChunkDataCache.WATCH_QUEUE.dequeueLoadedChunk(pos, data);
-	 * });
-	 * 
-	 * }
-	 * }
-	 * 
-	 * @SubscribeEvent
-	 * public static void onChunkUnload(ChunkEvent.Unload event) {
-	 * // Clear server side chunk data cache
-	 * if (!event.getWorld().isRemote() && !(event.getChunk() instanceof
-	 * EmptyChunk)) {
-	 * ChunkDataCache.SERVER.remove(event.getChunk().getPos());
-	 * }
-	 * }
-	 */
 
 	@SubscribeEvent
 	public static void addOreGenFeatures(BiomeLoadingEvent event) {
@@ -379,36 +340,20 @@ public class ForgeEvents {
 		}
 	}
 
-	// @SubscribeEvent
-//    public static void addBaseNutritionOnFirstLogin(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
-//        CompoundNBT nbt = event.getPlayer().getPersistentData();
-//        CompoundNBT persistent;
-//
-//        if (nbt.contains(PlayerEntity.PERSISTED_NBT_TAG)) {
-//            persistent = nbt.getCompound(PlayerEntity.PERSISTED_NBT_TAG);
-//        } else {
-//            nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
-//        }
-//        if (!persistent.contains(FHNBT.FIRST_LOGIN_GIVE_NUTRITION)) {
-//            persistent.putBoolean(FHNBT.FIRST_LOGIN_GIVE_NUTRITION, false);
-//            if (ModList.get().isLoaded("diet") && event.getPlayer().getServer() != null && event.getPlayer().isServerWorld()) {
-//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s fruits 0.75");
-//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s grains 0.75");
-//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s proteins 0.75");
-//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s sugars 0.75");
-//                event.getPlayer().getServer().getCommandManager().handleCommand(event.getPlayer().getCommandSource(), "/diet set @s vegetables 0.75");
-//            }
-//        }
-//    }
 	@SubscribeEvent
 	public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
 		if (event.getEntity() instanceof ServerPlayerEntity) {
+			ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHDatapackSyncPacket());
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHResearchRegistrtySyncPacket());
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHResearchDataSyncPacket(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
+			serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap)->{
+				PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+						new FHClimatePacket(cap));
+			});
 		}
 	}
 
@@ -510,13 +455,7 @@ public class ForgeEvents {
 		AddTempCommand.register(dispatcher);
 	}
 
-//    @SubscribeEvent
-//    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
-//        ToolType Tool = event.getState().getHarvestTool();
-//        if (Tool != null) {
-//            if (!FHTags.Blocks.ALWAYS_BREAKABLE.contains(event.getState().getBlock()))
-//                if (event.getPlayer().getHeldItemMainhand().getHarvestLevel(Tool, event.getPlayer(), event.getState()) == -1)
-//                    event.setNewSpeed(0);
-//        }
-//    }
+	public static void attachWorldCapabilities(AttachCapabilitiesEvent<World> event) {
+		event.addCapability(ClimateData.ID, new ClimateData());
+	}
 }
