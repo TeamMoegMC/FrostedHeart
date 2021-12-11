@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
@@ -154,6 +155,11 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     }
 
     @Override
+	public AxisAlignedBB getRenderBoundingBox() {
+		return new AxisAlignedBB(pos.getX()-1,pos.getY()-1,pos.getZ()-1,pos.getX()+1,pos.getY()+6,pos.getZ()+1);
+	}
+
+	@Override
 	protected void tickFuel() {
 		super.tickFuel();
 		this.tickLiquid();
