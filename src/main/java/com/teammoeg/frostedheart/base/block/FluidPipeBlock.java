@@ -52,16 +52,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
     Class<T> type;
     public final String name;
     protected int lightOpacity;
-    public static final BooleanProperty CASING = BooleanProperty.create("casing");
-    public static final Map<Direction, BooleanProperty> RIM_MAP = Util.make(Maps.newEnumMap(Direction.class), (directions) -> {
-        directions.put(Direction.NORTH, BooleanProperty.create("north_rim"));
-        directions.put(Direction.EAST, BooleanProperty.create("east_rim"));
-        directions.put(Direction.SOUTH, BooleanProperty.create("south_rim"));
-        directions.put(Direction.WEST, BooleanProperty.create("west_rim"));
-        directions.put(Direction.UP, BooleanProperty.create("up_rim"));
-        directions.put(Direction.DOWN, BooleanProperty.create("down_rim"));
-    });
-
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
@@ -181,10 +171,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
     @Override
     protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, CASING, BlockStateProperties.WATERLOGGED);
-        for (BooleanProperty rim : RIM_MAP.values()) {
-            builder.add(rim);
-        }
+        builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, BlockStateProperties.WATERLOGGED);
         super.fillStateContainer(builder);
     }
 
@@ -215,52 +202,8 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
         for (Direction d : Direction.values())
             if (d != ignore) {
                 state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
-                state = state.with(RIM_MAP.get(d), shouldDrawRim(world, pos, state, d));
             }
-        if (shouldDrawCasing(world, pos, state)) {
-            state = state.with(CASING, true);
-        } else {
-            state = state.with(CASING, false);
-        }
         return state;
-		/*BracketedTileEntityBehaviour bracket = TileEntityBehaviour.get(world, pos, BracketedTileEntityBehaviour.TYPE);
-		if (bracket != null && bracket.isBracketPresent())
-			return state;
-
-		BlockState prevState = state;
-		int prevStateSides = (int) Arrays.stream(Iterate.directions)
-				.map(PROPERTY_BY_DIRECTION::get)
-				.filter(prevState::getValue)
-				.count();
-
-		// Update sides that are not ignored
-		for (Direction d : Iterate.directions)
-			if (d != ignore) {
-				boolean shouldConnect = canConnectTo(world, pos.relative(d), world.getBlockState(pos.relative(d)), d);
-				state = state.setValue(PROPERTY_BY_DIRECTION.get(d), shouldConnect);
-			}
-
-		// See if it has enough connections
-		Direction connectedDirection = null;
-		for (Direction d : Iterate.directions) {
-			if (isOpenAt(state, d)) {
-				if (connectedDirection != null)
-					return state;
-				connectedDirection = d;
-			}
-		}
-
-		// Add opposite end if only one connection
-		if (connectedDirection != null)
-			return state.setValue(PROPERTY_BY_DIRECTION.get(connectedDirection.getOpposite()), true);
-
-		// If we can't connect to anything and weren't connected before, do nothing
-		if (prevStateSides == 2)
-			return prevState;
-
-		// Use preferred
-		return state.setValue(PROPERTY_BY_DIRECTION.get(preferredDirection), true)
-				.setValue(PROPERTY_BY_DIRECTION.get(preferredDirection.getOpposite()), true);*/
     }
 
     @Override

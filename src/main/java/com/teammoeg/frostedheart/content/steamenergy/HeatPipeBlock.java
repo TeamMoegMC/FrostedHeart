@@ -63,36 +63,10 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
     }
 
 
-	/*@Override
-	public void onBlockAdded(BlockState state, World worldIn, BlockPos pos, BlockState oldState, boolean isMoving) {
-		super.onBlockAdded(state, worldIn, pos, oldState, isMoving);
-		TileEntity tec=Utils.getExistingTileEntity(worldIn,pos);
-		for(Direction d:Direction.values()) {
-			TileEntity te=Utils.getExistingTileEntity(worldIn,pos.offset(d));
-			if(te instanceof HeatPipeTileEntity)
-				((HeatPipeTileEntity) te).connectAt(d.getOpposite());
-			else
-				((HeatPipeTileEntity) tec).connectAt(d);
-		}
-	}*/
-
-
-	/*@Override
-	public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
-		super.onReplaced(state, worldIn, pos, newState, isMoving);
-		for(Direction d:Direction.values()) {
-			TileEntity te=Utils.getExistingTileEntity(worldIn,pos.offset(d));
-			if(te instanceof HeatPipeTileEntity)
-				((HeatPipeTileEntity) te).disconnectAt(d.getOpposite());
-		}
-	}*/
-
 
     @Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
-        //System.out.println(pos);
-        //System.out.println(fromPos);
         TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
         if (te instanceof HeatPipeTileEntity) {
             Vector3i vec = fromPos.subtract(pos);

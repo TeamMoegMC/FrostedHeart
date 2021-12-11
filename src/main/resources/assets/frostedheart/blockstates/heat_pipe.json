@@ -60,14 +60,6 @@
 		},
 		{
 			"when": {
-				"casing": "true"
-			},
-			"apply": {
-				"model": "frostedheart:block/fluid_pipe/casing"
-			}
-		},
-		{
-			"when": {
 				"up": "true",
 				"north": "true",
 				"south": "false",
@@ -427,54 +419,6 @@
 			},
 			"apply": {
 				"model": "frostedheart:block/fluid_pipe/none_z"
-			}
-		},
-		{
-			"when": {
-				"up_rim": "true"
-			},
-			"apply": {
-				"model": "frostedheart:block/fluid_pipe/rim/up"
-			}
-		},
-		{
-			"when": {
-				"down_rim": "true"
-			},
-			"apply": {
-				"model": "frostedheart:block/fluid_pipe/rim/down"
-			}
-		},
-		{
-			"when": {
-				"north_rim": "true"
-			},
-			"apply": {
-				"model": "frostedheart:block/fluid_pipe/rim/north"
-			}
-		},
-		{
-			"when": {
-				"south_rim": "true"
-			},
-			"apply": {
-				"model": "frostedheart:block/fluid_pipe/rim/south"
-			}
-		},
-		{
-			"when": {
-				"west_rim": "true"
-			},
-			"apply": {
-				"model": "frostedheart:block/fluid_pipe/rim/west"
-			}
-		},
-		{
-			"when": {
-				"east_rim": "true"
-			},
-			"apply": {
-				"model": "frostedheart:block/fluid_pipe/rim/east"
 			}
 		}
 	]

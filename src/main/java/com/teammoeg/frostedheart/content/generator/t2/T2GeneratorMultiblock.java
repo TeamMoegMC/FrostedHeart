@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -40,8 +41,7 @@ public class T2GeneratorMultiblock extends FHBaseMultiblock {
     public boolean canRenderFormedStructure() {
         return false;
     }
-
-    @Override
+	@Override
     @OnlyIn(Dist.CLIENT)
     public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
     }

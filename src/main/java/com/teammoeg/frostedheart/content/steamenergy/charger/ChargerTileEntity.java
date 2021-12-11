@@ -31,6 +31,8 @@ import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 import com.teammoeg.frostedheart.util.FHUtils;
+
+import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
@@ -44,6 +46,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 
 import java.util.List;
 
@@ -102,7 +108,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                     if (sr.getIngredients().iterator().next().test(is)) {
                     	if(!world.isRemote) {
 	                        power -= sr.getCookTime() / 20;
-	                        pe.giveExperiencePoints((int) sr.getExperience());
+	                        splitAndSpawnExperience(pe.getEntityWorld(),pe.getPosition(), sr.getExperience());
 	                        is.setCount(is.getCount() - 1);
 	                        ItemStack gain = sr.getCraftingResult(null).copy();
 	                        FHUtils.giveItem(pe, gain);
@@ -117,7 +123,20 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         }
         return ActionResultType.PASS;
     }
+    private static void splitAndSpawnExperience(World world,BlockPos pos, float experience) {
+        int i = MathHelper.floor(experience);
+        float f = MathHelper.frac(experience);
+        if (f != 0.0F && Math.random() < f) {
+           ++i;
+        }
 
+        while(i > 0) {
+           int j = ExperienceOrbEntity.getXPSplit(i);
+           i -= j;
+           world.addEntity(new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), j));
+        }
+
+     }
     public void drawEffect() {
         if (world != null && world.isRemote) {
             ClientUtils.spawnSteamParticles(world, this.getPos());

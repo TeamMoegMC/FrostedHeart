@@ -18,13 +18,19 @@
 
 package com.teammoeg.frostedheart.events;
 
+import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
+import blusunrize.immersiveengineering.client.render.tile.DynamicModel.ModelType;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHContent.FHTileTypes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
+import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
+import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
+import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
@@ -47,6 +53,7 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -63,6 +70,18 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         // Register translucent render type
+        T1GeneratorRenderer.FUEL = DynamicModel.createSided(
+				new ResourceLocation(FHMain.MODID, "block/multiblocks/generator_fuel.obj"),
+				"generator_t1_fuel", ModelType.IE_OBJ
+		);
+		 T2GeneratorRenderer.FUEL = DynamicModel.createSided(
+					new ResourceLocation(FHMain.MODID, "block/multiblocks/generator_t2_fuel.obj"),
+					"generator_t2_fuel", ModelType.IE_OBJ
+			);
+		 HeatPipeRenderer.RIM = DynamicModel.createSimple(
+					new ResourceLocation(FHMain.MODID, "block/fluid_pipe/pipe_rim.obj"),
+					"pipe_rim", ModelType.IE_OBJ
+			);
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.wolfberry_bush_block, RenderType.getCutoutMipped());
@@ -72,6 +91,9 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getTranslucent());
+        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(),T1GeneratorRenderer::new);
+        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(),T2GeneratorRenderer::new);
+        ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(),HeatPipeRenderer::new);
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
         PlayerRenderer render = skinMap.get("default");

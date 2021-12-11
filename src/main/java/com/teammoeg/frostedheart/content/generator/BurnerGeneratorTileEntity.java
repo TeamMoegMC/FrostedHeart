@@ -111,12 +111,12 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         if (!descPacket) {
-            ItemStackHelper.loadAllItems(nbt, inventory);
+            
             process = nbt.getInt("process");
             processMax = nbt.getInt("processMax");
             currentItem = ItemStack.read(nbt.getCompound("currentItem"));
         }
-        ;
+        ItemStackHelper.loadAllItems(nbt, inventory);
     }
 
     @Override
@@ -129,8 +129,8 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
                 nbt.remove("current");
             nbt.putInt("process", process);
             nbt.putInt("processMax", processMax);
-            ItemStackHelper.saveAllItems(nbt, inventory);
         }
+        ItemStackHelper.saveAllItems(nbt, inventory);
     }
 
     @Nonnull
@@ -207,7 +207,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
     @Override
     public NonNullList<ItemStack> getInventory() {
         T master = master();
-        if (master != null && master.formed && formed)
+        if (master != null)
             return master.inventory;
         return this.inventory;
     }
