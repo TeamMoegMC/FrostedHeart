@@ -70,18 +70,7 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         // Register translucent render type
-        T1GeneratorRenderer.FUEL = DynamicModel.createSided(
-				new ResourceLocation(FHMain.MODID, "block/multiblocks/generator_fuel.obj"),
-				"generator_t1_fuel", ModelType.IE_OBJ
-		);
-		 T2GeneratorRenderer.FUEL = DynamicModel.createSided(
-					new ResourceLocation(FHMain.MODID, "block/multiblocks/generator_t2_fuel.obj"),
-					"generator_t2_fuel", ModelType.IE_OBJ
-			);
-		 HeatPipeRenderer.RIM = DynamicModel.createSimple(
-					new ResourceLocation(FHMain.MODID, "block/fluid_pipe/pipe_rim.obj"),
-					"pipe_rim", ModelType.IE_OBJ
-			);
+
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.wolfberry_bush_block, RenderType.getCutoutMipped());
