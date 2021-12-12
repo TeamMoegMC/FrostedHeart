@@ -253,24 +253,24 @@ public class ForgeEvents {
 				if (temp < growTemp) {
 					event.setCanceled(true);
 					player.sendStatusMessage(
-							new TranslationTextComponent("message.frostedheart.crop_not_growable", growTemp), false);
+							new TranslationTextComponent("message.frostedheart.crop_no_bonemeal", growTemp), false);
 				}
 			} else if (growBlock instanceof FHBerryBushBlock) {
 				int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
 				if (temp < growTemp) {
 					event.setCanceled(true);
 					player.sendStatusMessage(
-							new TranslationTextComponent("message.frostedheart.crop_not_growable", growTemp), false);
+							new TranslationTextComponent("message.frostedheart.crop_no_bonemeal", growTemp), false);
 				}
 			} else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
 				if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
 					event.setCanceled(true);
-					player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
+					player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
 							WorldClimate.HEMP_GROW_TEMPERATURE), false);
 				}
 			} else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
 				event.setCanceled(true);
-				player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
+				player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
 						WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), false);
 			}
 		}

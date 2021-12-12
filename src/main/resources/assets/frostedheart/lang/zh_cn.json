@@ -108,6 +108,7 @@
   "message.frostedheart.corespade.nothing": "什么都没有。",
   "message.frostedheart.eaten_poisonous_food": "你不应该吃生肉！",
   "message.frostedheart.crop_not_growable": "这里的温度太低了，这株植物生长至少需要 %s °C",
+  "message.frostedheart.crop_no_bonemeal": "这里的温度太低了，即便使用骨粉也无法加速生长。施用骨粉需要达到至少%s °C",
   "message.frostedheart.info.thermometerbody": "体温：%s °C",
   "message.frostedheart.info.soil_thermometerbody": "你所在位置的土壤温度：%s °C",
   "message.frostedheart.campfire.forever": "这个篝火不会熄灭！",

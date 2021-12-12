@@ -69,7 +69,8 @@ minecraft {
             args '--mod', 'frostedheart', '--all', '--output', file('src/generated/resources/'), 'validate', '--existing', file('src/main/resources/'), '--existing-mod', 'immersiveengineering'
             mods {
                 frostedheart {
-                    source sourceSets.main
+					source sourceSets.main
+                    source sourceSets.datagen
                 }
             }
         }

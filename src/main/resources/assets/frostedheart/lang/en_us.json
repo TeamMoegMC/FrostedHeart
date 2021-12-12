@@ -104,6 +104,7 @@
 
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under %s °C",
+  "message.frostedheart.crop_no_bonemeal": "Temperature here is too low. Fertilizers does not take effect! Temperature should reach %s °C to speed up growing.",
   "message.frostedheart.info.thermometerbody": "Body Temperature:%s °C",
   "message.frostedheart.vein_size.nothing": "Nothing.",
   "message.frostedheart.vein_size.small": "Small ",
