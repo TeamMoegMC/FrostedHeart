@@ -56,7 +56,7 @@ public class RecipeInnerDismantle extends SpecialRecipe {
 			if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
 				if (itemstack.hasTag()) {
 					CompoundNBT cnbt = itemstack.getTag();
-					if (!cnbt.getBoolean("inner_bounded") && cnbt.getString("inner_cover") != null)
+					if (!cnbt.getBoolean("inner_bounded") && !cnbt.getString("inner_cover").isEmpty())
 						hasArmor = true;
 					else
 						return false;
