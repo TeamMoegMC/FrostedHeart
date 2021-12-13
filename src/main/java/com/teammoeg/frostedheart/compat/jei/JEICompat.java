@@ -83,7 +83,8 @@ public class JEICompat implements IModPlugin {
         		),CuttingCategory.UID); 
     }
 
-    @Override
+
+	@Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
         registration.addRecipeCategories(

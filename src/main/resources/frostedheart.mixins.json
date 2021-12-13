@@ -25,6 +25,7 @@
     "create.MixinSawTileEntity",
     "create.MixinSmartTileEntity",
     "create.MixinToolboxInventory",
+    "create.CreateJEIMixin",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
     "immersiveengineering.HempBlockMixin",
