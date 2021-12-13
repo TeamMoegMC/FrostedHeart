@@ -48,6 +48,7 @@
     "minecraft.TemplateAccess",
     "minecraft.TemplateManagerMixin",
     "minecraft.VillagerMixin",
+    "minecraft.MixinAbstractFurnaceTileEntity",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

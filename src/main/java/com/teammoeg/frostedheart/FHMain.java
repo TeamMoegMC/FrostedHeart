@@ -43,7 +43,6 @@ import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 import net.minecraft.advancements.criterion.ItemPredicate;
-import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -129,7 +128,7 @@ public class FHMain {
     	try {
     		Class.forName("moze_intel.projecte.PECore");
     		MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
-    	}catch(Exception ignored){}
+    	}catch(Throwable ignored){}
         ChunkDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
 

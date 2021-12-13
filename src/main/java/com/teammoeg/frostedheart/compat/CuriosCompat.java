@@ -91,7 +91,17 @@ public class CuriosCompat {
 
         @Override
         public boolean hasNext() {
-            return (cur != null && cur.hasNext()) || it.hasNext();
+            if(cur != null && cur.hasNext())return true;
+            ICurioStacksHandler current;
+            while(it.hasNext()) {
+            	current = it.next();
+            	if (current.isVisible()) {
+                    cur = new ItemIterator(current.getSlots(), current.getStacks());
+                    if(cur.hasNext())
+                    	return true;
+                }
+            }
+            return false;
         }
 
         @Override
