@@ -131,14 +131,14 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                 if (optional.isPresent()) {
                     if (!worldIn.isRemote && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
                         player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
-                        return ActionResultType.SUCCESS;
+                        return ActionResultType.CONSUME;
                     }
-                    return ActionResultType.CONSUME;
+                    return ActionResultType.PASS;
                 }
 
             } else {
-                ICampfireExtra info = (ICampfireExtra) worldIn.getTileEntity(pos);
-                if (!worldIn.isRemote && info != null)
+                ICampfireExtra info = (ICampfireExtra) campfiretileentity;
+                if (!worldIn.isRemote)
                     if (state.get(CampfireBlock.LIT)) {
                         player.sendMessage(GuiUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), player.getUniqueID());
                     } else if (info.getLifeTime() > 0) {
