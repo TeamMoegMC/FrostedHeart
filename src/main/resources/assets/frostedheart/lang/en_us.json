@@ -151,9 +151,9 @@
   "effect.frostedheart.wet": "wet",
 
   "death.attack.hyperthermia": "%s died of hyperthermia.",
-  "death.attack.hyperthermia.player": "%s was grilled into a hot dog.",
+  "death.attack.hyperthermia_instant": "%s was grilled into a hot dog.",
   "death.attack.hypothermia": "%s turned into a frozen stick.",
-  "death.attack.hypothermia.player": "%s turned into a frozen stick.",
+  "death.attack.hypothermia_instant": "%s was deep freezed.",
 
   "gui.jei.category.frostedheart.crucible": "Steel Mill Crucible",
 

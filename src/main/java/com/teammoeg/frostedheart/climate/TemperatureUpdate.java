@@ -144,9 +144,9 @@ public class TemperatureUpdate {
 				keepwarm = 1;
 			float dheat= HEAT_EXCHANGE_CONSTANT  * (1 - keepwarm) * (envtemp - current);
 			if(dheat>0.1)
-				player.attackEntityFrom(FHDamageSources.HYPERTHERMIA,(dheat)*20);
+				player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT,(dheat)*10);
 			else if(dheat<-0.1)
-				player.attackEntityFrom(FHDamageSources.HYPERTHERMIA,(-dheat)*20);
+				player.attackEntityFrom(FHDamageSources.HYPOTHERMIA_INSTANT,(-dheat)*10);
 			current +=dheat* tspeed;
 			if (current < -10)
 				current = -10;
