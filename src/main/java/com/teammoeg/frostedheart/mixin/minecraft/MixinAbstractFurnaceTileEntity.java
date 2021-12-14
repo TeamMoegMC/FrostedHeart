@@ -2,6 +2,9 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.tileentity.ITickableTileEntity;
@@ -17,7 +20,8 @@ public abstract class MixinAbstractFurnaceTileEntity extends LockableTileEntity 
 	 * @author khjxiaogu
 	 * @reason no more furnace.
 	 */
-	@Overwrite
-	@Override
-	public void tick() {};
+	@Inject(at=@At("HEAD"),cancellable=true,method="tick")
+	public void NoTick(CallbackInfo cbi) {
+		cbi.cancel();
+	};
 }
