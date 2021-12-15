@@ -20,10 +20,12 @@ package com.teammoeg.frostedheart.network;
 
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.UUID;
@@ -50,7 +52,12 @@ public class FHResearchProgressSyncPacket {
 
     void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHResearch.researches.getById(id).getData().deserialize(data);
+        	Research rs=FHResearch.researches.getById(id);
+        	ResearchData datax=rs.getData();
+        	boolean status=datax.isCompleted();
+        	datax.deserialize(data);
+        	if(status!=datax.isCompleted())
+        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()))
         });
         context.get().setPacketHandled(true);
     }

@@ -27,8 +27,7 @@ public class TeamResearchData {
 		return Optional.ofNullable(team.get());
 	}
 	public void triggerClue(int id) {
-		ensureClue(id);
-		clueComplete.set(id-1,true);
+		setClueTriggered(id,true);
 	}
 	public void triggerClue(AbstractClue clue) {
 		triggerClue(clue.getRId());
@@ -39,6 +38,7 @@ public class TeamResearchData {
 	public void setClueTriggered(int id,boolean trig) {
 		ensureClue(id);
 		clueComplete.set(id-1,trig);
+		getActiveResearch().ifPresent(r->this.getData(r).checkComplete());
 	}
 	public void setClueTriggered(AbstractClue clue,boolean trig) {
 		setClueTriggered(clue.getRId(),trig);

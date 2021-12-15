@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 
@@ -15,6 +16,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
+
+import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
@@ -45,6 +48,7 @@ public class ResearchData {
 		if(getTotalCommitted()==rs.get().getRequiredPoints()) {
 			finished=true;
 			parent.getTeam().ifPresent(t->rs.get().sendProgressPacket(t));
+			MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(rs.get(),parent.team.get(),finished));
 		}
 	}
 	public ResearchData(Supplier<Research> r,CompoundNBT nc,TeamResearchData parent){
