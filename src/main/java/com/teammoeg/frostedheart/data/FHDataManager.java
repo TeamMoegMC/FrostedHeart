@@ -22,6 +22,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.data.FHDataManager.FHDataType.DataType;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -31,12 +33,56 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class FHDataManager {
+	public static enum FHDataType {
+	    Armor(new DataType<>(ArmorTempData.class,"temperature", "armor")),
+	    Biome(new DataType<>(BiomeTempData.class,"temperature", "biome")),
+	    Food (new DataType<>( FoodTempData.class,"temperature", "food" )),
+	    Block(new DataType<>(BlockTempData.class,"temperature", "block")),
+	    Drink(new DataType<>(DrinkTempData.class,"temperature", "drink")),
+	    Cup  (new DataType<>(      CupData.class,"temperature", "cup"  )),
+	    World(new DataType<>(WorldTempData.class,"temperature", "world")),
+		ResearchRecipe(new DataType<>(ResearchRecipe.class,"research", "crafting"));
+
+	    static class DataType<T extends JsonDataHolder> {
+	        final Class<T> dataCls;
+	        final String location;
+	        final String domain;
+
+	        public DataType(Class<T> dataCls,String domain, String location) {
+	            this.location = location;
+	            this.dataCls = dataCls;
+	            this.domain = domain;
+	        }
+
+	        public T create(JsonObject jo) {
+	            try {
+	                return dataCls.getConstructor(JsonObject.class).newInstance(jo);
+	            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+	                    | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+	                // TODO Auto-generated catch block
+	                throw new RuntimeException(e);
+	            }
+	        }
+
+	        public String getLocation() {
+	            return domain+"/"+location;
+	        }
+	    }
+
+	    public final DataType type;
+
+	    private FHDataType(DataType type) {
+	        this.type = type;
+	    }
+
+	}
     public static class ResourceMap<T extends JsonDataHolder> extends HashMap<ResourceLocation, T> {
         public ResourceMap() {
             super();
@@ -58,27 +104,14 @@ public class FHDataManager {
     private FHDataManager() {
     }
 
-    public static final ResourceMap<FoodTempData>  foodData  = new ResourceMap<>();
-    public static final ResourceMap<ArmorTempData> armorData = new ResourceMap<>();
-    public static final ResourceMap<BiomeTempData> biomeData = new ResourceMap<>();
-    public static final ResourceMap<BlockTempData> blockData = new ResourceMap<>();
-    public static final ResourceMap<DrinkTempData> drinkData = new ResourceMap<>();
-    public static final ResourceMap<WorldTempData> worldData = new ResourceMap<>();
-    public static final ResourceMap<ResearchRecipe> researchCraftData = new ResourceMap<>();
-    public static final ResourceMap<CupData> cupData = new ResourceMap<>();
     public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
     public static boolean synched = false;
     private static final JsonParser parser = new JsonParser();
 
     static {
-        ALL_DATA.put(FHDataType.Armor, armorData);
-        ALL_DATA.put(FHDataType.Biome, biomeData);
-        ALL_DATA.put(FHDataType.Block, blockData);
-        ALL_DATA.put(FHDataType.Food, foodData);
-        ALL_DATA.put(FHDataType.Drink, drinkData);
-        ALL_DATA.put(FHDataType.World, worldData);
-        ALL_DATA.put(FHDataType.Cup, cupData);
-        ALL_DATA.put(FHDataType.ResearchRecipe, researchCraftData);
+    	for(FHDataType dt:FHDataType.values()) {
+    		ALL_DATA.put(dt,new ResourceMap<>());
+    	}
     }
 
     public static final void reset() {
@@ -94,7 +127,11 @@ public class FHDataManager {
         ALL_DATA.get(dt).put(jdh.getId(), jdh);
         synched = false;
     }
-
+    @SuppressWarnings("unchecked")
+	public static final <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt){
+		return ALL_DATA.get(dt);
+    	
+    }
     @SuppressWarnings("unchecked")
     public static final void load(DataEntry[] entries) {
         reset();
@@ -121,7 +158,8 @@ public class FHDataManager {
     }
 
     public static ITempAdjustFood getFood(ItemStack is) {
-    	CupData data=cupData.get(is.getItem().getRegistryName());
+    	CupData data=FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
+    	ResourceMap<FoodTempData> foodData=FHDataManager.get(FHDataType.Food);
     	if(data!=null) {
     		return new CupTempAdjustProxy(data.getEfficiency(),foodData.get(is.getItem().getRegistryName()));
     	}
@@ -130,41 +168,41 @@ public class FHDataManager {
 
     public static IWarmKeepingEquipment getArmor(ItemStack is) {
         //System.out.println(is.getItem().getRegistryName());
-        return armorData.get(is.getItem().getRegistryName());
+        return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(is.getItem().getRegistryName());
     }
 
     public static IWarmKeepingEquipment getArmor(String is) {
         //System.out.println(is.getItem().getRegistryName());
-        return armorData.get(new ResourceLocation(is));
+        return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(new ResourceLocation(is));
     }
 
     public static Float getBiomeTemp(Biome b) {
-        BiomeTempData data = biomeData.get(b.getRegistryName());
+        BiomeTempData data = FHDataManager.<BiomeTempData>get(FHDataType.Biome).get(b.getRegistryName());
         if (data != null)
             return data.getTemp();
         return null;
     }
     public static Float getWorldTemp(World w) {
-        WorldTempData data = worldData.get(w.getDimensionKey().getLocation());
+        WorldTempData data = FHDataManager.<WorldTempData>get(FHDataType.World).get(w.getDimensionKey().getLocation());
         if (data != null)
             return data.getTemp();
         return null;
     }
     public static BlockTempData getBlockData(Block b) {
-        return blockData.get(b.getRegistryName());
+        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(b.getRegistryName());
     }
     public static BlockTempData getBlockData(ItemStack b) {
-        return blockData.get(b.getItem().getRegistryName());
+        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(b.getItem().getRegistryName());
     }
 
     public static float getDrinkHeat(FluidStack f) {
-        DrinkTempData dtd = drinkData.get(f.getFluid().getRegistryName());
+        DrinkTempData dtd = FHDataManager.<DrinkTempData>get(FHDataType.Drink).get(f.getFluid().getRegistryName());
         if (dtd != null)
             return dtd.getHeat();
         return -0.3f;
     }
     public static boolean testRecipe(IRecipe<?> recipe,PlayerEntity pe) {
-        ResearchRecipe dtd = researchCraftData.get(recipe.getId());
+        ResearchRecipe dtd = FHDataManager.<ResearchRecipe>get(FHDataType.ResearchRecipe).get(recipe.getId());
         if (dtd != null)
             return dtd.test(pe);
         return true;

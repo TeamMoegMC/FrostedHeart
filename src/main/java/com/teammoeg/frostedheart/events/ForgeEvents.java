@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.events;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
@@ -103,6 +104,10 @@ public class ForgeEvents {
 	@SubscribeEvent
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
 
+	}
+	@SubscribeEvent
+	public static void onIEMultiBlockForm(MultiblockFormEvent event) {
+		event.getMultiblock().getUniqueName();
 	}
 	@SubscribeEvent(receiveCanceled=true,priority=EventPriority.HIGHEST)
 	public static void onArmorDamage(LivingHurtEvent event) {

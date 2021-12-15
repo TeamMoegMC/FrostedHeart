@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.data.FHDataManager.FHDataType;
 import com.teammoeg.frostedheart.util.StructureUtils;
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
