@@ -5,13 +5,21 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.Supplier;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+
 public class ResearchData {
-	boolean active;
+	boolean active;//is all items fulfilled?
+	boolean finished;
 	Supplier<Research> rs;
 	int committed;//points committed
 	final TeamResearchData parent;
@@ -54,23 +62,52 @@ public class ResearchData {
 	public boolean isCompleted() {
 		return getProgress() == 1.0F;
 	}
-
-	//TODO: impl
 	public boolean isInProgress() {
-		if(parent.getActiveResearch().isPresent()) {
-			return parent.getActiveResearch().resolve().get().equals(this.rs);
+		LazyOptional<Research> r=parent.getActiveResearch();
+		if(r.isPresent()) {
+			return r.resolve().get().equals(this.rs);
 		}
 		return false;
 	}
-
-	//TODO: impl
-	public HashSet<ItemStack> getItemStored() {
-		HashSet<ItemStack> set = new HashSet<ItemStack>();
-		set.add(new ItemStack(Items.GRASS_BLOCK));
-		return set;
+	public List<ItemStack> commitItem(ItemStack is) {
+		Research r=rs.get();
+		List<IngredientWithSize> items=new ArrayList<>(r.getRequiredItems());
+		boolean flag1=false;
+		for(ItemStack isx:committedItems) {
+			if(ItemStack.areItemsEqual(isx,is)) {
+				isx.setCount(isx.getCount()+is.getCount());
+				flag1=true;
+			}
+		}
+		if(!flag1)
+			committedItems.add(is);
+		List<ItemStack> cur=committedItems;//copy
+		committedItems=new ArrayList<>();//replace
+		List<ItemStack> ret=new ArrayList<>();
+		for(Iterator<ItemStack>it0=cur.iterator();it0.hasNext();) {
+			ItemStack cs=it0.next();
+			for(Iterator<IngredientWithSize> it=items.iterator();it.hasNext();) {
+				IngredientWithSize iws=it.next();
+				if(iws.testIgnoringSize(cs)) {
+					if(cs.getCount()<=iws.getCount()) {
+						committedItems.add(cs);
+						if(iws.getCount()==cs.getCount())
+							it.remove();
+					}else {
+						committedItems.add(ItemHandlerHelper.copyStackWithSize(cs,iws.getCount()));
+						ret.add(ItemHandlerHelper.copyStackWithSize(cs,cs.getCount()-iws.getCount()));//excess output
+						it.remove();
+					}
+				}
+			}
+		}
+		if(items.isEmpty())//all requirements fulfilled
+			active=true;
+		return ret;
 	}
-
-	//TODO: impl
+	public List<ItemStack> getItemStored() {
+		return Collections.unmodifiableList(committedItems);
+	}
 	public float getProgress() {
 		return getTotalCommitted()/rs.get().getRequiredPoints();
 	}

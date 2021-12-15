@@ -16,7 +16,9 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -42,7 +44,8 @@ public class Research extends FHRegisteredItem{
 		clues.add(cl);
 	}
 	private ArrayList<IngredientWithSize> requiredItems=new ArrayList<>();
-    private int points;//research point
+
+	private int points;//research point
     private int time;//time cost per research point commit.
 
     @SafeVarargs
@@ -50,7 +53,9 @@ public class Research extends FHRegisteredItem{
         this(path, category, Items.GRASS_BLOCK, parents);
     }
 
-
+    public List<IngredientWithSize> getRequiredItems() {
+		return Collections.unmodifiableList(requiredItems);
+	}
     @SafeVarargs
 	public Research(String id, ResearchCategory category, Item icon, Supplier<Research>... parents) {
         this.id = id;
