@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
@@ -57,7 +59,7 @@ public class FHResearchProgressSyncPacket {
         	boolean status=datax.isCompleted();
         	datax.deserialize(data);
         	if(status!=datax.isCompleted())
-        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()))
+        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()));
         });
         context.get().setPacketHandled(true);
     }
