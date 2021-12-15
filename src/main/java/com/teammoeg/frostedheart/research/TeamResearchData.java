@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.research;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -7,6 +8,8 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -89,6 +92,31 @@ public class TeamResearchData {
 		if(activeResearchId==0)
 			return LazyOptional.empty();
 		return LazyOptional.of(()->FHResearch.getResearch(activeResearchId).get());
+	}
+	public boolean canResearch() {
+		LazyOptional<Research> rs=getActiveResearch();
+		if(rs.isPresent()) {
+			Research r=rs.resolve().get();
+			return this.getData(r).canResearch();
+		}
+		return false;
+	}
+	
+	//return excess items.
+	public List<ItemStack> commitItem(ItemStack item){
+		LazyOptional<Research> rs=getActiveResearch();
+		if(rs.isPresent()) {
+			Research r=rs.resolve().get();
+			return this.getData(r).commitItem(item);
+		}
+		return Arrays.asList(new ItemStack[0]);
+	}
+	public void doResearch(int points){
+		LazyOptional<Research> rs=getActiveResearch();
+		if(rs.isPresent()) {
+			Research r=rs.resolve().get();
+			this.getData(r).doResearch(points);
+		}
 	}
 	public CompoundNBT serialize() {
 		CompoundNBT nbt=new CompoundNBT();
