@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
+import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
@@ -117,7 +118,7 @@ public class ForgeEvents {
 	}
 	@SubscribeEvent(receiveCanceled=true,priority=EventPriority.HIGHEST)
 	public static void onArmorDamage(LivingHurtEvent event) {
-		if(event.getEntityLiving() instanceof PlayerEntity) {
+		if(event.getEntityLiving() instanceof PlayerEntity&&!event.getSource().isUnblockable()) {
 			PlayerEntity player=(PlayerEntity) event.getEntityLiving();
 			float p_234563_2_=event.getAmount();
 			DamageSource p_234563_1_=event.getSource();
@@ -471,6 +472,7 @@ public class ForgeEvents {
 	public static void onRegisterCommands(RegisterCommandsEvent event) {
 		CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
 		AddTempCommand.register(dispatcher);
+		ResearchCommand.register(dispatcher);
 	}
 
 	public static void attachWorldCapabilities(AttachCapabilitiesEvent<World> event) {

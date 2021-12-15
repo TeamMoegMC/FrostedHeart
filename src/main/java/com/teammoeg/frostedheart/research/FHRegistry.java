@@ -81,6 +81,7 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 				items.add(item);
 				rnames.add(item.getLId());
 			}else {
+				item.setRId(index+1);
 				items.set(index,item);
 			}
 		}
@@ -137,7 +138,7 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 		return new RegisteredSupplier<>(id,strLazyGetter);
 	}
 	public Supplier<T> get(int id) {
-		if(rnames.size()>id) {
+		if(rnames.size()>=id) {
 			String name=rnames.get(id-1);
 			if(name!=null)
 				return get(name);

@@ -43,9 +43,18 @@ public class ResearchData {
 		if(finished)return;
 		if(getTotalCommitted()==rs.get().getRequiredPoints()) {
 			finished=true;
-			parent.getTeam().ifPresent(t->rs.get().sendProgressPacket(t));
-			MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(rs.get(),parent.team.get(),finished));
+			this.announceCompletion();
 		}
+	}
+	public void announceCompletion() {
+		sendProgressPacket();
+		MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(rs.get(),parent.team.get(),finished));
+	}
+	public void setFinished(boolean finished) {
+		this.finished = finished;
+	}
+	public void sendProgressPacket() {
+		parent.getTeam().ifPresent(t->rs.get().sendProgressPacket(t));
 	}
 	public ResearchData(Supplier<Research> r,CompoundNBT nc,TeamResearchData parent){
 		this(r,parent);
@@ -72,7 +81,7 @@ public class ResearchData {
 		committed=cn.getInt("committed");
 		active=cn.getBoolean("active");
 		finished=cn.getBoolean("finished");
-		ListNBT items=cn.getList("items",0);
+		ListNBT items=cn.getList("items",10);
 		items.stream().map(e->ItemStack.read((CompoundNBT)e)).forEach(e->committedItems.add(e));
 		//rs=FHResearch.getResearch(cn.getInt("research"));
 	}

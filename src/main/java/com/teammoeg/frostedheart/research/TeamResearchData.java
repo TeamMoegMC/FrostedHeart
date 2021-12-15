@@ -128,7 +128,7 @@ public class TeamResearchData {
 		nbt.putByteArray("clues",cl);
 		nbt.put("vars",variants);
 		ListNBT rs=new ListNBT();
-		rdata.stream().map(e->e!=null?e.serialize():ByteNBT.ZERO).forEach(e->rs.add(e));
+		rdata.stream().map(e->e!=null?e.serialize():new CompoundNBT()).forEach(e->rs.add(e));
 		nbt.put("researches",rs);
 		nbt.putInt("active",activeResearchId);
 		return nbt;
@@ -144,7 +144,7 @@ public class TeamResearchData {
 		variants=data.getCompound("vars");
 		for(int i=0;i<ba.length;i++)
 			clueComplete.set(i,ba[i]!=0);
-		ListNBT li=data.getList("researches",0);
+		ListNBT li=data.getList("researches",10);
 		activeResearchId=data.getInt("active");
 		for(int i=0;i<li.size();i++) {
 			INBT e=li.get(i);

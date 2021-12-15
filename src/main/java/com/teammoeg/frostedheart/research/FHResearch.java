@@ -36,8 +36,9 @@ public class FHResearch {
 		allResearches.orElse(Collections.emptyList()).forEach(c->c.doIndex());
 	}
 	public static void load(CompoundNBT cnbt) {
-		clues.deserialize(cnbt.getList("clues",0));
-		researches.deserialize(cnbt.getList("researches",0));
+		clues.deserialize(cnbt.getList("clues",8));
+		researches.deserialize(cnbt.getList("researches",8));
+		
 	}
 	public static Supplier<Research> getResearch(String id) {
 		return researches.get(id);

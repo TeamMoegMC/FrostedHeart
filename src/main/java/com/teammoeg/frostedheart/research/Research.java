@@ -44,7 +44,7 @@ public class Research extends FHRegisteredItem{
 	}
 	private ArrayList<IngredientWithSize> requiredItems=new ArrayList<>();
 
-	private int points;//research point
+	private int points=2000;//research point
     private int time;//time cost per research point commit.
 
     @SafeVarargs
