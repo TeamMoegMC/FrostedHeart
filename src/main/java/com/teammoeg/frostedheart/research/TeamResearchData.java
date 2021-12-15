@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research;
 
 import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class TeamResearchData {
 		ensureResearch(id);
 		ResearchData rnd=rdata.get(id-1);
 		if(rnd==null) {
-			rnd=new ResearchData(FHResearch.getResearch(id));
+			rnd=new ResearchData(FHResearch.getResearch(id),this);
 			rdata.set(id-1,rnd);
 		}
 		return rnd;
@@ -95,6 +96,13 @@ public class TeamResearchData {
 		variants=data.getCompound("vars");
 		for(int i=0;i<ba.length;i++)
 			clueComplete.set(i,ba[i]!=0);
-		data.getList("researches",0).stream().map(e->e.getId()==10?new ResearchData((CompoundNBT) e):null).forEach(e->rdata.add(e));;
+		ListNBT li=data.getList("researches",0);
+		for(int i=0;i<li.size();i++) {
+			INBT e=li.get(i);
+			if(e.getId()==10) {
+				rdata.add(new ResearchData(FHResearch.getResearch(i+1),(CompoundNBT) e,this));
+			}else
+				rdata.add(null);
+		}
 	}
 }

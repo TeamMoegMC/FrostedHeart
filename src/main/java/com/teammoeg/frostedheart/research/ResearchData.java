@@ -3,17 +3,36 @@ package com.teammoeg.frostedheart.research;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.function.Supplier;
 
 public class ResearchData {
 	boolean active;
 	Supplier<Research> rs;
-	public ResearchData(Supplier<Research> r){
+	int committed;//points committed
+	final TeamResearchData parent;
+	ArrayList<ItemStack> committedItems=new ArrayList<>();//items comitted
+	public ResearchData(Supplier<Research> r,TeamResearchData parent){
 		this.rs=r;
+		this.parent=parent;
 	}
-	public ResearchData(CompoundNBT nc){
+	public int getCommitted() {
+		return committed;
+	}
+	public int getTotalCommitted() {
+		Research r=rs.get();
+		int currentProgress=committed;
+		for(AbstractClue ac:r.getClues())
+			if(ac.isCompleted(parent))
+				currentProgress+=r.getRequiredPoints()*ac.getResearchContribution();
+		return currentProgress;
+	}
+	public ResearchData(Supplier<Research> r,CompoundNBT nc,TeamResearchData parent){
+		this(r,parent);
 		deserialize(nc);
 	}
 	public Research getResearch() {
@@ -21,12 +40,12 @@ public class ResearchData {
 	}
 	public CompoundNBT serialize() {
 		CompoundNBT cnbt=new CompoundNBT();
-		cnbt.putInt("research",getResearch().getRId());
+		//cnbt.putInt("research",getResearch().getRId());
 		return cnbt;
 		
 	}
 	public void deserialize(CompoundNBT cn) {
-		rs=FHResearch.getResearch(cn.getInt("research"));
+		//rs=FHResearch.getResearch(cn.getInt("research"));
 	}
 
 	public boolean isCompleted() {
@@ -47,6 +66,6 @@ public class ResearchData {
 
 	//TODO: impl
 	public float getProgress() {
-		return 0.0F;
+		return getTotalCommitted()/rs.get().getRequiredPoints();
 	}
 }

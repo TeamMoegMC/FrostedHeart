@@ -37,6 +37,9 @@ public abstract class AbstractClue extends FHRegisteredItem{
 	public void setCompleted(boolean trig) {
 		TeamResearchData.INSTANCE.setClueTriggered(this, trig);;
 	}
+	public boolean isCompleted(TeamResearchData data) {
+		return data.isClueTriggered(this);
+	}
 	public boolean isCompleted(Team team) {
 		return ResearchDataManager.INSTANCE.getData(team.getId()).isClueTriggered(this);
 	}

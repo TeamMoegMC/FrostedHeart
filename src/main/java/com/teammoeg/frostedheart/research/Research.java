@@ -33,12 +33,15 @@ public class Research extends FHRegisteredItem{
     private HashSet<Supplier<Research>> children = new HashSet<>();
     private HashSet<Supplier<AbstractClue>> clues=new HashSet<>();
     private ResearchCategory category;
-    private ArrayList<ItemStack> requireItems=new ArrayList<>();
-    private int points;
-    private int requiredTicks;
-    private int finishedTicks;
-    // the time required to complete research after starting research
-    // with required items are consumed and clues are found and other requirements satisfied
+    public Set<AbstractClue> getClues() {
+		return clues.stream().map(e->e.get()).collect(Collectors.toSet());
+	}
+    public void attachClue(Supplier<AbstractClue> cl) {
+		clues.add(cl);
+	}
+	private ArrayList<ItemStack> requireItems=new ArrayList<>();
+    private int points;//research point
+    private int time;//time cost per research point commit.
 
     @SafeVarargs
 	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
@@ -54,8 +57,7 @@ public class Research extends FHRegisteredItem{
         this.desc = new TranslationTextComponent("research."+id + ".desc");
         this.icon = icon;
         this.category = category;
-        this.requiredTicks = 1200;
-        this.finishedTicks = 600;
+        this.time = 20;
     }
     public String getId() {
         return id;
@@ -105,16 +107,16 @@ public class Research extends FHRegisteredItem{
         return category;
     }
 
-    public int getRequiredTicks() {
-        return requiredTicks;
+    public int getRequiredPoints() {
+        return points;
     }
-
-    public int getFinishedTicks() {
-        return finishedTicks;
+    @OnlyIn(Dist.CLIENT)
+    public int getCurrentPoints() {
+        return getData().getTotalCommitted();
     }
-
+    @OnlyIn(Dist.CLIENT)
     public float getProgressFraction() {
-        return (float) finishedTicks / requiredTicks;
+        return getData().getProgress();
     }
 
     public ResearchData getData(Team team) {
