@@ -57,6 +57,9 @@ public class ResearchData {
 
 	//TODO: impl
 	public boolean isInProgress() {
+		if(parent.getActiveResearch().isPresent()) {
+			return parent.getActiveResearch().resolve().get().equals(this.rs);
+		}
 		return false;
 	}
 
