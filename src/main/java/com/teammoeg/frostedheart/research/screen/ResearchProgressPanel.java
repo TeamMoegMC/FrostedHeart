@@ -33,8 +33,8 @@ public class ResearchProgressPanel extends Panel {
         theme.drawString(matrixStack, GuiUtils.translateGui("research_progress"), x + 10, y + 10);
         // progress bar
         float progress = researchScreen.getInProgressResearch().getProgressFraction();
-        float reqTime = researchScreen.getInProgressResearch().getRequiredTicks();
-        float finTIme = researchScreen.getInProgressResearch().getFinishedTicks();
+        float reqTime = researchScreen.getInProgressResearch().getCurrentPoints();
+        float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
         GuiHelper.drawHollowRect(matrixStack, x + 10, y + 20, w - 20, 5, Color4I.BLACK, false);
         GuiHelper.drawRectWithShade(matrixStack, x + 10, y + 20, (int) ( (w - 20) * progress), 5, Color4I.WHITE, 128);
 

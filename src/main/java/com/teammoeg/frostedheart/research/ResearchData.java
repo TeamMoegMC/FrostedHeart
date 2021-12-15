@@ -40,11 +40,14 @@ public class ResearchData {
 	}
 	public CompoundNBT serialize() {
 		CompoundNBT cnbt=new CompoundNBT();
+		cnbt.putInt("committed",committed);
 		//cnbt.putInt("research",getResearch().getRId());
 		return cnbt;
 		
 	}
 	public void deserialize(CompoundNBT cn) {
+		committed=cn.getInt("committed");
+		
 		//rs=FHResearch.getResearch(cn.getInt("research"));
 	}
 
