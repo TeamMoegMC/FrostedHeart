@@ -133,7 +133,6 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                         player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
                         return ActionResultType.CONSUME;
                     }
-                    return ActionResultType.PASS;
                 }
 
             } else {

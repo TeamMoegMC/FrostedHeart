@@ -335,14 +335,15 @@ public class FrostedHud {
         }
         FoodStats stats = mc.player.getFoodStats();
         int foodLevel = stats.getFoodLevel();
-        int foodLevelState = MathHelper.ceil(foodLevel / 20.0F * 100) - 1;
-        if(foodLevelState>99)
-        	foodLevelState=99;
-        int hungerCol = foodLevelState / 10;
-        int hungerRow = foodLevelState % 10;
-        mc.getTextureManager().bindTexture(HUNGER);
-        mc.ingameGUI.blit(stack, x + BarPos.right_half_1.getB().getA(), y + BarPos.right_half_1.getB().getB(), hungerCol * UV.hunger_bar.w, hungerRow * UV.hunger_bar.h, UV.hunger_bar.w, UV.hunger_bar.h, 160, 320);
-
+        if(foodLevel>0) {
+	        int foodLevelState = MathHelper.ceil(foodLevel / 20.0F * 100) - 1;
+	        if(foodLevelState>99)
+	        	foodLevelState=99;
+	        int hungerCol = foodLevelState / 10;
+	        int hungerRow = foodLevelState % 10;
+	        mc.getTextureManager().bindTexture(HUNGER);
+	        mc.ingameGUI.blit(stack, x + BarPos.right_half_1.getB().getA(), y + BarPos.right_half_1.getB().getB(), hungerCol * UV.hunger_bar.w, hungerRow * UV.hunger_bar.h, UV.hunger_bar.w, UV.hunger_bar.h, 160, 320);
+        }
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
@@ -364,11 +365,13 @@ public class FrostedHud {
         player.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(data -> {
             int waterLevel = data.getWaterLevel();
             int waterLevelState = MathHelper.ceil(waterLevel / 20.0F * 100) - 1;
-            if(waterLevelState>99)
-            	waterLevelState=99;
-            int waterCol = waterLevelState / 10;
-            int waterRow = waterLevelState % 10;
-            mc.ingameGUI.blit(stack, x + BarPos.right_half_2.getB().getA(), y + BarPos.right_half_2.getB().getB(), waterCol * UV.thirst_bar.w, waterRow * UV.thirst_bar.h, UV.thirst_bar.w, UV.thirst_bar.h, 160, 320);
+            if(waterLevel>0) {
+	            if(waterLevelState>99)
+	            	waterLevelState=99;
+	            int waterCol = waterLevelState / 10;
+	            int waterRow = waterLevelState % 10;
+	            mc.ingameGUI.blit(stack, x + BarPos.right_half_2.getB().getA(), y + BarPos.right_half_2.getB().getB(), waterCol * UV.thirst_bar.w, waterRow * UV.thirst_bar.h, UV.thirst_bar.w, UV.thirst_bar.h, 160, 320);
+            }
         });
 
         RenderSystem.disableBlend();
