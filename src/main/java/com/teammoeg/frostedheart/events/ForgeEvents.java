@@ -72,6 +72,7 @@ import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -107,7 +108,12 @@ public class ForgeEvents {
 	}
 	@SubscribeEvent
 	public static void onIEMultiBlockForm(MultiblockFormEvent event) {
-		event.getMultiblock().getUniqueName();
+		if(event.getPlayer()instanceof FakePlayer) {
+			event.setCanceled(true);
+			return;
+		}
+		if(!FHDataManager.testMultiBlock(event.getMultiblock().getUniqueName(),event.getPlayer()))
+			event.setCanceled(true);
 	}
 	@SubscribeEvent(receiveCanceled=true,priority=EventPriority.HIGHEST)
 	public static void onArmorDamage(LivingHurtEvent event) {

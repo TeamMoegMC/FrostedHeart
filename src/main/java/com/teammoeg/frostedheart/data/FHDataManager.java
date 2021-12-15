@@ -48,7 +48,8 @@ public class FHDataManager {
 	    Drink(new DataType<>(DrinkTempData.class,"temperature", "drink")),
 	    Cup  (new DataType<>(      CupData.class,"temperature", "cup"  )),
 	    World(new DataType<>(WorldTempData.class,"temperature", "world")),
-		ResearchRecipe(new DataType<>(ResearchRecipe.class,"research", "crafting"));
+		ResearchRecipe(new DataType<>(ResearchRecipe.class,"research", "crafting")),
+		ResearchMultiblock(new DataType<>(ResearchRecipe.class,"research", "multiblock"));
 
 	    static class DataType<T extends JsonDataHolder> {
 	        final Class<T> dataCls;
@@ -203,6 +204,12 @@ public class FHDataManager {
     }
     public static boolean testRecipe(IRecipe<?> recipe,PlayerEntity pe) {
         ResearchRecipe dtd = FHDataManager.<ResearchRecipe>get(FHDataType.ResearchRecipe).get(recipe.getId());
+        if (dtd != null)
+            return dtd.test(pe);
+        return true;
+    }
+    public static boolean testMultiBlock(ResourceLocation key,PlayerEntity pe) {
+        ResearchRecipe dtd = FHDataManager.<ResearchRecipe>get(FHDataType.ResearchMultiblock).get(key);
         if (dtd != null)
             return dtd.test(pe);
         return true;
