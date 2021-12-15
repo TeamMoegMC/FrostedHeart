@@ -65,7 +65,10 @@ public class Research extends FHRegisteredItem{
         this.category = category;
         this.time = 20;
     }
-    public String getId() {
+    public int getTime() {
+		return time;
+	}
+	public String getId() {
         return id;
     }
 
