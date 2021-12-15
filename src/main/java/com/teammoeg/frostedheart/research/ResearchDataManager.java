@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import dev.ftb.mods.ftbteams.data.TeamManager;
+
 public class ResearchDataManager {
 	MinecraftServer server;
 	Path local;
@@ -25,7 +27,7 @@ public class ResearchDataManager {
 		INSTANCE=this;
 	}
 	public TeamResearchData getData(UUID id) {
-		TeamResearchData cn=data.computeIfAbsent(id,c->new TeamResearchData());
+		TeamResearchData cn=data.computeIfAbsent(id,c->new TeamResearchData(()->TeamManager.INSTANCE.getTeamByID(id)));
 		return cn;
 
 	}
@@ -47,7 +49,7 @@ public class ResearchDataManager {
 			try {
 				UUID tud=UUID.fromString(f.getName().split("\\.")[0]);
 				CompoundNBT nbt=CompressedStreamTools.readCompressed(f);
-				TeamResearchData trd=new TeamResearchData();
+				TeamResearchData trd=new TeamResearchData(()->TeamManager.INSTANCE.getTeamByID(tud));
 				trd.deserialize(nbt);
 				data.put(tud,trd);
 			}catch(IllegalArgumentException ex) {

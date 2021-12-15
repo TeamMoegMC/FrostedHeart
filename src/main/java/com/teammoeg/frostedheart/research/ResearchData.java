@@ -40,6 +40,13 @@ public class ResearchData {
 				currentProgress+=r.getRequiredPoints()*ac.getResearchContribution();
 		return currentProgress;
 	}
+	public void checkComplete() {
+		if(finished)return;
+		if(getTotalCommitted()==rs.get().getRequiredPoints()) {
+			finished=true;
+			parent.getTeam().ifPresent(t->rs.get().sendProgressPacket(t));
+		}
+	}
 	public ResearchData(Supplier<Research> r,CompoundNBT nc,TeamResearchData parent){
 		this(r,parent);
 		deserialize(nc);
@@ -82,6 +89,12 @@ public class ResearchData {
 	}
 	public boolean canResearch() {
 		return active;
+	}
+	public void doResearch(int points) {
+		if(active) {
+			committed+=points;
+			checkComplete();
+		}
 	}
 	public List<ItemStack> commitItem(ItemStack is) {
 		Research r=rs.get();

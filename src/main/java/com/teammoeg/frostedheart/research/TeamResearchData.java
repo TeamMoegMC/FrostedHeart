@@ -7,13 +7,25 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import dev.ftb.mods.ftbteams.data.Team;
 
 public class TeamResearchData {
-	public static TeamResearchData INSTANCE=new TeamResearchData();
+	public static TeamResearchData INSTANCE=new TeamResearchData(null);
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
 	ArrayList<ResearchData> rdata=new ArrayList<>();
 	int activeResearchId=0;
 	CompoundNBT variants=new CompoundNBT();
+	Supplier<Team> team;
+	public TeamResearchData(Supplier<Team> team) {
+		this.team = team;
+	}
+	public Optional<Team> getTeam() {
+		if(team==null)return Optional.empty();
+		return Optional.ofNullable(team.get());
+	}
 	public void triggerClue(int id) {
 		ensureClue(id);
 		clueComplete.set(id-1,true);
