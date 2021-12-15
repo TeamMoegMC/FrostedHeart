@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.research;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.LazyOptional;
@@ -49,18 +50,28 @@ public class ResearchData {
 	public CompoundNBT serialize() {
 		CompoundNBT cnbt=new CompoundNBT();
 		cnbt.putInt("committed",committed);
+		cnbt.putBoolean("active",active);
+		cnbt.putBoolean("finished", finished);
+		ListNBT items=new ListNBT();
+		for(ItemStack is:committedItems) {
+			items.add(is.serializeNBT());
+		}
+		cnbt.put("items",items);
 		//cnbt.putInt("research",getResearch().getRId());
 		return cnbt;
 		
 	}
 	public void deserialize(CompoundNBT cn) {
 		committed=cn.getInt("committed");
-		
+		active=cn.getBoolean("active");
+		finished=cn.getBoolean("finished");
+		ListNBT items=cn.getList("items",0);
+		items.stream().map(e->ItemStack.read((CompoundNBT)e)).forEach(e->committedItems.add(e));
 		//rs=FHResearch.getResearch(cn.getInt("research"));
 	}
 
 	public boolean isCompleted() {
-		return getProgress() == 1.0F;
+		return finished;
 	}
 	public boolean isInProgress() {
 		LazyOptional<Research> r=parent.getActiveResearch();
@@ -68,6 +79,9 @@ public class ResearchData {
 			return r.resolve().get().equals(this.rs);
 		}
 		return false;
+	}
+	public boolean canResearch() {
+		return active;
 	}
 	public List<ItemStack> commitItem(ItemStack is) {
 		Research r=rs.get();
