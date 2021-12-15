@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.research;
 
 import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
@@ -39,7 +41,7 @@ public class Research extends FHRegisteredItem{
     public void attachClue(Supplier<AbstractClue> cl) {
 		clues.add(cl);
 	}
-	private ArrayList<ItemStack> requireItems=new ArrayList<>();
+	private ArrayList<IngredientWithSize> requiredItems=new ArrayList<>();
     private int points;//research point
     private int time;//time cost per research point commit.
 

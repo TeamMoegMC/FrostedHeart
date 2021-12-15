@@ -23,7 +23,42 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 	private List<String> rnames=new ArrayList<>();//registry mappings
 	private Map<String,LazyOptional<T>> cache=new HashMap<>();//object cache
 	private final Function<String,LazyOptional<T>> cacheGen=(n)->LazyOptional.of(()->getByName(n));
-	
+	private static final class RegisteredSupplier<T extends FHRegisteredItem,K> implements Supplier<T>{
+		private final K key;
+		private final Function<K,T> getter;
+		public RegisteredSupplier(K key, Function<K, T> getter) {
+			this.key = key;
+			this.getter = getter;
+		}
+		@Override
+		public T get() {
+			return getter.apply(key);
+		}
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((key == null) ? 0 : key.hashCode());
+			return result;
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			RegisteredSupplier other = (RegisteredSupplier) obj;
+			if (key == null) {
+				if (other.key != null)
+					return false;
+			} else if (!key.equals(other.key))
+				return false;
+			return getter==other.getter;
+		}
+		
+	}
 	/**
 	 * Instantiates a new FHRegistry.<br>
 	 */
@@ -91,7 +126,7 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 	public LazyOptional<T> lazyGet(String id) {
 		return cache.computeIfAbsent(id,cacheGen);
 	}
-	
+	private Function<String,T> strLazyGetter=x->lazyGet(x).orElse(null);
 	/**
 	 * Get a Supplier with buffer for item by name.<br>
 	 *
@@ -99,15 +134,15 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 	 * @return returns Supplier of item
 	 */
 	public Supplier<T> get(String id) {
-		return ()->lazyGet(id).orElse(null);
+		return new RegisteredSupplier<>(id,strLazyGetter);
 	}
 	public Supplier<T> get(int id) {
 		if(rnames.size()>id) {
 			String name=rnames.get(id-1);
 			if(name!=null)
-				return ()->lazyGet(name).orElse(null);
+				return get(name);
 		}
-		return ()->items.get(id-1);
+		throw new IllegalStateException("Cannot get research by id before initialize");
 	}
 	/**
 	 * Get all non-null items.<br>

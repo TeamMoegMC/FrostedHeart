@@ -4,6 +4,7 @@ import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.ArrayList;
 
@@ -11,6 +12,7 @@ public class TeamResearchData {
 	public static TeamResearchData INSTANCE=new TeamResearchData();
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
 	ArrayList<ResearchData> rdata=new ArrayList<>();
+	int activeResearchId=0;
 	CompoundNBT variants=new CompoundNBT();
 	public void triggerClue(int id) {
 		ensureClue(id);
@@ -71,6 +73,11 @@ public class TeamResearchData {
 	public ResearchData getData(String lid) {
 		return getData(FHResearch.researches.getByName(lid));
 	}
+	public LazyOptional<Research> getActiveResearch() {
+		if(activeResearchId==0)
+			return LazyOptional.empty();
+		return LazyOptional.of(()->FHResearch.getResearch(activeResearchId).get());
+	}
 	public CompoundNBT serialize() {
 		CompoundNBT nbt=new CompoundNBT();
 		byte[] cl=new byte[clueComplete.size()];
@@ -83,6 +90,7 @@ public class TeamResearchData {
 		ListNBT rs=new ListNBT();
 		rdata.stream().map(e->e!=null?e.serialize():ByteNBT.ZERO).forEach(e->rs.add(e));
 		nbt.put("researches",rs);
+		nbt.putInt("active",activeResearchId);
 		return nbt;
 	}
 	public CompoundNBT getVariants() {
@@ -97,6 +105,7 @@ public class TeamResearchData {
 		for(int i=0;i<ba.length;i++)
 			clueComplete.set(i,ba[i]!=0);
 		ListNBT li=data.getList("researches",0);
+		activeResearchId=data.getInt("active");
 		for(int i=0;i<li.size();i++) {
 			INBT e=li.get(i);
 			if(e.getId()==10) {
