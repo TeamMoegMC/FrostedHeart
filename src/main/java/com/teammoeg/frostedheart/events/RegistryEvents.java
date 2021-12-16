@@ -19,19 +19,28 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.loot.DegradeMetalLootModifier;
 import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
+
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
+import net.minecraft.loot.LootConditionType;
 import net.minecraft.potion.Effect;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.gen.feature.Feature;
+import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.IForgeRegistry;
 
 import static com.teammoeg.frostedheart.FHContent.*;
+
+import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RegistryEvents {
@@ -46,7 +55,12 @@ public class RegistryEvents {
             }
         }
     }
+    @SubscribeEvent
+    public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
+        IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();
 
+        registry.register(new DegradeMetalLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"replace_loot")));
+    }
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         for (Item item : registeredFHItems) {

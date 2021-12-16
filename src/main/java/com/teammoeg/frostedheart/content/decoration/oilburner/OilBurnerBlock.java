@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.content.decoration.oilburner;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.util.FHUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ILiquidContainer;
@@ -49,7 +51,7 @@ public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
 
     public OilBurnerBlock(String name, Properties blockProps,
                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+        super(name, blockProps.setLightLevel(FHUtils.getLightValueLit(15)), createItemBlock);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
     @Override
