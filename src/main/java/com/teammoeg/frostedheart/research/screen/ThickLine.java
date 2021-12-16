@@ -2,11 +2,12 @@ package com.teammoeg.frostedheart.research.screen;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
-public class Line extends Widget {
+public class ThickLine extends Widget {
 	//diagonal direction
 	private boolean xdirection=true;
 	private boolean ydirection=true;
@@ -37,10 +38,10 @@ public class Line extends Widget {
 	public void setY(int v) {
 		super.setY(v);
 	}
-	public Line(Panel p) {
+	public ThickLine(Panel p) {
 		super(p);
 	}
-	public int color;
+	public Color4I color;
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		if(xdirection^ydirection)

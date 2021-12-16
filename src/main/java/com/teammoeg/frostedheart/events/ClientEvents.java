@@ -29,10 +29,13 @@ import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
@@ -49,6 +52,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -71,7 +75,10 @@ public class ClientEvents {
             HeaterVestRenderer.rendersAssigned = true;
         }
     }
-
+	@SubscribeEvent
+	public static void onResearchStatus(ClientResearchStatusEvent event) {
+		JEICompat.setRecipeStatus(event.getResearch().getId(),event.isCompletion());
+	}
     @SubscribeEvent
     public static void addNormalItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();

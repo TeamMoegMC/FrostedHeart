@@ -33,11 +33,16 @@ import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
+import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHNBT;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.constants.VanillaRecipeCategoryUid;
 import mezz.jei.api.helpers.IGuiHelper;
+import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.registration.*;
+import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
@@ -50,6 +55,8 @@ import net.minecraft.util.ResourceLocation;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map.Entry;
+import java.util.Set;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -82,8 +89,39 @@ public class JEICompat implements IModPlugin {
         		new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.brown_mushroombed),0),new ItemStack(Items.BROWN_MUSHROOM,10))
         		),CuttingCategory.UID); 
     }
+    public static IRecipeManager man;
 
-
+	@Override
+	public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
+		man=jeiRuntime.getRecipeManager();
+		syncJEI();
+	}
+	public static void syncJEI() {
+		if(man==null)return;
+		ClientWorld world = Minecraft.getInstance().world;
+        checkNotNull(world, "minecraft world");
+        RecipeManager recipeManager = world.getRecipeManager();
+		for(Entry<String, Set<ResourceLocation>> i:FHDataManager.researchRecipe.entrySet()) {
+			for(ResourceLocation rl:i.getValue())
+				if(!TeamResearchData.INSTANCE.getData(i.getKey()).isCompleted())
+					recipeManager.getRecipe(rl).ifPresent(r->man.hideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
+				else
+					recipeManager.getRecipe(rl).ifPresent(r->man.unhideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
+		}
+	}
+	public static void setRecipeStatus(String research,boolean show) {
+		if(man==null)return;
+		ClientWorld world = Minecraft.getInstance().world;
+        checkNotNull(world, "minecraft world");
+        RecipeManager recipeManager = world.getRecipeManager();
+        Set<ResourceLocation> srl=FHDataManager.researchRecipe.get(research);
+        if(srl!=null) {
+        	if(!show)for(ResourceLocation rl:srl)
+        			recipeManager.getRecipe(rl).ifPresent(r->man.hideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
+				else for(ResourceLocation rl:srl)
+					recipeManager.getRecipe(rl).ifPresent(r->man.unhideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
+		}
+	}
 	@Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();

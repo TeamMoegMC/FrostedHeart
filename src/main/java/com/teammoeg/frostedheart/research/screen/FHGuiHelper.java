@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
@@ -37,17 +38,17 @@ public class FHGuiHelper {
 
 	}
 	//draw a line from start to end by color, ABSOLUTE POSITION
-	public static void drawLine(MatrixStack matrixStack,int color,int startX,int startY,int endX,int endY) {
+	public static void drawLine(MatrixStack matrixStack,Color4I color,int startX,int startY,int endX,int endY) {
 		IVertexBuilder vertexBuilderLines = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().getBuffer(BOLD_LINE_TYPE);
-		drawLine(matrixStack.getLast().getMatrix(),vertexBuilderLines, new Color(color,true),startX,startY,endX,endY);
+		drawLine(matrixStack.getLast().getMatrix(),vertexBuilderLines,color,startX,startY,endX,endY);
 	}
 
-	private static void drawLine(Matrix4f mat,IVertexBuilder renderBuffer, Color color,int startX,int startY,int endX,int endY) {
+	private static void drawLine(Matrix4f mat,IVertexBuilder renderBuffer, Color4I color,int startX,int startY,int endX,int endY) {
 		renderBuffer.pos(mat,startX,startY,0F)
-				.color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha())
+				.color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 				.endVertex();
 		renderBuffer.pos(mat,endX,endY,0F)
-				.color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha())
+				.color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 				.endVertex();
 	}
 }

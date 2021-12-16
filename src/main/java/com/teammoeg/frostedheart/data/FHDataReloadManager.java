@@ -55,5 +55,6 @@ public class FHDataReloadManager implements IResourceManagerReloadListener {
                 }
             }
         }
+        FHDataManager.doIndex();
     }
 }

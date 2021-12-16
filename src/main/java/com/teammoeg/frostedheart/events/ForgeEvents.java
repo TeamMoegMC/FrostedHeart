@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ResearchCommand;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
@@ -107,6 +108,7 @@ public class ForgeEvents {
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
 
 	}
+
 	@SubscribeEvent
 	public static void onIEMultiBlockForm(MultiblockFormEvent event) {
 		if(event.getPlayer()instanceof FakePlayer) {
@@ -369,6 +371,7 @@ public class ForgeEvents {
 					new FHResearchRegistrtySyncPacket());
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHResearchDataSyncPacket(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
+			
 			serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap)->{
 				PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 						new FHClimatePacket(cap));

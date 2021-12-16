@@ -20,7 +20,24 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 
 public class ResearchHierarchyPanel extends Panel {
-    public ResearchScreen researchScreen;
+    public static class ResearchHierarchyLine extends ThickLine {
+    	Research r;
+		public ResearchHierarchyLine(Panel p,Research r) {
+			super(p);
+		}
+		@Override
+		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+			if(r.isCompleted())
+				color=Color4I.GREEN;
+			else
+				color=Color4I.RED;
+			super.draw(matrixStack, theme, x, y, w, h);
+		}
+		
+
+	}
+
+	public ResearchScreen researchScreen;
 
     public ResearchHierarchyPanel(ResearchScreen panel) {
         super(panel);
@@ -43,8 +60,7 @@ public class ResearchHierarchyPanel extends Panel {
             ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
             add(parentButton);
             parentButton.setPos((width - 34 * psize) / 2 + k * 34, (height / 2 - 24) / 2);
-            Line l=new Line(this);
-            l.color=0xFFFF0000;//TODO: for debug use
+            ThickLine l=new ResearchHierarchyLine(this,parent);
             add(l);
             l.setPosAndSize(jointx,upjointy,parentButton.posX+parentButton.width/2-jointx,parentButton.posY+parentButton.height-upjointy);
             k++;
@@ -59,16 +75,15 @@ public class ResearchHierarchyPanel extends Panel {
 	            ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
 	            add(childButton);
 	            childButton.setPos((width - 34 * csize) / 2 + k * 34, (height / 2 - 24) / 2 + height / 2);
-	            Line l=new Line(this);
+	            ThickLine l=new ResearchHierarchyLine(this,researchScreen.selectedResearch);
 	            add(l);
-	            l.color=0xFF00FF00;//TODO: for debug use
 	            l.setPosAndSize(jointx,downjointy,childButton.posX+childButton.width/2-jointx,childButton.posY-downjointy);
 	            
 	            k++;
 	        }
         }
     }
-
+    
 	@Override
     public void alignWidgets() {
 

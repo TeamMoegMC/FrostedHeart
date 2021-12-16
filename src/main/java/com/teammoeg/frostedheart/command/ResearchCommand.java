@@ -32,7 +32,7 @@ public class ResearchCommand {
 				return Command.SINGLE_SUCCESS;
 				}))).then(Commands.literal("reset").then(Commands.argument("name",StringArgumentType.string()).executes(ct->{
 					ResearchData rd=ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(FHResearch.getResearch(ct.getArgument("name",String.class).toString()).get());
-					rd.setFinished(true);
+					rd.setFinished(false);
 					rd.announceCompletion();
 				return Command.SINGLE_SUCCESS;
 				})));

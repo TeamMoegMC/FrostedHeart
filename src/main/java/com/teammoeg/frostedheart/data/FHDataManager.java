@@ -36,8 +36,10 @@ import net.minecraftforge.fluids.FluidStack;
 import java.lang.reflect.InvocationTargetException;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class FHDataManager {
 	public static enum FHDataType {
@@ -108,7 +110,7 @@ public class FHDataManager {
     public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
     public static boolean synched = false;
     private static final JsonParser parser = new JsonParser();
-
+    public static Map<String,Set<ResourceLocation>> researchRecipe=new HashMap<>();
     static {
     	for(FHDataType dt:FHDataType.values()) {
     		ALL_DATA.put(dt,new ResourceMap<>());
@@ -119,6 +121,7 @@ public class FHDataManager {
         synched = false;
         for (ResourceMap rm : ALL_DATA.values())
             rm.clear();
+        researchRecipe.clear();
     }
 
     @SuppressWarnings("unchecked")
@@ -141,6 +144,7 @@ public class FHDataManager {
             //System.out.println("registering "+dt.type.location+": "+jdh.getId());
             ALL_DATA.get(de.type).put(jdh.getId(), jdh);
         }
+        doIndex();
     }
 
     public static final DataEntry[] save() {
@@ -157,7 +161,12 @@ public class FHDataManager {
         }
         return entries;
     }
-
+    public static void doIndex() {
+    	for(Entry<ResourceLocation, ResearchRecipe> rr:FHDataManager.<ResearchRecipe>get(FHDataType.ResearchRecipe).entrySet()) {
+    		if(rr.getValue().getResearch()!=null)
+    			researchRecipe.computeIfAbsent(rr.getValue().getResearch(),s->new HashSet<>()).add(rr.getKey());
+    	}
+    }
     public static ITempAdjustFood getFood(ItemStack is) {
     	CupData data=FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
     	ResourceMap<FoodTempData> foodData=FHDataManager.get(FHDataType.Food);
