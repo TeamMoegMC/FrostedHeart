@@ -41,7 +41,7 @@ public class ThickLine extends Widget {
 	public ThickLine(Panel p) {
 		super(p);
 	}
-	public Color4I color;
+	public Color4I color=Color4I.BLACK;
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		if(xdirection^ydirection)

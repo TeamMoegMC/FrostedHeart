@@ -24,6 +24,7 @@ public class ResearchHierarchyPanel extends Panel {
     	Research r;
 		public ResearchHierarchyLine(Panel p,Research r) {
 			super(p);
+			this.r=r;
 		}
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
