@@ -32,9 +32,9 @@ import mezz.jei.api.gui.ingredient.IGuiItemStackGroup;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.tags.TagCollectionManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -47,6 +47,7 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "knife_cutting");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
+    public static List<Item> matching;
     public static final ResourceLocation ktag=new ResourceLocation(FHMain.MODID,"knife");
     public CuttingCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(()->new ItemStack(Items.IRON_SWORD),()->new ItemStack(FHItems.brown_mushroombed));
@@ -90,7 +91,8 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     public void setIngredients(CuttingRecipe recipe, IIngredients ingredients) {
     	ArrayList<List<ItemStack>> als=new ArrayList<>(2);
     	als.add(Arrays.asList(recipe.in));
-    	als.add(TagCollectionManager.getManager().getItemTags().get(ktag).getAllElements().stream().map(ItemStack::new).collect(Collectors.toList()));
+    	if(matching!=null)
+    		als.add(matching.stream().map(ItemStack::new).collect(Collectors.toList()));
         ingredients.setInputLists(VanillaTypes.ITEM,als);
         ingredients.setOutput(VanillaTypes.ITEM, recipe.out);
     }

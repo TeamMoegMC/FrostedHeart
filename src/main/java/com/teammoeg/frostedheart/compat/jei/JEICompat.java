@@ -78,6 +78,7 @@ public class JEICompat implements IModPlugin {
     	 ClientWorld world = Minecraft.getInstance().world;
          checkNotNull(world, "minecraft world");
          RecipeManager recipeManager = world.getRecipeManager();
+         CuttingCategory.matching=world.getTags().getItemTags().get(CuttingCategory.ktag).getAllElements();
         registration.addRecipes(new ArrayList<>(GeneratorRecipe.recipeList.values()), GeneratorFuelCategory.UID);
         registration.addRecipes(new ArrayList<>(GeneratorSteamRecipe.recipeList.values()),GeneratorSteamCategory.UID);
         registration.addRecipes(new ArrayList<>(ChargerRecipe.recipeList.values()),ChargerCategory.UID);

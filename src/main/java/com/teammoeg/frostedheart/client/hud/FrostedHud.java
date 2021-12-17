@@ -296,8 +296,8 @@ public class FrostedHud {
         }
         mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), heart.x,heart.y, heart.w, heart.h);
         // range: [0, 99]
-        int healthState = health == 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
-        int absorbState = absorb == 0 ? 0 : MathHelper.ceil(absorb / 20 * 100) - 1;
+        int healthState = health <= 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
+        int absorbState = absorb <= 0 ? 0 : MathHelper.ceil(absorb / 20 * 100) - 1;
         if(healthState>99)
         	healthState=99;
         // range: [0, 9]
@@ -307,11 +307,14 @@ public class FrostedHud {
         // range: [0, 9]
         int healthRow = healthState % 10;
         int absorbRow = absorbState % 10;
-
-        mc.getTextureManager().bindTexture(HP);
-        mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), healthCol * UV.health_bar.w, healthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
-        mc.getTextureManager().bindTexture(ABSORPTION);
-        mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_outer.getA(), y + BarPos.left_threequarters_outer.getB(), absorbCol * UV.absorption_bar.w, absorbRow * UV.absorption_bar.h, UV.absorption_bar.w, UV.absorption_bar.h, 360, 360);
+        if(healthState>0) {
+        	mc.getTextureManager().bindTexture(HP);
+        	mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), healthCol * UV.health_bar.w, healthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
+        }
+        if(absorbState>0) {
+        	mc.getTextureManager().bindTexture(ABSORPTION);
+        	mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_outer.getA(), y + BarPos.left_threequarters_outer.getB(), absorbCol * UV.absorption_bar.w, absorbRow * UV.absorption_bar.h, UV.absorption_bar.w, UV.absorption_bar.h, 360, 360);
+        }
         int ihealth = (int) Math.ceil(health);
         int offset = mc.fontRenderer.getStringWidth(String.valueOf(ihealth)) / 2;
         mc.fontRenderer.drawString(stack, String.valueOf(ihealth), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
