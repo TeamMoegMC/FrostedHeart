@@ -30,6 +30,7 @@
     "forge.FluidHandlerItemStackSimpleMixin",
     "immersiveengineering.HempBlockMixin",
     "immersiveengineering.RotationUtilMixin",
+    "immersiveengineering.MultiblockProcessMixerMixin",
     "jei.MixinCommandUtilServer",
     "minecraft.BeeHiveMixin",
     "minecraft.BigTreeMixin",
