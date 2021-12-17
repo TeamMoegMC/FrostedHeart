@@ -36,7 +36,7 @@ public class T2GeneratorRenderer extends TileEntityRenderer<T2GeneratorTileEntit
 		if(!te.formed||te.isDummy()||!te.getWorldNonnull().isBlockLoaded(te.getPos()))
 			return;
 		List<String> renderedParts = new ArrayList<>();
-		if(!te.getInventory().get(0).isEmpty()) {
+		if(te.process>0||!te.getInventory().get(0).isEmpty()) {
 			renderedParts.add("lowerFuel");
 			renderedParts.add("higherFuel");
 		}

@@ -195,14 +195,16 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
             if (isActualOverdrive()) {
                 if (random.nextFloat() < 0.9F) {
                     for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                        ClientUtils.spawnSteamParticles(world, blockpos);
+                    	if(this.liquidtick!=0)
+                    		ClientUtils.spawnSteamParticles(world, blockpos);
                         ClientUtils.spawnT2FireParticles(world, blockpos);
                     }
                 }
             } else {
                 if (random.nextFloat() < 0.5F) {
-                    for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                        ClientUtils.spawnSteamParticles(world, blockpos);
+                    for (int i = 0; i < random.nextInt(2) + 2; ++i){
+                    	if(this.liquidtick!=0)
+                    		ClientUtils.spawnSteamParticles(world, blockpos);
                         ClientUtils.spawnT2FireParticles(world, blockpos);
                     }
                 }

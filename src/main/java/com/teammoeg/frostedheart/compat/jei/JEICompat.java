@@ -95,6 +95,9 @@ public class JEICompat implements IModPlugin {
 	public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
 		man=jeiRuntime.getRecipeManager();
 		syncJEI();
+		man.hideRecipeCategory(VanillaRecipeCategoryUid.BLASTING);
+		man.hideRecipeCategory(VanillaRecipeCategoryUid.SMOKING);
+		man.hideRecipeCategory(VanillaRecipeCategoryUid.FURNACE);
 	}
 	public static void syncJEI() {
 		if(man==null)return;

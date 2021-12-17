@@ -65,6 +65,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.Dimension;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -118,10 +119,11 @@ public class ForgeEvents {
 		if(!FHDataManager.testMultiBlock(event.getMultiblock().getUniqueName(),event.getPlayer()))
 			event.setCanceled(true);
 	}
-	@SubscribeEvent(receiveCanceled=true,priority=EventPriority.HIGHEST)
+	@SubscribeEvent(receiveCanceled=true,priority=EventPriority.LOWEST)
 	public static void onArmorDamage(LivingHurtEvent event) {
 		if(event.getEntityLiving() instanceof PlayerEntity&&!event.getSource().isUnblockable()) {
 			PlayerEntity player=(PlayerEntity) event.getEntityLiving();
+			
 			float p_234563_2_=event.getAmount();
 			DamageSource p_234563_1_=event.getSource();
 			if (p_234563_2_ > 0) {
