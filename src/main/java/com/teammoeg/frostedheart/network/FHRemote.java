@@ -1,13 +1,8 @@
 package com.teammoeg.frostedheart.network;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.data.JsonHelper;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
