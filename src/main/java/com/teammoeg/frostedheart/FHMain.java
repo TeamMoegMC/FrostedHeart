@@ -70,7 +70,7 @@ public class FHMain {
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
-    public static final FHRemote remote = new FHRemote();
+    public static FHRemote remote = new FHRemote();
 
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override

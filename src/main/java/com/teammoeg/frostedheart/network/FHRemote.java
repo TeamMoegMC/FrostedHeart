@@ -1,5 +1,13 @@
 package com.teammoeg.frostedheart.network;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.data.JsonHelper;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
@@ -9,7 +17,11 @@ public class FHRemote {
     public String stableVersion;
 
     public FHRemote() {
-        stableVersion = fetchString("https://info.teammoeg.com/twr/stable_version.txt");
+//        stableVersion = fetchString("https://info.teammoeg.com/twr/stable_version.txt");
+        JsonParser parser = new JsonParser();
+        JsonObject json = parser.parse(fetchString("https://addons-ecs.forgesvc.net/api/v2/addon/535790")).getAsJsonObject();
+        String fileName = json.get("latestFiles").getAsJsonArray().get(0).getAsJsonObject().get("fileName").getAsString();
+        stableVersion = fileName.substring(18, fileName.indexOf(".zip"));
     }
 
     /**
@@ -33,4 +45,5 @@ public class FHRemote {
         }
         return "";
     }
+
 }
