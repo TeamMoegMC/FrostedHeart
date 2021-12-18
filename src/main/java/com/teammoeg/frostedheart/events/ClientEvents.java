@@ -47,6 +47,7 @@ import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
+import net.minecraft.client.resources.Language;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -55,8 +56,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -81,7 +85,7 @@ import static net.minecraft.util.text.TextFormatting.GRAY;
 public class ClientEvents {
 
     @SubscribeEvent
-    public static void onGuiInit(GuiScreenEvent.DrawScreenEvent event) {
+    public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent event) {
         Screen gui = event.getGui();
         if (gui instanceof MainMenuScreen) {
             MatrixStack matrixStack = event.getMatrixStack();
@@ -89,23 +93,48 @@ public class ClientEvents {
             String stableVersion = FHMain.remote.stableVersion;
             FontRenderer font = gui.getMinecraft().fontRenderer;
             if (!clientVersion.equals(stableVersion)) {
-                List<IReorderingProcessor> list = font.trimStringToWidth(GuiUtils.translateGui("update_recommended").appendString(stableVersion), 70);
+                List<IReorderingProcessor> list = font.trimStringToWidth(GuiUtils.translateGui("update_recommended").appendString(stableVersion).mergeStyle(TextFormatting.BOLD), 70);
                 int l = 0;
                 for (IReorderingProcessor line : list) {
                     FHGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72, gui.height / 2 + 9 + l);
                     font.drawTextWithShadow(matrixStack, line, 1, gui.height / 2.0F + l, 0xFFFFFF);
                     l += 9;
                 }
+                font.drawTextWithShadow(matrixStack, new StringTextComponent("CurseForge").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
+                        .mergeStyle(TextFormatting.UNDERLINE)
+                        .mergeStyle(TextFormatting.BOLD)
+                        .mergeStyle(TextFormatting.GOLD), 1, gui.height / 2.0F + l, 0xFFFFFF);
+                if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
+                    l += 9;
+                    font.drawTextWithShadow(matrixStack, new StringTextComponent("MCBBS").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html")))
+                            .mergeStyle(TextFormatting.UNDERLINE)
+                            .mergeStyle(TextFormatting.BOLD)
+                            .mergeStyle(TextFormatting.DARK_RED), 1, gui.height / 2.0F + l, 0xFFFFFF);
+                }
             }
         }
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
         String clientVersion = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
         String stableVersion = FHMain.remote.stableVersion;
         if (!clientVersion.equals(stableVersion)) {
-            event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended").mergeStyle(TextFormatting.BOLD).appendString(stableVersion).mergeStyle(TextFormatting.UNDERLINE), false);
+            event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
+                    .appendString(stableVersion)
+                    .mergeStyle(TextFormatting.BOLD), false);
+
+            event.getPlayer().sendStatusMessage(new StringTextComponent("CurseForge").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
+                    .mergeStyle(TextFormatting.UNDERLINE)
+                    .mergeStyle(TextFormatting.BOLD)
+                    .mergeStyle(TextFormatting.GOLD), false);
+
+            if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
+                event.getPlayer().sendStatusMessage(new StringTextComponent("MCBBS").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html")))
+                        .mergeStyle(TextFormatting.UNDERLINE)
+                        .mergeStyle(TextFormatting.BOLD)
+                        .mergeStyle(TextFormatting.DARK_RED), false);
+            }
         }
     }
 

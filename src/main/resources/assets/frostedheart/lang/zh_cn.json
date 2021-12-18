@@ -94,7 +94,7 @@
   "gui.frostedheart.research_progress": "Research Progress",
   "gui.frostedheart.research_time_left": "Time Remaining: %s Minutes",
   "gui.frostedheart.research_hierarchy": "Research Relationship",
-  "gui.frostedheart.update_recommended": "建议更新《冬季救援》：",
+  "gui.frostedheart.update_recommended": "建议更新《冬季救援》： ",
   "gui.jei.category.frostedheart.generator_fuel": "能量塔燃料",
   "gui.jei.category.frostedheart.generator_steam": "能量塔热介质",
   "gui.jei.category.frostedheart.charger": "蒸汽加工",
