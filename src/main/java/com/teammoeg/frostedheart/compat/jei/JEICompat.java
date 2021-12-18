@@ -51,11 +51,13 @@ import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Set;
 
 @JeiPlugin
@@ -78,7 +80,7 @@ public class JEICompat implements IModPlugin {
     	 ClientWorld world = Minecraft.getInstance().world;
          checkNotNull(world, "minecraft world");
          RecipeManager recipeManager = world.getRecipeManager();
-         CuttingCategory.matching=world.getTags().getItemTags().get(CuttingCategory.ktag).getAllElements();
+         CuttingCategory.matching=ForgeRegistries.ITEMS.getValues().stream().filter(e->e.getTags().contains(CuttingCategory.ktag)).collect(Collectors.toList());
         registration.addRecipes(new ArrayList<>(GeneratorRecipe.recipeList.values()), GeneratorFuelCategory.UID);
         registration.addRecipes(new ArrayList<>(GeneratorSteamRecipe.recipeList.values()),GeneratorSteamCategory.UID);
         registration.addRecipes(new ArrayList<>(ChargerRecipe.recipeList.values()),ChargerCategory.UID);
