@@ -34,12 +34,10 @@ import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
-import com.teammoeg.frostedheart.network.FHRemote;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 
 import com.teammoeg.frostedheart.research.screen.FHGuiHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
@@ -47,7 +45,6 @@ import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
-import net.minecraft.client.resources.Language;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -65,7 +62,6 @@ import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -74,11 +70,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
-import java.util.Scanner;
-
 import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -92,7 +84,7 @@ public class ClientEvents {
             String clientVersion = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
             String stableVersion = FHMain.remote.stableVersion;
             FontRenderer font = gui.getMinecraft().fontRenderer;
-            if (!clientVersion.equals(stableVersion)) {
+            if (!stableVersion.isEmpty()&&!clientVersion.equals(stableVersion)) {
                 List<IReorderingProcessor> list = font.trimStringToWidth(GuiUtils.translateGui("update_recommended").appendString(stableVersion).mergeStyle(TextFormatting.BOLD), 70);
                 int l = 0;
                 for (IReorderingProcessor line : list) {
