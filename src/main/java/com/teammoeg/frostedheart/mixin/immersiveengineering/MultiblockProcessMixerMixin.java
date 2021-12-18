@@ -31,15 +31,15 @@ public class MultiblockProcessMixerMixin extends MultiblockProcessInMachine<Mixe
 		int timerStep = Math.max(this.maxTicks/this.recipe.fluidAmount, 1);
 		if(timerStep!=0&&this.processTick%timerStep==0)
 		{
-			int amount = this.recipe.fluidAmount/maxTicks;
-			int leftover = this.recipe.fluidAmount%maxTicks;
-			int inamount=this.recipe.fluidInput.getAmount()/maxTicks;
-			int inleftover=this.recipe.fluidInput.getAmount()%maxTicks;
-			if(leftover > 0)
+			int outamount = this.recipe.fluidAmount/maxTicks;
+			int outleftover = this.recipe.fluidAmount%maxTicks;
+			int inamount = this.recipe.fluidInput.getAmount()/maxTicks;
+			int inleftover = this.recipe.fluidInput.getAmount()%maxTicks;
+			if(outleftover > 0)
 			{
-				double distBetweenExtra = maxTicks/(double)leftover;
+				double distBetweenExtra = maxTicks/(double)outleftover;
 				if(Math.floor(processTick/distBetweenExtra)!=Math.floor((processTick-1)/distBetweenExtra))
-					amount++;
+					outamount++;
 			}
 			if(inleftover > 0)
 			{
@@ -48,14 +48,14 @@ public class MultiblockProcessMixerMixin extends MultiblockProcessInMachine<Mixe
 					inamount++;
 			}
 			MixerTileEntity mixer = (MixerTileEntity)multiblock;
-			FluidTagInput drain=recipe.fluidInput.withAmount(inamount);
-			if(mixer.tank.drain(drain,FluidAction.SIMULATE).getAmount()>=inamount) {
+			FluidTagInput drain = recipe.fluidInput.withAmount(inamount);
+			if(mixer.tank.drain(drain, FluidAction.SIMULATE).getAmount() >= inamount) {
 				FluidStack drained=mixer.tank.drain(drain, FluidAction.EXECUTE);
 				NonNullList<ItemStack> components = NonNullList.withSize(this.inputSlots.length, ItemStack.EMPTY);
 				for(int i = 0; i < components.size(); i++)
 					components.set(i, multiblock.getInventory().get(this.inputSlots[i]));
 				FluidStack output = this.recipe.getFluidOutput(drained, components);
-				FluidStack fs = Utils.copyFluidStackWithAmount(output,amount, false);
+				FluidStack fs = Utils.copyFluidStackWithAmount(output, outamount, false);
 				((MixerTileEntity)multiblock).tank.fill(fs, FluidAction.EXECUTE);
 			}
 		}

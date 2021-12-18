@@ -72,7 +72,6 @@
     "client.ToastGuiMixin",
     "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
-    "create.MenuRowsAccess",
     "create.MixinOpenConfigButtonHandler",
     "rankine.MixinDryMortarItem",
     "rankine.MixinMortarItem"
