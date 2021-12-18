@@ -9,14 +9,17 @@ import java.util.Scanner;
 
 public class FHRemote {
 
-    public String stableVersion;
+    public String stableVersion = "";
 
     public FHRemote() {
-//        stableVersion = fetchString("https://info.teammoeg.com/twr/stable_version.txt");
-        JsonParser parser = new JsonParser();
-        JsonObject json = parser.parse(fetchString("https://addons-ecs.forgesvc.net/api/v2/addon/535790")).getAsJsonObject();
-        String fileName = json.get("latestFiles").getAsJsonArray().get(0).getAsJsonObject().get("fileName").getAsString();
-        stableVersion = fileName.substring(18, fileName.indexOf(".zip"));
+        try {
+            JsonParser parser = new JsonParser();
+            JsonObject json = parser.parse(fetchString("https://addons-ecs.forgesvc.net/api/v2/addon/535790")).getAsJsonObject();
+            String fileName = json.get("latestFiles").getAsJsonArray().get(0).getAsJsonObject().get("fileName").getAsString();
+            stableVersion = fileName.substring(18, fileName.indexOf(".zip"));
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 
     /**
