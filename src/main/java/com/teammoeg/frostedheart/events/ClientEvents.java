@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
@@ -43,6 +44,7 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
@@ -55,6 +57,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
@@ -79,7 +83,7 @@ import static net.minecraft.util.text.TextFormatting.GRAY;
 public class ClientEvents {
 
     @SubscribeEvent
-    public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent event) {
+    public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
         Screen gui = event.getGui();
         if (gui instanceof MainMenuScreen) {
         	FHMain.remote.fetchVersion().ifPresent(stableVersion->{
@@ -93,18 +97,35 @@ public class ClientEvents {
 	                for (IReorderingProcessor line : list) {
 	                    FHGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72, gui.height / 2 + 9 + l);
 	                    font.drawTextWithShadow(matrixStack, line, 1, gui.height / 2.0F + l, 0xFFFFFF);
+	                    
 	                    l += 9;
 	                }
-	                font.drawTextWithShadow(matrixStack, new StringTextComponent("CurseForge").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
-	                        .mergeStyle(TextFormatting.UNDERLINE)
-	                        .mergeStyle(TextFormatting.BOLD)
-	                        .mergeStyle(TextFormatting.GOLD), 1, gui.height / 2.0F + l, 0xFFFFFF);
+	                IFormattableTextComponent itxc=new StringTextComponent("CurseForge")
+                    .mergeStyle(TextFormatting.UNDERLINE)
+                    .mergeStyle(TextFormatting.BOLD)
+                    .mergeStyle(TextFormatting.GOLD);
+	                boolean needEvents=true;
+	                for(IGuiEventListener x:gui.getEventListeners())
+	                	if(x instanceof GuiClickedEvent) {
+	                		needEvents=false;
+	                		break;
+	                	}
+	              
+	                font.drawTextWithShadow(matrixStack,itxc, 1, gui.height / 2.0F + l, 0xFFFFFF);
+	                Style opencf=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
+	                //Though the capture is ? extends IGuiEventListener, I can't add new to it unless I cast it to List 
+	                if(needEvents)
+	                	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxc)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(opencf)));
 	                if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
 	                    l += 9;
-	                    font.drawTextWithShadow(matrixStack, new StringTextComponent("MCBBS").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html")))
-	                            .mergeStyle(TextFormatting.UNDERLINE)
-	                            .mergeStyle(TextFormatting.BOLD)
-	                            .mergeStyle(TextFormatting.DARK_RED), 1, gui.height / 2.0F + l, 0xFFFFFF);
+	                    Style openmcbbs=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html"));
+	                    IFormattableTextComponent itxm=new StringTextComponent("MCBBS")
+                        .mergeStyle(TextFormatting.UNDERLINE)
+                        .mergeStyle(TextFormatting.BOLD)
+                        .mergeStyle(TextFormatting.DARK_RED);
+	                    if(needEvents)
+	                    	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxm)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(openmcbbs)));
+	                    font.drawTextWithShadow(matrixStack,itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
 	                }
 	            }
         	});
@@ -113,25 +134,27 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
-        String clientVersion = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
-        String stableVersion = FHMain.remote.stableVersion;
-        if (!clientVersion.equals(stableVersion)) {
-            event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
-                    .appendString(stableVersion)
-                    .mergeStyle(TextFormatting.BOLD), false);
-
-            event.getPlayer().sendStatusMessage(new StringTextComponent("CurseForge").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
-                    .mergeStyle(TextFormatting.UNDERLINE)
-                    .mergeStyle(TextFormatting.BOLD)
-                    .mergeStyle(TextFormatting.GOLD), false);
-
-            if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
-                event.getPlayer().sendStatusMessage(new StringTextComponent("MCBBS").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html")))
-                        .mergeStyle(TextFormatting.UNDERLINE)
-                        .mergeStyle(TextFormatting.BOLD)
-                        .mergeStyle(TextFormatting.DARK_RED), false);
-            }
-        }
+        FHMain.remote.fetchVersion().ifPresent(stableVersion->{
+        	if(stableVersion.isEmpty())return;
+        	FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
+	        if (!stableVersion.isEmpty()&&(clientVersion.isEmpty()||!clientVersion.laterThan(stableVersion))) {
+	            event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
+	                    .appendString(stableVersion.getOriginal())
+	                    .mergeStyle(TextFormatting.BOLD), false);
+	
+	            event.getPlayer().sendStatusMessage(new StringTextComponent("CurseForge").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
+	                    .mergeStyle(TextFormatting.UNDERLINE)
+	                    .mergeStyle(TextFormatting.BOLD)
+	                    .mergeStyle(TextFormatting.GOLD), false);
+	
+	            if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
+	                event.getPlayer().sendStatusMessage(new StringTextComponent("MCBBS").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html")))
+	                        .mergeStyle(TextFormatting.UNDERLINE)
+	                        .mergeStyle(TextFormatting.BOLD)
+	                        .mergeStyle(TextFormatting.DARK_RED), false);
+	            }
+        	}
+        });
     }
 
     @SubscribeEvent

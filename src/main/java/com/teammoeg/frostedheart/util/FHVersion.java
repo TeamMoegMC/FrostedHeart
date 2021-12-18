@@ -27,9 +27,7 @@ public class FHVersion {
 		}
 		
 	}
-	int[] majors;
-	
-	static class SubVersion{
+	private static class SubVersion{
 		String subtype;
 		int subversion;
 		public SubVersion(String subtype, int subversion) {
@@ -71,11 +69,12 @@ public class FHVersion {
 		}
 		@Override
 		public String toString() {
-			return "SubVersion [subtype=" + subtype + ", subversion=" + subversion + "]";
+			return "-" + subtype + "." + subversion;
 		}
 	}
-	SubVersion[] minors;
-	String original="";
+	private int[] majors;
+	private SubVersion[] minors;
+	private String original="";
 	public FHVersion(int[] majors, SubVersion[] minors, String original) {
 		this.majors = majors;
 		this.minors = minors;
@@ -146,6 +145,6 @@ public class FHVersion {
 	}
 	@Override
 	public String toString() {
-		return "FHVersion [majors=" + Arrays.toString(majors) + ", minors=" + Arrays.toString(minors) + "]";
+		return "FHVersion [ver" + Arrays.toString(majors) + " " + Arrays.toString(minors)+"]";
 	}
 }
