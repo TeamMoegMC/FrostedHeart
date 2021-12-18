@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.PEEvents;
+import com.teammoeg.frostedheart.network.FHRemote;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
@@ -69,6 +70,7 @@ public class FHMain {
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
+    public static final FHRemote remote = new FHRemote();
 
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
