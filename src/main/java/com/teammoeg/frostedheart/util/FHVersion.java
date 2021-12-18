@@ -19,8 +19,8 @@ public class FHVersion {
 			if(min<0)return lt;
 			return eq;
 		}
-		boolean isValid;
-		boolean isLater;
+		final boolean isValid;
+		final boolean isLater;
 		private EqualState(boolean isValid, boolean isLater) {
 			this.isValid = isValid;
 			this.isLater = isLater;
