@@ -26,8 +26,13 @@ public class FHRemote {
 			File vers=new File(FMLPaths.CONFIGDIR.get().toFile(),".twrlastversion");
 			try {
 				this.stableVersion=readString(vers);
-			} catch (IOException e) {
-				this.stableVersion=ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+			} catch (Throwable e) {
+				try {
+					this.stableVersion=ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+				} catch (Throwable e2) {
+					e2.printStackTrace();
+					this.stableVersion="";
+				}
 			}
 		}
 		public static byte[] readAll(InputStream i) throws IOException {

@@ -105,18 +105,24 @@ public class FHVersion {
 		}
 		if(minors==null) {
 			if(other.minors!=null)
-				return false;
+				return SubType.pre.equals(other.minors[0].getType());
 			return true;
 		}
 		if(other.minors==null)
-			return true;
+			return !SubType.pre.equals(minors[0].getType());
 		int len=Math.min(minors.length,other.minors.length);
 		for(int i=0;i<len;i++) {
 			EqualState es=minors[i].laterThan(other.minors[i]);
 			if(es!=EqualState.eq)
 				return es.isLater;
 		}
-		return minors.length>=other.minors.length;
+		if(other.minors.length>minors.length) {
+			if(SubType.pre.equals(other.minors[minors.length].getType()))
+				return true;
+			return false;
+		}else if(SubType.pre.equals(minors[other.minors.length].getType()))
+			return false;
+		return true;
 	}
 	public static FHVersion parse(String vers) {
 		if(vers.isEmpty())
