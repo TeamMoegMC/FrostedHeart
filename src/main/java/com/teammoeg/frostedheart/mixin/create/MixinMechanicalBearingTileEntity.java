@@ -24,7 +24,7 @@ public abstract class MixinMechanicalBearingTileEntity extends GeneratingKinetic
 	@Override
 	public float calculateStressApplied() {
 		if(movedContraption!=null) {
-			ContraptionCostUtils.setSpeed(movedContraption, (int) speed);
+			ContraptionCostUtils.setSpeedAndCollect(movedContraption, (int) speed);
 			this.lastStressApplied =ContraptionCostUtils.getRotationCost(movedContraption)+1;
 		}else
 			this.lastStressApplied=0.5F;

@@ -248,7 +248,7 @@ public class LazyOptional<T>
     }
 
     /**
-     * Register a {@link NonNullConsumer listener} that will be called when this {@link LazyOptional} becomes valid
+     * Register a {@link NonNullConsumer listener} that will be called when this {@link LazyOptional} becomes resolved
      */
     public void addListener(NonNullConsumer<LazyOptional<T>> listener)
     {

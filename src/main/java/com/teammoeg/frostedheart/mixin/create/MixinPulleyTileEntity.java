@@ -18,7 +18,7 @@ public abstract class MixinPulleyTileEntity extends LinearActuatorTileEntity {
 	public float calculateStressApplied() {
 		
 		if(super.movedContraption!=null) {
-			ContraptionCostUtils.setSpeed(movedContraption, (int) speed);
+			ContraptionCostUtils.setSpeedAndCollect(movedContraption, (int) speed);
 			if(this.getMotionVector().getY()<0) {
 				this.lastStressApplied = ContraptionCostUtils.getActorCost(super.movedContraption)+0.5F;
 				return lastStressApplied;
