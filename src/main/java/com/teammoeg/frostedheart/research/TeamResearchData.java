@@ -1,17 +1,17 @@
 package com.teammoeg.frostedheart.research;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraftforge.common.util.LazyOptional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.data.Team;
 

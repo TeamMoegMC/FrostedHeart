@@ -190,7 +190,7 @@ public class LazyOptional<T>
      */
     public Optional<T> resolve()
     {
-        return isPresent() ? Optional.of(getValue()) : Optional.empty();
+        return isPresent() ? Optional.ofNullable(getValue()) : Optional.empty();
     }
 
     /**

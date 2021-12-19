@@ -4,7 +4,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 import java.util.ArrayList;
@@ -14,6 +13,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
+import com.teammoeg.frostedheart.util.LazyOptional;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
