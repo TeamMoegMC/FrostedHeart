@@ -43,6 +43,8 @@ import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
+import com.teammoeg.frostedheart.util.FHVersion;
+
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -70,8 +72,9 @@ public class FHMain {
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
-    public static FHRemote remote= new FHRemote();
+    public static FHRemote remote;
     public static FHRemote local;
+    public static FHRemote pre;
 
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
@@ -86,7 +89,10 @@ public class FHMain {
     }
 
     public FHMain() {
-    	local=new FHRemote.FHLocal();
+    	local = new FHRemote.FHLocal();
+    	remote = new FHRemote();
+    	if(local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
+    		pre=new FHRemote.FHPreRemote();
         CreateCompat.init();
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();

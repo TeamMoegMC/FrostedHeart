@@ -86,8 +86,8 @@ public class FHVersion {
 		return majors==null&&minors==null;
 	}
 	private EqualState majorLaterThan(FHVersion other) {
-		if(majors==null)return EqualState.und;
-		if(other.majors==null)return EqualState.und;
+		if(majors==null)return other.majors==null?EqualState.und:EqualState.lt;
+		if(other.majors==null)return EqualState.gt;
 		int len=Math.min(majors.length,other.majors.length);
 		for(int i=0;i<len;i++) {
 			if(majors[i]>other.majors[i])

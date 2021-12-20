@@ -56,6 +56,17 @@ public class FHRemote {
 		}
 		
 	}
+	public static class FHPreRemote extends FHRemote{
+
+		@Override
+		public void fetch() {
+			try {
+				this.stableVersion=fetchString("https://khjxiaogu.com/datalink?name=twrprever");
+			} catch (Throwable e) {
+				this.stableVersion="";
+			}
+		}
+	}
     public String stableVersion = null;
 
     public FHRemote() {

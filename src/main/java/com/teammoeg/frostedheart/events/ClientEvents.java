@@ -60,7 +60,6 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
@@ -75,7 +74,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
@@ -89,6 +87,14 @@ public class ClientEvents {
         Screen gui = event.getGui();
         if (gui instanceof MainMenuScreen) {
         	FHMain.remote.fetchVersion().ifPresent(stableVersion->{
+            	boolean isStable=true;
+            	if(FHMain.pre!=null&&FHMain.pre.fetchVersion().isPresent()) {
+        			FHVersion preversion=FHMain.pre.fetchVersion().resolve().get();
+            		if(preversion.laterThan(stableVersion)) {
+            			stableVersion=preversion;
+            			isStable=false;
+            		}
+            	}
         		if(stableVersion.isEmpty())return;
 	            MatrixStack matrixStack = event.getMatrixStack();
 	            FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
@@ -102,32 +108,33 @@ public class ClientEvents {
 	                    
 	                    l += 9;
 	                }
-	                IFormattableTextComponent itxc=new StringTextComponent("CurseForge")
-                    .mergeStyle(TextFormatting.UNDERLINE)
-                    .mergeStyle(TextFormatting.BOLD)
-                    .mergeStyle(TextFormatting.GOLD);
-	                boolean needEvents=true;
-	                for(IGuiEventListener x:gui.getEventListeners())
-	                	if(x instanceof GuiClickedEvent) {
-	                		needEvents=false;
-	                		break;
-	                	}
-	              
-	                font.drawTextWithShadow(matrixStack,itxc, 1, gui.height / 2.0F + l, 0xFFFFFF);
-	                Style opencf=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
-	                //Though the capture is ? extends IGuiEventListener, I can't add new to it unless I cast it to List 
-	                if(needEvents)
-	                	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxc)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(opencf)));
-	                if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
-	                    l += 9;
-	                    Style openmcbbs=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html"));
-	                    IFormattableTextComponent itxm=new StringTextComponent("MCBBS")
-                        .mergeStyle(TextFormatting.UNDERLINE)
-                        .mergeStyle(TextFormatting.BOLD)
-                        .mergeStyle(TextFormatting.DARK_RED);
-	                    if(needEvents)
-	                    	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxm)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(openmcbbs)));
-	                    font.drawTextWithShadow(matrixStack,itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
+	                if(isStable) {
+		                IFormattableTextComponent itxc=new StringTextComponent("CurseForge")
+	                    .mergeStyle(TextFormatting.UNDERLINE)
+	                    .mergeStyle(TextFormatting.BOLD)
+	                    .mergeStyle(TextFormatting.GOLD);
+		                boolean needEvents=true;
+		                for(IGuiEventListener x:gui.getEventListeners())
+		                	if(x instanceof GuiClickedEvent) {
+		                		needEvents=false;
+		                		break;
+		                	}
+		                font.drawTextWithShadow(matrixStack,itxc, 1, gui.height / 2.0F + l, 0xFFFFFF);
+		                Style opencf=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
+		                //Though the capture is ? extends IGuiEventListener, I can't add new to it unless I cast it to List 
+		                if(needEvents)
+		                	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxc)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(opencf)));
+		                if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
+		                    l += 9;
+		                    Style openmcbbs=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html"));
+		                    IFormattableTextComponent itxm=new StringTextComponent("MCBBS")
+	                        .mergeStyle(TextFormatting.UNDERLINE)
+	                        .mergeStyle(TextFormatting.BOLD)
+	                        .mergeStyle(TextFormatting.DARK_RED);
+		                    if(needEvents)
+		                    	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxm)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(openmcbbs)));
+		                    font.drawTextWithShadow(matrixStack,itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
+		                }
 	                }
 	            }
         	});
@@ -137,23 +144,32 @@ public class ClientEvents {
     @SubscribeEvent
     public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
         FHMain.remote.fetchVersion().ifPresent(stableVersion->{
+        	boolean isStable=true;
+        	if(FHMain.pre!=null&&FHMain.pre.fetchVersion().isPresent()) {
+    			FHVersion preversion=FHMain.pre.fetchVersion().resolve().get();
+        		if(preversion.laterThan(stableVersion)) {
+        			stableVersion=preversion;
+        			isStable=false;
+        		}
+        	}
         	if(stableVersion.isEmpty())return;
         	FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
 	        if (!stableVersion.isEmpty()&&(clientVersion.isEmpty()||!clientVersion.laterThan(stableVersion))) {
 	            event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
 	                    .appendString(stableVersion.getOriginal())
 	                    .mergeStyle(TextFormatting.BOLD), false);
-	
-	            event.getPlayer().sendStatusMessage(new StringTextComponent("CurseForge").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
-	                    .mergeStyle(TextFormatting.UNDERLINE)
-	                    .mergeStyle(TextFormatting.BOLD)
-	                    .mergeStyle(TextFormatting.GOLD), false);
-	
-	            if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
-	                event.getPlayer().sendStatusMessage(new StringTextComponent("MCBBS").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html")))
-	                        .mergeStyle(TextFormatting.UNDERLINE)
-	                        .mergeStyle(TextFormatting.BOLD)
-	                        .mergeStyle(TextFormatting.DARK_RED), false);
+	            if(isStable) {
+		            event.getPlayer().sendStatusMessage(new StringTextComponent("CurseForge").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
+		                    .mergeStyle(TextFormatting.UNDERLINE)
+		                    .mergeStyle(TextFormatting.BOLD)
+		                    .mergeStyle(TextFormatting.GOLD), false);
+		
+		            if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
+		                event.getPlayer().sendStatusMessage(new StringTextComponent("MCBBS").setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html")))
+		                        .mergeStyle(TextFormatting.UNDERLINE)
+		                        .mergeStyle(TextFormatting.BOLD)
+		                        .mergeStyle(TextFormatting.DARK_RED), false);
+		            }
 	            }
         	}
         });
