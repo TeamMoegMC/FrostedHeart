@@ -55,6 +55,8 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
@@ -204,7 +206,8 @@ public class ClientEvents {
                 event.getToolTip().add(GuiUtils.translateTooltip("inner").mergeStyle(TextFormatting.GREEN).appendSibling(new TranslationTextComponent("item." + s.replaceFirst(":", "."))));
                 if(!ItemNBTHelper.getBoolean(stack,"inner_bounded")) {
                 	if(stack.hasTag()&&stack.getTag().contains("inner_cover_tag")) {
-	                	int damage=stack.getTag().getCompound("inner_cover_tag").getInt("Damage");
+                		CompoundNBT cn=stack.getTag().getCompound("inner_cover_tag");
+	                	int damage=cn.getInt("Damage");
 	                	if(damage!=0) {
 	                		RecipeInner ri=RecipeInner.recipeList.get(new ResourceLocation(s));
 	                		if(ri!=null) {
@@ -214,6 +217,14 @@ public class ClientEvents {
 		                		event.getToolTip().add(GuiUtils.translateTooltip("inner_damage",temps));
 	                		}
 	                	}
+	                	if(cn.contains("Enchantments")) {
+	                		ListNBT ln=cn.getList("Enchantments",10);
+	                		if(!ln.isEmpty()) {
+	                			event.getToolTip().add(GuiUtils.translateTooltip("inner_enchantment").mergeStyle(TextFormatting.GRAY));
+	                			ItemStack.addEnchantmentTooltips(event.getToolTip(),ln);
+	                		}
+	                	}
+	                	
                 	}
                 }
                 iwe = FHDataManager.getArmor(s + "_" + aes.getName());

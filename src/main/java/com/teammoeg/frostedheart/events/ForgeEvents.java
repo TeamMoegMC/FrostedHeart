@@ -49,9 +49,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
@@ -84,6 +86,7 @@ import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -112,20 +115,55 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onIEMultiBlockForm(MultiblockFormEvent event) {
-		if(event.getPlayer()instanceof FakePlayer) {
+		if (event.getPlayer() instanceof FakePlayer) {
 			event.setCanceled(true);
 			return;
 		}
-		if(!FHDataManager.testMultiBlock(event.getMultiblock().getUniqueName(),event.getPlayer()))
+		if (!FHDataManager.testMultiBlock(event.getMultiblock().getUniqueName(), event.getPlayer()))
 			event.setCanceled(true);
 	}
-	@SubscribeEvent(receiveCanceled=true,priority=EventPriority.LOWEST)
+
+	@SubscribeEvent
+	public static void playerXPPickUp(PickupXp event) {
+		PlayerEntity player = event.getPlayer();
+		for (ItemStack stack : player.getArmorInventoryList()) {
+			if (!stack.isEmpty()) {
+				CompoundNBT cn = stack.getTag();
+				if (cn == null)
+					continue;
+				String inner = cn.getString("inner_cover");
+				if (inner.isEmpty() || cn.getBoolean("inner_bounded"))
+					continue;
+				CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
+				int crdmg = cnbt.getInt("Damage");
+				if(crdmg>0&&FHUtils.getEnchantmentLevel(Enchantments.MENDING,cnbt)>0) {
+					event.setCanceled(true);
+					ExperienceOrbEntity orb = event.getOrb();
+					player.xpCooldown = 2;
+					player.onItemPickup(orb, 1);
+					
+					int toRepair = Math.min(orb.xpValue * 2,crdmg);
+					orb.xpValue -= toRepair / 2;
+					crdmg=crdmg - toRepair;
+					cnbt.putInt("Damage", crdmg);
+					cn.put("inner_cover_tag", cnbt);
+					if (orb.xpValue > 0) {
+						player.giveExperiencePoints(orb.xpValue);
+					}
+					orb.remove();
+					return;
+				}
+			}
+		}
+	}
+
+	@SubscribeEvent(receiveCanceled = true, priority = EventPriority.LOWEST)
 	public static void onArmorDamage(LivingHurtEvent event) {
-		if(event.getEntityLiving() instanceof PlayerEntity&&!event.getSource().isUnblockable()) {
-			PlayerEntity player=(PlayerEntity) event.getEntityLiving();
-			
-			float p_234563_2_=event.getAmount();
-			DamageSource p_234563_1_=event.getSource();
+		if (event.getEntityLiving() instanceof PlayerEntity && !event.getSource().isUnblockable()) {
+			PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+
+			float p_234563_2_ = event.getAmount();
+			DamageSource p_234563_1_ = event.getSource();
 			if (p_234563_2_ > 0) {
 				p_234563_2_ = p_234563_2_ / 4.0F;
 				if (p_234563_1_.isFireDamage())// fire damage more
@@ -133,50 +171,50 @@ public class ForgeEvents {
 				else if (p_234563_1_.isExplosion())// explode add a lot
 					p_234563_2_ *= 4;
 				int amount = (int) p_234563_2_;
-				if(amount!=p_234563_2_)
-				amount+=player.getRNG().nextDouble()<(p_234563_2_-amount)?1:0;
-				if (amount <=0)return;
+				if (amount != p_234563_2_)
+					amount += player.getRNG().nextDouble() < (p_234563_2_ - amount) ? 1 : 0;
+				if (amount <= 0)
+					return;
 				for (ItemStack itemstack : player.getArmorInventoryList()) {
-					if(itemstack.isEmpty())continue;
+					if (itemstack.isEmpty())
+						continue;
 					CompoundNBT cn = itemstack.getTag();
 					if (cn == null)
 						continue;
-					if (amount > 0) {
-						String inner = cn.getString("inner_cover");
-						if (inner == null || cn.getBoolean("inner_bounded"))
-							continue;
-						int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING,cn);
-						int j = 0;
-						if(i>0)
-							for (int k = 0; i > 0 && k < amount; ++k) {
-								if (UnbreakingEnchantment.negateDamage(itemstack, i, player.getRNG())) {
-									++j;
-								}
+					String inner = cn.getString("inner_cover");
+					if (inner.isEmpty() || cn.getBoolean("inner_bounded"))
+						continue;
+					CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
+					int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
+					int j = 0;
+					if (i > 0)
+						for (int k = 0; i > 0 && k < amount; ++k) {
+							if (UnbreakingEnchantment.negateDamage(itemstack, i, player.getRNG())) {
+								++j;
 							}
-
-						amount -= j;
-						if (amount <= 0)
-							continue;
-						CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
-						int crdmg = cnbt.getInt("Damage");
-						crdmg += amount;
-						RecipeInner ri = RecipeInner.recipeList.get(new ResourceLocation(inner));
-
-						if (ri != null && ri.getDurability() <= crdmg) {// damaged
-							cn.remove("inner_cover");
-							cn.remove("inner_cover_tag");
-							cn.remove("inner_bounded");
-							player.sendBreakAnimation(MobEntity.getSlotForItemStack(itemstack));
-						} else {
-							cnbt.putInt("Damage", crdmg);
-							cn.put("inner_cover_tag", cnbt);
 						}
+					amount -= j;
+					if (amount <= 0)
+						continue;
+					int crdmg = cnbt.getInt("Damage");
+					crdmg += amount;
+					RecipeInner ri = RecipeInner.recipeList.get(new ResourceLocation(inner));
+
+					if (ri != null && ri.getDurability() <= crdmg) {// damaged
+						cn.remove("inner_cover");
+						cn.remove("inner_cover_tag");
+						cn.remove("inner_bounded");
+						player.sendBreakAnimation(MobEntity.getSlotForItemStack(itemstack));
+					} else {
+						cnbt.putInt("Damage", crdmg);
+						cn.put("inner_cover_tag", cnbt);
 					}
 				}
 
 			}
 		}
 	}
+
 	@SubscribeEvent
 	public static void addReloadListeners(AddReloadListenerEvent event) {
 		DataPackRegistries dataPackRegistries = event.getDataPackRegistries();
@@ -356,7 +394,7 @@ public class ForgeEvents {
 					.setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_leg"))));
 			event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorNBT(new ItemStack(Items.IRON_BOOTS)
 					.setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_foot"))));
-			
+
 			ItemStack breads = new ItemStack(Items.BREAD);
 			breads.setCount(16);
 			event.getPlayer().inventory.addItemStackToInventory(breads);
@@ -372,9 +410,10 @@ public class ForgeEvents {
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHResearchRegistrtySyncPacket());
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-					new FHResearchDataSyncPacket(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
-			
-			serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap)->{
+					new FHResearchDataSyncPacket(
+							FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
+
+			serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
 				PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 						new FHClimatePacket(cap));
 			});
@@ -426,11 +465,9 @@ public class ForgeEvents {
 				float min = adj.getMinTemp(event.getItem());
 				float heat = adj.getHeat(event.getItem());
 				if (heat > 1) {
-					event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT,
-							(heat) * 2);
+					event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
 				} else if (heat < -1)
-					event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPOTHERMIA_INSTANT,
-							(heat) * 2);
+					event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPOTHERMIA_INSTANT, (heat) * 2);
 				if (heat > 0) {
 					if (current >= max)
 						return;

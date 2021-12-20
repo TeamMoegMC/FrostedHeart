@@ -145,6 +145,7 @@
   "tooltip.frostedheart.handstove.add_fuel": "与任意碳棒进行无序合成添加燃料",
   "tooltip.frostedheart.handstove.trash_ash": "灰烬已满！对地面按住右键以倒出灰烬",
   "tooltip.frostedheart.handstove.fuel": "剩余燃烧时间：%s s",
+  "tooltip.frostedheart.inner_enchantment": "内衬附魔：",
   "tooltip.frostedheart.research_is_locked": "Research is locked! Finish all of its prerequisites first: ",
 
   "effect.frostedheart.hypothermia": "失温",
