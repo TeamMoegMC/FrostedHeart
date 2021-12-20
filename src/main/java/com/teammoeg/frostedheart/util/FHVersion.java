@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.util;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 public class FHVersion {
 	private enum SubType{
@@ -29,8 +30,8 @@ public class FHVersion {
 	}
 	private static class SubVersion{
 		String subtype;
-		int subversion;
-		public SubVersion(String subtype, int subversion) {
+		MajorVersion subversion;
+		public SubVersion(String subtype,MajorVersion subversion) {
 			this.subtype = subtype;
 			this.subversion = subversion;
 		}
@@ -45,7 +46,7 @@ public class FHVersion {
 			SubType ttype=getType();
 			SubType otype=other.getType();
 			if(ttype==otype) {
-				return EqualState.of(subversion-other.subversion);
+				return subversion.laterThan(other.subversion);
 			}
 			return ttype==null?EqualState.gt:(otype==null?EqualState.lt:EqualState.of(ttype.ordinal()-otype.ordinal()));
 		}
@@ -57,25 +58,69 @@ public class FHVersion {
 				if(c>='0'&&c<='9')break;//number start
 				st.append(c);
 			}
-			int ver;
+			MajorVersion ver;
 			if(i!=v.length()) {
-				try {
-					ver=Integer.parseInt(v.substring(i));
-				}catch(Exception ex){
-					ver=v.substring(i).hashCode();
-				}
-			}else ver=0;
+				ver=MajorVersion.parse(v.substring(i));
+			}else ver=MajorVersion.empty;
 			return new SubVersion(st.toString(),ver);
 		}
 		@Override
 		public String toString() {
-			return "-" + subtype + "." + subversion;
+			return "-" + subtype + subversion.toString();
 		}
 	}
-	private int[] majors;
+	private static class MajorVersion{
+		private static final MajorVersion empty=new MajorVersion(null);
+		private int[] vers;
+		public MajorVersion(int[] vers) {
+			this.vers = vers;
+		}
+		public boolean isEmpty() {
+			return vers==null;
+		}
+		@Override
+		public String toString() {
+			String[] joined=new String[vers.length];
+			int i=-1;
+			for(int in:vers)
+				joined[++i]=String.valueOf(in);
+			if(vers!=null)
+				return String.join(".",joined);
+			return "Empty";
+		}
+		private EqualState laterThan(MajorVersion other) {
+			if(vers==null)return other.vers==null?EqualState.und:EqualState.lt;
+			if(other.vers==null)return EqualState.gt;
+			int len=Math.min(vers.length,other.vers.length);
+			for(int i=0;i<len;i++) {
+				if(vers[i]>other.vers[i])
+					return EqualState.gt;
+				else if(vers[i]<other.vers[i])
+					return EqualState.lt; 
+			}
+			return EqualState.of(vers.length-other.vers.length);
+		}
+		public static MajorVersion parse(String vers) {
+			if(vers.isEmpty())
+				return empty;
+			String[] main=vers.split("\\.");
+			if(main.length<=0)return empty;
+			int[] majors=new int[main.length];
+			int i=-1;
+			for(String s:main) {
+				try {
+					majors[++i]=Integer.parseInt(s);
+				}catch(Exception e) {
+					majors[i]=s.hashCode();
+				}
+			}
+			return new MajorVersion(majors);
+		}
+	}
+	private MajorVersion majors;
 	private SubVersion[] minors;
 	private String original="";
-	public FHVersion(int[] majors, SubVersion[] minors, String original) {
+	public FHVersion(MajorVersion majors, SubVersion[] minors, String original) {
 		this.majors = majors;
 		this.minors = minors;
 		this.original = original;
@@ -85,20 +130,8 @@ public class FHVersion {
 	public boolean isEmpty() {
 		return majors==null&&minors==null;
 	}
-	private EqualState majorLaterThan(FHVersion other) {
-		if(majors==null)return other.majors==null?EqualState.und:EqualState.lt;
-		if(other.majors==null)return EqualState.gt;
-		int len=Math.min(majors.length,other.majors.length);
-		for(int i=0;i<len;i++) {
-			if(majors[i]>other.majors[i])
-				return EqualState.gt;
-			else if(majors[i]<other.majors[i])
-				return EqualState.lt; 
-		}
-		return EqualState.of(majors.length-other.majors.length);
-	}
 	public boolean laterThan(FHVersion other) {
-		EqualState maj=majorLaterThan(other);
+		EqualState maj=majors.laterThan(other.majors);
 		if(!maj.isValid)return true;
 		if(maj!=EqualState.eq) {
 			return maj.isLater;
@@ -120,7 +153,7 @@ public class FHVersion {
 			if(SubType.pre.equals(other.minors[minors.length].getType()))
 				return true;
 			return false;
-		}else if(SubType.pre.equals(minors[other.minors.length].getType()))
+		}else if(other.minors.length<minors.length&&SubType.pre.equals(minors[other.minors.length].getType()))
 			return false;
 		return true;
 	}
@@ -128,16 +161,7 @@ public class FHVersion {
 		if(vers.isEmpty())
 			return empty;
 		String[] verss=vers.split("-");
-		String[] main=verss[0].split("\\.");
-		int[] majors=new int[main.length];
-		int i=-1;
-		for(String s:main) {
-			try {
-				majors[++i]=Integer.parseInt(s);
-			}catch(Exception e) {
-				majors[i]=s.hashCode();
-			}
-		}
+		MajorVersion majors=MajorVersion.parse(verss[0]);
 		SubVersion[] svers=null;
 		if(verss.length>1)
 		svers=new SubVersion[verss.length-1];
@@ -151,6 +175,6 @@ public class FHVersion {
 	}
 	@Override
 	public String toString() {
-		return "FHVersion [ver" + Arrays.toString(majors) + " " + Arrays.toString(minors)+"]";
+		return "FHVersion [ver " + String.valueOf(majors) +Arrays.toString(minors)+"]";
 	}
 }
