@@ -71,7 +71,7 @@ public class JEICompat implements IModPlugin {
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator), GeneratorFuelCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.charger), ChargerCategory.UID,ChargerCookingCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.charger), ChargerCategory.UID,ChargerCookingCategory.UID,ChargerDefrostCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE),CampfireDefrostCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(Blocks.SMOKER),SmokingDefrostCategory.UID);
     }
@@ -87,6 +87,7 @@ public class JEICompat implements IModPlugin {
         registration.addRecipes(recipeManager.getRecipesForType(IRecipeType.SMOKING),ChargerCookingCategory.UID);
         registration.addRecipes(new ArrayList<>(CampfireDefrostRecipe.recipeList.values()),CampfireDefrostCategory.UID);
         registration.addRecipes(new ArrayList<>(SmokingDefrostRecipe.recipeList.values()),SmokingDefrostCategory.UID);
+        registration.addRecipes(new ArrayList<>(CampfireDefrostRecipe.recipeList.values()),ChargerDefrostCategory.UID);
         registration.addRecipes(Arrays.asList(
         		new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.red_mushroombed),0),new ItemStack(Items.RED_MUSHROOM,10)),
         		new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.brown_mushroombed),0),new ItemStack(Items.BROWN_MUSHROOM,10))
@@ -138,7 +139,8 @@ public class JEICompat implements IModPlugin {
                 new ChargerCookingCategory(guiHelper),
                 new CuttingCategory(guiHelper),
                 new CampfireDefrostCategory(guiHelper),
-                new SmokingDefrostCategory(guiHelper)
+                new SmokingDefrostCategory(guiHelper),
+                new ChargerDefrostCategory(guiHelper)
         );
     }
 

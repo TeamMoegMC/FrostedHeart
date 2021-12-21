@@ -103,8 +103,8 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .collect(Collectors.<RecipeInner,ResourceLocation,RecipeInner>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
         CampfireDefrostRecipe.recipeList=recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass()==CampfireDefrostRecipe.class)
-                .map(e->(DefrostRecipe)e)
-                .collect(Collectors.<DefrostRecipe,ResourceLocation,DefrostRecipe>toMap(recipe -> recipe.getId(), recipe -> recipe));
+                .map(e->(CampfireDefrostRecipe)e)
+                .collect(Collectors.<CampfireDefrostRecipe,ResourceLocation,CampfireDefrostRecipe>toMap(recipe -> recipe.getId(), recipe -> recipe));
         SmokingDefrostRecipe.recipeList=recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass()==SmokingDefrostRecipe.class)
                 .map(e->(DefrostRecipe)e)

@@ -26,6 +26,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
@@ -51,6 +52,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 
+import java.util.Collection;
 import java.util.List;
 
 public class ChargerTileEntity extends IEBaseTileEntity implements
@@ -102,12 +104,31 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                     return ActionResultType.SUCCESS;
                 }
             }
+            
             if (power >= 100) {
                 List<SmokingRecipe> irs = this.world.getRecipeManager().getRecipesForType(IRecipeType.SMOKING);
                 for (SmokingRecipe sr : irs) {
                     if (sr.getIngredients().iterator().next().test(is)) {
                     	if(!world.isRemote) {
 	                        power -= sr.getCookTime() / 20;
+	                        splitAndSpawnExperience(pe.getEntityWorld(),pe.getPosition(), sr.getExperience());
+	                        is.setCount(is.getCount() - 1);
+	                        ItemStack gain = sr.getCraftingResult(null).copy();
+	                        FHUtils.giveItem(pe, gain);
+	                        markDirty();
+	                        this.markContainingBlockForUpdate(null);
+                        }
+                        drawEffect();
+                        return ActionResultType.SUCCESS;
+                    }
+                }
+            }
+            {
+                Collection<CampfireDefrostRecipe> irs = CampfireDefrostRecipe.recipeList.values();
+                for (CampfireDefrostRecipe sr : irs) {
+                    if (sr.getIngredient().test(is)) {
+                    	if(!world.isRemote) {
+	                        power -= sr.getCookTime() / 80;
 	                        splitAndSpawnExperience(pe.getEntityWorld(),pe.getPosition(), sr.getExperience());
 	                        is.setCount(is.getCount() - 1);
 	                        ItemStack gain = sr.getCraftingResult(null).copy();

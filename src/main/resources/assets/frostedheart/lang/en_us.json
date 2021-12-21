@@ -101,6 +101,7 @@
   "gui.jei.category.frostedheart.charger_cooking":"Steaming",
   "gui.jei.category.frostedheart.knife_cutting":"Cutting With Knife",
   "gui.jei.category.frostedheart.defrost_campfire":"Defrost With Campfire",
+  "gui.jei.category.frostedheart.charger_defrost": "Defrost By Steaming",
   "gui.jei.category.frostedheart.defrost_smoking":"Defrost With Smoker",
 
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",

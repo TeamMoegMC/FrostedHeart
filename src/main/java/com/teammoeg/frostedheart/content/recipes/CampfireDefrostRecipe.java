@@ -50,7 +50,7 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
 	}
 
 	public static RegistryObject<IRecipeSerializer<CampfireDefrostRecipe>> SERIALIZER;
-	public static Map<ResourceLocation, DefrostRecipe> recipeList = Collections.emptyMap();
+	public static Map<ResourceLocation, CampfireDefrostRecipe> recipeList = Collections.emptyMap();
 
 	@Override
 	public IRecipeSerializer<?> getSerializer() {
