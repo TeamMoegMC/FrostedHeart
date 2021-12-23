@@ -29,7 +29,7 @@ public class T1GeneratorContainer extends IEBaseContainer<T1GeneratorTileEntity>
     public T1GeneratorTileEntity.GeneratorData data;
 
     public T1GeneratorContainer(int id, PlayerInventory inventoryPlayer, T1GeneratorTileEntity tile) {
-        super(inventoryPlayer, tile, id);
+        super(tile, id);
 
         this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
             @Override

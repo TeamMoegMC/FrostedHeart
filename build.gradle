@@ -154,8 +154,8 @@ dependencies {
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}")
 
-    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.5-140")
-    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.5-140:datagen")
+    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.6-141")
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.6-141:datagen")
 
     implementation fg.deobf("curse.maven:create-328085:3499718")
     implementation fg.deobf("curse.maven:flywheel-486392:3459739")
