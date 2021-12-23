@@ -31,7 +31,6 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ResearchCommand;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
@@ -49,7 +48,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.entity.MobEntity;
@@ -67,8 +65,6 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.Difficulty;
-import net.minecraft.world.Dimension;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -334,7 +330,7 @@ public class ForgeEvents {
 	@SubscribeEvent
 	public static void onEntityPlaceBlock(BlockEvent.EntityPlaceEvent event) {
 		if (event.getEntity() instanceof ServerPlayerEntity) {
-			PlayerEntity player = (PlayerEntity) event.getEntity();
+			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
 			Block growBlock = event.getPlacedBlock().getBlock();
 			float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
 			if (growBlock instanceof IGrowable) {

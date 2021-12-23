@@ -19,6 +19,9 @@
 package com.teammoeg.frostedheart.climate;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+
+import java.util.ArrayList;
+
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -48,7 +51,17 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class TemperatureUpdate {
 	public static final float HEAT_EXCHANGE_CONSTANT = 0.0012F;
 	public static final float SELF_HEATING_CONSTANT = 0.036F;
-
+	private static final class HeatingEquipment{
+		IHeatingEquipment e;
+		ItemStack i;
+		public HeatingEquipment(IHeatingEquipment e, ItemStack i) {
+			this.e = e;
+			this.i = i;
+		}
+		public float compute(float body,float env) {
+			return e.compute(i, body, env);
+		}
+	}
 	/**
 	 * Perform temperature tick logic
 	 *
@@ -58,11 +71,10 @@ public class TemperatureUpdate {
 	public static void updateTemperature(PlayerTickEvent event) {
 		if (event.side == LogicalSide.SERVER && event.phase == Phase.START
 				&& event.player instanceof ServerPlayerEntity) {
-
 			ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-
 			if (player.ticksExisted % 10 != 0 || player.isCreative() || player.isSpectator())
 				return;
+			//soak in water modifier
 			if (player.isInWater()) {
 				boolean hasArmor = false;
 				for (ItemStack is : player.getArmorInventoryList()) {
@@ -77,30 +89,37 @@ public class TemperatureUpdate {
 				else if (current == null || current.getDuration() < 100)
 					player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
 			}
+			//load current data
 			float current = TemperatureCore.getBodyTemperature(player);
 			double tspeed = FHConfig.SERVER.tempSpeed.get();
 			if (current < 0)
 				current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed;
+			//world and chunk temperature
 			World world = player.getEntityWorld();
 			BlockPos pos = player.getPosition();
 			float envtemp = ChunkData.getTemperature(world, pos);
+			//time temperature
 			float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
 			float gameTime = world.getDayTime() % 24000L;
 			gameTime = gameTime / (200 / 3);
 			gameTime = (float) Math.sin(Math.toRadians(gameTime));
 			envtemp += TemperatureCore.getBlockTemp(world, pos);
 			envtemp += skyLight > 5.0F ? (gameTime * 5.0F) : (-1.0F * 5.0F);
-			envtemp -= 37F;// normalize
-			float keepwarm = 0;
+			// burning heat
 			if (player.isBurning())
 				envtemp += 150F;
+			// normalize
+			envtemp -= 37F;
+			float keepwarm = 0;
+			//list of equipments to be calculated
+			ArrayList<HeatingEquipment> equipments=new ArrayList<>(7);
 			for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
 				if (is == null)
 					continue;
 				Item it = is.getItem();
 				if (it instanceof IHeatingEquipment)
-					current += ((IHeatingEquipment) it).compute(is, current, envtemp) * tspeed;
-				if (it instanceof IWarmKeepingEquipment) {
+					equipments.add(new HeatingEquipment((IHeatingEquipment) it,is));
+				if (it instanceof IWarmKeepingEquipment) {//only for direct warm keeping
 					keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
 				} else {
 					IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
@@ -113,10 +132,10 @@ public class TemperatureUpdate {
 					continue;
 				Item it = is.getItem();
 				if (it instanceof IHeatingEquipment)
-					current += ((IHeatingEquipment) it).compute(is, current, envtemp) * tspeed;
+					equipments.add(new HeatingEquipment((IHeatingEquipment) it,is));
 				if (it instanceof IWarmKeepingEquipment) {
 					keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
-				} else {
+				} else {//include inner
 					String s = ItemNBTHelper.getString(is, "inner_cover");
 					IWarmKeepingEquipment iw = null;
 					EquipmentSlotType aes = MobEntity.getSlotForItemStack(is);
@@ -128,21 +147,29 @@ public class TemperatureUpdate {
 						keepwarm += iw.getFactor(player, is);
 				}
 			}
-			{
+			{//main hand
 				ItemStack hand = player.getHeldItemMainhand();
 				Item it = hand.getItem();
 				if (it instanceof IHeatingEquipment && ((IHeatingEquipment) it).canHandHeld())
-					current += ((IHeatingEquipment) it).compute(hand, current, envtemp) * tspeed;
+					equipments.add(new HeatingEquipment((IHeatingEquipment) it,hand));
 			}
-			{
+			{//off hand
 				ItemStack hand = player.getHeldItemOffhand();
 				Item it = hand.getItem();
 				if (it instanceof IHeatingEquipment && ((IHeatingEquipment) it).canHandHeld())
-					current += ((IHeatingEquipment) it).compute(hand, current, envtemp) * tspeed;
+					equipments.add(new HeatingEquipment((IHeatingEquipment) it,hand));;
 			}
-			if (keepwarm > 1)
+			if (keepwarm > 1)//prevent negative
 				keepwarm = 1;
+			//environment heat exchange
 			float dheat= HEAT_EXCHANGE_CONSTANT  * (1 - keepwarm) * (envtemp - current);
+			//simulate temperature transform to get heating device working
+			float simulated=(float) (current/tspeed+dheat);
+			for(HeatingEquipment it:equipments) {
+				float addi=it.compute(simulated,envtemp);
+				dheat+=addi;
+				simulated+=addi;
+			}
 			if(dheat>0.1)
 				player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT,(dheat)*10);
 			else if(dheat<-0.1)

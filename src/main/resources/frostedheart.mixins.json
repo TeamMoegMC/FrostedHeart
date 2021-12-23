@@ -32,6 +32,7 @@
     "immersiveengineering.MultiblockProcessMixerMixin",
     "immersiveengineering.RotationUtilMixin",
     "jei.MixinCommandUtilServer",
+    "minecraft.AnimalEntityMixin",
     "minecraft.BeeHiveMixin",
     "minecraft.BigTreeMixin",
     "minecraft.BiomeMixin",
