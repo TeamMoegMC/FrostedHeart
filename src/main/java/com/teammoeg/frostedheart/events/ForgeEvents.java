@@ -75,9 +75,11 @@ import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.item.ItemEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
@@ -152,7 +154,14 @@ public class ForgeEvents {
 			}
 		}
 	}
-
+	//not allow repair
+	@SubscribeEvent(receiveCanceled = true, priority = EventPriority.LOWEST)
+	public static void onItemRepair(AnvilUpdateEvent event) {
+		if(event.getLeft().hasTag()) {
+			if(event.getLeft().getTag().getBoolean("inner_bounded"))
+				event.setCanceled(true);
+		}
+	}
 	@SubscribeEvent(receiveCanceled = true, priority = EventPriority.LOWEST)
 	public static void onArmorDamage(LivingHurtEvent event) {
 		if (event.getEntityLiving() instanceof PlayerEntity && !event.getSource().isUnblockable()) {
@@ -178,8 +187,23 @@ public class ForgeEvents {
 					if (cn == null)
 						continue;
 					String inner = cn.getString("inner_cover");
-					if (inner.isEmpty() || cn.getBoolean("inner_bounded"))
+					if (inner.isEmpty())
 						continue;
+					if(cn.getBoolean("inner_bounded")) {
+						int dmg=cn.getInt("inner_damage");
+						if(dmg<itemstack.getDamage()) {
+							dmg=itemstack.getDamage();
+						}
+						dmg+=amount;
+						if(dmg>=itemstack.getMaxDamage()) {
+							cn.remove("inner_cover");
+							cn.remove("inner_cover_tag");
+							cn.remove("inner_bounded");
+							cn.remove("inner_damage");
+							player.sendBreakAnimation(MobEntity.getSlotForItemStack(itemstack));
+						}else cn.putInt("inner_damage",dmg);
+						continue;
+					}
 					CompoundNBT cnbt = cn.getCompound("inner_cover_tag");
 					int i = FHUtils.getEnchantmentLevel(Enchantments.UNBREAKING, cnbt);
 					int j = 0;
