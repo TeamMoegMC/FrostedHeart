@@ -40,6 +40,8 @@ public class WorldClimate {
      */
     public static final int HEMP_GROW_TEMPERATURE = 0;
 
+	public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
+
     /**
      * Get World temperature for a specific world, affected by weather and so on
      *

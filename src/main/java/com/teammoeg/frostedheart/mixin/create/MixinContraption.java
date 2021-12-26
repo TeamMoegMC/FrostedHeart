@@ -35,7 +35,11 @@ public abstract class MixinContraption implements ISpeedContraption{
 	@Override
 	public void setSpeed(float spd) {
 		speed=spd;
-	}
+	}/**
+	
+	*@author khjxiaogu
+	*@reason no more instabreak
+	*/
 	@Overwrite(remap=false)
 	protected boolean customBlockPlacement(IWorld world, BlockPos targetPos, BlockState state) {
 		BlockState blockState = world.getBlockState(targetPos);

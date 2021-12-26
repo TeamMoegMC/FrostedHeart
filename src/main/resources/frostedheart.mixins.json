@@ -53,6 +53,7 @@
     "minecraft.TemplateManagerMixin",
     "minecraft.VillagerMixin",
     "minecraft.CowEntityMixin",
+    "snow.HookMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
