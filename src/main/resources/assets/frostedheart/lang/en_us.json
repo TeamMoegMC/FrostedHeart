@@ -124,6 +124,8 @@
   "message.frostedheart.too_cold_to_transmute": "The Philosopher Stone lost its power.",
   "message.frostedheart.magical_backslash": "Backslash is approaching...",
   "message.frostedheart.village.unknown": "hmmm...hmm e dnot udnrsootd wah u mean",
+  "message.frostedheart.cow.nomilk.hungry": "This cow is too hungry to produce milk. you should feed it with dry grass or wheat.",
+  "message.frostedheart.cow.nomilk.digest": "This cow has no milk now.",
 
   "tooltip.frostedheart.f3_average_temperature": "Average Temperature: %s °C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "Invalid Chunk Data",

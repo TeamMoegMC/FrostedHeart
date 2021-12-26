@@ -52,6 +52,7 @@
     "minecraft.TemplateAccess",
     "minecraft.TemplateManagerMixin",
     "minecraft.VillagerMixin",
+    "minecraft.CowEntityMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
