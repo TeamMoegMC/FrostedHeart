@@ -164,9 +164,8 @@ public class ForgeEvents {
 	}
 	@SubscribeEvent(receiveCanceled = true, priority = EventPriority.LOWEST)
 	public static void onArmorDamage(LivingHurtEvent event) {
-		if (event.getEntityLiving() instanceof PlayerEntity && !event.getSource().isUnblockable()) {
+		if (event.getEntityLiving() instanceof PlayerEntity && (event.getSource().isFireDamage()||!event.getSource().isUnblockable())) {
 			PlayerEntity player = (PlayerEntity) event.getEntityLiving();
-
 			float p_234563_2_ = event.getAmount();
 			DamageSource p_234563_1_ = event.getSource();
 			if (p_234563_2_ > 0) {

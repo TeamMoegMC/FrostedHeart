@@ -69,6 +69,7 @@ import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -362,6 +363,11 @@ public class ClientEvents {
 	            FrostedHud.renderJumpbar(stack, anchorX, anchorY, mc, clientPlayer);
 	            event.setCanceled(true);
 	        }
+        }
+        //add compatibility to other MOD UIs, may cause problem?
+        if(event.isCanceled()) {
+        	if(event.getType()!=RenderGameOverlayEvent.ElementType.FOOD)
+        		MinecraftForge.EVENT_BUS.post(new RenderGameOverlayEvent.Post(event.getMatrixStack(),event,event.getType()));//compatibility
         }
     }
 }

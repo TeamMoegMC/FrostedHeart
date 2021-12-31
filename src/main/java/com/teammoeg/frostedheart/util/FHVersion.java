@@ -89,8 +89,8 @@ public class FHVersion {
 			return "Empty";
 		}
 		private EqualState laterThan(MajorVersion other) {
-			if(vers==null)return other.vers==null?EqualState.und:EqualState.lt;
-			if(other.vers==null)return EqualState.gt;
+			if(vers==null)return (other==null||other.vers==null)?EqualState.und:EqualState.lt;
+			if(other==null||other.vers==null)return EqualState.gt;
 			int len=Math.min(vers.length,other.vers.length);
 			for(int i=0;i<len;i++) {
 				if(vers[i]>other.vers[i])
