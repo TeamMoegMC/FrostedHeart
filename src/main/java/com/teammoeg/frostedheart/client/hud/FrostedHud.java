@@ -83,13 +83,13 @@ public class FrostedHud {
     public static final ResourceLocation DEFENCE = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/defence.png");
     public static final ResourceLocation HORSEHP = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/horsehp.png");
     public static final ResourceLocation HP = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/hp.png");
+    public static final ResourceLocation HP_MAX = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/maxhp.png");
     public static final ResourceLocation HUNGER = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/hunger.png");
     public static final ResourceLocation JUMP = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/jump.png");
     public static final ResourceLocation OXYGEN = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/oxygen.png");
     public static final ResourceLocation THIRST = new ResourceLocation(FHMain.MODID, "textures/gui/hud/atlantes/thirst.png");
 
     public static void renderSetup(ClientPlayerEntity player, PlayerEntity renderViewPlayer) {
-        Minecraft mc = Minecraft.getInstance();
         renderHealth = !player.isCreative() && !player.isSpectator();
         renderHealthMount = renderHealth && player.getRidingEntity() instanceof LivingEntity;
         renderFood = renderHealth && !renderHealthMount;
@@ -268,7 +268,11 @@ public class FrostedHud {
 
         float health = player.getHealth();
         //ModifiableAttributeInstance attrMaxHealth = player.getAttribute(Attributes.MAX_HEALTH);
-        float healthMax =/* (float) attrMaxHealth.getValue()*/player.getMaxHealth();
+        float omax;
+        float healthMax= omax=/* (float) attrMaxHealth.getValue()*/player.getMaxHealth();
+        
+        if(healthMax<20)
+        	healthMax=20;
         float absorb = player.getAbsorptionAmount(); // let's say max is 20
 
         UV4i heart=UV.icon_health_normal;
@@ -295,18 +299,30 @@ public class FrostedHud {
 	        }
         }
         mc.ingameGUI.blit(stack, x + IconPos.left_threequarters.getA(), y + IconPos.left_threequarters.getB(), heart.x,heart.y, heart.w, heart.h);
+        
         // range: [0, 99]
+        int mhealthState = omax >= 20 ? 99 : MathHelper.ceil(omax / 20*100) - 1;
         int healthState = health <= 0 ? 0 : MathHelper.ceil(health / healthMax * 100) - 1;
-        int absorbState = absorb <= 0 ? 0 : MathHelper.ceil(absorb / 20 * 100) - 1;
+        int absorbState = absorb <= 0 ? 0 : MathHelper.ceil(absorb / 20*100) - 1;
         if(healthState>99)
         	healthState=99;
+        if(mhealthState<0)
+        	mhealthState=0;
+        if(absorbState>99)
+        	absorbState=99;
         // range: [0, 9]
         int healthCol = healthState / 10;
         int absorbCol = absorbState / 10;
+        int mhealthCol = mhealthState / 10;
 
         // range: [0, 9]
         int healthRow = healthState % 10;
         int absorbRow = absorbState % 10;
+        int mhealthRow = mhealthState % 10;
+        if(mhealthState<99) {
+        	mc.getTextureManager().bindTexture(HP_MAX);
+        	mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), mhealthCol * UV.health_bar.w, mhealthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
+        }
         if(healthState>0) {
         	mc.getTextureManager().bindTexture(HP);
         	mc.ingameGUI.blit(stack, x + BarPos.left_threequarters_inner.getA(), y + BarPos.left_threequarters_inner.getB(), healthCol * UV.health_bar.w, healthRow * UV.health_bar.h, UV.health_bar.w, UV.health_bar.h, 320, 320);
@@ -317,7 +333,7 @@ public class FrostedHud {
         }
         int ihealth = (int) Math.ceil(health);
         int offset = mc.fontRenderer.getStringWidth(String.valueOf(ihealth)) / 2;
-        mc.fontRenderer.drawString(stack, String.valueOf(ihealth), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow(stack, String.valueOf(ihealth), x + BasePos.left_threequarters.getA() + UV.left_threequarters_frame.w / 2.0F - offset, y + BasePos.left_threequarters.getB() + UV.left_threequarters_frame.h / 2.0F, 0xFFFFFF);
 
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
