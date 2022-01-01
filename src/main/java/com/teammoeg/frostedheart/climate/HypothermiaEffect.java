@@ -32,7 +32,9 @@ public class HypothermiaEffect extends Effect {
     @Override
     public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
         if (entityLivingBaseIn instanceof ServerPlayerEntity) {
-            if (entityLivingBaseIn.getHealth() > 10.0F) {
+        	if (entityLivingBaseIn.getHealth() > 20.0F) {
+                entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 1F);
+            } else if (entityLivingBaseIn.getHealth() > 10.0F) {
                 entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 0.5F);
             } else if (entityLivingBaseIn.getHealth() > 5.0F) {
                 entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 0.3F);
