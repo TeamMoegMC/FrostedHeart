@@ -4,19 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameters;
 import net.minecraft.loot.conditions.ILootCondition;
-import net.minecraft.tileentity.LockableLootTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -26,9 +19,8 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
-public class DegradeMetalLootModifier extends LootModifier {
+public class ReplaceLootModifier extends LootModifier {
 	static class ReplacePair{
 		Ingredient from;
 		Item to;
@@ -44,7 +36,7 @@ public class DegradeMetalLootModifier extends LootModifier {
 		}
 	}
 	List<ReplacePair> remap=new ArrayList<>();
-    private DegradeMetalLootModifier(ILootCondition[] conditionsIn,Collection<ReplacePair> pairsin) {
+    private ReplaceLootModifier(ILootCondition[] conditionsIn,Collection<ReplacePair> pairsin) {
         super(conditionsIn);
         this.remap.addAll(pairsin);
     }
@@ -52,14 +44,7 @@ public class DegradeMetalLootModifier extends LootModifier {
     @Nonnull
     @Override
     protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
-        if(context.has(LootParameters.ORIGIN)) {
-        	Vector3d o= context.get(LootParameters.ORIGIN);
-        	ServerWorld w=context.getWorld();
-        	TileEntity te=Utils.getExistingTileEntity(w,new BlockPos(o.x,o.y,o.z));
-            if(te instanceof LockableLootTileEntity) {//this must be a chest generate
-	            generatedLoot.replaceAll(this::doReplace);
-	        }
-        }
+	    generatedLoot.replaceAll(this::doReplace);
         return generatedLoot;
     }
     private ItemStack doReplace(ItemStack orig) {
@@ -70,9 +55,9 @@ public class DegradeMetalLootModifier extends LootModifier {
     	}
     	return orig;
     }
-    public static class Serializer extends GlobalLootModifierSerializer<DegradeMetalLootModifier> {
+    public static class Serializer extends GlobalLootModifierSerializer<ReplaceLootModifier> {
         @Override
-        public DegradeMetalLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+        public ReplaceLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
         	JsonArray ja=object.get("changes").getAsJsonArray();
         	List<ReplacePair> changes=new ArrayList<>();
         	for(JsonElement je:ja) {
@@ -80,11 +65,11 @@ public class DegradeMetalLootModifier extends LootModifier {
         			changes.add(new ReplacePair(Ingredient.deserialize(je.getAsJsonObject().get("from")),ForgeRegistries.ITEMS.getValue(new ResourceLocation(je.getAsJsonObject().get("to").getAsString()))));
         		}
         	}
-            return new DegradeMetalLootModifier(conditions,changes);
+            return new ReplaceLootModifier(conditions,changes);
         }
 
         @Override
-        public JsonObject write(DegradeMetalLootModifier instance) {
+        public JsonObject write(ReplaceLootModifier instance) {
             JsonObject object = new JsonObject();
             JsonArray changes=new JsonArray();
             instance.remap.stream().map(ReplacePair::toJson).forEach(changes::add);

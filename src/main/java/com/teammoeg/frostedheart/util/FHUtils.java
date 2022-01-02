@@ -76,6 +76,10 @@ public class FHUtils {
 		if(!canBigTreeGenerate(w,p,r))
 			cr.setReturnValue(false);
     }
+    public static boolean canSmallTreeGenerate(World w,BlockPos p,Random r) {
+		return r.nextInt(3)<=2;
+			
+    }
     public static boolean canBigTreeGenerate(World w,BlockPos p,Random r) {
 		int i=35;
 		i-=ChunkData.getTemperature(w, p)/2;
