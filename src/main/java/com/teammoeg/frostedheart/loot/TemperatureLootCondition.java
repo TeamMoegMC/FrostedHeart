@@ -43,10 +43,13 @@ public class TemperatureLootCondition implements ILootCondition {
 	@SuppressWarnings("resource")
 	@Override
 	public boolean test(LootContext t) {
-		Vector3d v=t.get(LootParameters.ORIGIN);
-		BlockPos bp=new BlockPos(v.x,v.y,v.z);
-		World w=t.getWorld();
-		return comparator.test(ChunkData.getTemperature(w,bp),temp);
+		if(t.has(LootParameters.ORIGIN)) {
+			Vector3d v=t.get(LootParameters.ORIGIN);
+			BlockPos bp=new BlockPos(v.x,v.y,v.z);
+			World w=t.getWorld();
+			return comparator.test(ChunkData.getTemperature(w,bp),temp);
+		}
+		return false;
 	}
 
 	@Override

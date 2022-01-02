@@ -29,12 +29,15 @@ public class TagLootCondition implements ILootCondition {
 	@SuppressWarnings("resource")
 	@Override
 	public boolean test(LootContext t) {
-		Vector3d v=t.get(LootParameters.ORIGIN);
-		BlockPos bp=new BlockPos(v.x,v.y,v.z);
-		World w=t.getWorld();
-		BlockState bs=w.getBlockState(bp);
-
-		return bs!=null&&tag.contains(bs.getBlock());
+		if(t.has(LootParameters.ORIGIN)) {
+			Vector3d v=t.get(LootParameters.ORIGIN);
+			BlockPos bp=new BlockPos(v.x,v.y,v.z);
+			World w=t.getWorld();
+			BlockState bs=w.getBlockState(bp);
+	
+			return bs!=null&&tag.contains(bs.getBlock());
+		}
+		return false;
 	}
 
 	@Override
