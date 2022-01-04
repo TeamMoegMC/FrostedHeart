@@ -82,8 +82,8 @@ public class FHConfig {
                     .define("alwaysKeepInventory", false);
 
             fixEssJeiIssue = builder
-                    .comment("Fixes JEI and Essentials compat issue")
-                    .define("fixEssJeiIssue", false);
+                    .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
+                    .define("fixEssJeiIssue", true);
 
             developers = builder
                     .comment("Special array of players")

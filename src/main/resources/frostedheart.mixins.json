@@ -65,6 +65,7 @@
     "rankine.MixinEHTree",
     "rankine.MixinPPTree",
     "rankine.TapBarrelBlockMixin",
+    "rankine.MixinBWTree",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin"
   ],
