@@ -171,6 +171,9 @@ dependencies {
 
     compile fg.deobf("curse.maven:snowrealmagic-308663:3295579")
     implementation fg.deobf("curse.maven:snowrealmagic-308663:3295579")
+    
+    compile fg.deobf("curse.maven:engineersdecor-313866:3590976")
+    implementation fg.deobf("curse.maven:engineers-decor-313866:3566177")
 
     compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 

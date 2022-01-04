@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.IMilkable;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.BreedGoal;
@@ -31,9 +32,19 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.world.World;
 
 @Mixin(CowEntity.class)
-public abstract class CowEntityMixin extends AnimalEntity {
+public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 	private final static ResourceLocation cow_feed = new ResourceLocation(FHMain.MODID, "cow_feed");
 	private EatGrassGoal eatGrassGoal;
+
+	@Override
+	public byte getMilk() {
+		return milk;
+	}
+
+	@Override
+	public void setMilk(byte milk) {
+		this.milk = milk;
+	}
 
 	@Override
 	public void eatGrassBonus() {
