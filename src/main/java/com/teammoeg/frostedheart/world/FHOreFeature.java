@@ -18,8 +18,12 @@
 
 package com.teammoeg.frostedheart.world;
 
+import java.util.BitSet;
+import java.util.Random;
+
 import com.cannolicatfish.rankine.blocks.RankineOreBlock;
 import com.mojang.serialization.Codec;
+
 import net.minecraft.block.Block;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -29,9 +33,6 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.Feature;
-
-import java.util.BitSet;
-import java.util.Random;
 
 public class FHOreFeature extends Feature<FHOreFeatureConfig> {
     public FHOreFeature(Codec<FHOreFeatureConfig> codec) {

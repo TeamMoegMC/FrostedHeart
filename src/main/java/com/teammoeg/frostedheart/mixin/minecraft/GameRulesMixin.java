@@ -1,10 +1,5 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import net.minecraft.world.GameRules;
-import net.minecraft.world.GameRules.BooleanValue;
-import net.minecraft.world.GameRules.RuleKey;
-import net.minecraft.world.GameRules.RuleValue;
-
 import java.util.Map;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,6 +9,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.util.FHGameRule;
+
+import net.minecraft.world.GameRules;
+import net.minecraft.world.GameRules.BooleanValue;
+import net.minecraft.world.GameRules.RuleKey;
+import net.minecraft.world.GameRules.RuleValue;
 
 @Mixin(GameRules.class)
 public class GameRulesMixin implements FHGameRule {

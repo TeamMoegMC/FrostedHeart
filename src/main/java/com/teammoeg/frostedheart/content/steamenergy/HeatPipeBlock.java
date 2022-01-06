@@ -18,9 +18,15 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.function.BiFunction;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
@@ -34,10 +40,6 @@ import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.function.BiFunction;
 
 public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;

@@ -18,7 +18,10 @@
 
 package com.teammoeg.frostedheart.events;
 
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
+
+import java.util.Map;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHTileTypes;
 import com.teammoeg.frostedheart.FHMain;
@@ -33,6 +36,8 @@ import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.FHLogger;
+
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -55,10 +60,6 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.Map;
-
-import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {

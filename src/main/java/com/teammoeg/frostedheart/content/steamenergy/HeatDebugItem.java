@@ -18,9 +18,12 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.lang.reflect.InvocationTargetException;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -36,8 +39,6 @@ import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
-
-import java.lang.reflect.InvocationTargetException;
 
 public class HeatDebugItem extends Item {
     public HeatDebugItem(String name) {

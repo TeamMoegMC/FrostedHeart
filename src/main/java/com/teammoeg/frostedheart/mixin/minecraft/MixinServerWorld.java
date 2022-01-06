@@ -1,5 +1,16 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.network.FHClimatePacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
@@ -13,16 +24,6 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IServerWorldInfo;
 import net.minecraft.world.storage.ISpawnWorldInfo;
 import net.minecraftforge.fml.network.PacketDistributor;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World {

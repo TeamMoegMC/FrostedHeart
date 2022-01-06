@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research;
 
 import com.teammoeg.frostedheart.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ITextComponent;

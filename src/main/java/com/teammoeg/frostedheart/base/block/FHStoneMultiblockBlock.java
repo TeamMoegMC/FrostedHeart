@@ -18,10 +18,11 @@
 
 package com.teammoeg.frostedheart.base.block;
 
-import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FHUtils;
+
+import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;

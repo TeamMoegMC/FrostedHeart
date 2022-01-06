@@ -18,6 +18,12 @@
 
 package com.teammoeg.frostedheart.events;
 
+import static com.teammoeg.frostedheart.FHContent.registeredFHBlocks;
+import static com.teammoeg.frostedheart.FHContent.registeredFHFluids;
+import static com.teammoeg.frostedheart.FHContent.registeredFHItems;
+
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.loot.RemoveLootModifier;
 import com.teammoeg.frostedheart.loot.ReplaceLootModifier;
@@ -41,10 +47,6 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
-
-import static com.teammoeg.frostedheart.FHContent.*;
-
-import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RegistryEvents {

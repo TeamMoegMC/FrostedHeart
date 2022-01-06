@@ -18,14 +18,15 @@
 
 package com.teammoeg.frostedheart.util;
 
-import com.teammoeg.frostedheart.FHMain;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import com.teammoeg.frostedheart.FHMain;
+
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class Lang {
     public static TranslationTextComponent translate(String key, Object... args) {

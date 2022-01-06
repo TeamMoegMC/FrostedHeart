@@ -96,6 +96,8 @@
   "gui.frostedheart.research_time_left": "Time Remaining: %s Minutes",
   "gui.frostedheart.research_hierarchy": "Research Relationship",
   "gui.frostedheart.update_recommended": "The Winter Rescue Update: ",
+  "gui.frostedheart.save_updated": "Auto updated your save, old configuration backed-up at ",
+  "gui.frostedheart.save_update_needed": "Your save is outdated, Cannot auto update your save! Please exit world and delete %s to complete update!",
   "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
   "gui.jei.category.frostedheart.generator_steam":"Generator Heat Medium",
   "gui.jei.category.frostedheart.charger":"Steam Processing",

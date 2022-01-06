@@ -1,11 +1,5 @@
 package com.teammoeg.frostedheart.research;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.items.ItemHandlerHelper;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -16,6 +10,11 @@ import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 public class ResearchData {
 	boolean active;//is all items fulfilled?

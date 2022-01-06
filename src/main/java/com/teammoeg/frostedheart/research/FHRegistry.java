@@ -1,9 +1,5 @@
 package com.teammoeg.frostedheart.research;
 
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +8,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.util.LazyOptional;
+
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 
 /**
  * Class FHRegistry.

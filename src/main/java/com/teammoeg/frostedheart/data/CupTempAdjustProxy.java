@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.data;
 
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;

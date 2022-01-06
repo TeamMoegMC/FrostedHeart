@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.research.screen;
 
-import java.awt.Color;
 import java.util.OptionalDouble;
 
 import org.lwjgl.opengl.GL11;
@@ -12,10 +11,8 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3d;
 
 public class FHGuiHelper {
 	public static RenderType BOLD_LINE_TYPE;

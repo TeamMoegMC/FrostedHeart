@@ -18,10 +18,25 @@
 
 package com.teammoeg.frostedheart.compat.jei;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.compat.jei.category.*;
+import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
+import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
+import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
+import com.teammoeg.frostedheart.compat.jei.category.ChargerDefrostCategory;
+import com.teammoeg.frostedheart.compat.jei.category.CuttingCategory;
+import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
+import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
+import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
@@ -36,12 +51,17 @@ import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHNBT;
+
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IRecipeManager;
-import mezz.jei.api.registration.*;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
+import mezz.jei.api.registration.IRecipeCatalystRegistration;
+import mezz.jei.api.registration.IRecipeCategoryRegistration;
+import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
@@ -52,13 +72,6 @@ import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-import java.util.Set;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -81,6 +94,7 @@ public class JEICompat implements IModPlugin {
          checkNotNull(world, "minecraft world");
          RecipeManager recipeManager = world.getRecipeManager();
          CuttingCategory.matching=ForgeRegistries.ITEMS.getValues().stream().filter(e->e.getTags().contains(CuttingCategory.ktag)).collect(Collectors.toList());
+         
         registration.addRecipes(new ArrayList<>(GeneratorRecipe.recipeList.values()), GeneratorFuelCategory.UID);
         registration.addRecipes(new ArrayList<>(GeneratorSteamRecipe.recipeList.values()),GeneratorSteamCategory.UID);
         registration.addRecipes(new ArrayList<>(ChargerRecipe.recipeList.values()),ChargerCategory.UID);

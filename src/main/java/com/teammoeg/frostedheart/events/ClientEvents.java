@@ -18,7 +18,10 @@
 
 package com.teammoeg.frostedheart.events;
 
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import static net.minecraft.util.text.TextFormatting.GRAY;
+
+import java.util.List;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
@@ -36,10 +39,10 @@ import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRender
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
-
 import com.teammoeg.frostedheart.research.screen.FHGuiHelper;
 import com.teammoeg.frostedheart.util.FHVersion;
 
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -76,9 +79,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-
-import java.util.List;
-import static net.minecraft.util.text.TextFormatting.GRAY;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
@@ -174,6 +175,14 @@ public class ClientEvents {
 	            }
         	}
         });
+        if(ServerLifecycleHooks.getCurrentServer()!=null)
+	        if(FHMain.saveNeedUpdate) {
+	        	event.getPlayer().sendStatusMessage(GuiUtils.translateGui("save_update_needed",FHMain.lastServerConfig.getAbsolutePath()).mergeStyle(TextFormatting.RED),false);
+	        }else if(FHMain.lastbkf!=null) {
+	        	event.getPlayer().sendStatusMessage(GuiUtils.translateGui("save_updated")
+	                    .appendSibling(new StringTextComponent(FHMain.lastbkf.getName()).setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE,FHMain.lastbkf.getAbsolutePath())).applyFormatting(TextFormatting.UNDERLINE)))
+	                    , false);
+	        }
     }
 
     @SubscribeEvent

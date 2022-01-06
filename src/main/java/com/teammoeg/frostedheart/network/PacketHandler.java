@@ -18,8 +18,9 @@
 
 package com.teammoeg.frostedheart.network;
 
-import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.teammoeg.frostedheart.FHMain;
+
+import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;

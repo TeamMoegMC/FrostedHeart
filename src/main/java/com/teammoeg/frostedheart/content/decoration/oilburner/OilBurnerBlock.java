@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
+import java.util.Random;
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -41,9 +44,6 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-
-import java.util.Random;
-import java.util.function.BiFunction;
 
 public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
 

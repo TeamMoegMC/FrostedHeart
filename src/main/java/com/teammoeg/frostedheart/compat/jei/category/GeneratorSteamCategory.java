@@ -18,12 +18,17 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -38,10 +43,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "generator_steam");

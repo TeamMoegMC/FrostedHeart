@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.climate;
 
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.NoopStorage;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
@@ -13,8 +13,6 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
-
-import javax.annotation.Nullable;
 
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     @CapabilityInject(ClimateData.class)

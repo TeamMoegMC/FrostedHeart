@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHContent.FHMultiblocks;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
@@ -22,7 +21,6 @@ import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
 
 public class T2GeneratorRenderer extends TileEntityRenderer<T2GeneratorTileEntity> {
 	public static DynamicModel<Direction> FUEL;

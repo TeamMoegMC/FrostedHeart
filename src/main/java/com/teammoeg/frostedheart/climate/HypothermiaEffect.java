@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.util.FHDamageSources;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.Effect;

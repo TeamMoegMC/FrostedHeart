@@ -1,12 +1,13 @@
 package com.teammoeg.frostedheart.research.api;
 
+import java.util.UUID;
+
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
+
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-
-import java.util.UUID;
 
 public class ResearchDataAPI {
 

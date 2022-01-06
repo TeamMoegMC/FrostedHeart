@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.util;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 public class FHVersion {
 	private enum SubType{

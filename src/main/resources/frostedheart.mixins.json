@@ -29,6 +29,7 @@
     "engdecor.EdMilkerMixin",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
+    "forge.ServerLifecycleHooksMixin",
     "immersiveengineering.HempBlockMixin",
     "immersiveengineering.MultiblockProcessMixerMixin",
     "immersiveengineering.RotationUtilMixin",

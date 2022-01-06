@@ -18,6 +18,11 @@
 
 package com.teammoeg.frostedheart;
 
+import java.io.File;
+import java.io.InputStreamReader;
+
+import javax.annotation.Nonnull;
+
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -64,9 +69,6 @@ import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-import javax.annotation.Nonnull;
-import java.io.InputStreamReader;
-
 @Mod(FHMain.MODID)
 public class FHMain {
 
@@ -75,7 +77,10 @@ public class FHMain {
     public static FHRemote remote;
     public static FHRemote local;
     public static FHRemote pre;
-
+    public static File lastbkf;
+    public static File lastServerConfig;
+    public static boolean saveNeedUpdate;
+    
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
         @Nonnull
@@ -166,6 +171,7 @@ public class FHMain {
         CuriosCompat.sendIMCS();
     }
     private void serverStart(final FMLServerAboutToStartEvent event) {
+
     	new ResearchDataManager(event.getServer()).load();
     }
     private void serverSave(final WorldEvent.Save event) {

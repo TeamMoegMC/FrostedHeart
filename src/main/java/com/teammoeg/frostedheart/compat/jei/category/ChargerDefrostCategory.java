@@ -18,6 +18,8 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
+import java.util.Arrays;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
@@ -37,14 +39,10 @@ import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.crafting.SmokingRecipe;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.Arrays;
 
 public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charger_defrost");

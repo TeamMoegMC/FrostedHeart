@@ -18,12 +18,19 @@
 
 package com.teammoeg.frostedheart.client.hud;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.ArrayList;
+
+import org.lwjgl.opengl.GL11;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.UV4i;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.util.FHEffects;
+
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -47,11 +54,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import org.lwjgl.opengl.GL11;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.ArrayList;
 
 public class FrostedHud {
     public static boolean renderHotbar = true;

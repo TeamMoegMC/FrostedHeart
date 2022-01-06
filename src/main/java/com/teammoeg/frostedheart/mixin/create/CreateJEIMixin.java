@@ -18,9 +18,9 @@ import com.simibubi.create.compat.jei.category.CreateRecipeCategory;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.ShapedRecipe;
 import net.minecraft.item.crafting.ShapelessRecipe;
 import net.minecraft.util.NonNullList;
-import net.minecraft.item.crafting.ShapedRecipe;
 
 @Mixin(targets="com.simibubi.create.compat.jei.CreateJEI$CategoryBuilder",remap=false)
 public abstract class CreateJEIMixin {

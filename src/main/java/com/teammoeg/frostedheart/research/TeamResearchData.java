@@ -1,10 +1,5 @@
 package com.teammoeg.frostedheart.research;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.ListNBT;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +9,10 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
 
 public class TeamResearchData {
 	public static TeamResearchData INSTANCE=new TeamResearchData(null);

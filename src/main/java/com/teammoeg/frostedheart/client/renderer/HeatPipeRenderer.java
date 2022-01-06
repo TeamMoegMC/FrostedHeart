@@ -5,9 +5,6 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHContent.FHBlocks;
-import com.teammoeg.frostedheart.FHContent.FHMultiblocks;
-import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 
@@ -25,7 +22,6 @@ import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.World;
 
 public class HeatPipeRenderer extends TileEntityRenderer<HeatPipeTileEntity> {

@@ -18,14 +18,15 @@
 
 package com.teammoeg.frostedheart.client.util;
 
+import java.util.Random;
+
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.util.Random;
 
 public class ClientUtils {
     public static Minecraft mc() {
