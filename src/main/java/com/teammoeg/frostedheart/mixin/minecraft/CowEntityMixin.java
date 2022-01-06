@@ -48,7 +48,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 
 	@Override
 	public void eatGrassBonus() {
-		if (feeded < 2 && milk < 2)
+		if (feeded < 2)
 			feeded++;
 	}
 
@@ -68,7 +68,8 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 			if (digestTimer == 0) {
 				if (feeded > 0) {
 					feeded--;
-					milk++;
+					if(milk<2)
+						milk++;
 				}
 			}
 		} else if (feeded > 0) {
@@ -121,11 +122,11 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 		ItemStack itemstack = playerIn.getHeldItem(hand);
 
 		if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
-			if (feeded < 2 && milk < 2) {
+			if (feeded < 2) {
 				ActionResultType parent = ActionResultType.PASS;
 				if (this.isBreedingItem(itemstack))
 					parent = super.getEntityInteractionResult(playerIn, hand);
-				if (!parent.isSuccessOrConsume())
+				if (!parent.isSuccessOrConsume()&&!this.world.isRemote)
 					this.consumeItemFromStack(playerIn, itemstack);
 				feeded++;
 				return ActionResultType.func_233537_a_(this.world.isRemote);

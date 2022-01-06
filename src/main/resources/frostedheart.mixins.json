@@ -55,6 +55,7 @@
     "minecraft.TemplateManagerMixin",
     "minecraft.VillagerMixin",
     "minecraft.CowEntityMixin",
+    "minecraft.ChickenEntityMixin",
     "minecraft.MixinContainer",
     "snow.HookMixin",
     "primalwinter.WeatherDataAccess",

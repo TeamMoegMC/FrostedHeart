@@ -16,6 +16,5 @@ public abstract class AnimalEntityMixin extends AgeableEntity{
 		super(type, worldIn);
 	}
 	@ModifyConstant(method="spawnBabyAnimal",constant=@Constant(intValue=6000))
-	
 	public int getBreedCooldown(int orig) {return 28800;}
 }
