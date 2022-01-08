@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.teammoeg.frostedheart.bridge.ICampfireExtra;
+import com.teammoeg.frostedheart.util.ICampfireExtra;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;

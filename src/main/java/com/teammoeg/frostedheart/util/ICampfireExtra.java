@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.bridge;
+package com.teammoeg.frostedheart.util;
 
 public interface ICampfireExtra {
     int getLifeTime();

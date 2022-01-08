@@ -25,6 +25,8 @@ import static com.teammoeg.frostedheart.FHContent.registeredFHItems;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
+import com.teammoeg.frostedheart.loot.DechantLootModifier;
 import com.teammoeg.frostedheart.loot.RemoveLootModifier;
 import com.teammoeg.frostedheart.loot.ReplaceLootModifier;
 import com.teammoeg.frostedheart.loot.TagLootCondition;
@@ -66,6 +68,8 @@ public class RegistryEvents {
         IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();
         registry.register(new RemoveLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"remove_loot")));
         registry.register(new ReplaceLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"replace_loot")));
+        registry.register(new DechantLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"dechant")));
+        registry.register(new ApplyDamageLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"damage")));
         TemperatureLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE,new ResourceLocation(FHMain.MODID,"temperature"),new LootConditionType(new TemperatureLootCondition.Serializer()));
         TagLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE,new ResourceLocation(FHMain.MODID,"block_tag"),new LootConditionType(new TagLootCondition.Serializer()));
         TreasureLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE,new ResourceLocation(FHMain.MODID,"treasure"),new LootConditionType(new TreasureLootCondition.Serializer()));
