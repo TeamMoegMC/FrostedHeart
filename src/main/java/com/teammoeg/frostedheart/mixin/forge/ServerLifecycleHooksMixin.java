@@ -40,11 +40,13 @@ public class ServerLifecycleHooksMixin {
 		File fconfig=config.toFile();
 		File saveVersion=new File(fconfig,".twrsaveversion");
 		FHMain.lastServerConfig=config.toFile();
-		String localVersion=FHMain.local.fetchVersion().orElse(FHVersion.empty).getOriginal();
+		FHVersion local=FHMain.local.fetchVersion().orElse(FHVersion.empty);
+		String localVersion=local.getOriginal();
 		if(saveVersion.exists()&&!localVersion.isEmpty()) {
 			try {
 				String lw=FileUtil.readString(saveVersion);
-				if(!lw.isEmpty()&&lw.equals(localVersion))
+				FHVersion save=FHVersion.parse(lw);
+				if(!lw.isEmpty()&&(lw.equals(localVersion)||save.laterThan(local)))
 					return;
 			} catch (IOException e) {
 				e.printStackTrace();
