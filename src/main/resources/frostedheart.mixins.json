@@ -57,6 +57,7 @@
     "minecraft.CowEntityMixin",
     "minecraft.ChickenEntityMixin",
     "minecraft.MixinContainer",
+    "minecraft.PistonBlockMixin",
     "snow.HookMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
