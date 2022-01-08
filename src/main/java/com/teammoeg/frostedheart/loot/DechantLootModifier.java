@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
 import javax.annotation.Nonnull;
 
 import com.google.gson.JsonArray;
@@ -12,7 +13,6 @@ import com.google.gson.JsonObject;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.loot.LootContext;
@@ -32,18 +32,24 @@ public class DechantLootModifier extends LootModifier {
     @Nonnull
     @Override
     protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
-        generatedLoot.forEach(e->doRemove(e,context));
+        generatedLoot.replaceAll(e->doRemove(e,context));
         return generatedLoot;
     }
-    private void doRemove(ItemStack orig,LootContext context) {
+    private ItemStack doRemove(ItemStack orig,LootContext context) {
     	Map<Enchantment, Integer> enchs=EnchantmentHelper.getEnchantments(orig);
-    	orig.removeChildTag("Enchantments");
-    	orig.removeChildTag("StoredEnchantments");
+    	int origsize=enchs.size();
     	enchs.keySet().removeIf(removed::contains);
-    	if(enchs.size()<0&&orig.getItem()==Items.ENCHANTED_BOOK) {
-    		EnchantmentHelper.addRandomEnchantment(context.getRandom(),orig,1,false);
+    	if(origsize==enchs.size())
+    		return orig;
+    	if(orig.getItem() == Items.ENCHANTED_BOOK) {
+    		if(enchs.isEmpty())
+    			return EnchantmentHelper.addRandomEnchantment(context.getRandom(),new ItemStack(Items.BOOK),1,false);
+			orig=new ItemStack(Items.ENCHANTED_BOOK);
+			EnchantmentHelper.setEnchantments(enchs,orig);
+			return orig;
     	}
     	EnchantmentHelper.setEnchantments(enchs,orig);
+    	return orig;
     }
     public static class Serializer extends GlobalLootModifierSerializer<DechantLootModifier> {
         @Override
