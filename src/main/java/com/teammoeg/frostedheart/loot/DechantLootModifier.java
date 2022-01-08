@@ -36,6 +36,8 @@ public class DechantLootModifier extends LootModifier {
     }
     private void doRemove(ItemStack orig) {
     	Map<Enchantment, Integer> enchs=EnchantmentHelper.getEnchantments(orig);
+    	orig.removeChildTag("Enchantments");
+    	orig.removeChildTag("StoredEnchantments");
     	enchs.keySet().removeIf(removed::contains);
     	EnchantmentHelper.setEnchantments(enchs,orig);
     }
