@@ -14,6 +14,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.loot.LootContext;
 import net.minecraft.loot.conditions.ILootCondition;
 import net.minecraft.util.ResourceLocation;
@@ -31,14 +32,17 @@ public class DechantLootModifier extends LootModifier {
     @Nonnull
     @Override
     protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
-        generatedLoot.forEach(this::doRemove);
+        generatedLoot.forEach(e->doRemove(e,context));
         return generatedLoot;
     }
-    private void doRemove(ItemStack orig) {
+    private void doRemove(ItemStack orig,LootContext context) {
     	Map<Enchantment, Integer> enchs=EnchantmentHelper.getEnchantments(orig);
     	orig.removeChildTag("Enchantments");
     	orig.removeChildTag("StoredEnchantments");
     	enchs.keySet().removeIf(removed::contains);
+    	if(enchs.size()<0&&orig.getItem()==Items.ENCHANTED_BOOK) {
+    		EnchantmentHelper.addRandomEnchantment(context.getRandom(),orig,1,false);
+    	}
     	EnchantmentHelper.setEnchantments(enchs,orig);
     }
     public static class Serializer extends GlobalLootModifierSerializer<DechantLootModifier> {
