@@ -5,6 +5,9 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.IMilkable;
 
 import net.minecraft.entity.EntityType;
@@ -55,7 +58,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 	byte feeded;
 	int digestTimer;
 	byte milk;
-
+	short hxteTimer;
 	protected CowEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
 		super(type, worldIn);
 	}
@@ -63,19 +66,30 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 	@Override
 	public void tick() {
 		super.tick();
-		if (digestTimer > 0) {
-			digestTimer--;
-			if (digestTimer == 0) {
-				if (feeded > 0) {
-					feeded--;
-					if(milk<2)
-						milk++;
+		if(!this.world.isRemote) {
+			if (digestTimer > 0) {
+				digestTimer--;
+				if (digestTimer == 0) {
+					if (feeded > 0) {
+						feeded--;
+						if(milk<2)
+							milk++;
+					}
 				}
+			} else if (feeded > 0) {
+				digestTimer = 14400;
 			}
-		} else if (feeded > 0) {
-			digestTimer = 14400;
+			float temp=ChunkData.getTemperature(this.getEntityWorld(),this.getPosition());
+			if(temp<WorldClimate.HEMP_GROW_TEMPERATURE||temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+				if(hxteTimer<100) {
+					hxteTimer++;
+				}else {
+					hxteTimer=0;
+					this.attackEntityFrom(temp>0?FHDamageSources.HYPERTHERMIA:FHDamageSources.HYPOTHERMIA,2);
+				}
+			}else if(hxteTimer>0)
+				hxteTimer--;
 		}
-
 	}
 
 	@Override
@@ -84,6 +98,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 		compound.putByte("milk_stored", milk);
 		compound.putByte("feed_stored", feeded);
 		compound.putInt("feed_digest", digestTimer);
+		compound.putShort("hxthermia",hxteTimer);
 	}
 
 	@Override
@@ -92,6 +107,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 		milk = compound.getByte("milk_stored");
 		feeded = compound.getByte("feed_stored");
 		digestTimer = compound.getInt("feed_digest");
+		hxteTimer=compound.getShort("hxthermia");
 	}
 	/**
 	 * @author khjxiaogu
