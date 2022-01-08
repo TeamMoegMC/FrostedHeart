@@ -116,7 +116,7 @@ public class FHVersion {
 			return new MajorVersion(majors);
 		}
 	}
-	private MajorVersion majors;
+	private MajorVersion majors=MajorVersion.empty;
 	private SubVersion[] minors;
 	private String original="";
 	public FHVersion(MajorVersion majors, SubVersion[] minors, String original) {
@@ -127,7 +127,7 @@ public class FHVersion {
 	public static final FHVersion empty=new FHVersion();
 	private FHVersion() {}
 	public boolean isEmpty() {
-		return majors==null&&minors==null;
+		return majors==MajorVersion.empty&&minors==null;
 	}
 	public boolean laterThan(FHVersion other) {
 		EqualState maj=majors.laterThan(other.majors);
