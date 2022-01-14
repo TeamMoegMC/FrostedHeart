@@ -86,8 +86,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
             //System.out.println("no cache at"+pos);
-            return getCapability(world.chunkExists(pos.x, pos.z) ? world.getChunk(pos.asBlockPos()) : null)
-                    .orElse(ChunkData.EMPTY);
+    	if(world instanceof IWorld)
+            return ((IWorld) world).getChunkProvider().isChunkLoaded(pos) ?getCapability(world.getChunk(pos.asBlockPos()))
+                    .orElse(ChunkData.EMPTY):ChunkData.EMPTY;
+        return world.chunkExists(pos.x,pos.z) ?getCapability(world.getChunk(pos.asBlockPos()))
+                .orElse(ChunkData.EMPTY):ChunkData.EMPTY;
         //}
         //return data;
     }
@@ -126,8 +129,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * Used on a ServerWorld context to set temperature in certain 3D region in a
      * ChunkData instance
      * Updates server side cache first. Then send a sync packet to every client.
-     *
-     * @see TemperatureChangePacket
      */
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, BlockPos src) {
         if (world != null && !world.isRemote()) {
@@ -136,7 +137,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             if(data!=null)
             	data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
                     && adj.getCenterZ() == src.getZ());
-            //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
@@ -144,8 +144,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * Used on a ServerWorld context to set temperature in certain 3D region in a
      * ChunkData instance
      * Updates server side cache first. Then send a sync packet to every client.
-     *
-     * @see TemperatureChangePacket
      */
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adj) {
         if (world != null && !world.isRemote()) {
@@ -153,7 +151,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
             if(data!=null)
             	data.adjusters.remove(adj);
-            //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
@@ -370,6 +367,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param pos   position
      */
     float getTemperatureAtBlock(IWorldReader world, BlockPos pos) {
+    	if(adjusters.isEmpty())return WorldClimate.getWorldTemperature(world, pos);
         float ret = 0, tmp;
         for (ITemperatureAdjust adj : adjusters) {
             if (adj.isEffective(pos)) {
@@ -381,28 +379,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         return WorldClimate.getWorldTemperature(world, pos) + ret;
     }
 
-    /**
-     * @deprecated This does not consider world specific temperature<br>use {@link #getTemperature(IWorld, BlockPos)}
-     */
-    @Deprecated
-    public float getTemperatureAtBlock(BlockPos pos) {
-        float ret = 0, tmp;
-        for (ITemperatureAdjust adj : adjusters) {
-            if (adj.isEffective(pos)) {
-                tmp = adj.getValueAt(pos);
-                if (tmp > ret)
-                    ret = tmp;
-            }
-        }
-        return WorldClimate.WORLD_TEMPERATURE + ret;
-    }
 
-    /**
-     * Called on client, sets to received data
-     */
-    public void onUpdatePacket(List<ITemperatureAdjust> tempMatrix) {
-        this.adjusters = tempMatrix;
-    }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {

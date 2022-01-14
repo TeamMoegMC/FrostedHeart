@@ -149,9 +149,7 @@ public class FHVersion {
 				return es.isLater;
 		}
 		if(other.minors.length>minors.length) {
-			if(SubType.pre.equals(other.minors[minors.length].getType()))
-				return true;
-			return false;
+			return SubType.pre.equals(other.minors[minors.length].getType());
 		}else if(other.minors.length<minors.length&&SubType.pre.equals(minors[other.minors.length].getType()))
 			return false;
 		return true;

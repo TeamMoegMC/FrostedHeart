@@ -18,31 +18,36 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.data.FHDataManager;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 
 public class WorldClimate {
 
     /**
      * Constant WORLD_TEMPERATURE.<br>
      */
-    public static final byte WORLD_TEMPERATURE = -20;
+    public static final float WORLD_TEMPERATURE = -20;
 
     /**
      * Constant VANILLA_PLANT_GROW_TEMPERATURE.<br>
      */
-    public static final int VANILLA_PLANT_GROW_TEMPERATURE = 20;
+    public static final float VANILLA_PLANT_GROW_TEMPERATURE = 20;
 
     /**
      * Constant HEMP_GROW_TEMPERATURE.<br>
      */
-    public static final int HEMP_GROW_TEMPERATURE = 0;
+    public static final float HEMP_GROW_TEMPERATURE = 0;
 
 	public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
-
+	public static Map<Object,Float> worldbuffer=new HashMap<>();
+	public static Map<Biome,Float> biomebuffer=new HashMap<>();
     /**
      * Get World temperature for a specific world, affected by weather and so on
      *
@@ -50,15 +55,21 @@ public class WorldClimate {
      * @return world temperature<br>
      */
     public static float getWorldTemperature(IWorldReader w, BlockPos pos) {
-        Float temp = FHDataManager.getBiomeTemp(w.getBiome(pos));
+        Float temp = biomebuffer.computeIfAbsent(w.getBiome(pos),FHDataManager::getBiomeTemp);
         float wt=WORLD_TEMPERATURE;
         if(w instanceof World) {
-        	Float fw=FHDataManager.getWorldTemp((World) w);
-        	if(fw!=null)
-        		wt=fw;
+        	wt=worldbuffer.computeIfAbsent(w,(k)->{
+        		Float fw=FHDataManager.getWorldTemp((World) w);
+        		if(fw==null)return WORLD_TEMPERATURE;
+        		return fw;
+        	});
         }
         if (temp != null)
             return wt + temp;
         return wt;
     }
+	public static void clear() {
+		worldbuffer.clear();
+		biomebuffer.clear();
+	}
 }

@@ -189,7 +189,7 @@ public class FHDataManager {
         BiomeTempData data = FHDataManager.<BiomeTempData>get(FHDataType.Biome).get(b.getRegistryName());
         if (data != null)
             return data.getTemp();
-        return null;
+        return 0F;
     }
     public static Float getWorldTemp(World w) {
         WorldTempData data = FHDataManager.<WorldTempData>get(FHDataType.World).get(w.getDimensionKey().getLocation());
