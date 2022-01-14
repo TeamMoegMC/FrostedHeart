@@ -18,7 +18,8 @@ import snownee.snow.Hook;
 public class HookMixin {
 	@Inject(at=@At("HEAD"),method="canSurvive",remap=false,cancellable=true)
 	private static void canSurvive(BlockState blockState, IWorldReader world, BlockPos pos,CallbackInfoReturnable<Boolean> cbi) {
-		if (ChunkData.getTemperature(world, pos) < WorldClimate.HEMP_GROW_TEMPERATURE||ChunkData.getTemperature(world, pos)>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+		float t=ChunkData.getTemperature(world, pos);
+		if (t < WorldClimate.HEMP_GROW_TEMPERATURE||t>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
 			cbi.setReturnValue(false);
 		
 	}
