@@ -21,7 +21,7 @@ import net.minecraft.nbt.StringNBT;
  */
 public abstract class FHRegistry<T extends FHRegisteredItem> {
 	private ArrayList<T> items=new ArrayList<>();//registered objects
-	private List<String> rnames=new ArrayList<>();//registry mappings
+	private ArrayList<String> rnames=new ArrayList<>();//registry mappings
 	private Map<String,LazyOptional<T>> cache=new HashMap<>();//object cache
 	private final Function<String,LazyOptional<T>> cacheGen=(n)->LazyOptional.of(()->getByName(n));
 	private static final class RegisteredSupplier<T extends FHRegisteredItem,K> implements Supplier<T>{
@@ -144,7 +144,7 @@ public abstract class FHRegistry<T extends FHRegisteredItem> {
 			if(name!=null)
 				return get(name);
 		}
-		throw new IllegalStateException("Cannot get research by id before initialize");
+		throw new IllegalStateException("Cannot get data by id before initialize");
 	}
 	/**
 	 * Get all non-null items.<br>

@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.network;
 
 import java.io.File;
+import java.io.FileReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
@@ -17,23 +18,41 @@ import net.minecraftforge.fml.loading.FMLPaths;
 
 public class FHRemote {
 	public static class FHLocal extends FHRemote{
-
-		@Override
-		public void doFetch() {
-			File vers=new File(FMLPaths.CONFIGDIR.get().toFile(),".twrlastversion");
+		private void fromTLV() {
+			File vers=new File(FMLPaths.CONFIGDIR.get().toFile(),".twrlastversion");//from twrlastvers
 			if(vers.exists()) {
 				try {
 					this.stableVersion=FileUtil.readString(vers);
 				} catch (Throwable e) {
-					try {
-						this.stableVersion=ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
-					} catch (Throwable e2) {
-						e2.printStackTrace();
-						this.stableVersion="";
-					}
 				}
-			}else
-				this.stableVersion="";
+			}
+		}
+		private void fromModVersion() {
+			try {
+				this.stableVersion=ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+			} catch (Throwable e) {
+			}
+		}
+		private void fromCFM() {//from curseforge manifest
+			File vers=new File(FMLPaths.GAMEDIR.get().toFile(),"manifest.json");
+			if(vers.exists()) {
+				try {
+					JsonParser parser = new JsonParser();
+					try(FileReader fr=new FileReader(vers)){
+						this.stableVersion=parser.parse(fr).getAsJsonObject().get("version").getAsString();
+					}
+				} catch (Throwable e) {
+				}
+			}
+		}
+		@Override
+		public void doFetch() {
+			fromTLV();
+			if(this.stableVersion!=null)return;
+			fromCFM();
+			if(this.stableVersion!=null)return;
+			fromModVersion();
+			if(this.stableVersion==null)this.stableVersion="";
 		}
 			
 		

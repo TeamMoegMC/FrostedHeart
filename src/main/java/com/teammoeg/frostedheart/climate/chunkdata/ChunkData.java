@@ -430,12 +430,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
             super(new ChunkPos(ChunkPos.SENTINEL));
         }
 
-
-        @Override
-        public void onUpdatePacket(List<ITemperatureAdjust> temperatureLayer) {
-            throw new UnsupportedOperationException("Tried to modify immutable chunk data");
-        }
-
         @Override
         public void deserializeNBT(CompoundNBT nbt) {
             throw new UnsupportedOperationException("Tried to modify immutable chunk data");
