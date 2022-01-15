@@ -7,7 +7,6 @@ import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 
@@ -23,18 +22,7 @@ public class ResearchRecipe extends JsonDataHolder {
 		return super.getString("research");
 	}
 	public boolean test(PlayerEntity pe) {
-		if(pe instanceof ClientPlayerEntity) {
-			String research=getResearch();
-			if(research!=null) {
-				Research rs=FHResearch.getResearch(research).get();
-				if(rs!=null&&rs.isCompleted())return true;
-				return false;
-			}
-			String variant=getVariant();
-			if(variant!=null) {
-				return TeamResearchData.INSTANCE.getVariants().getBoolean(variant);
-			}
-		}else if(pe instanceof ServerPlayerEntity){
+		if(pe instanceof ServerPlayerEntity){
 			String research=getResearch();
 			if(research!=null) {
 				Research rs=FHResearch.getResearch(research).get();
