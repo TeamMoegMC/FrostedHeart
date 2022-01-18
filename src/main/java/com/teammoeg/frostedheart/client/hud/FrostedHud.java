@@ -522,7 +522,33 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
-
+    public static void renderHeatVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
+        mc.getProfiler().startSection("frostedheart_vignette");
+        float temp = MathHelper.clamp(TemperatureCore.getBodyTemperature(player),1,10);
+        // 0 < temp < 10 ===== 1 - 0
+        float opacityDelta = (temp- 0.5F) / 9.5F;
+        RenderSystem.enableBlend();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+        RenderSystem.color4f(1, 1, 1, Math.min(opacityDelta, 1));
+        RenderSystem.disableAlphaTest();
+        mc.getTextureManager().bindTexture(FIRE_VIGNETTE);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+        buffer.pos(0.0D, y, -90.0D).tex(0.0F, 1.0F).endVertex();
+        buffer.pos(x * 2, y, -90.0D).tex(1.0F, 1.0F).endVertex();
+        buffer.pos(x * 2, 0.0D, -90.0D).tex(1.0F, 0.0F).endVertex();
+        buffer.pos(0.0D, 0.0D, -90.0D).tex(0.0F, 0.0F).endVertex();
+        tessellator.draw();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableAlphaTest();
+        RenderSystem.color4f(1, 1, 1, 1);
+        RenderSystem.disableBlend();
+        mc.getProfiler().endSection();
+    }
     public static void renderAirBar(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_air");
         RenderSystem.enableBlend();

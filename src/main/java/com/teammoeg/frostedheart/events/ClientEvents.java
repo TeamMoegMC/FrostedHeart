@@ -310,6 +310,8 @@ public class ClientEvents {
         if (event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && player != null && !player.isCreative() && !player.isSpectator()) {
             if (TemperatureCore.getBodyTemperature(player) <= -0.5) {
                 FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
+            }else if (TemperatureCore.getBodyTemperature(player) >= 0.5) {
+                FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, player);
             }
             if (TemperatureCore.getBodyTemperature(player) <= -1.0) {
                 FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, player);
