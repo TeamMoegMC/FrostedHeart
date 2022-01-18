@@ -88,7 +88,7 @@ public class ProspectorPick extends FHBaseItem {
 			                    int BlockZ = z + z2;
 			                    ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
 			                    if (ore.getTags().contains(tag)) {
-			                        founded.merge(ore.getTranslationKey(),1,(a,b)->a+b);
+			                        founded.merge(ore.getTranslationKey(),1,Integer::sum);
 			                        rseed++;
 			                    }
 			                }

@@ -92,7 +92,7 @@ public class CoreSpade extends FHBaseItem {
 				BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
 				Block ore;
 				HashMap<String, Integer> founded = new HashMap<>();
-				int hrange = this.getHorizonalRange(context.getItem());
+				final int hrange = this.getHorizonalRange(context.getItem());
 				int vrange = this.getVerticalRange(context.getItem());
 				vrange = Math.min(y, (rnd.nextInt(vrange) + vrange) / 2);
 
@@ -104,7 +104,7 @@ public class CoreSpade extends FHBaseItem {
 							int BlockZ = z + z2;
 							ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
 							if (tagdet.test(ore.getTags())) {
-								founded.merge(ore.getTranslationKey(), 1, (a, b) -> a + b);
+								founded.merge(ore.getTranslationKey(), 1, Integer::sum);
 							}
 						}
 

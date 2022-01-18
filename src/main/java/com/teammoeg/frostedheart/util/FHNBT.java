@@ -27,10 +27,13 @@ public class FHNBT {
     public static final String FIRST_LOGIN_GIVE_NUTRITION = FHMain.MODID + "first_login_give_nutrition";
     public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
 
-    public static ItemStack ArmorNBT(ItemStack stack) {
+    public static ItemStack ArmorLiningNBT(ItemStack stack) {
         stack.getOrCreateTag().putString("inner_cover", "frostedheart:gambeson");
         stack.getTag().putBoolean("inner_bounded",true);//bound lining to armor
-        stack.setDamage((int) (stack.getMaxDamage()-107-Math.random()*6));
+        return ArmorNBT(stack,107,6);
+    }
+    public static ItemStack ArmorNBT(ItemStack stack,int base,int mult) {
+        stack.setDamage((int) (stack.getMaxDamage()-base-Math.random()*mult));
         return stack;
     }
     public static ItemStack Damage(ItemStack stack,int dmg) {
