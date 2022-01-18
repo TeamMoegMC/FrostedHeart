@@ -256,7 +256,7 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
-        HUDElements.left_threequarters_frame.blit(mc.ingameGUI,stack, x + BasePos.left_threequarters.getX(), y + BasePos.left_threequarters.getY());
+        HUDElements.left_threequarters_frame.blit(mc.ingameGUI,stack, x, y ,BasePos.left_threequarters);
         
         
 
@@ -293,7 +293,7 @@ public class FrostedHud {
 	        }else
 	        	heart=HUDElements.icon_health_normal;
         }
-        heart.blit(mc.ingameGUI,stack, x + IconPos.left_threequarters.getX(), y + IconPos.left_threequarters.getY());
+        heart.blit(mc.ingameGUI,stack, x, y,IconPos.left_threequarters);
         
         // range: [0, 99]
         int mhealthState = omax >= 20 ? 99 : MathHelper.ceil(omax / 20*100) - 1;
@@ -392,7 +392,7 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
-        HUDElements.temperature_orb_frame.blit(mc.ingameGUI,stack, x + BasePos.temperature_orb_frame.getX(), y + BasePos.temperature_orb_frame.getY() + 3);
+        HUDElements.temperature_orb_frame.blit(mc.ingameGUI,stack, x, y + 3,BasePos.temperature_orb_frame);
 
         int temperature = (int) TemperatureCore.getEnvTemperature(player);
         renderTemp(stack, mc, temperature, x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3, true);
@@ -424,8 +424,8 @@ public class FrostedHud {
         mc.getProfiler().startSection("frostedheart_mounthealth");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
-        HUDElements.right_threequarters_frame.blit(mc.ingameGUI,stack,x + BasePos.right_threequarters.getX(), y + BasePos.right_threequarters.getY());
-        HUDElements.icon_horse_normal.blit(mc.ingameGUI,stack,x + BasePos.right_threequarters.getX(), y + BasePos.right_threequarters.getY());
+        HUDElements.right_threequarters_frame.blit(mc.ingameGUI,stack,x, y,BasePos.right_threequarters);
+        HUDElements.icon_horse_normal.blit(mc.ingameGUI,stack,x, y,IconPos.right_threequarters);
         Entity tmp = player.getRidingEntity();
         if (!(tmp instanceof LivingEntity)) return;
         LivingEntity mount = (LivingEntity) tmp;
@@ -716,7 +716,7 @@ public class FrostedHud {
             uv4is.get(1).blit(stack, offsetX + 14, offsetY + 7, 100, 34);
             uv4is.get(2).blit(stack, offsetX + 24, offsetY + 7, 100, 34);
         }
-        mc.getTextureManager().bindTexture(HUD_ELEMENTS);
+        //mc.getTextureManager().bindTexture(HUD_ELEMENTS);
     }
 
     private static ArrayList<UV> getIntegerDigitUVs(int digit) {
