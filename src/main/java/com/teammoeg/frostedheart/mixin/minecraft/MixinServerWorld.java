@@ -126,15 +126,14 @@ public abstract class MixinServerWorld extends World {
 		this.serverWorldInfo.setThundering(isThundering);
 		this.serverWorldInfo.setRaining(isRaining);
 
-		// check if need to sync to client
-		if (cap.isBlizzard() != isBlizzard || cap.getBlizzardTime() != blizzardTime) {
-			PacketHandler.send(PacketDistributor.DIMENSION.with(() -> this.getDimensionKey()), new FHClimatePacket(cap));
-		}
-
 		// server side change
 		cap.setBlizzard(isBlizzard);
 		cap.setBlizzardTime(blizzardTime);
 
+		// check if need to sync to client
+		if (cap.isBlizzard() != isBlizzard || cap.getBlizzardTime() != blizzardTime) {
+			PacketHandler.send(PacketDistributor.DIMENSION.with(() -> this.getDimensionKey()), new FHClimatePacket(cap));
+		}
 	}
 
 }
