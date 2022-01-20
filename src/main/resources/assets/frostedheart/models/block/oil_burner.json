@@ -1,9 +1,13 @@
 {
-  "parent": "minecraft:block/cube_bottom_top",
+  "parent": "minecraft:block/cube",
   "textures": {
     "particle": "frostedheart:block/smoke_dispenser_i_sagittal",
-    "bottom": "frostedheart:block/stone_block_bottom",
-    "top": "frostedheart:block/smoke_dispenser_i_top",
-    "side": "frostedheart:block/smoke_dispenser_i_sagittal"
+    "down": "frostedheart:block/stone_block_bottom",
+    "up": "frostedheart:block/smoke_dispenser_i_top",
+    "west": "frostedheart:block/smoke_dispenser_i_sagittal",
+    "east": "frostedheart:block/smoke_dispenser_i_sagittal",
+    "north": "frostedheart:block/smoke_dispenser_i_coronal",
+    "south": "frostedheart:block/smoke_dispenser_i_coronal"
+    
   }
 }
