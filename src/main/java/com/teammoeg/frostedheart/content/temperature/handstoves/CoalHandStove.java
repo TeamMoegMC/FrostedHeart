@@ -49,8 +49,8 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
 		if(fuel>=2) {
 			int ash=getAshAmount(stack);
 			if(ash<=800) {
-				fuel-=2;
-				ash+=2;
+				fuel--;
+				ash++;
 				setFuelAmount(stack, fuel);
 				setAshAmount(stack, ash);
 		        if (bodyTemp < 0) {
