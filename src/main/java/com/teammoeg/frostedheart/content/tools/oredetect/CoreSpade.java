@@ -69,10 +69,10 @@ public class CoreSpade extends FHBaseItem {
 			World world = context.getWorld();
 			BlockPos blockpos = context.getPos();
 			if (world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
-				player.sendMessage(
+				player.sendStatusMessage(
 						new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey())
 								.mergeStyle(TextFormatting.GOLD),
-								player.getUniqueID());
+								false);
 				return ActionResultType.SUCCESS;
 			}
 			int x = blockpos.getX();
@@ -103,7 +103,7 @@ public class CoreSpade extends FHBaseItem {
 							int BlockY = y + y2;
 							int BlockZ = z + z2;
 							ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
-							if (tagdet.test(ore.getTags())) {
+							if (!ore.getRegistryName().getNamespace().equals("minecraft")&&tagdet.test(ore.getTags())) {
 								founded.merge(ore.getTranslationKey(), 1, Integer::sum);
 							}
 						}
@@ -119,12 +119,12 @@ public class CoreSpade extends FHBaseItem {
 						}
 					}
 					if (count > 0) {
-						player.sendMessage(s, player.getUniqueID());
+						player.sendStatusMessage(s, false);
 						return ActionResultType.SUCCESS;
 					}
 				}
-				player.sendMessage(GuiUtils.translateMessage("corespade.nothing").mergeStyle(TextFormatting.GRAY),
-						player.getUniqueID());
+				player.sendStatusMessage(GuiUtils.translateMessage("corespade.nothing").mergeStyle(TextFormatting.GRAY),
+						false);
 			}
 		}
 		return ActionResultType.SUCCESS;
