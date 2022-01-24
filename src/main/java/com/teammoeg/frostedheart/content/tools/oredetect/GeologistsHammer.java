@@ -63,7 +63,7 @@ public class GeologistsHammer extends FHBaseItem {
 	        World world = context.getWorld();
 	        BlockPos blockpos = context.getPos();
 	        if(world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
-	        	player.sendMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
+	        	player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD),false);
 	        	 return ActionResultType.SUCCESS;
 	        }
 	        int x = blockpos.getX();
@@ -105,12 +105,12 @@ public class GeologistsHammer extends FHBaseItem {
 		            		}
 		            	}
 		            	if(count>0) {
-		            		player.sendMessage(s,player.getUniqueID());
+		            		player.sendStatusMessage(s,false);
 		            		return ActionResultType.SUCCESS;
 		            	}
 		            }
 		        }
-	            player.sendMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GRAY),player.getUniqueID());
+	            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GRAY),false);
 	        }
         }
         return ActionResultType.SUCCESS;

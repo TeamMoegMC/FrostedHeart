@@ -236,7 +236,7 @@ public class FHContent {
         public static Item heat_debuger = new HeatDebugItem("heat_debugger");
         public static Item red_mushroombed=new MushroomBed("straw_briquette_red_mushroom",Items.RED_MUSHROOM,createProps().defaultMaxDamage(4800));
         public static Item brown_mushroombed=new MushroomBed("straw_briquette_brown_mushroom",Items.BROWN_MUSHROOM,createProps().defaultMaxDamage(4800));
-        public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", createProps());
+        public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", createProps().maxStackSize(1));
     }
 
     public static class FHMultiblocks {

@@ -41,12 +41,15 @@ public class CeramicBucket extends FHBaseItem {
         super(name, properties);
     }
 
-    @Override
+
+
+	@Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         Fluid containedFluid = getFluid(itemstack);
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, containedFluid == Fluids.EMPTY ? RayTraceContext.FluidMode.SOURCE_ONLY : RayTraceContext.FluidMode.NONE);
         ActionResult<ItemStack> ret = net.minecraftforge.event.ForgeEventFactory.onBucketUse(playerIn, worldIn, itemstack, raytraceresult);
+        
         if (ret != null)return ret;
         if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
             return ActionResult.resultPass(itemstack);
@@ -63,8 +66,6 @@ public class CeramicBucket extends FHBaseItem {
                     if (blockstate1.getBlock() instanceof IBucketPickupHandler) {
                         Fluid fluid1 = ((IBucketPickupHandler) blockstate1.getBlock()).pickupFluid(worldIn, blockpos, blockstate1);
                         if (fluid1 != Fluids.EMPTY) {
-
-
                             SoundEvent soundevent = containedFluid.getAttributes().getFillSound();
                             if (soundevent == null)
                                 soundevent = fluid1.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_FILL_LAVA : SoundEvents.ITEM_BUCKET_FILL;
@@ -80,6 +81,8 @@ public class CeramicBucket extends FHBaseItem {
 
                     return ActionResult.resultFail(itemstack);
                 }
+                if(itemstack.getCount()>1)
+                	return ActionResult.resultFail(itemstack);
 				BlockState blockstate = worldIn.getBlockState(blockpos);
 				BlockPos blockpos2 = canBlockContainFluid(worldIn, blockpos, blockstate, containedFluid) ? blockpos : blockpos1;
 				if (this.tryPlaceContainedLiquid(playerIn, worldIn, blockpos2, blockraytraceresult, containedFluid)) {
@@ -131,7 +134,10 @@ public class CeramicBucket extends FHBaseItem {
 			return true;
 		}
     }
-
+    @Override
+	public int getItemStackLimit(ItemStack stack) {
+		return this.getFluid(stack)==Fluids.EMPTY?16:1;
+	}
     private ItemStack emptyBucket(ItemStack stack, PlayerEntity playerIn) {
         if (playerIn.abilities.isCreativeMode) {
             return stack;

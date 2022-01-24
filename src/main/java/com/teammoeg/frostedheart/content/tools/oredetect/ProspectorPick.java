@@ -63,7 +63,7 @@ public class ProspectorPick extends FHBaseItem {
 	        World world = context.getWorld();
 	        BlockPos blockpos = context.getPos();
 	        if(world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
-	        	player.sendMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
+	        	player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD),false);
 	        	 return ActionResultType.SUCCESS;
 	        }
 	        int x = blockpos.getX();
@@ -106,17 +106,17 @@ public class ProspectorPick extends FHBaseItem {
 		            	}
 		            	if(ore_name!=null) {
 			                if (count < 20)
-			                    player.sendMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
+			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.small").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),false);
 			                else if (count < 40)
-			                    player.sendMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
+			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.medium").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),false);
 			                else {
-			                    player.sendMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),player.getUniqueID());
+			                    player.sendStatusMessage(GuiUtils.translateMessage("vein_size.large").appendSibling(new TranslationTextComponent(ore_name)).mergeStyle(TextFormatting.GOLD),false);
 			                }
 			                return ActionResultType.SUCCESS;
 		            	}
 		            }
 		        }
-	            player.sendMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), player.getUniqueID());
+	            player.sendStatusMessage(GuiUtils.translateMessage("vein_size.nothing").mergeStyle(TextFormatting.GOLD), false);
 	        }
         }
         return ActionResultType.SUCCESS;
