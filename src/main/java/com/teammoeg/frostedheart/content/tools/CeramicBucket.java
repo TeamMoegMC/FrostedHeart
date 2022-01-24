@@ -65,8 +65,6 @@ public class CeramicBucket extends FHBaseItem {
                     if (blockstate1.getBlock() instanceof IBucketPickupHandler) {
                         Fluid fluid1 = ((IBucketPickupHandler) blockstate1.getBlock()).pickupFluid(worldIn, blockpos, blockstate1);
                         if (fluid1 != Fluids.EMPTY) {
-
-
                             SoundEvent soundevent = containedFluid.getAttributes().getFillSound();
                             if (soundevent == null)
                                 soundevent = fluid1.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_FILL_LAVA : SoundEvents.ITEM_BUCKET_FILL;
