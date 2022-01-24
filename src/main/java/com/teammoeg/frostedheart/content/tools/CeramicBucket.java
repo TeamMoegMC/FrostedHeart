@@ -49,6 +49,7 @@ public class CeramicBucket extends FHBaseItem {
         Fluid containedFluid = getFluid(itemstack);
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, containedFluid == Fluids.EMPTY ? RayTraceContext.FluidMode.SOURCE_ONLY : RayTraceContext.FluidMode.NONE);
         ActionResult<ItemStack> ret = net.minecraftforge.event.ForgeEventFactory.onBucketUse(playerIn, worldIn, itemstack, raytraceresult);
+        
         if (ret != null)return ret;
         if (raytraceresult.getType() == RayTraceResult.Type.MISS) {
             return ActionResult.resultPass(itemstack);
@@ -80,6 +81,8 @@ public class CeramicBucket extends FHBaseItem {
 
                     return ActionResult.resultFail(itemstack);
                 }
+                if(itemstack.getCount()>1)
+                	return ActionResult.resultFail(itemstack);
 				BlockState blockstate = worldIn.getBlockState(blockpos);
 				BlockPos blockpos2 = canBlockContainFluid(worldIn, blockpos, blockstate, containedFluid) ? blockpos : blockpos1;
 				if (this.tryPlaceContainedLiquid(playerIn, worldIn, blockpos2, blockraytraceresult, containedFluid)) {
