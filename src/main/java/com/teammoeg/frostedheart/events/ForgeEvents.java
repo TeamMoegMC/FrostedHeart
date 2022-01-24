@@ -50,6 +50,7 @@ import com.teammoeg.frostedheart.world.FHFeatures;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -70,6 +71,7 @@ import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
@@ -78,8 +80,10 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Features;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.IWorldInfo;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
@@ -102,6 +106,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.logging.log4j.Level;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
@@ -283,6 +288,7 @@ public class ForgeEvents {
 	@SubscribeEvent
 	public static void addOreGenFeatures(BiomeLoadingEvent event) {
 		if (event.getName() != null) {
+			event.getGeneration().withStructure(FHStructureFeatures.Observatory_Feature);
 			if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
 				if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH) {
 					event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES,
@@ -293,7 +299,6 @@ public class ForgeEvents {
 			}
 		}
 	}
-
 	@SubscribeEvent
 	public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
 		Block growBlock = event.getState().getBlock();
@@ -510,7 +515,7 @@ public class ForgeEvents {
 	}
 
 	@SubscribeEvent
-	public static void removeVanillaVillages(WorldEvent.CreateSpawnPosition event) {
+	public static void CreateSpawnPosition(WorldEvent.CreateSpawnPosition event) {
 		if (event.getWorld() instanceof ServerWorld) {
 			ServerWorld serverWorld = (ServerWorld) event.getWorld();
 			try {

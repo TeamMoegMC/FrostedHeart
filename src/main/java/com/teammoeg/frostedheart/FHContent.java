@@ -40,6 +40,9 @@ import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
+import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
+import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
+import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
@@ -171,6 +174,7 @@ public class FHContent {
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
                 .notSolid(), FHBlockItem::new);
+        public static Block relic_chest=new RelicChestBlock("relic_chest");
     }
 
     public static class FHItems {
@@ -285,6 +289,9 @@ public class FHContent {
         public static final RegistryObject<TileEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
                 "drawing_desk", makeType(() -> new DrawingDeskTileEntity(), () -> FHBlocks.drawing_desk)
         );
+        public static final RegistryObject<TileEntityType<RelicChestTileEntity>> RELIC_CHEST = REGISTER.register(
+                "relic_chest", makeType(() -> new RelicChestTileEntity(), () -> FHBlocks.relic_chest)
+        );
 
         private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
             return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
@@ -322,5 +329,6 @@ public class FHContent {
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
+        GuiHandler.register(RelicChestTileEntity.class,new ResourceLocation(FHMain.MODID,"relic_chest"), RelicChestContainer::new);
     }
 }

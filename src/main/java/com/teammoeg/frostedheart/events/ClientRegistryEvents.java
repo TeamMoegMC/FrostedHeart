@@ -18,10 +18,7 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
-
-import java.util.Map;
-
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHTileTypes;
 import com.teammoeg.frostedheart.FHMain;
@@ -32,12 +29,11 @@ import com.teammoeg.frostedheart.client.particles.SteamParticle;
 import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.util.FHLogger;
-
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -61,6 +57,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.Map;
+
+import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
     @SubscribeEvent
@@ -68,6 +68,7 @@ public class ClientRegistryEvents {
         // Register screens
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID,"relic_chest"), RelicChestScreen::new);
         // Register translucent render type
 
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutoutMipped());
@@ -79,6 +80,7 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getTranslucent());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.relic_chest, RenderType.getTranslucent());
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(),T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(),T2GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(),HeatPipeRenderer::new);

@@ -26,6 +26,7 @@
   "block.frostedheart.smoke_block_t1": "T1 Smoke Generator",
   "block.frostedheart.copper_gravel":"Copper Gravel",
   "block.frostedheart.wolfbery_bush_block": "Chinese Wolfberries",
+  "block.frostedheart.relic_chest": "Relic Chest",
   "item.frostedheart.frozen_seeds": "Frozen Seeds",
   "item.frostedheart.rye": "Rye Ears",
   "item.frostedheart.rye_bread": "Rye Bread",
@@ -106,6 +107,8 @@
   "gui.jei.category.frostedheart.defrost_campfire":"Defrost With Campfire",
   "gui.jei.category.frostedheart.charger_defrost": "Defrost By Steaming",
   "gui.jei.category.frostedheart.defrost_smoking":"Defrost With Smoker",
+
+  "container.relic_chest": "Relic Chest",
 
   "message.frostedheart.eaten_poisonous_food": "You should not eat raw meat!",
   "message.frostedheart.crop_not_growable": "Temperature here is too low. This crop won't grow under %s °C",

@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.world;
+package com.teammoeg.frostedheart.world.feature;
 
 import java.util.BitSet;
 import java.util.Random;

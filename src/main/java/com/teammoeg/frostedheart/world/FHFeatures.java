@@ -24,18 +24,17 @@ import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHContent;
 
+import com.teammoeg.frostedheart.world.feature.FHOreFeature;
+import com.teammoeg.frostedheart.world.feature.FHOreFeatureConfig;
+import com.teammoeg.frostedheart.world.feature.SpacecraftFeature;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.Feature;
-import net.minecraft.world.gen.feature.FeatureSpread;
-import net.minecraft.world.gen.feature.Features;
-import net.minecraft.world.gen.feature.IFeatureConfig;
-import net.minecraft.world.gen.feature.SphereReplaceConfig;
+import net.minecraft.world.gen.feature.*;
 
 public class FHFeatures {
     public static final Feature<FHOreFeatureConfig> FHORE = new FHOreFeature(FHOreFeatureConfig.CODEC);
+    public static final SpacecraftFeature SPACECRAFT = new SpacecraftFeature(NoFeatureConfig.CODEC);
     public static ArrayList<ConfiguredFeature> FH_ORES = new ArrayList();
     public static final ConfiguredFeature<?, ?> ore_magnetite = register("ore_magnetite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.magnetite, RankineBlocks.MAGNETITE_ORE.get().getDefaultState(), 40)).range(64).square().chance(4));
     public static final ConfiguredFeature<?, ?> ore_pyrite = register("ore_pyrite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.PYRITE_ORE.get().getDefaultState(), 40)).range(35).square().chance(4));
@@ -58,7 +57,9 @@ public class FHFeatures {
     public static final ConfiguredFeature<?, ?> ore_sphalerite = register("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getDefaultState(), 40)).range(65).square().chance(4));
     public static final ConfiguredFeature<?, ?> ore_anthracite = register("ore_anthracite",FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.anthracite, RankineBlocks.ANTHRACITE_ORE.get().getDefaultState(), 50)).range(48).chance(15));
     public static final ConfiguredFeature<?, ?> ore_graphite = register("ore_graphite",FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.graphite, RankineBlocks.PLUMBAGO_ORE.get().getDefaultState(), 35)).range(50).chance(12));
+
     public static final ConfiguredFeature<?, ?> copper_gravel = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "copper_gravel" ,Feature.DISK.withConfiguration(new SphereReplaceConfig(FHContent.FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 1), 1, ImmutableList.of(Blocks.GRAVEL.getDefaultState(),Blocks.SAND.getDefaultState(),Blocks.DIRT.getDefaultState()))).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(1));
+    public static final ConfiguredFeature<?,?> spacecraft_feature = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE,"spacecraft",SPACECRAFT.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
     private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> register(String key, ConfiguredFeature<FC, ?> configuredFeature) {
         FH_ORES.add(configuredFeature);
         return Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, key, configuredFeature);

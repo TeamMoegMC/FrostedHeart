@@ -50,6 +50,8 @@ import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.FHVersion;
 
+import com.teammoeg.frostedheart.world.FHStructureFeatures;
+import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -68,9 +70,12 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod(FHMain.MODID)
 public class FHMain {
+    public static final Logger LOGGER = LogManager.getLogger();
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
@@ -101,6 +106,7 @@ public class FHMain {
         CreateCompat.init();
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
+        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
 
         mod.addListener(this::setup);
         mod.addListener(this::processIMC);
@@ -135,7 +141,8 @@ public class FHMain {
     	MinecraftForge.EVENT_BUS.addListener(this::serverStart);
     	MinecraftForge.EVENT_BUS.addListener(this::serverSave);
     	MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
-    	
+
+    	FHStructureFeatures.registerStructureFeatures();
     	if(ModList.get().isLoaded("projecte")) {
     		MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
     		System.out.println("pe loaded");

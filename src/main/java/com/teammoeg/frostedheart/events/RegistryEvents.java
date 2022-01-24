@@ -105,6 +105,8 @@ public class RegistryEvents {
 
     @SubscribeEvent
     public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
-        event.getRegistry().register(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
+        event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"),
+        FHFeatures.SPACECRAFT.setRegistryName(FHMain.MODID,"spacecraft"));
+
     }
 }

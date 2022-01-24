@@ -26,6 +26,7 @@
   "block.frostedheart.smoke_block_t1": "T1发烟器",
   "block.frostedheart.copper_gravel": "铜矿沙砾",
   "block.frostedheart.wolfbery_bush_block": "枸杞",
+  "block.frostedheart.relic_chest": "遗迹箱",
   "item.frostedheart.frozen_seeds": "冰冻种子",
   "item.frostedheart.rye": "黑麦穗",
   "item.frostedheart.rye_bread": "黑麦面包",
@@ -106,6 +107,8 @@
   "gui.jei.category.frostedheart.knife_cutting": "用刀切割",
   "gui.jei.category.frostedheart.defrost_campfire": "营火解冻",
   "gui.jei.category.frostedheart.defrost_smoking": "烟熏解冻",
+
+  "container.relic_chest": "遗迹箱",
 
   "message.frostedheart.eaten_poisonous_food": "你不应该吃生肉！",
   "message.frostedheart.crop_not_growable": "这里的温度太低了，这株植物生长至少需要 %s °C",
