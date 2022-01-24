@@ -41,7 +41,9 @@ public class CeramicBucket extends FHBaseItem {
         super(name, properties);
     }
 
-    @Override
+
+
+	@Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         Fluid containedFluid = getFluid(itemstack);
@@ -131,7 +133,10 @@ public class CeramicBucket extends FHBaseItem {
 			return true;
 		}
     }
-
+    @Override
+	public int getItemStackLimit(ItemStack stack) {
+		return this.getFluid(stack)==Fluids.EMPTY?16:1;
+	}
     private ItemStack emptyBucket(ItemStack stack, PlayerEntity playerIn) {
         if (playerIn.abilities.isCreativeMode) {
             return stack;
