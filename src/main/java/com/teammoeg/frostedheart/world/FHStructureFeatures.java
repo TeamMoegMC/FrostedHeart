@@ -20,7 +20,7 @@ public class FHStructureFeatures {
         Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.Observatory.get().getRegistryName().toString(), FHStructures.Observatory.get());
         Registry<StructureFeature<?, ?>> registry = WorldGenRegistries.CONFIGURED_STRUCTURE_FEATURE;
         Registry.register(registry, new ResourceLocation(FHMain.MODID,"observatory"), Observatory_Feature);
-        StructureSeparationSettings structureConfig = new StructureSeparationSettings(8,4,123456789);
+        StructureSeparationSettings structureConfig = new StructureSeparationSettings(12,8,123456789);
 
         DimensionStructuresSettings.field_236191_b_  = ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
                         .putAll(DimensionStructuresSettings.field_236191_b_)

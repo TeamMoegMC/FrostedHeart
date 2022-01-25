@@ -2,12 +2,14 @@ package com.teammoeg.frostedheart.world.structure;
 
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.util.registry.DynamicRegistries;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.provider.BiomeProvider;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -39,8 +41,16 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
 
 
     @Override
-    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom p_230363_5_, int p_230363_6_, int p_230363_7_, Biome p_230363_8_, ChunkPos p_230363_9_, NoFeatureConfig p_230363_10_) {
-        return true;
+    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom seed, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
+        BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
+
+        int landHeight = generator.getNoiseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
+
+        IBlockReader columnOfBlocks = generator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
+
+        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
+
+        return topBlock.getFluidState().isEmpty();
     }
 
     public static class Start extends StructureStart<NoFeatureConfig> {
@@ -50,9 +60,10 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
         @Override
         public void func_230364_a_(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
 
-            int x = (chunkX << 4) + 7;
-            int z = (chunkZ << 4) + 7;
-            int surfaceY = generator.getHeight(x, z, Heightmap.Type.WORLD_SURFACE_WG);
+            int x = chunkX << 4;
+            int z = chunkZ << 4;
+            int surfaceY = generator.getNoiseHeightMinusOne(x, z, Heightmap.Type.WORLD_SURFACE_WG);
+
             BlockPos blockpos = new BlockPos(x, surfaceY, z);
 
             Rotation rotation = Rotation.randomRotation(this.rand);

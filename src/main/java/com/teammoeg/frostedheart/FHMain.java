@@ -75,7 +75,7 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(FHMain.MODID)
 public class FHMain {
-    public static final Logger LOGGER = LogManager.getLogger();
+//    public static final Logger LOGGER = LogManager.getLogger();
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
