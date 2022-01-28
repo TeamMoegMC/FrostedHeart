@@ -68,7 +68,7 @@ public abstract class MixinContraption implements ISpeedContraption{
 				if (targetPos.getY() == 0)
 					targetPos = targetPos.up();
 				world.playEvent(2001, targetPos, Block.getStateId(state));
-				Block.spawnDrops(state, world, targetPos, null);
+				//Block.spawnDrops(state, world, targetPos, null);
 				return true;
 			}
 		return false;

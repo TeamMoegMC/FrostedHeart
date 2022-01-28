@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.events;
 import javax.annotation.Nonnull;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ClimateData;
@@ -58,6 +59,7 @@ import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -71,7 +73,7 @@ import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
@@ -80,10 +82,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.Features;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.IWorldInfo;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
@@ -97,6 +97,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.BlockEvent.FluidPlaceBlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -106,7 +107,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
-import org.apache.logging.log4j.Level;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
@@ -119,7 +119,13 @@ public class ForgeEvents {
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
 
 	}
-
+	/*@SubscribeEvent(priority=EventPriority.HIGHEST)
+	public static void onBlockGenerate(FluidPlaceBlockEvent event) {
+		if(event.getWorld().getEntitiesWithinAABB(Entity.class,new AxisAlignedBB(event.getLiquidPos())).size()>0) {
+			event.setCanceled(true);
+			event.setNewState(event.getOriginalState());
+		}
+	}*/
 	@SubscribeEvent
 	public static void onIEMultiBlockForm(MultiblockFormEvent event) {
 		if (event.getPlayer() instanceof FakePlayer) {
