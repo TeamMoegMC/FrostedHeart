@@ -36,6 +36,8 @@ import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
+import com.teammoeg.frostedheart.world.FHStructureFeatures;
+import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
@@ -44,6 +46,7 @@ import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -108,5 +111,11 @@ public class RegistryEvents {
         event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"),
         FHFeatures.SPACECRAFT.setRegistryName(FHMain.MODID,"spacecraft"));
 
+    }
+    @SubscribeEvent
+    public static void onSRegistry(RegistryEvent.Register<Structure<?>> event) {
+        event.getRegistry().registerAll(FHStructures.OBSERVATORY.setRegistryName(FHMain.MODID, "observatory"));
+
+        FHStructureFeatures.registerStructureFeatures();
     }
 }

@@ -50,6 +50,7 @@ import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.FHVersion;
 
+import com.teammoeg.frostedheart.world.FHBiomes;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.advancements.criterion.ItemPredicate;
@@ -75,7 +76,7 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(FHMain.MODID)
 public class FHMain {
-//    public static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
@@ -106,7 +107,6 @@ public class FHMain {
         CreateCompat.init();
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
-        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
 
         mod.addListener(this::setup);
         mod.addListener(this::processIMC);
@@ -124,6 +124,8 @@ public class FHMain {
         FHFluids.FLUIDS.register(mod);
         FHContent.FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
+        FHBiomes.BIOME_REGISTER.register(mod);
+//        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID,"blacklist"),BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
     	JsonParser gs=new JsonParser();
@@ -142,7 +144,6 @@ public class FHMain {
     	MinecraftForge.EVENT_BUS.addListener(this::serverSave);
     	MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
 
-    	FHStructureFeatures.registerStructureFeatures();
     	if(ModList.get().isLoaded("projecte")) {
     		MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
     		System.out.println("pe loaded");
@@ -155,6 +156,8 @@ public class FHMain {
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
 
         ClimateData.setup();
+        FHBiomes.Biomes();
+        FHStructures.registerStructureGenerate();
 
         ResearchCategories.init();
         FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING, FHContent.FHItems.hand_stove));
