@@ -114,7 +114,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     private static void addChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adjx) {
         if (world != null && !world.isRemote()) {
-            IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
+            IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
             if(data!=null) {
 	            data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
@@ -132,7 +132,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, BlockPos src) {
         if (world != null && !world.isRemote()) {
-            IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
+            IChunk chunk =  world.getChunk(chunkPos.x, chunkPos.z);
             ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
             if(data!=null)
             	data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
@@ -147,7 +147,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adj) {
         if (world != null && !world.isRemote()) {
-            IChunk chunk = world.chunkExists(chunkPos.x, chunkPos.z) ? world.getChunk(chunkPos.x, chunkPos.z) : null;
+            IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
             ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
             if(data!=null)
             	data.adjusters.remove(adj);

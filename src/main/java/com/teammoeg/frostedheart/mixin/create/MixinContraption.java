@@ -44,18 +44,16 @@ public abstract class MixinContraption implements ISpeedContraption{
 	public float getSpeed() {
 		return speed;
 	}
-
 	@Override
 	public void contributeSpeed(float s) {
 		if(sc<20480)
 			sc+=Math.abs(s);
 	}
-
 	@Override
 	public void setSpeed(float spd) {
 		speed=spd;
-	}/**
-	
+	}
+	/**
 	*@author khjxiaogu
 	*@reason no more instabreak
 	*/
@@ -68,7 +66,8 @@ public abstract class MixinContraption implements ISpeedContraption{
 				if (targetPos.getY() == 0)
 					targetPos = targetPos.up();
 				world.playEvent(2001, targetPos, Block.getStateId(state));
-				//Block.spawnDrops(state, world, targetPos, null);
+				if(state.getCollisionShape(world, targetPos).isEmpty())
+					Block.spawnDrops(state, world, targetPos, null);
 				return true;
 			}
 		return false;

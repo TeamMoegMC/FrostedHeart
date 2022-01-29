@@ -282,7 +282,6 @@ public class ForgeEvents {
 		if (!event.getObject().isEmpty()) {
 			World world = event.getObject().getWorld();
 			ChunkPos chunkPos = event.getObject().getPos();
-			ChunkData data;
 			if (!world.isRemote) {
 				if (!event.getCapabilities().containsKey(ChunkDataCapabilityProvider.KEY))
 					event.addCapability(ChunkDataCapabilityProvider.KEY, new ChunkData(chunkPos));
