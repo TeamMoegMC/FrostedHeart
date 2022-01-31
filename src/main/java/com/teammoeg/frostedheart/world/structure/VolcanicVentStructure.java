@@ -1,15 +1,12 @@
 package com.teammoeg.frostedheart.world.structure;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.world.FHStructures;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.Rotation;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.world.IBlockReader;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.provider.BiomeProvider;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -19,16 +16,16 @@ import net.minecraft.world.gen.feature.NoFeatureConfig;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.gen.feature.template.TemplateManager;
-import net.minecraft.world.gen.settings.StructureSeparationSettings;
+import org.apache.logging.log4j.Level;
 
-public class ObservatoryStructure extends Structure<NoFeatureConfig> {
-    public ObservatoryStructure(Codec<NoFeatureConfig> codec) {
+public class VolcanicVentStructure extends Structure<NoFeatureConfig>  {
+    public VolcanicVentStructure(Codec<NoFeatureConfig> codec) {
         super(codec);
     }
 
 
     public Structure.IStartFactory<NoFeatureConfig> getStartFactory() {
-        return ObservatoryStructure.Start::new;
+        return Start::new;
     }
     @Override
     public GenerationStage.Decoration getDecorationStage() {
@@ -38,15 +35,7 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
 
     @Override
     protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom seed, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
-        BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
-
-        int landHeight = generator.getNoiseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
-
-        IBlockReader columnOfBlocks = generator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
-
-        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
-
-        return topBlock.getFluidState().isEmpty();
+        return true;
     }
 
     public static class Start extends StructureStart<NoFeatureConfig> {
@@ -59,13 +48,11 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
             int x = chunkX << 4;
             int z = chunkZ << 4;
             int surfaceY = generator.getNoiseHeightMinusOne(x, z, Heightmap.Type.WORLD_SURFACE_WG);
-
             BlockPos blockpos = new BlockPos(x, surfaceY, z);
 
-            Rotation rotation = Rotation.randomRotation(this.rand);
-            this.components.add(new ObservatoryPiece(template, blockpos, rotation));
+            this.components.add(new VolcanicVentPiece(blockpos));
             this.recalculateStructureSize();
-//            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
+            FHMain.LOGGER.log(Level.DEBUG, "volcanic at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
     }
 }
