@@ -57,7 +57,7 @@ public class ServerLifecycleHooksMixin {
 			configbkf.toFile().mkdirs();
 			File backup=new File(configbkf.toFile(),"backup-"+(new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date())+".zip");
 			ZipMaker zf=new ZipMaker(backup,config);
-			zf.addAndDel(config.toFile(),f->!f.getName().startsWith("."));
+			zf.addAndDel(config.toFile(),f->!f.getName().startsWith(".")&&f.getName().endsWith(".toml"));
 			zf.close();
 			fconfig.mkdirs();
 			FileUtil.transfer(localVersion,saveVersion);
