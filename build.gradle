@@ -174,7 +174,7 @@ dependencies {
     
     compile fg.deobf("curse.maven:engineersdecor-313866:3590976")
     implementation fg.deobf("curse.maven:engineers-decor-313866:3566177")
-
+	implementation fg.deobf("curse.maven:diet-443570:3536671")
     compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
