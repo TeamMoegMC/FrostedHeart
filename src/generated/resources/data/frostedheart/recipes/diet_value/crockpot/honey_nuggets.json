@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.002468857,
+    "proteins": 0.009875429,
+    "vegetables": 0.009875429,
+    "vitamin": 0.003209515
+  },
+  "item": "crockpot:honey_nuggets"
+}

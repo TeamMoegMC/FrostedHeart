@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.004937715
+  },
+  "item": "rankine:roasted_asparagus"
+}

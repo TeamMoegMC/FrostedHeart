@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.001662934,
+    "plant_oil": 0.006651738
+  },
+  "item": "crockpot:avaj"
+}

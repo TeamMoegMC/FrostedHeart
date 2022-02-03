@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.007406572,
+    "plant_oil": 0.007406572
+  },
+  "item": "charcoal_pit:beet_stew"
+}

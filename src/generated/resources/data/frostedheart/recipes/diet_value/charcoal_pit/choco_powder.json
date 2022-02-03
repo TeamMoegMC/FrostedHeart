@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 8.31467E-4,
+    "plant_oil": 0.002468857
+  },
+  "item": "charcoal_pit:choco_powder"
+}

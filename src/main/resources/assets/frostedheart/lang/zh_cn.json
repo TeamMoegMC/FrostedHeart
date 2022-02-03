@@ -97,6 +97,7 @@
   "gui.frostedheart.research_time_left": "Time Remaining: %s Minutes",
   "gui.frostedheart.research_hierarchy": "Research Relationship",
   "gui.frostedheart.update_recommended": "建议更新《冬季救援》： ",
+
   "gui.frostedheart.save_updated": "已经自动更新您的存档，旧的配置备份在",
   "gui.frostedheart.save_update_needed": "自动更新未完成！请退出这个世界然后手动删除%s以完成更新！",
   "gui.jei.category.frostedheart.generator_fuel": "能量塔燃料",

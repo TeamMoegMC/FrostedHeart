@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.001234429,
+    "vegetables": 0.001234429,
+    "vitamin": 8.31467E-4
+  },
+  "item": "rankine:aged_cheese"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.01975086,
+    "vitamin": 0.006419029
+  },
+  "item": "minecraft:cooked_beef"
+}

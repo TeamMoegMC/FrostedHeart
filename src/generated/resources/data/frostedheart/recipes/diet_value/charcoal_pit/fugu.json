@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.005487684,
+    "vegetables": 0.005487684,
+    "vitamin": 0.002978107,
+    "grains": 0.005487684
+  },
+  "item": "charcoal_pit:fugu"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.006172143,
+    "vegetables": 0.024688574
+  },
+  "item": "crockpot:pumpkin_cookie"
+}

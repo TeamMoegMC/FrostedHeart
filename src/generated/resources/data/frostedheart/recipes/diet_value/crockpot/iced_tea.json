@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.002494402,
+    "vegetables": 0.009977607
+  },
+  "item": "crockpot:iced_tea"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 9.1634E-4,
+    "plant_oil": 0.006651738
+  },
+  "item": "crockpot:hot_cocoa"
+}

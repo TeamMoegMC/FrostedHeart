@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.003086072,
+    "vegetables": 0.006172143,
+    "plant_oil": 0.006172143
+  },
+  "item": "frostedheart:black_bread"
+}

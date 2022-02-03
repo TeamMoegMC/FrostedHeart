@@ -74,7 +74,8 @@
     "rankine.TapBarrelBlockMixin",
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
-    "snow.ModUtilMixin"
+    "snow.ModUtilMixin",
+    "diet.DietApiImplMixin"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",

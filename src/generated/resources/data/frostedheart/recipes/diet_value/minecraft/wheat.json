@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 9.1634E-4,
+    "grains": 9.1634E-4
+  },
+  "item": "minecraft:wheat"
+}

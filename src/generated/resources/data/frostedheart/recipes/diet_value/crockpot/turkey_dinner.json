@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.014813144,
+    "vegetables": 0.014813144,
+    "vitamin": 0.009628544
+  },
+  "item": "crockpot:turkey_dinner"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.022219716,
+    "vitamin": 0.007221408
+  },
+  "item": "crockpot:hot_chili"
+}

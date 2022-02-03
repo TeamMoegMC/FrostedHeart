@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.004937715,
+    "vitamin": 0.001604757
+  },
+  "item": "stone_age:cooked_fat"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.003703286,
+    "plant_oil": 0.014813144
+  },
+  "item": "crockpot:jammy_preserves"
+}

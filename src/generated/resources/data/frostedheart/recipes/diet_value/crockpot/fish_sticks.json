@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.008641001,
+    "vegetables": 0.008641001,
+    "vitamin": 0.00561665
+  },
+  "item": "crockpot:fish_sticks"
+}

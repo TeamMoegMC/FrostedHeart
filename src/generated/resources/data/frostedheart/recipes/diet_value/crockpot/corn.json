@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.001814354,
+    "plant_oil": 0.001814354,
+    "grains": 0.001814354
+  },
+  "item": "crockpot:corn"
+}

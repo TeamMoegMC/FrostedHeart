@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.004988803,
+    "vegetables": 0.009977607,
+    "plant_oil": 0.009977607
+  },
+  "item": "create:bar_of_chocolate"
+}

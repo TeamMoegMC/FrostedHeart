@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.006651738,
+    "plant_oil": 0.006651738
+  },
+  "item": "crockpot:asparagus_soup"
+}

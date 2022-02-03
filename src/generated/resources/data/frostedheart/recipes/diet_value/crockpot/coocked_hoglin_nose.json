@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.01975086
+  },
+  "item": "crockpot:coocked_hoglin_nose"
+}

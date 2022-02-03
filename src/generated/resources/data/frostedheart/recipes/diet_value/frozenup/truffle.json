@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.004988803,
+    "plant_oil": 0.010996086
+  },
+  "item": "frozenup:truffle"
+}

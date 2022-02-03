@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 9.1634E-4,
+    "vegetables": 9.1634E-4,
+    "vitamin": 0.001080907
+  },
+  "item": "minecraft:turtle_egg"
+}

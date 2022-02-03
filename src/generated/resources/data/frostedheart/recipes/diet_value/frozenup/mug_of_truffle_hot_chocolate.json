@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.002468857,
+    "vitamin": 8.02379E-4
+  },
+  "item": "frozenup:mug_of_truffle_hot_chocolate"
+}

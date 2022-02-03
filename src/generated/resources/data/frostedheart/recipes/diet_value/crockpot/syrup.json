@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 6.17214E-4,
+    "plant_oil": 0.002468857
+  },
+  "item": "crockpot:syrup"
+}

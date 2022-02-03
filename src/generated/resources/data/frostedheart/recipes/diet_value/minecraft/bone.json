@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.001832681,
+    "vitamin": 0.001080907
+  },
+  "item": "minecraft:bone"
+}

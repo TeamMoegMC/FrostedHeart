@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.00658522,
+    "vegetables": 0.00658522,
+    "vitamin": 0.003573728,
+    "grains": 0.00658522
+  },
+  "item": "charcoal_pit:corn_stew"
+}

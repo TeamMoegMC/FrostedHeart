@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.0043205,
+    "proteins": 0.011406121,
+    "vegetables": 0.011406121,
+    "vitamin": 0.00561665,
+    "grains": 0.011406121
+  },
+  "item": "minecraft:cake"
+}

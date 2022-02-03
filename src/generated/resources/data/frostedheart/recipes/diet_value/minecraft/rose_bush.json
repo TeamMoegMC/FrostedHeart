@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "plant_oil": 0.001832681
+  },
+  "item": "minecraft:rose_bush"
+}

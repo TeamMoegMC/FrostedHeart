@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.005498043,
+    "vegetables": 0.019955212,
+    "grains": 0.019955212
+  },
+  "item": "rankine:pancake_breakfast"
+}
