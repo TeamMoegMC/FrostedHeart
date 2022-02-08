@@ -468,18 +468,13 @@ public class ForgeEvents {
 				&& event.getEntityLiving() instanceof ServerPlayerEntity
 				&& event.getItem().getItem().getTags().contains(FHMain.rl("raw_food"))) {
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-			player.addPotionEffect(new EffectInstance(Effects.POISON, 400, 1));
-			player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 400, 1));
-			if (ModList.get().isLoaded("diet") && player.getServer() != null) {
-				player.getServer().getCommandManager().handleCommand(player.getCommandSource(),
-						"/diet subtract @s proteins 0.01");
-			}
+			player.addPotionEffect(new EffectInstance(Effects.HUNGER, 400, 1));
 			player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
 		}
 	}
 
 	@SubscribeEvent
-	public static void eatingFood(LivingEntityUseItemEvent.Finish event) {
+	public static void finishedEatingFood(LivingEntityUseItemEvent.Finish event) {
 		if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
 				&& event.getEntityLiving() instanceof ServerPlayerEntity) {
 			ItemStack is = event.getItem();

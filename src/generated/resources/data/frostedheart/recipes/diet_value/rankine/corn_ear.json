@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 6.04785E-4,
-    "plant_oil": 6.04785E-4,
-    "grains": 6.04785E-4
+    "plant_oil": 2.20049E-4,
+    "grains": 2.20049E-4
   },
   "item": "rankine:corn_ear"
 }

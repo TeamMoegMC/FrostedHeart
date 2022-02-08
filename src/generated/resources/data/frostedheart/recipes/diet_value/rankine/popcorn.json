@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 0.001629446,
-    "plant_oil": 0.001629446,
-    "grains": 0.001629446
+    "plant_oil": 4.86055E-4,
+    "grains": 5.92868E-4
   },
   "item": "rankine:popcorn"
 }

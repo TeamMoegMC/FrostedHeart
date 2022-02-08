@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 8.14723E-4,
-    "plant_oil": 8.14723E-4,
-    "grains": 8.14723E-4
+    "grains": 5.92868E-4
   },
   "item": "charcoal_pit:popcorn"
 }

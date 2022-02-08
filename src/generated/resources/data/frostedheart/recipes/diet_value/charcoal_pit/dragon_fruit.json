@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.004988803,
-    "vegetables": 0.010996086
+    "sugars": 0.004338924,
+    "vegetables": 0.002640585
   },
   "item": "charcoal_pit:dragon_fruit"
 }

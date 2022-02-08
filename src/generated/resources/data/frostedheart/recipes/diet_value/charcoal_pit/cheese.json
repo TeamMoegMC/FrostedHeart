@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.006172143,
-    "vegetables": 0.006172143,
-    "vitamin": 0.004011893
+    "proteins": 0.00296434,
+    "vitamin": 0.003273892
   },
   "item": "charcoal_pit:cheese"
 }

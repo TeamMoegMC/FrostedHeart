@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.029626288,
-    "vitamin": 0.009628544
+    "proteins": 0.007114416,
+    "vitamin": 0.007857341
   },
   "item": "crockpot:bacon_eggs"
 }

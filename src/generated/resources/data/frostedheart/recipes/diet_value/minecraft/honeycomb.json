@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 8.31467E-4,
-    "plant_oil": 0.001832681
+    "sugars": 7.23154E-4,
+    "vegetables": 4.40097E-4
   },
   "item": "minecraft:honeycomb"
 }

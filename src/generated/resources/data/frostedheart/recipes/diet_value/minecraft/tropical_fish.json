@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.001832681,
-    "vitamin": 0.001080907
+    "proteins": 4.40097E-4,
+    "vitamin": 7.23154E-4
   },
   "item": "minecraft:tropical_fish"
 }

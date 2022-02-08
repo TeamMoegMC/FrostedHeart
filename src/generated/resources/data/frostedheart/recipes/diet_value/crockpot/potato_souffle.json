@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 0.02660695
+    "vegetables": 0.003194678,
+    "plant_oil": 0.003194678
   },
   "item": "crockpot:potato_souffle"
 }

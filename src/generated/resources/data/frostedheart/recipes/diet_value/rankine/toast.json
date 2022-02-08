@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 0.007406572,
-    "grains": 0.007406572
+    "grains": 0.003557208
   },
   "item": "rankine:toast"
 }

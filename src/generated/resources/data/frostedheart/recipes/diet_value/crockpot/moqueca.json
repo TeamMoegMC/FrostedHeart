@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.023281083,
-    "vegetables": 0.023281083,
-    "vitamin": 0.015132703
+    "proteins": 0.005590687,
+    "vegetables": 0.005590687,
+    "vitamin": 0.010124155
   },
   "item": "crockpot:moqueca"
 }

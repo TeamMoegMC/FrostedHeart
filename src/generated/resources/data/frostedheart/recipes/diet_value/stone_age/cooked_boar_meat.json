@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.017282002,
-    "vitamin": 0.00561665
+    "proteins": 0.004150076,
+    "vitamin": 0.004583449
   },
   "item": "stone_age:cooked_boar_meat"
 }
