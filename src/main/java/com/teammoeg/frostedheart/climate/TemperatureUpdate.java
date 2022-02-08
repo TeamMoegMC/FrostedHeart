@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHEffects;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
@@ -104,7 +105,7 @@ public class TemperatureUpdate {
 			gameTime = gameTime / (200 / 3);
 			gameTime = (float) Math.sin(Math.toRadians(gameTime));
 			envtemp += TemperatureCore.getBlockTemp(world, pos);
-			envtemp += skyLight > 5.0F ? (gameTime * 5.0F) : (-1.0F * 5.0F);
+			envtemp += skyLight > 5.0F ?(FHUtils.isRainingAt(pos,world)?-8F:(gameTime * 5.0F)) : (-5.0F);
 			// burning heat
 			if (player.isBurning())
 				envtemp += 150F;
