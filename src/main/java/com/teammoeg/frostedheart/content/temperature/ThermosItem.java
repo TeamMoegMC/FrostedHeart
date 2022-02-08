@@ -39,6 +39,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
+import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -49,6 +50,7 @@ import net.minecraft.potion.PotionUtils;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ITag;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
@@ -71,6 +73,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
@@ -79,7 +82,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     final int unit;
 
     public ThermosItem(String name, int capacity, int unit) {
-        super(new Properties().maxStackSize(1).setNoRepair().maxDamage(capacity).group(FHMain.itemGroup), capacity);
+        super(new Properties().maxStackSize(1).setNoRepair().maxDamage(capacity).group(FHMain.itemGroup).food(new Food.Builder().hunger(1).saturation(1).build()), capacity);
         this.unit = unit;
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
@@ -137,7 +140,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         super.inventoryTick(stack, worldIn, entityIn, itemSlot, isSelected);
         updateDamage(stack);
     }
-
+    boolean succ;
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
@@ -156,6 +159,22 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
                     return ActionResult.resultSuccess(itemstack);
                 }
+            }else {
+            	TileEntity te=worldIn.getTileEntity(blockpos);
+            	if(te!=null) {
+            		succ=false;
+            		te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY).ifPresent(blocktank->{
+            			itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(itemtank -> {
+            				FluidStack fs=blocktank.drain(itemtank.getTankCapacity(0)-itemtank.getFluidInTank(0).getAmount(),FluidAction.SIMULATE);
+            				if(!fs.isEmpty()&&itemtank.fill(fs,FluidAction.SIMULATE)==fs.getAmount()) {
+            					itemtank.fill(blocktank.drain(fs,FluidAction.EXECUTE),FluidAction.EXECUTE);
+            					succ=true;
+            				}
+                        });
+            		});
+            		if(succ)
+            			return ActionResult.resultSuccess(itemstack);
+            	}
             }
             playerIn.setActiveHand(handIn);
             return canDrink(playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
@@ -167,9 +186,11 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
         if (this.isInGroup(group)) {
             ITag<Fluid> tag = FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID, "drink"));
+            ResourceLocation hidden=new ResourceLocation(FHMain.MODID, "hidden_drink");
             items.add(new ItemStack(this));
             if (tag == null) return;
             for (Fluid fluid : tag.getAllElements()) {
+            	if(fluid.getTags().contains(hidden))continue;
                 ItemStack itemStack = new ItemStack(this);
                 itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
                     data.fill(new FluidStack(fluid, data.getTankCapacity(0)), IFluidHandler.FluidAction.EXECUTE);
