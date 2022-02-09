@@ -140,7 +140,6 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         super.inventoryTick(stack, worldIn, entityIn, itemSlot, isSelected);
         updateDamage(stack);
     }
-    boolean succ;
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
@@ -159,22 +158,6 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
                     return ActionResult.resultSuccess(itemstack);
                 }
-            }else {
-            	TileEntity te=worldIn.getTileEntity(blockpos);
-            	if(te!=null) {
-            		succ=false;
-            		te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY).ifPresent(blocktank->{
-            			itemstack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(itemtank -> {
-            				FluidStack fs=blocktank.drain(itemtank.getTankCapacity(0)-itemtank.getFluidInTank(0).getAmount(),FluidAction.SIMULATE);
-            				if(!fs.isEmpty()&&itemtank.fill(fs,FluidAction.SIMULATE)==fs.getAmount()) {
-            					itemtank.fill(blocktank.drain(fs,FluidAction.EXECUTE),FluidAction.EXECUTE);
-            					succ=true;
-            				}
-                        });
-            		});
-            		if(succ)
-            			return ActionResult.resultSuccess(itemstack);
-            	}
             }
             playerIn.setActiveHand(handIn);
             return canDrink(playerIn.getHeldItem(handIn)) ? ActionResult.resultSuccess(playerIn.getHeldItem(handIn)) : ActionResult.resultFail(playerIn.getHeldItem(handIn));
