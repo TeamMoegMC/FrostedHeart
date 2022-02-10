@@ -39,6 +39,7 @@
     "minecraft.BeeHiveMixin",
     "minecraft.BigTreeMixin",
     "minecraft.BiomeMixin",
+    "minecraft.PlayerInventoryMixin",
     "minecraft.CampfireBlockMixin",
     "minecraft.CampfireTileEntityMixin",
     "minecraft.ChickenEntityMixin",

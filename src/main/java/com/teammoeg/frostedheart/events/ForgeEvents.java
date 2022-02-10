@@ -90,6 +90,7 @@ import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
@@ -107,6 +108,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import top.theillusivec4.curios.api.event.CurioChangeEvent;
+import top.theillusivec4.curios.api.event.CurioDropsEvent;
+import top.theillusivec4.curios.api.event.DropRulesEvent;
+import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
@@ -472,7 +477,18 @@ public class ForgeEvents {
 			player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
 		}
 	}
-
+	@SubscribeEvent
+	public static void death(PlayerEvent.Clone ev) {
+		if(ev.isWasDeath()&&FHConfig.SERVER.keepEquipments.get()) {
+			 ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
+		}
+	}
+	@SubscribeEvent
+	public static void onCuriosDrop(DropRulesEvent cde) {
+		if((cde.getEntityLiving() instanceof PlayerEntity)&&FHConfig.SERVER.keepEquipments.get()) {
+			cde.addOverride(e->true,DropRule.ALWAYS_KEEP);
+		}
+	}
 	@SubscribeEvent
 	public static void finishedEatingFood(LivingEntityUseItemEvent.Finish event) {
 		if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
