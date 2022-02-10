@@ -25,7 +25,6 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
 	@Inject(at=@At("HEAD"),method="dropAllItems",cancellable=true)
 	public void fh$dropAllItems(CallbackInfo cbi) {
 		if(FHConfig.SERVER.keepEquipments.get()){
-			System.out.println("ki");
 			PlayerInventory othis = getThis();
 			for (int i = 9; i < othis.mainInventory.size(); i++) {
 				ItemStack itemstack = othis.mainInventory.get(i);
@@ -39,7 +38,6 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
 				if (!itemstack.isEmpty()&&!itemstack.isDamageable()&&itemstack.getToolTypes().isEmpty()) {
 					othis.player.dropItem(itemstack, true, false);
 					othis.mainInventory.set(i, ItemStack.EMPTY);
-					System.out.println("droped "+itemstack.getItem()+" from qb");
 				}
 			}
 			cbi.cancel();
