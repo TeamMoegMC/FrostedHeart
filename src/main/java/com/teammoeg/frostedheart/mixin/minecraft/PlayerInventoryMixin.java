@@ -11,7 +11,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.INameable;
-import net.minecraftforge.items.CapabilityItemHandler;
 
 @Mixin(PlayerInventory.class)
 public abstract class PlayerInventoryMixin implements IInventory, INameable {

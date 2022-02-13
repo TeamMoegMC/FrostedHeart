@@ -31,7 +31,7 @@ public class FHStructures {
 //        Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.VOLCANIC_VENT.getRegistryName().toString(), FHStructures.VOLCANIC_VENT);
 
         HashMap<Structure<?>, StructureSeparationSettings> StructureSettingMap = new HashMap();
-        StructureSettingMap.put(OBSERVATORY,new StructureSeparationSettings(12,8,123456789));
+        StructureSettingMap.put(OBSERVATORY,new StructureSeparationSettings(30,15,545465463));
 //        StructureSettingMap.put(VOLCANIC_VENT,new StructureSeparationSettings(12,8,123456));
 
 
