@@ -23,6 +23,9 @@ import java.io.InputStreamReader;
 
 import javax.annotation.Nonnull;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -49,15 +52,16 @@ import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.FHVersion;
-
 import com.teammoeg.frostedheart.world.FHBiomes;
-import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
+
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent.MissingMappings;
@@ -75,9 +79,6 @@ import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -179,7 +180,8 @@ public class FHMain {
         FHResearch.researches.register(new Research("generator_t3", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t2")));
         FHResearch.researches.register(new Research("generator_t4", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t3")));
         FHResearch.indexResearches();
-
+        //modify default value
+        GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS,IntegerValue.create(0));
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {

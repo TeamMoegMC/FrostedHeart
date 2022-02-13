@@ -21,6 +21,6 @@ public class FHBiomes {
     }
 
     public static void Biomes(){
-        BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(VOLCANIC.get()), 1000));
+        BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(VOLCANIC.get()), 2));
     }
 }

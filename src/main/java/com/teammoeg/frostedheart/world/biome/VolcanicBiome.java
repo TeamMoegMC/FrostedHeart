@@ -1,9 +1,16 @@
 package com.teammoeg.frostedheart.world.biome;
 
-import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHSurfaceBuilder;
+
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.biome.*;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeAmbience;
+import net.minecraft.world.biome.BiomeGenerationSettings;
+import net.minecraft.world.biome.DefaultBiomeFeatures;
+import net.minecraft.world.biome.MobSpawnInfo;
+import net.minecraft.world.biome.MoodSoundAmbience;
+import net.minecraft.world.biome.ParticleEffectAmbience;
 
 public class VolcanicBiome {
     public final Biome build()
@@ -12,13 +19,14 @@ public class VolcanicBiome {
         biomeBuilder.precipitation(Biome.RainType.RAIN)
         .category(Biome.Category.NONE)
         .depth(1F)
-        .scale(0.02F)
+        .scale(1F)
         .temperature(1.0F)
         .downfall(0.1F)
-        .setEffects((new BiomeAmbience.Builder()).setWaterColor(4159204).setWaterFogColor(329011).setFogColor(12638463).withSkyColor(calculateSkyColor(0.8F)).setMoodSound(MoodSoundAmbience.DEFAULT_CAVE).build());
-
+        .setEffects((new BiomeAmbience.Builder()).setWaterColor(4159204).setWaterFogColor(329011).setFogColor(12638463).withSkyColor(calculateSkyColor(0.8F)).setMoodSound(MoodSoundAmbience.DEFAULT_CAVE).setParticle(new ParticleEffectAmbience(ParticleTypes.WHITE_ASH, 0.068093334F)).build());
+        
         BiomeGenerationSettings.Builder biomeGenBuilder = new BiomeGenerationSettings.Builder();
         this.Generation(biomeGenBuilder);
+        
         biomeBuilder.withGenerationSettings(biomeGenBuilder.build());
 
         MobSpawnInfo.Builder mobSpawnBuilder = new MobSpawnInfo.Builder();
@@ -29,10 +37,16 @@ public class VolcanicBiome {
     }
 
     public void MobSpawn(MobSpawnInfo.Builder builder){
-
+    	DefaultBiomeFeatures.withDesertMobs(builder);
     }
     public void Generation(BiomeGenerationSettings.Builder builder){
         builder.withSurfaceBuilder(FHSurfaceBuilder.VOLCANIC);
+        DefaultBiomeFeatures.withLavaLakes(builder);
+        DefaultBiomeFeatures.withBadlandsStructures(builder);
+        DefaultBiomeFeatures.withDesertDeadBushes(builder);
+        
+        DefaultBiomeFeatures.withInfestedStone(builder);
+        DefaultBiomeFeatures.withLavaAndWaterSprings(builder);
 //        builder.withStructure(FHStructureFeatures.VOLCANIC_VENT_FEATURE);
 //        builder.withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
     }
