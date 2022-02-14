@@ -293,7 +293,7 @@ public class ForgeEvents {
 	@SubscribeEvent
 	public static void addOreGenFeatures(BiomeLoadingEvent event) {
 		if (event.getName() != null) {
-			event.getGeneration().withStructure(FHStructureFeatures.Observatory_Feature);
+//			event.getGeneration().withStructure(FHStructureFeatures.Observatory_Feature);
 			if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
 				if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH) {
 					event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES,

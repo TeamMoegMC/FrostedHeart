@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.FHVersion;
 
 import com.teammoeg.frostedheart.world.FHBiomes;
+import com.teammoeg.frostedheart.world.FHDimensions;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.advancements.criterion.ItemPredicate;
@@ -158,7 +159,7 @@ public class FHMain {
         ClimateData.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
-
+        FHDimensions.register();
         ResearchCategories.init();
         FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING, FHContent.FHItems.hand_stove));
         FHResearch.researches.register(new Research("snow_boots", ResearchCategories.EXPLORATION, RankineItems.SNOWSHOES.get()));

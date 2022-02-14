@@ -37,7 +37,7 @@ import net.minecraft.util.SoundEvents;
 
 @Mixin(CampfireTileEntity.class)
 public abstract class CampfireTileEntityMixin extends TileEntity implements ICampfireExtra {
-    public int lifeTime;
+    public int lifeTime = 0;
 
     @Override
     public int getLifeTime() {

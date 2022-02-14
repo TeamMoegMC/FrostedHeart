@@ -16,6 +16,7 @@ import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.feature.NoFeatureConfig;
 import net.minecraft.world.gen.feature.template.PlacementSettings;
 import net.minecraft.world.gen.feature.template.Template;
+import org.apache.logging.log4j.Level;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,19 +37,18 @@ public class SpacecraftFeature extends Feature<NoFeatureConfig> {
         List<Integer> listZ = IntStream.rangeClosed(chunkpos.getZStart(), chunkpos.getZEnd()).boxed().collect(Collectors.toList());
         Collections.shuffle(listZ, rand);
         BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable();
-
         for(Integer integerX : listX) {
             for(Integer integerZ : listZ) {
-                blockpos$mutable.setPos(integerX, generator.getNoiseHeightMinusOne(integerX, integerZ, Heightmap.Type.WORLD_SURFACE_WG), integerZ);
+                blockpos$mutable.setPos(integerX, 0, integerZ);
+                BlockPos centre = new BlockPos(blockpos$mutable.getX(), generator.getHeight(blockpos$mutable.getX(), blockpos$mutable.getZ(), Heightmap.Type.WORLD_SURFACE_WG), blockpos$mutable.getZ());
 
-                if (reader.isAirBlock(blockpos$mutable) || reader.getBlockState(blockpos$mutable).getCollisionShapeUncached(reader, blockpos$mutable).isEmpty()) {
-
+                if (reader.isAirBlock(centre) || reader.getBlockState(centre).getCollisionShapeUncached(reader, centre).isEmpty()) {
                     PlacementSettings settings = (new PlacementSettings()).setRotation(Rotation.randomRotation(rand)).setMirror(Mirror.NONE);
-                    Template template = reader.getWorld().getStructureTemplateManager().getTemplate(new ResourceLocation(FHMain.MODID,"relic/spacecraft"));
-                    MutableBoundingBox boundingBox = template.getMutableBoundingBox(settings, blockpos$mutable);
+                    Template template = reader.getWorld().getStructureTemplateManager().getTemplate(new ResourceLocation(FHMain.MODID, "relic/spacecraft"));
+                    MutableBoundingBox boundingBox = template.getMutableBoundingBox(settings, centre);
                     Vector3i vector3i = boundingBox.func_215126_f();
 
-                    if (template.func_237146_a_(reader, blockpos$mutable, new BlockPos(vector3i.getX(), boundingBox.minY, vector3i.getZ()), settings, reader.getRandom(), 2)) {
+                    if (template.func_237146_a_(reader, centre, new BlockPos(vector3i.getX(), boundingBox.minY, vector3i.getZ()), settings, reader.getRandom(), 2)) {
 //                      FHMain.LOGGER.log(Level.DEBUG, "spacecraft at " + (centre.getX()) + " " + centre.getY() + " " + (centre.getZ()));
                         return true;
                     }
