@@ -37,16 +37,17 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
 
 
     @Override
-    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom seed, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
+    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long seed, SharedSeedRandom random, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
         BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
 
         int landHeight = generator.getNoiseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
-
+        if(landHeight<100||landHeight>200)return false;
         IBlockReader columnOfBlocks = generator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
 
         BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
 
         return topBlock.getFluidState().isEmpty();
+        
     }
 
     public static class Start extends StructureStart<NoFeatureConfig> {
@@ -64,6 +65,7 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
 
             Rotation rotation = Rotation.randomRotation(this.rand);
             this.components.add(new ObservatoryPiece(template, blockpos, rotation));
+            
             this.recalculateStructureSize();
 //            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.002371472,
+    "vegetables": 0.002371472
+  },
+  "item": "watersource:coconut_chicken"
+}

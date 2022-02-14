@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 8.80195E-4,
+    "vitamin": 0.001446308
+  },
+  "item": "minecraft:mutton"
+}

@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.events;
 import javax.annotation.Nonnull;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ClimateData;
@@ -31,6 +30,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
+import com.teammoeg.frostedheart.command.GenSC;
 import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -59,7 +59,6 @@ import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -73,7 +72,6 @@ import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
@@ -97,16 +95,16 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.BlockEvent.FluidPlaceBlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import top.theillusivec4.curios.api.event.DropRulesEvent;
+import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
@@ -293,7 +291,6 @@ public class ForgeEvents {
 	@SubscribeEvent
 	public static void addOreGenFeatures(BiomeLoadingEvent event) {
 		if (event.getName() != null) {
-//			event.getGeneration().withStructure(FHStructureFeatures.Observatory_Feature);
 			if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
 				if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH) {
 					event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES,
@@ -301,6 +298,9 @@ public class ForgeEvents {
 				}
 				for (ConfiguredFeature feature : FHFeatures.FH_ORES)
 					event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
+			}
+			if(event.getCategory()==Biome.Category.EXTREME_HILLS||event.getCategory()==Biome.Category.TAIGA) {
+				event.getGeneration().withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
 			}
 		}
 	}
@@ -468,18 +468,24 @@ public class ForgeEvents {
 				&& event.getEntityLiving() instanceof ServerPlayerEntity
 				&& event.getItem().getItem().getTags().contains(FHMain.rl("raw_food"))) {
 			ServerPlayerEntity player = (ServerPlayerEntity) event.getEntityLiving();
-			player.addPotionEffect(new EffectInstance(Effects.POISON, 400, 1));
-			player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 400, 1));
-			if (ModList.get().isLoaded("diet") && player.getServer() != null) {
-				player.getServer().getCommandManager().handleCommand(player.getCommandSource(),
-						"/diet subtract @s proteins 0.01");
-			}
+			player.addPotionEffect(new EffectInstance(Effects.HUNGER, 400, 1));
 			player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.eaten_poisonous_food"), false);
 		}
 	}
-
 	@SubscribeEvent
-	public static void eatingFood(LivingEntityUseItemEvent.Finish event) {
+	public static void death(PlayerEvent.Clone ev) {
+		if(ev.isWasDeath()&&FHConfig.SERVER.keepEquipments.get()) {
+			 ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
+		}
+	}
+	@SubscribeEvent
+	public static void onCuriosDrop(DropRulesEvent cde) {
+		if((cde.getEntityLiving() instanceof PlayerEntity)&&FHConfig.SERVER.keepEquipments.get()) {
+			cde.addOverride(e->true,DropRule.ALWAYS_KEEP);
+		}
+	}
+	@SubscribeEvent
+	public static void finishedEatingFood(LivingEntityUseItemEvent.Finish event) {
 		if (event.getEntityLiving() != null && !event.getEntityLiving().world.isRemote
 				&& event.getEntityLiving() instanceof ServerPlayerEntity) {
 			ItemStack is = event.getItem();
@@ -548,6 +554,7 @@ public class ForgeEvents {
 		CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
 		AddTempCommand.register(dispatcher);
 		ResearchCommand.register(dispatcher);
+		GenSC.register(dispatcher);
 	}
 
 	public static void attachWorldCapabilities(AttachCapabilitiesEvent<World> event) {

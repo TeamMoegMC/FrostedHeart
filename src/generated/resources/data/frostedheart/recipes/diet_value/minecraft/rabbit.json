@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.001320292,
+    "vitamin": 0.002169462
+  },
+  "item": "minecraft:rabbit"
+}

@@ -75,12 +75,13 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> developers;
         public final ForgeConfigSpec.EnumValue<FHDifficulty> tdiffculty;
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
-
+        public final ForgeConfigSpec.BooleanValue keepEquipments;
         Server(ForgeConfigSpec.Builder builder) {
             alwaysKeepInventory = builder
                     .comment("Always keep inventory on death on every dimension and world")
                     .define("alwaysKeepInventory", false);
-
+            keepEquipments=builder.comment("Instead of keeping all inventory, only keep equipments, curios and quickbar tools on death")
+            		.define("keepEquipments",true);
             fixEssJeiIssue = builder
                     .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
                     .define("fixEssJeiIssue", true);
@@ -92,6 +93,7 @@ public class FHConfig {
             		.defineEnum("temperatureDifficulty",FHDifficulty.Normal);
             tempSpeed=builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
             		.defineInRange("temperatureChangeRate",0.5,0,20);
+            
             
         }
     }

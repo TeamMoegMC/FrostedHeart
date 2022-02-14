@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "plant_oil": 0.002396009,
+    "vitamin": 0.003928671,
+    "grains": 0.002396009
+  },
+  "item": "charcoal_pit:corn_stew"
+}

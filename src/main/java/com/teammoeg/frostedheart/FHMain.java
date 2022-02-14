@@ -23,6 +23,9 @@ import java.io.InputStreamReader;
 
 import javax.annotation.Nonnull;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -49,17 +52,20 @@ import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.FHVersion;
-
 import com.teammoeg.frostedheart.world.FHBiomes;
-import com.teammoeg.frostedheart.world.FHDimensions;
-import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
+
 import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.GameRules.IntegerValue;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent.MissingMappings;
+import net.minecraftforge.event.RegistryEvent.MissingMappings.Mapping;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.CrashReportExtender;
@@ -72,8 +78,7 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -144,7 +149,7 @@ public class FHMain {
     	MinecraftForge.EVENT_BUS.addListener(this::serverStart);
     	MinecraftForge.EVENT_BUS.addListener(this::serverSave);
     	MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
-
+    	MinecraftForge.EVENT_BUS.addGenericListener(Fluid.class,this::missingMapping);
     	if(ModList.get().isLoaded("projecte")) {
     		MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
     		System.out.println("pe loaded");
@@ -159,7 +164,7 @@ public class FHMain {
         ClimateData.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
-        FHDimensions.register();
+
         ResearchCategories.init();
         FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING, FHContent.FHItems.hand_stove));
         FHResearch.researches.register(new Research("snow_boots", ResearchCategories.EXPLORATION, RankineItems.SNOWSHOES.get()));
@@ -175,7 +180,8 @@ public class FHMain {
         FHResearch.researches.register(new Research("generator_t3", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t2")));
         FHResearch.researches.register(new Research("generator_t4", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t3")));
         FHResearch.indexResearches();
-
+        //modify default value
+        GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS,IntegerValue.create(0));
     }
 
     private void enqueueIMC(final InterModEnqueueEvent event) {
@@ -191,5 +197,12 @@ public class FHMain {
     }
     private void processIMC(final InterModProcessEvent event) {
 
+    }
+    private void missingMapping(MissingMappings<Fluid> miss) {
+    	ResourceLocation hw=new ResourceLocation(MODID,"hot_water");
+    	for(Mapping<Fluid> i:miss.getAllMappings()) {
+    		if(i.key.equals(hw))
+    			i.remap(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("thermopolium","nail_soup")));
+    	}
     }
 }

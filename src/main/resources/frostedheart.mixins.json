@@ -39,6 +39,7 @@
     "minecraft.BeeHiveMixin",
     "minecraft.BigTreeMixin",
     "minecraft.BiomeMixin",
+    "minecraft.PlayerInventoryMixin",
     "minecraft.CampfireBlockMixin",
     "minecraft.CampfireTileEntityMixin",
     "minecraft.ChickenEntityMixin",
@@ -74,7 +75,8 @@
     "rankine.TapBarrelBlockMixin",
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
-    "snow.ModUtilMixin"
+    "snow.ModUtilMixin",
+    "diet.DietApiImplMixin"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 4.40097E-4,
+    "vitamin": 7.23154E-4
+  },
+  "item": "charcoal_pit:calamari"
+}

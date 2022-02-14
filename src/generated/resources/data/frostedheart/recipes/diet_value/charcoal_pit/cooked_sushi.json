@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.001173879,
+    "vegetables": 0.001173879,
+    "vitamin": 0.003928671,
+    "grains": 0.001173879
+  },
+  "item": "charcoal_pit:cooked_sushi"
+}

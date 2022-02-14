@@ -83,7 +83,7 @@ public class FHUtils {
 			cr.setReturnValue(false);
     }
     public static boolean canSmallTreeGenerate(World w,BlockPos p,Random r) {
-		return r.nextInt(3)<=2;
+		return r.nextInt(4)==0;
 			
     }
     public static boolean canBigTreeGenerate(World w,BlockPos p,Random r) {

@@ -18,7 +18,9 @@
 
 package com.teammoeg.frostedheart.data;
 
+import java.io.FileNotFoundException;
 import java.util.HashMap;
+import java.util.Scanner;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -31,35 +33,58 @@ import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 public class FHRecipeProvider extends RecipeProvider {
-    private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();
+	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();
 
-    public FHRecipeProvider(DataGenerator generatorIn) {
-        super(generatorIn);
-    }
+	public FHRecipeProvider(DataGenerator generatorIn) {
+		super(generatorIn);
+	}
 
-    @Override
-    protected void registerRecipes(@Nonnull Consumer<IFinishedRecipe> out) {
-       // recipesGenerator(out);
-    }
+	@Override
+	protected void registerRecipes(@Nonnull Consumer<IFinishedRecipe> out) {
+		try (Scanner sc = new Scanner(FMLPaths.GAMEDIR.get()
+				.resolve("../src/datagen/resources/data/frostedheart/data/food_values.csv").toFile(), "UTF-8")) {
+			if(sc.hasNextLine()) {
+				sc.nextLine();
+				while(sc.hasNextLine()) {
+					String line=sc.nextLine();
+					if(!line.isEmpty()) {
+						String[] parts=line.split(",");
+						ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
+						DietValueBuilder dvb=new DietValueBuilder(id,new ResourceLocation(parts[0]));
+						for(int i=0;i<6;i++) {
+							float f=Float.parseFloat(parts[i+2]);
+							if(f!=0)
+								dvb.addGroup(i,f);
+						}
+						out.accept(dvb);
+					}
+				}
+			}
+		}
+		// recipesGenerator(out);
+		catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
-    private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out) {
-        GeneratorRecipeBuilder.builder(IETags.slag, 1)
-                .addInput(ItemTags.COALS)
-                .setTime(1000)
-                .build(out, toRL("generator/slag"));
-    }
+	private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out) {
+		GeneratorRecipeBuilder.builder(IETags.slag, 1).addInput(ItemTags.COALS).setTime(1000).build(out,
+				toRL("generator/slag"));
+	}
 
-    private ResourceLocation toRL(String s) {
-        if (!s.contains("/"))
-            s = "crafting/" + s;
-        if (PATH_COUNT.containsKey(s)) {
-            int count = PATH_COUNT.get(s) + 1;
-            PATH_COUNT.put(s, count);
-            return new ResourceLocation(FHMain.MODID, s + count);
-        }
-        PATH_COUNT.put(s, 1);
-        return new ResourceLocation(FHMain.MODID, s);
-    }
+	private ResourceLocation toRL(String s) {
+		if (!s.contains("/"))
+			s = "crafting/" + s;
+		if (PATH_COUNT.containsKey(s)) {
+			int count = PATH_COUNT.get(s) + 1;
+			PATH_COUNT.put(s, count);
+			return new ResourceLocation(FHMain.MODID, s + count);
+		}
+		PATH_COUNT.put(s, 1);
+		return new ResourceLocation(FHMain.MODID, s);
+	}
 }

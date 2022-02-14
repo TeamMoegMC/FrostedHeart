@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.world;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.world.structure.ObservatoryPiece;
 import com.teammoeg.frostedheart.world.structure.ObservatoryStructure;
@@ -30,8 +31,8 @@ public class FHStructures {
         Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.OBSERVATORY.getRegistryName().toString(), FHStructures.OBSERVATORY);
 //        Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.VOLCANIC_VENT.getRegistryName().toString(), FHStructures.VOLCANIC_VENT);
 
-        HashMap<Structure<?>, StructureSeparationSettings> StructureSettingMap = new HashMap();
-        StructureSettingMap.put(OBSERVATORY,new StructureSeparationSettings(12,8,123456789));
+        HashMap<Structure<?>, StructureSeparationSettings> StructureSettingMap = new HashMap<>();
+        StructureSettingMap.put(OBSERVATORY,new StructureSeparationSettings(30,15,545465463));
 //        StructureSettingMap.put(VOLCANIC_VENT,new StructureSeparationSettings(12,8,123456));
 
 
@@ -39,7 +40,10 @@ public class FHStructures {
                 .putAll(DimensionStructuresSettings.field_236191_b_)
                 .putAll(StructureSettingMap)
                 .build();
-
+        Structure.field_236384_t_=ImmutableList.<Structure<?>>builder()
+                .addAll(Structure.field_236384_t_)
+                .add(FHStructures.OBSERVATORY.getStructure())
+                .build();
         WorldGenRegistries.NOISE_SETTINGS.forEach(settings -> {
             Map<Structure<?>, StructureSeparationSettings> structureMap = settings.getStructures().func_236195_a_();
             if(structureMap instanceof ImmutableMap){

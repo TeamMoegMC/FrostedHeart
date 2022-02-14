@@ -62,6 +62,8 @@ import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipeSerializer;
+import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
+import com.teammoeg.frostedheart.content.recipes.DietValueSerializer;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantle;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantleSerializer;
@@ -331,12 +333,14 @@ public class FHContent {
             CampfireDefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_campfire",CampfireDefrostRecipeSerializer::new);
             SmokingDefrostRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("defrost_smoking",SmokingDefrostRecipeSerializer::new);
             RecipeFueling.SERIALIZER=RECIPE_SERIALIZERS.register("fuel_stove",RecipeFuelingSerializer::new);
+            DietValueRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("diet_override",DietValueSerializer::new);
         }
 
         public static void registerRecipeTypes() {
             GeneratorRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":generator");
             GeneratorSteamRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":steam_generator");
             ChargerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":charger");
+            DietValueRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":diet_override");
         }
     }
 

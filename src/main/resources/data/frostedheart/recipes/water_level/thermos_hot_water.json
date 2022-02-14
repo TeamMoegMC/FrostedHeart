@@ -3,7 +3,7 @@
   "ingredient": {
     "item": "frostedheart:thermos"
   },
-  "fluid": "frostedheart:hot_water",
+  "fluid": "thermopolium:nail_soup",
   "waterLevel": 5,
   "waterSaturationLevel": 6
 }

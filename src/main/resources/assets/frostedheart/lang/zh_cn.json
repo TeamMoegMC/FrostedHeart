@@ -97,6 +97,7 @@
   "gui.frostedheart.research_time_left": "Time Remaining: %s Minutes",
   "gui.frostedheart.research_hierarchy": "Research Relationship",
   "gui.frostedheart.update_recommended": "建议更新《冬季救援》： ",
+
   "gui.frostedheart.save_updated": "已经自动更新您的存档，旧的配置备份在",
   "gui.frostedheart.save_update_needed": "自动更新未完成！请退出这个世界然后手动删除%s以完成更新！",
   "gui.jei.category.frostedheart.generator_fuel": "能量塔燃料",
@@ -197,5 +198,6 @@
   "tooltip.frostedheart.survive_armor_temp_mod": "保暖指数：",
   "tooltip.frostedheart.survive_block_temp_mod": "温度指数：",
   "tooltip.frostedheart.survive_range": "范围:",
-  "tooltip.frostedheart.survive_weight_mod": "沉重指数："
+  "tooltip.frostedheart.survive_weight_mod": "沉重指数：",
+  "biome.frostedheart.volcanic":"活跃地质区"
 }

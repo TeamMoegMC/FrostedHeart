@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
+import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
@@ -106,11 +107,15 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         CampfireDefrostRecipe.recipeList=recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass()==CampfireDefrostRecipe.class)
                 .map(e->(CampfireDefrostRecipe)e)
-                .collect(Collectors.<CampfireDefrostRecipe,ResourceLocation,CampfireDefrostRecipe>toMap(recipe -> recipe.getId(), recipe -> recipe));
+                .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
         SmokingDefrostRecipe.recipeList=recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass()==SmokingDefrostRecipe.class)
                 .map(e->(DefrostRecipe)e)
-                .collect(Collectors.<DefrostRecipe,ResourceLocation,DefrostRecipe>toMap(recipe -> recipe.getId(), recipe -> recipe));
+                .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
+        DietValueRecipe.recipeList=recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass()==DietValueRecipe.class)
+                .map(e->(DietValueRecipe)e)
+                .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {

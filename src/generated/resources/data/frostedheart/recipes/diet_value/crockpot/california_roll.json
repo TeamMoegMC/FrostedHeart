@@ -1,0 +1,9 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.003993348,
+    "vegetables": 0.003993348,
+    "vitamin": 0.006547785
+  },
+  "item": "crockpot:california_roll"
+}

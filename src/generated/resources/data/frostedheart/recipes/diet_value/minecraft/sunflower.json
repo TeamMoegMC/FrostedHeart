@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 4.40097E-4
+  },
+  "item": "minecraft:sunflower"
+}

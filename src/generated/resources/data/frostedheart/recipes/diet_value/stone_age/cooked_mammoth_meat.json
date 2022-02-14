@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.004742944,
+    "vitamin": 0.005238228
+  },
+  "item": "stone_age:cooked_mammoth_meat"
+}

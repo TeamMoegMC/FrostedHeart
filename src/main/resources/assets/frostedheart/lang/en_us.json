@@ -192,5 +192,6 @@
   "research.steam_cannon.name": "Steam Cannon",
   "research.steam_cannon.desc": "A decent long range weapon.",
   "research.aluminum_extraction.name": "Aluminum Extraction",
-  "research.aluminum_extraction.desc": "Make your bauxite useful with chemistry."
+  "research.aluminum_extraction.desc": "Make your bauxite useful with chemistry.",
+  "biome.frostedheart.volcanic":"Geology Active Area"
 }

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.002371472,
+    "plant_oil": 0.001944219
+  },
+  "item": "crockpot:potato_tornado"
+}

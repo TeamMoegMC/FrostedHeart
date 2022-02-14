@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.00148217,
+    "vegetables": 0.00148217
+  },
+  "item": "crockpot:salmon_sushi"
+}

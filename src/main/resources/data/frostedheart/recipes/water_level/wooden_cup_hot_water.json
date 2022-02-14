@@ -1,9 +1,0 @@
-{
-    "type": "watersource:water_level_fluid",
-    "ingredient": {
-        "item": "watersource:wooden_cup_drink"
-    },
-	"fluid": "frostedheart:hot_water",
-	"waterLevel": 4,
-	"waterSaturationLevel": 2
-}

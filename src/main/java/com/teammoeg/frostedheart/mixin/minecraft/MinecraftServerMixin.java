@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.GameRules.IntegerValue;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IServerWorldInfo;
 import org.spongepowered.asm.mixin.Mixin;

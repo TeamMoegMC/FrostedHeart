@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.001320292
+  },
+  "item": "crockpot:tomato"
+}

@@ -1,0 +1,7 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "vegetables": 0.00296434
+  },
+  "item": "crockpot:cooked_eggplant"
+}

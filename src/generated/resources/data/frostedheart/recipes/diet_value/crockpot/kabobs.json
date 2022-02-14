@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "proteins": 0.004150076,
+    "vitamin": 0.004583449
+  },
+  "item": "crockpot:kabobs"
+}

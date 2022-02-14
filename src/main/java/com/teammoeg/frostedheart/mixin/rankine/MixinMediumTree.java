@@ -5,6 +5,7 @@ import java.util.Random;
 import org.spongepowered.asm.mixin.Mixin;
 
 import com.cannolicatfish.rankine.world.trees.BlackWalnutTree;
+import com.cannolicatfish.rankine.world.trees.CoconutPalmTree;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.block.BlockState;
@@ -13,7 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 
-@Mixin({BlackWalnutTree.class})
+@Mixin({BlackWalnutTree.class,CoconutPalmTree.class})
 public abstract class MixinMediumTree extends Tree {
 	@Override
 	public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,

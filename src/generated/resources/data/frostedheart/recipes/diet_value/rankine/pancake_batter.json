@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 6.54778E-4,
+    "proteins": 2.96434E-4,
+    "vitamin": 6.54778E-4,
+    "grains": 2.96434E-4
+  },
+  "item": "rankine:pancake_batter"
+}
