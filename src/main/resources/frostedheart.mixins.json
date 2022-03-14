@@ -72,7 +72,6 @@
     "rankine.MixinDryMortarItemEntity",
     "rankine.MixinLargeTree",
     "rankine.MixinMediumTree",
-    "rankine.TapBarrelBlockMixin",
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin",
@@ -87,8 +86,7 @@
     "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
     "create.MixinOpenConfigButtonHandler",
-    "rankine.MixinDryMortarItem",
-    "rankine.MixinMortarItem"
+    "rankine.MixinDryMortarItem"
   ],
   "injectors": {
     "defaultRequire": 1

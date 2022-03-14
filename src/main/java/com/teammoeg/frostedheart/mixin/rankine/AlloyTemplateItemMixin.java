@@ -91,7 +91,7 @@ public class AlloyTemplateItemMixin extends Item {
     @Overwrite
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         if (AlloyTemplateItem.getTemplate(stack).size() != 0) {
-            tooltip.add(new StringTextComponent("Composition: " + AlloyTemplateItem.getOutputAlloyData(stack)).mergeStyle(TextFormatting.GRAY));
+            tooltip.add(new StringTextComponent("Composition: " + AlloyTemplateItem.getOutput(stack)).mergeStyle(TextFormatting.GRAY));
             tooltip.add(new StringTextComponent("Requires:").mergeStyle(TextFormatting.DARK_GREEN));
             String comp = AlloyTemplateItem.getTemplate(stack).get("StoredTemplate").getString();
             int count = 0;
@@ -122,7 +122,7 @@ public class AlloyTemplateItemMixin extends Item {
             }
             tooltip.add(new StringTextComponent(""));
             tooltip.add(new StringTextComponent("Made in:").mergeStyle(TextFormatting.DARK_GREEN));
-            int tier = AlloyTemplateItem.getTier(stack);
+            int tier = AlloyTemplateItem.getAlloyTier(stack);
             if ((tier & 1) != 0) {
                 tooltip.add(new StringTextComponent("Alloy Furnace").mergeStyle(TextFormatting.GRAY));
             }
