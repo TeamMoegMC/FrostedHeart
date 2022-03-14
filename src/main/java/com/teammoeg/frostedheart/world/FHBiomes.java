@@ -14,9 +14,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHBiomes {
     public static final DeferredRegister<Biome> BIOME_REGISTER = DeferredRegister.create(ForgeRegistries.BIOMES, FHMain.MODID);
 
-    public static RegistryObject<Biome> VOLCANIC = BIOME_REGISTER.register("volcanic", () -> new VolcanicBiome().build());
+	public static RegistryObject<Biome> VOLCANIC = BIOME_REGISTER.register("volcanic", () -> new VolcanicBiome().build());
 
-    private static RegistryKey<Biome> makeKey(Biome biome) {
+    public static RegistryObject<Biome> RELIC = BIOME_REGISTER.register("relic", () -> new VolcanicBiome().build());
+
+    public static RegistryKey<Biome> makeKey(Biome biome) {
         return RegistryKey.getOrCreateKey(Registry.BIOME_KEY, biome.getRegistryName());
     }
 
