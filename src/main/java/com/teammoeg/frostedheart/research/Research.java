@@ -16,7 +16,9 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -28,13 +30,12 @@ import net.minecraftforge.fml.network.PacketDistributor;
  *
  */
 public class Research extends FHRegisteredItem{
-    private String id;
-    private TranslationTextComponent name;
-    private TranslationTextComponent desc;
-    private Item icon;
-    private HashSet<Supplier<Research>> parents = new HashSet<>();
-    private HashSet<Supplier<Research>> children = new HashSet<>();
-    private HashSet<Supplier<AbstractClue>> clues=new HashSet<>();
+    private String id;//id of this research
+    private ItemStack icon;//icon for this research in term of item
+    private HashSet<Supplier<Research>> parents = new HashSet<>();//parent researches
+    private HashSet<Supplier<Research>> children = new HashSet<>();//child researches, this is set automatically, should not set manually.
+    private HashSet<Supplier<AbstractClue>> clues=new HashSet<>();//research clues
+    private List<Effect> effects=new ArrayList<>();//effects of this research
     private ResearchCategory category;
     public Set<AbstractClue> getClues() {
 		return clues.stream().map(e->e.get()).collect(Collectors.toSet());
@@ -49,7 +50,7 @@ public class Research extends FHRegisteredItem{
 
     @SafeVarargs
 	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
-        this(path, category, Items.GRASS_BLOCK, parents);
+        this(path, category,new ItemStack(Items.AIR), parents);
     }
 
     public List<IngredientWithSize> getRequiredItems() {
@@ -57,10 +58,12 @@ public class Research extends FHRegisteredItem{
 	}
     @SafeVarargs
 	public Research(String id, ResearchCategory category, Item icon, Supplier<Research>... parents) {
+        this(id,category,new ItemStack(icon),parents);
+    }
+    @SafeVarargs
+	public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
         this.id = id;
         this.parents.addAll(Arrays.asList(parents));
-        this.name = new TranslationTextComponent("research."+id+ ".name");
-        this.desc = new TranslationTextComponent("research."+id + ".desc");
         this.icon = icon;
         this.category = category;
         this.time = 20;
@@ -100,16 +103,16 @@ public class Research extends FHRegisteredItem{
         this.parents.addAll(Arrays.asList(parents));
     }
     
-    public Item getIcon() {
+    public ItemStack getIcon() {
         return icon;
     }
 
     public TranslationTextComponent getName() {
-        return name;
+        return new TranslationTextComponent("research."+id+ ".name");
     }
 
     public TranslationTextComponent getDesc() {
-        return desc;
+        return new TranslationTextComponent("research."+id + ".desc");
     }
 
     public ResearchCategory getCategory() {

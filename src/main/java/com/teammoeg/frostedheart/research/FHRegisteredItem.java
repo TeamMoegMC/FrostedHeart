@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.research;
-
+/**
+ * Our own registry.
+ * */
 public abstract class FHRegisteredItem {
 	private int id=0;
 	public int getRId() {

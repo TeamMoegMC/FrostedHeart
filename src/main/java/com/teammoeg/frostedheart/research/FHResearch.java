@@ -8,10 +8,13 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import net.minecraft.nbt.CompoundNBT;
-
+/**
+ * Main Research System.
+ * 
+ * */
 public class FHResearch {
-	public static ResearchRegistry researches=new ResearchRegistry();
-	public static ClueRegistry clues=new ClueRegistry();
+	public static FHRegistry<Research> researches=new FHRegistry<Research>();
+	public static FHRegistry<AbstractClue> clues=new FHRegistry<AbstractClue>();
 	private static LazyOptional<List<Research>> allResearches=LazyOptional.of(()->researches.all());
 	private static LazyOptional<List<AbstractClue>> allClues=LazyOptional.of(()->clues.all());
 	public static CompoundNBT save(CompoundNBT cnbt) {

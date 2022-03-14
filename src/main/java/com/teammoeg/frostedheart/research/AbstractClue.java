@@ -9,9 +9,11 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
-
+/**
+ * "Clue" for researches, contributes completion percentage for some researches.
+ * */
 public abstract class AbstractClue extends FHRegisteredItem{
-	float contribution;
+	float contribution;//percentage, range (0,1]
 	String ID;
 	ITextComponent name;
 	ITextComponent desc;
@@ -48,6 +50,10 @@ public abstract class AbstractClue extends FHRegisteredItem{
 	public boolean isCompleted() {
 		return TeamResearchData.INSTANCE.isClueTriggered(this);
 	}
+	/**
+	 * send progress packet to client
+	 * should not called manually
+	 * */
 	public void sendProgressPacket(Team team) {
     	FHClueProgressSyncPacket packet=new FHClueProgressSyncPacket(team.getId(),this);
     	for(ServerPlayerEntity spe:team.getOnlineMembers())

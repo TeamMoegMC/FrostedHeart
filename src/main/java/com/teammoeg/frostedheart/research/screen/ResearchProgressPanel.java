@@ -43,7 +43,7 @@ public class ResearchProgressPanel extends Panel {
         theme.drawString(matrixStack, GuiUtils.translateGui("research_time_left", (int) ( (reqTime - finTIme) / 20 / 60) ), x + 10, y + 30);
 
         // research icon
-        GuiHelper.drawItem(matrixStack, new ItemStack(researchScreen.getInProgressResearch().getIcon()), x + 10, y + 40, 2, 2, false, null);
+        GuiHelper.drawItem(matrixStack,researchScreen.getInProgressResearch().getIcon(), x + 10, y + 40, 2, 2, false, null);
         theme.drawString(matrixStack, researchScreen.getInProgressResearch().getName(), x + 50, y + 45);
         theme.drawString(matrixStack, researchScreen.getInProgressResearch().getDesc(), x + 50, y + 55, Color4I.GRAY, 0);
 

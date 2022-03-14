@@ -14,12 +14,12 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 
 /**
- * Class FHRegistry.
+ * Our own registry type to reduce network and storage cost.
  *
  * @author khjxiaogu
  * @param <T> the generic type of registry
  */
-public abstract class FHRegistry<T extends FHRegisteredItem> {
+public class FHRegistry<T extends FHRegisteredItem> {
 	private ArrayList<T> items=new ArrayList<>();//registered objects
 	private ArrayList<String> rnames=new ArrayList<>();//registry mappings
 	private Map<String,LazyOptional<T>> cache=new HashMap<>();//object cache
