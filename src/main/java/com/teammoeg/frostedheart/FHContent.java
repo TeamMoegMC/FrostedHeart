@@ -40,6 +40,7 @@ import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
+import com.teammoeg.frostedheart.content.decoration.AccessControlBlock;
 import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
 import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
@@ -101,7 +102,9 @@ import com.teammoeg.frostedheart.util.FHFoods;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.fluid.Fluid;
@@ -134,10 +137,12 @@ public class FHContent {
         public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
         public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
         public static Block rye_block = new RyeBlock("rye_block", -10, cropProps, FHBlockItem::new);
-        public static Block wolfberry_bush_block = new WolfBerryBushBlock("wolfberry_bush_block",-100,berryBushBlocks, 10);
+        public static Block wolfberry_bush_block = new WolfBerryBushBlock("wolfberry_bush_block", -100, berryBushBlocks, 10);
         public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
-        public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel,FHBlockItem::new );
-        public static Block relic_chest=new RelicChestBlock("relic_chest");
+        public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel, FHBlockItem::new);
+        public static Block relic_chest = new RelicChestBlock("relic_chest");
+        public static Block access_control = new AccessControlBlock("access_control", FHBlockItem::new);
+        public static Block gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK), FHBlockItem::new);
 
         public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
                 .create(Material.ROCK).sound(SoundType.WOOD)

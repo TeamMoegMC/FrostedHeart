@@ -73,8 +73,7 @@ public class RelicChestBlock extends FHBaseBlock {
             RelicChestTileEntity tile = (RelicChestTileEntity) worldIn.getTileEntity(pos);
             if (tile != null) {
                 NetworkHooks.openGui((ServerPlayerEntity) player, tile, tile.getPos());
-                if (!player.isSpectator())
-                    worldIn.playSound(null, pos, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 0.3F, 1.5F);
+                worldIn.playSound(null, pos, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 0.3F, 1.5F);
             }
         }
         return ActionResultType.SUCCESS;

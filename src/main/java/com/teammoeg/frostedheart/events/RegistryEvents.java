@@ -109,11 +109,12 @@ public class RegistryEvents {
     @SubscribeEvent
     public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
         event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"),
-        FHFeatures.SPACECRAFT.setRegistryName(FHMain.MODID,"spacecraft"));
+                FHFeatures.SPACECRAFT.setRegistryName(FHMain.MODID, "spacecraft"));
 
     }
+
     @SubscribeEvent
-    public static void onSRegistry(RegistryEvent.Register<Structure<?>> event) {
+    public static void onStructureRegistry(RegistryEvent.Register<Structure<?>> event) {
         event.getRegistry().registerAll(FHStructures.OBSERVATORY.setRegistryName(FHMain.MODID, "observatory"));
 
         FHStructureFeatures.registerStructureFeatures();
