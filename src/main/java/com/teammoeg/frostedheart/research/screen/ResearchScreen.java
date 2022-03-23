@@ -18,7 +18,7 @@ import net.minecraft.entity.player.PlayerEntity;
 public class ResearchScreen extends BaseScreen {
 
     public static final int PADDING = 2;
-    private PlayerEntity player;
+    PlayerEntity player;
     public ResearchCategoryPanel researchCategoryPanel;
     public ResearchListPanel researchListPanel;
     public ResearchHierarchyPanel researchHierarchyPanel;

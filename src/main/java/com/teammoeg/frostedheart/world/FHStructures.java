@@ -34,7 +34,7 @@ public class FHStructures {
         HashMap<Structure<?>, StructureSeparationSettings> StructureSettingMap = new HashMap<>();
         StructureSettingMap.put(OBSERVATORY,new StructureSeparationSettings(30,15,545465463));
 //        StructureSettingMap.put(VOLCANIC_VENT,new StructureSeparationSettings(12,8,123456));
-
+        
 
         DimensionStructuresSettings.field_236191_b_=ImmutableMap.<Structure<?>, StructureSeparationSettings>builder()
                 .putAll(DimensionStructuresSettings.field_236191_b_)
