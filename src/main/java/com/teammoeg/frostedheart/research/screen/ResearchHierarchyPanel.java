@@ -116,7 +116,8 @@ public class ResearchHierarchyPanel extends Panel {
         @Override
         public void onClicked(MouseButton mouseButton) {
             // todo: open research detail gui
-        	new ResearchDetailPanel(researchScreen.player,researchScreen.selectedResearch).openGuiLater();
+        	this.researchScreen.detailframe.r=research;
+        	this.researchScreen.refreshWidgets();
         }
 
         @Override

@@ -13,6 +13,7 @@ import com.teammoeg.frostedheart.research.ResearchLevel;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class ResearchScreen extends BaseScreen {
@@ -27,7 +28,7 @@ public class ResearchScreen extends BaseScreen {
     public ResearchLevel researchLevel;
     public Research selectedResearch;
     public Research inProgressResearch;
-
+    public ResearchDetailPanel detailframe;
     public ResearchScreen(PlayerEntity player, ResearchLevel level, Research progress) {
         this.player = player;
         this.researchLevel = level;
@@ -36,6 +37,7 @@ public class ResearchScreen extends BaseScreen {
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
         progressPanel = new ResearchProgressPanel(this);
         inProgressResearch = progress; // nullable
+        detailframe=new ResearchDetailPanel(this);
     }
 
     @Override
@@ -44,6 +46,7 @@ public class ResearchScreen extends BaseScreen {
         add(researchListPanel);
         add(researchHierarchyPanel);
         add(progressPanel);
+        add(detailframe);
     }
 
     @Override
@@ -55,6 +58,7 @@ public class ResearchScreen extends BaseScreen {
     	researchListPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING*5 + CAT_PANEL_HEIGHT + IN_PROGRESS_HEIGHT));
     	researchHierarchyPanel.setPosAndSize(PADDING + RESEARCH_LIST_WIDTH + PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, width - (PADDING*5 + RESEARCH_LIST_WIDTH), height - (PADDING*4 + CAT_PANEL_HEIGHT));
         progressPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, 80);
+        detailframe.setPosAndSize((super.width-200)/2,(super.height-100)/2,200,100);
         return true;
     }
 
@@ -87,4 +91,29 @@ public class ResearchScreen extends BaseScreen {
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.drawBackground(matrixStack, theme, x, y, w, h);
     }
+
+	/*@Override
+	public void closeGui() {
+		if(detailframe.r!=null)
+			detailframe.r=null;
+		else
+			super.closeGui();
+	}
+*/
+	@Override
+	public void onBack() {
+		if(detailframe.r!=null)
+			detailframe.r=null;
+		else super.onBack();
+	}
+
+
+	/*@Override
+	public boolean onClosedByKey(Key key) {
+		if(detailframe.r!=null) {
+			detailframe.r=null;
+			return false;
+		}
+		return super.onClosedByKey(key);
+	}*/
 }
