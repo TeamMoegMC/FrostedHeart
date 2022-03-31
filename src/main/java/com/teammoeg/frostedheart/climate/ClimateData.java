@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.climate;
 
-import javax.annotation.Nullable;
-
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -61,7 +59,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
         return cap == CAPABILITY ? capability.cast() : LazyOptional.empty();
     }
 
