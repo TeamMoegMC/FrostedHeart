@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.research.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,10 +44,6 @@ import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.PEEvents;
 import com.teammoeg.frostedheart.network.FHRemote;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchCategories;
-import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
@@ -166,20 +163,7 @@ public class FHMain {
         FHStructures.registerStructureGenerate();
 
         ResearchCategories.init();
-        FHResearch.researches.register(new Research("coal_hand_stove", ResearchCategories.LIVING, FHContent.FHItems.hand_stove));
-        FHResearch.researches.register(new Research("snow_boots", ResearchCategories.EXPLORATION, RankineItems.SNOWSHOES.get()));
-        FHResearch.researches.register(new Research("mechanics", ResearchCategories.ARS, AllItems.GOGGLES.get()));
-        FHResearch.researches.register(new Research("steam_properties", ResearchCategories.ARS, FHContent.FHItems.steam_bottle));
-        FHResearch.researches.register(new Research("steam_cannon", ResearchCategories.ARS, AllItems.POTATO_CANNON.get(),
-                FHResearch.getResearch("mechanics"), FHResearch.getResearch("steam_properties")));
-        FHResearch.researches.register(new Research("sulfuric_acid", ResearchCategories.PRODUCTION, RankineItems.SULFUR.get()));
-        FHResearch.researches.register(new Research("aluminum_extraction", ResearchCategories.PRODUCTION, RankineItems.ALUMINUM_INGOT.get(),
-                FHResearch.getResearch("sulfuric_acid")));
-        FHResearch.researches.register(new Research("generator_t1", ResearchCategories.RESCUE,  FHContent.FHItems.energy_core));
-        FHResearch.researches.register(new Research("generator_t2", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t1")));
-        FHResearch.researches.register(new Research("generator_t3", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t2")));
-        FHResearch.researches.register(new Research("generator_t4", ResearchCategories.RESCUE, FHResearch.getResearch("generator_t3")));
-        FHResearch.indexResearches();
+        Researches.init();
         //modify default value
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS,IntegerValue.create(0));
     }

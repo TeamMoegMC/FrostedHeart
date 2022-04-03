@@ -60,16 +60,20 @@ public class Research extends FHRegisteredItem {
         return effects;
     }
 
-    public void attachEffect(Effect effect) {
-        effects.add(effect);
+    public void attachEffect(Effect... effs) {
+        for (Effect effect : effs) {
+            effects.add(effect);
+        }
     }
 
     public List<IngredientWithSize> getRequiredItems() {
         return Collections.unmodifiableList(requiredItems);
     }
 
-    public void attachRequiredItem(IngredientWithSize ingredient) {
-        requiredItems.add(ingredient);
+    public void attachRequiredItem(IngredientWithSize... ingredients) {
+        for (IngredientWithSize ingredient : ingredients) {
+            requiredItems.add(ingredient);
+        }
     }
 
     @SafeVarargs
