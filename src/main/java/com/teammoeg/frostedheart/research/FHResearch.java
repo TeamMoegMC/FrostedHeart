@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import net.minecraft.nbt.CompoundNBT;

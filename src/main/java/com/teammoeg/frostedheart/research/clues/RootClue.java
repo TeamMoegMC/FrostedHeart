@@ -1,5 +1,6 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.clues;
 
+import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import net.minecraft.util.text.ITextComponent;
 
 public class RootClue extends AbstractClue {

@@ -13,12 +13,13 @@ import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.effects.Effect;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -27,92 +28,115 @@ import net.minecraftforge.fml.network.PacketDistributor;
 /**
  * Only Definition of research.
  * Part of Research Category {@link ResearchCategory}
- *
  */
-public class Research extends FHRegisteredItem{
+public class Research extends FHRegisteredItem {
     private String id;//id of this research
     private ItemStack icon;//icon for this research in term of item
+    private ResearchCategory category;
     private HashSet<Supplier<Research>> parents = new HashSet<>();//parent researches
     private HashSet<Supplier<Research>> children = new HashSet<>();//child researches, this is set automatically, should not set manually.
-    private HashSet<Supplier<AbstractClue>> clues=new HashSet<>();//research clues
-    private List<Effect> effects=new ArrayList<>();//effects of this research
-    private ResearchCategory category;
-    public Set<AbstractClue> getClues() {
-		return clues.stream().map(e->e.get()).collect(Collectors.toSet());
-	}
-    public void attachClue(Supplier<AbstractClue> cl) {
-		clues.add(cl);
-	}
-	private ArrayList<IngredientWithSize> requiredItems=new ArrayList<>();
 
-	private int points=2000;//research point
+    private HashSet<Supplier<AbstractClue>> clues = new HashSet<>();//research clues
+    private ArrayList<IngredientWithSize> requiredItems = new ArrayList<>();
+    private List<Effect> effects = new ArrayList<>();//effects of this research
+
+    private int points = 2000;//research point
     private int time;//time cost per research point commit.
 
     @SafeVarargs
-	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
-        this(path, category,new ItemStack(Items.AIR), parents);
+    public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
+        this(path, category, new ItemStack(Items.AIR), parents);
+    }
+
+    public Set<AbstractClue> getClues() {
+        return clues.stream().map(e -> e.get()).collect(Collectors.toSet());
+    }
+
+    public void attachClue(Supplier<AbstractClue> cl) {
+        clues.add(cl);
+    }
+
+    public List<Effect> getEffects() {
+        return effects;
+    }
+
+    public void attachEffect(Effect effect) {
+        effects.add(effect);
     }
 
     public List<IngredientWithSize> getRequiredItems() {
-		return Collections.unmodifiableList(requiredItems);
-	}
-    @SafeVarargs
-	public Research(String id, ResearchCategory category, Item icon, Supplier<Research>... parents) {
-        this(id,category,new ItemStack(icon),parents);
+        return Collections.unmodifiableList(requiredItems);
     }
+
+    public void attachRequiredItem(IngredientWithSize ingredient) {
+        requiredItems.add(ingredient);
+    }
+
     @SafeVarargs
-	public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
+    public Research(String id, ResearchCategory category, Item icon, Supplier<Research>... parents) {
+        this(id, category, new ItemStack(icon), parents);
+    }
+
+    @SafeVarargs
+    public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
         this.id = id;
         this.parents.addAll(Arrays.asList(parents));
         this.icon = icon;
         this.category = category;
         this.time = 20;
     }
+
     public int getTime() {
-		return time;
-	}
-	public String getId() {
+        return time;
+    }
+
+    public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
     }
-    public Supplier<Research> getSupplier(){
-		return FHResearch.getResearch(this.getLId());
-    	
+
+    public Supplier<Research> getSupplier() {
+        return FHResearch.getResearch(this.getLId());
+
     }
+
     public void doIndex() {
-    	Supplier<Research> objthis=getSupplier();
-    	for(Supplier<Research> r:this.parents) {
-    		r.get().populateChild(objthis);
-    	}
+        Supplier<Research> objthis = getSupplier();
+        for (Supplier<Research> r : this.parents) {
+            r.get().populateChild(objthis);
+        }
     }
+
     public void populateChild(Supplier<Research> child) {
-    	children.add(child);
+        children.add(child);
     }
+
     public Set<Research> getChildren() {
-        return children.stream().map(r->r.get()).collect(Collectors.toSet());
+        return children.stream().map(r -> r.get()).collect(Collectors.toSet());
     }
+
     public Set<Research> getParents() {
-        return parents.stream().map(r->r.get()).collect(Collectors.toSet());
+        return parents.stream().map(r -> r.get()).collect(Collectors.toSet());
     }
 
     public void setParents(Supplier<Research>... parents) {
         this.parents.clear();
         this.parents.addAll(Arrays.asList(parents));
     }
-    
+
     public ItemStack getIcon() {
         return icon;
     }
 
     public TranslationTextComponent getName() {
-        return new TranslationTextComponent("research."+id+ ".name");
+        return new TranslationTextComponent("research." + id + ".name");
     }
 
     public TranslationTextComponent getDesc() {
-        return new TranslationTextComponent("research."+id + ".desc");
+        return new TranslationTextComponent("research." + id + ".desc");
     }
 
     public ResearchCategory getCategory() {
@@ -122,40 +146,46 @@ public class Research extends FHRegisteredItem{
     public int getRequiredPoints() {
         return points;
     }
+
     @OnlyIn(Dist.CLIENT)
     public int getCurrentPoints() {
         return getData().getTotalCommitted();
     }
+
     @OnlyIn(Dist.CLIENT)
     public float getProgressFraction() {
         return getData().getProgress();
     }
 
     public ResearchData getData(Team team) {
-    	return ResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
+        return ResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
     }
+
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
-    	return TeamResearchData.INSTANCE.getData(this);
+        return TeamResearchData.INSTANCE.getData(this);
     }
+
     public void sendProgressPacket(Team team) {
-    	FHResearchProgressSyncPacket packet=new FHResearchProgressSyncPacket(team.getId(),this);
-    	for(ServerPlayerEntity spe:team.getOnlineMembers())
-    		PacketHandler.send(PacketDistributor.PLAYER.with(()->spe),packet);
+        FHResearchProgressSyncPacket packet = new FHResearchProgressSyncPacket(team.getId(), this);
+        for (ServerPlayerEntity spe : team.getOnlineMembers())
+            PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
     public String toString() {
         return "Research[" + id + "]";
     }
 
-	@Override
-	public String getLId() {
-		return id.toString();
-	}
-	public boolean isCompleted(Team t) {
+    @Override
+    public String getLId() {
+        return id.toString();
+    }
+
+    public boolean isCompleted(Team t) {
         return getData(t).isCompleted();
     }
-	public boolean isUnlocked(Team t) {
+
+    public boolean isUnlocked(Team t) {
         for (Research parent : this.getParents()) {
             if (!parent.getData(t).isCompleted()) {
                 return false;
@@ -163,12 +193,14 @@ public class Research extends FHRegisteredItem{
         }
         return true;
     }
-	@OnlyIn(Dist.CLIENT)
-	public boolean isCompleted() {
+
+    @OnlyIn(Dist.CLIENT)
+    public boolean isCompleted() {
         return getData().isCompleted();
     }
-	@OnlyIn(Dist.CLIENT)
-	public boolean isUnlocked() {
+
+    @OnlyIn(Dist.CLIENT)
+    public boolean isUnlocked() {
         for (Research parent : this.getParents()) {
             if (!parent.getData().isCompleted()) {
                 return false;

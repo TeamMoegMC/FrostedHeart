@@ -1,7 +1,8 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.clues;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.research.TeamResearchData;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.util.text.ITextComponent;
 

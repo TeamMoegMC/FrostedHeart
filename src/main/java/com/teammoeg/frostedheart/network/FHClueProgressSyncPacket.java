@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.network;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.AbstractClue;
+import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;

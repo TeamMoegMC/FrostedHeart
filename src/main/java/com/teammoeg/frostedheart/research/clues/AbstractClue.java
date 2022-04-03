@@ -1,8 +1,11 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.clues;
 
 import com.teammoeg.frostedheart.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
+import com.teammoeg.frostedheart.research.FHRegisteredItem;
+import com.teammoeg.frostedheart.research.ResearchDataManager;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ITextComponent;
@@ -12,7 +15,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 /**
  * "Clue" for researches, contributes completion percentage for some researches.
  * */
-public abstract class AbstractClue extends FHRegisteredItem{
+public abstract class AbstractClue extends FHRegisteredItem {
 	float contribution;//percentage, range (0,1]
 	String ID;
 	ITextComponent name;

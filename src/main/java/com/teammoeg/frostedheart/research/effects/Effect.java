@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.effects;
 
 import java.util.List;
 
@@ -15,4 +15,16 @@ public abstract class Effect {
 	public abstract void init();
 	public abstract void grant();
 	public abstract void revoke();
+
+	public ItemStack getIcon() {
+		return icon;
+	}
+
+	public ITextComponent getName() {
+		return name;
+	}
+
+	public List<ITextComponent> getTooltip() {
+		return tooltip;
+	}
 }
