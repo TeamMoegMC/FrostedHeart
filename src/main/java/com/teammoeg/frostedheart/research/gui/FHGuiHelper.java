@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research.screen;
+package com.teammoeg.frostedheart.research.gui;
 
 import java.util.OptionalDouble;
 

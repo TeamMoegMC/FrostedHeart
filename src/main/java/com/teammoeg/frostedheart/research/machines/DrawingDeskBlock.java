@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchLevel;
-import com.teammoeg.frostedheart.research.screen.ResearchScreen;
+import com.teammoeg.frostedheart.research.gui.ResearchScreen;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

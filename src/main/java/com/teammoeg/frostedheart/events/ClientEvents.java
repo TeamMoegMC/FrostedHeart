@@ -39,7 +39,7 @@ import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRender
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
-import com.teammoeg.frostedheart.research.screen.FHGuiHelper;
+import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.util.FHVersion;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;

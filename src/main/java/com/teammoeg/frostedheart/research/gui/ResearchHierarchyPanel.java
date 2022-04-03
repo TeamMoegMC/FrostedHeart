@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research.screen;
+package com.teammoeg.frostedheart.research.gui;
 
 import java.util.Set;
 
@@ -116,7 +116,7 @@ public class ResearchHierarchyPanel extends Panel {
         @Override
         public void onClicked(MouseButton mouseButton) {
             // todo: open research detail gui
-        	this.researchScreen.detailframe.research =research;
+        	this.researchScreen.detailframe.open(research);
         	this.researchScreen.refreshWidgets();
         }
 

@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research.screen;
+package com.teammoeg.frostedheart.research.gui;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;

@@ -1,6 +1,6 @@
-package com.teammoeg.frostedheart.research.screen;
+package com.teammoeg.frostedheart.research.gui;
 
-import static com.teammoeg.frostedheart.research.screen.ResearchCategoryPanel.CAT_PANEL_HEIGHT;
+import static com.teammoeg.frostedheart.research.gui.ResearchCategoryPanel.CAT_PANEL_HEIGHT;
 
 import javax.annotation.Nullable;
 

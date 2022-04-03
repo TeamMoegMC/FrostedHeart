@@ -1,6 +1,6 @@
-package com.teammoeg.frostedheart.research.screen;
+package com.teammoeg.frostedheart.research.gui;
 
-import static com.teammoeg.frostedheart.research.screen.ResearchScreen.PADDING;
+import static com.teammoeg.frostedheart.research.gui.ResearchScreen.PADDING;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.ResearchCategories;

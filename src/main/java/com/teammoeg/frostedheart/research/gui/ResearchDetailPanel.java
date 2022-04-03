@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research.screen;
+package com.teammoeg.frostedheart.research.gui;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -31,6 +31,7 @@ public class ResearchDetailPanel extends Panel {
 
 	public ResearchDetailPanel(Panel panel) {
 		super(panel);
+		//setPosAndSize(-1, -1, 0, 0);
 		this.setOnlyInteractWithWidgetsInside(true);
 		this.setOnlyRenderWidgetsInside(true);
 		descPanel = new TextField(this);
@@ -40,7 +41,8 @@ public class ResearchDetailPanel extends Panel {
 		closeButton = new Button(this, new StringTextComponent("X"), Icon.EMPTY) {
 			@Override
 			public void onClicked(MouseButton mouseButton) {
-				closeGui();
+				research=null;
+				
 			}
 		};
 		commitItems = new Button(this, new StringTextComponent("Commit Items"), Icon.EMPTY) {
@@ -87,7 +89,10 @@ public class ResearchDetailPanel extends Panel {
 		add(closeButton);
 		add(commitItems);
 	}
-
+	@Override
+	public boolean mousePressed(MouseButton button) {
+		return super.mousePressed(button) || isMouseOver();
+	}
 	@Override
 	public void alignWidgets() {
 	}
@@ -101,7 +106,11 @@ public class ResearchDetailPanel extends Panel {
 		theme.drawString(matrixStack, research.getName(), x+PADDING, y+PADDING);
 		ci.draw(matrixStack, x+PADDING, y+PADDING+10+PADDING, 32,32);
 	}
-
+	public void open(Research r) {
+		this.research=r;
+		this.refreshWidgets();
+		//this.openGui();
+	}
 	@Override
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
@@ -140,6 +149,7 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+			super.draw(matrixStack,theme,x,y,w,h);
 			theme.drawString(matrixStack, "Clues", x, y);
 //			int cnt = 0;
 //			for (AbstractClue clue : detailPanel.research.getClues()) {
@@ -179,6 +189,7 @@ public class ResearchDetailPanel extends Panel {
 					button.setPosAndSize(offset*16, PADDING*2, 16, 16);
 					button.setIcon(icon);
 					button.setTitle(ingredient.getMatchingStacks()[0].getTextComponent());
+					
 					add(button);
 					offset++;
 				}
@@ -195,6 +206,7 @@ public class ResearchDetailPanel extends Panel {
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			// research requirements
+			super.draw(matrixStack,theme,x,y,w,h);
 			theme.drawString(matrixStack, "Required Items", x, y);
 //			int cnt = 0;
 //			for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
@@ -249,6 +261,7 @@ public class ResearchDetailPanel extends Panel {
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			// research effects
+			super.draw(matrixStack,theme,x,y,w,h);
 			theme.drawString(matrixStack, "Effects", x, y);
 //			int cnt = 0;
 //			for (Effect effect : detailPanel.research.getEffects()) {
