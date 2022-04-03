@@ -10,13 +10,14 @@ import java.util.ArrayList;
 public class EffectStats extends Effect {
 
     public EffectStats() {
+        name = GuiUtils.translateGui("effect.use");
+        tooltip = new ArrayList<>();
+        tooltip.add(GuiUtils.translateTooltip("effect.use.1"));
     }
 
     @Override
     public void init() {
-        name = GuiUtils.translateGui("effect.use");
-        tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.translateTooltip("effect.use.1"));
+
     }
 
     @Override

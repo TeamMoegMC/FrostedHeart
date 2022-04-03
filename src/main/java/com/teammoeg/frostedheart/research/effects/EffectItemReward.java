@@ -19,10 +19,6 @@ public class EffectItemReward extends Effect {
         for (ItemStack stack : stacks) {
             rewards.add(stack);
         }
-    }
-
-    @Override
-    public void init() {
         name = GuiUtils.translateGui("effect.itemreward");
         if (rewards.size() != 0) {
             icon = rewards.get(0);
@@ -31,6 +27,11 @@ public class EffectItemReward extends Effect {
         }
         tooltip = new ArrayList<>();
         tooltip.add(GuiUtils.translateTooltip("effect.itemreward.1"));
+    }
+
+    @Override
+    public void init() {
+
     }
 
     public List<ItemStack> getRewards() {

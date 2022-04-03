@@ -17,14 +17,15 @@ public class EffectBuilding extends Effect {
 
     public EffectBuilding(IETemplateMultiblock s) {
         multiblock = s;
-    }
-
-    @Override
-    public void init() {
         name = GuiUtils.translateGui("effect.building");
         icon = new ItemStack(FHContent.FHItems.copper_core_spade);
         tooltip = new ArrayList<>();
         tooltip.add(GuiUtils.translateTooltip(multiblock.getUniqueName().toString()));
+    }
+
+    @Override
+    public void init() {
+
     }
 
     @Override

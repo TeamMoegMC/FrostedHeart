@@ -29,7 +29,14 @@ public class Researches {
 
         GEN_T1.attachRequiredItem(
                 IngredientWithSize.of(new ItemStack(FHContent.FHItems.energy_core)),
-                IngredientWithSize.of(new ItemStack(FHContent.FHBlocks.generator_brick.asItem())));
+                IngredientWithSize.of(new ItemStack(FHContent.FHBlocks.generator_brick.asItem(), 2)),
+                IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_core_spade)),
+                IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_geologists_hammer)),
+                IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_pro_pick)),
+                IngredientWithSize.of(new ItemStack(FHContent.FHItems.iron_core_spade)),
+                IngredientWithSize.of(new ItemStack(FHContent.FHItems.iron_geologists_hammer)),
+                IngredientWithSize.of(new ItemStack(FHContent.FHItems.iron_pro_pick))
+                );
         GEN_T1.attachEffect(
                 new EffectItemReward(new ItemStack(FHContent.FHItems.energy_core)),
                 new EffectBuilding(FHContent.FHMultiblocks.GENERATOR)

@@ -45,7 +45,7 @@ public class ResearchProgressPanel extends Panel {
         // research icon
         GuiHelper.drawItem(matrixStack,researchScreen.getInProgressResearch().getIcon(), x + 10, y + 40, 2, 2, false, null);
         theme.drawString(matrixStack, researchScreen.getInProgressResearch().getName(), x + 50, y + 45);
-        theme.drawString(matrixStack, researchScreen.getInProgressResearch().getDesc(), x + 50, y + 55, Color4I.GRAY, 0);
+        // theme.drawString(matrixStack, researchScreen.getInProgressResearch().getDesc(), x + 50, y + 55, Color4I.GRAY, 0);
 
     }
 

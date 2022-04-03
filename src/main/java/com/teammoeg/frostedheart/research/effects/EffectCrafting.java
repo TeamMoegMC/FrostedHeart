@@ -7,13 +7,14 @@ import java.util.ArrayList;
 public class EffectCrafting extends Effect {
 
     public EffectCrafting() {
+        name = GuiUtils.translateGui("effect.crafting");
+        tooltip = new ArrayList<>();
+        tooltip.add(GuiUtils.translateTooltip("effect.crafting.1"));
     }
 
     @Override
     public void init() {
-        name = GuiUtils.translateGui("effect.crafting");
-        tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.translateTooltip("effect.crafting.1"));
+
     }
 
     @Override

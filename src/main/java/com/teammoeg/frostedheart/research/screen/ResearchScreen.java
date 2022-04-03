@@ -13,7 +13,6 @@ import com.teammoeg.frostedheart.research.ResearchLevel;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class ResearchScreen extends BaseScreen {
@@ -58,7 +57,7 @@ public class ResearchScreen extends BaseScreen {
     	researchListPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING*5 + CAT_PANEL_HEIGHT + IN_PROGRESS_HEIGHT));
     	researchHierarchyPanel.setPosAndSize(PADDING + RESEARCH_LIST_WIDTH + PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, width - (PADDING*5 + RESEARCH_LIST_WIDTH), height - (PADDING*4 + CAT_PANEL_HEIGHT));
         progressPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, 80);
-        detailframe.setPosAndSize((super.width-200)/2,(super.height-100)/2,200,100);
+        detailframe.setPosAndSize((width-300)/2,(height-150)/2,300,150);
         return true;
     }
 
@@ -102,8 +101,8 @@ public class ResearchScreen extends BaseScreen {
 */
 	@Override
 	public void onBack() {
-		if(detailframe.r!=null)
-			detailframe.r=null;
+		if(detailframe.research !=null)
+			detailframe.research =null;
 		else super.onBack();
 	}
 

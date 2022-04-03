@@ -69,10 +69,10 @@ public class ResearchListPanel extends Panel {
             listPanel.researchScreen.selectResearch(research);
         }
 
-        @Override
-        public void addMouseOverText(TooltipList list) {
-            list.add(research.getDesc());
-        }
+//        @Override
+//        public void addMouseOverText(TooltipList list) {
+//            list.add(research.getDesc());
+//        }
 
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {

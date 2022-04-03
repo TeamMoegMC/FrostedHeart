@@ -2,37 +2,90 @@ package com.teammoeg.frostedheart.research.screen;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.Research;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 public class ResearchDetailPanel extends Panel {
-	Research r;
+	Research research;
 	Icon ci;
 	CluesPanel cluesPanel;
 	EffectsPanel effectsPanel;
 	ReqPanel reqPanel;
+	TextField descPanel;
+	Button closeButton;
+	Button commitItems;
+
+	public PanelScrollBar scrollEffects;
+	public PanelScrollBar scrollClues;
+
+	public static final int PADDING = 5;
 
 	public ResearchDetailPanel(Panel panel) {
 		super(panel);
 		this.setOnlyInteractWithWidgetsInside(true);
 		this.setOnlyRenderWidgetsInside(true);
+		descPanel = new TextField(this);
 		cluesPanel = new CluesPanel(this);
 		effectsPanel = new EffectsPanel(this);
+		reqPanel = new ReqPanel(this);
+		closeButton = new Button(this, new StringTextComponent("X"), Icon.EMPTY) {
+			@Override
+			public void onClicked(MouseButton mouseButton) {
+				closeGui();
+			}
+		};
+		commitItems = new Button(this, new StringTextComponent("Commit Items"), Icon.EMPTY) {
+			@Override
+			public void onClicked(MouseButton mouseButton) {
+				// Lookup player inventory and check whether it has the required items
+				// if does
+					// consume them
+				// else
+					// through error message
+			}
+		};
 	}
 
 	@Override
 	public void addWidgets() {
-		if(r==null)return;
-		ci=ItemIcon.getItemIcon(r.getIcon());
+		if(research ==null)return;
+		ci=ItemIcon.getItemIcon(research.getIcon());
+
+		add(descPanel);
+		descPanel.setMaxWidth(width/2-PADDING*2);
+		descPanel.setPosAndSize(PADDING, height/2+PADDING, width/2-PADDING*2, height/2-PADDING*2);
+		descPanel.setText(research.getDesc());
+
 		add(cluesPanel);
+		cluesPanel.setPosAndSize(width/2+PADDING, PADDING, width/2-PADDING*2, height/3-PADDING*2);
+
 		add(effectsPanel);
+		effectsPanel.setPosAndSize(width/2+PADDING, height/3+PADDING, width/2-PADDING*2, height/3-PADDING*2);
+
 		add(reqPanel);
+		reqPanel.setPosAndSize(width/2+PADDING, height/3*2+PADDING, width/2-PADDING*2, height/3-PADDING*2);
+
+		scrollEffects = new PanelScrollBar(this, effectsPanel);
+		scrollEffects.setPosAndSize(width-PADDING-PADDING*2, height/3+PADDING, PADDING*2, height/3-PADDING*2);
+		add(scrollEffects);
+
+		scrollClues = new PanelScrollBar(this, cluesPanel);
+		scrollClues.setPosAndSize(width-PADDING-PADDING*2, PADDING, PADDING*2, height/3-PADDING*2);
+		add(scrollClues);
+
+		closeButton.setPosAndSize(width-PADDING*2, 0, PADDING*2, PADDING*2);
+		commitItems.setPosAndSize(PADDING+32+PADDING, PADDING+10+PADDING, 20, 10);
+		add(closeButton);
+		add(commitItems);
 	}
 
 	@Override
@@ -41,29 +94,12 @@ public class ResearchDetailPanel extends Panel {
 
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		if(r==null)return;
+		if(research ==null)return;
 		super.draw(matrixStack,theme, x, y, w, h);
 
 		// research info
-		theme.drawString(matrixStack,r.getName(), x+3, y+3);
-		ci.draw(matrixStack, x+13, y+13, 32,32);
-		theme.drawString(matrixStack, r.getDesc(), x+50, y+3);
-
-//		// research effects
-//		theme.drawString(matrixStack, "Effects", x+3, y+50);
-//		int cnt = 0;
-//		for (Effect effect : r.getEffects()) {
-//			theme.drawString(matrixStack, effect.getName(), x + 3, y + 60 + cnt * 10);
-//			cnt++;
-//		}
-//
-//		// research requirements
-//		theme.drawString(matrixStack, "Required Items", x+50, y+50);
-//		cnt = 0;
-//		for (IngredientWithSize ingredient : r.getRequiredItems()) {
-//			theme.drawString(matrixStack, ingredient.getMatchingStacks(), x + 3, y + 60 + cnt * 10);
-//			cnt++;
-//		}
+		theme.drawString(matrixStack, research.getName(), x+PADDING, y+PADDING);
+		ci.draw(matrixStack, x+PADDING, y+PADDING+10+PADDING, 32,32);
 	}
 
 	@Override
@@ -82,7 +118,19 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void addWidgets() {
+			int offset = 0;
+			for (AbstractClue clue : detailPanel.research.getClues()) {
+				TextField textField = new TextField(this);
+				textField.setMaxWidth(width);
+				textField.setPosAndSize(0, offset*10, width, 10);
 
+				textField.setText(clue.getName());
+				TooltipList tooltipList = new TooltipList();
+				tooltipList.add(clue.getDescription());
+				textField.addMouseOverText(tooltipList);
+				add(textField);
+				offset++;
+			}
 		}
 
 		@Override
@@ -92,7 +140,12 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-
+			theme.drawString(matrixStack, "Clues", x, y);
+//			int cnt = 0;
+//			for (AbstractClue clue : detailPanel.research.getClues()) {
+//				theme.drawString(matrixStack, clue.getName(), x + PADDING, y + PADDING + cnt * 10);
+//				cnt++;
+//			}
 		}
 
 		@Override
@@ -112,7 +165,26 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void addWidgets() {
+			int offset = 0;
 
+			for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
+				if (ingredient.getMatchingStacks().length != 0) {
+					Icon icon = ItemIcon.getItemIcon(ingredient.getMatchingStacks()[0]);
+					Button button = new Button(this) {
+						@Override
+						public void onClicked(MouseButton mouseButton) {
+
+						}
+					};
+					button.setPosAndSize(offset*16, PADDING*2, 16, 16);
+					button.setIcon(icon);
+					button.setTitle(ingredient.getMatchingStacks()[0].getTextComponent());
+					add(button);
+					offset++;
+				}
+			}
+
+			this.setHeight(offset*16);
 		}
 
 		@Override
@@ -122,7 +194,17 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-
+			// research requirements
+			theme.drawString(matrixStack, "Required Items", x, y);
+//			int cnt = 0;
+//			for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
+//				if (ingredient.getMatchingStacks().length != 0) {
+//					Icon icon = ItemIcon.getItemIcon(ingredient.getMatchingStacks()[0]);
+//					icon.draw(matrixStack, x, y+PADDING*2 + cnt * 16, 16, 16);
+//					theme.drawString(matrixStack, ingredient.getMatchingStacks()[0].getTextComponent(), x + 16 + PADDING, y + PADDING*2 + cnt * 16);
+//					cnt++;
+//				}
+//			}
 		}
 
 		@Override
@@ -142,7 +224,21 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void addWidgets() {
+			int offset = 0;
+			for (Effect effect : detailPanel.research.getEffects()) {
+				TextField textField = new TextField(this);
+				textField.setMaxWidth(width);
+				textField.setPosAndSize(0, offset*10, width, 10);
 
+				textField.setText(effect.getName());
+				TooltipList tooltipList = new TooltipList();
+				for (ITextComponent text : effect.getTooltip()) {
+					tooltipList.add(text);
+				}
+				textField.addMouseOverText(tooltipList);
+				add(textField);
+				offset++;
+			}
 		}
 
 		@Override
@@ -152,7 +248,13 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-
+			// research effects
+			theme.drawString(matrixStack, "Effects", x, y);
+//			int cnt = 0;
+//			for (Effect effect : detailPanel.research.getEffects()) {
+//				theme.drawString(matrixStack, effect.getName(), x + PADDING, y + 60 + cnt * 10);
+//				cnt++;
+//			}
 		}
 
 		@Override
