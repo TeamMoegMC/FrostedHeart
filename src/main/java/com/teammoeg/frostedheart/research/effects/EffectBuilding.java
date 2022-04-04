@@ -1,10 +1,14 @@
 package com.teammoeg.frostedheart.research.effects;
 
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 
 import java.util.ArrayList;
 
@@ -22,7 +26,7 @@ public class EffectBuilding extends Effect {
         tooltip = new ArrayList<>();
         tooltip.add(GuiUtils.translateTooltip(multiblock.getUniqueName().toString()));
     }
-
+    public EffectBuilding(JsonObject jo) {}
     @Override
     public void init() {
 
@@ -37,4 +41,13 @@ public class EffectBuilding extends Effect {
     public void revoke() {
 
     }
+
+	@Override
+	public JsonElement serialize() {
+		return null;
+	}
+
+	@Override
+	public void write(PacketBuffer buffer) {
+	}
 }

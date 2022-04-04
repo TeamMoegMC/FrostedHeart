@@ -2,13 +2,15 @@ package com.teammoeg.frostedheart.research.effects;
 
 import java.util.List;
 
+import com.teammoeg.frostedheart.util.Writeable;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
 /**
  * "Effect" of an research: how would it becomes when a research is completed ?
  * 
  * */
-public abstract class Effect {
+public abstract class Effect implements Writeable{
 	ITextComponent name;
 	List<ITextComponent> tooltip;
 	ItemStack icon;

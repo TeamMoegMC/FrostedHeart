@@ -9,17 +9,22 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.util.Writeable;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -29,7 +34,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * Only Definition of research.
  * Part of Research Category {@link ResearchCategory}
  */
-public class Research extends FHRegisteredItem {
+public class Research extends FHRegisteredItem implements Writeable{
     private String id;//id of this research
     private ItemStack icon;//icon for this research in term of item
     private ResearchCategory category;
@@ -47,7 +52,9 @@ public class Research extends FHRegisteredItem {
     public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
         this(path, category, new ItemStack(Items.AIR), parents);
     }
-
+    public Research(JsonObject jo) {
+    	
+    }
     public Set<AbstractClue> getClues() {
         return clues.stream().map(e -> e.get()).collect(Collectors.toSet());
     }
@@ -212,4 +219,13 @@ public class Research extends FHRegisteredItem {
         }
         return true;
     }
+
+	@Override
+	public JsonElement serialize() {
+		return null;
+	}
+
+	@Override
+	public void write(PacketBuffer buffer) {
+	}
 }

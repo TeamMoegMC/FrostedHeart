@@ -1,6 +1,10 @@
 package com.teammoeg.frostedheart.research.effects;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+
+import net.minecraft.network.PacketBuffer;
 
 import java.util.ArrayList;
 
@@ -14,7 +18,7 @@ public class EffectStats extends Effect {
         tooltip = new ArrayList<>();
         tooltip.add(GuiUtils.translateTooltip("effect.use.1"));
     }
-
+    public EffectStats(JsonObject jo) {}
     @Override
     public void init() {
 
@@ -29,4 +33,13 @@ public class EffectStats extends Effect {
     public void revoke() {
 
     }
+
+	@Override
+	public JsonElement serialize() {
+		return null;
+	}
+
+	@Override
+	public void write(PacketBuffer buffer) {
+	}
 }
