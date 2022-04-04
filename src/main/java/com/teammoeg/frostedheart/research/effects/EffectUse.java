@@ -19,6 +19,7 @@ public class EffectUse extends Effect {
     List<Block> blocksToUse;
 
     public EffectUse(Block... blocks) {
+    	super(null,null,null);
         name = GuiUtils.translateGui("effect.use");
         blocksToUse = new ArrayList<>();
         for (Block b : blocks) {
@@ -29,7 +30,9 @@ public class EffectUse extends Effect {
     public List<Block> getBlocksToUse() {
         return blocksToUse;
     }
-    public EffectUse(JsonObject jo) {}
+    public EffectUse(JsonObject jo) {
+    	super(jo);
+    }
     @Override
     public void init() {
 

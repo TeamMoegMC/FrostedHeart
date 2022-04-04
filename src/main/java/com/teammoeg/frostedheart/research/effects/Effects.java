@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -15,6 +16,9 @@ public class Effects {
 	public static void register(ResourceLocation id,Function<JsonObject,Effect> j,Function<PacketBuffer,Effect> p) {
 		fromJson.put(id,j);
 		fromPacket.put(id,p);
+	}
+	static {
+		register(new ResourceLocation(FHMain.MODID,"form_structure"),EffectBuilding::new,EffectBuilding::new);
 	}
 	private Effects() {
 	}

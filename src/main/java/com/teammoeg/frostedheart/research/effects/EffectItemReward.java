@@ -19,6 +19,7 @@ public class EffectItemReward extends Effect {
     List<ItemStack> rewards;
 
     public EffectItemReward(ItemStack... stacks) {
+    	super(null,null,null);
         rewards = new ArrayList<>();
         for (ItemStack stack : stacks) {
             rewards.add(stack);
@@ -32,7 +33,9 @@ public class EffectItemReward extends Effect {
         tooltip = new ArrayList<>();
         tooltip.add(GuiUtils.translateTooltip("effect.item_reward.1"));
     }
-    public EffectItemReward(JsonObject jo) {}
+    public EffectItemReward(JsonObject jo) {
+    	super(jo);
+    }
     @Override
     public void init() {
 

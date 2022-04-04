@@ -24,7 +24,8 @@ public class ResearchData {
     int committed;//points committed
     final TeamResearchData parent;
     ArrayList<ItemStack> committedItems = new ArrayList<>();//items comitted
-
+    UnlockList unlockedrecipes;
+    
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
         this.parent = parent;

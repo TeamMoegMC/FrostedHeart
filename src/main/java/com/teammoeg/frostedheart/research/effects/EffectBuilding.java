@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.research.effects;
 
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -23,14 +22,18 @@ public class EffectBuilding extends Effect {
 
 
     public EffectBuilding(IETemplateMultiblock s, Block b) {
+    	super(GuiUtils.translateGui("effect.building"),new ArrayList<>(),new ItemStack(FHContent.FHItems.copper_core_spade));
         multiblock = s;
         block = b;
-        name = GuiUtils.translateGui("effect.building");
-        icon = new ItemStack(FHContent.FHItems.copper_core_spade);
-        tooltip = new ArrayList<>();
+        
         tooltip.add(GuiUtils.translateTooltip(multiblock.getUniqueName().toString()));
     }
-    public EffectBuilding(JsonObject jo) {}
+    public EffectBuilding(JsonObject jo) {
+    	super(jo);
+    }
+    public EffectBuilding(PacketBuffer pb) {
+    	super(pb);
+    }
 
     public IETemplateMultiblock getMultiblock() {
         return multiblock;

@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.research;
 
-import java.util.HashMap;
-
 import net.minecraft.nbt.CompoundNBT;
 
 public class UnlockList {

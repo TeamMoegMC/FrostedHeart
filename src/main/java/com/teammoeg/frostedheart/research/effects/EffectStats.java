@@ -17,6 +17,7 @@ public class EffectStats extends Effect {
     String upgradeInfo;
 
     public EffectStats(String info) {
+    	super(null,null,null);
         name = GuiUtils.translateGui("effect.stats");
         upgradeInfo = info;
     }
@@ -24,7 +25,9 @@ public class EffectStats extends Effect {
     public String getUpgradeInfo() {
         return upgradeInfo;
     }
-    public EffectStats(JsonObject jo) {}
+    public EffectStats(JsonObject jo) {
+    	super(jo);
+    }
     @Override
     public void init() {
 

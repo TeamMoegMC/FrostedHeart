@@ -1,33 +1,30 @@
 package com.teammoeg.frostedheart.research.effects;
 
-import com.google.gson.JsonElement;
+import java.util.ArrayList;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.item.Item;
-
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.ArrayList;
-import java.util.List;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class EffectCrafting extends Effect{
 
-    List<Item> itemsToCraft;
 
-    public EffectCrafting(Item... items) {
-        name = GuiUtils.translateGui("effect.crafting");
-        itemsToCraft = new ArrayList<>();
-        for (Item item : items) {
-            itemsToCraft.add(item);
-        }
+    public EffectCrafting(ItemStack item) {
+    	super(GuiUtils.translateGui("effect.crafting"),new ArrayList<>(),item);
+    	tooltip.add(new TranslationTextComponent(item.getTranslationKey()));
     }
 
-    public List<Item> getItemsToCraft() {
-        return itemsToCraft;
+    public EffectCrafting(JsonObject jo) {
+    	super(jo);
     }
-    public EffectCrafting(JsonObject jo) {}
-    @Override
+    public EffectCrafting(Item asItem) {
+    	this(new ItemStack(asItem));
+	}
+
+	@Override
     public void init() {
 
     }

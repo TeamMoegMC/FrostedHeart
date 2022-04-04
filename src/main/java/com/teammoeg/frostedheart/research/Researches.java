@@ -64,7 +64,8 @@ public class Researches {
         GEN_T1.attachEffect(
                 new EffectItemReward(new ItemStack(FHContent.FHItems.energy_core)),
                 new EffectBuilding(FHContent.FHMultiblocks.GENERATOR, FHContent.FHMultiblocks.generator),
-                new EffectCrafting(FHContent.FHBlocks.generator_core_t1.asItem(), FHContent.FHBlocks.generator_amplifier_r1.asItem()),
+                new EffectCrafting(FHContent.FHBlocks.generator_core_t1.asItem()),
+                new EffectCrafting(FHContent.FHBlocks.generator_amplifier_r1.asItem()),
                 new EffectUse(FHContent.FHBlocks.generator_core_t1, FHContent.FHBlocks.generator_amplifier_r1),
                 new EffectStats("Generator Burning Efficiency +25%")
         );

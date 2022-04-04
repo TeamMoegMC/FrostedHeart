@@ -220,7 +220,7 @@ public class ResearchInfoPanel extends Panel {
             }
 
             // crafting
-            if (effect instanceof EffectCrafting) {
+           /* if (effect instanceof EffectCrafting) {
                 List<Item> itemsToCraft = ((EffectCrafting) effect).getItemsToCraft();
                 for (int i = 0; i < itemsToCraft.size(); i++) {
                     Icon icon = ItemIcon.getItemIcon(itemsToCraft.get(i));
@@ -237,7 +237,7 @@ public class ResearchInfoPanel extends Panel {
                 }
                 // additional offset caused by item icons
                 offset += 17;
-            }
+            }*/
 
             // use
             if (effect instanceof EffectUse) {

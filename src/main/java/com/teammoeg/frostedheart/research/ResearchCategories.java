@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.research;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
