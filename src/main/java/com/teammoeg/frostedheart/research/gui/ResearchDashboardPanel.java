@@ -1,12 +1,15 @@
 package com.teammoeg.frostedheart.research.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.StringTextComponent;
 
 import static com.teammoeg.frostedheart.research.gui.ResearchDetailPanel.PADDING;
@@ -48,6 +51,8 @@ public class ResearchDashboardPanel extends Panel {
         theme.drawString(matrixStack, detailPanel.research.getName(), x, y);
         // icon
         detailPanel.icon.draw(matrixStack, x, y+PADDING, 32, 32);
-        // research pts
+        // TODO: research progress
+        ResearchData data = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);
+        // theme.drawString(matrixStack, data.getProgress()*100 + "%", x+theme.getStringWidth(detailPanel.research.getName())+5, y);
     }
 }

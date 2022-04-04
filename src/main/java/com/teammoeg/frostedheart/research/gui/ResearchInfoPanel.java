@@ -2,7 +2,9 @@ package com.teammoeg.frostedheart.research.gui;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.*;
@@ -14,6 +16,7 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -40,88 +43,110 @@ public class ResearchInfoPanel extends Panel {
     public void addWidgets() {
         int offset = 0;
 
-        // exp materials
-        TextField req = new TextField(this);
-        req.setMaxWidth(width).setText(GuiUtils.translateGui("research.requirements").mergeStyle(TextFormatting.UNDERLINE)).setPos(0, offset);
-        add(req);
-        offset += req.height+1;
+        ResearchData researchData = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);
 
-        int xoffset = 0;
-        for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
-            if (ingredient.getMatchingStacks().length != 0) {
-                ItemStack toDisplay = ingredient.getMatchingStacks()[0];
-                Icon icon = ItemIcon.getItemIcon(toDisplay);
-                Button button = new Button(this) {
-                    @Override
-                    public void onClicked(MouseButton mouseButton) {
-
-                    }
-                };
-
-                button.setPosAndSize(xoffset, offset, 16, 16);
-                button.setIcon(icon);
-                button.setTitle(new TranslationTextComponent(toDisplay.getTranslationKey()).appendString(" x " + toDisplay.getCount()));
-                add(button);
-
-                xoffset += 17;
+        // already committed items
+        if (researchData.canResearch()) {
+            TextField canResearch = new TextField(this);
+            canResearch.setMaxWidth(width).setText(GuiUtils.translateGui("research.can_research").mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.GREEN)).setPos(0, offset);
+            add(canResearch);
+            offset += canResearch.height+1;
+            if (researchData.isInProgress()) {
+                TextField inProgress = new TextField(this);
+                inProgress.setMaxWidth(width).setText(GuiUtils.translateGui("research.in_progress").mergeStyle(TextFormatting.BOLD).mergeStyle(TextFormatting.BLUE)).setPos(0, offset);
+                add(inProgress);
+                offset += inProgress.height+1;
             }
         }
-        offset += 17;
 
-        // commit items button
-        Button commitItems = new SimpleTextButton(this, GuiUtils.translateGui("research.commit_material_and_start"), Icon.EMPTY) {
-            @Override
-            public void onClicked(MouseButton mouseButton) {
+        // exp materials
+        else {
 
-                // check materials
-                boolean hasAllMaterials = true;
-                for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
-                    if (!hasAllMaterials)
-                        break;
-                    // each ingredient
-                    ItemStack[] matchingStacks = ingredient.getMatchingStacks();
-                    boolean alreadyFound = false;
-                    for (ItemStack requiredStack : matchingStacks) {
-                        if (alreadyFound) break;
-                        for(ItemStack invStack : detailPanel.researchScreen.player.inventory.mainInventory) {
-                            if (!invStack.isEmpty() && invStack.isItemEqual(requiredStack) && invStack.getCount() >= requiredStack.getCount()) {
-                                alreadyFound = true;
-                                break;
-                            }
+            TextField req = new TextField(this);
+            req.setMaxWidth(width).setText(GuiUtils.translateGui("research.requirements").mergeStyle(TextFormatting.UNDERLINE)).setPos(0, offset);
+            add(req);
+            offset += req.height + 1;
+
+            int xoffset = 0;
+            for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
+                if (ingredient.getMatchingStacks().length != 0) {
+                    ItemStack toDisplay = ingredient.getMatchingStacks()[0];
+                    Icon icon = ItemIcon.getItemIcon(toDisplay);
+                    Button button = new Button(this) {
+                        @Override
+                        public void onClicked(MouseButton mouseButton) {
+
                         }
-                    }
-                    if (!alreadyFound)
-                        hasAllMaterials = false;
+                    };
+
+                    button.setPosAndSize(xoffset, offset, 16, 16);
+                    button.setIcon(icon);
+                    button.setTitle(new TranslationTextComponent(toDisplay.getTranslationKey()).appendString(" x " + toDisplay.getCount()));
+                    add(button);
+
+                    xoffset += 17;
                 }
+            }
+            offset += 17;
 
-                // commit materials
-                if (hasAllMaterials) {
-                    ResearchData researchData = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);
+            // commit items button
+            Button commitItems = new SimpleTextButton(this, GuiUtils.translateGui("research.commit_material_and_start"), Icon.EMPTY) {
+                @Override
+                public void onClicked(MouseButton mouseButton) {
 
+                    // check materials
+                    boolean hasAllMaterials = true;
                     for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
+                        if (!hasAllMaterials)
+                            break;
                         // each ingredient
                         ItemStack[] matchingStacks = ingredient.getMatchingStacks();
                         boolean alreadyFound = false;
                         for (ItemStack requiredStack : matchingStacks) {
                             if (alreadyFound) break;
-                            for(ItemStack invStack : detailPanel.researchScreen.player.inventory.mainInventory) {
+                            for (ItemStack invStack : detailPanel.researchScreen.player.inventory.mainInventory) {
                                 if (!invStack.isEmpty() && invStack.isItemEqual(requiredStack) && invStack.getCount() >= requiredStack.getCount()) {
-                                    invStack.shrink(requiredStack.getCount());
-                                    // notify data
-                                    researchData.commitItem(requiredStack);
                                     alreadyFound = true;
                                     break;
                                 }
                             }
                         }
+                        if (!alreadyFound)
+                            hasAllMaterials = false;
+                    }
+
+                    // commit materials
+                    if (hasAllMaterials) {
+                        ResearchData researchData = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);
+
+                        for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
+                            // each ingredient
+                            ItemStack[] matchingStacks = ingredient.getMatchingStacks();
+                            boolean alreadyFound = false;
+                            for (ItemStack requiredStack : matchingStacks) {
+                                if (alreadyFound) break;
+                                for (ItemStack invStack : detailPanel.researchScreen.player.inventory.mainInventory) {
+                                    if (!invStack.isEmpty() && invStack.isItemEqual(requiredStack) && invStack.getCount() >= requiredStack.getCount()) {
+                                        invStack.shrink(requiredStack.getCount());
+                                        // notify data
+                                        researchData.commitItem(requiredStack);
+                                        alreadyFound = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        refreshWidgets();
                     }
                 }
-            }
-        };
+            };
 
-        commitItems.setPos(0, offset);
-        add(commitItems);
-        offset += commitItems.height+1;
+            commitItems.setPos(0, offset);
+            add(commitItems);
+            offset += commitItems.height + 1;
+
+        }
 
         offset += 5;
 
@@ -157,6 +182,24 @@ public class ResearchInfoPanel extends Panel {
                 }
                 // additional offset caused by item icons
                 offset += 17;
+                // claim reward button if research is completed
+                TeamResearchData data = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player);
+                // TODO: remove || true after api works
+                if (data.getData(detailPanel.research).isCompleted() || true) {
+                    Button claimRewards = new SimpleTextButton(this, GuiUtils.translateGui("research.claim_rewards"), Icon.EMPTY) {
+                        @Override
+                        public void onClicked(MouseButton mouseButton) {
+                            for (ItemStack rewardStack : ((EffectItemReward) effect).getRewards()) {
+                                // TODO: check inventory full
+                                detailPanel.researchScreen.player.inventory.addItemStackToInventory(rewardStack.copy());
+                            }
+                            refreshWidgets();
+                        }
+                    };
+                    claimRewards.setPos(0, offset);
+                    add(claimRewards);
+                    offset += claimRewards.height+1;
+                }
             }
 
             // building

@@ -109,6 +109,9 @@
   "gui.frostedheart.research.effects" : "Possible Outcomes",
   "gui.frostedheart.research.hint" : "Hint: ",
   "gui.frostedheart.research.commit_material_and_start" : "Commit Material & Start",
+  "gui.frostedheart.research.claim_rewards" : "Claim Rewards",
+  "gui.frostedheart.research.can_research" : "Can Research",
+  "gui.frostedheart.research.in_progress" : "In Progress",
 
   "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
   "gui.jei.category.frostedheart.generator_steam":"Generator Heat Medium",
