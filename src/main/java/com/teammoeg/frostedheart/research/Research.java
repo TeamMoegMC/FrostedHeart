@@ -133,7 +133,8 @@ public class Research extends FHRegisteredItem implements Writeable{
         return parents.stream().map(r -> r.get()).collect(Collectors.toSet());
     }
 
-    public void setParents(Supplier<Research>... parents) {
+    @SafeVarargs
+    public final void setParents(Supplier<Research>... parents) {
         this.parents.clear();
         this.parents.addAll(Arrays.asList(parents));
     }

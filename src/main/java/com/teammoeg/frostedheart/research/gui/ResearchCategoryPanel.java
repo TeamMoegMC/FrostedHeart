@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.research.gui;
 import static com.teammoeg.frostedheart.research.gui.ResearchScreen.PADDING;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
 
@@ -38,6 +39,8 @@ public class ResearchCategoryPanel extends Panel {
 		@Override
 		public void onClicked(MouseButton mouseButton) {
 			categoryPanel.researchScreen.selectCategory(category);
+			if (FHResearch.getFirstResearchInCategory(category) != null)
+				categoryPanel.researchScreen.selectResearch(FHResearch.getFirstResearchInCategory(category));
 		}
 
 		@Override
@@ -77,7 +80,6 @@ public class ResearchCategoryPanel extends Panel {
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		super.draw(matrixStack, theme, x, y, w, h);
-		theme.drawString(matrixStack, new StringTextComponent("Current: ").appendSibling(researchScreen.selectedCategory.getName()), w * 4 / 5, y);
 		drawBackground(matrixStack, theme, x, y, w, h);
 	}
 

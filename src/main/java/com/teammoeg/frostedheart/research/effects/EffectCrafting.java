@@ -3,17 +3,27 @@ package com.teammoeg.frostedheart.research.effects;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import net.minecraft.item.Item;
 
 import net.minecraft.network.PacketBuffer;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class EffectCrafting extends Effect{
 
-    public EffectCrafting() {
+    List<Item> itemsToCraft;
+
+    public EffectCrafting(Item... items) {
         name = GuiUtils.translateGui("effect.crafting");
-        tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.translateTooltip("effect.crafting.1"));
+        itemsToCraft = new ArrayList<>();
+        for (Item item : items) {
+            itemsToCraft.add(item);
+        }
+    }
+
+    public List<Item> getItemsToCraft() {
+        return itemsToCraft;
     }
     public EffectCrafting(JsonObject jo) {}
     @Override

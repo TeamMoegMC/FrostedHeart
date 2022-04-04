@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.research.Research;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
@@ -38,6 +39,8 @@ public class ResearchHierarchyPanel extends Panel {
 
     public ResearchHierarchyPanel(ResearchScreen panel) {
         super(panel);
+        this.setOnlyInteractWithWidgetsInside(true);
+        this.setOnlyRenderWidgetsInside(true);
         researchScreen = panel;
     }
 
@@ -94,11 +97,7 @@ public class ResearchHierarchyPanel extends Panel {
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
-        // title
         theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 10, y + 10);
-        // horizontal line
-        //GuiHelper.drawRectWithShade(matrixStack, x + 10, y + (w - 64) / 2 - 5, w - 20, 2, Color4I.BLACK, 128);
-
     }
 
     public static class ResearchDetailButton extends Button {
@@ -115,22 +114,20 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void onClicked(MouseButton mouseButton) {
-            // todo: open research detail gui
         	this.researchScreen.detailframe.open(research);
         	this.researchScreen.refreshWidgets();
         }
 
         @Override
         public void addMouseOverText(TooltipList list) {
-            list.add(research.getDesc());
+            list.add(research.getName().mergeStyle(TextFormatting.BOLD));
         }
 
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            super.drawBackground(matrixStack, theme, x, y, w, h);
+            GuiHelper.setupDrawing();
+            this.drawBackground(matrixStack, theme, x, y, w, h);
             this.drawIcon(matrixStack, theme, x + 16, y, 32, 32);
-            theme.drawString(matrixStack, research.getName(), x + (w - theme.getStringWidth(research.getName())) / 2, y + 32);
-
         }
     }
 
@@ -166,7 +163,8 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            super.drawBackground(matrixStack, theme, x, y, w, h);
+            GuiHelper.setupDrawing();
+            this.drawBackground(matrixStack, theme, x, y, w, h);
             this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y, 16, 16);
         }
     }

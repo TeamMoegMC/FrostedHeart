@@ -86,7 +86,8 @@
     "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
     "create.MixinOpenConfigButtonHandler",
-    "rankine.MixinDryMortarItem"
+    "rankine.MixinDryMortarItem",
+    "client.ServerWorldInfoMixin"
   ],
   "injectors": {
     "defaultRequire": 1

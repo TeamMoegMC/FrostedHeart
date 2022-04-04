@@ -13,10 +13,15 @@ import java.util.ArrayList;
  */
 public class EffectStats extends Effect {
 
-    public EffectStats() {
-        name = GuiUtils.translateGui("effect.use");
-        tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.translateTooltip("effect.use.1"));
+    String upgradeInfo;
+
+    public EffectStats(String info) {
+        name = GuiUtils.translateGui("effect.stats");
+        upgradeInfo = info;
+    }
+
+    public String getUpgradeInfo() {
+        return upgradeInfo;
     }
     public EffectStats(JsonObject jo) {}
     @Override
