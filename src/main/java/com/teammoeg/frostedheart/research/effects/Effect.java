@@ -13,15 +13,10 @@ import net.minecraft.util.text.TranslationTextComponent;
  * "Effect" of an research: how would it becomes when a research is completed ?
  * 
  * */
-<<<<<<< HEAD
-public abstract class Effect implements Writeable{
-	ITextComponent name;
-	List<ITextComponent> tooltip;
-=======
 public abstract class Effect {
 	IFormattableTextComponent name;
 	List<IFormattableTextComponent> tooltip;
->>>>>>> refs/remotes/origin/master
+
 	ItemStack icon;
 	public abstract void init();
 	public abstract void grant();

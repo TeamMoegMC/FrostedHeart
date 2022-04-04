@@ -34,9 +34,7 @@ public class EffectBuilding extends Effect {
         tooltip = new ArrayList<>();
         tooltip.add(GuiUtils.translateTooltip(multiblock.getUniqueName().toString()));
     }
-<<<<<<< HEAD
     public EffectBuilding(JsonObject jo) {}
-=======
 
     public IETemplateMultiblock getMultiblock() {
         return multiblock;
@@ -45,8 +43,6 @@ public class EffectBuilding extends Effect {
     public Block getBlock() {
         return block;
     }
-
->>>>>>> refs/remotes/origin/master
     @Override
     public void init() {
 
