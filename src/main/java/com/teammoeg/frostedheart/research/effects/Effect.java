@@ -3,14 +3,17 @@ package com.teammoeg.frostedheart.research.effects;
 import java.util.List;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+
 /**
  * "Effect" of an research: how would it becomes when a research is completed ?
  * 
  * */
 public abstract class Effect {
-	ITextComponent name;
-	List<ITextComponent> tooltip;
+	IFormattableTextComponent name;
+	List<IFormattableTextComponent> tooltip;
 	ItemStack icon;
 	public abstract void init();
 	public abstract void grant();
@@ -20,11 +23,11 @@ public abstract class Effect {
 		return icon;
 	}
 
-	public ITextComponent getName() {
+	public IFormattableTextComponent getName() {
 		return name;
 	}
 
-	public List<ITextComponent> getTooltip() {
+	public List<IFormattableTextComponent> getTooltip() {
 		return tooltip;
 	}
 }

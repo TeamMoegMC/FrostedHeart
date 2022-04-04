@@ -14,6 +14,8 @@ public class ResearchProgressPanel extends Panel {
 
     public ResearchProgressPanel(ResearchScreen panel) {
         super(panel);
+        this.setOnlyInteractWithWidgetsInside(true);
+        this.setOnlyRenderWidgetsInside(true);
         researchScreen = panel;
     }
 

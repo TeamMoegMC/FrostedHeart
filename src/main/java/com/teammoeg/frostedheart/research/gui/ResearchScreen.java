@@ -13,6 +13,7 @@ import com.teammoeg.frostedheart.research.ResearchLevel;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class ResearchScreen extends BaseScreen {
@@ -91,28 +92,18 @@ public class ResearchScreen extends BaseScreen {
         super.drawBackground(matrixStack, theme, x, y, w, h);
     }
 
-	/*@Override
-	public void closeGui() {
-		if(detailframe.r!=null)
-			detailframe.r=null;
-		else
-			super.closeGui();
-	}
-*/
+    @Override
+    public void addMouseOverText(TooltipList list) {
+        list.zOffset = 950;
+        list.zOffsetItemTooltip = 500;
+        super.addMouseOverText(list);
+    }
+
 	@Override
 	public void onBack() {
-		if(detailframe.research !=null)
-			detailframe.research =null;
+		if(detailframe.research !=null) {
+            detailframe.research =null;
+        }
 		else super.onBack();
 	}
-
-
-	/*@Override
-	public boolean onClosedByKey(Key key) {
-		if(detailframe.r!=null) {
-			detailframe.r=null;
-			return false;
-		}
-		return super.onClosedByKey(key);
-	}*/
 }

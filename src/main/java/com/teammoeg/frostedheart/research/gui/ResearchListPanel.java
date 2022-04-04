@@ -6,10 +6,7 @@ import com.teammoeg.frostedheart.research.Research;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.Button;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
-import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 
@@ -24,6 +21,8 @@ public class ResearchListPanel extends Panel {
     public ResearchList rl;
     public ResearchListPanel(ResearchScreen panel) {
         super(panel);
+        this.setOnlyInteractWithWidgetsInside(true);
+        this.setOnlyRenderWidgetsInside(true);
         researchScreen = panel;
     }
     public static class ResearchList extends Panel{
@@ -69,19 +68,11 @@ public class ResearchListPanel extends Panel {
             listPanel.researchScreen.selectResearch(research);
         }
 
-//        @Override
-//        public void addMouseOverText(TooltipList list) {
-//            list.add(research.getDesc());
-//        }
-
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-			super.drawBackground(matrixStack, theme, x, y, w, h);
-            //theme.drawHorizontalTab(matrixStack, x, y, w, h, categoryPanel.researchScreen.selectedCategory == category);
-			
+            GuiHelper.setupDrawing();
+            this.drawBackground(matrixStack, theme, x, y, w, h);
 			this.drawIcon(matrixStack, theme, x + 2, y + 2, RES_ICON_WIDTH, RES_ICON_HEIGHT);
-//            theme.drawHorizontalTab(matrixStack, x, y, w, h, listPanel.researchScreen.selectedResearch == research);
-//            this.drawIcon(matrixStack, theme, x + 2, y + 2, RES_ICON_WIDTH, RES_ICON_HEIGHT);
 			if(research.isCompleted()) {
 				 theme.drawString(matrixStack,research.getName(), x + RES_ICON_WIDTH + 4, y + RES_ICON_HEIGHT /2 - 4,Color4I.GREEN,0);
 			}else if(!research.isUnlocked()) {

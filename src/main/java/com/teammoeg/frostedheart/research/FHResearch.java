@@ -45,6 +45,7 @@ public class FHResearch {
 		researches.deserialize(cnbt.getList("researches",8));
 		
 	}
+
 	public static Supplier<Research> getResearch(String id) {
 		return researches.get(id);
 	}
@@ -76,6 +77,17 @@ public class FHResearch {
 		if (showLocked) available.addAll(locked);
 		return available;
 	}
+
+	public static Research getFirstResearchInCategory(ResearchCategory cate) {
+		List<Research> rs = getResearchesForRender(cate, false);
+		if (rs.size() != 0) {
+			return rs.get(0);
+		} else {
+			return null;
+		}
+	}
+
+
 	public static List<AbstractClue> getAllClue() {
 		return allClues.resolve().get();
 	}

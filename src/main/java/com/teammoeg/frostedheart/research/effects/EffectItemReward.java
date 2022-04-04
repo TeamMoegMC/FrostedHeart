@@ -19,14 +19,14 @@ public class EffectItemReward extends Effect {
         for (ItemStack stack : stacks) {
             rewards.add(stack);
         }
-        name = GuiUtils.translateGui("effect.itemreward");
+        name = GuiUtils.translateGui("effect.item_reward");
         if (rewards.size() != 0) {
             icon = rewards.get(0);
         } else {
             icon = new ItemStack(Items.GRASS_BLOCK);
         }
         tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.translateTooltip("effect.itemreward.1"));
+        tooltip.add(GuiUtils.translateTooltip("effect.item_reward.1"));
     }
 
     @Override
