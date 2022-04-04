@@ -5,14 +5,22 @@ import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.clues.ClueCopy;
+import com.teammoeg.frostedheart.research.clues.RootClue;
 import com.teammoeg.frostedheart.research.effects.EffectBuilding;
 import com.teammoeg.frostedheart.research.effects.EffectItemReward;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.StringTextComponent;
+
+import java.util.function.Supplier;
 
 /**
  * Store some constant research instances
  */
 public class Researches {
+
+    public static final RootClue ROOT_CLUE = new RootClue("rootclue", 1.0F, new StringTextComponent("rootname"), new StringTextComponent("rootdesc"), new StringTextComponent("roothint"), false);
 
     public static final Research GEN_T1 = new Research("generator_t1", ResearchCategories.RESCUE,  FHContent.FHItems.energy_core);
     public static final Research GEN_T2 = new Research("generator_t2", ResearchCategories.RESCUE,  FHContent.FHItems.energy_core);
@@ -62,6 +70,7 @@ public class Researches {
                 new EffectItemReward(new ItemStack(FHContent.FHItems.energy_core)),
                 new EffectBuilding(FHContent.FHMultiblocks.GENERATOR, FHContent.FHMultiblocks.generator)
         );
+        GEN_T1.attachClue(() -> ROOT_CLUE);
         FHResearch.researches.register(GEN_T1);
         GEN_T2.setParents(FHResearch.getResearch("generator_t1"));
         GEN_T2.attachRequiredItem(

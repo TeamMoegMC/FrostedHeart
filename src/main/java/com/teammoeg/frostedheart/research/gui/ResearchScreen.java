@@ -103,6 +103,7 @@ public class ResearchScreen extends BaseScreen {
 	public void onBack() {
 		if(detailframe.research !=null) {
             detailframe.research =null;
+            detailframe.closeGui();
         }
 		else super.onBack();
 	}

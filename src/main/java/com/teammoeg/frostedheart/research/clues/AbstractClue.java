@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -18,16 +19,16 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public abstract class AbstractClue extends FHRegisteredItem {
 	float contribution;//percentage, range (0,1]
 	String ID;
-	ITextComponent name;
-	ITextComponent desc;
-	ITextComponent hint;
+	IFormattableTextComponent name;
+	IFormattableTextComponent desc;
+	IFormattableTextComponent hint;
 	
 	boolean pend;
 	public float getResearchContribution() {
 		return contribution;
 	}
 
-	public AbstractClue(String ID,float contribution, ITextComponent name, ITextComponent desc, ITextComponent hint,boolean isPend) {
+	public AbstractClue(String ID,float contribution, IFormattableTextComponent name, IFormattableTextComponent desc, IFormattableTextComponent hint,boolean isPend) {
 		this.contribution = contribution;
 		this.ID = ID;
 		this.name = name;
@@ -70,15 +71,15 @@ public abstract class AbstractClue extends FHRegisteredItem {
 		return ID;
 	}
 
-	public ITextComponent getName() {
+	public IFormattableTextComponent getName() {
 		return name;
 	}
 
-	public ITextComponent getDescription() {
+	public IFormattableTextComponent getDescription() {
 		return desc;
 	}
 
-	public ITextComponent getHint() {
+	public IFormattableTextComponent getHint() {
 		return hint;
 	}
 	@Override

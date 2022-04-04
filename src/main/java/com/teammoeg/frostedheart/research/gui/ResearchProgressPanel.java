@@ -35,14 +35,13 @@ public class ResearchProgressPanel extends Panel {
         // title
         theme.drawString(matrixStack, GuiUtils.translateGui("research_progress"), x + 10, y + 10);
         // progress bar
-        float progress = researchScreen.getInProgressResearch().getProgressFraction();
-        float reqTime = researchScreen.getInProgressResearch().getCurrentPoints();
-        float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
-        GuiHelper.drawHollowRect(matrixStack, x + 10, y + 20, w - 20, 5, Color4I.BLACK, false);
-        GuiHelper.drawRectWithShade(matrixStack, x + 10, y + 20, (int) ( (w - 20) * progress), 5, Color4I.WHITE, 128);
-
-        // show time remaining in minutes
-        theme.drawString(matrixStack, GuiUtils.translateGui("research_time_left", (int) ( (reqTime - finTIme) / 20 / 60) ), x + 10, y + 30);
+        // TODO: this cause crash when root clue is added
+        // float progress = researchScreen.getInProgressResearch().getProgressFraction();
+        // float reqTime = researchScreen.getInProgressResearch().getCurrentPoints();
+        // float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
+        // GuiHelper.drawHollowRect(matrixStack, x + 10, y + 20, w - 20, 5, Color4I.BLACK, false);
+        // GuiHelper.drawRectWithShade(matrixStack, x + 10, y + 20, (int) ( (w - 20) * progress), 5, Color4I.WHITE, 128);
+        // theme.drawString(matrixStack, GuiUtils.translateGui("research_time_left", (int) ( (reqTime - finTIme) / 20 / 60) ), x + 10, y + 30);
 
         // research icon
         GuiHelper.drawItem(matrixStack,researchScreen.getInProgressResearch().getIcon(), x + 10, y + 40, 2, 2, false, null);

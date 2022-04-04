@@ -105,9 +105,9 @@
   "gui.frostedheart.effect.stats": "New Stats Upgrade",
   "gui.frostedheart.effect.use": "New Usage Unlocked",
   "gui.frostedheart.research.clues" : "Clues",
-  "gui.frostedheart.research.requirements" : "Requirements",
+  "gui.frostedheart.research.requirements" : "Experiment Material",
   "gui.frostedheart.research.effects" : "Effects",
-
+  "gui.frostedheart.research.hint" : "Hint: ",
 
   "gui.jei.category.frostedheart.generator_fuel":"Generator Fuel",
   "gui.jei.category.frostedheart.generator_steam":"Generator Heat Medium",

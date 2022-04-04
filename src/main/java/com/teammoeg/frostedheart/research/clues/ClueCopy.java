@@ -4,11 +4,12 @@ import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 
 public class ClueCopy extends AbstractClue {
 	AbstractClue parent;
-	public ClueCopy(@Nonnull AbstractClue parent,@Nonnull String ID, float contribution, ITextComponent name, ITextComponent desc, ITextComponent hint,boolean pend) {
+	public ClueCopy(@Nonnull AbstractClue parent, @Nonnull String ID, float contribution, IFormattableTextComponent name, IFormattableTextComponent desc, IFormattableTextComponent hint, boolean pend) {
 		super(ID, contribution, name, desc, hint, pend);
 		this.parent=parent;
 	}
@@ -19,17 +20,17 @@ public class ClueCopy extends AbstractClue {
 	}
 
 	@Override
-	public ITextComponent getName() {
+	public IFormattableTextComponent getName() {
 		return super.name==null?parent.getName():super.name;
 	}
 
 	@Override
-	public ITextComponent getDescription() {
+	public IFormattableTextComponent getDescription() {
 		return super.desc==null?parent.getDescription():super.desc;
 	}
 
 	@Override
-	public ITextComponent getHint() {
+	public IFormattableTextComponent getHint() {
 		return super.hint==null?parent.getHint():super.hint;
 	}
 
