@@ -28,18 +28,20 @@ public class ResearchDetailPanel extends Panel {
 	ResearchDashboardPanel dashboardPanel;
 	ResearchInfoPanel infoPanel;
 	DescPanel descPanel;
+	ResearchScreen researchScreen;
 
 	public PanelScrollBar scrollInfo;
 
 	public static final int PADDING = 10;
 
-	public ResearchDetailPanel(Panel panel) {
+	public ResearchDetailPanel(ResearchScreen panel) {
 		super(panel);
 		this.setOnlyInteractWithWidgetsInside(true);
 		this.setOnlyRenderWidgetsInside(true);
 		descPanel = new DescPanel(this);
 		infoPanel = new ResearchInfoPanel(this);
 		dashboardPanel = new ResearchDashboardPanel(this);
+		researchScreen = panel;
 	}
 
 	@Override
@@ -57,7 +59,7 @@ public class ResearchDetailPanel extends Panel {
 		infoPanel.setPosAndSize(width/2, PADDING, width/2-PADDING, height-PADDING*2);
 
 		scrollInfo = new PanelScrollBar(this, infoPanel);
-		scrollInfo.setPosAndSize(width-PADDING, PADDING, PADDING, height-PADDING*2);
+		scrollInfo.setPosAndSize(width-PADDING-5, PADDING, PADDING, height-PADDING*2);
 		add(scrollInfo);
 	}
 
@@ -118,190 +120,5 @@ public class ResearchDetailPanel extends Panel {
 
 		}
 	}
-
-//	public static class CluesPanel extends Panel {
-//
-//		ResearchDetailPanel detailPanel;
-//
-//		public CluesPanel(ResearchDetailPanel panel) {
-//			super(panel);
-//			this.setOnlyInteractWithWidgetsInside(true);
-//			this.setOnlyRenderWidgetsInside(true);
-//			detailPanel = panel;
-//		}
-//
-//		@Override
-//		public void addWidgets() {
-//			int offset = 0;
-//			for (AbstractClue clue : detailPanel.research.getClues()) {
-//				TextField textField = new TextField(this);
-//				textField.setMaxWidth(width);
-//				textField.setPosAndSize(0, PADDING+offset*10, width, 10);
-//
-//				textField.setText(clue.getName());
-//				TooltipList tooltipList = new TooltipList();
-//				tooltipList.add(clue.getDescription());
-//				textField.addMouseOverText(tooltipList);
-//				add(textField);
-//				offset++;
-//			}
-//		}
-//
-//		@Override
-//		public void alignWidgets() {
-//
-//		}
-//
-//		@Override
-//		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-//			super.draw(matrixStack,theme,x,y,w,h);
-//		}
-//
-//		@Override
-//		public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-//			super.drawBackground(matrixStack, theme, x, y, w, h);
-//			// theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
-//		}
-//	}
-//
-//	public static class ReqPanel extends Panel {
-//
-//		ResearchDetailPanel detailPanel;
-//
-//		public ReqPanel(ResearchDetailPanel panel) {
-//			super(panel);
-//			this.setOnlyInteractWithWidgetsInside(true);
-//			this.setOnlyRenderWidgetsInside(true);
-//			detailPanel = panel;
-//		}
-//
-//		@Override
-//		public void addWidgets() {
-//			int offset = PADDING;
-//
-//			for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
-//				if (ingredient.getMatchingStacks().length != 0) {
-//					Icon icon = ItemIcon.getItemIcon(ingredient.getMatchingStacks()[0]);
-//					Button button = new Button(this) {
-//						@Override
-//						public void onClicked(MouseButton mouseButton) {
-//
-//						}
-//					};
-//					button.setPosAndSize(offset, 10, 16, 16);
-//					button.setIcon(icon);
-//					button.setTitle(ingredient.getMatchingStacks()[0].getTextComponent());
-//
-//					add(button);
-//					offset+=17;
-//				}
-//			}
-//
-//		}
-//
-//		@Override
-//		public void alignWidgets() {
-//
-//		}
-//
-//		@Override
-//		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-//			super.draw(matrixStack,theme,x,y,w,h);
-//		}
-//
-//		@Override
-//		public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-//			super.drawBackground(matrixStack, theme, x, y, w, h);
-//			// theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
-//		}
-//	}
-//
-//	public static class EffectsPanel extends Panel {
-//
-//		ResearchDetailPanel detailPanel;
-//
-//		public EffectsPanel(ResearchDetailPanel panel) {
-//			super(panel);
-//			this.setOnlyInteractWithWidgetsInside(true);
-//			this.setOnlyRenderWidgetsInside(true);
-//			detailPanel = panel;
-//		}
-//
-//		@Override
-//		public void addWidgets() {
-//			int offset = PADDING;
-//			for (Effect effect : detailPanel.research.getEffects()) {
-//
-//				// effect type
-//				TextField textField = new TextField(this);
-//				textField.setMaxWidth(width);
-//				textField.setPosAndSize(PADDING, offset, width, 10);
-//				textField.setText(effect.getName().mergeStyle(TextFormatting.BOLD));
-//				add(textField);
-//
-//				offset += 13;
-//
-//				// item reward
-//				if (effect instanceof EffectItemReward) {
-//					List<ItemStack> rewards = ((EffectItemReward) effect).getRewards();
-//					for (int i = 0; i < rewards.size(); i++) {
-//						Icon icon = ItemIcon.getItemIcon(rewards.get(i));
-//						Button button = new Button(this) {
-//							@Override
-//							public void onClicked(MouseButton mouseButton) {
-//
-//							}
-//						};
-//						button.setPosAndSize(i*17, offset, 16, 16);
-//						button.setIcon(icon);
-//						button.setTitle(new TranslationTextComponent(rewards.get(i).getTranslationKey()));
-//						add(button);
-//					}
-//					// additional offset caused by item icons
-//					offset += 17;
-//				}
-//
-//				// building
-//				if (effect instanceof EffectBuilding) {
-//					Block block = ((EffectBuilding) effect).getBlock();
-//					Icon icon = ItemIcon.getItemIcon(block.asItem());
-//					Button button = new Button(this) {
-//						@Override
-//						public void onClicked(MouseButton mouseButton) {
-//
-//						}
-//					};
-//					button.setPosAndSize(0, offset, 16, 16);
-//					button.setIcon(icon);
-//					button.setTitle(block.getTranslatedName());
-//					add(button);
-//					offset += 17;
-//				}
-//
-//				// crafting
-//
-//				// use
-//
-//				// stats
-//
-//			}
-//		}
-//
-//		@Override
-//		public void alignWidgets() {
-//
-//		}
-//
-//		@Override
-//		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-//			super.draw(matrixStack,theme,x,y,w,h);
-//		}
-//
-//		@Override
-//		public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-//			super.drawBackground(matrixStack, theme, x, y, w, h);
-//			// theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
-//		}
-//	}
 
 }

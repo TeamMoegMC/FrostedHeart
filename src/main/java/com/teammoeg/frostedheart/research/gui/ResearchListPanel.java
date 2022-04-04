@@ -44,6 +44,7 @@ public class ResearchListPanel extends Panel {
 	            offset += (RESEARCH_HEIGHT);
 	        }
 	        this.setHeight(offset);
+            researchScreen.researchListPanel.scroll.setMaxValue(offset);
 		}
 
 		@Override
@@ -90,6 +91,7 @@ public class ResearchListPanel extends Panel {
     	add(scroll);
     	scroll.setX(RESEARCH_WIDTH);
     	scroll.setSize(10,height);
+
     }
 
     @Override

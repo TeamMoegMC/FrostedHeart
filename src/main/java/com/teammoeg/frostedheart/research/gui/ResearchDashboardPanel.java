@@ -14,9 +14,6 @@ import static com.teammoeg.frostedheart.research.gui.ResearchDetailPanel.PADDING
 public class ResearchDashboardPanel extends Panel {
 
     ResearchDetailPanel detailPanel;
-    Button closePanel;
-    Button commitItems;
-    Button startResearch;
 
     public ResearchDashboardPanel(ResearchDetailPanel panel) {
         super(panel);
@@ -27,35 +24,15 @@ public class ResearchDashboardPanel extends Panel {
 
     @Override
     public void addWidgets() {
-        // start research button
-        startResearch = new SimpleTextButton(this, new StringTextComponent("Start Research"), Icon.EMPTY) {
-            @Override
-            public void onClicked(MouseButton mouseButton) {
-            }
-        };
-
-        startResearch.setPos(width-PADDING*5, 0);
-        add(startResearch);
-
-        // commit items button
-        commitItems = new SimpleTextButton(this, new StringTextComponent("Commit Materials"), Icon.EMPTY) {
-            @Override
-            public void onClicked(MouseButton mouseButton) {
-            }
-        };
-
-        commitItems.setPos(width-PADDING*5, PADDING*2);
-        add(commitItems);
-
         // close panel button
-        closePanel = new SimpleTextButton(this, new StringTextComponent("Close"), Icon.EMPTY) {
+        Button closePanel = new SimpleTextButton(this, new StringTextComponent("Close"), Icon.EMPTY) {
             @Override
             public void onClicked(MouseButton mouseButton) {
                 detailPanel.research = null;
                 closeGui();
             }
         };
-        closePanel.setPosAndSize(width, 0, PADDING, PADDING);
+        closePanel.setPosAndSize(width-PADDING, 0, PADDING, PADDING);
         add(closePanel);
     }
 
