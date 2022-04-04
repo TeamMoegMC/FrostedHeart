@@ -52,7 +52,7 @@ public class ResearchDashboardPanel extends Panel {
         // icon
         detailPanel.icon.draw(matrixStack, x, y+PADDING, 32, 32);
         // TODO: research progress
-        ResearchData data = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);
+        // ResearchData data = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);
         // theme.drawString(matrixStack, data.getProgress()*100 + "%", x+theme.getStringWidth(detailPanel.research.getName())+5, y);
     }
 }
