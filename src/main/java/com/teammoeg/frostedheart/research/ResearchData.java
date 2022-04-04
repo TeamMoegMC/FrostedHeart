@@ -141,6 +141,11 @@ public class ResearchData {
 			active=true;
 		return ret;
 	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
 	public List<ItemStack> getItemStored() {
 		return Collections.unmodifiableList(committedItems);
 	}

@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.research.gui;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.*;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -12,6 +14,7 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.StringTextComponent;
@@ -93,6 +96,8 @@ public class ResearchInfoPanel extends Panel {
 
                 // commit materials
                 if (hasAllMaterials) {
+                    ResearchData researchData = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);
+
                     for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
                         // each ingredient
                         ItemStack[] matchingStacks = ingredient.getMatchingStacks();
@@ -102,14 +107,14 @@ public class ResearchInfoPanel extends Panel {
                             for(ItemStack invStack : detailPanel.researchScreen.player.inventory.mainInventory) {
                                 if (!invStack.isEmpty() && invStack.isItemEqual(requiredStack) && invStack.getCount() >= requiredStack.getCount()) {
                                     invStack.shrink(requiredStack.getCount());
+                                    // notify data
+                                    researchData.commitItem(requiredStack);
                                     alreadyFound = true;
                                     break;
                                 }
                             }
                         }
                     }
-
-                    // TODO: mark research as in progress
                 }
             }
         };
