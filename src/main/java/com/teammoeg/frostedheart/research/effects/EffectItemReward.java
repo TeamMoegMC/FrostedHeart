@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,11 +53,7 @@ public class EffectItemReward extends Effect {
     }
 
 	@Override
-	public JsonElement serialize() {
+	public ResourceLocation getId() {
 		return null;
-	}
-
-	@Override
-	public void write(PacketBuffer buffer) {
 	}
 }

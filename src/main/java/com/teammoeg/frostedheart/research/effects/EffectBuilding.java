@@ -5,15 +5,11 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
-<<<<<<< HEAD
 import net.minecraft.network.PacketBuffer;
-=======
-import net.minecraft.util.text.TranslationTextComponent;
->>>>>>> refs/remotes/origin/master
+import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 
@@ -57,13 +53,8 @@ public class EffectBuilding extends Effect {
     public void revoke() {
 
     }
-
 	@Override
-	public JsonElement serialize() {
+	public ResourceLocation getId() {
 		return null;
-	}
-
-	@Override
-	public void write(PacketBuffer buffer) {
 	}
 }

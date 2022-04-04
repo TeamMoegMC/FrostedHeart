@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 
@@ -40,11 +41,8 @@ public class EffectStats extends Effect {
     }
 
 	@Override
-	public JsonElement serialize() {
+	public ResourceLocation getId() {
 		return null;
 	}
 
-	@Override
-	public void write(PacketBuffer buffer) {
-	}
 }

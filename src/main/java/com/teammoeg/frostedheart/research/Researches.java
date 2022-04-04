@@ -5,7 +5,7 @@ import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.research.clues.RootClue;
+import com.teammoeg.frostedheart.research.clues.CustomClue;
 import com.teammoeg.frostedheart.research.effects.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.StringTextComponent;
@@ -15,7 +15,7 @@ import net.minecraft.util.text.StringTextComponent;
  */
 public class Researches {
 
-    public static final RootClue ROOT_CLUE = new RootClue("rootclue", 1.0F, new StringTextComponent("Root Name"), new StringTextComponent("To follow this clue, you need to craft a..."), new StringTextComponent("Some thing you took with your ship..."), false);
+    public static final CustomClue ROOT_CLUE = new CustomClue("rootclue", 1.0F);
 
     public static final Research GEN_T1 = new Research("generator_t1", ResearchCategories.RESCUE,  FHContent.FHItems.energy_core);
     public static final Research GEN_T2 = new Research("generator_t2", ResearchCategories.RESCUE,  FHContent.FHItems.energy_core);

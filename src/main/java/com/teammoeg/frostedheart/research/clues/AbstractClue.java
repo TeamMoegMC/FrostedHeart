@@ -1,40 +1,37 @@
 package com.teammoeg.frostedheart.research.clues;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
 import com.teammoeg.frostedheart.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.util.Writeable;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
 /**
  * "Clue" for researches, contributes completion percentage for some researches.
  * */
-public abstract class AbstractClue extends FHRegisteredItem {
+public abstract class AbstractClue extends FHRegisteredItem implements Writeable{
 	float contribution;//percentage, range (0,1]
 	String ID;
-	IFormattableTextComponent name;
-	IFormattableTextComponent desc;
-	IFormattableTextComponent hint;
-	
-	boolean pend;
 	public float getResearchContribution() {
 		return contribution;
 	}
 
-	public AbstractClue(String ID,float contribution, IFormattableTextComponent name, IFormattableTextComponent desc, IFormattableTextComponent hint,boolean isPend) {
+	public AbstractClue(String ID,float contribution) {
 		this.contribution = contribution;
 		this.ID = ID;
-		this.name = name;
-		this.desc = desc;
-		this.hint = hint;
-		this.pend=isPend;
 	}
 	public void setCompleted(Team team,boolean trig) {
 		ResearchDataManager.INSTANCE.getData(team.getId()).setClueTriggered(this,trig);
@@ -63,27 +60,37 @@ public abstract class AbstractClue extends FHRegisteredItem {
     	for(ServerPlayerEntity spe:team.getOnlineMembers())
     		PacketHandler.send(PacketDistributor.PLAYER.with(()->spe),packet);
     }
-	public boolean isPendingAtStart() {
-		return pend;
-	}
 
 	public String getID() {
 		return ID;
 	}
 
 	public IFormattableTextComponent getName() {
-		return name;
+		return new TranslationTextComponent("clue."+FHMain.MODID+"."+ID+".name");
 	}
 
 	public IFormattableTextComponent getDescription() {
-		return desc;
+		return new TranslationTextComponent("clue."+FHMain.MODID+"."+ID+".desc");
 	}
 
 	public IFormattableTextComponent getHint() {
-		return hint;
+		return new TranslationTextComponent("clue."+FHMain.MODID+"."+ID+".hint");
 	}
 	@Override
 	public String getLId() {
 		return ID;
 	}
+
+	@Override
+	public JsonObject serialize() {
+		JsonObject jo=new JsonObject();
+		jo.addProperty("percent",contribution);
+		return jo;
+	}
+
+	@Override
+	public void write(PacketBuffer buffer) {
+		buffer.writeFloat(contribution);
+	}
+	
 }

@@ -11,12 +11,15 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.effects.Effects;
+import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -24,7 +27,9 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -42,19 +47,60 @@ public class Research extends FHRegisteredItem implements Writeable{
     private HashSet<Supplier<Research>> children = new HashSet<>();//child researches, this is set automatically, should not set manually.
 
     private HashSet<Supplier<AbstractClue>> clues = new HashSet<>();//research clues
-    private ArrayList<IngredientWithSize> requiredItems = new ArrayList<>();
+    private List<IngredientWithSize> requiredItems = new ArrayList<>();
     private List<Effect> effects = new ArrayList<>();//effects of this research
 
     private int points = 2000;//research point
-    private int time;//time cost per research point commit.
 
     @SafeVarargs
     public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
         this(path, category, new ItemStack(Items.AIR), parents);
     }
-    public Research(JsonObject jo) {
-    	
+    public Research(String id,JsonObject jo) {
+    	this.id=id;
+    	icon=Ingredient.deserialize(jo.get("icon")).getMatchingStacks()[0];
+    	category=ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString()));
+    	parents.addAll(SerializeUtil.parseJsonElmList(jo.get("parents"),p->FHResearch.researches.get(p.getAsString())));
+    	clues.addAll(SerializeUtil.parseJsonElmList(jo.get("clues"),p->FHResearch.clues.get(p.getAsString())));
+    	requiredItems=SerializeUtil.parseJsonElmList(jo.get("ingredients"),IngredientWithSize::deserialize);
+    	effects=SerializeUtil.parseJsonList(jo.get("effects"),Effects::deserialize);
+    	points=jo.get("points").getAsInt();
     }
+    public Research(String id,PacketBuffer data) {
+    	this.id=id;
+    	icon=data.readItemStack();
+    	category=ResearchCategories.ALL.get(data.readResourceLocation());
+    	
+    	parents.addAll(SerializeUtil.readList(data,p->FHResearch.researches.get(p.readVarInt())));
+    	clues.addAll(SerializeUtil.readList(data,p->FHResearch.clues.get(p.readVarInt())));
+    	requiredItems=SerializeUtil.readList(data,IngredientWithSize::read);
+    	effects=SerializeUtil.readList(data,Effects::deserialize);
+    	points=data.readVarInt();
+    }
+	@Override
+	public JsonElement serialize() {
+		JsonObject jo=new JsonObject();
+		jo.add("icon",Ingredient.fromStacks(icon).serialize());
+		jo.addProperty("category",category.getId().toString());
+		jo.add("parents",SerializeUtil.toJsonList(parents,p->new JsonPrimitive(p.get().getId())));
+		jo.add("clues",SerializeUtil.toJsonList(clues,p->p.get().serialize()));
+		jo.add("ingredients",SerializeUtil.toJsonList(requiredItems,IngredientWithSize::serialize));
+		jo.add("effects",SerializeUtil.toJsonList(effects,Writeable::serialize));
+		jo.addProperty("points",points);
+		
+		return jo;
+	}
+
+	@Override
+	public void write(PacketBuffer buffer) {
+		buffer.writeItemStack(icon);
+		buffer.writeResourceLocation(category.getId());
+		SerializeUtil.writeList(buffer,parents,(e,p)->p.writeVarInt(e.get().getRId()));
+		SerializeUtil.writeList(buffer,clues,(e,p)->p.writeVarInt(e.get().getRId()));
+		SerializeUtil.writeList(buffer,requiredItems,(e,p)->e.write(p));
+		SerializeUtil.writeList(buffer,effects,(e,p)->e.write(p));
+		buffer.writeVarInt(points);
+	}
     public Set<AbstractClue> getClues() {
         return clues.stream().map(e -> e.get()).collect(Collectors.toSet());
     }
@@ -94,12 +140,11 @@ public class Research extends FHRegisteredItem implements Writeable{
         this.parents.addAll(Arrays.asList(parents));
         this.icon = icon;
         this.category = category;
-        this.time = 20;
     }
 
-    public int getTime() {
+/*    public int getTime() {
         return time;
-    }
+    }*/
 
     public String getId() {
         return id;
@@ -221,12 +266,5 @@ public class Research extends FHRegisteredItem implements Writeable{
         return true;
     }
 
-	@Override
-	public JsonElement serialize() {
-		return null;
-	}
 
-	@Override
-	public void write(PacketBuffer buffer) {
-	}
 }
