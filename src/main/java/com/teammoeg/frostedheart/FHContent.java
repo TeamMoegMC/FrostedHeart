@@ -236,7 +236,7 @@ public class FHContent {
         public static Item hide_hat = new FHBaseArmorItem("hide_hat", FHArmorMaterial.HIDE, EquipmentSlotType.HEAD, createProps());
         public static Item hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, createProps());
         public static Item hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, createProps());
-        public static Item heater_vest = new HeaterVestItem("heater_vest", createProps());
+        public static Item heater_vest = new HeaterVestItem("heater_vest", createProps().maxStackSize(1).setNoRepair());
         public static Item thermos = new ThermosItem("thermos", 1500, 250);
         public static Item advanced_thermos = new ThermosItem("advanced_thermos", 3000, 250);
         public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick",8,4,createProps().defaultMaxDamage(128));
