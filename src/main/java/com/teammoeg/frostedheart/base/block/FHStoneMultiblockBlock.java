@@ -34,19 +34,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T>> extends IEMultiblockBlock<T> {
-    private RegistryObject<TileEntityType<T>> type;
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FHStoneMultiblockBlock(String name, RegistryObject<TileEntityType<T>> type) {
         super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)),type);
-        this.type = type;
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
     public FHStoneMultiblockBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
         super(name, props,type);
-        this.type = type;
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }

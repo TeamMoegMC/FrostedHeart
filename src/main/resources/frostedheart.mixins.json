@@ -68,8 +68,7 @@
     "projecte.MixinPhilosopherStone",
     "projecte.MixinTransmutationStone",
     "projecte.MixinTransmutationTablet",
-    "rankine.AlloyTemplateItemMixin",
-    "rankine.MixinDryMortarItemEntity",
+    "rankine.MixinGrassySoilBlock",
     "rankine.MixinLargeTree",
     "rankine.MixinMediumTree",
     "snow.HookMixin",
@@ -86,7 +85,6 @@
     "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
     "create.MixinOpenConfigButtonHandler",
-    "rankine.MixinDryMortarItem",
     "client.ServerWorldInfoMixin"
   ],
   "injectors": {

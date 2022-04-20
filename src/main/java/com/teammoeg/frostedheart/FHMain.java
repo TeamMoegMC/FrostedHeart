@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.research.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -53,6 +54,7 @@ import com.teammoeg.frostedheart.world.FHBiomes;
 import com.teammoeg.frostedheart.world.FHStructures;
 
 import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -139,6 +141,12 @@ public class FHMain {
         !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))||
         !mixins.contains(new JsonPrimitive( "projecte.MixinTransmutationTablet")))
         	throw new ChException.作弊者禁止进入();
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.COARSE_DIRT);
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.SAND);
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.RED_SAND);
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
     public void setup(final FMLCommonSetupEvent event) {

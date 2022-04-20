@@ -23,6 +23,7 @@ import java.util.function.ToIntFunction;
 
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
 import net.minecraft.block.BlockState;
@@ -42,6 +43,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
@@ -124,5 +126,9 @@ public class FHUtils {
 		}
 	
 		return 0;
+	}
+	public static boolean canGrassSurvive(IWorldReader world,BlockPos pos) {
+		float t=ChunkData.getTemperature(world, pos);
+		return t >= WorldClimate.HEMP_GROW_TEMPERATURE&&t<=WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
 	}
 }

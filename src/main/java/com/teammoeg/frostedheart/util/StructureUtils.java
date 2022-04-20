@@ -23,7 +23,6 @@ public class StructureUtils {
 		baned.add(Blocks.SMOKER);
 		baned.add(Blocks.BLAST_FURNACE);
 		RemapRL(Blocks.CHEST,new ResourceLocation("stone_age","stone_chest"));
-		System.out.println("frostedheart structure reloaded");
 	}
 	public static Block getChest() {
 		Block b=ForgeRegistries.BLOCKS.getValue(new ResourceLocation("stone_age","stone_chest"));
