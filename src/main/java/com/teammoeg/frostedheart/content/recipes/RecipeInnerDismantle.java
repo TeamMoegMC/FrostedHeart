@@ -128,6 +128,7 @@ public class RecipeInnerDismantle extends SpecialRecipe {
 			ItemStack item = inv.getStackInSlot(i);
 			if (!item.isEmpty()) {
 				ItemStack real = item.copy();
+				real.setCount(1);
 				real.removeChildTag("inner_cover_tag");
 				real.removeChildTag("inner_cover");
 				real.removeChildTag("inner_bounded");
