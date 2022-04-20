@@ -125,7 +125,7 @@ public class RecipeInner extends SpecialRecipe {
 
 		if (!armoritem.isEmpty() && !buffstack.isEmpty()) {
 			ItemStack ret = armoritem.copy();
-			armoritem.setCount(1);
+			ret.setCount(1);
 			ItemNBTHelper.putString(ret, "inner_cover", buffstack.getItem().getRegistryName().toString());
 			CompoundNBT nbt = buffstack.getTag();
 			ret.getTag().put("inner_cover_tag", nbt != null ? nbt : new CompoundNBT());
