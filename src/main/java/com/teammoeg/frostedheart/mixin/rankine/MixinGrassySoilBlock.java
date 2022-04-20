@@ -23,7 +23,7 @@ public class MixinGrassySoilBlock extends GrassBlock {
 		super(properties);
 	}
 	
-	@Inject(at=@At("HEAD"),method="isSnowyConditions",cancellable=true)
+	@Inject(at=@At("HEAD"),method="isSnowyConditions",cancellable=true,remap=false)
 	private static void isSnowyConditions(BlockState state, IWorldReader worldReader, BlockPos pos,CallbackInfoReturnable<Boolean> cbi) {
         if(!FHUtils.canGrassSurvive(worldReader, pos))
         	cbi.setReturnValue(false);
