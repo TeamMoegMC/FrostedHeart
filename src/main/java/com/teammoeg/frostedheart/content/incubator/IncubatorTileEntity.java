@@ -31,10 +31,10 @@ import net.minecraftforge.items.IItemHandler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class RelicChestTileEntity extends LockableLootTileEntity implements IIEInventory {
+public class IncubatorTileEntity extends LockableLootTileEntity implements IIEInventory {
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
-    public RelicChestTileEntity() {
+    public IncubatorTileEntity() {
         super(FHContent.FHTileTypes.RELIC_CHEST.get());
         this.inventory = NonNullList.withSize(15, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(15, this));
