@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.lang.reflect.InvocationTargetException;
-
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 
@@ -71,14 +69,8 @@ public class HeatDebugItem extends Item {
                 playerIn.sendMessage(new StringTextComponent("HeatProvider network=" + ((HeatProvider) te).getNetwork()), playerIn.getUniqueID());
             } else if (te instanceof EnergyNetworkProvider) {
                 playerIn.sendMessage(new StringTextComponent("EnergyNetworkProvider network=" + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
-            }
-            try {
-                if (te != null && te.getClass().getMethod("getNetwork") != null) {
-                    Object nw = te.getClass().getMethod("getNetwork").invoke(te);
-                    playerIn.sendMessage(new StringTextComponent("Other tile network=" + nw), playerIn.getUniqueID());
-                }
-            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                // TODO Auto-generated catch block
+            }else if(te instanceof INetworkConsumer) {
+            	playerIn.sendMessage(new StringTextComponent("EnergyNetworkConsumer data=" + ((INetworkConsumer) te).getHolder()), playerIn.getUniqueID());
             }
             return ActionResult.resultSuccess(itemstack);
         }

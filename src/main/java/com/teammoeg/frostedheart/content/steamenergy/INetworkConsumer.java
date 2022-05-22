@@ -20,10 +20,10 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import net.minecraft.util.Direction;
 
-public interface IConnectable {
-    boolean disconnectAt(Direction to);
-
-    boolean connectAt(Direction to);
+public interface INetworkConsumer {
+    boolean connect(Direction d,int distance);
 
     boolean canConnectAt(Direction to);
+    
+    NetworkHolder getHolder();
 }

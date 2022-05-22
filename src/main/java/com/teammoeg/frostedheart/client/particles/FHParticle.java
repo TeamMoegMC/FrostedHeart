@@ -35,6 +35,9 @@ public class FHParticle extends SpriteTexturedParticle {
 
     public FHParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
         super(world, x, y, z, motionX, motionY, motionZ);
+        this.motionX*=1.25;
+        this.motionY*=1.25;
+        this.motionZ*=1.25;
     }
 
     public IParticleRenderType getRenderType() {
@@ -46,27 +49,25 @@ public class FHParticle extends SpriteTexturedParticle {
         float age = (this.age + pt) / maxAge * 32.0F;
 
         age = MathHelper.clamp(age, 0.0F, 1.0F);
-
-        this.particleScale = originalScale * age;
+        super.particleAlpha=MathHelper.clamp(1-(this.age + pt) / maxAge, 0.0F, 1.0F);
+        super.particleScale = originalScale*(age+this.age*0.0375F);
         super.renderParticle(worldRendererIn, entityIn, pt);
     }
 
     public void tick() {
-        this.prevPosX = posX;
+    	this.prevPosX = posX;
         this.prevPosY = posY;
         this.prevPosZ = posZ;
         if (age >= maxAge)
             setExpired();
         this.age++;
-
         this.motionY -= 0.04D * particleGravity;
-        move(motionX, motionY, motionZ);
+        move(motionX,motionY, motionZ);
 
         if (posY == prevPosY) {
             this.motionX *= 1.1D;
             this.motionZ *= 1.1D;
         }
-
         this.motionX *= 0.96D;
         this.motionY *= 0.96D;
         this.motionZ *= 0.96D;

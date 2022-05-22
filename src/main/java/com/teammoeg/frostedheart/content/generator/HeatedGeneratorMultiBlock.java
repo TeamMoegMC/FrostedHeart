@@ -18,7 +18,7 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
@@ -48,10 +48,10 @@ public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);
-        if (te instanceof IConnectable) {
+        if (te instanceof INetworkConsumer) {
             Vector3i vec = pos.subtract(fromPos);
             Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((IConnectable) te).connectAt(dir);
+            ((INetworkConsumer) te).connect(dir,0);
         }
     }
 

@@ -27,8 +27,8 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
-import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
-import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -55,7 +55,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 public class ChargerTileEntity extends IEBaseTileEntity implements
-        IConnectable, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity, FHBlockInterfaces.IActiveState {
+        INetworkConsumer, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity, FHBlockInterfaces.IActiveState {
     NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public float power = 0;
     public static final int INPUT_SLOT = 0;
@@ -65,20 +65,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         super(FHContent.FHTileTypes.CHARGER.get());
     }
 
-    SteamEnergyNetwork network;
+    NetworkHolder network=new NetworkHolder();
     Direction last;
 
-    SteamEnergyNetwork getNetwork() {
-        if (network != null && network.isValid()) return network;
-        if (last == null) return null;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(last));
-        if (te instanceof EnergyNetworkProvider) {
-            network = ((EnergyNetworkProvider) te).getNetwork();
-        } else {
-            disconnectAt(last);
-        }
-        return network;
-    }
 
     public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
         if (is != null) {
@@ -180,20 +169,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public boolean disconnectAt(Direction to) {
-        if (last == to) {
-            network = null;
-            for (Direction d : Direction.values()) {
-                if (d == to) continue;
-                if (connectAt(d))
-                    break;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean connectAt(Direction to) {
+    public boolean connect(Direction to,int dist) {
         Direction bd = this.getWorld().getBlockState(this.getPos()).get(BlockStateProperties.FACING);
         if (to != bd &&
                 !((bd != Direction.DOWN && to == Direction.DOWN)
@@ -201,14 +177,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                         || (bd == Direction.DOWN && to == Direction.SOUTH))) return false;
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof EnergyNetworkProvider) {
-            last = to;
-            SteamEnergyNetwork nw = ((EnergyNetworkProvider) te).getNetwork();
-            if (nw != null) {
-                network = nw;
-                return true;
-            }
-        } else
-            disconnectAt(to);
+            network.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
+            return true;
+        }
         return false;
     }
 
@@ -254,8 +225,8 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     @Override
     public void tick() {
         if (!world.isRemote) {
-            SteamEnergyNetwork network = getNetwork();
-            if (network != null) {
+            if (network.isValid()) {
+            	network.tick();
                 float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
                 if (actual > 0) {
                     power += actual * 0.8;
@@ -279,5 +250,8 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 	@Override
 	public void doGraphicalUpdates() {
 	}
-
+	@Override
+	public NetworkHolder getHolder() {
+		return network;
+	}
 }

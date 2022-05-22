@@ -27,7 +27,8 @@ import com.teammoeg.frostedheart.content.generator.AbstractGenerator;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
-import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
@@ -43,7 +44,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
 public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> implements
-        IConnectable, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
+        INetworkConsumer, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
     public float power = 0;
     public int process = 0;
     public int processMax = 0;
@@ -55,20 +56,8 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         super(FHContent.FHMultiblocks.RADIATOR, FHContent.FHTileTypes.RADIATOR.get(), false);
     }
 
-    SteamEnergyNetwork network;
-    Direction last;
+    NetworkHolder network=new NetworkHolder();
 
-    SteamEnergyNetwork getNetwork() {
-        if (network != null && network.isValid()) return network;
-        if (last == null) return null;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(last));
-        if (te instanceof EnergyNetworkProvider) {
-            network = ((EnergyNetworkProvider) te).getNetwork();
-        } else {
-            disconnectAt(last);
-        }
-        return network;
-    }
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -77,8 +66,6 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         process = nbt.getInt("process");
         processMax = nbt.getInt("processMax");
         tempLevelLast = nbt.getFloat("temp");
-        if (nbt.contains("dir"))
-            last = Direction.values()[nbt.getInt("dir")];
     }
 
     @Override
@@ -88,36 +75,16 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         nbt.putInt("process", process);
         nbt.putInt("processMax", processMax);
         nbt.putFloat("temp", tempLevelLast);
-        if (last != null)
-            nbt.putInt("dir", last.ordinal());
     }
 
     @Override
-    public boolean disconnectAt(Direction to) {
-        if (last == to) {
-            network = null;
-            for (Direction d : Direction.values()) {
-                if (d == to) continue;
-                if (connectAt(d))
-                    break;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean connectAt(Direction to) {
+    public boolean connect(Direction to,int dist) {
         if (this.offsetToMaster.getY() != 0) return false;
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof EnergyNetworkProvider) {
-            last = to;
-            network = ((EnergyNetworkProvider) te).getNetwork();
-            if (te instanceof HeatPipeTileEntity) {
-                te.getBlockState().with(HeatPipeBlock.FACING_TO_PROPERTY_MAP.get(to.getOpposite()), true);
-            }
+            network.connect(((EnergyNetworkProvider) te).getNetwork(),dist);
             return true;
-        } else
-            disconnectAt(to);
+        }
         return false;
     }
 
@@ -157,8 +124,8 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 
     @Override
     protected void tickFuel() {
-        SteamEnergyNetwork network = getNetwork();
-        if (network != null) {
+        if (network.isValid()) {
+        	network.tick();
             float actual = network.drainHeat(Math.min(24, getMaxPower() - power));
             if (actual > 0) {
                 power += actual;
@@ -166,11 +133,11 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
             }
         }
         if (process > 0) {
-            if (network != null)
+            if (network.isValid())
                 process -= network.getTemperatureLevel();
             else
                 process -= tempLevelLast;
-        } else if (network != null && power >= 4 * 160 * network.getTemperatureLevel()) {
+        } else if (network.isValid()&& power >= 4 * 160 * network.getTemperatureLevel()) {
             power -= 4 * 160 * network.getTemperatureLevel();
             process = (int) (160 * network.getTemperatureLevel());
             processMax = (int) (160 * network.getTemperatureLevel());
@@ -178,7 +145,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         } else {
             this.setActive(false);
         }
-        if (network != null && tempLevelLast != network.getTemperatureLevel()) {
+        if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
             tempLevelLast = network.getTemperatureLevel();
             this.markChanged(true);
         }
@@ -234,5 +201,8 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 	public boolean shouldUnique() {
 		return false;
 	}
-
+	@Override
+	public NetworkHolder getHolder() {
+		return network;
+	}
 }

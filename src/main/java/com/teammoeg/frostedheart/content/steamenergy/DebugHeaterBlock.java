@@ -62,10 +62,10 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);
-        if (te instanceof IConnectable) {
+        if (te instanceof INetworkConsumer) {
             Vector3i vec = pos.subtract(fromPos);
             Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((IConnectable) te).connectAt(dir);
+            ((INetworkConsumer) te).connect(dir,0);
         }
     }
 

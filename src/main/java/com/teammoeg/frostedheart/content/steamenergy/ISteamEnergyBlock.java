@@ -32,20 +32,11 @@ public interface ISteamEnergyBlock {
     public default boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
         if (world instanceof World) {
             TileEntity te = Utils.getExistingTileEntity((World) world, pos);
-            if (te instanceof IConnectable) {
-                return ((IConnectable) te).canConnectAt(dir);
+            if (te instanceof INetworkConsumer) {
+                return ((INetworkConsumer) te).canConnectAt(dir);
             }
         }
         return false;
     }
 
-    public default void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
-                                        boolean isMoving) {
-        TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);
-        if (te instanceof IConnectable) {
-            Vector3i vec = pos.subtract(fromPos);
-            Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((IConnectable) te).connectAt(dir);
-        }
-    }
 }

@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -83,16 +83,6 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     }
 
 
-    @Override
-    public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
-                                boolean isMoving) {
-        TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
-        if (te instanceof ChargerTileEntity) {
-            Vector3i vec = fromPos.subtract(pos);
-            Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((IConnectable) te).connectAt(dir);
-        }
-    }
 
 
     @Override

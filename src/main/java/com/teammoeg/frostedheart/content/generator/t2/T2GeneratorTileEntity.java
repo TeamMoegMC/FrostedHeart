@@ -27,7 +27,8 @@ import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProvider;
-import com.teammoeg.frostedheart.content.steamenergy.IConnectable;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -42,7 +43,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity> implements HeatProvider, IConnectable {
+public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity> implements HeatProvider, INetworkConsumer {
     @Override
     public void disassemble() {
         if (sen != null)
@@ -166,12 +167,12 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		this.tickLiquid();
 		refreshTimer--;
 		if(refreshTimer<=0) {
-			refreshTimer=20;
+			refreshTimer=5;
 			for (BlockPos nwt : networkTile) {
                 BlockPos actualPos = getBlockPosForPos(nwt);
                 TileEntity te = Utils.getExistingTileEntity(world, actualPos.down());
-                if (te instanceof HeatPipeTileEntity) {
-                    ((HeatPipeTileEntity) te).doTestConnect(Direction.UP);
+                if (te instanceof INetworkConsumer) {
+                    ((INetworkConsumer) te).connect(Direction.UP,0);
                 }
             }
 		}
@@ -276,32 +277,18 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
         }
         return super.getRangeLevel();
     }
-
     @Override
-    public boolean disconnectAt(Direction to) {
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof IConnectable && !(te instanceof HeatProvider)) {
-            ((IConnectable) te).disconnectAt(to.getOpposite());
-        }
-        return true;
-    }
-
-    @Override
-    public boolean connectAt(Direction to) {
-        if (to != Direction.DOWN || this.offsetToMaster.getY() != -1 || (this.offsetToMaster.getX() != 0 && this.offsetToMaster.getZ() != 0))
-            return false;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof IConnectable && !(te instanceof HeatProvider)) {
-            //System.out.println("connecting");
-            ((IConnectable) te).connectAt(to.getOpposite());
-        }
-        return true;
+    public boolean connect(Direction to,int dist) {
+        return false;
     }
 
     @Override
     public boolean canConnectAt(Direction to) {
         return to == Direction.UP && (this.offsetToMaster.getX() == 0 || this.offsetToMaster.getZ() == 0);
     }
-
+	@Override
+	public NetworkHolder getHolder() {
+		return null;
+	}
 
 }

@@ -24,10 +24,11 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider, IConnectable {
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider, INetworkConsumer,ITickableTileEntity {
     public DebugHeaterTileEntity() {
         super(FHContent.FHTileTypes.DEBUGHEATER.get());
     }
@@ -58,25 +59,6 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
     }
 
     @Override
-    public boolean disconnectAt(Direction to) {
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof IConnectable && !(te instanceof HeatProvider)) {
-            ((IConnectable) te).disconnectAt(to.getOpposite());
-        }
-        return true;
-    }
-
-    @Override
-    public boolean connectAt(Direction to) {
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof IConnectable && !(te instanceof HeatProvider)) {
-            ((IConnectable) te).connectAt(to.getOpposite());
-        }
-        return true;
-    }
-
-
-    @Override
     public float getTemperatureLevel() {
         return this.getBlockState().get(BlockStateProperties.LEVEL_1_8);
     }
@@ -86,4 +68,26 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
         return true;
     }
 
+	@Override
+	public boolean connect(Direction to, int distance) {
+		return false;
+	}
+	int propcd=0;
+	@Override
+	public void tick() {
+		if(propcd==0) {
+			for(Direction d:Direction.values()) {
+				TileEntity te=Utils.getExistingTileEntity(this.getWorld(),pos.offset(d));
+				if(te instanceof INetworkConsumer)
+					if(((INetworkConsumer) te).canConnectAt(d.getOpposite()))
+						((INetworkConsumer) te).connect(d.getOpposite(),0);
+			}
+			propcd=5;
+		}else
+			propcd--;
+	}
+	@Override
+	public NetworkHolder getHolder() {
+		return null;
+	}
 }
