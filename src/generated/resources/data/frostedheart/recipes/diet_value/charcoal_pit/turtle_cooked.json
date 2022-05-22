@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.002371472,
-    "vitamin": 0.002619114
+    "vitamin": 0.001636946
   },
   "item": "charcoal_pit:turtle_cooked"
 }

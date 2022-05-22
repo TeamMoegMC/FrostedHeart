@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.003247272,
-    "vitamin": 0.006508385
+    "vitamin": 0.004067741
   },
   "item": "crockpot:meat_balls"
 }

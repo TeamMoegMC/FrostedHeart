@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.01185736,
-    "vitamin": 0.013095569
+    "vitamin": 0.008184731
   },
   "item": "crockpot:bone_stew"
 }

@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 8.80195E-4,
-    "vitamin": 0.001446308
+    "vitamin": 9.03942E-4
   },
   "item": "minecraft:chicken"
 }

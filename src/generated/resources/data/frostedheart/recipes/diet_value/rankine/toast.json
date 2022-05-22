@@ -1,6 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
+    "sugars": 0.00122771,
     "grains": 0.003557208
   },
   "item": "rankine:toast"

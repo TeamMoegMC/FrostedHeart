@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.001309557,
+    "sugars": 4.09237E-4,
     "grains": 0.001185736
   },
   "item": "minecraft:cookie"

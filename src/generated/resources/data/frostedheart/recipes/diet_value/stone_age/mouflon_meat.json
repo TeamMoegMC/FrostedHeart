@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.001320292,
-    "vitamin": 0.002169462
+    "vitamin": 0.001355914
   },
   "item": "stone_age:mouflon_meat"
 }

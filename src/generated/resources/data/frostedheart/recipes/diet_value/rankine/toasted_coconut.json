@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.001309557,
+    "sugars": 4.86055E-4,
     "vegetables": 0.001185736
   },
   "item": "rankine:toasted_coconut"
