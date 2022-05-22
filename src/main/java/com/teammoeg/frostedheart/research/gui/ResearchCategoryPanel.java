@@ -13,7 +13,6 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.util.text.StringTextComponent;
 
 public class ResearchCategoryPanel extends Panel {
 	public static final int CAT_PANEL_HEIGHT = 40;
@@ -65,10 +64,12 @@ public class ResearchCategoryPanel extends Panel {
 
 	@Override
 	public void addWidgets() {
-		for (int k = 0; k < ResearchCategories.ALL.size(); k++) {
-			CategoryButton button = new CategoryButton(this, ResearchCategories.ALL.get(k));
+		int k=0;
+		for (ResearchCategory r:ResearchCategories.ALL.values()) {
+			CategoryButton button = new CategoryButton(this,r);
 			button.setPosAndSize(posX + k * (width / 5), posY, width / 5, height - PADDING * 2);
 			add(button);
+			k++;
 		}
 	}
 

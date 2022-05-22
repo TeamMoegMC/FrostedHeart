@@ -100,7 +100,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 unpropagate(from);
                 return;
             }
-            //setActive(true);
+
             if (hasNetwork() && length <= lengthx) return;
             length = lengthx;
             dMaster = from;

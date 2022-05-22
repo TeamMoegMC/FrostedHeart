@@ -50,12 +50,15 @@ import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.FHVersion;
+import com.teammoeg.frostedheart.util.RankineRemap;
 import com.teammoeg.frostedheart.world.FHBiomes;
 import com.teammoeg.frostedheart.world.FHStructures;
 
 import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -141,6 +144,7 @@ public class FHMain {
         !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))||
         !mixins.contains(new JsonPrimitive( "projecte.MixinTransmutationTablet")))
         	throw new ChException.作弊者禁止进入();
+        //remove primal winter blocks not to temper rankine world
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.COARSE_DIRT);
@@ -154,7 +158,10 @@ public class FHMain {
     	MinecraftForge.EVENT_BUS.addListener(this::serverStart);
     	MinecraftForge.EVENT_BUS.addListener(this::serverSave);
     	MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
+    	
     	MinecraftForge.EVENT_BUS.addGenericListener(Fluid.class,this::missingMapping);
+    	MinecraftForge.EVENT_BUS.addGenericListener(Item.class,this::missingMappingR);
+    	MinecraftForge.EVENT_BUS.addGenericListener(Block.class,this::missingMappingB);
     	if(ModList.get().isLoaded("projecte")) {
     		MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
     		System.out.println("pe loaded");
@@ -189,6 +196,22 @@ public class FHMain {
     }
     private void processIMC(final InterModProcessEvent event) {
 
+    }
+    private void missingMappingR(MissingMappings<Item> miss) {
+    	ResourceLocation hw=new ResourceLocation(MODID,"hot_water");
+    	for(Mapping<Item> i:miss.getAllMappings()) {
+    		ResourceLocation rl=RankineRemap.rankineremap.get(i.key);
+    		if(rl!=null)
+    			i.remap(ForgeRegistries.ITEMS.getValue(rl));
+    	}
+    }
+    private void missingMappingB(MissingMappings<Block> miss) {
+    	ResourceLocation hw=new ResourceLocation(MODID,"hot_water");
+    	for(Mapping<Block> i:miss.getAllMappings()) {
+    		ResourceLocation rl=RankineRemap.rankineremap.get(i.key);
+    		if(rl!=null)
+    			i.remap(ForgeRegistries.BLOCKS.getValue(rl));
+    	}
     }
     private void missingMapping(MissingMappings<Fluid> miss) {
     	ResourceLocation hw=new ResourceLocation(MODID,"hot_water");

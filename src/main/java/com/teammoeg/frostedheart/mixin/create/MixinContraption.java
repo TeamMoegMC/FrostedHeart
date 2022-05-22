@@ -36,6 +36,7 @@ import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.template.Template.BlockInfo;
+import net.minecraftforge.common.util.Constants.BlockFlags;
 @Mixin(Contraption.class)
 public abstract class MixinContraption implements ISpeedContraption{
 	float speed;
@@ -62,12 +63,18 @@ public abstract class MixinContraption implements ISpeedContraption{
 		BlockState blockState = world.getBlockState(targetPos);
 		
 		if(sc<20480)
-			if (!blockState.getCollisionShape(world, targetPos).isEmpty()) {
+			if (!blockState.getCollisionShape(world, targetPos).isEmpty()&&blockState.getBlockHardness(world, targetPos)!=-1) {
 				if (targetPos.getY() == 0)
 					targetPos = targetPos.up();
-				world.playEvent(2001, targetPos, Block.getStateId(state));
-				if(state.getCollisionShape(world, targetPos).isEmpty())
+				if(!state.getCollisionShape(world, targetPos).isEmpty()) {
+					world.playEvent(2001, targetPos, Block.getStateId(blockState));
+					world.setBlockState(targetPos,state,3|BlockFlags.IS_MOVING);
+					if(!blockState.getRequiresTool())
+						Block.spawnDrops(blockState, world, targetPos, null);
+				}else {
+					world.playEvent(2001, targetPos, Block.getStateId(state));
 					Block.spawnDrops(state, world, targetPos, null);
+				}
 				return true;
 			}
 		return false;
@@ -76,7 +83,7 @@ public abstract class MixinContraption implements ISpeedContraption{
 	public void fh$writeNBT(boolean spawnPacket,CallbackInfoReturnable<CompoundNBT> cbi,CompoundNBT cnbt) {
 		cnbt.putFloat("speedCollected",sc);
 	}
-	@Inject(at=@At("RETURN"),method="readNBT",remap=false)
+	@Inject(at=@At("HEAD"),method="readNBT",remap=false)
 	public void fh$readNBT(World world, CompoundNBT nbt, boolean spawnData,CallbackInfo cbi) {
 		sc=nbt.getFloat("speedCollected");
 	}
