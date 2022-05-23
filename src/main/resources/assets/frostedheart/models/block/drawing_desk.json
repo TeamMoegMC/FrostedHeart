@@ -1,9 +1,10 @@
 {
-  "parent": "block/block",
-  "loader": "forge:obj",
-  "model": "frostedheart:models/block/drawing_desk.obj",
-  "flip-v": true,
+  "parent": "minecraft:block/block",
   "textures": {
-    "particle": "frostedheart:block/obj/drawing_desk"
-  }
+    "particle": "frostedheart:block/escritoire_main"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/escritoire.obj",
+  "detectCullableFaces": false,
+  "flip-v": true
 }

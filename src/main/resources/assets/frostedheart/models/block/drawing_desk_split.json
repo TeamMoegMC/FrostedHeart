@@ -1,0 +1,21 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"particle": "frostedheart:block/escritoire_main"
+	},
+	"loader": "immersiveengineering:basic_split",
+	"dynamic": false,
+	"base_model": "frostedheart:block/drawing_desk",
+	"split_parts": [
+		[
+			0,
+			0,
+			0
+		],
+		[
+			1,
+			0,
+			0
+		]
+	]
+}

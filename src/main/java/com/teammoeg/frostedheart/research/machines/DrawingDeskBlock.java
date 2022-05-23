@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchLevel;
 import com.teammoeg.frostedheart.research.gui.ResearchScreen;
 
+import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -47,19 +48,40 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
-public class DrawingDeskBlock extends FHBaseBlock {
+public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider{
 
     public static final BooleanProperty IS_NOT_MAIN = BooleanProperty.create("not_multi_main");
     public static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.Plane.HORIZONTAL);
     public static final BooleanProperty BOOK = BooleanProperty.create("has_book");
 
+	static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 15, 16);
+	static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 12, 16);
+
+	@Override
+	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
+			ISelectionContext context) {
+		if(state.get(IS_NOT_MAIN))
+			return shape2;
+		return shape;
+	}
+
+	@Override
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+		if(state.get(IS_NOT_MAIN))
+			return shape2;
+		return shape;
+	}
     public DrawingDeskBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
         this.setDefaultState(this.stateContainer.getBaseState().with(IS_NOT_MAIN, false).with(BOOK, false));
+        super.setLightOpacity(0);
     }
 
     @Override
@@ -92,7 +114,7 @@ public class DrawingDeskBlock extends FHBaseBlock {
         Direction direction = context.getPlacementHorizontalFacing().rotateYCCW();
         BlockPos blockpos = context.getPos();
         BlockPos blockpos1 = blockpos.offset(direction);
-        return context.getWorld().getBlockState(blockpos1).isReplaceable(context) ? this.getDefaultState().with(FACING, direction) : null;
+        return context.getWorld().getBlockState(blockpos1).isReplaceable(context) ? this.getDefaultState().with(FACING, direction.getOpposite()) : null;
     }
 
     @Override
@@ -115,9 +137,8 @@ public class DrawingDeskBlock extends FHBaseBlock {
     public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos) {
         if (facing == getNeighbourDirection(stateIn.get(IS_NOT_MAIN), stateIn.get(FACING)) && facingState.getBlock() != this) {
             return Blocks.AIR.getDefaultState();
-        } else {
-            return super.updatePostPlacement(stateIn, facing, facingState, worldIn, currentPos, facingPos);
         }
+		return super.updatePostPlacement(stateIn, facing, facingState, worldIn, currentPos, facingPos);
     }
 
     @Override
@@ -167,5 +188,13 @@ public class DrawingDeskBlock extends FHBaseBlock {
         TileEntity tileentity = worldIn.getTileEntity(pos);
         return tileentity != null && tileentity.receiveClientEvent(id, param);
     }
+
+	@Override
+	public BlockPos getModelOffset(BlockState arg0, Vector3i arg1) {
+		if(arg0.get(IS_NOT_MAIN))
+			return new BlockPos(1,0,0);
+		return new BlockPos(0,0,0);
+		//return null;
+	}
 }
 

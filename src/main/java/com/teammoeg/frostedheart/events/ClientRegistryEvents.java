@@ -76,10 +76,10 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.wolfberry_bush_block, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.drawing_desk, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutoutMipped());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getTranslucent());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.relic_chest, RenderType.getTranslucent());
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(),T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(),T2GeneratorRenderer::new);

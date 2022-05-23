@@ -55,4 +55,5 @@ public class ResearchCategory {
     public ResourceLocation getId() {
         return id;
     }
+
 }

@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.research.gui;
 
-import static com.teammoeg.frostedheart.research.gui.ResearchScreen.PADDING;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchCategories;
@@ -49,16 +47,17 @@ public class ResearchCategoryPanel extends Panel {
 
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-			setSize(w, h);
-			
+
 			//theme.drawHorizontalTab(matrixStack, x, y, w, h,categoryPanel.researchScreen.selectedCategory==category);
-			if(categoryPanel.researchScreen.selectedCategory==category)
-				Extrawidgets.TAB_V_SELECTED.draw(matrixStack, x, y-3, w, h+2);
-			else
-				Extrawidgets.TAB_V_UNSELECTED.draw(matrixStack, x, y-3, w, h);
+			
+			if(categoryPanel.researchScreen.selectedCategory==category) {
+				DrawDeskIcons.TAB_HL.draw(matrixStack, x, y, w, 7);
+				this.drawIcon(matrixStack, theme,x + 7,y + 2, 16, 16);
+			}else
+				this.drawIcon(matrixStack, theme,x + 7,y + 5, 16, 16);
 			//super.drawBackground(matrixStack, theme, x, y, w, h);
-			this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y + 4, 16, 16);
-			theme.drawString(matrixStack, category.getName(), x + (w - theme.getStringWidth(category.getName())) / 2, y + 24);
+			
+			//theme.drawString(matrixStack, category.getName(), x + (w - theme.getStringWidth(category.getName())) / 2, y + 24);
 		}
 	}
 
@@ -67,7 +66,7 @@ public class ResearchCategoryPanel extends Panel {
 		int k=0;
 		for (ResearchCategory r:ResearchCategories.ALL.values()) {
 			CategoryButton button = new CategoryButton(this,r);
-			button.setPosAndSize(posX + k * (width / 5), posY, width / 5, height - PADDING * 2);
+			button.setPosAndSize(k * 40,0,30,21);
 			add(button);
 			k++;
 		}
@@ -81,7 +80,12 @@ public class ResearchCategoryPanel extends Panel {
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		super.draw(matrixStack, theme, x, y, w, h);
-		drawBackground(matrixStack, theme, x, y, w, h);
+		//drawBackground(matrixStack, theme, x, y, w, h);
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return researchScreen.canEnable(this);
 	}
 
 }

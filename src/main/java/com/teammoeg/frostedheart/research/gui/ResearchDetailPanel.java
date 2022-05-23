@@ -1,26 +1,12 @@
 package com.teammoeg.frostedheart.research.gui;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.clues.AbstractClue;
-import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.Research;
 
-import com.teammoeg.frostedheart.research.effects.EffectBuilding;
-import com.teammoeg.frostedheart.research.effects.EffectItemReward;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.*;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.List;
 
 public class ResearchDetailPanel extends Panel {
 	Research research;
@@ -81,6 +67,15 @@ public class ResearchDetailPanel extends Panel {
 	public void open(Research r) {
 		this.research=r;
 		this.refreshWidgets();
+		researchScreen.setModal(this);;
+		researchScreen.refreshWidgets();
+		
+	}
+	public void close() {
+		this.research=null;
+		this.refreshWidgets();
+		researchScreen.closeModal(this);
+		researchScreen.refreshWidgets();
 	}
 
 	@Override
@@ -120,5 +115,8 @@ public class ResearchDetailPanel extends Panel {
 
 		}
 	}
-
+	@Override
+	public boolean isEnabled() {
+		return researchScreen.canEnable(this)&&research!=null;
+	}
 }

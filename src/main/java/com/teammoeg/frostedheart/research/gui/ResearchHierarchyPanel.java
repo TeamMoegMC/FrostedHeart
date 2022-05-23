@@ -26,9 +26,9 @@ public class ResearchHierarchyPanel extends Panel {
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			if(r.isCompleted())
-				color=Color4I.GREEN;
+				color=Color4I.rgb(0x474139);
 			else
-				color=Color4I.RED;
+				color=Color4I.rgb(0xADA691);
 			super.draw(matrixStack, theme, x, y, w, h);
 		}
 		
@@ -50,8 +50,8 @@ public class ResearchHierarchyPanel extends Panel {
         add(button);
         button.setPos((width - 64) / 2, (height - 48) / 2);
         int jointx=button.posX+button.width/2;
-        int upjointy=button.posY;
-        int downjointy=upjointy+button.height;
+        int upjointy=button.posY+2;
+        int downjointy=upjointy+button.height-4;
         int k = 0;
         Set<Research> parents=researchScreen.selectedResearch.getParents();
         int psize=parents.size()>4?5:parents.size();
@@ -62,7 +62,7 @@ public class ResearchHierarchyPanel extends Panel {
             parentButton.setPos((width - 34 * psize) / 2 + k * 34, (height / 2 - 24) / 2);
             ThickLine l=new ResearchHierarchyLine(this,parent);
             add(l);
-            l.setPosAndSize(jointx,upjointy,parentButton.posX+parentButton.width/2-jointx,parentButton.posY+parentButton.height-upjointy);
+            l.setPosAndSize(jointx,upjointy,parentButton.posX+parentButton.width/2-jointx,parentButton.posY+parentButton.height-upjointy-4);
             k++;
         }
 
@@ -77,7 +77,7 @@ public class ResearchHierarchyPanel extends Panel {
 	            childButton.setPos((width - 34 * csize) / 2 + k * 34, (height / 2 - 24) / 2 + height / 2);
 	            ThickLine l=new ResearchHierarchyLine(this,researchScreen.selectedResearch);
 	            add(l);
-	            l.setPosAndSize(jointx,downjointy,childButton.posX+childButton.width/2-jointx,childButton.posY-downjointy);
+	            l.setPosAndSize(jointx,downjointy,childButton.posX+childButton.width/2-jointx,childButton.posY-downjointy+6);
 	            
 	            k++;
 	        }
@@ -91,13 +91,14 @@ public class ResearchHierarchyPanel extends Panel {
 
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawPanelBackground(matrixStack, x, y, w, h);
+        //theme.drawPanelBackground(matrixStack, x, y, w, h);
     }
 
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
-        theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 10, y + 10);
+        theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 3, y + 3,Color4I.rgb(0x474139),0);
+        DrawDeskIcons.HLINE_L.draw(matrixStack, x+1, y+13,80,3);
     }
 
     public static class ResearchDetailButton extends Button {
@@ -109,7 +110,7 @@ public class ResearchHierarchyPanel extends Panel {
             super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
             this.research = research;
             this.researchScreen = panel.researchScreen;
-            setSize(64, 48);
+            setSize(36, 36);
         }
 
         @Override
@@ -125,9 +126,9 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
-            this.drawBackground(matrixStack, theme, x, y, w, h);
-            this.drawIcon(matrixStack, theme, x + 16, y, 32, 32);
+            //this.drawBackground(matrixStack, theme, x, y, w, h);
+        	DrawDeskIcons.LSLOT.draw(matrixStack, x, y, w, h);
+            this.drawIcon(matrixStack, theme, x + 2, y+2, 32, 32);
         }
     }
 
@@ -140,7 +141,7 @@ public class ResearchHierarchyPanel extends Panel {
             super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
             this.research = research;
             this.researchScreen = panel.researchScreen;
-            setSize(32, 24);
+            setSize(24, 24);
         }
 
         @Override
@@ -163,9 +164,16 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
-            this.drawBackground(matrixStack, theme, x, y, w, h);
-            this.drawIcon(matrixStack, theme, x + (w - 16) / 2, y, 16, 16);
+        	GuiHelper.setupDrawing();
+        	DrawDeskIcons.SLOT.draw(matrixStack, x, y, w, h);
+        	if(research.isUnlocked())
+        		this.drawIcon(matrixStack, theme, x + 4, y+4, 16, 16);
+        	else
+        		DrawDeskIcons.Question.draw(matrixStack, x+4, y+4,16,16);
         }
     }
+	@Override
+	public boolean isEnabled() {
+		return researchScreen.canEnable(this);
+	}
 }

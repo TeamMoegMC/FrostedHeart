@@ -31,8 +31,8 @@ public class ResearchDashboardPanel extends Panel {
         Button closePanel = new SimpleTextButton(this, new StringTextComponent("Close"), Icon.EMPTY) {
             @Override
             public void onClicked(MouseButton mouseButton) {
-                detailPanel.research = null;
-                closeGui();
+                detailPanel.close();
+                //closeGui();
             }
         };
         closePanel.setPosAndSize(width-PADDING, 0, PADDING, PADDING);

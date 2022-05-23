@@ -1,12 +1,24 @@
 {
-  "variants": {
-    "not_multi_main=false,facing=east": { "model": "frostedheart:block/drawing_desk", "y": 90 },
-    "not_multi_main=false,facing=south": { "model": "frostedheart:block/drawing_desk", "y": 180 },
-    "not_multi_main=false,facing=west": { "model": "frostedheart:block/drawing_desk", "y": 270 },
-    "not_multi_main=false,facing=north": { "model": "frostedheart:block/drawing_desk", "y": 0 },
-    "not_multi_main=true,facing=east": { "model": "frostedheart:block/drawing_desk_part", "y": 90 },
-    "not_multi_main=true,facing=south": { "model": "frostedheart:block/drawing_desk_part", "y": 180 },
-    "not_multi_main=true,facing=west": { "model": "frostedheart:block/drawing_desk_part", "y": 270 },
-    "not_multi_main=true,facing=north": { "model": "frostedheart:block/drawing_desk_part", "y": 0 }
-  }
+	"variants": {
+		"facing=east": {
+			"model": "frostedheart:block/drawing_desk_split",
+			"y": 0,
+			"uvlock": true
+		},
+		"facing=south": {
+			"model": "frostedheart:block/drawing_desk_split",
+			"y": 90,
+			"uvlock": true
+		},
+		"facing=west": {
+			"model": "frostedheart:block/drawing_desk_split",
+			"y": 180,
+			"uvlock": true
+		},
+		"facing=north": {
+			"model": "frostedheart:block/drawing_desk_split",
+			"y": 270,
+			"uvlock": true
+		}
+	}
 }

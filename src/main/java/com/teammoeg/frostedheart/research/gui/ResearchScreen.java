@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.research.gui;
 
-import static com.teammoeg.frostedheart.research.gui.ResearchCategoryPanel.CAT_PANEL_HEIGHT;
-
 import javax.annotation.Nullable;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -12,7 +10,10 @@ import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.ResearchLevel;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.entity.player.PlayerEntity;
 
@@ -29,6 +30,7 @@ public class ResearchScreen extends BaseScreen {
     public Research selectedResearch;
     public Research inProgressResearch;
     public ResearchDetailPanel detailframe;
+    public Panel modalPanel=null;
     public ResearchScreen(PlayerEntity player, ResearchLevel level, Research progress) {
         this.player = player;
         this.researchLevel = level;
@@ -51,13 +53,15 @@ public class ResearchScreen extends BaseScreen {
 
     @Override
     public boolean onInit() {
-    	setFullscreen();
+    	int sw=387;
+    	int sh=203;
+    	this.setSize(sw,sh);
         selectCategory(ResearchCategories.RESCUE);
         selectedResearch = FHResearch.researches.getByName("generator_t1");
-    	researchCategoryPanel.setPosAndSize(PADDING,PADDING, this.width-PADDING*2, CAT_PANEL_HEIGHT);
-    	researchListPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING + IN_PROGRESS_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, height - (PADDING*5 + CAT_PANEL_HEIGHT + IN_PROGRESS_HEIGHT));
-    	researchHierarchyPanel.setPosAndSize(PADDING + RESEARCH_LIST_WIDTH + PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, width - (PADDING*5 + RESEARCH_LIST_WIDTH), height - (PADDING*4 + CAT_PANEL_HEIGHT));
-        progressPanel.setPosAndSize(PADDING,PADDING + CAT_PANEL_HEIGHT + PADDING, RESEARCH_LIST_WIDTH, 80);
+    	researchCategoryPanel.setPosAndSize(165,0,190,21);
+    	researchListPanel.setPosAndSize(16,74,110,118);
+    	researchHierarchyPanel.setPosAndSize(160,23,210,160);
+        progressPanel.setPosAndSize(14,19,111,51);
         detailframe.setPosAndSize((width-300)/2,(height-150)/2,300,150);
         return true;
     }
@@ -73,6 +77,8 @@ public class ResearchScreen extends BaseScreen {
         if (selectedResearch != research) {
             selectedResearch = research;
             this.refreshWidgets();
+        }else {
+        	detailframe.open(research);
         }
     }
 
@@ -89,7 +95,7 @@ public class ResearchScreen extends BaseScreen {
 
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.drawBackground(matrixStack, theme, x, y, w, h);
+        DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
     }
 
     @Override
@@ -102,9 +108,25 @@ public class ResearchScreen extends BaseScreen {
 	@Override
 	public void onBack() {
 		if(detailframe.research !=null) {
-            detailframe.research =null;
-            detailframe.closeGui();
+            detailframe.close();
         }
 		else super.onBack();
+	}
+	public void setModal(Panel p) {
+		modalPanel=p;
+	}
+	public void closeModal(Panel p) {
+		if(p==modalPanel)
+		modalPanel=null;
+	}
+	public boolean canEnable(Panel p) {
+		return modalPanel==null||modalPanel==p;
+	}
+
+	@Override
+	public void drawWidget(MatrixStack arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6,
+			int arg7) {
+		GuiHelper.setupDrawing();
+		super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 	}
 }
