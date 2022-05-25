@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
@@ -40,10 +41,7 @@ import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
-import com.teammoeg.frostedheart.content.decoration.AccessControlBlock;
-import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
-import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
-import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
+import com.teammoeg.frostedheart.content.decoration.*;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
@@ -104,9 +102,7 @@ import com.teammoeg.frostedheart.util.FHFoods;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.fluid.Fluid;
@@ -143,8 +139,9 @@ public class FHContent {
         public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
         public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel, FHBlockItem::new);
         public static Block relic_chest = new RelicChestBlock("relic_chest");
-        public static Block access_control = new AccessControlBlock("access_control", FHBlockItem::new);
-        public static Block gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK), FHBlockItem::new);
+        //        public static Block access_control = new AccessControlBlock("access_control", FHBlockItem::new);
+//        public static Block gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK), FHBlockItem::new);
+        public static Block fluorite_ore;
 
         public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
                 .create(Material.ROCK).sound(SoundType.WOOD)
@@ -206,7 +203,7 @@ public class FHContent {
         public static Item charcoal_stick = new FHBaseItem("charcoal_stick", createProps());
         public static Item energy_core = new FHBaseItem("energy_core", createProps());
         public static Item wolfberries = new FoodBlockItem(FHBlocks.wolfberry_bush_block, createProps(), FHFoods.WOLFBERRIES, "wolfberries");
-        public static Item dried_wolfberries = new FHBaseItem("dried_wolfberries", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.DRIED_WOLFBERRIES));
+        public static Item dried_wolfberries = new FHBaseItem("dried_wolfberries", createProps().food(FHFoods.DRIED_WOLFBERRIES));
         public static Item rye = new FHBaseItem("rye", createProps());
         public static Item generator_ash = new FHBaseItem("generator_ash", createProps());
         public static Item frozen_seeds = new FHBaseItem("frozen_seeds", createProps());
@@ -214,13 +211,13 @@ public class FHContent {
         public static Item raw_rye_bread = new FHBaseItem("raw_rye_bread", createProps());
         public static Item random_seeds = new FHBaseItem("random_seeds", createProps());
         public static Item mercury_body_thermometer = new ThermometerItem("mercury_body_thermometer", createProps());
-        public static Item rye_bread = new FHBaseItem("rye_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.RYE_BREAD));
-        public static Item black_bread = new FHBaseItem("black_bread", new Item.Properties().group(FHMain.itemGroup).food(FHFoods.BLACK_BREAD));
-        public static Item vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
-        public static Item rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
-        public static Item rye_porridge = new FHSoupItem("rye_porridge", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
-        public static Item vegetable_soup = new FHSoupItem("vegetable_soup", new Item.Properties().maxStackSize(1).group(FHMain.itemGroup).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
-        public static Item steam_bottle = new SteamBottleItem("steam_bottle", new Item.Properties().group(FHMain.itemGroup).maxStackSize(1));
+        public static Item rye_bread = new FHBaseItem("rye_bread", createProps().food(FHFoods.RYE_BREAD));
+        public static Item black_bread = new FHBaseItem("black_bread", createProps().food(FHFoods.BLACK_BREAD));
+        public static Item vegetable_sawdust_soup = new FHSoupItem("vegetable_sawdust_soup", createProps().maxStackSize(1).food(FHFoods.VEGETABLE_SAWDUST_SOUP), true);
+        public static Item rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", createProps().maxStackSize(1).food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
+        public static Item rye_porridge = new FHSoupItem("rye_porridge", createProps().maxStackSize(1).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
+        public static Item vegetable_soup = new FHSoupItem("vegetable_soup", createProps().maxStackSize(1).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
+        public static Item steam_bottle = new SteamBottleItem("steam_bottle", createProps().maxStackSize(1));
         public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
         public static Item buff_coat = new FHBaseItem("buff_coat", createProps().defaultMaxDamage(384)).setRepairItem(raw_hide);
         public static Item gambeson = new FHBaseItem("gambeson", createProps().defaultMaxDamage(384)).setRepairItem(Items.WHITE_WOOL);

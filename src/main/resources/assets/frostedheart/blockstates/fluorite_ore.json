@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "type=0": {
+      "model": "frostedheart:block/ore/fluorite_ore0"
+    },
+    "type=1": {
+      "model": "frostedheart:block/ore/fluorite_ore1"
+    },
+    "type=2": {
+      "model": "frostedheart:block/ore/fluorite_ore2"
+    },
+    "type=11": {
+      "model": "frostedheart:block/ore/fluorite_ore11"
+    },
+    "type=13": {
+      "model": "frostedheart:block/ore/fluorite_ore13"
+    },
+    "type=21": {
+      "model": "frostedheart:block/ore/fluorite_ore21"
+    },
+    "type=31": {
+      "model": "frostedheart:block/ore/fluorite_ore31"
+    },
+    "type=40": {
+      "model": "frostedheart:block/ore/fluorite_ore40"
+    }
+  }
+}

@@ -52,7 +52,7 @@ public class VolcanicVentStructure extends Structure<NoFeatureConfig>  {
 
             this.components.add(new VolcanicVentPiece(blockpos));
             this.recalculateStructureSize();
-            FHMain.LOGGER.debug( "volcanic at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
+//            FHMain.LOGGER.debug( "volcanic at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
     }
 }
