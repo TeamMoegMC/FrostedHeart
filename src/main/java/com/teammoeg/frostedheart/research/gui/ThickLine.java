@@ -7,47 +7,27 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
-public class ThickLine extends Widget {
-	//diagonal direction
-	private boolean xdirection=true;
-	private boolean ydirection=true;
+public class ThickLine {
+	int x,y,x2,y2;
 	//ensure w and h is positive
-	@Override
-	public void setHeight(int v) {
-		if(v<0) {
-			super.setY(posY+v);
-			v=-v;
-			xdirection=false;
-		}else xdirection=true;
-		super.setHeight(v);
+	public void setPosAndDelta(int x,int y,int dx,int dy) {
+		this.x=x;
+		this.y=y;
+		this.x2=x+dx;
+		this.y2=y+dy;
 	}
-	@Override
-	public void setWidth(int v) {
-		if(v<0) {
-			super.setX(posX+v);
-			v=-v;
-			ydirection=false;
-		}else ydirection=true;
-		super.setWidth(v);
+	//ensure w and h is positive
+	public void setPoints(int x,int y,int x2,int y2) {
+		this.x=x;
+		this.y=y;
+		this.x2=x2;
+		this.y2=y2;
 	}
-	@Override
-	public void setX(int v) {
-		super.setX(v);
-	}
-	@Override
-	public void setY(int v) {
-		super.setY(v);
-	}
-	public ThickLine(Panel p) {
-		super(p);
+	public ThickLine() {
 	}
 	public Color4I color=Color4I.BLACK;
-	@Override
-	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		if(xdirection^ydirection)
-			FHGuiHelper.drawLine(matrixStack, color, x+w, y, x, y+h);
-		else
-			FHGuiHelper.drawLine(matrixStack, color, x, y, x+w, y+h);
+	public void draw(MatrixStack matrixStack,int x,int y,int w,int h) {
+		FHGuiHelper.drawLine(matrixStack, color, x+this.x, y+this.y, x+this.x2, y+this.y2);
 		
 		//super.draw(matrixStack, theme, x, y, w, h);
 	}

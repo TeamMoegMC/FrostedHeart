@@ -1,12 +1,16 @@
 package com.teammoeg.frostedheart.research.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.ResearchData;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.util.text.TextFormatting;
 
 public class ResearchDetailPanel extends Panel {
 	Research research;
@@ -17,8 +21,6 @@ public class ResearchDetailPanel extends Panel {
 	ResearchScreen researchScreen;
 
 	public PanelScrollBar scrollInfo;
-
-	public static final int PADDING = 10;
 
 	public ResearchDetailPanel(ResearchScreen panel) {
 		super(panel);
@@ -32,21 +34,47 @@ public class ResearchDetailPanel extends Panel {
 
 	@Override
 	public void addWidgets() {
-		if(research ==null)return;
-		icon =ItemIcon.getItemIcon(research.getIcon());
+		if (research == null)
+			return;
+		icon = ItemIcon.getItemIcon(research.getIcon());
 
 		add(dashboardPanel);
-		dashboardPanel.setPosAndSize(PADDING, PADDING, width/2-PADDING*2, PADDING+32);
+		dashboardPanel.setPosAndSize(4, 11, 140, 51);
 
 		add(descPanel);
-		descPanel.setPosAndSize(PADDING, PADDING*3+32, width/2-PADDING*2, height-PADDING*4-32);
+		descPanel.setPosAndSize(8, 64, 132, 100);
 
 		add(infoPanel);
-		infoPanel.setPosAndSize(width/2, PADDING, width/2-PADDING, height-PADDING*2);
+		infoPanel.setPosAndSize(150, 15, 135, 151);
+		Button closePanel = new Button(this) {
+			@Override
+			public void onClicked(MouseButton mouseButton) {
+				close();
+			}
 
-		scrollInfo = new PanelScrollBar(this, infoPanel);
-		scrollInfo.setPosAndSize(width-PADDING-5, PADDING, PADDING, height-PADDING*2);
+			@Override
+			public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+			}
+		};
+		closePanel.setPosAndSize(284, 7, 9, 8);
+		add(closePanel);
+		scrollInfo = new TechScrollBar(this, infoPanel);
+		scrollInfo.setPosAndSize(285, 18, 8, 146);
 		add(scrollInfo);
+		// already committed items
+		ResearchData rd = research.getData();
+		TextField status = new TextField(this);
+		status.setMaxWidth(135);
+		if (research.getData().isInProgress()) {
+			status.setText(GuiUtils.translateGui("research.in_progress").mergeStyle(TextFormatting.BOLD)
+					.mergeStyle(TextFormatting.BLUE));
+		} else if (rd.canResearch()) {
+			status.setText(GuiUtils.translateGui("research.can_research").mergeStyle(TextFormatting.BOLD)
+					.mergeStyle(TextFormatting.GREEN));
+
+		}
+		status.setPos(0, 6);
+		add(status);
 	}
 
 	@Override
@@ -55,24 +83,26 @@ public class ResearchDetailPanel extends Panel {
 
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		if(research ==null) {
+		if (research == null) {
 			return;
 		}
 		matrixStack.push();
 		matrixStack.translate(0, 0, 500);
-		super.draw(matrixStack,theme, x, y, w, h);
+		super.draw(matrixStack, theme, x, y, w, h);
 		matrixStack.pop();
 	}
 
 	public void open(Research r) {
-		this.research=r;
+		this.research = r;
 		this.refreshWidgets();
-		researchScreen.setModal(this);;
+		researchScreen.setModal(this);
+		;
 		researchScreen.refreshWidgets();
-		
+
 	}
+
 	public void close() {
-		this.research=null;
+		this.research = null;
 		this.refreshWidgets();
 		researchScreen.closeModal(this);
 		researchScreen.refreshWidgets();
@@ -87,8 +117,9 @@ public class ResearchDetailPanel extends Panel {
 
 	@Override
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		super.drawBackground(matrixStack, theme, x, y, w, h);
-		theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
+		// drawBackground(matrixStack, theme, x, y, w, h);
+		// theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
+		DrawDeskIcons.DIALOG.draw(matrixStack, x, y, w, h);
 	}
 
 	public static class DescPanel extends Panel {
@@ -105,9 +136,11 @@ public class ResearchDetailPanel extends Panel {
 		public void addWidgets() {
 			TextField desc = new TextField(this);
 			add(desc);
-			desc.setMaxWidth(width-PADDING);
+			desc.setMaxWidth(width);
 			desc.setPosAndSize(0, 0, width, height);
 			desc.setText(detailPanel.research.getDesc());
+			desc.setColor(DrawDeskIcons.text);
+			this.setHeight(desc.height);
 		}
 
 		@Override
@@ -115,8 +148,9 @@ public class ResearchDetailPanel extends Panel {
 
 		}
 	}
+
 	@Override
 	public boolean isEnabled() {
-		return researchScreen.canEnable(this)&&research!=null;
+		return researchScreen.canEnable(this) && research != null;
 	}
 }

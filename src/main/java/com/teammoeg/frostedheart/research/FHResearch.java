@@ -37,7 +37,7 @@ public class FHResearch {
 		allClues=LazyOptional.of(()->clues.all());
 	}
 	//called after reload
-	public static void indexResearches() {
+	public static void finishReload() {
 		allResearches.orElse(Collections.emptyList()).forEach(c->c.doIndex());
 	}
 	public static void load(CompoundNBT cnbt) {

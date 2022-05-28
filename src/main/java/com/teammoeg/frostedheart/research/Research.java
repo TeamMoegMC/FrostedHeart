@@ -29,6 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
@@ -130,7 +131,7 @@ public class Research extends FHRegisteredItem implements Writeable{
     }
 
     @SafeVarargs
-    public Research(String id, ResearchCategory category, Item icon, Supplier<Research>... parents) {
+    public Research(String id, ResearchCategory category, IItemProvider icon, Supplier<Research>... parents) {
         this(id, category, new ItemStack(icon), parents);
     }
 

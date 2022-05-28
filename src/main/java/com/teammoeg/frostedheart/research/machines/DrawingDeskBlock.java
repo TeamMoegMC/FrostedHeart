@@ -177,7 +177,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
             }
         }
         //todo: actually add some server-side functions in TE to provide the level and in progress research
-        ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t1"));
+        ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t2"));
         screen.openGui();
         return ActionResultType.SUCCESS;
     }

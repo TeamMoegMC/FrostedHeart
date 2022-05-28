@@ -62,7 +62,7 @@ public class ResearchScreen extends BaseScreen {
     	researchListPanel.setPosAndSize(16,74,110,118);
     	researchHierarchyPanel.setPosAndSize(160,23,210,160);
         progressPanel.setPosAndSize(14,19,111,51);
-        detailframe.setPosAndSize((width-300)/2,(height-150)/2,300,150);
+        detailframe.setPosAndSize((width-302)/2,(height-170)/2,302,170);
         return true;
     }
 

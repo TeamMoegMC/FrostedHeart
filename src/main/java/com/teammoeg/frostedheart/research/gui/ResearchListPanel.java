@@ -36,13 +36,13 @@ public class ResearchListPanel extends Panel {
 		public void addWidgets() {
 	        int offset = 0;
 
-	        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory, true)) {
+	        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory,false)) {
 	            ResearchButton button = new ResearchButton(this, r);
 	            add(button);
 	            button.setPos(0,offset);
 	            offset += 18;
 	        }
-	        this.setHeight(offset);
+	        this.setHeight(offset+1);
             researchScreen.researchListPanel.scroll.setMaxValue(offset+300);
 		}
 
@@ -55,12 +55,13 @@ public class ResearchListPanel extends Panel {
 
         Research research;
         ResearchList listPanel;
-
+        RTextField tf;
         public ResearchButton(ResearchList panel, Research research) {
             super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
             this.research = research;
             this.listPanel =  panel;
             setSize(99, RESEARCH_HEIGHT);
+            tf=new RTextField(panel).setMaxLine(1).setMaxWidth(81).setText(research.getName());
         }
 
         @Override
@@ -72,13 +73,15 @@ public class ResearchListPanel extends Panel {
         @Override
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
             //GuiHelper.setupDrawing();
-			this.drawIcon(matrixStack, theme, x + 3, y + 1,16,16);
+			this.drawIcon(matrixStack, theme, x+1, y + 1,16,16);
 			if(research.isCompleted()) {
-				 theme.drawString(matrixStack,research.getName(), x + 23, y + 6,Color4I.GREEN,0);
+				 tf.setColor(Color4I.rgb(0x229000));
 			}else if(!research.isUnlocked()) {
-				theme.drawString(matrixStack,research.getName(), x + 23, y + 6,Color4I.RED,0);
+				tf.setColor(Color4I.rgb(0xa92b0d));
 			}else
-            theme.drawString(matrixStack, research.getName(), x + 23, y +6,Color4I.rgb(0x474139),0);
+				tf.setColor(DrawDeskIcons.text);
+			tf.draw(matrixStack, theme, x+18, y+6,81,tf.height);
+			
 			DrawDeskIcons.HLINE.draw(matrixStack,x, y+17, 99, 1);
         }
     }

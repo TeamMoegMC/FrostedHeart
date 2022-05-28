@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.research.gui;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.icon.PartIcon;
@@ -15,7 +16,7 @@ public class DrawDeskIcons {
 	public static final Icon SHADOW=ALL.withUV(241,240,36,9,512,512);
 	public static final Icon LSLOT=ALL.withUV(241,203,36,36,512,512);
 	public static final Icon SLOT=ALL.withUV(278,203,24,24,512,512);
-	public static final Icon DIALOG=ALL.withUV(239, 203, 240,150,512,512);
+	public static final Icon DIALOG=ALL.withUV(0, 267,302,170,512,512);
 	public static final PartIcon BUTTON_FRAME=new PartIcon(ALL,278,228,14,14,5).setTextureSize(512,512);
 	public static final PartIcon SLIDER_FRAME=new PartIcon(ALL,344,203,8,8,3).setTextureSize(512,512);
 	public static final Icon BUTTON_BG=ALL.withUV(293,228,4,4,512,512);
@@ -26,6 +27,7 @@ public class DrawDeskIcons {
 	public static final VLineIcon VLINE=new VLineIcon(ALL,342,203,1,21,10,10,512,512);
 	public static final Icon TAB_HL=ALL.withUV(241, 250,30,7,512,512);
 	public static final Icon Background=ALL.withUV(0, 0, 387,203,512, 512);
+	public static final Color4I text=Color4I.rgb(0x474139);
 	static {
 		BUTTON_FRAME.updateParts();
 		SLIDER_FRAME.updateParts();

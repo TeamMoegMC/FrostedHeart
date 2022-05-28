@@ -99,7 +99,7 @@
   "gui.frostedheart.update_recommended": "The Winter Rescue Update: ",
   "gui.frostedheart.save_updated": "Auto updated your save, old configuration backed-up at ",
   "gui.frostedheart.save_update_needed": "Your save is outdated, Cannot auto update your save! Please exit world and delete %s to complete update!",
-  "gui.frostedheart.effect.item_reward": "Returned Materials",
+  "gui.frostedheart.effect.item_reward": "Item Rewards",
   "gui.frostedheart.effect.building": "New Building",
   "gui.frostedheart.effect.crafting": "New Recipe",
   "gui.frostedheart.effect.stats": "Stats Upgrade",
