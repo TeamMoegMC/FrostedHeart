@@ -24,7 +24,11 @@ import static com.teammoeg.frostedheart.FHContent.registeredFHItems;
 
 import javax.annotation.Nonnull;
 
+import com.cannolicatfish.rankine.init.RankineBlocks;
+import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.base.item.FHBlockItem;
+import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
 import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
 import com.teammoeg.frostedheart.loot.DechantLootModifier;
 import com.teammoeg.frostedheart.loot.RemoveLootModifier;
@@ -57,6 +61,8 @@ import net.minecraftforge.registries.IForgeRegistry;
 public class RegistryEvents {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
+        FHContent.FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
+
         for (Block block : registeredFHBlocks) {
             try {
                 event.getRegistry().register(block);

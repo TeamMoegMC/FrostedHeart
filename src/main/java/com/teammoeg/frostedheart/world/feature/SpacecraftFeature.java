@@ -42,7 +42,7 @@ public class SpacecraftFeature extends Feature<NoFeatureConfig> {
                     Vector3i vector3i = boundingBox.func_215126_f();
 
                     if (template.func_237146_a_(reader,start, new BlockPos(vector3i.getX(),vector3i.getY(), vector3i.getZ()), settings, reader.getRandom(), 2)) {
-                        FHMain.LOGGER.debug( "spacecraft at " + (start.getX()) + " " + start.getY() + " " + (start.getZ())+" "+rot);
+//                        FHMain.LOGGER.debug( "spacecraft at " + (start.getX()) + " " + start.getY() + " " + (start.getZ())+" "+rot);
                         return true;
                     }
                 //}

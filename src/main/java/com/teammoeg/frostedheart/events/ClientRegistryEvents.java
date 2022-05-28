@@ -68,22 +68,23 @@ public class ClientRegistryEvents {
         // Register screens
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
-        registerIEScreen(new ResourceLocation(FHMain.MODID,"relic_chest"), RelicChestScreen::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
         // Register translucent render type
 
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.wolfberry_bush_block, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutoutMipped());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.wolfberry_bush_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.drawing_desk, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutoutMipped());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.relic_chest, RenderType.getTranslucent());
-        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(),T1GeneratorRenderer::new);
-        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(),T2GeneratorRenderer::new);
-        ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(),HeatPipeRenderer::new);
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.relic_chest, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.fluorite_ore, RenderType.getCutout());
+        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
+        ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
+        ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
         PlayerRenderer render = skinMap.get("default");

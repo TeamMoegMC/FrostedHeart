@@ -50,12 +50,13 @@ public class FHOreFeatureConfig implements IFeatureConfig {
     }
 
     public static final class FillerBlockType {
-        public static final FHRuleTest magnetite = new FHRuleTest(new Block[]{RankineBlocks.DOLOSTONE.get(), RankineBlocks.CHALK.get(), RankineBlocks.BRECCIA.get(), RankineBlocks.LIMESTONE.get(),RankineBlocks.SHALE.get()});
+        public static final FHRuleTest magnetite = new FHRuleTest(new Block[]{RankineBlocks.DOLOSTONE.get(), RankineBlocks.CHALK.get(), RankineBlocks.BRECCIA.get(), RankineBlocks.LIMESTONE.get(), RankineBlocks.SHALE.get()});
         public static final FHRuleTest pyrite = new FHRuleTest(new Block[]{RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
-        public static final FHRuleTest native_copper = new FHRuleTest(new Block[]{Blocks.ANDESITE, RankineBlocks.SLATE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
+        public static final FHRuleTest hematite = new FHRuleTest(new Block[]{Blocks.ANDESITE, RankineBlocks.RHYOLITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
+        public static final FHRuleTest chalcocite = new FHRuleTest(new Block[]{Blocks.ANDESITE, RankineBlocks.SLATE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
         public static final FHRuleTest malachite = new FHRuleTest(new Block[]{RankineBlocks.LIMESTONE.get(), RankineBlocks.WHITE_MARBLE.get(), RankineBlocks.BLACK_MARBLE.get(), RankineBlocks.BRECCIA.get()});
         public static final FHRuleTest pentlandite = new FHRuleTest(new Block[]{RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.GRAY_GRANITE.get(), Blocks.DIORITE, Blocks.GRANITE, RankineBlocks.RHYOLITE.get(), RankineBlocks.GABBRO.get(), RankineBlocks.GRANODIORITE.get(), RankineBlocks.KOMATIITE.get()});
-        public static final FHRuleTest native_tin = new FHRuleTest(new Block[]{RankineBlocks.PEGMATITE.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.QUARTZITE.get(),Blocks.ANDESITE});
+        public static final FHRuleTest native_tin = new FHRuleTest(new Block[]{RankineBlocks.PEGMATITE.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.QUARTZITE.get(), Blocks.ANDESITE});
         public static final FHRuleTest cassiterite = new FHRuleTest(new Block[]{Blocks.DIORITE, RankineBlocks.GRANODIORITE.get(), Blocks.GRANITE, RankineBlocks.GRAY_GRANITE.get(), RankineBlocks.GABBRO.get(), RankineBlocks.WHITE_MARBLE.get()});
         public static final FHRuleTest bituminous = new FHRuleTest(new Block[]{RankineBlocks.DOLOSTONE.get(), RankineBlocks.CHALK.get(), RankineBlocks.LIMESTONE.get(), RankineBlocks.MUDSTONE.get()});
         public static final FHRuleTest lignite = new FHRuleTest(new Block[]{RankineBlocks.CHALK.get(), RankineBlocks.SHALE.get(), RankineBlocks.DOLOSTONE.get(), RankineBlocks.LIMESTONE.get(), RankineBlocks.BRECCIA.get(), RankineBlocks.MUDSTONE.get()});
