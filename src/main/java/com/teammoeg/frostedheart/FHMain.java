@@ -24,16 +24,15 @@ import java.io.InputStreamReader;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.research.*;
+import com.teammoeg.frostedheart.world.FHFeatures;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.alcatrazescapee.primalwinter.common.ModBlocks;
-import com.cannolicatfish.rankine.init.RankineItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.client.ClientProxy;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.ClimateData;
@@ -176,7 +175,7 @@ public class FHMain {
         ClimateData.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
-
+        FHFeatures.initFeatures();
         ResearchCategories.init();
         Researches.init();
         //modify default value

@@ -9,7 +9,7 @@
           "children": [
             {
               "type": "minecraft:item",
-              "name": "kubejs:native_copper"
+              "name": "rankine:malachite"
             }
           ]
         }
