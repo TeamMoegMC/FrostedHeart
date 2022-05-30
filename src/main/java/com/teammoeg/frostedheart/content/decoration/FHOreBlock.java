@@ -2,14 +2,11 @@ package com.teammoeg.frostedheart.content.decoration;
 
 import com.cannolicatfish.rankine.blocks.RankineOreBlock;
 import com.cannolicatfish.rankine.util.WorldgenUtils;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
-import net.minecraft.state.Property;
 import net.minecraft.state.StateContainer;
 import net.minecraft.world.World;
 

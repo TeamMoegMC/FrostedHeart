@@ -10,6 +10,7 @@
   ],
   "mixins": [
     "create.CreateJEIMixin",
+    "create.FluidReactionsMixin",
     "create.HandCrankBlockMixin",
     "create.MixinAbstractContraption",
     "create.MixinBlockBreakingMovementBehaviour",
@@ -26,7 +27,7 @@
     "create.MixinSawTileEntity",
     "create.MixinSmartTileEntity",
     "create.MixinToolboxInventory",
-    "create.FluidReactionsMixin",
+    "diet.DietApiImplMixin",
     "engdecor.EdMilkerMixin",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
@@ -39,7 +40,6 @@
     "minecraft.BeeHiveMixin",
     "minecraft.BigTreeMixin",
     "minecraft.BiomeMixin",
-    "minecraft.PlayerInventoryMixin",
     "minecraft.CampfireBlockMixin",
     "minecraft.CampfireTileEntityMixin",
     "minecraft.ChickenEntityMixin",
@@ -59,6 +59,7 @@
     "minecraft.MixinSwampHutPiece",
     "minecraft.MooshroomMixin",
     "minecraft.PistonBlockMixin",
+    "minecraft.PlayerInventoryMixin",
     "minecraft.PortalSizeMixin",
     "minecraft.TemplateAccess",
     "minecraft.TemplateManagerMixin",
@@ -71,21 +72,21 @@
     "rankine.MixinGrassySoilBlock",
     "rankine.MixinLargeTree",
     "rankine.MixinMediumTree",
+    "rankine.MixinPostWorldReplacer",
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
-    "snow.ModUtilMixin",
-    "diet.DietApiImplMixin"
+    "snow.ModUtilMixin"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",
     "client.IngameGuiAccess",
     "client.IngameGuiMixin",
     "client.MixinClientEvents",
+    "client.ServerWorldInfoMixin",
     "client.ToastGuiMixin",
     "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
-    "create.MixinOpenConfigButtonHandler",
-    "client.ServerWorldInfoMixin"
+    "create.MixinOpenConfigButtonHandler"
   ],
   "injectors": {
     "defaultRequire": 1

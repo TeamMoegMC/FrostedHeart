@@ -1,9 +1,0 @@
-{
-  "type": "frostedheart:relic_dim",
-  "generator": {
-    "type": "frostedheart:relic_chunkgen",
-    "biome_source": {
-      "type": "frostedheart:relic_biomeprovider"
-    }
-  }
-}

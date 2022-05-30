@@ -278,27 +278,27 @@ public class ForgeEvents {
 	@SubscribeEvent
 	public static void onAttachCapabilitiesChunk(AttachCapabilitiesEvent<Chunk> event) {
 		if (!event.getObject().isEmpty()) {
-			World world = event.getObject().getWorld();
-			ChunkPos chunkPos = event.getObject().getPos();
-			if (!world.isRemote) {
-				if (!event.getCapabilities().containsKey(ChunkDataCapabilityProvider.KEY))
-					event.addCapability(ChunkDataCapabilityProvider.KEY, new ChunkData(chunkPos));
-			}
+            World world = event.getObject().getWorld();
+            ChunkPos chunkPos = event.getObject().getPos();
+            if (!world.isRemote) {
+                if (!event.getCapabilities().containsKey(ChunkDataCapabilityProvider.KEY))
+                    event.addCapability(ChunkDataCapabilityProvider.KEY, new ChunkData(chunkPos));
+            }
 
-		}
-	}
+        }
+    }
 
-	@SubscribeEvent
-	public static void addOreGenFeatures(BiomeLoadingEvent event) {
-		if (event.getName() != null) {
-			if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
-				if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH) {
-					event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES,
-							FHFeatures.copper_gravel);
-				}
-				for (ConfiguredFeature feature : FHFeatures.FH_ORES)
-					event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
-			}
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public static void addOreGenFeatures(BiomeLoadingEvent event) {
+        if (event.getName() != null) {
+            if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
+                if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH) {
+                    for (ConfiguredFeature feature : FHFeatures.FH_DISK)
+                        event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
+                }
+                for (ConfiguredFeature feature : FHFeatures.FH_ORES)
+                    event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
+            }
 			if(event.getCategory()==Biome.Category.EXTREME_HILLS||event.getCategory()==Biome.Category.TAIGA) {
 				event.getGeneration().withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
 			}

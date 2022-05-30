@@ -58,7 +58,7 @@ public class ResearchInstituteStructure extends Structure<NoFeatureConfig> {
         public void func_230364_a_(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
             int x = chunkX << 4;
             int z = chunkZ << 4;
-            if (biome == FHBiomes.RELIC.get()) {
+/*            if (biome == FHBiomes.RELIC.get()) {
 
                 int surfaceY = generator.getNoiseHeightMinusOne(x, z, Heightmap.Type.WORLD_SURFACE_WG);
 
@@ -75,7 +75,7 @@ public class ResearchInstituteStructure extends Structure<NoFeatureConfig> {
                 Rotation rotation = Rotation.randomRotation(this.rand);
                 this.components.add(new ObservatoryPiece(template, blockpos, rotation));
                 this.recalculateStructureSize();
-            }
+            }*/
 //            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
     }
