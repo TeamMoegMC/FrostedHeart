@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.research.effects;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IEMultiblocks;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 
 import com.google.gson.JsonObject;
@@ -29,6 +31,7 @@ public class EffectBuilding extends Effect {
         tooltip.add(GuiUtils.translateTooltip(multiblock.getUniqueName().toString()));
     }
     public EffectBuilding(JsonObject jo) {
+    	//this(MultiblockHandler.getByUniqueName(getId()),);
     	super(jo);
     }
     public EffectBuilding(PacketBuffer pb) {

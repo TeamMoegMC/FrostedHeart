@@ -57,7 +57,7 @@ public class ResearchListPanel extends Panel {
         ResearchList listPanel;
         RTextField tf;
         public ResearchButton(ResearchList panel, Research research) {
-            super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
+            super(panel, research.getName(), research.getIcon());
             this.research = research;
             this.listPanel =  panel;
             setSize(99, RESEARCH_HEIGHT);

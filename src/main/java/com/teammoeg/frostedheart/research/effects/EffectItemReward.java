@@ -1,11 +1,10 @@
 package com.teammoeg.frostedheart.research.effects;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.gui.FHIcons;
+
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
@@ -26,9 +25,9 @@ public class EffectItemReward extends Effect {
         }
         name = GuiUtils.translateGui("effect.item_reward");
         if (rewards.size() != 0) {
-            icon = rewards.get(0);
+            icon = FHIcons.getIcon(rewards);
         } else {
-            icon = new ItemStack(Items.GRASS_BLOCK);
+            icon = FHIcons.nop();
         }
         tooltip = new ArrayList<>();
         tooltip.add(GuiUtils.translateTooltip("effect.item_reward.1"));

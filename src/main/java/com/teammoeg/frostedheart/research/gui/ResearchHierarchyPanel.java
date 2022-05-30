@@ -174,7 +174,7 @@ public class ResearchHierarchyPanel extends Panel {
 		Research research;
 
 		public ResearchDetailButton(ResearchHierarchyPanel panel, Research research) {
-			super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
+			super(panel, research.getName(), research.getIcon());
 			this.research = research;
 			this.researchScreen = panel.researchScreen;
 			setSize(36, 36);
@@ -205,7 +205,7 @@ public class ResearchHierarchyPanel extends Panel {
 		Research research;
 		Research parent;
 		public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
-			super(panel, research.getName(), ItemIcon.getItemIcon(research.getIcon()));
+			super(panel, research.getName(), research.getIcon());
 			this.research = research;
 			this.researchScreen = panel.researchScreen;
 			setSize(24, 24);

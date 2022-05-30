@@ -4,6 +4,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
@@ -14,7 +15,7 @@ import net.minecraft.util.text.TextFormatting;
 
 public class ResearchDetailPanel extends Panel {
 	Research research;
-	Icon icon;
+	FHIcon icon;
 	ResearchDashboardPanel dashboardPanel;
 	ResearchInfoPanel infoPanel;
 	DescPanel descPanel;
@@ -36,7 +37,7 @@ public class ResearchDetailPanel extends Panel {
 	public void addWidgets() {
 		if (research == null)
 			return;
-		icon = ItemIcon.getItemIcon(research.getIcon());
+		icon = research.getIcon();
 
 		add(dashboardPanel);
 		dashboardPanel.setPosAndSize(4, 11, 140, 51);

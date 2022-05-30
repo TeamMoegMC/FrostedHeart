@@ -82,7 +82,9 @@ public class SerializeUtil {
 	public static <T> void writeOptional(PacketBuffer buffer, T data, BiConsumer<T, PacketBuffer> func) {
 		writeOptional(buffer, Optional.ofNullable(data), func);
 	}
-
+	public static <T> void writeOptional2(PacketBuffer buffer, T data, BiConsumer<PacketBuffer,T> func) {
+		writeOptional(buffer, data,(a,b)->func.accept(b,a));
+	}
 	public static <T> void writeOptional(PacketBuffer buffer, Optional<T> data, BiConsumer<T, PacketBuffer> func) {
 		if (data.isPresent()) {
 			buffer.writeBoolean(true);

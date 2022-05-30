@@ -35,16 +35,14 @@ public class T2GeneratorRenderer extends TileEntityRenderer<T2GeneratorTileEntit
 			return;
 		List<String> renderedParts = new ArrayList<>();
 		if(te.process>0||!te.getInventory().get(0).isEmpty()) {
-			renderedParts.add("lowerFuel");
-			renderedParts.add("higherFuel");
-		}
-		if(renderedParts.isEmpty())
+		
+		}else
 			return;
 		BlockPos blockPos = te.getPos();
 		BlockState state = te.getWorld().getBlockState(blockPos);
 		if(state.getBlock()!=FHMultiblocks.generator_t2)
 			return;
-		IEObjState objState = new IEObjState(VisibilityList.show(renderedParts));
+		IEObjState objState = new IEObjState(VisibilityList.showAll());
 		
 		matrixStack.push();
 		List<BakedQuad> quads = FUEL.getNullQuads(te.getFacing(), state, new SinglePropertyModelData<>(objState, Model.IE_OBJ_STATE));

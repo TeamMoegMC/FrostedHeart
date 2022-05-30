@@ -19,9 +19,12 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
+import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
@@ -42,7 +45,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  */
 public class Research extends FHRegisteredItem implements Writeable{
     private String id;//id of this research
-    private ItemStack icon;//icon for this research in term of item
+    private FHIcon icon;//icon for this research in term of item
     private ResearchCategory category;
     private HashSet<Supplier<Research>> parents = new HashSet<>();//parent researches
     private HashSet<Supplier<Research>> children = new HashSet<>();//child researches, this is set automatically, should not set manually.
@@ -59,7 +62,7 @@ public class Research extends FHRegisteredItem implements Writeable{
     }
     public Research(String id,JsonObject jo) {
     	this.id=id;
-    	icon=Ingredient.deserialize(jo.get("icon")).getMatchingStacks()[0];
+    	icon=FHIcons.getIcon(jo.get("icon"));
     	category=ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString()));
     	parents.addAll(SerializeUtil.parseJsonElmList(jo.get("parents"),p->FHResearch.researches.get(p.getAsString())));
     	clues.addAll(SerializeUtil.parseJsonElmList(jo.get("clues"),p->FHResearch.clues.get(p.getAsString())));
@@ -69,7 +72,7 @@ public class Research extends FHRegisteredItem implements Writeable{
     }
     public Research(String id,PacketBuffer data) {
     	this.id=id;
-    	icon=data.readItemStack();
+    	icon=FHIcons.readIcon(data);
     	category=ResearchCategories.ALL.get(data.readResourceLocation());
     	
     	parents.addAll(SerializeUtil.readList(data,p->FHResearch.researches.get(p.readVarInt())));
@@ -81,7 +84,7 @@ public class Research extends FHRegisteredItem implements Writeable{
 	@Override
 	public JsonElement serialize() {
 		JsonObject jo=new JsonObject();
-		jo.add("icon",Ingredient.fromStacks(icon).serialize());
+		jo.add("icon",icon.serialize());
 		jo.addProperty("category",category.getId().toString());
 		jo.add("parents",SerializeUtil.toJsonList(parents,p->new JsonPrimitive(p.get().getId())));
 		jo.add("clues",SerializeUtil.toJsonList(clues,p->p.get().serialize()));
@@ -94,7 +97,7 @@ public class Research extends FHRegisteredItem implements Writeable{
 
 	@Override
 	public void write(PacketBuffer buffer) {
-		buffer.writeItemStack(icon);
+		icon.write(buffer);;
 		buffer.writeResourceLocation(category.getId());
 		SerializeUtil.writeList(buffer,parents,(e,p)->p.writeVarInt(e.get().getRId()));
 		SerializeUtil.writeList(buffer,clues,(e,p)->p.writeVarInt(e.get().getRId()));
@@ -139,7 +142,7 @@ public class Research extends FHRegisteredItem implements Writeable{
     public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
         this.id = id;
         this.parents.addAll(Arrays.asList(parents));
-        this.icon = icon;
+        this.icon = FHIcons.getIcon(icon);
         this.category = category;
     }
 
@@ -185,7 +188,7 @@ public class Research extends FHRegisteredItem implements Writeable{
         this.parents.addAll(Arrays.asList(parents));
     }
 
-    public ItemStack getIcon() {
+    public FHIcon getIcon() {
         return icon;
     }
 

@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.loot.TemperatureLootCondition;
 import com.teammoeg.frostedheart.loot.TreasureLootCondition;
 import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
+import com.teammoeg.frostedheart.world.FHDimensions;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
@@ -49,6 +50,7 @@ import net.minecraft.loot.LootConditionType;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
@@ -111,7 +113,11 @@ public class RegistryEvents {
     public static void registerEffects(final RegistryEvent.Register<Effect> event) {
         FHEffects.registerAll(event.getRegistry());
     }
+    @SubscribeEvent
+    public static void onDimensionRegistry(RegistryEvent.Register event) {
+    	FHDimensions.register();
 
+    }
     @SubscribeEvent
     public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
         event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"),

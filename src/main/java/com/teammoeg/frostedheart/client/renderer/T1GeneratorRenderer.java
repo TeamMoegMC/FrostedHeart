@@ -33,21 +33,16 @@ public class T1GeneratorRenderer extends TileEntityRenderer<T1GeneratorTileEntit
 			IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
 		if(!te.formed||te.isDummy()||!te.getWorldNonnull().isBlockLoaded(te.getPos()))
 			return;
-		List<String> renderedParts = new ArrayList<>();
 		if(te.process>0||!te.getInventory().get(0).isEmpty()) {
-			renderedParts.add("FCS");
-			renderedParts.add("FCN");
-			renderedParts.add("FCE");
-			renderedParts.add("FCW");
-			renderedParts.add("Mid");
-		}
-		if(renderedParts.isEmpty())
-			return;
+			
+		}else
+		return;
+			
 		BlockPos blockPos = te.getPos();
 		BlockState state = te.getWorld().getBlockState(blockPos);
 		if(state.getBlock()!=FHMultiblocks.generator)
 			return;
-		IEObjState objState = new IEObjState(VisibilityList.show(renderedParts));
+		IEObjState objState = new IEObjState(VisibilityList.showAll());
 		
 		matrixStack.push();
 		List<BakedQuad> quads = FUEL.getNullQuads(te.getFacing(), state, new SinglePropertyModelData<>(objState, Model.IE_OBJ_STATE));

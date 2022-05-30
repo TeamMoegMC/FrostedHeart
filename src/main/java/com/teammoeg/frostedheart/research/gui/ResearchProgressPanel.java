@@ -47,7 +47,7 @@ public class ResearchProgressPanel extends Panel {
         theme.drawString(matrixStack,"35%", x +90, y +34,DrawDeskIcons.text,0);
         // research icon
         DrawDeskIcons.SHADOW.draw(matrixStack, x+1, y+38, 36, 9);
-        GuiHelper.drawItem(matrixStack,researchScreen.getInProgressResearch().getIcon(), x + 3, y + 12, 2, 2, false, null);
+        researchScreen.getInProgressResearch().getIcon().draw(matrixStack, x+3, y+12,32,32);
         theme.drawString(matrixStack, researchScreen.getInProgressResearch().getName(), x + 40, y + 15,DrawDeskIcons.text,0);
         DrawDeskIcons.HLINE_LR.draw(matrixStack, x+1, y+48,w-1,3);
         // theme.drawString(matrixStack, researchScreen.getInProgressResearch().getDesc(), x + 50, y + 55, Color4I.GRAY, 0);
