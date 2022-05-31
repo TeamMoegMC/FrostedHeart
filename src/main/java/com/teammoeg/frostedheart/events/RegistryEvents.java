@@ -115,7 +115,7 @@ public class RegistryEvents {
     }
     @SubscribeEvent
     public static void onDimensionRegistry(RegistryEvent.Register event) {
-    	FHDimensions.register();
+    	//FHDimensions.register();
 
     }
     @SubscribeEvent
