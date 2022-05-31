@@ -76,7 +76,7 @@ public class Researches {
 				new EffectCrafting(FHContent.FHBlocks.generator_core_t1.asItem()),
 				new EffectCrafting(FHContent.FHBlocks.generator_amplifier_r1.asItem()),
 				new EffectUse(FHContent.FHBlocks.generator_core_t1, FHContent.FHBlocks.generator_amplifier_r1),
-				new EffectStats("Generator Burning Efficiency +25%"));
+				new EffectStats("Generator Burning Efficiency",25));
 		GEN_T1.attachClue(() -> ROOT_CLUE);
 		FHResearch.researches.register(GEN_T1);
 

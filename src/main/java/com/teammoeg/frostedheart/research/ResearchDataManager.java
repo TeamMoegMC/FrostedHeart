@@ -15,7 +15,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.storage.FolderName;
 
 public class ResearchDataManager {
-	MinecraftServer server;
+	public static MinecraftServer server;
 	Path local;
 	File regfile;
 	static final FolderName dataFolder=new FolderName("fhresearch");

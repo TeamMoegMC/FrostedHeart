@@ -2,10 +2,12 @@ package com.teammoeg.frostedheart.research.effects;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.util.FHUtils;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +20,11 @@ public class EffectItemReward extends Effect {
     List<ItemStack> rewards;
 
     public EffectItemReward(ItemStack... stacks) {
-    	super(null,null,null);
+    	super(GuiUtils.translateGui("effect.item_reward"),null,FHIcons.getIcon(stacks));
         rewards = new ArrayList<>();
         for (ItemStack stack : stacks) {
             rewards.add(stack);
         }
-        name = GuiUtils.translateGui("effect.item_reward");
         if (rewards.size() != 0) {
             icon = FHIcons.getIcon(rewards);
         } else {
@@ -45,17 +46,18 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public void grant() {
-
+    public void grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    	for(ItemStack s:rewards)
+    		FHUtils.giveItem(triggerPlayer,s.copy());
     }
-
+    //We dont confiscate players items, that is totally unnecessary
     @Override
-    public void revoke() {
+    public void revoke(TeamResearchData team) {
 
     }
 
 	@Override
-	public ResourceLocation getId() {
-		return null;
+	public String getId() {
+		return "item";
 	}
 }

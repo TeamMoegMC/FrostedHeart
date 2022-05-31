@@ -262,9 +262,9 @@ public class ResearchInfoPanel extends Panel {
 
 				// stats
 				if (effect instanceof EffectStats) {
-					String info = ((EffectStats) effect).getUpgradeInfo();
+					
 					TextField stats = new TextField(fp);
-					stats.setMaxWidth(width).setText(new StringTextComponent(info)).setPos(0, offset);
+					stats.setMaxWidth(width).setText(effect.getName()).setPos(0, offset);
 					fp.add(stats);
 					offset += stats.height;
 				}

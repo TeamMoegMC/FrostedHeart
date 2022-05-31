@@ -3,10 +3,12 @@ package com.teammoeg.frostedheart.research.effects;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import net.minecraft.block.Block;
+import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.gui.FHIcons;
 
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +21,7 @@ public class EffectUse extends Effect {
     List<Block> blocksToUse;
 
     public EffectUse(Block... blocks) {
-    	super(null,null,null);
-        name = GuiUtils.translateGui("effect.use");
+    	super(GuiUtils.translateGui("effect.use"),new ArrayList<>(),FHIcons.getIcon(blocks));
         blocksToUse = new ArrayList<>();
         for (Block b : blocks) {
             blocksToUse.add(b);
@@ -39,18 +40,18 @@ public class EffectUse extends Effect {
     }
 
     @Override
-    public void grant() {
+    public void grant(TeamResearchData team, PlayerEntity triggerPlayer) {
 
     }
 
     @Override
-    public void revoke() {
+    public void revoke(TeamResearchData team) {
 
     }
 
 
 	@Override
-	public ResourceLocation getId() {
+	public String getId() {
 		return null;
 	}
 }

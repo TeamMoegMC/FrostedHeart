@@ -176,8 +176,7 @@ public class FHMain {
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();
-        ResearchCategories.init();
-        Researches.init();
+        
         //modify default value
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS,IntegerValue.create(0));
     }
@@ -186,8 +185,12 @@ public class FHMain {
         CuriosCompat.sendIMCS();
     }
     private void serverStart(final FMLServerAboutToStartEvent event) {
-
-    	new ResearchDataManager(event.getServer()).load();
+    	new ResearchDataManager(event.getServer());
+    	ResearchCategories.init();
+        Researches.init();
+    	
+        ResearchDataManager.INSTANCE.load();
+    	
     }
     private void serverSave(final WorldEvent.Save event) {
     	if(ResearchDataManager.INSTANCE!=null)

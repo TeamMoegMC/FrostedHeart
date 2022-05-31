@@ -22,8 +22,12 @@ public class TeamResearchData {
 	int activeResearchId=0;
 	CompoundNBT variants=new CompoundNBT();
 	Supplier<Team> team;
+	public UnlockList crafting;
+	public UnlockList building;
 	public TeamResearchData(Supplier<Team> team) {
 		this.team = team;
+		crafting=new UnlockList();
+		building=new UnlockList();
 	}
 	public Optional<Team> getTeam() {
 		if(team==null)return Optional.empty();
@@ -131,6 +135,8 @@ public class TeamResearchData {
 		rdata.stream().map(e->e!=null?e.serialize():new CompoundNBT()).forEach(e->rs.add(e));
 		nbt.put("researches",rs);
 		nbt.putInt("active",activeResearchId);
+		nbt.put("crafting",crafting.serialize());
+		nbt.put("building",building.serialize());
 		return nbt;
 	}
 	public CompoundNBT getVariants() {
@@ -146,6 +152,8 @@ public class TeamResearchData {
 			clueComplete.set(i,ba[i]!=0);
 		ListNBT li=data.getList("researches",10);
 		activeResearchId=data.getInt("active");
+		crafting=new UnlockList(data.getCompound("crafting"));
+		building=new UnlockList(data.getCompound("building"));
 		for(int i=0;i<li.size();i++) {
 			INBT e=li.get(i);
 			if(e.getId()==10) {

@@ -17,9 +17,12 @@ import com.teammoeg.frostedheart.util.Writeable;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
+import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.IItemProvider;
+import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 
 public class FHIcons {
@@ -84,6 +87,9 @@ public class FHIcons {
 		public FHItemIcon(String item) {
 			this.item=item;
 			init();
+		}
+		public FHItemIcon(IItemProvider item2) {
+			this(new ItemStack(item2));
 		}
 		private void init() {
 			if(item!=null)
@@ -253,6 +259,88 @@ public class FHIcons {
 			buffer.writeResourceLocation(rl);
 		}
 	}
+	private static class FHTextureUVIcon extends FHIcon{
+		Icon nested;
+		ResourceLocation rl;
+		int x,y,w,h,tw,th;
+		public FHTextureUVIcon(JsonElement elm) {
+			this(new ResourceLocation(elm.getAsJsonObject().get("location").getAsString()),
+					elm.getAsJsonObject().get("x").getAsInt(),
+					elm.getAsJsonObject().get("y").getAsInt(),
+					elm.getAsJsonObject().get("w").getAsInt(),
+					elm.getAsJsonObject().get("h").getAsInt(),
+					JSONUtils.getInt(elm.getAsJsonObject(),"tw",256),
+					JSONUtils.getInt(elm.getAsJsonObject(),"th",256));
+		}
+		public FHTextureUVIcon(PacketBuffer buffer) {
+			this(buffer.readResourceLocation(),buffer.readVarInt(),buffer.readVarInt(),buffer.readVarInt(),buffer.readVarInt(),buffer.readVarInt(),buffer.readVarInt());
+		}
+
+		public FHTextureUVIcon(ResourceLocation rl, int x, int y, int w, int h,int tw,int th) {
+			super();
+			this.rl = rl;
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+			this.tw=tw;
+			this.th=th;
+			nested=ImageIcon.getIcon(rl).withUV(x,y,w,h);
+		}
+		@Override
+		public void draw(MatrixStack ms, int x, int y, int w, int h) {
+			nested.draw(ms, x, y, w, h);
+		}
+
+		@Override
+		public JsonElement serialize() {
+			JsonObject jo=new JsonObject();
+			jo.addProperty("type","texture_uv");
+			jo.addProperty("location",rl.toString());
+			jo.addProperty("x",x);
+			jo.addProperty("y",y);
+			jo.addProperty("w",w);
+			jo.addProperty("h",h);
+			jo.addProperty("w",tw);
+			jo.addProperty("h",th);
+			return jo;
+		}
+
+		@Override
+		public void write(PacketBuffer buffer) {
+			buffer.writeVarInt(6);
+			buffer.writeResourceLocation(rl);
+			buffer.writeVarInt(x);
+			buffer.writeVarInt(y);
+			buffer.writeVarInt(w);
+			buffer.writeVarInt(h);
+			buffer.writeVarInt(tw);
+			buffer.writeVarInt(th);
+		}
+	}
+	private static class FHDelegateIcon extends FHIcon{
+		Icon nested;
+
+		public FHDelegateIcon(Icon nested) {
+			super();
+			this.nested = nested;
+		}
+
+		@Override
+		public void draw(MatrixStack ms, int x, int y, int w, int h) {
+			nested.draw(ms, x, y, w, h);
+		}
+
+		@Override
+		public JsonElement serialize() {
+			return FHNopIcon.INSTANCE.serialize();
+		}
+
+		@Override
+		public void write(PacketBuffer buffer) {
+			FHNopIcon.INSTANCE.write(buffer);
+		}
+	}
 	public static final Map<String,Function<JsonElement,FHIcon>> JsonIcon=new HashMap<>();
 	public static final List<Function<PacketBuffer,FHIcon>> BufferIcon=new ArrayList<>();
 	static {
@@ -262,13 +350,14 @@ public class FHIcons {
 		JsonIcon.put("animated",FHAnimatedIcon::new);
 		JsonIcon.put("ingredient",FHIngredientIcon::new);
 		JsonIcon.put("texture",FHTextureIcon::new);
+		JsonIcon.put("texture_uv",FHTextureUVIcon::new);
 		BufferIcon.add(FHNopIcon::get);
 		BufferIcon.add(FHItemIcon::new);
 		BufferIcon.add(FHCombinedIcon::new);
 		BufferIcon.add(FHAnimatedIcon::new);
 		BufferIcon.add(FHIngredientIcon::new);
 		BufferIcon.add(FHTextureIcon::new);
-		
+		BufferIcon.add(FHTextureUVIcon::new);
 	}
 	/**
 	 * get Icon from ItemStack
@@ -276,6 +365,9 @@ public class FHIcons {
 	 * To preserve NBT, use {@link #getIcon(String)}
 	 * */
 	public static FHIcon getIcon(ItemStack item) {
+		return new FHItemIcon(item);
+	}
+	public static FHIcon getIcon(IItemProvider item) {
 		return new FHItemIcon(item);
 	}
 	/**
@@ -295,6 +387,16 @@ public class FHIcons {
 	}
 	public static FHIcon getIcon(ResourceLocation texture) {
 		return new FHTextureIcon(texture);
+	}
+	public static FHIcon getIcon(ResourceLocation texture,int x,int y,int w,int h,int tw,int th) {
+		return new FHTextureUVIcon(texture,x,y,w,h,tw,th);
+	}
+	/**
+	 * Make a FHIcon delegate of the given icon, THIS IS NOT SERIALIZABLE
+	 * All Serialization progress would result in getting an NOP icon.
+	 * */
+	public static FHIcon getIcon(Icon i) {
+		return new FHDelegateIcon(i);
 	}
 	public static FHIcon getAnimatedIcon(FHIcon... icons) {
 		return new FHAnimatedIcon(icons);
@@ -326,6 +428,13 @@ public class FHIcons {
 	public static FHIcon nop() {
 		return FHNopIcon.INSTANCE;
 	}
+	public static FHIcon getIcon(ItemStack[] stacks) {
+		return new FHIngredientIcon(Ingredient.fromStacks(stacks));
+	}
+	public static FHIcon getIcon(IItemProvider[] items) {
+		return new FHIngredientIcon(Ingredient.fromItems(items));
+	}
+
 	
 
 }

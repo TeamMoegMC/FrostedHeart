@@ -1,16 +1,15 @@
 package com.teammoeg.frostedheart.research.effects;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IEMultiblocks;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.ResearchGlobals;
+import com.teammoeg.frostedheart.research.TeamResearchData;
+
 import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
 
@@ -24,7 +23,7 @@ public class EffectBuilding extends Effect {
 
 
     public EffectBuilding(IETemplateMultiblock s, Block b) {
-    	super(GuiUtils.translateGui("effect.building"),new ArrayList<>(),new ItemStack(FHContent.FHItems.copper_core_spade));
+    	super(GuiUtils.translateGui("effect.building"),new ArrayList<>(),b);
         multiblock = s;
         block = b;
         
@@ -47,20 +46,24 @@ public class EffectBuilding extends Effect {
     }
     @Override
     public void init() {
-
+    	ResearchGlobals.multiblock.unlock(multiblock.getUniqueName());//This list treat as blacklist, so unlock is lock,
+																	  //THIS IS NOT AN ERROR
     }
 
     @Override
-    public void grant() {
-
+    public void grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    	team.building.unlock(multiblock.getUniqueName());
+    	
     }
 
     @Override
-    public void revoke() {
-
+    public void revoke(TeamResearchData team) {
+    	team.building.lock(multiblock.getUniqueName());
     }
+
 	@Override
-	public ResourceLocation getId() {
-		return null;
+	public String getId() {
+		return "multiblock";
 	}
+
 }
