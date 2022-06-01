@@ -46,19 +46,18 @@ public class EffectBuilding extends Effect {
     }
     @Override
     public void init() {
-    	ResearchGlobals.multiblock.unlock(multiblock.getUniqueName());//This list treat as blacklist, so unlock is lock,
-																	  //THIS IS NOT AN ERROR
+    	ResearchGlobals.multiblock.add(multiblock);
     }
 
     @Override
     public void grant(TeamResearchData team, PlayerEntity triggerPlayer) {
-    	team.building.unlock(multiblock.getUniqueName());
+    	team.building.add(multiblock);
     	
     }
 
     @Override
     public void revoke(TeamResearchData team) {
-    	team.building.lock(multiblock.getUniqueName());
+    	team.building.remove(multiblock);
     }
 
 	@Override

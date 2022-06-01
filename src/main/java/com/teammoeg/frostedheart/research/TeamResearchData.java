@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.research.ResearchGlobals.BlockUnlockList;
+import com.teammoeg.frostedheart.research.ResearchGlobals.MultiblockUnlockList;
+import com.teammoeg.frostedheart.research.ResearchGlobals.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
@@ -14,6 +17,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 
 public class TeamResearchData {
 	public static TeamResearchData INSTANCE=new TeamResearchData(null);
@@ -22,12 +26,11 @@ public class TeamResearchData {
 	int activeResearchId=0;
 	CompoundNBT variants=new CompoundNBT();
 	Supplier<Team> team;
-	public UnlockList crafting;
-	public UnlockList building;
+	public RecipeUnlockList crafting=new RecipeUnlockList();
+	public MultiblockUnlockList building=new MultiblockUnlockList();
+	public BlockUnlockList block=new BlockUnlockList();
 	public TeamResearchData(Supplier<Team> team) {
 		this.team = team;
-		crafting=new UnlockList();
-		building=new UnlockList();
 	}
 	public Optional<Team> getTeam() {
 		if(team==null)return Optional.empty();
@@ -137,6 +140,7 @@ public class TeamResearchData {
 		nbt.putInt("active",activeResearchId);
 		nbt.put("crafting",crafting.serialize());
 		nbt.put("building",building.serialize());
+		nbt.put("block",block.serialize());
 		return nbt;
 	}
 	public CompoundNBT getVariants() {
@@ -152,8 +156,9 @@ public class TeamResearchData {
 			clueComplete.set(i,ba[i]!=0);
 		ListNBT li=data.getList("researches",10);
 		activeResearchId=data.getInt("active");
-		crafting=new UnlockList(data.getCompound("crafting"));
-		building=new UnlockList(data.getCompound("building"));
+		crafting.load(data.getList("crafting",8));
+		building.load(data.getList("building",8));
+		block.load(data.getList("block",8));
 		for(int i=0;i<li.size();i++) {
 			INBT e=li.get(i);
 			if(e.getId()==10) {

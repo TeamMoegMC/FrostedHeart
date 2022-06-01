@@ -25,12 +25,12 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public class EffectCrafting extends Effect{
-	List<String> unlocks=new ArrayList<>();
+	List<IRecipe<?>> unlocks=new ArrayList<>();
     public EffectCrafting(ItemStack item) {
     	super(GuiUtils.translateGui("effect.crafting"),new ArrayList<>(),FHIcons.getIcon(FHIcons.getIcon(item),FHIcons.getIcon(Items.CRAFTING_TABLE)));
     	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
     		if(r.getRecipeOutput().equals(item)) {
-    			unlocks.add(r.getId().toString());
+    			unlocks.add(r);
     		}
     	}
     	tooltip.add(new TranslationTextComponent(item.getTranslationKey()));
@@ -39,7 +39,7 @@ public class EffectCrafting extends Effect{
     	super(GuiUtils.translateGui("effect.crafting"),new ArrayList<>(),FHIcons.getIcon(FHIcons.getIcon(item),FHIcons.getIcon(Items.CRAFTING_TABLE)));
     	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
     		if(r.getRecipeOutput().getItem().equals(item.asItem())) {
-    			unlocks.add(r.getId().toString());
+    			unlocks.add(r);
     		}
     	}
     	tooltip.add(new TranslationTextComponent(item.asItem().getTranslationKey()));
@@ -47,10 +47,10 @@ public class EffectCrafting extends Effect{
     public EffectCrafting(ResourceLocation recipe) {
     	super(GuiUtils.translateGui("effect.crafting"),new ArrayList<>());
     	Optional<? extends IRecipe<?>> r=ResearchDataManager.server.getRecipeManager().getRecipe(recipe);
-    	unlocks.add(recipe.toString());
+    	
     	if(r.isPresent()) {
     		ItemStack output=r.get().getRecipeOutput();
-    		
+    		unlocks.add(r.get());
     		tooltip.add(new TranslationTextComponent(output.getTranslationKey()));
     	}else
     		tooltip.add(GuiUtils.translateGui("effect.recipe.error"));
@@ -61,21 +61,17 @@ public class EffectCrafting extends Effect{
 
 	@Override
     public void init() {
-		for(String s:unlocks)
-			ResearchGlobals.recipe.unlock(s);//This list treat as blacklist, so unlock is lock,
-											 //THIS IS NOT AN ERROR
+		ResearchGlobals.recipe.addAll(unlocks);
     }
 
     @Override
     public void grant(TeamResearchData team, PlayerEntity triggerPlayer) {
-    	for(String s:unlocks)
-    		team.crafting.unlock(s);
+    	team.crafting.addAll(unlocks);
     }
 
     @Override
     public void revoke(TeamResearchData team) {
-    	for(String s:unlocks)
-    		team.crafting.lock(s);
+    	team.crafting.addAll(unlocks);
     }
 
 	@Override

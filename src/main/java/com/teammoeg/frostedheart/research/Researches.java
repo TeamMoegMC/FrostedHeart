@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.research;
 
 import blusunrize.immersiveengineering.api.EnumMetals;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.common.IEContent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import blusunrize.immersiveengineering.common.items.IEItems;
 
@@ -15,7 +14,6 @@ import com.teammoeg.frostedheart.FHContent.FHMultiblocks;
 import com.teammoeg.frostedheart.research.clues.CustomClue;
 import com.teammoeg.frostedheart.research.effects.*;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.StringTextComponent;
 
 /**
  * Store some constant research instances

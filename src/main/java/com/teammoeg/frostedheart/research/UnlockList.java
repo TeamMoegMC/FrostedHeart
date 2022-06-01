@@ -1,36 +1,52 @@
 package com.teammoeg.frostedheart.research;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
 
-public class UnlockList {
-	CompoundNBT nbt;
+public abstract class UnlockList<T> {
+	Set<T> s=new HashSet<>();
 
 	public UnlockList() {
-		nbt=new CompoundNBT();
+		
 	}
-	public UnlockList(CompoundNBT nbt) {
-		this.nbt=nbt;
+	public UnlockList(ListNBT nbt) {
+		this();
+		load(nbt);
 	}
-	public boolean has(ResourceLocation key) {
-		return has(key.toString());
+	public boolean has(T key) {
+		return s.contains(key);
 	}
-	public boolean has(String key) {
-		return nbt.contains(key);
+	public void add(T key) {
+		s.add(key);
 	}
-	public void unlock(ResourceLocation key) {
-		unlock(key.toString());
+	public void addAll(Collection<T> key) {
+		s.addAll(key);
 	}
-	public void unlock(String key) {
-		nbt.putBoolean(key,true);
+	public abstract String getString(T item);
+	public abstract T getObject(String s);
+	
+	public ListNBT serialize() {
+		ListNBT ln=new ListNBT();
+		for(T t:s)
+			ln.add(StringNBT.valueOf(getString(t)));
+		return ln;
 	}
-	public CompoundNBT serialize() {
-		return nbt;
+	public void remove(T key) {
+		s.remove(key);
 	}
-	public void lock(String key) {
-		nbt.remove(key);
+	public void removeAll(Collection<T> key) {
+		s.removeAll(key);
 	}
-	public void lock(ResourceLocation key) {
-		lock(key.toString());
+	public void load(ListNBT nbt) {
+		for(INBT in:nbt) {
+			s.add(getObject(in.getString()));
+		}
 	}
 }
