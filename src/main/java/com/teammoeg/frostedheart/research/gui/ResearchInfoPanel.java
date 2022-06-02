@@ -51,19 +51,9 @@ public class ResearchInfoPanel extends Panel {
 				int xoffset = 0;
 				for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
 					if (ingredient.getMatchingStacks().length != 0) {
-						ItemStack toDisplay = ingredient.getMatchingStacks()[0];
-						Icon icon = ItemIcon.getItemIcon(toDisplay);
-						Button button = new Button(fp) {
-							@Override
-							public void onClicked(MouseButton mouseButton) {
-
-							}
-						};
+						RequirementSlot button = new RequirementSlot(fp,ingredient.getMatchingStacks());
 
 						button.setPosAndSize(xoffset, ioffset, 16, 16);
-						button.setIcon(icon);
-						button.setTitle(new TranslationTextComponent(toDisplay.getTranslationKey())
-								.appendString(" x " + toDisplay.getCount()));
 						fp.add(button);
 
 						xoffset += button.width + 1;
@@ -169,9 +159,8 @@ public class ResearchInfoPanel extends Panel {
 				hasB=true;
 			}
 			if(hasB)
-				offset+=4;
+				offset+=40;
 			hasB=false;
-			fX=true;
 			fY=true;
 			xoffset=2;
 			for (Effect effect : detailPanel.research.getEffects()) {
@@ -188,10 +177,9 @@ public class ResearchInfoPanel extends Panel {
 				}
 				EffectWidget button = new EffectWidget(fp,effect);
 				button.setPos(xoffset, offset);
-				add(button);
-				if(fX) {xoffset+=4;fX=false;}
-				xoffset += 16;
-				if(xoffset>=121) {
+				fp.add(button);
+				xoffset += 17;
+				if(xoffset>=119) {
 					xoffset=2;
 					if(fY) {
 					offset+=4;
@@ -202,7 +190,7 @@ public class ResearchInfoPanel extends Panel {
 				hasB=true;
 			}
 			if(hasB)
-				offset+=8;
+				offset+=24;
 			TeamResearchData data = TeamResearchData.INSTANCE;
 			// TODO: remove || true after api works
 			if (hasItemRewards&&(data.getData(detailPanel.research).isCompleted() || true)) {

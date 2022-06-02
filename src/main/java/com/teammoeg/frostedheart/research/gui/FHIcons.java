@@ -18,6 +18,7 @@ import com.teammoeg.frostedheart.util.Writeable;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
@@ -139,8 +140,11 @@ public class FHIcons {
 		}
 		@Override
 		public void draw(MatrixStack ms, int x, int y, int w, int h) {
-			large.draw(ms, x, y, w, h);
+			GuiHelper.setupDrawing();
 			small.draw(ms, x+w/2, y+h/2, w/2, h/2);
+			large.draw(ms, x, y, w, h);
+			
+			
 		}
 
 		@Override

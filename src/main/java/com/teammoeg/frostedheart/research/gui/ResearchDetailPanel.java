@@ -34,6 +34,7 @@ public class ResearchDetailPanel extends Panel {
 		infoPanel = new ResearchInfoPanel(this);
 		dashboardPanel = new ResearchDashboardPanel(this);
 		researchScreen = panel;
+		
 	}
 
 	@Override

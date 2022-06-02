@@ -13,7 +13,17 @@ public class LEffectWidget extends EffectWidget{
 		super(panel, e);
 		super.setSize(36, 36);
 	}
+	public boolean checkMouseOver(int mouseX, int mouseY) {
+		if (parent == null) {
+			return true;
+		} else if (!parent.isMouseOver()) {
+			return false;
+		}
 
+		int ax = getX();
+		int ay = getY();
+		return mouseX >= ax+2 && mouseY >= ay+2 && mouseX < ax + width-4 && mouseY < ay + height-4;
+	}
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		GuiHelper.setupDrawing();
