@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
@@ -24,7 +25,7 @@ public class ResearchData {
     int committed;//points committed
     final TeamResearchData parent;
     ArrayList<ItemStack> committedItems = new ArrayList<>();//items comitted
-    UnlockList unlockedrecipes;
+    
     
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
@@ -49,9 +50,12 @@ public class ResearchData {
 
     public void checkComplete() {
         if (finished) return;
-        if (getTotalCommitted() == rs.get().getRequiredPoints()) {
+        Research r=rs.get();
+        if (getTotalCommitted() >= r.getRequiredPoints()) {
             finished = true;
             this.announceCompletion();
+            for(Effect e:r.getEffects())
+            	parent.grantEffect(e);
         }
     }
 

@@ -1,13 +1,17 @@
 package com.teammoeg.frostedheart.research.effects;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,25 +22,39 @@ import java.util.List;
 public class EffectItemReward extends Effect {
 
     List<ItemStack> rewards;
-
+    FHIcon iicons;
     public EffectItemReward(ItemStack... stacks) {
-    	super(GuiUtils.translateGui("effect.item_reward"),null,FHIcons.getIcon(stacks));
+    	super("@gui." + FHMain.MODID + ".effect.item_reward",new ArrayList<>());
         rewards = new ArrayList<>();
+
         for (ItemStack stack : stacks) {
             rewards.add(stack);
+            if(stack.getCount()==1)
+            	tooltip.add("@"+stack.getTranslationKey());
+            else
+            	tooltip.add("{"+stack.getTranslationKey()+"} x "+stack.getCount());
         }
-        if (rewards.size() != 0) {
-            icon = FHIcons.getIcon(rewards);
+        initIcons();
+    }
+    private void initIcons() {
+    	if (rewards.size() != 0) {
+        	iicons = FHIcons.getIcon(rewards);
         } else {
-            icon = FHIcons.nop();
+        	iicons = FHIcons.nop();
         }
-        tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.translateTooltip("effect.item_reward.1"));
     }
     public EffectItemReward(JsonObject jo) {
     	super(jo);
+    	rewards=SerializeUtil.parseJsonElmList(jo.get("rewards"),SerializeUtil::fromJson);
+    	initIcons();
     }
-    @Override
+    
+    public EffectItemReward(PacketBuffer pb) {
+		super(pb);
+		rewards=SerializeUtil.readList(pb,PacketBuffer::readItemStack);
+		initIcons();
+	}
+	@Override
     public void init() {
 
     }
@@ -46,9 +64,11 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public void grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    	if(triggerPlayer==null)return false;
     	for(ItemStack s:rewards)
     		FHUtils.giveItem(triggerPlayer,s.copy());
+    	return true;
     }
     //We dont confiscate players items, that is totally unnecessary
     @Override
@@ -59,5 +79,26 @@ public class EffectItemReward extends Effect {
 	@Override
 	public String getId() {
 		return "item";
+	}
+	@Override
+	public JsonObject serialize() {
+		JsonObject jo=super.serialize();
+		jo.add("rewards",SerializeUtil.toJsonList(rewards,SerializeUtil::toJson));
+		return jo;
+	}
+	@Override
+	public void write(PacketBuffer buffer) {
+		super.write(buffer);
+		SerializeUtil.writeList2(buffer,rewards,PacketBuffer::writeItemStack);
+	}
+	@Override
+	public FHIcon getIcon() {
+		if(super.getIcon()!=FHIcons.nop())
+			return super.getIcon();
+		return iicons;
+	}
+	@Override
+	public int getIntID() {
+		return 3;
 	}
 }

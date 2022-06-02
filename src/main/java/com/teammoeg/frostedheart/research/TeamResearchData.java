@@ -10,9 +10,11 @@ import com.teammoeg.frostedheart.research.ResearchGlobals.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchGlobals.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchGlobals.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -22,6 +24,7 @@ import net.minecraft.nbt.StringNBT;
 public class TeamResearchData {
 	public static TeamResearchData INSTANCE=new TeamResearchData(null);
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
+	ArrayList<Boolean> grantedEffects=new ArrayList<>();
 	ArrayList<ResearchData> rdata=new ArrayList<>();
 	int activeResearchId=0;
 	CompoundNBT variants=new CompoundNBT();
@@ -108,7 +111,31 @@ public class TeamResearchData {
 		}
 		return false;
 	}
-	
+	public void ensureEffect(int len) {
+		grantedEffects.ensureCapacity(len);
+		while(grantedEffects.size()<len)
+			grantedEffects.add(false);
+	}
+	public void grantEffect(int id) {
+		ensureEffect(id-1);
+		if(!grantedEffects.get(id-1)) {
+			grantedEffects.set(id-1,FHResearch.effects.getById(id).grant(this, null));
+		}
+	}
+	public void grantEffect(Effect e) {
+		int id=e.getRId()-1;
+		ensureEffect(id);
+		if(!grantedEffects.get(id)) {
+			grantedEffects.set(id,e.grant(this, null));
+		}
+	}
+	public void grantEffect(Effect e,ServerPlayerEntity player) {
+		int id=e.getRId()-1;
+		ensureEffect(id-1);
+		if(!grantedEffects.get(id-1)) {
+			grantedEffects.set(id-1,e.grant(this,player));
+		}
+	}
 	//return excess items.
 	public List<ItemStack> commitItem(ItemStack item){
 		LazyOptional<Research> rs=getActiveResearch();

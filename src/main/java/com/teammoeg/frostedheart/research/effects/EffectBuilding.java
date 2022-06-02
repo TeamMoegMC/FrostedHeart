@@ -1,16 +1,18 @@
 package com.teammoeg.frostedheart.research.effects;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.ResearchGlobals;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-
+import net.minecraft.util.ResourceLocation;
 import java.util.ArrayList;
 
 /**
@@ -18,40 +20,35 @@ import java.util.ArrayList;
  */
 public class EffectBuilding extends Effect {
 
-    IETemplateMultiblock multiblock;
-    Block block;
-
-
+    IMultiblock multiblock;
     public EffectBuilding(IETemplateMultiblock s, Block b) {
-    	super(GuiUtils.translateGui("effect.building"),new ArrayList<>(),b);
+    	super("@gui." + FHMain.MODID + ".effect.building",new ArrayList<>(),b);
         multiblock = s;
-        block = b;
         
-        tooltip.add(GuiUtils.translateTooltip(multiblock.getUniqueName().toString()));
+        tooltip.add("@"+b.getTranslationKey());
     }
     public EffectBuilding(JsonObject jo) {
-    	//this(MultiblockHandler.getByUniqueName(getId()),);
     	super(jo);
+    	multiblock = MultiblockHandler.getByUniqueName(new ResourceLocation(jo.get("multiblock").getAsString()));
     }
     public EffectBuilding(PacketBuffer pb) {
     	super(pb);
+    	multiblock=MultiblockHandler.getByUniqueName(pb.readResourceLocation());
     }
 
-    public IETemplateMultiblock getMultiblock() {
+    public IMultiblock getMultiblock() {
         return multiblock;
     }
 
-    public Block getBlock() {
-        return block;
-    }
     @Override
     public void init() {
     	ResearchGlobals.multiblock.add(multiblock);
     }
 
     @Override
-    public void grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
     	team.building.add(multiblock);
+		return true;
     	
     }
 
@@ -63,6 +60,21 @@ public class EffectBuilding extends Effect {
 	@Override
 	public String getId() {
 		return "multiblock";
+	}
+	@Override
+	public JsonObject serialize() {
+		JsonObject jo=super.serialize();
+		jo.addProperty("multiblock", multiblock.getUniqueName().toString());
+		return jo;
+	}
+	@Override
+	public void write(PacketBuffer buffer) {
+		super.write(buffer);
+		buffer.writeResourceLocation(multiblock.getUniqueName());
+	}
+	@Override
+	public int getIntID() {
+		return 1;
 	}
 
 }

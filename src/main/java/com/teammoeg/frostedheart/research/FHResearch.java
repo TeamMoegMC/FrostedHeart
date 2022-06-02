@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -16,6 +17,7 @@ import net.minecraft.nbt.CompoundNBT;
 public class FHResearch {
 	public static FHRegistry<Research> researches=new FHRegistry<Research>();
 	public static FHRegistry<AbstractClue> clues=new FHRegistry<AbstractClue>();
+	public static FHRegistry<Effect> effects=new FHRegistry<Effect>();
 	private static LazyOptional<List<Research>> allResearches=LazyOptional.of(()->researches.all());
 	private static LazyOptional<List<AbstractClue>> allClues=LazyOptional.of(()->clues.all());
 	public static CompoundNBT save(CompoundNBT cnbt) {

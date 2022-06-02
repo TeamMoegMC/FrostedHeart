@@ -33,9 +33,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.FHMain;
+
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class SerializeUtil {
 	public static class Deserializer<T extends JsonElement, U extends Writeable> {
@@ -139,7 +146,7 @@ public class SerializeUtil {
 		if (elm.isJsonArray())
 			return StreamSupport.stream(elm.getAsJsonArray().spliterator(), false).map(mapper)
 					.collect(Collectors.toList());
-		return Lists.newArrayList(mapper.apply(elm.getAsJsonObject()));
+		return Lists.newArrayList(mapper.apply(elm));
 	}
 
 	public static <T> JsonArray toJsonList(Collection<T> li, Function<T, JsonElement> mapper) {
@@ -147,10 +154,45 @@ public class SerializeUtil {
 		li.stream().map(mapper).forEach(ja::add);
 		return ja;
 	}
+	public static <T,B> JsonArray toJsonStringList(Collection<T> li, Function<T,B> mapper) {
+		JsonArray ja = new JsonArray();
+		li.stream().map(mapper).map(B::toString).forEach(ja::add);
+		return ja;
+	}
 
 	public static <T> ListNBT toNBTList(Collection<T> stacks, Function<T, INBT> mapper) {
 		ListNBT nbt = new ListNBT();
 		stacks.stream().map(mapper).forEach(nbt::add);
 		return nbt;
+	}
+	public static JsonElement toJson(ItemStack stack) {
+		boolean hasCount=stack.getCount()>1,hasTag=stack.hasTag();
+		if(!hasCount&&!hasTag)
+			return new JsonPrimitive(stack.getItem().getRegistryName().toString());
+		JsonObject jo=new JsonObject();
+		jo.addProperty("id",stack.getItem().getRegistryName().toString());
+		if(hasCount)
+			jo.addProperty("count",stack.getCount());
+		if(hasTag)
+			jo.addProperty("tag",Mojangson.writeNBT(stack.getTag()));
+		return jo;
+	}
+	public static ItemStack fromJson(JsonElement elm) {
+		if(elm.isJsonPrimitive())
+			return new ItemStack(ForgeRegistries.BLOCKS.getValue(new ResourceLocation(elm.getAsString())));
+		else if(elm.isJsonObject()) {
+			JsonObject jo=elm.getAsJsonObject();
+			ItemStack ret=new ItemStack(ForgeRegistries.BLOCKS.getValue(new ResourceLocation(jo.get("id").getAsString())));
+			if(jo.has("count"))
+				ret.setCount(jo.get("count").getAsInt());
+			if(jo.has("tag"))
+				try {
+					ret.setTag(JsonToNBT.getTagFromJson(jo.get("tag").getAsString()));
+				} catch (CommandSyntaxException e) {
+					FHMain.LOGGER.warn(e.getMessage());
+				}
+			return ret;
+		}
+		return ItemStack.EMPTY;
 	}
 }

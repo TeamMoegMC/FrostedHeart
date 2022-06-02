@@ -4,27 +4,23 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.network.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.*;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
@@ -151,124 +147,76 @@ public class ResearchInfoPanel extends Panel {
 
 		FramedPanel ppl = new FramedPanel(this, fp -> {
 			int offset=0;
+			int xoffset=0;
+			boolean fX=true;
+			boolean fY=true;
+			boolean hasItemRewards=false;
+			boolean hasB=false;
+			for(Effect effect:detailPanel.research.getEffects()) {
+				if(!(effect instanceof EffectBuilding))continue;
+				LEffectWidget button = new LEffectWidget(fp,effect);
+				button.setPos(xoffset, offset);
+				fp.add(button);
+				if(fX) {
+					xoffset+=2;
+					fX=false;
+				}
+				xoffset+=32;
+				if(xoffset>=98) {
+					if(fY) {offset+=2;fY=false;};
+					offset += 32;
+				}
+				hasB=true;
+			}
+			if(hasB)
+				offset+=4;
+			hasB=false;
+			fX=true;
+			fY=true;
+			xoffset=2;
 			for (Effect effect : detailPanel.research.getEffects()) {
-				
-				// effect name
-				TextField effectName = new TextField(fp);
-				effectName.setMaxWidth(width).setText(effect.getName().mergeStyle(TextFormatting.BOLD)).setColor(DrawDeskIcons.text).setPos(0, offset);
-				fp.add(effectName);
-				offset += effectName.height + 1;
 
 				// item reward
 				if (effect instanceof EffectItemReward) {
-					List<ItemStack> rewards = ((EffectItemReward) effect).getRewards();
-					for (int i = 0; i < rewards.size(); i++) {
-						Icon icon = ItemIcon.getItemIcon(rewards.get(i));
-						Button button = new Button(fp) {
-							@Override
-							public void onClicked(MouseButton mouseButton) {
-
-							}
-						};
-						button.setPosAndSize(i * 17, offset, 16, 16);
-						button.setIcon(icon);
-						button.setTitle(new TranslationTextComponent(rewards.get(i).getTranslationKey())
-								.appendString(" x " + rewards.get(i).getCount()));
-						fp.add(button);
-					}
-					// additional offset caused by item icons
-					offset += 17;
-					// claim reward button if research is completed
-					TeamResearchData data = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player);
-					// TODO: remove || true after api works
-					if (data.getData(detailPanel.research).isCompleted() || true) {
-						Button claimRewards = new TechTextButton(fp, GuiUtils.translateGui("research.claim_rewards"),
-								Icon.EMPTY) {
-							@Override
-							public void onClicked(MouseButton mouseButton) {
-								for (ItemStack rewardStack : ((EffectItemReward) effect).getRewards()) {
-									// TODO: check inventory full
-									detailPanel.researchScreen.player.inventory.addItemStackToInventory(rewardStack.copy());
-								}
-								refreshWidgets();
-							}
-						};
-						claimRewards.setPos(0, offset);
-						fp.add(claimRewards);
-						offset += claimRewards.height + 1;
-					}
+					hasItemRewards=true;
+					
 				}
 
 				// building
 				if (effect instanceof EffectBuilding) {
-					Block block = ((EffectBuilding) effect).getBlock();
-					Icon icon = ItemIcon.getItemIcon(block.asItem());
-					Button button = new Button(fp) {
-						@Override
-						public void onClicked(MouseButton mouseButton) {
-
-						}
-					};
-					button.setPosAndSize(0, offset, 32, 32);
-					button.setIcon(icon);
-					button.setTitle(block.getTranslatedName());
-					fp.add(button);
-					offset += 33;
+					continue;
 				}
-
-				// crafting
-				/*
-				 * if (effect instanceof EffectCrafting) {
-				 * List<Item> itemsToCraft = ((EffectCrafting) effect).getItemsToCraft();
-				 * for (int i = 0; i < itemsToCraft.size(); i++) {
-				 * Icon icon = ItemIcon.getItemIcon(itemsToCraft.get(i));
-				 * Button button = new Button(fp) {
-				 * 
-				 * @Override
-				 * public void onClicked(MouseButton mouseButton) {
-				 * 
-				 * }
-				 * };
-				 * button.setPosAndSize(i*17, offset, 16, 16);
-				 * button.setIcon(icon);
-				 * button.setTitle(new
-				 * TranslationTextComponent(itemsToCraft.get(i).getTranslationKey()));
-				 * fp.add(button);
-				 * }
-				 * // additional offset caused by item icons
-				 * offset += 17;
-				 * }
-				 */
-
-				// use
-				if (effect instanceof EffectUse) {
-					List<Block> blocksToUse = ((EffectUse) effect).getBlocksToUse();
-					for (int i = 0; i < blocksToUse.size(); i++) {
-						Icon icon = ItemIcon.getItemIcon(blocksToUse.get(i).asItem());
-						Button button = new Button(fp) {
-							@Override
-							public void onClicked(MouseButton mouseButton) {
-
-							}
-						};
-						button.setPosAndSize(i * 17, offset, 16, 16);
-						button.setIcon(icon);
-						button.setTitle(new TranslationTextComponent(blocksToUse.get(i).getTranslationKey()));
-						fp.add(button);
+				EffectWidget button = new EffectWidget(fp,effect);
+				button.setPos(xoffset, offset);
+				add(button);
+				if(fX) {xoffset+=4;fX=false;}
+				xoffset += 16;
+				if(xoffset>=121) {
+					xoffset=2;
+					if(fY) {
+					offset+=4;
+					fY=false;
 					}
-					// additional offset caused by item icons
-					offset += 17;
+					offset+=16;
 				}
-
-				// stats
-				if (effect instanceof EffectStats) {
-					
-					TextField stats = new TextField(fp);
-					stats.setMaxWidth(width).setText(effect.getName()).setPos(0, offset);
-					fp.add(stats);
-					offset += stats.height;
-				}
-				
+				hasB=true;
+			}
+			if(hasB)
+				offset+=8;
+			TeamResearchData data = TeamResearchData.INSTANCE;
+			// TODO: remove || true after api works
+			if (hasItemRewards&&(data.getData(detailPanel.research).isCompleted() || true)) {
+				Button claimRewards = new TechTextButton(fp, GuiUtils.translateGui("research.claim_rewards"),
+						Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						PacketHandler.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
+						refreshWidgets();
+					}
+				};
+				claimRewards.setPos(0, offset);
+				fp.add(claimRewards);
+				offset += claimRewards.height + 1;
 			}
 			fp.setWidth(width);
 			fp.setHeight(offset);

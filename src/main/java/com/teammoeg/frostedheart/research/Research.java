@@ -20,20 +20,20 @@ import com.teammoeg.frostedheart.research.clues.AbstractClue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -43,232 +43,255 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * Only Definition of research.
  * Part of Research Category {@link ResearchCategory}
  */
-public class Research extends FHRegisteredItem implements Writeable{
-    private String id;//id of this research
-    private FHIcon icon;//icon for this research in term of item
-    private ResearchCategory category;
-    private HashSet<Supplier<Research>> parents = new HashSet<>();//parent researches
-    private HashSet<Supplier<Research>> children = new HashSet<>();//child researches, this is set automatically, should not set manually.
+public class Research extends FHRegisteredItem implements Writeable {
+	private String id;// id of this research
+	private FHIcon icon;// icon for this research in term of item
+	private ResearchCategory category;
+	private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
+	private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
+																	// should not set manually.
 
-    private HashSet<Supplier<AbstractClue>> clues = new HashSet<>();//research clues
-    private List<IngredientWithSize> requiredItems = new ArrayList<>();
-    private List<Effect> effects = new ArrayList<>();//effects of this research
+	private HashSet<Supplier<AbstractClue>> clues = new HashSet<>();// research clues
+	private List<IngredientWithSize> requiredItems = new ArrayList<>();
+	private List<Effect> effects = new ArrayList<>();// effects of this research
+	public String name="";
+	public List<String> desc;
 
-    private int points = 2000;//research point
+	private int points = 2000;// research point
 
-    @SafeVarargs
-    public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
-        this(path, category, new ItemStack(Items.AIR), parents);
-    }
-    public Research(String id,JsonObject jo) {
-    	this.id=id;
-    	icon=FHIcons.getIcon(jo.get("icon"));
-    	category=ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString()));
-    	parents.addAll(SerializeUtil.parseJsonElmList(jo.get("parents"),p->FHResearch.researches.get(p.getAsString())));
-    	clues.addAll(SerializeUtil.parseJsonElmList(jo.get("clues"),p->FHResearch.clues.get(p.getAsString())));
-    	requiredItems=SerializeUtil.parseJsonElmList(jo.get("ingredients"),IngredientWithSize::deserialize);
-    	effects=SerializeUtil.parseJsonList(jo.get("effects"),Effects::deserialize);
-    	points=jo.get("points").getAsInt();
-    }
-    public Research(String id,PacketBuffer data) {
-    	this.id=id;
-    	icon=FHIcons.readIcon(data);
-    	category=ResearchCategories.ALL.get(data.readResourceLocation());
-    	
-    	parents.addAll(SerializeUtil.readList(data,p->FHResearch.researches.get(p.readVarInt())));
-    	clues.addAll(SerializeUtil.readList(data,p->FHResearch.clues.get(p.readVarInt())));
-    	requiredItems=SerializeUtil.readList(data,IngredientWithSize::read);
-    	effects=SerializeUtil.readList(data,Effects::deserialize);
-    	points=data.readVarInt();
-    }
+	@SafeVarargs
+	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
+		this(path, category, new ItemStack(Items.AIR), parents);
+		
+	}
+
+	public Research(String id, JsonObject jo) {
+		this.id = id;
+		if(jo.has("name"))
+			name=jo.get("name").getAsString();
+		desc=SerializeUtil.parseJsonElmList(jo.get("desc"),JsonElement::getAsString);
+		icon = FHIcons.getIcon(jo.get("icon"));
+		category = ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString()));
+		parents.addAll(
+				SerializeUtil.parseJsonElmList(jo.get("parents"), p -> FHResearch.researches.get(p.getAsString())));
+		clues.addAll(SerializeUtil.parseJsonElmList(jo.get("clues"), p -> FHResearch.clues.get(p.getAsString())));
+		requiredItems = SerializeUtil.parseJsonElmList(jo.get("ingredients"), IngredientWithSize::deserialize);
+		effects = SerializeUtil.parseJsonList(jo.get("effects"), Effects::deserialize);
+		points = jo.get("points").getAsInt();
+		
+	}
 	@Override
 	public JsonElement serialize() {
-		JsonObject jo=new JsonObject();
-		jo.add("icon",icon.serialize());
-		jo.addProperty("category",category.getId().toString());
-		jo.add("parents",SerializeUtil.toJsonList(parents,p->new JsonPrimitive(p.get().getId())));
-		jo.add("clues",SerializeUtil.toJsonList(clues,p->p.get().serialize()));
-		jo.add("ingredients",SerializeUtil.toJsonList(requiredItems,IngredientWithSize::serialize));
-		jo.add("effects",SerializeUtil.toJsonList(effects,Writeable::serialize));
-		jo.addProperty("points",points);
-		
+		JsonObject jo = new JsonObject();
+		if(name.length()>0&&!name.equals("@"))
+			jo.addProperty("name",name);
+		jo.add("desc",SerializeUtil.toJsonStringList(desc,e->e));
+		jo.add("icon", icon.serialize());
+		jo.addProperty("category", category.getId().toString());
+		jo.add("parents", SerializeUtil.toJsonList(parents, p -> new JsonPrimitive(p.get().getId())));
+		jo.add("clues", SerializeUtil.toJsonList(clues, p -> p.get().serialize()));
+		jo.add("ingredients", SerializeUtil.toJsonList(requiredItems, IngredientWithSize::serialize));
+		jo.add("effects", SerializeUtil.toJsonList(effects, Writeable::serialize));
+		jo.addProperty("points", points);
+
 		return jo;
 	}
+	public Research(String id, PacketBuffer data) {
+		this.id = id;
+		name=data.readString();
+		desc=SerializeUtil.readList(data,PacketBuffer::readString);
+		icon = FHIcons.readIcon(data);
+		category = ResearchCategories.ALL.get(data.readResourceLocation());
+
+		parents.addAll(SerializeUtil.readList(data, p -> FHResearch.researches.get(p.readVarInt())));
+		clues.addAll(SerializeUtil.readList(data, p -> FHResearch.clues.get(p.readVarInt())));
+		requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
+		effects = SerializeUtil.readList(data, Effects::deserialize);
+		points = data.readVarInt();
+	}
+
+
 
 	@Override
 	public void write(PacketBuffer buffer) {
-		icon.write(buffer);;
+		buffer.writeString(name);
+		SerializeUtil.writeList2(buffer, desc,PacketBuffer::writeString);
+		icon.write(buffer);
 		buffer.writeResourceLocation(category.getId());
-		SerializeUtil.writeList(buffer,parents,(e,p)->p.writeVarInt(e.get().getRId()));
-		SerializeUtil.writeList(buffer,clues,(e,p)->p.writeVarInt(e.get().getRId()));
-		SerializeUtil.writeList(buffer,requiredItems,(e,p)->e.write(p));
-		SerializeUtil.writeList(buffer,effects,(e,p)->e.write(p));
+		SerializeUtil.writeList(buffer, parents, (e, p) -> p.writeVarInt(e.get().getRId()));
+		SerializeUtil.writeList(buffer, clues, (e, p) -> p.writeVarInt(e.get().getRId()));
+		SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
+		SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
 		buffer.writeVarInt(points);
 	}
-    public Set<AbstractClue> getClues() {
-        return clues.stream().map(e -> e.get()).collect(Collectors.toSet());
-    }
 
-    public void attachClue(Supplier<AbstractClue> cl) {
-        clues.add(cl);
-    }
+	public Set<AbstractClue> getClues() {
+		return clues.stream().map(e -> e.get()).collect(Collectors.toSet());
+	}
 
-    public List<Effect> getEffects() {
-        return effects;
-    }
+	public void attachClue(Supplier<AbstractClue> cl) {
+		clues.add(cl);
+	}
 
-    public void attachEffect(Effect... effs) {
-        for (Effect effect : effs) {
-            effects.add(effect);
-        }
-    }
+	public List<Effect> getEffects() {
+		return effects;
+	}
 
-    public List<IngredientWithSize> getRequiredItems() {
-        return Collections.unmodifiableList(requiredItems);
-    }
+	public void attachEffect(Effect... effs) {
+		for (Effect effect : effs) {
+			effects.add(effect);
+		}
+	}
 
-    public void attachRequiredItem(IngredientWithSize... ingredients) {
-        for (IngredientWithSize ingredient : ingredients) {
-            requiredItems.add(ingredient);
-        }
-    }
+	public List<IngredientWithSize> getRequiredItems() {
+		return Collections.unmodifiableList(requiredItems);
+	}
 
-    @SafeVarargs
-    public Research(String id, ResearchCategory category, IItemProvider icon, Supplier<Research>... parents) {
-        this(id, category, new ItemStack(icon), parents);
-    }
+	public void attachRequiredItem(IngredientWithSize... ingredients) {
+		for (IngredientWithSize ingredient : ingredients) {
+			requiredItems.add(ingredient);
+		}
+	}
 
-    @SafeVarargs
-    public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
-        this.id = id;
-        this.parents.addAll(Arrays.asList(parents));
-        this.icon = FHIcons.getIcon(icon);
-        this.category = category;
-    }
+	@SafeVarargs
+	public Research(String id, ResearchCategory category, IItemProvider icon, Supplier<Research>... parents) {
+		this(id, category, new ItemStack(icon), parents);
+	}
 
-/*    public int getTime() {
-        return time;
-    }*/
+	@SafeVarargs
+	public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
+		this.id = id;
+		this.parents.addAll(Arrays.asList(parents));
+		this.icon = FHIcons.getIcon(icon);
+		this.category = category;
+		desc=new ArrayList<>();
+	}
 
-    public String getId() {
-        return id;
-    }
+	/*
+	 * public int getTime() {
+	 * return time;
+	 * }
+	 */
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public Supplier<Research> getSupplier() {
-        return FHResearch.getResearch(this.getLId());
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    }
+	public Supplier<Research> getSupplier() {
+		return FHResearch.getResearch(this.getLId());
 
-    public void doIndex() {
-        Supplier<Research> objthis = getSupplier();
-        for (Supplier<Research> r : this.parents) {
-            r.get().populateChild(objthis);
-        }
-    }
+	}
 
-    public void populateChild(Supplier<Research> child) {
-        children.add(child);
-    }
+	public void doIndex() {
+		Supplier<Research> objthis = getSupplier();
+		for (Supplier<Research> r : this.parents) {
+			r.get().populateChild(objthis);
+		}
+	}
 
-    public Set<Research> getChildren() {
-        return children.stream().map(r -> r.get()).collect(Collectors.toSet());
-    }
+	public void populateChild(Supplier<Research> child) {
+		children.add(child);
+	}
 
-    public Set<Research> getParents() {
-        return parents.stream().map(r -> r.get()).collect(Collectors.toSet());
-    }
+	public Set<Research> getChildren() {
+		return children.stream().map(r -> r.get()).collect(Collectors.toSet());
+	}
 
-    @SafeVarargs
-    public final void setParents(Supplier<Research>... parents) {
-        this.parents.clear();
-        this.parents.addAll(Arrays.asList(parents));
-    }
+	public Set<Research> getParents() {
+		return parents.stream().map(r -> r.get()).collect(Collectors.toSet());
+	}
 
-    public FHIcon getIcon() {
-        return icon;
-    }
+	@SafeVarargs
+	public final void setParents(Supplier<Research>... parents) {
+		this.parents.clear();
+		this.parents.addAll(Arrays.asList(parents));
+	}
 
-    public TranslationTextComponent getName() {
-        return new TranslationTextComponent("research." + id + ".name");
-    }
+	public FHIcon getIcon() {
+		return icon;
+	}
 
-    public TranslationTextComponent getDesc() {
-        return new TranslationTextComponent("research." + id + ".desc");
-    }
+	public TextComponent getName() {
+		return (TextComponent) FHTextUtil.get(name,()->"research." + id + ".name");
+	}
 
-    public ResearchCategory getCategory() {
-        return category;
-    }
+	public List<ITextComponent> getDesc() {
+		return FHTextUtil.get(desc,()->"research." + id + ".desc");
+	}
 
-    public int getRequiredPoints() {
-        return points;
-    }
+	public ResearchCategory getCategory() {
+		return category;
+	}
 
-    @OnlyIn(Dist.CLIENT)
-    public int getCurrentPoints() {
-        return getData().getTotalCommitted();
-    }
+	public int getRequiredPoints() {
+		return points;
+	}
 
-    @OnlyIn(Dist.CLIENT)
-    public float getProgressFraction() {
-        return getData().getProgress();
-    }
+	@OnlyIn(Dist.CLIENT)
+	public int getCurrentPoints() {
+		return getData().getTotalCommitted();
+	}
 
-    public ResearchData getData(Team team) {
-        return ResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
-    }
+	@OnlyIn(Dist.CLIENT)
+	public float getProgressFraction() {
+		return getData().getProgress();
+	}
 
-    @OnlyIn(Dist.CLIENT)
-    public ResearchData getData() {
-        return TeamResearchData.INSTANCE.getData(this);
-    }
+	public ResearchData getData(Team team) {
+		return ResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
+	}
 
-    public void sendProgressPacket(Team team) {
-        FHResearchProgressSyncPacket packet = new FHResearchProgressSyncPacket(team.getId(), this);
-        for (ServerPlayerEntity spe : team.getOnlineMembers())
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
-    }
+	@OnlyIn(Dist.CLIENT)
+	public ResearchData getData() {
+		return TeamResearchData.INSTANCE.getData(this);
+	}
 
-    public String toString() {
-        return "Research[" + id + "]";
-    }
+	public void sendProgressPacket(Team team) {
+		FHResearchProgressSyncPacket packet = new FHResearchProgressSyncPacket(team.getId(), this);
+		for (ServerPlayerEntity spe : team.getOnlineMembers())
+			PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+	}
 
-    @Override
-    public String getLId() {
-        return id.toString();
-    }
+	public String toString() {
+		return "Research[" + id + "]";
+	}
 
-    public boolean isCompleted(Team t) {
-        return getData(t).isCompleted();
-    }
+	@Override
+	public String getLId() {
+		return id.toString();
+	}
 
-    public boolean isUnlocked(Team t) {
-        for (Research parent : this.getParents()) {
-            if (!parent.getData(t).isCompleted()) {
-                return false;
-            }
-        }
-        return true;
-    }
+	public boolean isCompleted(Team t) {
+		return getData(t).isCompleted();
+	}
 
-    @OnlyIn(Dist.CLIENT)
-    public boolean isCompleted() {
-        return getData().isCompleted();
-    }
+	public boolean isUnlocked(Team t) {
+		for (Research parent : this.getParents()) {
+			if (!parent.getData(t).isCompleted()) {
+				return false;
+			}
+		}
+		return true;
+	}
 
-    @OnlyIn(Dist.CLIENT)
-    public boolean isUnlocked() {
-        for (Research parent : this.getParents()) {
-            if (!parent.getData().isCompleted()) {
-                return false;
-            }
-        }
-        return true;
-    }
+	@OnlyIn(Dist.CLIENT)
+	public boolean isCompleted() {
+		return getData().isCompleted();
+	}
+
+	@OnlyIn(Dist.CLIENT)
+	public boolean isUnlocked() {
+		for (Research parent : this.getParents()) {
+			if (!parent.getData().isCompleted()) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 
 }

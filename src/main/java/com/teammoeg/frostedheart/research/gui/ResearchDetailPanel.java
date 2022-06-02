@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.research.gui;
 
+import java.util.List;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
@@ -11,6 +13,7 @@ import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 
 public class ResearchDetailPanel extends Panel {
@@ -135,13 +138,18 @@ public class ResearchDetailPanel extends Panel {
 
 		@Override
 		public void addWidgets() {
-			TextField desc = new TextField(this);
-			add(desc);
-			desc.setMaxWidth(width);
-			desc.setPosAndSize(0, 0, width, height);
-			desc.setText(detailPanel.research.getDesc());
-			desc.setColor(DrawDeskIcons.text);
-			this.setHeight(desc.height);
+			List<ITextComponent> itxs=detailPanel.research.getDesc();
+			int offset=0;
+			for(ITextComponent itx:itxs) {
+				TextField desc = new TextField(this);
+				add(desc);
+				desc.setMaxWidth(width);
+				desc.setPosAndSize(0,offset, width, height);
+				desc.setText(itx);
+				desc.setColor(DrawDeskIcons.text);
+				offset+=desc.height;
+			}
+			this.setHeight(offset);
 		}
 
 		@Override

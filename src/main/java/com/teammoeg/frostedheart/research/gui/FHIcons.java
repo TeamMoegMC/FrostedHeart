@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.gui;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,10 @@ public class FHIcons {
 				item=elm.getAsString();
 				
 			}else if(elm.isJsonObject()) {
-				item=elm.getAsJsonObject().get("item").getAsString();
+				JsonElement it=elm.getAsJsonObject().get("item");
+				if(it.isJsonPrimitive())
+					item=it.getAsString();
+				else stack=SerializeUtil.fromJson(it);
 			}
 			init();
 		}
@@ -106,13 +110,7 @@ public class FHIcons {
 		public JsonElement serialize() {
 			if(item!=null)
 				return new JsonPrimitive(item);
-			StringBuilder sb=new StringBuilder();
-			sb.append(stack.getItem().getRegistryName());
-			sb.append(" ");
-			sb.append(stack.getCount());
-			sb.append(" ");
-			sb.append(stack.getDamage());
-			return new JsonPrimitive(sb.toString());
+			return SerializeUtil.toJson(stack);
 		}
 
 		@Override
@@ -359,26 +357,15 @@ public class FHIcons {
 		BufferIcon.add(FHTextureIcon::new);
 		BufferIcon.add(FHTextureUVIcon::new);
 	}
-	/**
-	 * get Icon from ItemStack
-	 * Would discard item NBT when serialize to json
-	 * To preserve NBT, use {@link #getIcon(String)}
-	 * */
 	public static FHIcon getIcon(ItemStack item) {
 		return new FHItemIcon(item);
 	}
 	public static FHIcon getIcon(IItemProvider item) {
 		return new FHItemIcon(item);
 	}
-	/**
-	 * get Item Icon from ItemStack String, serialize safe
-	 * */
 	public static FHIcon getIcon(String item) {
 		return new FHItemIcon(item);
 	}
-	/**
-	 * get Item Icon of combined base and small at the bottom right corner
-	 * */
 	public static FHIcon getIcon(FHIcon base,FHIcon small) {
 		return new FHCombinedIcon(base,small);
 	}
@@ -429,12 +416,17 @@ public class FHIcons {
 		return FHNopIcon.INSTANCE;
 	}
 	public static FHIcon getIcon(ItemStack[] stacks) {
-		return new FHIngredientIcon(Ingredient.fromStacks(stacks));
+		FHIcon[] icons=new FHIcon[stacks.length];
+		for(int i=0;i<stacks.length;i++)
+			icons[i]=FHIcons.getIcon(stacks[i]);
+		return getAnimatedIcon(icons);
 	}
 	public static FHIcon getIcon(IItemProvider[] items) {
 		return new FHIngredientIcon(Ingredient.fromItems(items));
 	}
-
+	public static FHIcon getIcon(Collection<IItemProvider> items) {
+		return new FHIngredientIcon(Ingredient.fromItems(items.toArray(new IItemProvider[0])));
+	}
 	
 
 }
