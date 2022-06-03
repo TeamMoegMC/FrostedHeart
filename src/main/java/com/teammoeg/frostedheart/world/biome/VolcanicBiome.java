@@ -47,6 +47,7 @@ public class VolcanicBiome {
         
         DefaultBiomeFeatures.withInfestedStone(builder);
         DefaultBiomeFeatures.withLavaAndWaterSprings(builder);
+        DefaultBiomeFeatures.withCavesAndCanyons(builder);
 //        builder.withStructure(FHStructureFeatures.VOLCANIC_VENT_FEATURE);
 //        builder.withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
     }
