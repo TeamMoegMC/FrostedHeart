@@ -30,14 +30,12 @@ public class ResearchCategory {
     private TranslationTextComponent name;
     private TranslationTextComponent desc;
     private ResourceLocation icon;
-    private ResourceLocation background;
-
     public ResearchCategory(String id) {
         this.id = FHMain.rl(id);
         this.name = GuiUtils.translateResearchCategoryName(id);
         this.desc = GuiUtils.translateResearchCategoryDesc(id);
         this.icon = FHMain.rl("textures/gui/research/category/" + id + ".png");
-        this.background = FHMain.rl("textures/gui/research/category/background/" + id + ".png");
+        FHMain.rl("textures/gui/research/category/background/" + id + ".png");
     }
 
     public ResourceLocation getIcon() {

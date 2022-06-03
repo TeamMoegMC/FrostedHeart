@@ -6,7 +6,7 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.research.ResearchGlobals;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import net.minecraft.block.Block;
@@ -42,7 +42,7 @@ public class EffectBuilding extends Effect {
 
     @Override
     public void init() {
-    	ResearchGlobals.multiblock.add(multiblock);
+    	ResearchListeners.multiblock.add(multiblock);
     }
 
     @Override

@@ -40,7 +40,10 @@ public class RequirementSlot extends Widget {
 		ItemStack cur=i[(int) ((System.currentTimeMillis()/1000)%i.length)];
 		GuiHelper.setupDrawing();
 		DrawDeskIcons.SLOT.draw(matrixStack, x-4, y-4, 24,24);
-		GuiHelper.drawItem(matrixStack,cur, x, y, w, h,true,null);
+		matrixStack.push();
+		matrixStack.translate(0, 0, 100);
+		GuiHelper.drawItem(matrixStack,cur, x, y, w/16F, h/16F,true,null);
+		matrixStack.pop();
 	}
 
 

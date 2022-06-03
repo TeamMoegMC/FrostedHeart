@@ -124,7 +124,7 @@ public class JEICompat implements IModPlugin {
         RecipeManager recipeManager = world.getRecipeManager();
 		for(Entry<String, Set<ResourceLocation>> i:FHDataManager.researchRecipe.entrySet()) {
 			for(ResourceLocation rl:i.getValue())
-				if(!TeamResearchData.INSTANCE.getData(i.getKey()).isCompleted())
+				if(!TeamResearchData.getClientInstance().getData(i.getKey()).isCompleted())
 					recipeManager.getRecipe(rl).ifPresent(r->man.hideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
 				else
 					recipeManager.getRecipe(rl).ifPresent(r->man.unhideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));

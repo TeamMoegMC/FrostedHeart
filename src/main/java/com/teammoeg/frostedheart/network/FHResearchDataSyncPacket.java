@@ -48,7 +48,7 @@ public class FHResearchDataSyncPacket {
 
     void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	TeamResearchData.INSTANCE.deserialize(data);
+        	TeamResearchData.getClientInstance().deserialize(data);
         	DistExecutor.safeRunWhenOn(Dist.CLIENT,()->JEICompat::syncJEI);
         });
         context.get().setPacketHandled(true);

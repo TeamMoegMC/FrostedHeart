@@ -14,7 +14,9 @@ import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 
 public class ResearchScreen extends BaseScreen {
@@ -63,6 +65,7 @@ public class ResearchScreen extends BaseScreen {
     	researchHierarchyPanel.setPosAndSize(160,23,210,160);
         progressPanel.setPosAndSize(14,19,111,51);
         detailframe.setPosAndSize((width-302)/2,(height-170)/2,302,170);
+        //this.closeGui(isMouseOver);
         return true;
     }
 
@@ -129,4 +132,13 @@ public class ResearchScreen extends BaseScreen {
 		GuiHelper.setupDrawing();
 		super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 	}
+
+
+	@Override
+	public boolean keyPressed(Key key) {
+		//if(key.esc())return true;
+		return super.keyPressed(key);
+	}
+
+
 }

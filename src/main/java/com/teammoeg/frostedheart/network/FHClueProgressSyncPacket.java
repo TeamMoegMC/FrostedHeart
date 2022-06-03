@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.network;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
@@ -32,7 +32,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class FHClueProgressSyncPacket {
     private final boolean data;
     private final int id;
-    public FHClueProgressSyncPacket(UUID team,AbstractClue rs) {
+    public FHClueProgressSyncPacket(UUID team,Clue rs) {
     	TeamResearchData rd=ResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isClueTriggered(rs);
         this.id=rs.getRId();

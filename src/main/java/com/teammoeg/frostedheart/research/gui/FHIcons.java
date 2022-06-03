@@ -141,10 +141,11 @@ public class FHIcons {
 		@Override
 		public void draw(MatrixStack ms, int x, int y, int w, int h) {
 			GuiHelper.setupDrawing();
-			small.draw(ms, x+w/2, y+h/2, w/2, h/2);
 			large.draw(ms, x, y, w, h);
-			
-			
+			ms.push();
+			ms.translate(0, 0,200);//let's get top most
+			small.draw(ms, x+w/2, y+h/2, w/2, h/2);
+			ms.pop();
 		}
 
 		@Override

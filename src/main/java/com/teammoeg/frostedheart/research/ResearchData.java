@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.util.LazyOptional;
@@ -42,7 +42,7 @@ public class ResearchData {
     public int getTotalCommitted() {
         Research r = rs.get();
         int currentProgress = committed;
-        for (AbstractClue ac : r.getClues())
+        for (Clue ac : r.getClues())
             if (ac.isCompleted(parent))
                 currentProgress += r.getRequiredPoints() * ac.getResearchContribution();
         return currentProgress;

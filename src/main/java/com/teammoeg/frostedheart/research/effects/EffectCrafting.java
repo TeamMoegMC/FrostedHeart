@@ -9,7 +9,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
-import com.teammoeg.frostedheart.research.ResearchGlobals;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.util.SerializeUtil;
@@ -86,7 +86,7 @@ public class EffectCrafting extends Effect{
 	}
 	@Override
     public void init() {
-		ResearchGlobals.recipe.addAll(unlocks);
+		ResearchListeners.recipe.addAll(unlocks);
     }
 
     @Override

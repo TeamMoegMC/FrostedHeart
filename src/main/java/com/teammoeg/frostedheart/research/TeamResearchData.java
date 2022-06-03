@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.ResearchGlobals.BlockUnlockList;
-import com.teammoeg.frostedheart.research.ResearchGlobals.MultiblockUnlockList;
-import com.teammoeg.frostedheart.research.ResearchGlobals.RecipeUnlockList;
-import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
+import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
+import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
+import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
@@ -19,10 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.StringNBT;
 
 public class TeamResearchData {
-	public static TeamResearchData INSTANCE=new TeamResearchData(null);
+	private static TeamResearchData INSTANCE=new TeamResearchData(null);
 	ArrayList<Boolean> clueComplete=new ArrayList<>();
 	ArrayList<Boolean> grantedEffects=new ArrayList<>();
 	ArrayList<ResearchData> rdata=new ArrayList<>();
@@ -42,7 +41,7 @@ public class TeamResearchData {
 	public void triggerClue(int id) {
 		setClueTriggered(id,true);
 	}
-	public void triggerClue(AbstractClue clue) {
+	public void triggerClue(Clue clue) {
 		triggerClue(clue.getRId());
 	}
 	public void triggerClue(String lid) {
@@ -53,7 +52,7 @@ public class TeamResearchData {
 		clueComplete.set(id-1,trig);
 		getActiveResearch().ifPresent(r->this.getData(r).checkComplete());
 	}
-	public void setClueTriggered(AbstractClue clue,boolean trig) {
+	public void setClueTriggered(Clue clue,boolean trig) {
 		setClueTriggered(clue.getRId(),trig);
 	}
 	public void setClueTriggered(String lid,boolean trig) {
@@ -72,7 +71,7 @@ public class TeamResearchData {
 		}
 		return false;
 	}
-	public boolean isClueTriggered(AbstractClue clue){
+	public boolean isClueTriggered(Clue clue){
 		return isClueTriggered(clue.getRId());
 	}
 	public boolean isClueTriggered(String lid){
@@ -193,5 +192,8 @@ public class TeamResearchData {
 			}else
 				rdata.add(null);
 		}
+	}
+	public static TeamResearchData getClientInstance() {
+		return INSTANCE;
 	}
 }

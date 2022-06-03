@@ -9,7 +9,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.*;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -47,8 +47,8 @@ public class ResearchInfoPanel extends Panel {
 		
 			
 			FramedPanel prl = new FramedPanel(this, fp -> {
-				int ioffset = 0;
-				int xoffset = 0;
+				int ioffset = 4;
+				int xoffset = 4;
 				for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
 					if (ingredient.getMatchingStacks().length != 0) {
 						RequirementSlot button = new RequirementSlot(fp,ingredient.getMatchingStacks());
@@ -56,10 +56,14 @@ public class ResearchInfoPanel extends Panel {
 						button.setPosAndSize(xoffset, ioffset, 16, 16);
 						fp.add(button);
 
-						xoffset += button.width + 1;
+						xoffset += 17;
+						if(xoffset>=121) {
+							xoffset=4;
+							ioffset+=17;
+						}
 					}
 				}
-				ioffset += 17;
+				ioffset += 23;
 
 				// commit items button
 				Button commitItems = new TechTextButton(fp,
@@ -136,10 +140,8 @@ public class ResearchInfoPanel extends Panel {
 			add(prl);
 
 		FramedPanel ppl = new FramedPanel(this, fp -> {
-			int offset=0;
-			int xoffset=0;
-			boolean fX=true;
-			boolean fY=true;
+			int offset=2;
+			int xoffset=2;
 			boolean hasItemRewards=false;
 			boolean hasB=false;
 			for(Effect effect:detailPanel.research.getEffects()) {
@@ -147,22 +149,17 @@ public class ResearchInfoPanel extends Panel {
 				LEffectWidget button = new LEffectWidget(fp,effect);
 				button.setPos(xoffset, offset);
 				fp.add(button);
-				if(fX) {
-					xoffset+=2;
-					fX=false;
-				}
 				xoffset+=32;
 				if(xoffset>=98) {
-					if(fY) {offset+=2;fY=false;};
 					offset += 32;
+					xoffset=2;
 				}
 				hasB=true;
 			}
 			if(hasB)
-				offset+=40;
+				offset+=42;
 			hasB=false;
-			fY=true;
-			xoffset=2;
+			xoffset=4;
 			for (Effect effect : detailPanel.research.getEffects()) {
 
 				// item reward
@@ -179,19 +176,15 @@ public class ResearchInfoPanel extends Panel {
 				button.setPos(xoffset, offset);
 				fp.add(button);
 				xoffset += 17;
-				if(xoffset>=119) {
-					xoffset=2;
-					if(fY) {
-					offset+=4;
-					fY=false;
-					}
-					offset+=16;
+				if(xoffset>=121) {
+					xoffset=4;
+					offset+=17;
 				}
 				hasB=true;
 			}
 			if(hasB)
 				offset+=24;
-			TeamResearchData data = TeamResearchData.INSTANCE;
+			TeamResearchData data = TeamResearchData.getClientInstance();
 			// TODO: remove || true after api works
 			if (hasItemRewards&&(data.getData(detailPanel.research).isCompleted() || true)) {
 				Button claimRewards = new TechTextButton(fp, GuiUtils.translateGui("research.claim_rewards"),
@@ -218,22 +211,16 @@ public class ResearchInfoPanel extends Panel {
 		FramedPanel pcl = new FramedPanel(this, fp -> {
 			int offset=0;
 	
-			for (AbstractClue clue : detailPanel.research.getClues()) {
+			for (Clue clue : detailPanel.research.getClues()) {
 				TextField clueName = new TextField(fp);
 				clueName.setMaxWidth(width).setText(clue.getName()).setPos(0, offset);
 				fp.add(clueName);
 				offset += clueName.height + 1;
 	
-				TextField clueDesc = new TextField(fp);
+				/*TextField clueDesc = new TextField(fp);
 				clueDesc.setMaxWidth(width).setText(clue.getDescription()).setPos(0, offset);
 				fp.add(clueDesc);
-				offset += clueDesc.height + 1;
-	
-				TextField clueHint = new TextField(fp);
-				clueHint.setMaxWidth(width).setText(GuiUtils.translateGui("research.hint").appendSibling(clue.getHint()))
-						.setPos(0, offset);
-				fp.add(clueHint);
-				offset += clueHint.height + 1;
+				offset += clueDesc.height + 1;*/
 			}
 			fp.setWidth(width);
 			fp.setHeight(offset);
@@ -251,8 +238,8 @@ public class ResearchInfoPanel extends Panel {
 	public void alignWidgets() {
 		int offset=0;
 		for(Panel p:panels) {
-			p.setPos(0,offset);
-			offset+=p.height;
+			p.setPos(3,offset);
+			offset+=p.height+2;
 		}
 		detailPanel.scrollInfo.setMaxValue(offset);
 	}

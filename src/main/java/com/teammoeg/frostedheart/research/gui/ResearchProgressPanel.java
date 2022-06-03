@@ -39,9 +39,6 @@ public class ResearchProgressPanel extends Panel {
         // float progress = researchScreen.getInProgressResearch().getProgressFraction();
         // float reqTime = researchScreen.getInProgressResearch().getCurrentPoints();
         // float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
-        // GuiHelper.drawHollowRect(matrixStack, x + 10, y + 20, w - 20, 5, Color4I.BLACK, false);
-        // GuiHelper.drawRectWithShade(matrixStack, x + 10, y + 20, (int) ( (w - 20) * progress), 5, Color4I.WHITE, 128);
-        // theme.drawString(matrixStack, GuiUtils.translateGui("research_time_left", (int) ( (reqTime - finTIme) / 20 / 60) ), x + 10, y + 30);
         DrawDeskIcons.SLIDER_FRAME.draw(matrixStack,x+40, y+26,70,8);
         DrawDeskIcons.drawTexturedRect(matrixStack,x+41, y+27,(int)(68f/100*35),6,true);
         theme.drawString(matrixStack,"35%", x +90, y +34,DrawDeskIcons.text,0);

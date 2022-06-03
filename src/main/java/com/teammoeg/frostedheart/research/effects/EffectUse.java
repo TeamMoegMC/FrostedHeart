@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.research.effects;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.ResearchGlobals;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
@@ -48,7 +48,7 @@ public class EffectUse extends Effect {
 	}
 	@Override
     public void init() {
-    	ResearchGlobals.block.addAll(blocksToUse);
+    	ResearchListeners.block.addAll(blocksToUse);
     }
 
     @Override

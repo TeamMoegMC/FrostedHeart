@@ -69,11 +69,11 @@ public abstract class Effect extends AutoIDItem implements Writeable{
 	}
 
 	public IFormattableTextComponent getName() {
-		return (IFormattableTextComponent) FHTextUtil.get(name,this::getLId);
+		return (IFormattableTextComponent) FHTextUtil.get(name,"effect",this::getLId);
 	}
 
 	public List<ITextComponent> getTooltip() {
-		return FHTextUtil.get(tooltip,this::getLId);
+		return FHTextUtil.get(tooltip,"effect",this::getLId);
 	}
 	public abstract String getId();
 	public abstract int getIntID();

@@ -16,7 +16,7 @@ import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
@@ -51,7 +51,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
 																	// should not set manually.
 
-	private HashSet<Supplier<AbstractClue>> clues = new HashSet<>();// research clues
+	private HashSet<Supplier<Clue>> clues = new HashSet<>();// research clues
 	private List<IngredientWithSize> requiredItems = new ArrayList<>();
 	private List<Effect> effects = new ArrayList<>();// effects of this research
 	public String name="";
@@ -125,11 +125,11 @@ public class Research extends FHRegisteredItem implements Writeable {
 		buffer.writeVarInt(points);
 	}
 
-	public Set<AbstractClue> getClues() {
+	public Set<Clue> getClues() {
 		return clues.stream().map(e -> e.get()).collect(Collectors.toSet());
 	}
 
-	public void attachClue(Supplier<AbstractClue> cl) {
+	public void attachClue(Supplier<Clue> cl) {
 		clues.add(cl);
 	}
 
@@ -191,6 +191,12 @@ public class Research extends FHRegisteredItem implements Writeable {
 		for (Supplier<Research> r : this.parents) {
 			r.get().populateChild(objthis);
 		}
+		int i=0;
+		for(Effect e:effects) {
+			e.addID(this.getLId(),i);
+			FHResearch.effects.register(e);
+			i++;
+		}
 	}
 
 	public void populateChild(Supplier<Research> child) {
@@ -216,11 +222,11 @@ public class Research extends FHRegisteredItem implements Writeable {
 	}
 
 	public TextComponent getName() {
-		return (TextComponent) FHTextUtil.get(name,()->"research." + id + ".name");
+		return (TextComponent) FHTextUtil.get(name,"research",()-> id + ".name");
 	}
 
 	public List<ITextComponent> getDesc() {
-		return FHTextUtil.get(desc,()->"research." + id + ".desc");
+		return FHTextUtil.get(desc,"research",()->id + ".desc");
 	}
 
 	public ResearchCategory getCategory() {
@@ -247,7 +253,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 
 	@OnlyIn(Dist.CLIENT)
 	public ResearchData getData() {
-		return TeamResearchData.INSTANCE.getData(this);
+		return TeamResearchData.getClientInstance().getData(this);
 	}
 
 	public void sendProgressPacket(Team team) {

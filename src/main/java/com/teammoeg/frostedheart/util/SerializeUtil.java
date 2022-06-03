@@ -174,7 +174,7 @@ public class SerializeUtil {
 		if(hasCount)
 			jo.addProperty("count",stack.getCount());
 		if(hasTag)
-			jo.addProperty("tag",Mojangson.writeNBT(stack.getTag()));
+			jo.addProperty("nbt",stack.getTag().toString());
 		return jo;
 	}
 	public static ItemStack fromJson(JsonElement elm) {
@@ -185,9 +185,9 @@ public class SerializeUtil {
 			ItemStack ret=new ItemStack(ForgeRegistries.BLOCKS.getValue(new ResourceLocation(jo.get("id").getAsString())));
 			if(jo.has("count"))
 				ret.setCount(jo.get("count").getAsInt());
-			if(jo.has("tag"))
+			if(jo.has("nbt"))
 				try {
-					ret.setTag(JsonToNBT.getTagFromJson(jo.get("tag").getAsString()));
+					ret.setTag(JsonToNBT.getTagFromJson(jo.get("nbt").getAsString()));
 				} catch (CommandSyntaxException e) {
 					FHMain.LOGGER.warn(e.getMessage());
 				}

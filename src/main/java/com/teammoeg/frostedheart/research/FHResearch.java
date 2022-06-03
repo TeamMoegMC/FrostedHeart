@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.clues.AbstractClue;
+import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
@@ -16,10 +16,10 @@ import net.minecraft.nbt.CompoundNBT;
  * */
 public class FHResearch {
 	public static FHRegistry<Research> researches=new FHRegistry<Research>();
-	public static FHRegistry<AbstractClue> clues=new FHRegistry<AbstractClue>();
+	public static FHRegistry<Clue> clues=new FHRegistry<Clue>();
 	public static FHRegistry<Effect> effects=new FHRegistry<Effect>();
 	private static LazyOptional<List<Research>> allResearches=LazyOptional.of(()->researches.all());
-	private static LazyOptional<List<AbstractClue>> allClues=LazyOptional.of(()->clues.all());
+	private static LazyOptional<List<Clue>> allClues=LazyOptional.of(()->clues.all());
 	public static CompoundNBT save(CompoundNBT cnbt) {
 		cnbt.put("clues", clues.serialize());
 		cnbt.put("researches", researches.serialize());
@@ -28,13 +28,11 @@ public class FHResearch {
 	public static void register(Research t) {
 		researches.register(t);
 	}
-	public static void register(AbstractClue t) {
-		clues.register(t);
-	}
 	//called before reload
 	public static void prepareReload() {
 		researches.prepareReload();
 		clues.prepareReload();
+		effects.prepareReload();
 		allResearches=LazyOptional.of(()->researches.all());
 		allClues=LazyOptional.of(()->clues.all());
 	}
@@ -45,19 +43,19 @@ public class FHResearch {
 	public static void load(CompoundNBT cnbt) {
 		clues.deserialize(cnbt.getList("clues",8));
 		researches.deserialize(cnbt.getList("researches",8));
-		
+		effects.deserialize(cnbt.getList("effects",8));
 	}
 
 	public static Supplier<Research> getResearch(String id) {
 		return researches.get(id);
 	}
-	public static Supplier<AbstractClue> getClue(String id) {
+	public static Supplier<Clue> getClue(String id) {
 		return clues.get(id);
 	}
 	public static Supplier<Research> getResearch(int id) {
 		return researches.get(id);
 	}
-	public static Supplier<AbstractClue> getClue(int id) {
+	public static Supplier<Clue> getClue(int id) {
 		return clues.get(id);
 	}
 	public static List<Research> getAllResearch() {
@@ -84,13 +82,12 @@ public class FHResearch {
 		List<Research> rs = getResearchesForRender(cate, false);
 		if (rs.size() != 0) {
 			return rs.get(0);
-		} else {
-			return null;
 		}
+		return null;
 	}
 
 
-	public static List<AbstractClue> getAllClue() {
+	public static List<Clue> getAllClue() {
 		return allClues.resolve().get();
 	}
 }
