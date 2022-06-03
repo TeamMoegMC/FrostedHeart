@@ -18,19 +18,19 @@
 
 package com.teammoeg.frostedheart.world;
 
-import java.util.ArrayList;
-
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHContent;
-
 import com.teammoeg.frostedheart.world.feature.FHOreFeature;
 import com.teammoeg.frostedheart.world.feature.FHOreFeatureConfig;
 import com.teammoeg.frostedheart.world.feature.SpacecraftFeature;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
 import net.minecraft.world.gen.feature.*;
+
+import java.util.ArrayList;
 
 public class FHFeatures {
     public static final Feature<FHOreFeatureConfig> FHORE = new FHOreFeature(FHOreFeatureConfig.CODEC);
@@ -61,10 +61,10 @@ public class FHFeatures {
         registerFHOre("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getDefaultState(), 40)).range(65).square().chance(4));
         registerFHOre("ore_anthracite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.anthracite, RankineBlocks.ANTHRACITE_ORE.get().getDefaultState(), 50)).range(48).chance(15));
         registerFHOre("ore_graphite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.graphite, RankineBlocks.PLUMBAGO_ORE.get().getDefaultState(), 35)).range(50).chance(12));
-        ImmutableList disk_target = ImmutableList.of(RankineBlocks.LOAM.get().getDefaultState(), RankineBlocks.LOAM_MUD.get().getDefaultState(), RankineBlocks.LOAM_MUD.get().getDefaultState(), RankineBlocks.SANDY_LOAM_MUD.get().getDefaultState(), Blocks.GRAVEL.getDefaultState(), Blocks.SAND.getDefaultState());
-        registerFHDisk("copper_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(FHContent.FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 1), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
-        registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.CLAY.getDefaultState(), FeatureSpread.create(2, 1), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
-        registerFHDisk("fh_disk_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.GRAVEL.getDefaultState(), FeatureSpread.create(2, 3), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
+        ImmutableList<BlockState> disk_target = ImmutableList.of(RankineBlocks.LOAM.get().getDefaultState(), RankineBlocks.LOAM_MUD.get().getDefaultState(), Blocks.SAND.getDefaultState(), Blocks.DIRT.getDefaultState());
+        registerFHDisk("copper_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(FHContent.FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 2), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
+        registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.CLAY.getDefaultState(), FeatureSpread.create(2, 2), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
+        registerFHDisk("fh_disk_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.GRAVEL.getDefaultState(), FeatureSpread.create(2, 4), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
         registerFHDisk("fh_disk_sand", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.SAND.getDefaultState(), FeatureSpread.create(2, 4), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).count(3));
     }
 
