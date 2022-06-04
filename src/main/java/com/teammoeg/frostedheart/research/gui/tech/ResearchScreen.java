@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.research.gui.tech;
 
 import javax.annotation.Nullable;
 
@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.ResearchLevel;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -61,7 +62,7 @@ public class ResearchScreen extends BaseScreen {
         selectCategory(ResearchCategories.RESCUE);
         selectedResearch = FHResearch.researches.getByName("generator_t1");
     	researchCategoryPanel.setPosAndSize(165,0,190,21);
-    	researchListPanel.setPosAndSize(16,74,110,118);
+    	researchListPanel.setPosAndSize(12,74,114,118);
     	researchHierarchyPanel.setPosAndSize(160,23,210,160);
         progressPanel.setPosAndSize(14,19,111,51);
         detailframe.setPosAndSize((width-302)/2,(height-170)/2,302,170);
@@ -98,7 +99,7 @@ public class ResearchScreen extends BaseScreen {
 
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
+        TechIcons.Background.draw(matrixStack, x, y, w, h);
     }
 
     @Override
@@ -136,7 +137,12 @@ public class ResearchScreen extends BaseScreen {
 
 	@Override
 	public boolean keyPressed(Key key) {
-		//if(key.esc())return true;
+		if(key.esc()) {
+			if(modalPanel!=null) {
+				detailframe.close();
+				return true;
+			}
+		}
 		return super.keyPressed(key);
 	}
 

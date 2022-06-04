@@ -1,19 +1,19 @@
 package com.teammoeg.frostedheart.research.effects;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import java.util.ArrayList;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-import java.util.ArrayList;
 
 /**
  * Allows forming multiblock

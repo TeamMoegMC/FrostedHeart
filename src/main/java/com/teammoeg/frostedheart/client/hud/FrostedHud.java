@@ -29,7 +29,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
-import com.teammoeg.frostedheart.client.util.Rect;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.util.FHEffects;

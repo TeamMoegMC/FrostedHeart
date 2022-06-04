@@ -19,13 +19,15 @@ public class FHGuiHelper {
 	static {
 		RenderType.State renderState;
 		renderState = RenderStateAccess.getState();
-		BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold", DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES,
-				128, renderState);
+		BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold", DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128,
+				renderState);
 	}
-	//hack to access render state protected members
+
+	// hack to access render state protected members
 	public static class RenderStateAccess extends RenderState {
 		public static RenderType.State getState() {
-			return RenderType.State.getBuilder().line(new RenderState.LineState(OptionalDouble.of(4)))//this is line width
+			return RenderType.State.getBuilder().line(new RenderState.LineState(OptionalDouble.of(4)))// this is line
+																										// width
 					.layer(VIEW_OFFSET_Z_LAYERING).target(MAIN_TARGET).writeMask(COLOR_DEPTH_WRITE).build(true);
 		}
 
@@ -34,18 +36,19 @@ public class FHGuiHelper {
 		}
 
 	}
-	//draw a line from start to end by color, ABSOLUTE POSITION
-	public static void drawLine(MatrixStack matrixStack,Color4I color,int startX,int startY,int endX,int endY) {
-		IVertexBuilder vertexBuilderLines = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource().getBuffer(BOLD_LINE_TYPE);
-		drawLine(matrixStack.getLast().getMatrix(),vertexBuilderLines,color,startX,startY,endX,endY);
+
+	// draw a line from start to end by color, ABSOLUTE POSITION
+	public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY) {
+		IVertexBuilder vertexBuilderLines = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource()
+				.getBuffer(BOLD_LINE_TYPE);
+		drawLine(matrixStack.getLast().getMatrix(), vertexBuilderLines, color, startX, startY, endX, endY);
 	}
 
-	private static void drawLine(Matrix4f mat,IVertexBuilder renderBuffer, Color4I color,int startX,int startY,int endX,int endY) {
-		renderBuffer.pos(mat,startX,startY,0F)
-				.color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+	private static void drawLine(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
+			int endX, int endY) {
+		renderBuffer.pos(mat, startX, startY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 				.endVertex();
-		renderBuffer.pos(mat,endX,endY,0F)
-				.color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.pos(mat, endX, endY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 				.endVertex();
 	}
 }

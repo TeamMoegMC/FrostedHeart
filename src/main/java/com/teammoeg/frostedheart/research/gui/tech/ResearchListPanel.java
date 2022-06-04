@@ -1,14 +1,15 @@
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.gui.RTextField;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 
 public class ResearchListPanel extends Panel {
 
@@ -20,8 +21,6 @@ public class ResearchListPanel extends Panel {
     public ResearchList rl;
     public ResearchListPanel(ResearchScreen panel) {
         super(panel);
-        this.setOnlyInteractWithWidgetsInside(true);
-        this.setOnlyRenderWidgetsInside(true);
         researchScreen = panel;
     }
     public static class ResearchList extends Panel{
@@ -29,7 +28,7 @@ public class ResearchListPanel extends Panel {
 		public ResearchList(ResearchListPanel panel) {
 			super(panel);
 			researchScreen=panel.researchScreen;
-			this.setWidth(99);
+			this.setWidth(103);
 		}
 
 		@Override
@@ -39,7 +38,7 @@ public class ResearchListPanel extends Panel {
 	        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory,false)) {
 	            ResearchButton button = new ResearchButton(this, r);
 	            add(button);
-	            button.setPos(0,offset);
+	            button.setPos(4,offset);
 	            offset += 18;
 	        }
 	        this.setHeight(offset+1);
@@ -60,8 +59,8 @@ public class ResearchListPanel extends Panel {
             super(panel, research.getName(), research.getIcon());
             this.research = research;
             this.listPanel =  panel;
-            setSize(99, RESEARCH_HEIGHT);
-            tf=new RTextField(panel).setMaxLine(1).setMaxWidth(81).setText(research.getName());
+            setSize(101, RESEARCH_HEIGHT);
+            tf=new RTextField(panel).setMaxLine(1).setMaxWidth(84).setText(research.getName());
         }
 
         @Override
@@ -79,10 +78,11 @@ public class ResearchListPanel extends Panel {
 			}else if(!research.isUnlocked()) {
 				tf.setColor(Color4I.rgb(0xa92b0d));
 			}else
-				tf.setColor(DrawDeskIcons.text);
+				tf.setColor(TechIcons.text);
 			tf.draw(matrixStack, theme, x+18, y+6,81,tf.height);
-			
-			DrawDeskIcons.HLINE.draw(matrixStack,x, y+17, 99, 1);
+			if(listPanel.researchScreen.selectedResearch==this.research)
+				TechIcons.SELECTED.draw(matrixStack,x-4, y+7,4,4);
+			TechIcons.HLINE.draw(matrixStack,x, y+17, 99, 1);
         }
     }
 
@@ -92,7 +92,7 @@ public class ResearchListPanel extends Panel {
     	scroll=new TechScrollBar(this,rl);
     	add(rl);
     	add(scroll);
-    	scroll.setX(100);
+    	scroll.setX(106);
     	scroll.setSize(8,height);
 
     }

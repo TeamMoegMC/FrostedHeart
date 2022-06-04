@@ -8,7 +8,6 @@ import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.Bits;
 import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
@@ -17,7 +16,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponent;
 
 public class RTextField extends Widget {
 
@@ -29,7 +27,8 @@ public class RTextField extends Widget {
 	public int textSpacing = 10;
 	public float scale = 1.0F;
 	public Color4I textColor = Icon.EMPTY;
-	public int maxLine=0;
+	public int maxLine = 0;
+
 	public RTextField(Panel panel) {
 		super(panel);
 	}
@@ -48,10 +47,12 @@ public class RTextField extends Widget {
 		maxWidth = width;
 		return this;
 	}
+
 	public RTextField setMaxLine(int line) {
 		maxLine = line;
 		return this;
 	}
+
 	public RTextField setColor(Color4I color) {
 		textColor = color;
 		return this;
@@ -67,31 +68,35 @@ public class RTextField extends Widget {
 		return this;
 	}
 
-
 	public RTextField setText(String txt) {
 		return setText(new StringTextComponent(txt));
 	}
+
 	public RTextField setText(ITextComponent txt) {
 		Theme theme = getGui().getTheme();
 
-		if (maxLine>0) {
-			List<ITextProperties> ls=theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), maxWidth);
-			formattedText = ls.subList(0,Math.min(ls.size(), maxLine)).toArray(new ITextProperties[0]);
+		if (maxLine > 0) {
+			List<ITextProperties> ls = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt),
+					maxWidth);
+			formattedText = ls.subList(0, Math.min(ls.size(), maxLine)).toArray(new ITextProperties[0]);
 		} else {
-			formattedText = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), maxWidth).toArray(new ITextProperties[0]);
+			formattedText = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), maxWidth)
+					.toArray(new ITextProperties[0]);
 		}
 
 		return resize(theme);
 	}
+
 	public RTextField resize(Theme theme) {
 		setWidth(0);
 
 		for (ITextProperties s : formattedText) {
-			setWidth(Math.max(width, (int) ((float) theme.getStringWidth(s) * scale)));
+			setWidth(Math.max(width, (int) (theme.getStringWidth(s) * scale)));
 		}
 
 		setWidth(MathHelper.clamp(width, minWidth, maxWidth));
-		setHeight((int) ((Math.max(1, formattedText.length) * textSpacing - (textSpacing - theme.getFontHeight() + 1)) * scale));
+		setHeight((int) ((Math.max(1, formattedText.length) * textSpacing - (textSpacing - theme.getFontHeight() + 1))
+				* scale));
 		return this;
 	}
 
@@ -119,7 +124,8 @@ public class RTextField extends Widget {
 			int i;
 			if (scale == 1.0F) {
 				for (i = 0; i < formattedText.length; ++i) {
-					theme.drawString(matrixStack, formattedText[i], (float) tx, (float) (ty + i * textSpacing), col, textFlags);
+					theme.drawString(matrixStack, formattedText[i], tx, ty + i * textSpacing, col,
+							textFlags);
 				}
 			} else {
 				matrixStack.push();
@@ -127,7 +133,7 @@ public class RTextField extends Widget {
 				matrixStack.scale(scale, scale, 1.0F);
 
 				for (i = 0; i < formattedText.length; ++i) {
-					theme.drawString(matrixStack, formattedText[i], 0.0F, (float) (i * textSpacing), col, textFlags);
+					theme.drawString(matrixStack, formattedText[i], 0.0F, i * textSpacing, col, textFlags);
 				}
 
 				matrixStack.pop();

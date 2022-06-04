@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.research.gui.tech;
 
 import java.util.List;
 
@@ -6,6 +6,9 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -124,7 +127,7 @@ public class ResearchDetailPanel extends Panel {
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		// drawBackground(matrixStack, theme, x, y, w, h);
 		// theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
-		DrawDeskIcons.DIALOG.draw(matrixStack, x, y, w, h);
+		TechIcons.DIALOG.draw(matrixStack, x, y, w, h);
 	}
 
 	public static class DescPanel extends Panel {
@@ -147,7 +150,7 @@ public class ResearchDetailPanel extends Panel {
 				desc.setMaxWidth(width);
 				desc.setPosAndSize(0,offset, width, height);
 				desc.setText(itx);
-				desc.setColor(DrawDeskIcons.text);
+				desc.setColor(TechIcons.text);
 				offset+=desc.height;
 			}
 			this.setHeight(offset);

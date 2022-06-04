@@ -64,7 +64,7 @@ public class TeamResearchData {
 			clueComplete.add(false);
 	}
 	public boolean isClueTriggered(int id){
-		if(clueComplete.size()<=id) {
+		if(clueComplete.size()>=id) {
 			Boolean b=clueComplete.get(id-1);
 			if(b!=null&&b==true)
 				return true;
@@ -127,6 +127,15 @@ public class TeamResearchData {
 		if(!grantedEffects.get(id)) {
 			grantedEffects.set(id,e.grant(this, null));
 		}
+	}
+	public boolean isEffectGranted(int id) {
+		if(grantedEffects.size()>=id) {
+			return grantedEffects.get(id-1);
+		}
+		return false;
+	}
+	public boolean isEffectGranted(Effect e) {
+		return isEffectGranted(e.getRId());
 	}
 	public void grantEffect(Effect e,ServerPlayerEntity player) {
 		int id=e.getRId()-1;

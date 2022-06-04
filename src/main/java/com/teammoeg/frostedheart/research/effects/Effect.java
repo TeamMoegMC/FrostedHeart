@@ -4,9 +4,9 @@ import java.util.List;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
@@ -19,7 +19,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 
 /**
  * "Effect" of an research: how would it becomes when a research is completed ?
@@ -97,5 +96,8 @@ public abstract class Effect extends AutoIDItem implements Writeable{
 	@Override
 	public String getType() {
 		return "effects";
+	}
+	public boolean isGranted() {
+		return ClientResearchDataAPI.getData().isEffectGranted(this);
 	}
 }

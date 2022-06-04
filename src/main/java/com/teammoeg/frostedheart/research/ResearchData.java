@@ -12,6 +12,7 @@ import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -51,11 +52,14 @@ public class ResearchData {
     public void checkComplete() {
         if (finished) return;
         Research r=rs.get();
+        Team t=parent.team.get();
         if (getTotalCommitted() >= r.getRequiredPoints()) {
             finished = true;
             this.announceCompletion();
             for(Effect e:r.getEffects())
             	parent.grantEffect(e);
+            for(Clue c:r.getClues())
+            	c.end(t);
         }
     }
 
@@ -180,10 +184,15 @@ public class ResearchData {
             }
         }
         if (requiredItems.isEmpty())//all requirements fulfilled
-            active = true;
+        	setActive();
         return ret;
     }
-
+    public void setActive() {
+    	if(active)return;
+    	active = true;
+    	for(Clue c:rs.get().getClues())
+    		c.start(parent.team.get());
+    }
     /**
      * @return Already committed items
      */

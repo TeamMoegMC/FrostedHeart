@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -17,6 +18,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.clues.Clues;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
@@ -51,7 +53,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
 																	// should not set manually.
 
-	private HashSet<Supplier<Clue>> clues = new HashSet<>();// research clues
+	private HashSet<Clue> clues = new HashSet<>();// research clues
 	private List<IngredientWithSize> requiredItems = new ArrayList<>();
 	private List<Effect> effects = new ArrayList<>();// effects of this research
 	public String name="";
@@ -74,7 +76,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		category = ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString()));
 		parents.addAll(
 				SerializeUtil.parseJsonElmList(jo.get("parents"), p -> FHResearch.researches.get(p.getAsString())));
-		clues.addAll(SerializeUtil.parseJsonElmList(jo.get("clues"), p -> FHResearch.clues.get(p.getAsString())));
+		clues.addAll(SerializeUtil.parseJsonList(jo.get("clues"), Clues::read));
 		requiredItems = SerializeUtil.parseJsonElmList(jo.get("ingredients"), IngredientWithSize::deserialize);
 		effects = SerializeUtil.parseJsonList(jo.get("effects"), Effects::deserialize);
 		points = jo.get("points").getAsInt();
@@ -89,7 +91,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		jo.add("icon", icon.serialize());
 		jo.addProperty("category", category.getId().toString());
 		jo.add("parents", SerializeUtil.toJsonList(parents, p -> new JsonPrimitive(p.get().getId())));
-		jo.add("clues", SerializeUtil.toJsonList(clues, p -> p.get().serialize()));
+		jo.add("clues", SerializeUtil.toJsonList(clues,Clue::serialize));
 		jo.add("ingredients", SerializeUtil.toJsonList(requiredItems, IngredientWithSize::serialize));
 		jo.add("effects", SerializeUtil.toJsonList(effects, Writeable::serialize));
 		jo.addProperty("points", points);
@@ -104,7 +106,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		category = ResearchCategories.ALL.get(data.readResourceLocation());
 
 		parents.addAll(SerializeUtil.readList(data, p -> FHResearch.researches.get(p.readVarInt())));
-		clues.addAll(SerializeUtil.readList(data, p -> FHResearch.clues.get(p.readVarInt())));
+		clues.addAll(SerializeUtil.readList(data, Clues::read));
 		requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
 		effects = SerializeUtil.readList(data, Effects::deserialize);
 		points = data.readVarInt();
@@ -119,17 +121,17 @@ public class Research extends FHRegisteredItem implements Writeable {
 		icon.write(buffer);
 		buffer.writeResourceLocation(category.getId());
 		SerializeUtil.writeList(buffer, parents, (e, p) -> p.writeVarInt(e.get().getRId()));
-		SerializeUtil.writeList(buffer, clues, (e, p) -> p.writeVarInt(e.get().getRId()));
+		SerializeUtil.writeList(buffer, clues,Clue::write);
 		SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
 		SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
 		buffer.writeVarInt(points);
 	}
 
 	public Set<Clue> getClues() {
-		return clues.stream().map(e -> e.get()).collect(Collectors.toSet());
+		return clues;
 	}
 
-	public void attachClue(Supplier<Clue> cl) {
+	public void attachClue(Clue cl) {
 		clues.add(cl);
 	}
 
@@ -195,6 +197,12 @@ public class Research extends FHRegisteredItem implements Writeable {
 		for(Effect e:effects) {
 			e.addID(this.getLId(),i);
 			FHResearch.effects.register(e);
+			i++;
+		}
+		i=0;
+		for(Clue c:clues) {
+			c.addID(this.getLId(), i);
+			FHResearch.clues.register(c);
 			i++;
 		}
 	}

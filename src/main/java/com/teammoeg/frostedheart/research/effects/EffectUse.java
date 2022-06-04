@@ -1,12 +1,15 @@
 package com.teammoeg.frostedheart.research.effects;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.block.Block;
@@ -14,9 +17,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Allows the research team to use certain machines
@@ -35,7 +35,7 @@ public class EffectUse extends Effect {
         initIcons();
     }
     private void initIcons() {
-    	iicons=FHIcons.getIcon(blocksToUse.toArray(new Block[0]));
+    	iicons=FHIcons.getIcon(FHIcons.getIcon(blocksToUse.toArray(new Block[0])),FHIcons.getIcon(TechIcons.HAND));
     }
     public EffectUse(JsonObject jo) {
     	super(jo);

@@ -54,18 +54,23 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.crafting.NBTIngredient;
 
 public class FHUtils {
+	private static class NBTIngredientAccess extends NBTIngredient{
+		public NBTIngredientAccess(ItemStack stack) {
+			super(stack);
+		}
+	}
     public static <T> T notNull() {
         return null;
     }
     public static Ingredient createIngredient(ItemStack is) {
-    	if(is.hasTag())return new NBTIngredient(is);
+    	if(is.hasTag())return new NBTIngredientAccess(is);
     	return Ingredient.fromStacks(is);
     }
     public static IngredientWithSize createIngredientWithSize(ResourceLocation tag,int count) {
     	return new IngredientWithSize( Ingredient.fromTag(ItemTags.getCollection().get(tag)),count);
     }
     public static IngredientWithSize createIngredientWithSize(ItemStack is) {
-    	if(is.hasTag())return new IngredientWithSize(new NBTIngredient(is),is.getCount());
+    	if(is.hasTag())return new IngredientWithSize(new NBTIngredientAccess(is),is.getCount());
     	return new IngredientWithSize(Ingredient.fromStacks(is),is.getCount());
     }
     public static Ingredient createIngredient(ResourceLocation tag) {

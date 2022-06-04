@@ -13,8 +13,8 @@ public class LineIcon extends IconWithParent {
 	int w;
 	int side1;
 	int side2;
-	int tw=256;
-	int th=256;
+	int tw = 256;
+	int th = 256;
 	Icon s0;
 	Icon m;
 	Icon s1;
@@ -32,20 +32,19 @@ public class LineIcon extends IconWithParent {
 		updateParts();
 	}
 
-
 	private Icon get(int x, int y, int w, int h) {
-		return parent.withUV(this.x+x,this.y+ y, w, h, tw, th);
+		return parent.withUV(this.x + x, this.y + y, w, h, tw, th);
 	}
 
 	public void updateParts() {
-		s0=get(0,0,side1,h);
-		m=get(side1,0,w-side2-side1,h);
-		s1=get(this.w-side2,0,side2,h);
+		s0 = get(0, 0, side1, h);
+		m = get(side1, 0, w - side2 - side1, h);
+		s1 = get(this.w - side2, 0, side2, h);
 	}
 
 	@Override
 	public LineIcon copy() {
-		LineIcon icon = new LineIcon(parent.copy(),x,y,w,h,side1,side2,tw,th);
+		LineIcon icon = new LineIcon(parent.copy(), x, y, w, h, side1, side2, tw, th);
 		return icon;
 	}
 
@@ -56,10 +55,10 @@ public class LineIcon extends IconWithParent {
 		y = properties.getInt("y", y);
 		w = properties.getInt("width", w);
 		h = properties.getInt("height", h);
-		side1 = properties.getInt("side1",side1);
-		side2 = properties.getInt("side2",side2);
-		tw = properties.getInt("texture_w",tw);
-		th = properties.getInt("texture_h",th);
+		side1 = properties.getInt("side1", side1);
+		side2 = properties.getInt("side2", side2);
+		tw = properties.getInt("texture_w", tw);
+		th = properties.getInt("texture_h", th);
 
 		String s = properties.getString("pos", "");
 
@@ -76,16 +75,17 @@ public class LineIcon extends IconWithParent {
 
 		updateParts();
 	}
+
 	@Override
 	public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
-		int msize=w-side2-side1;
-		if(msize<=0) {
-			s0.draw(matrixStack,x,y,side1,h);
-			s1.draw(matrixStack,x+side1,y,side2,h);
-		}else {
-			m.draw(matrixStack,x+side1,y,msize,h);
-			s0.draw(matrixStack,x,y,side1,h);
-			s1.draw(matrixStack,x+w-side2,y,side2,h);
+		int msize = w - side2 - side1;
+		if (msize <= 0) {
+			s0.draw(matrixStack, x, y, side1, h);
+			s1.draw(matrixStack, x + side1, y, side2, h);
+		} else {
+			m.draw(matrixStack, x + side1, y, msize, h);
+			s0.draw(matrixStack, x, y, side1, h);
+			s1.draw(matrixStack, x + w - side2, y, side2, h);
 		}
 	}
 

@@ -1,9 +1,10 @@
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -51,7 +52,7 @@ public class ResearchCategoryPanel extends Panel {
 			//theme.drawHorizontalTab(matrixStack, x, y, w, h,categoryPanel.researchScreen.selectedCategory==category);
 			
 			if(categoryPanel.researchScreen.selectedCategory==category) {
-				DrawDeskIcons.TAB_HL.draw(matrixStack, x, y, w, 7);
+				TechIcons.TAB_HL.draw(matrixStack, x, y, w, 7);
 				this.drawIcon(matrixStack, theme,x + 7,y + 2, 16, 16);
 			}else
 				this.drawIcon(matrixStack, theme,x + 7,y + 5, 16, 16);

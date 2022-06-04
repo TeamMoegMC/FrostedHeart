@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.research.clues;
 
-import java.util.List;
-
 import com.google.gson.JsonObject;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -14,9 +12,10 @@ import net.minecraft.util.ResourceLocation;
 
 public class AdvancementClue extends TickListenerClue {
 	ResourceLocation advancement = new ResourceLocation("minecraft:story/root");
-	String criterion="";
-	public AdvancementClue(String name, List<String> desc, float contribution) {
-		super(name, desc, contribution);
+	String criterion = "";
+
+	public AdvancementClue(String name, String desc, String hint, float contribution) {
+		super(name, desc, hint, contribution);
 	}
 
 	public AdvancementClue(String name, float contribution) {
@@ -25,15 +24,15 @@ public class AdvancementClue extends TickListenerClue {
 
 	public AdvancementClue(JsonObject jo) {
 		super(jo);
-		advancement=new ResourceLocation(jo.get("advancement").getAsString());
-		if(jo.has("criterion"))
-		criterion=jo.get("criterion").getAsString();
+		advancement = new ResourceLocation(jo.get("advancement").getAsString());
+		if (jo.has("criterion"))
+			criterion = jo.get("criterion").getAsString();
 	}
 
 	public AdvancementClue(PacketBuffer pb) {
 		super(pb);
-		advancement=pb.readResourceLocation();
-		criterion=pb.readString();
+		advancement = pb.readResourceLocation();
+		criterion = pb.readString();
 	}
 
 	@Override
@@ -59,9 +58,9 @@ public class AdvancementClue extends TickListenerClue {
 
 	@Override
 	public JsonObject serialize() {
-		JsonObject jo= super.serialize();
-		jo.addProperty("advancement",advancement.toString());
-		if(!criterion.isEmpty())
+		JsonObject jo = super.serialize();
+		jo.addProperty("advancement", advancement.toString());
+		if (!criterion.isEmpty())
 			jo.addProperty("criterion", criterion);
 		return jo;
 	}

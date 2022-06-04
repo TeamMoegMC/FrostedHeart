@@ -7,10 +7,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
 
 public class Effects {
 	private static Map<String,Function<JsonObject,Effect>> fromJson=new HashMap<>();

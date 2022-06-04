@@ -1,8 +1,11 @@
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.gui.RTextField;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -40,7 +43,7 @@ public class ResearchDashboardPanel extends Panel {
     	RTextField tf=new RTextField(this);
     	tf.setPos(0,0);
     	add(tf);
-    	tf.setMaxWidth(140).setMinWidth(140).setMaxLine(2).setColor(DrawDeskIcons.text).addFlags(4);
+    	tf.setMaxWidth(140).setMinWidth(140).setMaxLine(2).setColor(TechIcons.text).addFlags(4);
     	tf.setText(detailPanel.research.getName());
     	
     }
@@ -57,10 +60,10 @@ public class ResearchDashboardPanel extends Panel {
         // name
         //theme.drawString(matrixStack, detailPanel.research.getName(), x+7, y+8);
         // icon
-        DrawDeskIcons.SHADOW.draw(matrixStack, x+1, y+36, 36, 9);
+        TechIcons.SHADOW.draw(matrixStack, x+1, y+36, 36, 9);
         detailPanel.icon.draw(matrixStack, x+3, y+10, 32, 32);
         GuiHelper.setupDrawing();
-        DrawDeskIcons.HLINE_L.draw(matrixStack, x, y+49,140, 3);
+        TechIcons.HLINE_L.draw(matrixStack, x, y+49,140, 3);
         
         // TODO: research progress
         // ResearchData data = ResearchDataAPI.getData((ServerPlayerEntity) detailPanel.researchScreen.player).getData(detailPanel.research);

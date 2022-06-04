@@ -20,20 +20,23 @@ public class TechScrollBar extends PanelScrollBar {
 	@Override
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		GuiHelper.setupDrawing();
-		DrawDeskIcons.SLIDER_FRAME.draw(matrixStack, x, y, w, h);
+		TechIcons.SLIDER_FRAME.draw(matrixStack, x, y, w, h);
 	}
-	//Have to do this hack since FTBL fields are private.
-	private static final Theme dtheme=new Theme() {
+
+	// Have to do this hack since FTBL fields are private.
+	private static final Theme dtheme = new Theme() {
 		@Override
-		public void drawScrollBar(MatrixStack matrixStack, int x, int y, int w, int h, WidgetType type, boolean vertical) {
+		public void drawScrollBar(MatrixStack matrixStack, int x, int y, int w, int h, WidgetType type,
+				boolean vertical) {
 			GuiHelper.setupDrawing();
-			DrawDeskIcons.drawTexturedRect(matrixStack, x, y, w, h,type!=WidgetType.MOUSE_OVER);
+			TechIcons.drawTexturedRect(matrixStack, x, y, w, h, type != WidgetType.MOUSE_OVER);
 		}
 	};
+
 	@Override
 	public void drawScrollBar(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		
-		super.drawScrollBar(matrixStack,dtheme,x+1, y+1, w-2, h-2);
+
+		super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
 	}
 
 }

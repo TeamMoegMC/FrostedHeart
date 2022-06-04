@@ -1,12 +1,15 @@
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.research.gui.tech;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.gui.ThickLine;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
@@ -33,7 +36,7 @@ public class ResearchHierarchyPanel extends Panel {
 		@Override
 		public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
 			if (doShow())
-				color = DrawDeskIcons.text;
+				color = TechIcons.text;
 			else
 				color = Color4I.rgb(0xADA691);
 			super.draw(matrixStack, x, y, w, h);
@@ -164,8 +167,8 @@ public class ResearchHierarchyPanel extends Panel {
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		super.draw(matrixStack, theme, x, y, w, h);
-		theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 3, y + 3, DrawDeskIcons.text, 0);
-		DrawDeskIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
+		theme.drawString(matrixStack, GuiUtils.translateGui("research_hierarchy"), x + 3, y + 3, TechIcons.text, 0);
+		TechIcons.HLINE_L.draw(matrixStack, x + 1, y + 13, 80, 3);
 	}
 
 	public static class ResearchDetailButton extends Button {
@@ -194,8 +197,16 @@ public class ResearchHierarchyPanel extends Panel {
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			// this.drawBackground(matrixStack, theme, x, y, w, h);
-			DrawDeskIcons.LSLOT.draw(matrixStack, x, y, w, h);
+			GuiHelper.setupDrawing();
+			TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
 			this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
+			if(research.isCompleted()) {
+				matrixStack.push();
+				matrixStack.translate(0, 0, 300);
+				GuiHelper.setupDrawing();
+				TechIcons.FIN.draw(matrixStack, x+2, y+2, 32, 32);
+				matrixStack.pop();
+			}
 		}
 	}
 
@@ -234,11 +245,18 @@ public class ResearchHierarchyPanel extends Panel {
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			GuiHelper.setupDrawing();
-			DrawDeskIcons.SLOT.draw(matrixStack, x, y, w, h);
-			if ((parent==null&&research.isUnlocked())||(parent!=null&&parent.isUnlocked()))
+			TechIcons.SLOT.draw(matrixStack, x, y, w, h);
+			if ((parent==null&&research.isUnlocked())||(parent!=null&&parent.isUnlocked())) {
 				this.drawIcon(matrixStack, theme, x + 4, y + 4, 16, 16);
-			else
-				DrawDeskIcons.Question.draw(matrixStack, x + 4, y + 4, 16, 16);
+				if(research.isCompleted()) {
+					matrixStack.push();
+					matrixStack.translate(0, 0, 300);
+					GuiHelper.setupDrawing();
+					TechIcons.FIN.draw(matrixStack, x+4, y+4,16,16);
+					matrixStack.pop();
+				}
+			}else
+				TechIcons.Question.draw(matrixStack, x + 4, y + 4, 16, 16);
 		}
 	}
 

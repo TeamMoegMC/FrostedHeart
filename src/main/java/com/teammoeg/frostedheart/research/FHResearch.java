@@ -38,7 +38,9 @@ public class FHResearch {
 	}
 	//called after reload
 	public static void finishReload() {
-		allResearches.orElse(Collections.emptyList()).forEach(c->c.doIndex());
+		allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
+		effects.all().forEach(Effect::init);
+		clues.all().forEach(Clue::init);
 	}
 	public static void load(CompoundNBT cnbt) {
 		clues.deserialize(cnbt.getList("clues",8));

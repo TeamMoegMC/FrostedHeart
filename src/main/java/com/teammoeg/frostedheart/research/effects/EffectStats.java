@@ -1,24 +1,23 @@
 package com.teammoeg.frostedheart.research.effects;
 
+import java.text.NumberFormat;
+import java.util.ArrayList;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.TeamResearchData;
-import com.teammoeg.frostedheart.research.gui.DrawDeskIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
-
-import java.text.NumberFormat;
-import java.util.ArrayList;
 
 /**
  * Effect on numerical stats of the team's machines or abilities
  */
 public class EffectStats extends Effect {
-	private static FHIcon addIcon=FHIcons.getIcon(DrawDeskIcons.ADD);
+	private static FHIcon addIcon=FHIcons.getIcon(TechIcons.ADD);
     String name;
     double val;
     boolean isPercentage=false;

@@ -72,7 +72,7 @@ public abstract class TechTextButton extends TechButton {
 			textX += off + s;
 		}
 
-		theme.drawString(matrixStack, title, textX, textY,DrawDeskIcons.text,0);
+		theme.drawString(matrixStack, title, textX, textY, TechIcons.text, 0);
 	}
 
 }

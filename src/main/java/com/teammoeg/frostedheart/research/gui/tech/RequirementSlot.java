@@ -1,6 +1,8 @@
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
+
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -39,7 +41,7 @@ public class RequirementSlot extends Widget {
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		ItemStack cur=i[(int) ((System.currentTimeMillis()/1000)%i.length)];
 		GuiHelper.setupDrawing();
-		DrawDeskIcons.SLOT.draw(matrixStack, x-4, y-4, 24,24);
+		TechIcons.SLOT.draw(matrixStack, x-4, y-4, 24,24);
 		matrixStack.push();
 		matrixStack.translate(0, 0, 100);
 		GuiHelper.drawItem(matrixStack,cur, x, y, w/16F, h/16F,true,null);

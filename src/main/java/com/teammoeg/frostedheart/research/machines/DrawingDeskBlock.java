@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchLevel;
-import com.teammoeg.frostedheart.research.gui.ResearchScreen;
+import com.teammoeg.frostedheart.research.gui.tech.ResearchScreen;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import net.minecraft.block.Block;
