@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
@@ -36,9 +37,11 @@ import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -48,10 +51,25 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.crafting.NBTIngredient;
 
 public class FHUtils {
     public static <T> T notNull() {
         return null;
+    }
+    public static Ingredient createIngredient(ItemStack is) {
+    	if(is.hasTag())return new NBTIngredient(is);
+    	return Ingredient.fromStacks(is);
+    }
+    public static IngredientWithSize createIngredientWithSize(ResourceLocation tag,int count) {
+    	return new IngredientWithSize( Ingredient.fromTag(ItemTags.getCollection().get(tag)),count);
+    }
+    public static IngredientWithSize createIngredientWithSize(ItemStack is) {
+    	if(is.hasTag())return new IngredientWithSize(new NBTIngredient(is),is.getCount());
+    	return new IngredientWithSize(Ingredient.fromStacks(is),is.getCount());
+    }
+    public static Ingredient createIngredient(ResourceLocation tag) {
+    	return Ingredient.fromTag(ItemTags.getCollection().get(tag));
     }
     public static void giveItem(PlayerEntity pe,ItemStack is) {
 		if(!pe.addItemStackToInventory(is)) 

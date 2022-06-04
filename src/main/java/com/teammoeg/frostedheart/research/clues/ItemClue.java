@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gson.JsonObject;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
@@ -11,13 +12,11 @@ import net.minecraft.network.PacketBuffer;
 
 public class ItemClue extends ListenerClue {
 	boolean consume;
-	ItemStack stack;
-	public ItemClue(String name, List<String> desc, float contribution) {
-		super(name, desc, contribution);
-	}
+	IngredientWithSize stack;
 
-	public ItemClue(String name, float contribution) {
-		super(name, contribution);
+	public ItemClue(String name, List<String> desc, float contribution, IngredientWithSize stack) {
+		super(name, desc, contribution);
+		this.stack = stack;
 	}
 
 	public ItemClue(JsonObject jo) {
