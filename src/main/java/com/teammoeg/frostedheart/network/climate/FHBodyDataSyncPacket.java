@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.climate;
 
 import java.util.function.Supplier;
 
@@ -31,22 +31,22 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHDataSyncPacket {
+public class FHBodyDataSyncPacket {
     private final CompoundNBT data;
 
-    public FHDataSyncPacket(PlayerEntity pe) {
+    public FHBodyDataSyncPacket(PlayerEntity pe) {
         this.data = TemperatureCore.getFHData(pe);
     }
 
-    FHDataSyncPacket(PacketBuffer buffer) {
+    public FHBodyDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
     }
 
-    void encode(PacketBuffer buffer) {
+    public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
     }
 
-    void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
             World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);

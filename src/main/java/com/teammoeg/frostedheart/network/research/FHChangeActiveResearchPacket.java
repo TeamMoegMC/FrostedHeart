@@ -16,44 +16,33 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.research;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.data.DataEntry;
-import com.teammoeg.frostedheart.data.FHDataManager;
-
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-public class FHDatapackSyncPacket {
-    DataEntry[] entries;
-
-    public FHDatapackSyncPacket() {
-        entries = FHDataManager.save();
+// send when data update
+public class FHChangeActiveResearchPacket {
+    private final int id;
+    public FHChangeActiveResearchPacket(Research rs) {
+        this.id=rs.getRId();
     }
 
-    FHDatapackSyncPacket(PacketBuffer buffer) {
-        decode(buffer);
+    public FHChangeActiveResearchPacket(PacketBuffer buffer) {
+        id=buffer.readVarInt();
     }
 
-    void decode(PacketBuffer buffer) {
-        entries = new DataEntry[buffer.readVarInt()];
-        for (int i = 0; i < entries.length; i++) {
-            entries[i] = new DataEntry(buffer);
-        }
+    public void encode(PacketBuffer buffer) {
+        buffer.writeVarInt(id);
     }
 
-    void encode(PacketBuffer buffer) {
-        buffer.writeVarInt(entries.length);
-        for (DataEntry de : entries)
-            de.encode(buffer);
-    }
-
-    void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            // Update client-side nbt
-            FHDataManager.load(entries);
+        	ClientResearchDataAPI.getData().setCurrentResearch(FHResearch.researches.getById(id));
         });
         context.get().setPacketHandled(true);
     }

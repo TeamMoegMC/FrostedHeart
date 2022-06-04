@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.util;
 
 import java.io.File;
 import java.io.FileReader;
@@ -9,9 +9,6 @@ import java.util.Scanner;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.frostedheart.util.FileUtil;
-import com.teammoeg.frostedheart.util.LazyOptional;
 
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;

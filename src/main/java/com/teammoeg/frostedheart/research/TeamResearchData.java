@@ -1,11 +1,12 @@
 package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
@@ -15,10 +16,10 @@ import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 public class TeamResearchData {
 	private static TeamResearchData INSTANCE=new TeamResearchData(null);
@@ -50,7 +51,7 @@ public class TeamResearchData {
 	public void setClueTriggered(int id,boolean trig) {
 		ensureClue(id);
 		clueComplete.set(id-1,trig);
-		getActiveResearch().ifPresent(r->this.getData(r).checkComplete());
+		getCurrentResearch().ifPresent(r->this.getData(r).checkComplete());
 	}
 	public void setClueTriggered(Clue clue,boolean trig) {
 		setClueTriggered(clue.getRId(),trig);
@@ -97,13 +98,30 @@ public class TeamResearchData {
 	public ResearchData getData(String lid) {
 		return getData(FHResearch.researches.getByName(lid));
 	}
-	public LazyOptional<Research> getActiveResearch() {
+	public LazyOptional<Research> getCurrentResearch() {
 		if(activeResearchId==0)
 			return LazyOptional.empty();
 		return LazyOptional.of(()->FHResearch.getResearch(activeResearchId).get());
 	}
+	public void setCurrentResearch(Research r) {
+		if(this.getData(r).active) {
+			if(this.activeResearchId!=r.getRId()) {
+				this.activeResearchId=r.getRId();
+				FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
+				for (ServerPlayerEntity spe : team.get().getOnlineMembers())
+					PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+			}
+		}
+	}
+	public void clearCurrentResearch() {
+		activeResearchId=0;
+	}
+	public void clearCurrentResearch(Research r) {
+		if(activeResearchId==r.getRId())
+			activeResearchId=0;
+	}
 	public boolean canResearch() {
-		LazyOptional<Research> rs=getActiveResearch();
+		LazyOptional<Research> rs=getCurrentResearch();
 		if(rs.isPresent()) {
 			Research r=rs.resolve().get();
 			return this.getData(r).canResearch();
@@ -144,23 +162,14 @@ public class TeamResearchData {
 			grantedEffects.set(id-1,e.grant(this,player));
 		}
 	}
-	//return excess items.
-	public List<ItemStack> commitItem(ItemStack item){
-		LazyOptional<Research> rs=getActiveResearch();
-		if(rs.isPresent()) {
-			Research r=rs.resolve().get();
-			return this.getData(r).commitItem(item);
-		}
-		return Arrays.asList(new ItemStack[0]);
-	}
 	public void doResearch(int points){
-		LazyOptional<Research> rs=getActiveResearch();
+		LazyOptional<Research> rs=getCurrentResearch();
 		if(rs.isPresent()) {
 			Research r=rs.resolve().get();
 			this.getData(r).doResearch(points);
 		}
 	}
-	public CompoundNBT serialize() {
+	public CompoundNBT serialize(boolean updatePacket) {
 		CompoundNBT nbt=new CompoundNBT();
 		byte[] cl=new byte[clueComplete.size()];
 		int i=-1;
@@ -173,15 +182,18 @@ public class TeamResearchData {
 		rdata.stream().map(e->e!=null?e.serialize():new CompoundNBT()).forEach(e->rs.add(e));
 		nbt.put("researches",rs);
 		nbt.putInt("active",activeResearchId);
-		nbt.put("crafting",crafting.serialize());
-		nbt.put("building",building.serialize());
-		nbt.put("block",block.serialize());
+		//these data does not send to client
+		if(!updatePacket) {
+			nbt.put("crafting",crafting.serialize());
+			nbt.put("building",building.serialize());
+			nbt.put("block",block.serialize());
+		}
 		return nbt;
 	}
 	public CompoundNBT getVariants() {
 		return variants;
 	}
-	public void deserialize(CompoundNBT data) {
+	public void deserialize(CompoundNBT data,boolean updatePacket) {
 		clueComplete.clear();
 		rdata.clear();
 		byte[] ba=data.getByteArray("clues");
@@ -191,16 +203,16 @@ public class TeamResearchData {
 			clueComplete.set(i,ba[i]!=0);
 		ListNBT li=data.getList("researches",10);
 		activeResearchId=data.getInt("active");
-		crafting.load(data.getList("crafting",8));
-		building.load(data.getList("building",8));
-		block.load(data.getList("block",8));
 		for(int i=0;i<li.size();i++) {
 			INBT e=li.get(i);
-			if(e.getId()==10) {
-				rdata.add(new ResearchData(FHResearch.getResearch(i+1),(CompoundNBT) e,this));
-			}else
-				rdata.add(null);
+			rdata.add(new ResearchData(FHResearch.getResearch(i+1),(CompoundNBT) e,this));
 		}
+		if(!updatePacket) {
+			crafting.load(data.getList("crafting",8));
+			building.load(data.getList("building",8));
+			block.load(data.getList("block",8));
+		}
+
 	}
 	public static TeamResearchData getClientInstance() {
 		return INSTANCE;

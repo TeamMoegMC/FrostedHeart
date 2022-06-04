@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.climate;
 
 import java.util.function.Supplier;
 
@@ -37,15 +37,15 @@ public class FHClimatePacket {
         data = climateData.serializeNBT();
     }
 
-    FHClimatePacket(PacketBuffer buffer) {
+    public FHClimatePacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
     }
 
-    void encode(PacketBuffer buffer) {
+    public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
     }
 
-    void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
             World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);

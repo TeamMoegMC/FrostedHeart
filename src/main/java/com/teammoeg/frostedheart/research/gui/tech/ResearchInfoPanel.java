@@ -4,8 +4,8 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
@@ -75,57 +75,7 @@ public class ResearchInfoPanel extends Panel {
 				@Override
 				public void onClicked(MouseButton mouseButton) {
 
-					// check materials
-					boolean hasAllMaterials = true;
-					for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
-						if (!hasAllMaterials)
-							break;
-						// each ingredient
-						ItemStack[] matchingStacks = ingredient.getMatchingStacks();
-						boolean alreadyFound = false;
-						for (ItemStack requiredStack : matchingStacks) {
-							if (alreadyFound)
-								break;
-							for (ItemStack invStack : detailPanel.researchScreen.player.inventory.mainInventory) {
-								if (!invStack.isEmpty() && invStack.isItemEqual(requiredStack)
-										&& invStack.getCount() >= requiredStack.getCount()) {
-									alreadyFound = true;
-									break;
-								}
-							}
-						}
-						if (!alreadyFound)
-							hasAllMaterials = false;
-					}
-
-					// commit materials
-					if (hasAllMaterials) {
-						ResearchData researchData = ResearchDataAPI
-								.getData((ServerPlayerEntity) detailPanel.researchScreen.player)
-								.getData(detailPanel.research);
-
-						for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
-							// each ingredient
-							ItemStack[] matchingStacks = ingredient.getMatchingStacks();
-							boolean alreadyFound = false;
-							for (ItemStack requiredStack : matchingStacks) {
-								if (alreadyFound)
-									break;
-								for (ItemStack invStack : detailPanel.researchScreen.player.inventory.mainInventory) {
-									if (!invStack.isEmpty() && invStack.isItemEqual(requiredStack)
-											&& invStack.getCount() >= requiredStack.getCount()) {
-										invStack.shrink(requiredStack.getCount());
-										// notify data
-										researchData.commitItem(requiredStack);
-										alreadyFound = true;
-										break;
-									}
-								}
-							}
-						}
-
-						refreshWidgets();
-					}
+					refreshWidgets();
 				}
 			};
 

@@ -16,50 +16,40 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.research;
 
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
-import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 // send when player join
-public class FHResearchProgressSyncPacket {
+public class FHResearchDataSyncPacket {
     private final CompoundNBT data;
-    private final int id;
-    public FHResearchProgressSyncPacket(UUID team,Research rs) {
-    	TeamResearchData rd=ResearchDataManager.INSTANCE.getData(team);
-        this.data = rd.getData(rs).serialize();
-        this.id=rs.getRId();
+
+    public FHResearchDataSyncPacket(UUID team) {
+        this.data = ResearchDataManager.INSTANCE.getData(team).serialize(true);
     }
 
-    FHResearchProgressSyncPacket(PacketBuffer buffer) {
+    public FHResearchDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
-        id=buffer.readVarInt();
     }
 
-    void encode(PacketBuffer buffer) {
+    public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
-        buffer.writeVarInt(id);
     }
 
-    void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	Research rs=FHResearch.researches.getById(id);
-        	ResearchData datax=rs.getData();
-        	boolean status=datax.isCompleted();
-        	datax.deserialize(data);
-        	if(status!=datax.isCompleted())
-        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()));
+        	TeamResearchData.getClientInstance().deserialize(data,true);
+        	DistExecutor.safeRunWhenOn(Dist.CLIENT,()->JEICompat::syncJEI);
         });
         context.get().setPacketHandled(true);
     }

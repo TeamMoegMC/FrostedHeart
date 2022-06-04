@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.climate.ClimateData;
-import com.teammoeg.frostedheart.network.FHClimatePacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 import com.teammoeg.frostedheart.util.FHGameRule;
 
 import net.minecraft.profiler.IProfiler;

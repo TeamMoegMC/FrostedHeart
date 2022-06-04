@@ -24,8 +24,8 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
-import com.teammoeg.frostedheart.network.FHDataSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -182,7 +182,7 @@ public class TemperatureUpdate {
 				current = 10;
 
 			TemperatureCore.setTemperature(player, current, envtemp + 37);
-			PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHDataSyncPacket(player));
+			PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
 		}
 	}
 

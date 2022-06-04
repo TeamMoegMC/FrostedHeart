@@ -16,34 +16,46 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.research;
 
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkEvent;
-// send when player join
-public class FHResearchRegistrtySyncPacket {
+// send when data update
+public class FHResearchDataUpdatePacket {
     private final CompoundNBT data;
-
-    public FHResearchRegistrtySyncPacket() {
-        this.data = FHResearch.save(new CompoundNBT());
+    private final int id;
+    public FHResearchDataUpdatePacket(ResearchData rd) {
+        this.data = rd.serialize();
+        this.id=rd.getResearch().getRId();
     }
 
-    FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
+    public FHResearchDataUpdatePacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
+        id=buffer.readVarInt();
     }
 
-    void encode(PacketBuffer buffer) {
+    public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
+        buffer.writeVarInt(id);
     }
 
-    void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHResearch.load(data);
+        	Research rs=FHResearch.researches.getById(id);
+        	ResearchData datax=rs.getData();
+        	boolean status=datax.isCompleted();
+        	datax.deserialize(data);
+        	if(status!=datax.isCompleted())
+        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()));
         });
         context.get().setPacketHandled(true);
     }

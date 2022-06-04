@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.research;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -38,17 +38,17 @@ public class FHClueProgressSyncPacket {
         this.id=rs.getRId();
     }
 
-    FHClueProgressSyncPacket(PacketBuffer buffer) {
+    public FHClueProgressSyncPacket(PacketBuffer buffer) {
         data = buffer.readBoolean();
         id=buffer.readVarInt();
     }
 
-    void encode(PacketBuffer buffer) {
+    public void encode(PacketBuffer buffer) {
         buffer.writeBoolean(data);
         buffer.writeVarInt(id);
     }
 
-    void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
         	FHResearch.clues.getById(id).setCompleted(data);
         });

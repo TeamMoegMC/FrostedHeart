@@ -49,7 +49,7 @@ public class ResearchDataManager {
 				UUID tud=UUID.fromString(f.getName().split("\\.")[0]);
 				CompoundNBT nbt=CompressedStreamTools.readCompressed(f);
 				TeamResearchData trd=new TeamResearchData(()->TeamManager.INSTANCE.getTeamByID(tud));
-				trd.deserialize(nbt);
+				trd.deserialize(nbt,false);
 				data.put(tud,trd);
 			}catch(IllegalArgumentException ex) {
 				System.out.println("Unexpected data file "+f.getName()+", ignoring...");
@@ -71,7 +71,7 @@ public class ResearchDataManager {
 		for(Entry<UUID, TeamResearchData> entry:data.entrySet()) {
 			File f=local.resolve(entry.getKey().toString()+".nbt").toFile();
 			try {
-				CompressedStreamTools.writeCompressed(entry.getValue().serialize(),f);
+				CompressedStreamTools.writeCompressed(entry.getValue().serialize(false),f);
 				
 			} catch (IOException e) {
 				e.printStackTrace();

@@ -1,33 +1,29 @@
 package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.items.ItemHandlerHelper;
 
 public class ResearchData {
     boolean active;//is all items fulfilled?
     boolean finished;
-    Supplier<Research> rs;
+    private Supplier<Research> rs;
     int committed;//points committed
     final TeamResearchData parent;
-    ArrayList<ItemStack> committedItems = new ArrayList<>();//items comitted
-    
-    
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
         this.parent = parent;
@@ -41,7 +37,7 @@ public class ResearchData {
     }
 
     public int getTotalCommitted() {
-        Research r = rs.get();
+        Research r = getResearch();
         int currentProgress = committed;
         for (Clue ac : r.getClues())
             if (ac.isCompleted(parent))
@@ -51,7 +47,7 @@ public class ResearchData {
 
     public void checkComplete() {
         if (finished) return;
-        Research r=rs.get();
+        Research r=getResearch();
         Team t=parent.team.get();
         if (getTotalCommitted() >= r.getRequiredPoints()) {
             finished = true;
@@ -65,7 +61,7 @@ public class ResearchData {
 
     public void announceCompletion() {
         sendProgressPacket();
-        MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(rs.get(), parent.team.get(), finished));
+        MinecraftForge.EVENT_BUS.post(new ResearchStatusEvent(getResearch(), parent.team.get(), finished));
     }
 
     public void setFinished(boolean finished) {
@@ -73,7 +69,7 @@ public class ResearchData {
     }
 
     public void sendProgressPacket() {
-        parent.getTeam().ifPresent(t -> rs.get().sendProgressPacket(t));
+        parent.getTeam().ifPresent(t -> getResearch().sendProgressPacket(t,this));
     }
 
     public ResearchData(Supplier<Research> r, CompoundNBT nc, TeamResearchData parent) {
@@ -87,17 +83,21 @@ public class ResearchData {
 	public Research getResearch() {
         return rs.get();
     }
-
+	public void write(PacketBuffer pb) {
+		pb.writeVarInt(committed);
+		pb.writeBoolean(active);
+		pb.writeBoolean(finished);
+	}
+	public void read(PacketBuffer pb) {
+		committed=pb.readVarInt();
+		active=pb.readBoolean();
+		finished=pb.readBoolean();
+	}
     public CompoundNBT serialize() {
         CompoundNBT cnbt = new CompoundNBT();
         cnbt.putInt("committed", committed);
         cnbt.putBoolean("active", active);
         cnbt.putBoolean("finished", finished);
-        ListNBT items = new ListNBT();
-        for (ItemStack is : committedItems) {
-            items.add(is.serializeNBT());
-        }
-        cnbt.put("items", items);
         //cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 
@@ -107,8 +107,6 @@ public class ResearchData {
         committed = cn.getInt("committed");
         active = cn.getBoolean("active");
         finished = cn.getBoolean("finished");
-        ListNBT items = cn.getList("items", 10);
-        items.stream().map(e -> ItemStack.read((CompoundNBT) e)).forEach(e -> committedItems.add(e));
         //rs=FHResearch.getResearch(cn.getInt("research"));
     }
 
@@ -120,7 +118,7 @@ public class ResearchData {
     }
 
     public boolean isInProgress() {
-        LazyOptional<Research> r = parent.getActiveResearch();
+        LazyOptional<Research> r = parent.getCurrentResearch();
         if (r.isPresent()) {
             return r.resolve().get().equals(this.rs);
         }
@@ -145,66 +143,48 @@ public class ResearchData {
         }
     }
 
-    /**
-     * @param stackToCommit ItemStack to commit
-     * @return
-     */
-    public List<ItemStack> commitItem(ItemStack stackToCommit) {
-        Research research = rs.get();
-        List<IngredientWithSize> requiredItems = new ArrayList<>(research.getRequiredItems());
-        boolean alreadyExists = false;
-        for (ItemStack committedStack : committedItems) {
-            if (ItemStack.areItemsEqual(committedStack, stackToCommit)) {
-                committedStack.setCount(committedStack.getCount() + stackToCommit.getCount());
-                alreadyExists = true;
-            }
+    public boolean commitItem(ServerPlayerEntity player) {
+        Research research = getResearch();
+        //first do simple verify
+        for(IngredientWithSize iws:research.getRequiredItems()) {
+        	int count=iws.getCount();
+        	for(ItemStack it:player.inventory.mainInventory) {
+        		count-=it.getCount();
+        		if(count<=0)break;
+        	}
+        	if(count>0)return false;
         }
-        if (!alreadyExists)
-            committedItems.add(stackToCommit);
-
-        List<ItemStack> cur = committedItems;//copy
-        committedItems = new ArrayList<>();//replace
-
+        //then really consume item
         List<ItemStack> ret = new ArrayList<>();
-        for (Iterator<ItemStack> it0 = cur.iterator(); it0.hasNext(); ) {
-            ItemStack cs = it0.next();
-            for (Iterator<IngredientWithSize> it = requiredItems.iterator(); it.hasNext(); ) {
-                IngredientWithSize iws = it.next();
-                if (iws.testIgnoringSize(cs)) {
-                    if (cs.getCount() <= iws.getCount()) {
-                        committedItems.add(cs);
-                        if (iws.getCount() == cs.getCount())
-                            it.remove();
-                    } else {
-                        committedItems.add(ItemHandlerHelper.copyStackWithSize(cs, iws.getCount()));
-                        ret.add(ItemHandlerHelper.copyStackWithSize(cs, cs.getCount() - iws.getCount()));//excess output
-                        it.remove();
-                    }
-                }
-            }
+        for(IngredientWithSize iws:research.getRequiredItems()) {
+        	int count=iws.getCount();
+        	for(ItemStack it:player.inventory.mainInventory) {
+        		int redcount=Math.min(count, it.getCount());
+        		ret.add(it.split(redcount));
+        		count-=redcount;
+        		if(count<=0)break;
+        	}
+        	if(count>0) {//wrong, revert.
+        		for(ItemStack it:ret)
+        			FHUtils.giveItem(player, it);
+        		return false;
+        	}
         }
-        if (requiredItems.isEmpty())//all requirements fulfilled
-        	setActive();
-        return ret;
+        setActive();
+        return true;
     }
     public void setActive() {
     	if(active)return;
     	active = true;
-    	for(Clue c:rs.get().getClues())
+    	for(Clue c:getResearch().getClues())
     		c.start(parent.team.get());
+    	sendProgressPacket();
     }
-    /**
-     * @return Already committed items
-     */
-    public List<ItemStack> getItemStored() {
-        return Collections.unmodifiableList(committedItems);
-    }
-
 	/**
 	 * Current research progress
 	 * @return 0.0F-1.0F fraction
 	 */
 	public float getProgress() {
-        return getTotalCommitted() / rs.get().getRequiredPoints();
+        return getTotalCommitted() / getResearch().getRequiredPoints();
     }
 }

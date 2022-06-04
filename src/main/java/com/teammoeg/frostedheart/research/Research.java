@@ -13,8 +13,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.teammoeg.frostedheart.network.FHResearchProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -265,11 +265,13 @@ public class Research extends FHRegisteredItem implements Writeable {
 	}
 
 	public void sendProgressPacket(Team team) {
-		FHResearchProgressSyncPacket packet = new FHResearchProgressSyncPacket(team.getId(), this);
+		sendProgressPacket(team,getData(team));
+	}
+	public void sendProgressPacket(Team team,ResearchData rd) {
+		FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
 		for (ServerPlayerEntity spe : team.getOnlineMembers())
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
 	}
-
 	public String toString() {
 		return "Research[" + id + "]";
 	}

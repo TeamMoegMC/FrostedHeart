@@ -19,6 +19,16 @@
 package com.teammoeg.frostedheart.network;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
+import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
+import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
+import com.teammoeg.frostedheart.network.research.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.network.research.FHResearchRegistrtySyncPacket;
 
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraftforge.fml.network.NetworkRegistry;
@@ -59,22 +69,26 @@ public class PacketHandler {
 		// CHANNEL.registerMessage(id++, TemperatureChangePacket.class,
 		// TemperatureChangePacket::encode, TemperatureChangePacket::new,
 		// TemperatureChangePacket::handle);
-		CHANNEL.registerMessage(id++, FHDataSyncPacket.class, FHDataSyncPacket::encode, FHDataSyncPacket::new,
-				FHDataSyncPacket::handle);
+		CHANNEL.registerMessage(id++, FHBodyDataSyncPacket.class, FHBodyDataSyncPacket::encode, FHBodyDataSyncPacket::new,
+				FHBodyDataSyncPacket::handle);
 		CHANNEL.registerMessage(id++, FHDatapackSyncPacket.class, FHDatapackSyncPacket::encode,
 				FHDatapackSyncPacket::new, FHDatapackSyncPacket::handle);
 		CHANNEL.registerMessage(id++, FHResearchRegistrtySyncPacket.class, FHResearchRegistrtySyncPacket::encode,
 				FHResearchRegistrtySyncPacket::new, FHResearchRegistrtySyncPacket::handle);
 		CHANNEL.registerMessage(id++, FHResearchDataSyncPacket.class, FHResearchDataSyncPacket::encode,
 				FHResearchDataSyncPacket::new, FHResearchDataSyncPacket::handle);
-		CHANNEL.registerMessage(id++, FHResearchProgressSyncPacket.class, FHResearchProgressSyncPacket::encode,
-				FHResearchProgressSyncPacket::new, FHResearchProgressSyncPacket::handle);
+		CHANNEL.registerMessage(id++, FHResearchDataUpdatePacket.class, FHResearchDataUpdatePacket::encode,
+				FHResearchDataUpdatePacket::new, FHResearchDataUpdatePacket::handle);
 		CHANNEL.registerMessage(id++, FHClueProgressSyncPacket.class, FHClueProgressSyncPacket::encode,
 				FHClueProgressSyncPacket::new, FHClueProgressSyncPacket::handle);
 		CHANNEL.registerMessage(id++, FHClimatePacket.class, FHClimatePacket::encode, FHClimatePacket::new,
 				FHClimatePacket::handle);
 		CHANNEL.registerMessage(id++, FHEffectTriggerPacket.class, FHEffectTriggerPacket::encode,
 				FHEffectTriggerPacket::new, FHEffectTriggerPacket::handle);
+		CHANNEL.registerMessage(id++, FHResearchControlPacket.class, FHResearchControlPacket::encode,
+				FHResearchControlPacket::new, FHResearchControlPacket::handle);
+		CHANNEL.registerMessage(id++,FHChangeActiveResearchPacket.class, FHChangeActiveResearchPacket::encode,
+				FHChangeActiveResearchPacket::new, FHChangeActiveResearchPacket::handle);
 	}
 
 }

@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;

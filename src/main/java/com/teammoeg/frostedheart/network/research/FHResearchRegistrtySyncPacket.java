@@ -16,40 +16,34 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.research;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.research.ResearchDataManager;
-import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.FHResearch;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 // send when player join
-public class FHResearchDataSyncPacket {
+public class FHResearchRegistrtySyncPacket {
     private final CompoundNBT data;
 
-    public FHResearchDataSyncPacket(UUID team) {
-        this.data = ResearchDataManager.INSTANCE.getData(team).serialize();
+    public FHResearchRegistrtySyncPacket() {
+        this.data = FHResearch.save(new CompoundNBT());
     }
 
-    FHResearchDataSyncPacket(PacketBuffer buffer) {
+    public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
     }
 
-    void encode(PacketBuffer buffer) {
+    public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
     }
 
-    void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	TeamResearchData.getClientInstance().deserialize(data);
-        	DistExecutor.safeRunWhenOn(Dist.CLIENT,()->JEICompat::syncJEI);
+        	FHResearch.load(data);
         });
         context.get().setPacketHandled(true);
     }

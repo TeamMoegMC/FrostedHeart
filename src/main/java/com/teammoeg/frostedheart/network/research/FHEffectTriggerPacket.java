@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network;
+package com.teammoeg.frostedheart.network.research;
 
 import java.util.function.Supplier;
 
@@ -44,16 +44,16 @@ public class FHEffectTriggerPacket {
 		this.researchID = r.getRId();
 	}
 
-	FHEffectTriggerPacket(PacketBuffer buffer) {
+	public FHEffectTriggerPacket(PacketBuffer buffer) {
 		researchID = buffer.readVarInt();
 
 	}
 
-	void encode(PacketBuffer buffer) {
+	public void encode(PacketBuffer buffer) {
 		buffer.writeVarInt(researchID);
 	}
 
-	void handle(Supplier<NetworkEvent.Context> context) {
+	public void handle(Supplier<NetworkEvent.Context> context) {
 
 		context.get().enqueueWork(() -> {
 			Research r=FHResearch.researches.getById(researchID);
