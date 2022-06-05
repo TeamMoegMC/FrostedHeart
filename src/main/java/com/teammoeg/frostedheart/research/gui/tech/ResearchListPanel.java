@@ -16,15 +16,15 @@ public class ResearchListPanel extends Panel {
     public static final int RESEARCH_HEIGHT = 18;
     public static final int RES_PANEL_WIDTH = 80;
 
-    public ResearchScreen researchScreen;
+    public ResearchPanel researchScreen;
     public PanelScrollBar scroll;
     public ResearchList rl;
-    public ResearchListPanel(ResearchScreen panel) {
+    public ResearchListPanel(ResearchPanel panel) {
         super(panel);
         researchScreen = panel;
     }
     public static class ResearchList extends Panel{
-    	public ResearchScreen researchScreen;
+    	public ResearchPanel researchScreen;
 		public ResearchList(ResearchListPanel panel) {
 			super(panel);
 			researchScreen=panel.researchScreen;

@@ -26,15 +26,18 @@ import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchLevel;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.research.gui.tech.ResearchScreen;
+import com.teammoeg.frostedheart.research.gui.tech.ResearchPanel;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.PushReaction;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -55,6 +58,7 @@ import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider{
 
@@ -172,14 +176,17 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
 
     @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
+        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND&&!player.isSneaking()) {
             if (state.get(IS_NOT_MAIN)) {
                 pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
             }
+            TileEntity ii=Utils.getExistingTileEntity(worldIn, pos);
+            NetworkHooks.openGui((ServerPlayerEntity)player,(IInteractionObjectIE)ii,ii.getPos());
         }
         //todo: actually add some server-side functions in TE to provide the level and in progress research
         //ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t2"));
-        new DrawDeskScreen().openGui();
+        //new DrawDeskScreen().openGui();
+        
         return ActionResultType.SUCCESS;
     }
 

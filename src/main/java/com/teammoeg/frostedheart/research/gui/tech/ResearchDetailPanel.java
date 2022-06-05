@@ -25,11 +25,11 @@ public class ResearchDetailPanel extends Panel {
 	ResearchDashboardPanel dashboardPanel;
 	ResearchInfoPanel infoPanel;
 	DescPanel descPanel;
-	ResearchScreen researchScreen;
+	ResearchPanel researchScreen;
 
 	public PanelScrollBar scrollInfo;
 
-	public ResearchDetailPanel(ResearchScreen panel) {
+	public ResearchDetailPanel(ResearchPanel panel) {
 		super(panel);
 		this.setOnlyInteractWithWidgetsInside(true);
 		this.setOnlyRenderWidgetsInside(true);

@@ -55,9 +55,9 @@ public class ResearchHierarchyPanel extends Panel {
 
 	}
 
-	public ResearchScreen researchScreen;
+	public ResearchPanel researchScreen;
 
-	public ResearchHierarchyPanel(ResearchScreen panel) {
+	public ResearchHierarchyPanel(ResearchPanel panel) {
 		super(panel);
 		this.setOnlyInteractWithWidgetsInside(true);
 		this.setOnlyRenderWidgetsInside(true);
@@ -173,7 +173,7 @@ public class ResearchHierarchyPanel extends Panel {
 
 	public static class ResearchDetailButton extends Button {
 
-		ResearchScreen researchScreen;
+		ResearchPanel researchScreen;
 		Research research;
 
 		public ResearchDetailButton(ResearchHierarchyPanel panel, Research research) {
@@ -212,7 +212,7 @@ public class ResearchHierarchyPanel extends Panel {
 
 	public static class ResearchSimpleButton extends Button {
 
-		ResearchScreen researchScreen;
+		ResearchPanel researchScreen;
 		Research research;
 		Research parent;
 		public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {

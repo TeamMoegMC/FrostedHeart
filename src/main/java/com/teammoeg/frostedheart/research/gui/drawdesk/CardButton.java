@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 
 import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.CursorType;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
@@ -36,6 +37,13 @@ public class CardButton extends Button {
 				DrawDeskIcons.getIcon(c.getCt(),c.getCard(),false).draw(matrixStack, x, y, 16,16);
 			}
 		}
+	}
+
+	@Override
+	public CursorType getCursor() {
+		if(game.isTouchable(card))
+			return CursorType.HAND;
+		return CursorType.ARROW;
 	}
 
 }

@@ -16,9 +16,9 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 public class ResearchCategoryPanel extends Panel {
 	public static final int CAT_PANEL_HEIGHT = 40;
 
-	public ResearchScreen researchScreen;
+	public ResearchPanel researchScreen;
 
-	public ResearchCategoryPanel(ResearchScreen panel) {
+	public ResearchCategoryPanel(ResearchPanel panel) {
 		super(panel);
 		researchScreen = panel;
 	}

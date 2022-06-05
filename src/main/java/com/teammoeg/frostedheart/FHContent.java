@@ -95,6 +95,7 @@ import com.teammoeg.frostedheart.content.tools.CeramicBucket;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
+import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.util.FHFoods;
@@ -349,5 +350,6 @@ public class FHContent {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
         GuiHandler.register(RelicChestTileEntity.class,new ResourceLocation(FHMain.MODID,"relic_chest"), RelicChestContainer::new);
+        GuiHandler.register(DrawingDeskTileEntity.class,new ResourceLocation(FHMain.MODID,"draw_desk"), DrawDeskContainer::new);
     }
 }

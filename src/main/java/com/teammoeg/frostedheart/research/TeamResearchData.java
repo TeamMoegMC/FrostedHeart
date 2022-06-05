@@ -6,7 +6,6 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
-import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
@@ -99,6 +98,8 @@ public class TeamResearchData {
 		return getData(FHResearch.researches.getByName(lid));
 	}
 	public LazyOptional<Research> getCurrentResearch() {
+		//TODO Remove after test
+		activeResearchId=Researches.GEN_T2.getRId();
 		if(activeResearchId==0)
 			return LazyOptional.empty();
 		return LazyOptional.of(()->FHResearch.getResearch(activeResearchId).get());

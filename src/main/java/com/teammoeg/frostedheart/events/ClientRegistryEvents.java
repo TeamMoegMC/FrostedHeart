@@ -19,6 +19,8 @@
 package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHTileTypes;
 import com.teammoeg.frostedheart.FHMain;
@@ -33,6 +35,8 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
+import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.util.FHLogger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
@@ -69,6 +73,7 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
+        ClientRegistryEvents.<DrawDeskContainer,MenuScreenWrapper<DrawDeskContainer>>registerIEScreen(new ResourceLocation(FHMain.MODID,"draw_desk"),(c,i,t)->new MenuScreenWrapper<DrawDeskContainer>(new DrawDeskScreen(c),c,i,t).disableSlotDrawing());
         // Register translucent render type
 
         RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutout());

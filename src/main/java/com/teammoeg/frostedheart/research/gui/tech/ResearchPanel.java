@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.ResearchLevel;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
@@ -20,33 +21,41 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 
-public class ResearchScreen extends BaseScreen {
+public abstract class ResearchPanel extends Panel {
 
     public static final int PADDING = 2;
-    PlayerEntity player;
     public ResearchCategoryPanel researchCategoryPanel;
     public ResearchListPanel researchListPanel;
     public ResearchHierarchyPanel researchHierarchyPanel;
     public ResearchProgressPanel progressPanel;
     public ResearchCategory selectedCategory;
-    public ResearchLevel researchLevel;
     public Research selectedResearch;
-    public Research inProgressResearch;
     public ResearchDetailPanel detailframe;
     public Panel modalPanel=null;
-    public ResearchScreen(PlayerEntity player, ResearchLevel level, Research progress) {
-        this.player = player;
-        this.researchLevel = level;
+    public ResearchPanel(Panel p) {
+    	super(p);
         researchCategoryPanel = new ResearchCategoryPanel(this);
         researchListPanel = new ResearchListPanel(this);
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
         progressPanel = new ResearchProgressPanel(this);
-        inProgressResearch = progress; // nullable
         detailframe=new ResearchDetailPanel(this);
+        //TODO default select on progress research
+        Research cr=ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+        selectedCategory = cr==null?ResearchCategories.RESCUE:cr.getCategory();
+        selectedResearch = cr==null?FHResearch.getFirstResearchInCategory(selectedCategory):cr;
     }
 
     @Override
     public void addWidgets() {
+    	int sw=387;
+    	int sh=203;
+    	this.setSize(sw,sh);
+        
+    	researchCategoryPanel.setPosAndSize(165,0,190,21);
+    	researchListPanel.setPosAndSize(12,74,114,118);
+    	researchHierarchyPanel.setPosAndSize(160,23,210,160);
+        progressPanel.setPosAndSize(14,19,111,51);
+        detailframe.setPosAndSize((width-302)/2,(height-170)/2,302,170);
         add(researchCategoryPanel);
         add(researchListPanel);
         add(researchHierarchyPanel);
@@ -54,21 +63,6 @@ public class ResearchScreen extends BaseScreen {
         add(detailframe);
     }
 
-    @Override
-    public boolean onInit() {
-    	int sw=387;
-    	int sh=203;
-    	this.setSize(sw,sh);
-        selectCategory(ResearchCategories.RESCUE);
-        selectedResearch = FHResearch.researches.getByName("generator_t1");
-    	researchCategoryPanel.setPosAndSize(165,0,190,21);
-    	researchListPanel.setPosAndSize(12,74,114,118);
-    	researchHierarchyPanel.setPosAndSize(160,23,210,160);
-        progressPanel.setPosAndSize(14,19,111,51);
-        detailframe.setPosAndSize((width-302)/2,(height-170)/2,302,170);
-        //this.closeGui(isMouseOver);
-        return true;
-    }
 
     public void selectCategory(@Nullable ResearchCategory category) {
         if (selectedCategory != category) {
@@ -86,13 +80,6 @@ public class ResearchScreen extends BaseScreen {
         }
     }
 
-    public Research getInProgressResearch() {
-        return inProgressResearch;
-    }
-
-    public void setInProgressResearch(Research research) {
-        inProgressResearch = research;
-    }
 
     public static final int IN_PROGRESS_HEIGHT = 80;
     public static final int RESEARCH_LIST_WIDTH = 210;
@@ -109,13 +96,6 @@ public class ResearchScreen extends BaseScreen {
         super.addMouseOverText(list);
     }
 
-	@Override
-	public void onBack() {
-		if(detailframe.research !=null) {
-            detailframe.close();
-        }
-		else super.onBack();
-	}
 	public void setModal(Panel p) {
 		modalPanel=p;
 	}
@@ -142,8 +122,31 @@ public class ResearchScreen extends BaseScreen {
 				detailframe.close();
 				return true;
 			}
+			this.onDisabled();
+			//this.closeGui(true);
+			return true;
 		}
 		return super.keyPressed(key);
+	}
+	public abstract void onDisabled();
+	@Override
+	public void alignWidgets() {
+	}
+	boolean enabled;
+
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	@Override
+	public void draw(MatrixStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+		if(enabled)
+		super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
 	}
 
 

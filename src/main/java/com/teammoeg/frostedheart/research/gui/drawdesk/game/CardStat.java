@@ -4,12 +4,14 @@ public class CardStat {
 	public final CardType type;
 	public final int card;
 	public int num;
+	public int tot;
 
 	public CardStat(CardType type, int card) {
 		super();
 		this.type = type;
 		this.card = card;
 		this.num=0;
+		this.tot=0;
 	}
 
 	public boolean isGood() {

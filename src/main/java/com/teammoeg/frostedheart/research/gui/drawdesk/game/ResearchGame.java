@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.research.gui.drawdesk.game;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,8 +18,9 @@ public class ResearchGame {
 	Card[][] cards=new Card[9][9];
 	int addcur;
 	int addmax;
+	boolean finished=false;
 	CardPos lastSelect=null;//transient
-	Map<Integer,CardStat> stats=new LinkedHashMap<>();
+	Map<Integer,CardStat> stats=new LinkedHashMap<>();//transient
 	public ResearchGame() {
 		for(int i=0;i<9;i++)
 			for(int j=0;j<9;j++) {
@@ -31,31 +34,36 @@ public class ResearchGame {
 	}
 	private void resetState() {
 		addcur=1;
+		finished=false;
 		lastSelect=null;
 	}
+
 	public void select(CardPos pos) {
 		if(!isTouchable(pos))return;
-		if(tryCombine(pos,lastSelect)) {
+		if(!pos.equals(lastSelect)&&tryCombine(pos,lastSelect)) {
 			lastSelect=null;
 			return;
 		}
 		if(lastSelect==null) {
 			lastSelect=pos;
-		}
+		}else
+			lastSelect=null;
 			
 	}
 	public void calculateCardNum() {
-		for(CardStat c:stats.values())
-			c.num=0;
+		stats.clear();
+		Map<Integer,CardStat> stat=new HashMap<>();
 		for(int i=0;i<9;i++)
 			for(int j=0;j<9;j++) {
 				Card c=get(i,j);
+				CardStat cs=stat.computeIfAbsent(c.pack(),k->new CardStat(c.ct,c.card));
 				if(c.show) {
-					CardStat cc=stats.get(c.pack());
-					if(cc!=null)
-						cc.num++;
+					cs.num++;
 				}
+				cs.tot++;
 			}
+		stat.values().stream().filter(e->e.tot>0).filter(c->(c.type==CardType.SIMPLE)||(c.type==CardType.PAIR&&c.card%2==0)||(c.type==CardType.ADDING&&c.card!=0)
+			).sorted(Comparator.comparingInt(CardStat::pack)).forEach(e->stats.put(e.pack(), e));
 		
 	}
 	public boolean tryCombine(CardPos c1,CardPos c2) {
@@ -64,17 +72,33 @@ public class ResearchGame {
 				Card c=get(c1);
 				if(c.ct==CardType.ADDING&&c.card==8) {
 					c.show=false;
+					this.calculateCardNum();
 					return true;
 				}
 			}
 		}else {
 			if(canCombine(c1,c2)) {
-				get(c1).show=false;
-				get(c2).show=false;
+				Card cc1=get(c1);
+				Card cc2=get(c2);
+				if(cc1.ct==CardType.ADDING) {
+					addcur++;
+				}
+				cc1.show=false;
+				cc2.show=false;
+				this.calculateCardNum();
 				return true;
 			}
 		}
 		return false;
+	}
+	public void doWinPending() {
+		for(int i=0;i<9;i++)
+			for(int j=0;j<9;j++) {
+				if(cards[i][j].show)
+					return;
+			}
+		finished=true;
+				
 	}
 	public boolean canCombine(CardPos c1,CardPos c2) {
 		return canCombine(c1.x,c1.y,c2.x,c2.y);
@@ -104,6 +128,7 @@ public class ResearchGame {
 				attempt=0;
 			}
 		}
+		this.calculateCardNum();
 	}
 	public boolean isTouchable(CardPos c1) {
 		return isTouchable(c1.x,c1.y);
@@ -120,7 +145,7 @@ public class ResearchGame {
 		bd=isEmpty(x-1,y-1);
 		//return a+b+c+d>=2;
 		Card cur=get(x,y);
-		return (a&&c&&ac||a&&d&&ad||b&&c&&bc||b&&d&&bd)&&(cur.ct!=CardType.ADDING||cur.card==addcur||cur.card==0||(addmax==addcur&&cur.card==8));
+		return (a&&c&&ac||a&&d&&ad||b&&c&&bc||b&&d&&bd)&&!isEmpty(x,y)&&(cur.ct!=CardType.ADDING||cur.card==addcur||cur.card==0||(addmax==addcur&&cur.card==8));
 	}
 	public Card get(int x,int y) {
 		return cards[x][y];
@@ -172,6 +197,7 @@ public class ResearchGame {
 	}
 	private boolean placeSolution(List<CardCombo> sol,Random rnd) {
 		clear();
+		BroadStyles.values()[rnd.nextInt(BroadStyles.values().length)].deploy(cards);
 		Set<CardPos> place=new HashSet<>();
 		cards[4][4].setType(CardType.ADDING,8);
 		cards[4][4].show=true;
@@ -209,7 +235,6 @@ public class ResearchGame {
 		return true;
 	}
 	private List<CardCombo> generateSolution(Random rnd){
-		stats.clear();
 		List<CardCombo> solution=new ArrayList<>();
 		//init parameters
 		//TODO read from data
@@ -223,19 +248,11 @@ public class ResearchGame {
 		}
 		float WCchance=numWild*1F/totalSimple;
 		//Add simple pairs
-		if(numWild>0) {
-			CardStat cs=new CardStat(CardType.SIMPLE,0);
-			cs.num=numWild*2;
-			stats.put(cs.pack(),cs);
-		}
 		if(numElms.length>0)
 			for(int i=0;i<numElms.length;i++)
 				if(numElms[i]>0) {
 					for(int j=0;j<numElms[i];j++)
 						numWild-=pushSimple(solution,i+1,numWild>0,WCchance,rnd);
-					CardStat cs=new CardStat(CardType.SIMPLE,i+1);
-					cs.num=numElms[i]*2;
-					stats.put(cs.pack(),cs);
 					//System.out.println(cs+":"+cs.pack());
 				}
 		//add remaining wildcard
@@ -248,15 +265,12 @@ public class ResearchGame {
 				if(numPairs[i]>0)
 					for(int j=0;j<numPairs[i];j++)
 						solution.add(CardCombo.pair(i));
-				CardStat cs=new CardStat(CardType.PAIR,i*2);
-				cs.num=numPairs[i];
-				stats.put(cs.pack(),cs);
 				//System.out.println(cs+":"+cs.pack());
 			}
 		//normal add fin
 		Collections.shuffle(solution, rnd);
 		//add add but preserver order
-		addmax=numAdd;
+		addmax=numAdd+1;
 		addcur=1;
 		int[] inserts=new int[numAdd];
 		for(int i=0;i<numAdd;i++) {
@@ -308,5 +322,8 @@ public class ResearchGame {
 	}
 	public CardPos getLastSelect() {
 		return lastSelect;
+	}
+	public boolean isFinished() {
+		return finished;
 	}
 }
