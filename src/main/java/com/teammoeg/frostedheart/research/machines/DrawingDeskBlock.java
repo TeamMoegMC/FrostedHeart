@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchLevel;
+import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchScreen;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
@@ -177,8 +178,8 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
             }
         }
         //todo: actually add some server-side functions in TE to provide the level and in progress research
-        ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t2"));
-        screen.openGui();
+        //ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t2"));
+        new DrawDeskScreen().openGui();
         return ActionResultType.SUCCESS;
     }
 

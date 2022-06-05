@@ -33,9 +33,7 @@ public abstract class TechTextButton extends TechButton {
 		return icon.getIngredient();
 	}
 
-	public boolean hasIcon() {
-		return !icon.isEmpty();
-	}
+
 
 	@Override
 	public void addMouseOverText(TooltipList list) {
