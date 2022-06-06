@@ -67,6 +67,9 @@ import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
+    /**
+	 * @param event  
+	 */
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
@@ -100,11 +103,16 @@ public class ClientRegistryEvents {
 
     public static <C extends Container, S extends Screen & IHasContainer<C>> void
     registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
-        ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
+        @SuppressWarnings("unchecked")
+		ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
         ScreenManager.registerFactory(type, factory);
     }
 
-    @SubscribeEvent
+    /**
+	 * @param event  
+	 */
+    @SuppressWarnings("resource")
+	@SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
     }

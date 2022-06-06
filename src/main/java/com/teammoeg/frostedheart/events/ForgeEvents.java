@@ -42,16 +42,19 @@ import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
+import com.teammoeg.frostedheart.world.FHStructureFeatures;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -59,6 +62,7 @@ import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -87,7 +91,9 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.PlayerTickEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
@@ -99,6 +105,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -108,7 +115,7 @@ import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void onServerStarted(FMLServerStartedEvent event) {
 
 	}
@@ -116,7 +123,8 @@ public class ForgeEvents {
 	@SubscribeEvent
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
 
-	}
+	}*/
+	
 	/*@SubscribeEvent(priority=EventPriority.HIGHEST)
 	public static void onBlockGenerate(FluidPlaceBlockEvent event) {
 		if(event.getWorld().getEntitiesWithinAABB(Entity.class,new AxisAlignedBB(event.getLiquidPos())).size()>0) {
@@ -124,14 +132,39 @@ public class ForgeEvents {
 			event.setNewState(event.getOriginalState());
 		}
 	}*/
+	@SuppressWarnings("resource")
+	@SubscribeEvent
+	public static void onPlayerKill(LivingDeathEvent event) {
+		Entity ent=event.getSource().getTrueSource();
+		
+		if(ent==null||!(ent instanceof PlayerEntity)||ent instanceof FakePlayer)return;
+		if(ent.getEntityWorld().isRemote)return;
+		ServerPlayerEntity p=(ServerPlayerEntity) ent;
+		
+		ResearchListeners.kill(p,event.getEntityLiving());
+	}
+	@SubscribeEvent
+	public static void updateTemperature(PlayerTickEvent event) {
+		if (event.side == LogicalSide.SERVER && event.phase == Phase.START
+				&& event.player instanceof ServerPlayerEntity) {
+			ResearchListeners.tick((ServerPlayerEntity) event.player);
+		}
+	}
+	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void onIEMultiBlockForm(MultiblockFormEvent event) {
 		if (event.getPlayer() instanceof FakePlayer) {
 			event.setCanceled(true);
 			return;
 		}
-		if (!FHDataManager.testMultiBlock(event.getMultiblock().getUniqueName(), event.getPlayer()))
-			event.setCanceled(true);
+		if (ResearchListeners.multiblock.has(event.getMultiblock()))
+			if(event.getPlayer().getEntityWorld().isRemote) {
+				if(!ClientResearchDataAPI.getData().building.has(event.getMultiblock()))
+					event.setCanceled(true);
+			}else {
+				if(!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock()))
+					event.setCanceled(true);
+			}
 	}
 
 	@SubscribeEvent
@@ -263,6 +296,7 @@ public class ForgeEvents {
 		event.addListener(new FHRecipeCachingReloadListener(dataPackRegistries));
 	}
 
+	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
 		if (!event.getObject().isRemote) {
@@ -293,10 +327,10 @@ public class ForgeEvents {
         if (event.getName() != null) {
             if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
                 if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH) {
-                    for (ConfiguredFeature feature : FHFeatures.FH_DISK)
+                    for (ConfiguredFeature<?,?> feature : FHFeatures.FH_DISK)
                         event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
                 }
-                for (ConfiguredFeature feature : FHFeatures.FH_ORES)
+                for (ConfiguredFeature<?,?> feature : FHFeatures.FH_ORES)
                     event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
             }
 			if(event.getCategory()==Biome.Category.EXTREME_HILLS||event.getCategory()==Biome.Category.TAIGA) {
@@ -525,6 +559,7 @@ public class ForgeEvents {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void CreateSpawnPosition(WorldEvent.CreateSpawnPosition event) {
 		if (event.getWorld() instanceof ServerWorld) {
@@ -537,6 +572,7 @@ public class ForgeEvents {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void removeVanillaVillages(WorldEvent.Load event) {
 		if (event.getWorld() instanceof ServerWorld) {

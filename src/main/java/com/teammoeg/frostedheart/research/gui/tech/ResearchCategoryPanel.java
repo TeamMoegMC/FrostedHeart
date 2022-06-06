@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.gui.TechIcons;

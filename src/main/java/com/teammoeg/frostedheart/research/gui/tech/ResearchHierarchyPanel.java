@@ -5,14 +5,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.ThickLine;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -34,12 +32,12 @@ public class ResearchHierarchyPanel extends Panel {
 		}
 
 		@Override
-		public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
+		public void draw(MatrixStack matrixStack, int x, int y) {
 			if (doShow())
 				color = TechIcons.text;
 			else
 				color = Color4I.rgb(0xADA691);
-			super.draw(matrixStack, x, y, w, h);
+			super.draw(matrixStack, x, y);
 		}
 	}
 
@@ -161,7 +159,7 @@ public class ResearchHierarchyPanel extends Panel {
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		// theme.drawPanelBackground(matrixStack, x, y, w, h);
 		for(ThickLine l:lines)
-			l.draw(matrixStack, x, y, w, h);
+			l.draw(matrixStack, x, y);
 	}
 
 	@Override

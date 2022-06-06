@@ -42,6 +42,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 			result = prime * result + ((key == null) ? 0 : key.hashCode());
 			return result;
 		}
+		@SuppressWarnings("rawtypes")
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj)

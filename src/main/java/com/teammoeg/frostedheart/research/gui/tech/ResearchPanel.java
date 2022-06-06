@@ -7,19 +7,15 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
-import com.teammoeg.frostedheart.research.ResearchLevel;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
 
 public abstract class ResearchPanel extends Panel {
 

@@ -8,7 +8,10 @@ import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
+import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ResearchListPanel extends Panel {

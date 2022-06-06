@@ -28,7 +28,7 @@ public class ThickLine {
 
 	public Color4I color = Color4I.BLACK;
 
-	public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
+	public void draw(MatrixStack matrixStack, int x, int y) {
 		FHGuiHelper.drawLine(matrixStack, color, x + this.x, y + this.y, x + this.x2, y + this.y2);
 
 		// super.draw(matrixStack, theme, x, y, w, h);

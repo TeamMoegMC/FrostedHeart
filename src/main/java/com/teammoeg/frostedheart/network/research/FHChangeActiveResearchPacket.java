@@ -21,10 +21,9 @@ package com.teammoeg.frostedheart.network.research;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.TeamResearchData;
-import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 // send when data update

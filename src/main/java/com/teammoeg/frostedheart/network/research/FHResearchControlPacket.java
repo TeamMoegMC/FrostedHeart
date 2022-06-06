@@ -7,7 +7,6 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.effects.Effect;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;

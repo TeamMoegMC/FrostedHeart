@@ -1,14 +1,14 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 
-public class ItemClue extends ListenerClue {
+public class ItemClue extends Clue {
 	boolean consume;
 	IngredientWithSize stack;
 
@@ -46,19 +46,10 @@ public class ItemClue extends ListenerClue {
 		buffer.writeBoolean(consume);
 	}
 
-	@Override
-	public void initListener(Team t) {
-		ResearchListeners.itemClues.add(this, t);
-	}
 
-	@Override
-	public void removeListener(Team t) {
-		ResearchListeners.itemClues.remove(this, t);
-	}
-
-	public int test(Team t, ItemStack stack) {
+	public int test(TeamResearchData t, ItemStack stack) {
 		if (this.stack.test(stack)) {
-			this.setCompleted(t, true);
+			t.setClueTriggered(this, true);
 			if (consume)
 				return this.stack.getCount();
 		}
@@ -68,6 +59,23 @@ public class ItemClue extends ListenerClue {
 	@Override
 	public String getType() {
 		return "item";
+	}
+
+	@Override
+	public void init() {
+	}
+
+	@Override
+	public void start(Team team) {
+	}
+
+	@Override
+	public void end(Team team) {
+	}
+
+	@Override
+	public int getIntType() {
+		return 2;
 	}
 
 }

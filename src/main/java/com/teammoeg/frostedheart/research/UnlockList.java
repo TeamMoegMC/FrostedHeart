@@ -2,13 +2,16 @@ package com.teammoeg.frostedheart.research;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 
-public abstract class UnlockList<T> {
+public abstract class UnlockList<T> implements Iterable<T>{
 	Set<T> s=new HashSet<>();
 
 	public UnlockList() {
@@ -46,5 +49,17 @@ public abstract class UnlockList<T> {
 		for(INBT in:nbt) {
 			s.add(getObject(in.getString()));
 		}
+	}
+	@Override
+	public Iterator<T> iterator() {
+		return s.iterator();
+	}
+	@Override
+	public void forEach(Consumer<? super T> action) {
+		s.forEach(action);
+	}
+	@Override
+	public Spliterator<T> spliterator() {
+		return s.spliterator();
 	}
 }

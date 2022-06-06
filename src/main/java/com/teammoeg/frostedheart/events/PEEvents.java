@@ -20,6 +20,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 public class PEEvents {
+	@SuppressWarnings("resource")
 	public static void onRC(PlayerInteractEvent.RightClickItem rci) {
 		if (!rci.getWorld().isRemote&&rci.getItemStack().getItem().getRegistryName().getNamespace().equals("projecte")) {
 			rci.setCancellationResult(ActionResultType.SUCCESS);

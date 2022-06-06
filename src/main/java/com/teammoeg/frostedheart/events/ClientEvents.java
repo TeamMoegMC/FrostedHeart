@@ -38,6 +38,8 @@ import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.util.FHVersion;
@@ -84,7 +86,8 @@ import net.minecraftforge.fml.server.ServerLifecycleHooks;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
 
-    @SubscribeEvent
+    @SuppressWarnings({ "unchecked", "resource" })
+	@SubscribeEvent
     public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
         Screen gui = event.getGui();
         if (gui instanceof MainMenuScreen) {
@@ -125,7 +128,7 @@ public class ClientEvents {
 		                Style opencf=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
 		                //Though the capture is ? extends IGuiEventListener, I can't add new to it unless I cast it to List 
 		                if(needEvents)
-		                	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxc)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(opencf)));
+		                	((List<IGuiEventListener>)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxc)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(opencf)));
 		                if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode().equalsIgnoreCase("zh_cn")) {
 		                    l += 9;
 		                    Style openmcbbs=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.mcbbs.net/thread-1227167-1-1.html"));
@@ -134,7 +137,7 @@ public class ClientEvents {
 	                        .mergeStyle(TextFormatting.BOLD)
 	                        .mergeStyle(TextFormatting.DARK_RED);
 		                    if(needEvents)
-		                    	((List)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxm)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(openmcbbs)));
+		                    	((List<IGuiEventListener>)gui.getEventListeners()).add(new GuiClickedEvent(1,(int)(gui.height / 2.0F + l),font.getStringPropertyWidth(itxm)+1,(int)(gui.height / 2.0F + l+9),()->gui.handleComponentClicked(openmcbbs)));
 		                    font.drawTextWithShadow(matrixStack,itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
 		                }
 	                }
@@ -185,7 +188,11 @@ public class ClientEvents {
 	        }
     }
 
-    @SubscribeEvent
+    /**
+	 * @param event  
+	 */
+    @SuppressWarnings({ "resource", "unchecked", "rawtypes" })
+	@SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
         if (!HeaterVestRenderer.rendersAssigned) {
             for (Object render : ClientUtils.mc().getRenderManager().renderers.values())
@@ -199,7 +206,11 @@ public class ClientEvents {
 
 	@SubscribeEvent
 	public static void onResearchStatus(ClientResearchStatusEvent event) {
-		JEICompat.setRecipeStatus(event.getResearch().getId(),event.isCompletion());
+		for(Effect e:event.getResearch().getEffects())
+			if(e instanceof EffectCrafting) {
+				JEICompat.syncJEI();
+				return;
+			}
 	}
     @SubscribeEvent
     public static void addNormalItemTooltip(ItemTooltipEvent event) {

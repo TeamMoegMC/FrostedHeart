@@ -21,20 +21,15 @@ package com.teammoeg.frostedheart.data;
 import java.lang.reflect.InvocationTargetException;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -48,9 +43,7 @@ public class FHDataManager {
 	    Block(new DataType<>(BlockTempData.class,"temperature", "block")),
 	    Drink(new DataType<>(DrinkTempData.class,"temperature", "drink")),
 	    Cup  (new DataType<>(      CupData.class,"temperature", "cup"  )),
-	    World(new DataType<>(WorldTempData.class,"temperature", "world")),
-		ResearchRecipe(new DataType<>(ResearchRecipe.class,"research", "crafting")),
-		ResearchMultiblock(new DataType<>(ResearchRecipe.class,"research", "multiblock"));
+	    World(new DataType<>(WorldTempData.class,"temperature", "world"));
 
 	    static class DataType<T extends JsonDataHolder> {
 	        final Class<T> dataCls;
@@ -78,15 +71,20 @@ public class FHDataManager {
 	        }
 	    }
 
-	    public final DataType type;
+	    public final DataType<? extends JsonDataHolder> type;
 
-	    private FHDataType(DataType type) {
+	    private FHDataType(DataType<? extends JsonDataHolder> type) {
 	        this.type = type;
 	    }
 
 	}
     public static class ResourceMap<T extends JsonDataHolder> extends HashMap<ResourceLocation, T> {
-        public ResourceMap() {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1564047056157250446L;
+
+		public ResourceMap() {
             super();
         }
 
@@ -106,10 +104,10 @@ public class FHDataManager {
     private FHDataManager() {
     }
 
-    public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
+    @SuppressWarnings("rawtypes")
+	public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
     public static boolean synched = false;
     private static final JsonParser parser = new JsonParser();
-    public static Map<String,Set<ResourceLocation>> researchRecipe=new HashMap<>();
     static {
     	for(FHDataType dt:FHDataType.values()) {
     		ALL_DATA.put(dt,new ResourceMap<>());
@@ -118,9 +116,8 @@ public class FHDataManager {
 
     public static final void reset() {
         synched = false;
-        for (ResourceMap rm : ALL_DATA.values())
+        for (ResourceMap<?> rm : ALL_DATA.values())
             rm.clear();
-        researchRecipe.clear();
     }
 
     @SuppressWarnings("unchecked")
@@ -143,10 +140,10 @@ public class FHDataManager {
             //System.out.println("registering "+dt.type.location+": "+jdh.getId());
             ALL_DATA.get(de.type).put(jdh.getId(), jdh);
         }
-        doIndex();
     }
 
-    public static final DataEntry[] save() {
+    @SuppressWarnings("rawtypes")
+	public static final DataEntry[] save() {
         int tsize = 0;
         for (ResourceMap map : ALL_DATA.values()) {
             tsize += map.size();
@@ -159,12 +156,6 @@ public class FHDataManager {
             }
         }
         return entries;
-    }
-    public static void doIndex() {
-    	for(Entry<ResourceLocation, ResearchRecipe> rr:FHDataManager.<ResearchRecipe>get(FHDataType.ResearchRecipe).entrySet()) {
-    		if(rr.getValue().getResearch()!=null)
-    			researchRecipe.computeIfAbsent(rr.getValue().getResearch(),s->new HashSet<>()).add(rr.getKey());
-    	}
     }
     public static ITempAdjustFood getFood(ItemStack is) {
     	CupData data=FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
@@ -209,17 +200,5 @@ public class FHDataManager {
         if (dtd != null)
             return dtd.getHeat();
         return -0.3f;
-    }
-    public static boolean testRecipe(IRecipe<?> recipe,PlayerEntity pe) {
-        ResearchRecipe dtd = FHDataManager.<ResearchRecipe>get(FHDataType.ResearchRecipe).get(recipe.getId());
-        if (dtd != null)
-            return dtd.test(pe);
-        return true;
-    }
-    public static boolean testMultiBlock(ResourceLocation key,PlayerEntity pe) {
-        ResearchRecipe dtd = FHDataManager.<ResearchRecipe>get(FHDataType.ResearchMultiblock).get(key);
-        if (dtd != null)
-            return dtd.test(pe);
-        return true;
     }
 }

@@ -1,8 +1,8 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.CriterionProgress;
@@ -36,7 +36,7 @@ public class AdvancementClue extends TickListenerClue {
 	}
 
 	@Override
-	public boolean isCompleted(Team t, ServerPlayerEntity player) {
+	public boolean isCompleted(TeamResearchData t, ServerPlayerEntity player) {
 		Advancement a = player.server.getAdvancementManager().getAdvancement(advancement);
 		if (a == null) {
 			return false;
@@ -70,6 +70,11 @@ public class AdvancementClue extends TickListenerClue {
 		super.write(buffer);
 		buffer.writeResourceLocation(advancement);
 		buffer.writeString(criterion);
+	}
+
+	@Override
+	public int getIntType() {
+		return 1;
 	}
 
 }

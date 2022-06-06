@@ -4,17 +4,13 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.effects.Effect;
-import com.teammoeg.frostedheart.research.gui.FHIcons;
-import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
 

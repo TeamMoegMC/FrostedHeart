@@ -4,17 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.ItemClue;
-import com.teammoeg.frostedheart.research.clues.ListenerClue;
+import com.teammoeg.frostedheart.research.clues.KillClue;
 import com.teammoeg.frostedheart.research.clues.TickListenerClue;
+import com.teammoeg.frostedheart.util.LazyOptional;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.Block;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
@@ -149,19 +153,41 @@ public class ResearchListeners {
 	public static MultiblockUnlockList multiblock=new MultiblockUnlockList();
 	public static BlockUnlockList block=new BlockUnlockList();
 	private static ListenerList<TickListenerClue> tickClues=new ListenerList<>();
-	public static ListenerList<ItemClue> itemClues=new ListenerList<>();
+	private static ListenerList<KillClue> killClues=new ListenerList<>();
 	private ResearchListeners() {
 		
 	}
 	public static void tick(ServerPlayerEntity s) {
 		Team t=FTBTeamsAPI.getPlayerTeam(s);
-		tickClues.call(t,e->e.tick(t, s));
+		TeamResearchData trd=ResearchDataAPI.getData(s);
+		tickClues.call(t,e->e.tick(trd, s));
 	}
 	public static ListenerList<TickListenerClue> getTickClues() {
 		return tickClues;
 	}
 	public static void submitItem(ServerPlayerEntity s,ItemStack i) {
+		TeamResearchData trd=ResearchDataAPI.getData(s);
+		LazyOptional<Research> cur=trd.getCurrentResearch();
+		if(cur.isPresent())
+		for(Clue c:cur.orElse(null).getClues())
+			if(c instanceof ItemClue)
+				i.shrink(((ItemClue) c).test(trd, i));
+	}
+	@SuppressWarnings("resource")
+	public static boolean canUseRecipe(PlayerEntity s,IRecipe<?> r) {
+		if(recipe.has(r)) {
+			if(s.getEntityWorld().isRemote)
+				return ClientResearchDataAPI.getData().crafting.has(r);
+			return ResearchDataAPI.getData((ServerPlayerEntity) s).crafting.has(r);
+		}
+		return true;
+	}
+	public static ListenerList<KillClue> getKillClues() {
+		return killClues;
+	}
+	public static void kill(ServerPlayerEntity s,LivingEntity e) {
 		Team t=FTBTeamsAPI.getPlayerTeam(s);
-		itemClues.call(t,e->i.shrink(e.test(t, i)));
+		TeamResearchData trd=ResearchDataAPI.getData(s);
+		killClues.call(t,c->c.isCompleted(trd, e));
 	}
 }

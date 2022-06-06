@@ -9,24 +9,22 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.Clues;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
-import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -36,7 +34,6 @@ import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;

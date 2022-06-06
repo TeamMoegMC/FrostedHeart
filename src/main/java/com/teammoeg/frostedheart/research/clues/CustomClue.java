@@ -43,4 +43,9 @@ public class CustomClue extends Clue {
 	public void end(Team team) {
 	}
 
+	@Override
+	public int getIntType() {
+		return 0;
+	}
+
 }

@@ -1,21 +1,12 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.research.ResearchData;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.RTextField;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.text.StringTextComponent;
 
 public class ResearchDashboardPanel extends Panel {
 

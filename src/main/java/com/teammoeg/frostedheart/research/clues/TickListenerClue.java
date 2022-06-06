@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -35,13 +36,14 @@ public abstract class TickListenerClue extends ListenerClue {
 		ResearchListeners.getTickClues().remove(this, t);
 	}
 
-	public final void tick(Team t, ServerPlayerEntity player) {
-		if (!this.isCompleted(t))
+	public final void tick(TeamResearchData t, ServerPlayerEntity player) {
+		if (!t.isClueTriggered(this))
 			if (this.isCompleted(t, player)) {
-				this.setCompleted(t, true);
+				t.setClueTriggered(this, true);
+				
 			}
 	}
 
-	public abstract boolean isCompleted(Team t, ServerPlayerEntity player);
+	public abstract boolean isCompleted(TeamResearchData t, ServerPlayerEntity player);
 
 }

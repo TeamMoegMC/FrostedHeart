@@ -3,21 +3,19 @@ package com.teammoeg.frostedheart.research.gui.tech;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchData;
-import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechScrollBar;
-import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
-import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
+import dev.ftb.mods.ftblibrary.ui.TextField;
+import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
 
 public class ResearchDetailPanel extends Panel {
 	Research research;
@@ -70,7 +68,7 @@ public class ResearchDetailPanel extends Panel {
 		scrollInfo.setPosAndSize(285, 18, 8, 146);
 		add(scrollInfo);
 		// already committed items
-		ResearchData rd = research.getData();
+		//ResearchData rd = research.getData();
 		TextField status = new TextField(this);
 		status.setMaxWidth(135);
 		/*if (research.getData().isInProgress()) {

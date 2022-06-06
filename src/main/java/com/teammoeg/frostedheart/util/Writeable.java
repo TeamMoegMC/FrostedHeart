@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.util;
 
 import com.google.gson.JsonElement;
+
 import net.minecraft.network.PacketBuffer;
 /**
  * Not an typo, just to avoid name conflict

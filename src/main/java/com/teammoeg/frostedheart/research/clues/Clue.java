@@ -145,10 +145,11 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 
 	@Override
 	public void write(PacketBuffer buffer) {
+		buffer.writeVarInt(getIntType());
 		buffer.writeString(name);
 		buffer.writeString(desc);
 		buffer.writeString(hint);
 		buffer.writeFloat(contribution);
 	}
-
+	public abstract int getIntType() ;
 }

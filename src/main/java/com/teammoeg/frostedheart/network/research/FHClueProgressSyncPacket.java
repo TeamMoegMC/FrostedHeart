@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.network.research;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.clues.Clue;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;

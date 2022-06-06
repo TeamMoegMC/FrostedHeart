@@ -34,6 +34,7 @@ import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
 
 
+@SuppressWarnings("deprecation")
 public class FHDataReloadManager implements IResourceManagerReloadListener {
     public static final FHDataReloadManager INSTANCE = new FHDataReloadManager();
     private static final JsonParser parser = new JsonParser();
@@ -58,6 +59,5 @@ public class FHDataReloadManager implements IResourceManagerReloadListener {
                 }
             }
         }
-        FHDataManager.doIndex();
     }
 }

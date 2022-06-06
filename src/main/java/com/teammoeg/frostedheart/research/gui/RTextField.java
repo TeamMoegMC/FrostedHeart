@@ -104,12 +104,9 @@ public class RTextField extends Widget {
 	public void addMouseOverText(TooltipList list) {
 	}
 
-	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-	}
-
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		drawBackground(matrixStack, theme, x, y, w, h);
+		//drawBackground(matrixStack, theme, x, y, w, h);
 
 		if (formattedText.length != 0) {
 			boolean centered = Bits.getFlag(textFlags, 4);

@@ -20,6 +20,8 @@ package com.teammoeg.frostedheart.compat.jei;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,6 +51,7 @@ import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
 import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHNBT;
 
@@ -57,6 +60,7 @@ import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IRecipeManager;
+import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
@@ -68,6 +72,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
@@ -117,30 +122,26 @@ public class JEICompat implements IModPlugin {
 		man.hideRecipeCategory(VanillaRecipeCategoryUid.SMOKING);
 		man.hideRecipeCategory(VanillaRecipeCategoryUid.FURNACE);
 	}
+	static Map<IRecipeType<?>,ResourceLocation> types=new HashMap<>();
+	static {
+		types.put(IRecipeType.CRAFTING,VanillaRecipeCategoryUid.CRAFTING);
+	}
 	public static void syncJEI() {
 		if(man==null)return;
-		ClientWorld world = Minecraft.getInstance().world;
-        checkNotNull(world, "minecraft world");
-        RecipeManager recipeManager = world.getRecipeManager();
-		for(Entry<String, Set<ResourceLocation>> i:FHDataManager.researchRecipe.entrySet()) {
-			for(ResourceLocation rl:i.getValue())
-				if(!TeamResearchData.getClientInstance().getData(i.getKey()).isCompleted())
-					recipeManager.getRecipe(rl).ifPresent(r->man.hideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
-				else
-					recipeManager.getRecipe(rl).ifPresent(r->man.unhideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
+		Map<Class<?>,ResourceLocation> cates=new HashMap<>();
+		for(IRecipeCategory<?> rg:man.getRecipeCategories()) {
+			cates.put(rg.getRecipeClass(),rg.getUid());
 		}
-	}
-	public static void setRecipeStatus(String research,boolean show) {
-		if(man==null)return;
-		ClientWorld world = Minecraft.getInstance().world;
-        checkNotNull(world, "minecraft world");
-        RecipeManager recipeManager = world.getRecipeManager();
-        Set<ResourceLocation> srl=FHDataManager.researchRecipe.get(research);
-        if(srl!=null) {
-        	if(!show)for(ResourceLocation rl:srl)
-        			recipeManager.getRecipe(rl).ifPresent(r->man.hideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
-				else for(ResourceLocation rl:srl)
-					recipeManager.getRecipe(rl).ifPresent(r->man.unhideRecipe(r,VanillaRecipeCategoryUid.CRAFTING));
+		//ClientWorld world = Minecraft.getInstance().world;
+        //checkNotNull(world, "minecraft world");
+        //RecipeManager recipeManager = world.getRecipeManager();
+		
+		for(IRecipe<?> i:ResearchListeners.recipe) {
+			
+			if(!TeamResearchData.getClientInstance().crafting.has(i))
+				man.hideRecipe(i,types.computeIfAbsent(i.getType(),t->cates.getOrDefault(i.getClass(),VanillaRecipeCategoryUid.CRAFTING)));
+			else
+				man.unhideRecipe(i,types.computeIfAbsent(i.getType(),t->cates.getOrDefault(i.getClass(),VanillaRecipeCategoryUid.CRAFTING)));
 		}
 	}
 	@Override

@@ -2,9 +2,6 @@ package com.teammoeg.frostedheart.util;
 
 import java.util.Iterator;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonPrimitive;
-
 import net.minecraft.nbt.ByteArrayNBT;
 import net.minecraft.nbt.ByteNBT;
 import net.minecraft.nbt.CollectionNBT;
