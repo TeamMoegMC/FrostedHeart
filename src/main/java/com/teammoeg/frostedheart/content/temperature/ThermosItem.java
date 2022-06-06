@@ -200,7 +200,6 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
 
             @Nonnull
             @Override
-            @SuppressWarnings("deprecation")
             public ItemStack getContainer() {
                 return getFluid().isEmpty() ? new ItemStack(getEmptyContainer()) : this.container;
             }

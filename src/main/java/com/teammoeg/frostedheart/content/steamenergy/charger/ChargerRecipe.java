@@ -46,7 +46,7 @@ public class ChargerRecipe extends IESerializableRecipe {
     }
 
     @Override
-    protected IERecipeSerializer getIESerializer() {
+    protected IERecipeSerializer<ChargerRecipe> getIESerializer() {
         return SERIALIZER.get();
     }
 
