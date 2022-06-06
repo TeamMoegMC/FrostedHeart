@@ -22,7 +22,7 @@ public class ResearchData {
     boolean active;//is all items fulfilled?
     boolean finished;
     private Supplier<Research> rs;
-    int committed;//points committed
+    private long committed;//points committed
     final TeamResearchData parent;
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
@@ -32,19 +32,24 @@ public class ResearchData {
 	/**
 	 * @return Research points committed
 	 */
-	public int getCommitted() {
+	public long getCommitted() {
         return committed;
     }
 
-    public int getTotalCommitted() {
+    public long getTotalCommitted() {
         Research r = getResearch();
-        int currentProgress = committed;
+        long currentProgress = committed;
         for (Clue ac : r.getClues())
             if (ac.isCompleted(parent))
                 currentProgress += r.getRequiredPoints() * ac.getResearchContribution();
         return currentProgress;
     }
-
+    public long commitPoints(long pts) {
+    	if(!active)return pts;
+    	long tocommit=Math.min(pts,getResearch().getRequiredPoints());
+    	committed+=tocommit;
+    	return pts-tocommit;
+    }
     public void checkComplete() {
         if (finished) return;
         Research r=getResearch();
@@ -84,18 +89,18 @@ public class ResearchData {
         return rs.get();
     }
 	public void write(PacketBuffer pb) {
-		pb.writeVarInt(committed);
+		pb.writeVarLong(committed);
 		pb.writeBoolean(active);
 		pb.writeBoolean(finished);
 	}
 	public void read(PacketBuffer pb) {
-		committed=pb.readVarInt();
+		committed=pb.readVarLong();
 		active=pb.readBoolean();
 		finished=pb.readBoolean();
 	}
     public CompoundNBT serialize() {
         CompoundNBT cnbt = new CompoundNBT();
-        cnbt.putInt("committed", committed);
+        cnbt.putLong("committed", committed);
         cnbt.putBoolean("active", active);
         cnbt.putBoolean("finished", finished);
         //cnbt.putInt("research",getResearch().getRId());
@@ -104,7 +109,7 @@ public class ResearchData {
     }
 
     public void deserialize(CompoundNBT cn) {
-        committed = cn.getInt("committed");
+        committed = cn.getLong("committed");
         active = cn.getBoolean("active");
         finished = cn.getBoolean("finished");
         //rs=FHResearch.getResearch(cn.getInt("research"));
@@ -120,7 +125,7 @@ public class ResearchData {
     public boolean isInProgress() {
         LazyOptional<Research> r = parent.getCurrentResearch();
         if (r.isPresent()) {
-            return r.resolve().get().equals(this.rs);
+            return r.resolve().get().equals(getResearch());
         }
         return false;
     }
@@ -132,16 +137,6 @@ public class ResearchData {
         return active;
     }
 
-	/**
-	 * Add research points to current research
-	 * @param points to commit
-	 */
-	public void doResearch(int points) {
-        if (active) {
-            committed += points;
-            checkComplete();
-        }
-    }
 
     public boolean commitItem(ServerPlayerEntity player) {
         Research research = getResearch();
@@ -149,8 +144,10 @@ public class ResearchData {
         for(IngredientWithSize iws:research.getRequiredItems()) {
         	int count=iws.getCount();
         	for(ItemStack it:player.inventory.mainInventory) {
-        		count-=it.getCount();
-        		if(count<=0)break;
+        		if(iws.testIgnoringSize(it)) {
+	        		count-=it.getCount();
+	        		if(count<=0)break;
+        		}
         	}
         	if(count>0)return false;
         }
@@ -159,10 +156,12 @@ public class ResearchData {
         for(IngredientWithSize iws:research.getRequiredItems()) {
         	int count=iws.getCount();
         	for(ItemStack it:player.inventory.mainInventory) {
-        		int redcount=Math.min(count, it.getCount());
-        		ret.add(it.split(redcount));
-        		count-=redcount;
-        		if(count<=0)break;
+        		if(iws.testIgnoringSize(it)) {
+	        		int redcount=Math.min(count, it.getCount());
+	        		ret.add(it.split(redcount));
+	        		count-=redcount;
+	        		if(count<=0)break;
+        		}
         	}
         	if(count>0) {//wrong, revert.
         		for(ItemStack it:ret)

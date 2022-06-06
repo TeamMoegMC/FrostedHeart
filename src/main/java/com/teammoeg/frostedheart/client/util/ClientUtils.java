@@ -21,8 +21,12 @@ package com.teammoeg.frostedheart.client.util;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
+import com.teammoeg.frostedheart.research.gui.ResearchGui;
 
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.util.math.BlockPos;
@@ -40,7 +44,15 @@ public class ClientUtils {
     public static PlayerEntity getPlayer() {
         return Minecraft.getInstance().player;
     }
-
+    public static void refreshResearchGui() {
+    	Screen cur=mc().currentScreen;
+    	if(cur instanceof IScreenWrapper) {
+    		BaseScreen bs=((IScreenWrapper) cur).getGui();
+    		if(bs instanceof ResearchGui) {
+    			bs.refreshWidgets();
+    		}
+    	}
+    }
     public static void spawnSmokeParticles(World worldIn, BlockPos pos) {
         Random random = worldIn.getRandom();
         worldIn.addOptionalParticle(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, true, pos.getX() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), pos.getY() + random.nextDouble() + random.nextDouble(), pos.getZ() + 0.5D + random.nextDouble() / 3.0D * (random.nextBoolean() ? 1 : -1), 0.0D, 0.05D, 0.0D);

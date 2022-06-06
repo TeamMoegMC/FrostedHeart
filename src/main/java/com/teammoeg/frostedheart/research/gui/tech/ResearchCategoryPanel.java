@@ -37,8 +37,7 @@ public class ResearchCategoryPanel extends Panel {
 		@Override
 		public void onClicked(MouseButton mouseButton) {
 			categoryPanel.researchScreen.selectCategory(category);
-			if (FHResearch.getFirstResearchInCategory(category) != null)
-				categoryPanel.researchScreen.selectResearch(FHResearch.getFirstResearchInCategory(category));
+			
 		}
 
 		@Override

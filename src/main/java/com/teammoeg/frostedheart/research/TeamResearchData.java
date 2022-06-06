@@ -18,6 +18,8 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class TeamResearchData {
@@ -98,8 +100,6 @@ public class TeamResearchData {
 		return getData(FHResearch.researches.getByName(lid));
 	}
 	public LazyOptional<Research> getCurrentResearch() {
-		//TODO Remove after test
-		activeResearchId=Researches.GEN_T2.getRId();
 		if(activeResearchId==0)
 			return LazyOptional.empty();
 		return LazyOptional.of(()->FHResearch.getResearch(activeResearchId).get());
@@ -116,10 +116,13 @@ public class TeamResearchData {
 	}
 	public void clearCurrentResearch() {
 		activeResearchId=0;
+		FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket();
+		for (ServerPlayerEntity spe : team.get().getOnlineMembers())
+			PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
 	}
 	public void clearCurrentResearch(Research r) {
 		if(activeResearchId==r.getRId())
-			activeResearchId=0;
+			clearCurrentResearch();
 	}
 	public boolean canResearch() {
 		LazyOptional<Research> rs=getCurrentResearch();
@@ -163,12 +166,13 @@ public class TeamResearchData {
 			grantedEffects.set(id-1,e.grant(this,player));
 		}
 	}
-	public void doResearch(int points){
+	public long doResearch(long points){
 		LazyOptional<Research> rs=getCurrentResearch();
 		if(rs.isPresent()) {
 			Research r=rs.resolve().get();
-			this.getData(r).doResearch(points);
+			return this.getData(r).commitPoints(points);
 		}
+		return points;
 	}
 	public CompoundNBT serialize(boolean updatePacket) {
 		CompoundNBT nbt=new CompoundNBT();
@@ -217,5 +221,10 @@ public class TeamResearchData {
 	}
 	public static TeamResearchData getClientInstance() {
 		return INSTANCE;
+	}
+	@OnlyIn(Dist.CLIENT)
+	public static void setActiveResearch(int id) {
+		INSTANCE.activeResearchId=id;
+		
 	}
 }

@@ -246,7 +246,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	public int getCurrentPoints() {
+	public long getCurrentPoints() {
 		return getData().getTotalCommitted();
 	}
 

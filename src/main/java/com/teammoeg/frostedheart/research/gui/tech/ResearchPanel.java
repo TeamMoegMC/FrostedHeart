@@ -67,6 +67,8 @@ public abstract class ResearchPanel extends Panel {
     public void selectCategory(@Nullable ResearchCategory category) {
         if (selectedCategory != category) {
             selectedCategory = category;
+            if (FHResearch.getFirstResearchInCategory(category) != null)
+				selectResearch(FHResearch.getFirstResearchInCategory(category));
             this.refreshWidgets();
         }
     }

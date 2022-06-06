@@ -50,8 +50,8 @@ public class FHResearchControlPacket {
 			case COMMIT_ITEM:
 				
 				ResearchData rd=trd.getData(r);
-				if(rd.commitItem(spe)) {
-					
+				if(rd.canResearch())return;
+				if(rd.commitItem(spe)) {	
 					trd.setCurrentResearch(r);
 				}
 				return;

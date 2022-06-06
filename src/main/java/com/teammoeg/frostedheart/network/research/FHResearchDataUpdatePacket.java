@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.network.research;
 
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
@@ -54,6 +55,7 @@ public class FHResearchDataUpdatePacket {
         	ResearchData datax=rs.getData();
         	boolean status=datax.isCompleted();
         	datax.deserialize(data);
+        	ClientUtils.refreshResearchGui();
         	if(status!=datax.isCompleted())
         		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()));
         });

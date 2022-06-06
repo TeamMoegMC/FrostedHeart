@@ -98,6 +98,8 @@
   "gui.frostedheart.research_time_left": "Time Remaining: %s Minutes",
   "gui.frostedheart.research_hierarchy": "Research Relationship",
   "gui.frostedheart.no_active_research":"No Research Selected!",
+  "gui.frostedheart.research.start":"Start Research",
+  "gui.frostedheart.research.stop":"Stop Research",
   "gui.frostedheart.update_recommended": "建议更新《冬季救援》： ",
 
   "gui.frostedheart.save_updated": "已经自动更新您的存档，旧的配置备份在",

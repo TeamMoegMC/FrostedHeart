@@ -73,14 +73,14 @@ public class ResearchDetailPanel extends Panel {
 		ResearchData rd = research.getData();
 		TextField status = new TextField(this);
 		status.setMaxWidth(135);
-		if (research.getData().isInProgress()) {
+		/*if (research.getData().isInProgress()) {
 			status.setText(GuiUtils.translateGui("research.in_progress").mergeStyle(TextFormatting.BOLD)
 					.mergeStyle(TextFormatting.BLUE));
 		} else if (rd.canResearch()) {
 			status.setText(GuiUtils.translateGui("research.can_research").mergeStyle(TextFormatting.BOLD)
 					.mergeStyle(TextFormatting.GREEN));
 
-		}
+		}*/
 		status.setPos(0, 6);
 		add(status);
 	}

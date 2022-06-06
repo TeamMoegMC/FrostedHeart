@@ -6,34 +6,28 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
+import com.teammoeg.frostedheart.network.research.FHResearchControlPacket.Operator;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.TeamResearchData;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.*;
 import com.teammoeg.frostedheart.research.gui.FramedPanel;
-import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechTextButton;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class ResearchInfoPanel extends Panel {
 
 	ResearchDetailPanel detailPanel;
-	List<Panel> panels = new ArrayList<>();
+	List<Widget> panels = new ArrayList<>();
 
 	public ResearchInfoPanel(ResearchDetailPanel panel) {
 		super(panel);
@@ -68,20 +62,7 @@ public class ResearchInfoPanel extends Panel {
 				}
 			}
 			ioffset += 23;
-
-			// commit items button
-			Button commitItems = new TechTextButton(fp, GuiUtils.translateGui("research.commit_material_and_start"),
-					Icon.EMPTY) {
-				@Override
-				public void onClicked(MouseButton mouseButton) {
-
-					refreshWidgets();
-				}
-			};
-
-			commitItems.setPos(0, ioffset);
-			ioffset += commitItems.height;
-			fp.add(commitItems);
+			
 			fp.setWidth(width);
 
 			fp.setHeight(ioffset);
@@ -90,7 +71,42 @@ public class ResearchInfoPanel extends Panel {
 		prl.setPos(0, 0);
 		if (!researchData.canResearch())
 			panels.add(prl);
+		if(!researchData.canResearch()){
+			// commit items button
+			Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.commit_material_and_start"),
+					Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					PacketHandler.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM,detailPanel.research));
+				}
+			};
+			panels.add(commitItems);
+			
+			add(commitItems);
+		}else if(researchData.isInProgress()) {
+			// commit items button
+			Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.stop"),
+					Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					PacketHandler.sendToServer(new FHResearchControlPacket(Operator.PAUSE,detailPanel.research));
+				}
+			};
+			panels.add(commitItems);
+			add(commitItems);
+		}else if(!researchData.isCompleted()) {
+			// commit items button
+			Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.start"),
+					Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					PacketHandler.sendToServer(new FHResearchControlPacket(Operator.START,detailPanel.research));
+				}
+			};
 
+			panels.add(commitItems);
+			add(commitItems);
+		}
 		add(prl);
 
 		FramedPanel ppl = new FramedPanel(this, fp -> {
@@ -188,7 +204,7 @@ public class ResearchInfoPanel extends Panel {
 	@Override
 	public void alignWidgets() {
 		int offset = 0;
-		for (Panel p : panels) {
+		for (Widget p : panels) {
 			p.setPos(3, offset);
 			offset += p.height + 2;
 		}
