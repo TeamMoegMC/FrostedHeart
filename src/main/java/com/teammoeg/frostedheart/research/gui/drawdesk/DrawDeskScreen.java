@@ -2,16 +2,19 @@ package com.teammoeg.frostedheart.research.gui.drawdesk;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.gui.ResearchGui;
+import com.teammoeg.frostedheart.research.gui.editor.EditDialog;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchPanel;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 
 public class DrawDeskScreen extends BaseScreen implements ResearchGui{
 	DrawDeskContainer cx;
 	DrawDeskPanel p;
 	ResearchPanel r;
+	EditDialog dialog;
 	public DrawDeskScreen(DrawDeskContainer cx) {
 		super();
 		this.cx = cx;
@@ -44,12 +47,25 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui{
 		cx.setEnabled(true);
 		this.refreshWidgets();
 	}
+	public void openDialog(EditDialog dialog) {
+		this.dialog=dialog;
+		r.setEnabled(false);
+		this.refreshWidgets();
+	}
+	public void closeDialog(boolean refresh) {
+		this.dialog=null;
+		r.setEnabled(true);
+		if(refresh)
+			this.refreshWidgets();
+	}
 	@Override
 	public void addWidgets() {
 		if(p!=null&&p.isEnabled())
 			add(p);
 		if(r!=null&&r.isEnabled())
 			add(r);
+		if(getDialog()!=null)
+			add(getDialog());
 	}
 
 	@Override
@@ -61,6 +77,9 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui{
 	}
 	@Override
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+	}
+	public EditDialog getDialog() {
+		return dialog;
 	}
 
 }

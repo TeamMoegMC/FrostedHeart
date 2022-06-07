@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
@@ -14,6 +14,9 @@ import com.teammoeg.frostedheart.util.SerializeUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 /**
  * Reward the research team item rewards
@@ -21,37 +24,22 @@ import net.minecraft.network.PacketBuffer;
 public class EffectItemReward extends Effect {
 
     List<ItemStack> rewards;
-    FHIcon iicons;
     public EffectItemReward(ItemStack... stacks) {
-    	super("@gui." + FHMain.MODID + ".effect.item_reward",new ArrayList<>());
+    	super();
         rewards = new ArrayList<>();
 
         for (ItemStack stack : stacks) {
             rewards.add(stack);
-            if(stack.getCount()==1)
-            	tooltip.add("@"+stack.getTranslationKey());
-            else
-            	tooltip.add("{"+stack.getTranslationKey()+"} x "+stack.getCount());
-        }
-        initIcons();
-    }
-    private void initIcons() {
-    	if (rewards.size() != 0) {
-        	iicons = FHIcons.getIcon(rewards);
-        } else {
-        	iicons = FHIcons.nop();
         }
     }
     public EffectItemReward(JsonObject jo) {
     	super(jo);
     	rewards=SerializeUtil.parseJsonElmList(jo.get("rewards"),SerializeUtil::fromJson);
-    	initIcons();
     }
     
     public EffectItemReward(PacketBuffer pb) {
 		super(pb);
 		rewards=SerializeUtil.readList(pb,PacketBuffer::readItemStack);
-		initIcons();
 	}
 	@Override
     public void init() {
@@ -65,8 +53,10 @@ public class EffectItemReward extends Effect {
     @Override
     public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
     	if(triggerPlayer==null)return false;
-    	for(ItemStack s:rewards)
+    	for(ItemStack s:rewards) {
     		FHUtils.giveItem(triggerPlayer,s.copy());
+    		
+    	}
     	return true;
     }
     //We dont confiscate players items, that is totally unnecessary
@@ -91,13 +81,29 @@ public class EffectItemReward extends Effect {
 		SerializeUtil.writeList2(buffer,rewards,PacketBuffer::writeItemStack);
 	}
 	@Override
-	public FHIcon getIcon() {
-		if(super.getIcon()!=FHIcons.nop())
-			return super.getIcon();
-		return iicons;
-	}
-	@Override
 	public int getIntID() {
 		return 3;
+	}
+	@Override
+	public FHIcon getDefaultIcon() {
+    	if (rewards.size() != 0) {
+        	return FHIcons.getStackIcons(rewards);
+        }
+		return FHIcons.nop();
+	}
+	@Override
+	public IFormattableTextComponent getDefaultName() {
+		return GuiUtils.translateGui("effect.item_reward");
+	}
+	@Override
+	public List<ITextComponent> getDefaultTooltip() {
+		List<ITextComponent> tooltip=new ArrayList<>();
+		  for (ItemStack stack : rewards) {
+	            if(stack.getCount()==1)
+	            	tooltip.add(stack.getDisplayName());
+	            else
+	            	tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(new StringTextComponent(" x "+stack.getCount())));
+	        }
+		return tooltip;
 	}
 }

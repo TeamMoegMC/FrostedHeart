@@ -6,11 +6,14 @@ import java.util.Set;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.research.gui.ThickLine;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -67,7 +70,8 @@ public class ResearchHierarchyPanel extends Panel {
 
 	@Override
 	public void addWidgets() {
-		if(researchScreen.selectedResearch==null)return;
+		if (researchScreen.selectedResearch == null)
+			return;
 		ResearchDetailButton button = new ResearchDetailButton(this, researchScreen.selectedResearch);
 		add(button);
 		button.setPos(70, 48);
@@ -102,17 +106,17 @@ public class ResearchHierarchyPanel extends Panel {
 			else
 				lmost = ButtonPos[1] + 12;
 			lu.setPoints(lmost, 42, rmost, 42);
-			
+
 		}
-		if(k>0) {
+		if (k > 0) {
 			ThickLine lux = new ResearchCombinatorLine(researchScreen.selectedResearch);
 			lines.add(lux);
-			lux.setPosAndDelta(ButtonPos[0] + 12,42,0,6);
+			lux.setPosAndDelta(ButtonPos[0] + 12, 42, 0, 6);
 		}
 		k = 0;
-		if (researchScreen.selectedResearch.isUnlocked()) {
-			
-			
+
+		if (FHResearch.editor || researchScreen.selectedResearch.isUnlocked()) {
+
 			Set<Research> children = researchScreen.selectedResearch.getChildren();
 			for (Research child : children) {
 				if (k >= 4)
@@ -120,10 +124,10 @@ public class ResearchHierarchyPanel extends Panel {
 				ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
 				childButton.setChildren(researchScreen.selectedResearch);
 				add(childButton);
-				childButton.setPos(ButtonPos[k],92);
+				childButton.setPos(ButtonPos[k], 92);
 				ThickLine l = new ResearchHierarchyLine(researchScreen.selectedResearch);
 				lines.add(l);
-				l.setPosAndDelta(ButtonPos[k] + 12,90,0,24);
+				l.setPosAndDelta(ButtonPos[k] + 12, 90, 0, 24);
 				k++;
 			}
 			if (k > 1) {
@@ -141,13 +145,45 @@ public class ResearchHierarchyPanel extends Panel {
 					lmost = ButtonPos[3] + 12;
 				else
 					lmost = ButtonPos[1] + 12;
-				lu.setPoints(lmost, 90, rmost,90);
+				lu.setPoints(lmost, 90, rmost, 90);
 			}
-			if(k>0) {
+			if (k > 0) {
 				ThickLine lux2 = new ResearchHierarchyLine(researchScreen.selectedResearch);
 				lines.add(lux2);
-				lux2.setPosAndDelta(ButtonPos[0] + 12,66,0,24);
+				lux2.setPosAndDelta(ButtonPos[0] + 12, 66, 0, 24);
 			}
+		}
+		if (FHResearch.editor) {
+			int offset=5;
+			Button par = new TechTextButton(this, GuiUtils.str("add parent"), Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					// TODO Add parent
+				}
+			};
+			par.setPos(offset,130);
+			add(par);
+			offset += par.width + 3;
+			Button chd = new TechTextButton(this, GuiUtils.str("add children"), Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					// TODO Add children
+				}
+			};
+			chd.setPos(offset,130);
+			add(chd);
+			offset += chd.width + 3;
+
+			Button create = new TechTextButton(this, GuiUtils.str("new"), Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					// TODO Add research
+				}
+			};
+			create.setPos(offset, 130);
+			add(create);
+			offset += create.width + 3;
+
 		}
 	}
 
@@ -159,7 +195,7 @@ public class ResearchHierarchyPanel extends Panel {
 	@Override
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		// theme.drawPanelBackground(matrixStack, x, y, w, h);
-		for(ThickLine l:lines)
+		for (ThickLine l : lines)
 			l.draw(matrixStack, x, y);
 	}
 
@@ -185,7 +221,7 @@ public class ResearchHierarchyPanel extends Panel {
 		@Override
 		public void onClicked(MouseButton mouseButton) {
 			this.researchScreen.detailframe.open(research);
-			//this.researchScreen.refreshWidgets();
+			// this.researchScreen.refreshWidgets();
 		}
 
 		@Override
@@ -199,11 +235,11 @@ public class ResearchHierarchyPanel extends Panel {
 			GuiHelper.setupDrawing();
 			TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
 			this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
-			if(research.isCompleted()) {
+			if (research.isCompleted()) {
 				matrixStack.push();
 				matrixStack.translate(0, 0, 300);
 				GuiHelper.setupDrawing();
-				TechIcons.FIN.draw(matrixStack, x+2, y+2, 32, 32);
+				TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
 				matrixStack.pop();
 			}
 		}
@@ -214,15 +250,18 @@ public class ResearchHierarchyPanel extends Panel {
 		ResearchPanel researchScreen;
 		Research research;
 		Research parent;
+
 		public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
 			super(panel, research.getName(), research.getIcon());
 			this.research = research;
 			this.researchScreen = panel.researchScreen;
 			setSize(24, 24);
 		}
+
 		public void setChildren(Research p) {
-			parent=p;
+			parent = p;
 		}
+
 		@Override
 		public void onClicked(MouseButton mouseButton) {
 			researchScreen.selectResearch(research);
@@ -231,7 +270,7 @@ public class ResearchHierarchyPanel extends Panel {
 		@Override
 		public void addMouseOverText(TooltipList list) {
 			list.add(research.getName().mergeStyle(TextFormatting.BOLD));
-			if ((parent==null&&!research.isUnlocked())||(parent!=null&&!parent.isUnlocked())) {
+			if ((parent == null && !research.isUnlocked()) || (parent != null && !parent.isUnlocked())) {
 				list.add(GuiUtils.translateTooltip("research_is_locked").mergeStyle(TextFormatting.RED));
 				for (Research parent : research.getParents()) {
 					if (!parent.isCompleted()) {
@@ -245,16 +284,17 @@ public class ResearchHierarchyPanel extends Panel {
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			GuiHelper.setupDrawing();
 			TechIcons.SLOT.draw(matrixStack, x, y, w, h);
-			if ((parent==null&&research.isUnlocked())||(parent!=null&&parent.isUnlocked())) {
+			if (FHResearch.editor || (parent == null && research.isUnlocked())
+					|| (parent != null && parent.isUnlocked())) {
 				this.drawIcon(matrixStack, theme, x + 4, y + 4, 16, 16);
-				if(research.isCompleted()) {
+				if (research.isCompleted()) {
 					matrixStack.push();
 					matrixStack.translate(0, 0, 300);
 					GuiHelper.setupDrawing();
-					TechIcons.FIN.draw(matrixStack, x+4, y+4,16,16);
+					TechIcons.FIN.draw(matrixStack, x + 4, y + 4, 16, 16);
 					matrixStack.pop();
 				}
-			}else
+			} else
 				TechIcons.Question.draw(matrixStack, x + 4, y + 4, 16, 16);
 		}
 	}

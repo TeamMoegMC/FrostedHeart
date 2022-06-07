@@ -38,14 +38,14 @@ public class ResearchListPanel extends Panel {
 		public void addWidgets() {
 	        int offset = 0;
 
-	        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory,false)) {
+	        for (Research r:FHResearch.getResearchesForRender(this.researchScreen.selectedCategory,FHResearch.editor)) {
 	            ResearchButton button = new ResearchButton(this, r);
 	            add(button);
 	            button.setPos(4,offset);
 	            offset += 18;
 	        }
 	        this.setHeight(offset+1);
-            researchScreen.researchListPanel.scroll.setMaxValue(offset+300);
+            researchScreen.researchListPanel.scroll.setMaxValue(offset+1);
 		}
 
 		@Override

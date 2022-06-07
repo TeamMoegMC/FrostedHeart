@@ -52,6 +52,7 @@ public class ClientUtils {
     			bs.refreshWidgets();
     		}
     	}
+    	mc().getLanguageManager();
     }
     public static void spawnSmokeParticles(World worldIn, BlockPos pos) {
         Random random = worldIn.getRandom();

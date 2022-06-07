@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
@@ -16,6 +17,8 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
@@ -24,18 +27,12 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class EffectUse extends Effect {
 
     List<Block> blocksToUse;
-    FHIcon iicons;
     public EffectUse(Block... blocks) {
-    	super("@gui." + FHMain.MODID + ".effect.use",new ArrayList<>());
+    	super();
         blocksToUse = new ArrayList<>();
         for (Block b : blocks) {
             blocksToUse.add(b);
-            tooltip.add("@"+b.getTranslationKey());
         }
-        initIcons();
-    }
-    private void initIcons() {
-    	iicons=FHIcons.getIcon(FHIcons.getIcon(blocksToUse.toArray(new Block[0])),FHIcons.getIcon(TechIcons.HAND));
     }
     public EffectUse(JsonObject jo) {
     	super(jo);
@@ -75,12 +72,6 @@ public class EffectUse extends Effect {
 		return jo;
 	}
 	@Override
-	public FHIcon getIcon() {
-		if(super.getIcon()!=FHIcons.nop())
-			return super.getIcon();
-		return iicons;
-	}
-	@Override
 	public void write(PacketBuffer buffer) {
 		super.write(buffer);
 		SerializeUtil.writeList(buffer, blocksToUse,(b,p)->p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS,b));
@@ -88,5 +79,22 @@ public class EffectUse extends Effect {
 	@Override
 	public int getIntID() {
 		return 5;
+	}
+	@Override
+	public FHIcon getDefaultIcon() {
+		return FHIcons.getIcon(FHIcons.getIcon(blocksToUse.toArray(new Block[0])),FHIcons.getIcon(TechIcons.HAND));
+	}
+	@Override
+	public IFormattableTextComponent getDefaultName() {
+		return GuiUtils.translateGui("effect.use");
+	}
+	@Override
+	public List<ITextComponent> getDefaultTooltip() {
+		List<ITextComponent> tooltip=new ArrayList<>();
+		for(Block b:blocksToUse) {
+			tooltip.add(b.getTranslatedName());
+		}
+		
+		return tooltip;
 	}
 }

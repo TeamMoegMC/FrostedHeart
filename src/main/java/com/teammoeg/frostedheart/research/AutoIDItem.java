@@ -7,7 +7,8 @@ public abstract class AutoIDItem extends FHRegisteredItem{
 		return AssignedID;
 	}
 	public void addID(String id,int index) {
-		AssignedID=id+"."+getType()+"."+index;
+		AssignedID=id+"."+getType()+"."+index+"_"+getNonce();
 	}
 	public abstract String getType();
+	public abstract String getNonce();
 }

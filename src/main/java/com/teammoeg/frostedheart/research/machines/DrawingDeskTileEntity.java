@@ -63,5 +63,13 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 	public ResearchGame getGame() {
 		return game;
 	}
+	public void initGame() {
+		game.init();
+	}
+	public void updateGame() {
+		if(game.isFinished()) {
+			
+		}
+	}
 
 }

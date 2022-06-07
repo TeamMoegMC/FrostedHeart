@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.research.clues;
 
+import java.util.UUID;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
@@ -27,7 +29,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	String name = "";
 	String desc = "";
 	String hint = "";
-
+	String nonce;
 	public float getResearchContribution() {
 		return contribution;
 	}
@@ -38,6 +40,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		this.name = name;
 		this.desc = desc;
 		this.hint = hint;
+		this.nonce=Long.toHexString(UUID.randomUUID().getMostSignificantBits());
 	}
 
 	public Clue(String name, float contribution) {
@@ -53,6 +56,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		if (jo.has("hint"))
 			this.hint = jo.get("hint").getAsString();
 		this.contribution = jo.get("value").getAsFloat();
+		this.nonce=jo.get("id").getAsString();
 
 	}
 
@@ -62,7 +66,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		this.desc = pb.readString();
 		this.hint = pb.readString();
 		this.contribution = pb.readFloat();
-
+		this.nonce=pb.readString();
 	}
 
 	public void setCompleted(Team team, boolean trig) {
@@ -133,6 +137,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	@Override
 	public JsonObject serialize() {
 		JsonObject jo = new JsonObject();
+		jo.addProperty("type",this.getId());
 		if (!name.isEmpty())
 			jo.addProperty("name", name);
 		if (!desc.isEmpty())
@@ -140,9 +145,10 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		if (!hint.isEmpty())
 			jo.addProperty("hint", hint);
 		jo.addProperty("value", contribution);
+		jo.addProperty("id", nonce);
 		return jo;
 	}
-
+	public abstract String getId();
 	@Override
 	public void write(PacketBuffer buffer) {
 		buffer.writeVarInt(getIntType());
@@ -150,6 +156,17 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		buffer.writeString(desc);
 		buffer.writeString(hint);
 		buffer.writeFloat(contribution);
+		buffer.writeString(nonce);
 	}
-	public abstract int getIntType() ;
+	public abstract int getIntType();
+
+	@Override
+	public final String getType() {
+		return "clue";
+	}
+
+	@Override
+	public String getNonce() {
+		return nonce;
+	}
 }

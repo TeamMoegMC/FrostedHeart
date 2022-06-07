@@ -40,7 +40,7 @@ public class KillClue extends ListenerClue {
 	}
 
 	@Override
-	public String getType() {
+	public String getId() {
 		return "kill";
 	}
 	

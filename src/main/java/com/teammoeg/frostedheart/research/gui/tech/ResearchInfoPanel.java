@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchControlPacket.Operator;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -64,14 +65,25 @@ public class ResearchInfoPanel extends Panel {
 				}
 			}
 			ioffset += 23;
-			
+			if(FHResearch.editor) {
+				Button create = new TechTextButton(fp, GuiUtils.str("add"),
+						Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						//TODO Edit ingredient
+					}
+				};
+				create.setPos(0, ioffset);
+				fp.add(create);
+				ioffset+=create.height+1;
+			}
 			fp.setWidth(width);
 
 			fp.setHeight(ioffset);
 		});
 		prl.setTitle(GuiUtils.translateGui("research.requirements"));
 		prl.setPos(0, 0);
-		if (!researchData.canResearch())
+		if (FHResearch.editor||!researchData.canResearch())
 			panels.add(prl);
 		if(!researchData.canResearch()){
 			// commit items button
@@ -155,6 +167,7 @@ public class ResearchInfoPanel extends Panel {
 				}
 				hasB = true;
 			}
+			
 			if (hasB)
 				offset += 24;
 			TeamResearchData data = TeamResearchData.getClientInstance();
@@ -165,12 +178,23 @@ public class ResearchInfoPanel extends Panel {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						PacketHandler.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
-						refreshWidgets();
 					}
 				};
 				claimRewards.setPos(0, offset);
 				fp.add(claimRewards);
 				offset += claimRewards.height + 1;
+			}
+			if(FHResearch.editor) {
+				Button create = new TechTextButton(fp, GuiUtils.str("new"),
+						Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						//TODO Edit Effects
+					}
+				};
+				create.setPos(0, offset);
+				fp.add(create);
+				offset+=create.height+1;
 			}
 			fp.setWidth(width);
 			fp.setHeight(offset);
@@ -191,6 +215,18 @@ public class ResearchInfoPanel extends Panel {
 				offset += cl.height + 1;
 
 			}
+			if(FHResearch.editor) {
+				Button create = new TechTextButton(fp, GuiUtils.str("new"),
+						Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						//TODO Edit clue
+					}
+				};
+				create.setPos(0, offset);
+				fp.add(create);
+				offset+=create.height+1;
+			}
 			fp.setWidth(width);
 			fp.setHeight(offset);
 		});
@@ -199,7 +235,7 @@ public class ResearchInfoPanel extends Panel {
 		pcl.setPos(0, 0);
 		add(pcl);
 		panels.add(pcl);
-		if (researchData.canResearch())
+		if ((!FHResearch.editor)&&researchData.canResearch())
 			panels.add(prl);
 	}
 

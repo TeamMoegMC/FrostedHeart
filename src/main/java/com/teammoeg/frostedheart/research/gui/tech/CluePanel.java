@@ -7,6 +7,8 @@ import com.teammoeg.frostedheart.research.gui.TechIcons;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
 
@@ -45,7 +47,18 @@ public class CluePanel extends Panel {
 		if(desc!=null)
 		add(desc);
 	}
+	@Override
+	public boolean mousePressed(MouseButton button) {
+		if (isMouseOver()) {
+			if (getWidgetType() != WidgetType.DISABLED) {
+				//TODO edit clue
+			}
 
+			return true;
+		}
+
+		return false;
+	}
 	@Override
 	public void alignWidgets() {
 	}

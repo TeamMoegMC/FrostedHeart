@@ -2,9 +2,11 @@ package com.teammoeg.frostedheart.research.effects;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
@@ -12,6 +14,9 @@ import com.teammoeg.frostedheart.research.gui.TechIcons;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 /**
  * Effect on numerical stats of the team's machines or abilities
@@ -22,18 +27,10 @@ public class EffectStats extends Effect {
     double val;
     boolean isPercentage=false;
     public EffectStats(String name,double add) {
-    	super("@gui." + FHMain.MODID + ".effect.stats",new ArrayList<>(),FHIcons.nop());
-    	tooltip.add("@gui." + FHMain.MODID + ".effect.stats."+name);
+    	super();
+    	
     	val=add;
-    	String vtext;
-    	if(isPercentage) {
-    		vtext=NumberFormat.getPercentInstance().format(val);
-    	}else
-    		vtext=NumberFormat.getInstance().format(val);
-    	if(val>0) {
-    		tooltip.add("+"+vtext);
-    	}else
-    		tooltip.add(vtext);
+    	this.name=name;
     	
     	
     }
@@ -78,13 +75,6 @@ public class EffectStats extends Effect {
 	}
 
 	@Override
-	public FHIcon getIcon() {
-		if(super.getIcon()==FHIcons.nop())
-			return addIcon;
-		return super.getIcon();
-	}
-
-	@Override
 	public JsonObject serialize() {
 		JsonObject jo=super.serialize();
 		jo.addProperty("name",name);
@@ -105,6 +95,32 @@ public class EffectStats extends Effect {
 	@Override
 	public int getIntID() {
 		return 4;
+	}
+
+	@Override
+	public FHIcon getDefaultIcon() {
+		return addIcon;
+	}
+
+	@Override
+	public IFormattableTextComponent getDefaultName() {
+		return GuiUtils.translateGui("effect.stats");
+	}
+
+	@Override
+	public List<ITextComponent> getDefaultTooltip() {
+		List<ITextComponent> tooltip=new ArrayList<>();
+		tooltip.add(GuiUtils.translateGui("effect.stats."+name));
+    	String vtext;
+    	if(isPercentage) {
+    		vtext=NumberFormat.getPercentInstance().format(val);
+    	}else
+    		vtext=NumberFormat.getInstance().format(val);
+    	if(val>0) {
+    		tooltip.add(new StringTextComponent("+"+vtext));
+    	}else
+    		tooltip.add(new StringTextComponent(vtext));
+		return tooltip;
 	}
 
 }

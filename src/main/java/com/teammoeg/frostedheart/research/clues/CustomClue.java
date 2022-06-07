@@ -27,7 +27,7 @@ public class CustomClue extends Clue {
 	}
 
 	@Override
-	public String getType() {
+	public String getId() {
 		return "custom";
 	}
 

@@ -57,7 +57,7 @@ public class ItemClue extends Clue {
 	}
 
 	@Override
-	public String getType() {
+	public String getId() {
 		return "item";
 	}
 

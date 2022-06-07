@@ -1,47 +1,46 @@
 package com.teammoeg.frostedheart.research;
-
+/*
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHBlocks;
 import com.teammoeg.frostedheart.FHContent.FHMultiblocks;
-import com.teammoeg.frostedheart.research.clues.CustomClue;
-import com.teammoeg.frostedheart.research.effects.EffectBuilding;
-import com.teammoeg.frostedheart.research.effects.EffectCrafting;
-import com.teammoeg.frostedheart.research.effects.EffectItemReward;
-import com.teammoeg.frostedheart.research.effects.EffectStats;
-import com.teammoeg.frostedheart.research.effects.EffectUse;
+import com.teammoeg.frostedheart.research.effects.*;
+import com.teammoeg.frostedheart.research.clues.*;
 
 import blusunrize.immersiveengineering.api.EnumMetals;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import blusunrize.immersiveengineering.common.items.IEItems;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemStack;*/
 
 /**
  * Store some constant research instances
  */
 public class Researches {
 
-	public static final CustomClue ROOT_CLUE = new CustomClue("rootclue", 1.0F);
 
-	public static final Research GEN_T1 = new Research("generator_t1", ResearchCategories.RESCUE,
-			FHContent.FHItems.energy_core);
-	public static final Research GEN_T2 = new Research("generator_t2", ResearchCategories.RESCUE,
-			FHMultiblocks.generator_t2);
-	public static final Research GEN_T3 = new Research("generator_t3", ResearchCategories.RESCUE,
-			FHContent.FHItems.energy_core);
-	public static final Research GEN_T4 = new Research("generator_t4", ResearchCategories.RESCUE,
-			FHContent.FHItems.energy_core);
-
-	public static final Research COAL_HAND_STOVE = new Research("coal_hand_stove", ResearchCategories.LIVING,
-			FHContent.FHItems.hand_stove);
-
-	public static final Research SNOW_BOOTS = new Research("snow_boots", ResearchCategories.EXPLORATION,
-			RankineItems.SNOWSHOES.get());
 
 	public static void init() {
+		FHResearch.prepareReload();
+		/*
+		CustomClue ROOT_CLUE = new CustomClue("rootclue", 1.0F);
+
+		Research GEN_T1 = new Research("generator_t1", ResearchCategories.RESCUE,
+				FHContent.FHItems.energy_core);
+		Research GEN_T2 = new Research("generator_t2", ResearchCategories.RESCUE,
+				FHMultiblocks.generator_t2);
+		Research GEN_T3 = new Research("generator_t3", ResearchCategories.RESCUE,
+				FHContent.FHItems.energy_core);
+		Research GEN_T4 = new Research("generator_t4", ResearchCategories.RESCUE,
+				FHContent.FHItems.energy_core);
+
+		Research COAL_HAND_STOVE = new Research("coal_hand_stove", ResearchCategories.LIVING,
+				FHContent.FHItems.hand_stove);
+
+		Research SNOW_BOOTS = new Research("snow_boots", ResearchCategories.EXPLORATION,
+				RankineItems.SNOWSHOES.get());
 		COAL_HAND_STOVE.attachRequiredItem(IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_core_spade)),
 				IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_geologists_hammer)),
 				IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_pro_pick)),
@@ -99,8 +98,10 @@ public class Researches {
 
 		FHResearch.researches.register(
 				new Research("charger", ResearchCategories.LIVING, FHBlocks.charger.asItem(), GEN_T2.getSupplier()));
-
+*/
+		FHResearch.loadAll();
 		FHResearch.finishReload();
+		//FHResearch.saveAll();
 	}
 
 }

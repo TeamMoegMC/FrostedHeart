@@ -52,7 +52,7 @@ public class AdvancementClue extends TickListenerClue {
 	}
 
 	@Override
-	public String getType() {
+	public String getId() {
 		return "advancement";
 	}
 

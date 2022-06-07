@@ -88,11 +88,12 @@ public class FHGameOperationPacket {
         		ResearchGame rg=((DrawingDeskTileEntity) tile).getGame();
         		boolean flag=true;
         		switch(op) {
-        		case 0:rg.init();break;
+        		case 0:((DrawingDeskTileEntity) tile).initGame();break;
         		case 1:flag=rg.tryCombine(pos1, null);break;
         		case 2:flag=rg.tryCombine(pos1, pos2);break;
         		}
         		if(flag) {
+        			((DrawingDeskTileEntity) tile).updateGame();
         			((DrawingDeskTileEntity) tile).markDirty();
         			((DrawingDeskTileEntity) tile).markContainingBlockForUpdate(null);
         		}

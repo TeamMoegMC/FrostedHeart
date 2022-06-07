@@ -1,17 +1,22 @@
 package com.teammoeg.frostedheart.research.effects;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,6 +27,9 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class EffectCrafting extends Effect{
@@ -29,20 +37,19 @@ public class EffectCrafting extends Effect{
 	ItemStack itemStack=null;
 	Item item=null;
     public EffectCrafting(ItemStack item) {
-    	super("@gui." + FHMain.MODID + ".effect.crafting",new ArrayList<>(),FHIcons.getIcon(FHIcons.getIcon(item),FHIcons.getIcon(Items.CRAFTING_TABLE)));
+    	super();
+    
     	this.itemStack=item;
     	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
     		if(r.getRecipeOutput().equals(item)) {
     			unlocks.add(r);
     		}
     	}
-    	tooltip.add("@"+item.getTranslationKey());
     }
     public EffectCrafting(IItemProvider item) {
-    	super("@gui." + FHMain.MODID + ".effect.crafting",new ArrayList<>(),FHIcons.getIcon(FHIcons.getIcon(item),FHIcons.getIcon(Items.CRAFTING_TABLE)));
+    	super();
     	this.item=item.asItem();
     	initItem();
-    	tooltip.add("@"+item.asItem().getTranslationKey());
     }
     private void initItem() {
     	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
@@ -56,11 +63,8 @@ public class EffectCrafting extends Effect{
     	Optional<? extends IRecipe<?>> r=ResearchDataManager.server.getRecipeManager().getRecipe(recipe);
     	
     	if(r.isPresent()) {
-    		ItemStack output=r.get().getRecipeOutput();
     		unlocks.add(r.get());
-    		tooltip.add("@"+output.getTranslationKey());
-    	}else
-    		tooltip.add("@gui." + FHMain.MODID + ".effect.recipe.error");
+    	}
     }
     public EffectCrafting(JsonObject jo) {
     	super(jo);
@@ -127,6 +131,53 @@ public class EffectCrafting extends Effect{
 	@Override
 	public int getIntID() {
 		return 2;
+	}
+	@Override
+	public FHIcon getDefaultIcon() {
+		if(item!=null)
+			return FHIcons.getIcon(FHIcons.getIcon(item),FHIcons.getIcon(Items.CRAFTING_TABLE));
+		else if(itemStack!=null)
+			return FHIcons.getIcon(FHIcons.getIcon(itemStack),FHIcons.getIcon(Items.CRAFTING_TABLE));
+		else {
+			Set<ItemStack> stacks=new HashSet<>();
+			for(IRecipe<?> r:unlocks) {
+				if(!r.getRecipeOutput().isEmpty()) {
+					stacks.add(r.getRecipeOutput());
+				}
+			}
+			if(!stacks.isEmpty())
+				return FHIcons.getIcon(FHIcons.getStackIcons(stacks),FHIcons.getIcon(Items.CRAFTING_TABLE));
+		}
+		return FHIcons.getIcon(FHIcons.getIcon(TechIcons.Question),FHIcons.getIcon(Items.CRAFTING_TABLE));
+	}
+	@Override
+	public IFormattableTextComponent getDefaultName() {
+		return GuiUtils.translateGui("effect.crafting");
+	}
+	@Override
+	public List<ITextComponent> getDefaultTooltip() {
+		List<ITextComponent> tooltip=new ArrayList<>();
+		
+		if(item!=null)
+			tooltip.add(new TranslationTextComponent(item.getTranslationKey()));
+		else if(itemStack!=null)
+			tooltip.add(itemStack.getDisplayName());
+		else {
+			Set<ItemStack> stacks=new HashSet<>();
+			for(IRecipe<?> r:unlocks) {
+				if(!r.getRecipeOutput().isEmpty()) {
+					stacks.add(r.getRecipeOutput());
+				}
+			}
+			if(stacks.isEmpty())
+				tooltip.add(GuiUtils.translateGui("effect.recipe.error"));
+			else
+				for(ItemStack is:stacks) {
+					tooltip.add(is.getDisplayName());
+				}
+		}
+		
+		return tooltip;
 	}
 
 }

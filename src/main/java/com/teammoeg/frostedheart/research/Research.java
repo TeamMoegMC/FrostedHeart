@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -68,10 +67,14 @@ public class Research extends FHRegisteredItem implements Writeable {
 		this.id = id;
 		if(jo.has("name"))
 			name=jo.get("name").getAsString();
-		desc=SerializeUtil.parseJsonElmList(jo.get("desc"),JsonElement::getAsString);
+		if(jo.has("desc"))
+			desc=SerializeUtil.parseJsonElmList(jo.get("desc"),JsonElement::getAsString);
+		else
+			desc=new ArrayList<>();
 		icon = FHIcons.getIcon(jo.get("icon"));
 		category = ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString()));
-		parents.addAll(
+		if(jo.has("parents"))
+			parents.addAll(
 				SerializeUtil.parseJsonElmList(jo.get("parents"), p -> FHResearch.researches.get(p.getAsString())));
 		clues.addAll(SerializeUtil.parseJsonList(jo.get("clues"), Clues::read));
 		requiredItems = SerializeUtil.parseJsonElmList(jo.get("ingredients"), IngredientWithSize::deserialize);
@@ -84,10 +87,12 @@ public class Research extends FHRegisteredItem implements Writeable {
 		JsonObject jo = new JsonObject();
 		if(name.length()>0&&!name.equals("@"))
 			jo.addProperty("name",name);
-		jo.add("desc",SerializeUtil.toJsonStringList(desc,e->e));
+		if(!desc.isEmpty())
+			jo.add("desc",SerializeUtil.toJsonStringList(desc,e->e));
 		jo.add("icon", icon.serialize());
 		jo.addProperty("category", category.getId().toString());
-		jo.add("parents", SerializeUtil.toJsonList(parents, p -> new JsonPrimitive(p.get().getId())));
+		if(!parents.isEmpty())
+		jo.add("parents", SerializeUtil.toJsonStringList(parents,FHRegistry::serializeSupplier));
 		jo.add("clues", SerializeUtil.toJsonList(clues,Clue::serialize));
 		jo.add("ingredients", SerializeUtil.toJsonList(requiredItems, IngredientWithSize::serialize));
 		jo.add("effects", SerializeUtil.toJsonList(effects, Writeable::serialize));
@@ -188,7 +193,9 @@ public class Research extends FHRegisteredItem implements Writeable {
 	public void doIndex() {
 		Supplier<Research> objthis = getSupplier();
 		for (Supplier<Research> r : this.parents) {
-			r.get().populateChild(objthis);
+			Research rx=r.get();
+			if(rx!=null)
+				rx.populateChild(objthis);
 		}
 		int i=0;
 		for(Effect e:effects) {
@@ -213,7 +220,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	}
 
 	public Set<Research> getParents() {
-		return parents.stream().map(r -> r.get()).collect(Collectors.toSet());
+		return parents.stream().filter(e->e!=null).map(r -> r.get()).collect(Collectors.toSet());
 	}
 
 	@SafeVarargs
@@ -275,7 +282,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 
 	@Override
 	public String getLId() {
-		return id.toString();
+		return id;
 	}
 
 	public boolean isCompleted(Team t) {

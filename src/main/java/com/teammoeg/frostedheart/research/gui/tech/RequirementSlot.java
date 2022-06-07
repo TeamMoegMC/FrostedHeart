@@ -7,6 +7,8 @@ import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
@@ -18,25 +20,25 @@ public class RequirementSlot extends Widget {
 		this.i=i;
 		this.setSize(16,16);
 	}
-	/*public boolean checkMouseOver(int mouseX, int mouseY) {
-		if (parent == null) {
-			return true;
-		} else if (!parent.isMouseOver()) {
-			return false;
-		}
 
-		int ax = getX();
-		int ay = getY();
-		return mouseX >= ax && mouseY >= ay+4 && mouseX < ax + width-8 && mouseY < ay + height-8;
-	}*/
-	
 	@Override
 	public void addMouseOverText(TooltipList list) {
 		ItemStack cur=i[(int) ((System.currentTimeMillis()/1000)%i.length)];
 		//list.add(cur.getDisplayName());
 		cur.getTooltip(null, ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
 	}
+	@Override
+	public boolean mousePressed(MouseButton button) {
+		if (isMouseOver()) {
+			if (getWidgetType() != WidgetType.DISABLED) {
+				//TODO edit ingredient
+			}
 
+			return true;
+		}
+
+		return false;
+	}
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 		ItemStack cur=i[(int) ((System.currentTimeMillis()/1000)%i.length)];

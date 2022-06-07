@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.network.research.FHEffectProgressSyncPacket;
+import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
@@ -137,17 +139,19 @@ public class TeamResearchData {
 		while(grantedEffects.size()<len)
 			grantedEffects.add(false);
 	}
-	public void grantEffect(int id) {
-		ensureEffect(id-1);
+	public void grantEffect(Effect e) {
+		int id=e.getRId();
+		ensureEffect(id);
 		if(!grantedEffects.get(id-1)) {
-			grantedEffects.set(id-1,FHResearch.effects.getById(id).grant(this, null));
+			grantedEffects.set(id-1,e.grant(this, null));
+			e.sendProgressPacket(team.get());
 		}
 	}
-	public void grantEffect(Effect e) {
-		int id=e.getRId()-1;
+	public void setGrant(Effect e,boolean flag) {
+		int id=e.getRId();
 		ensureEffect(id);
-		if(!grantedEffects.get(id)) {
-			grantedEffects.set(id,e.grant(this, null));
+		if(!grantedEffects.get(id-1)) {
+			grantedEffects.set(id-1,flag);
 		}
 	}
 	public boolean isEffectGranted(int id) {
@@ -160,10 +164,11 @@ public class TeamResearchData {
 		return isEffectGranted(e.getRId());
 	}
 	public void grantEffect(Effect e,ServerPlayerEntity player) {
-		int id=e.getRId()-1;
-		ensureEffect(id-1);
+		int id=e.getRId();
+		ensureEffect(id);
 		if(!grantedEffects.get(id-1)) {
 			grantedEffects.set(id-1,e.grant(this,player));
+			e.sendProgressPacket(team.get());
 		}
 	}
 	public long doResearch(long points){
@@ -182,6 +187,12 @@ public class TeamResearchData {
 			cl[++i]=(byte) (b==null?0:(b?1:0));
 		}
 		nbt.putByteArray("clues",cl);
+		byte[] cl2=new byte[grantedEffects.size()];
+		i=-1;
+		for(Boolean b:grantedEffects) {
+			cl2[++i]=(byte) (b==null?0:(b?1:0));
+		}
+		nbt.putByteArray("effects",cl2);
 		nbt.put("vars",variants);
 		ListNBT rs=new ListNBT();
 		rdata.stream().map(e->e!=null?e.serialize():new CompoundNBT()).forEach(e->rs.add(e));
@@ -203,9 +214,13 @@ public class TeamResearchData {
 		rdata.clear();
 		byte[] ba=data.getByteArray("clues");
 		ensureClue(ba.length);
-		variants=data.getCompound("vars");
 		for(int i=0;i<ba.length;i++)
 			clueComplete.set(i,ba[i]!=0);
+		byte[] bd=data.getByteArray("effects");
+		ensureEffect(bd.length);
+		for(int i=0;i<bd.length;i++)
+			grantedEffects.set(i,bd[i]!=0);
+		variants=data.getCompound("vars");
 		ListNBT li=data.getList("researches",10);
 		activeResearchId=data.getInt("active");
 		for(int i=0;i<li.size();i++) {

@@ -33,6 +33,7 @@ public class ResearchDetailPanel extends Panel {
 		this.setOnlyRenderWidgetsInside(true);
 		descPanel = new DescPanel(this);
 		infoPanel = new ResearchInfoPanel(this);
+		scrollInfo = new TechScrollBar(this, infoPanel);
 		dashboardPanel = new ResearchDashboardPanel(this);
 		researchScreen = panel;
 		
@@ -64,8 +65,9 @@ public class ResearchDetailPanel extends Panel {
 		};
 		closePanel.setPosAndSize(284, 7, 9, 8);
 		add(closePanel);
-		scrollInfo = new TechScrollBar(this, infoPanel);
+		
 		scrollInfo.setPosAndSize(285, 18, 8, 146);
+		//scrollInfo.setMaxValue(height);
 		add(scrollInfo);
 		// already committed items
 		//ResearchData rd = research.getData();

@@ -25,10 +25,10 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	private ArrayList<String> rnames=new ArrayList<>();//registry mappings
 	private Map<String,LazyOptional<T>> cache=new HashMap<>();//object cache
 	private final Function<String,LazyOptional<T>> cacheGen=(n)->LazyOptional.of(()->getByName(n));
-	private static final class RegisteredSupplier<T extends FHRegisteredItem,K> implements Supplier<T>{
-		private final K key;
-		private final Function<K,T> getter;
-		public RegisteredSupplier(K key, Function<K, T> getter) {
+	private static final class RegisteredSupplier<T extends FHRegisteredItem> implements Supplier<T>{
+		private final String key;
+		private final Function<String,T> getter;
+		public RegisteredSupplier(String key, Function<String, T> getter) {
 			this.key = key;
 			this.getter = getter;
 		}
@@ -207,5 +207,14 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 */
 	public int getSize() {
 		return rnames.size();
+	}
+	public static<T extends FHRegisteredItem> String serializeSupplier(Supplier<T> s) {
+		if(s instanceof RegisteredSupplier) {
+			return ((RegisteredSupplier<T>)s).key;
+		}
+		T r=s.get();
+		if(r!=null)
+			return r.getLId();
+		return "";
 	}
 }

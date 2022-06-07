@@ -19,6 +19,7 @@ public class ResearchGame {
 	Card[][] cards=new Card[9][9];
 	int addcur;
 	int addmax;
+	
 	boolean finished=false;
 	Consumer<ResearchGame> listener;
 	

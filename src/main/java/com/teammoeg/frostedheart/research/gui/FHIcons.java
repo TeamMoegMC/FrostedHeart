@@ -79,11 +79,13 @@ public class FHIcons {
 				item = elm.getAsString();
 
 			} else if (elm.isJsonObject()) {
-				JsonElement it = elm.getAsJsonObject().get("item");
-				if (it.isJsonPrimitive())
-					item = it.getAsString();
-				else
-					stack = SerializeUtil.fromJson(it);
+				if(elm.getAsJsonObject().has("item")) {
+					JsonElement it = elm.getAsJsonObject().get("item");
+					if (it.isJsonPrimitive())
+						item = it.getAsString();
+					else
+						stack = SerializeUtil.fromJson(it);
+				}else stack = SerializeUtil.fromJson(elm);
 			}
 			init();
 		}
@@ -124,7 +126,12 @@ public class FHIcons {
 		public JsonElement serialize() {
 			if (item != null)
 				return new JsonPrimitive(item);
-			return SerializeUtil.toJson(stack);
+			JsonElement je=SerializeUtil.toJson(stack);
+			if(je.isJsonPrimitive())return je;
+			JsonObject jo=new JsonObject();
+			jo.addProperty("type","item");
+			jo.add("item", je);
+			return jo;
 		}
 
 		@Override
@@ -161,7 +168,7 @@ public class FHIcons {
 			GuiHelper.setupDrawing();
 			large.draw(ms, x, y, w, h);
 			ms.push();
-			ms.translate(0, 0, 200);// let's get top most
+			ms.translate(0, 0, 110);// let's get top most
 			GuiHelper.setupDrawing();
 			small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
 			ms.pop();
@@ -447,8 +454,10 @@ public class FHIcons {
 	public static FHIcon getAnimatedIcon(FHIcon... icons) {
 		return new FHAnimatedIcon(icons);
 	}
-
-	public static FHIcon getIcon(List<ItemStack> rewards) {
+	/**
+	 * This does not preserve nbt on save
+	 * */
+	public static FHIcon getStackIcons(Collection<ItemStack> rewards) {
 		return new FHIngredientIcon(Ingredient.fromStacks(rewards.stream()));
 	}
 
@@ -461,9 +470,14 @@ public class FHIcons {
 		} else if (elm.isJsonArray()) {
 			return new FHAnimatedIcon(elm);
 		} else if (elm.isJsonObject()) {
-			Function<JsonElement, FHIcon> func = JsonIcon.get("type");
-			if (func != null)
-				return func.apply(elm);
+			JsonObject jo=elm.getAsJsonObject();
+			if(jo.has("type")) {
+				Function<JsonElement, FHIcon> func = JsonIcon.get(jo.get("type").getAsString());
+				if (func != null)
+					return func.apply(elm);
+			}else {
+				return new FHItemIcon(jo);
+			}
 		}
 		return FHNopIcon.INSTANCE;
 	}

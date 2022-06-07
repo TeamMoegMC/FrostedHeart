@@ -1,12 +1,18 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.gui.RTextField;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.gui.TechTextButton;
 
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ResearchDashboardPanel extends Panel {
 
@@ -36,7 +42,17 @@ public class ResearchDashboardPanel extends Panel {
     	add(tf);
     	tf.setMaxWidth(140).setMinWidth(140).setMaxLine(2).setColor(TechIcons.text).addFlags(4);
     	tf.setText(detailPanel.research.getName());
-    	
+    	if(FHResearch.editor) {
+			Button create = new TechTextButton(this, GuiUtils.str("edit"),
+					Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					//TODO Edit research
+				}
+			};
+			create.setPos(40,20);
+			add(create);
+		}
     }
 
     @Override
