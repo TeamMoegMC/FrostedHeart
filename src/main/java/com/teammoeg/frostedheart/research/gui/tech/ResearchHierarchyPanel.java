@@ -70,6 +70,38 @@ public class ResearchHierarchyPanel extends Panel {
 
 	@Override
 	public void addWidgets() {
+		if (FHResearch.editor) {
+			int offset=5;
+			Button par = new TechTextButton(this, GuiUtils.str("add parent"), Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					// TODO Add parent
+				}
+			};
+			par.setPos(offset,130);
+			add(par);
+			offset += par.width + 3;
+			Button chd = new TechTextButton(this, GuiUtils.str("add children"), Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					// TODO Add children
+				}
+			};
+			chd.setPos(offset,130);
+			add(chd);
+			offset += chd.width + 3;
+
+			Button create = new TechTextButton(this, GuiUtils.str("new"), Icon.EMPTY) {
+				@Override
+				public void onClicked(MouseButton mouseButton) {
+					// TODO Add research
+				}
+			};
+			create.setPos(offset, 130);
+			add(create);
+			offset += create.width + 3;
+
+		}
 		if (researchScreen.selectedResearch == null)
 			return;
 		ResearchDetailButton button = new ResearchDetailButton(this, researchScreen.selectedResearch);
@@ -153,38 +185,7 @@ public class ResearchHierarchyPanel extends Panel {
 				lux2.setPosAndDelta(ButtonPos[0] + 12, 66, 0, 24);
 			}
 		}
-		if (FHResearch.editor) {
-			int offset=5;
-			Button par = new TechTextButton(this, GuiUtils.str("add parent"), Icon.EMPTY) {
-				@Override
-				public void onClicked(MouseButton mouseButton) {
-					// TODO Add parent
-				}
-			};
-			par.setPos(offset,130);
-			add(par);
-			offset += par.width + 3;
-			Button chd = new TechTextButton(this, GuiUtils.str("add children"), Icon.EMPTY) {
-				@Override
-				public void onClicked(MouseButton mouseButton) {
-					// TODO Add children
-				}
-			};
-			chd.setPos(offset,130);
-			add(chd);
-			offset += chd.width + 3;
 
-			Button create = new TechTextButton(this, GuiUtils.str("new"), Icon.EMPTY) {
-				@Override
-				public void onClicked(MouseButton mouseButton) {
-					// TODO Add research
-				}
-			};
-			create.setPos(offset, 130);
-			add(create);
-			offset += create.width + 3;
-
-		}
 	}
 
 	@Override
