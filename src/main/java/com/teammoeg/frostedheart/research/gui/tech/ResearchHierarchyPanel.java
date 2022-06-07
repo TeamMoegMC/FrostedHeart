@@ -67,6 +67,7 @@ public class ResearchHierarchyPanel extends Panel {
 
 	@Override
 	public void addWidgets() {
+		if(researchScreen.selectedResearch==null)return;
 		ResearchDetailButton button = new ResearchDetailButton(this, researchScreen.selectedResearch);
 		add(button);
 		button.setPos(70, 48);
@@ -184,7 +185,7 @@ public class ResearchHierarchyPanel extends Panel {
 		@Override
 		public void onClicked(MouseButton mouseButton) {
 			this.researchScreen.detailframe.open(research);
-			this.researchScreen.refreshWidgets();
+			//this.researchScreen.refreshWidgets();
 		}
 
 		@Override

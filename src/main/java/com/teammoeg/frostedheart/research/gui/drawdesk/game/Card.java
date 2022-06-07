@@ -6,18 +6,12 @@ public class Card{
 	boolean show;
 	//boolean sel;
 	boolean unplacable;
-	int x;
-	int y;
 	public void clear() {
 		ct=CardType.NONE;
 		card=-1;
 		show=false;
 		//sel=false;
 		unplacable=false;
-	}
-	public void setPos(int x,int y) {
-		this.x=x;
-		this.y=y;
 	}
 	public void setType(CardType ct,int card) {
 		this.ct=ct;
@@ -51,8 +45,6 @@ public class Card{
 			state|=0x04;
 		state|=ct.ordinal()<<4;
 		state|=card<<8;
-		state|=x<<12;
-		state|=y<<16;
 		return state;
 	}
 	public void read(int state) {
@@ -61,8 +53,6 @@ public class Card{
 		unplacable=(state&0x04)>0;
 		ct=CardType.values()[(state>>4)&0xf];
 		card=(state>>8)&0xf;
-		x=(state>>12)&0xf;
-		y=(state>>16)&0xf;
 	}
 	public CardType getCt() {
 		return ct;
@@ -76,10 +66,5 @@ public class Card{
 	public boolean isUnplacable() {
 		return unplacable;
 	}
-	public int getX() {
-		return x;
-	}
-	public int getY() {
-		return y;
-	}
+
 }

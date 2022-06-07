@@ -79,7 +79,7 @@ public class ResearchListPanel extends Panel {
 			if(research.isCompleted()) {
 				 tf.setColor(Color4I.rgb(0x229000));
 			}else if(!research.isUnlocked()) {
-				tf.setColor(Color4I.rgb(0xa92b0d));
+				tf.setColor(TechIcons.text_red);
 			}else
 				tf.setColor(TechIcons.text);
 			tf.draw(matrixStack, theme, x+18, y+6,81,tf.height);

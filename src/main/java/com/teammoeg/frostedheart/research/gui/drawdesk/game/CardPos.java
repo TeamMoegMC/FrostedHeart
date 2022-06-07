@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.research.gui.drawdesk.game;
 
+import net.minecraft.network.PacketBuffer;
+
 public class CardPos{
 	final int x;
 	final int y;
@@ -17,6 +19,13 @@ public class CardPos{
 		if(i<cache.length&&i>=0&&j<cache[x].length&&j>=0)
 			return cache[i][j];
 		return new CardPos(x,y);
+	}
+	public static CardPos valueOf(PacketBuffer pb) {
+		return valueOf(pb.readVarInt(),pb.readVarInt());
+	}
+	public void write(PacketBuffer pb) {
+		pb.writeVarInt(x);
+		pb.writeVarInt(y);
 	}
 	private CardPos(int x, int y) {
 		super();

@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.research.gui.drawdesk;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.gui.ResearchGui;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchPanel;
+import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -16,6 +17,10 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui{
 		this.cx = cx;
 		p=new DrawDeskPanel(this);
 		p.setEnabled(true);
+		
+	}
+	public DrawingDeskTileEntity getTile() {
+		return cx.tile;
 	}
 	public void showTechTree() {
 		if(r==null) {

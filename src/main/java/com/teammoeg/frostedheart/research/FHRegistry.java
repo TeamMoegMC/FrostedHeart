@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -186,6 +187,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	public void deserialize(ListNBT load) {
 		rnames.clear();
 		ArrayList<T> temp=new ArrayList<>(items);
+		temp.removeIf(Objects::isNull);
 		load.stream().map(INBT::getString).forEach(e->rnames.add(e));
 		if(!temp.isEmpty()) {//reset registries
 			items.clear();

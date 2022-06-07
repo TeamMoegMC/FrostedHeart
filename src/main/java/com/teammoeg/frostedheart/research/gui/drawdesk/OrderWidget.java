@@ -3,16 +3,16 @@ package com.teammoeg.frostedheart.research.gui.drawdesk;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardStat;
-import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
+import com.teammoeg.frostedheart.research.gui.drawdesk.game.ClientResearchGame;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public class OrderWidget extends Widget {
-	ResearchGame rg;
+	ClientResearchGame rg;
 	int cardstate;
-	public OrderWidget(Panel p, ResearchGame rg, int cardstate) {
+	public OrderWidget(Panel p, ClientResearchGame rg, int cardstate) {
 		super(p);
 		this.rg = rg;
 		this.cardstate = cardstate;

@@ -1,16 +1,20 @@
 package com.teammoeg.frostedheart.research.machines;
 
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 
+import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 
-public class DrawingDeskTileEntity extends TileEntity implements IInteractionObjectIE,IIEInventory{
+public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteractionObjectIE,IIEInventory{
 	protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
+	ResearchGame game=new ResearchGame();
     public DrawingDeskTileEntity() {
         super(FHContent.FHTileTypes.DRAWING_DESK.get());
     }
@@ -30,12 +34,34 @@ public class DrawingDeskTileEntity extends TileEntity implements IInteractionObj
 		return inventory;
 	}
 	@Override
-	public int getSlotLimit(int arg0) {
-		return 3;
+	public int getSlotLimit(int slot) {
+		return 64;
 	}
 	@Override
-	public boolean isStackValid(int arg0, ItemStack arg1) {
+	public boolean isStackValid(int slot, ItemStack item) {
 		return true;
+	}
+	@Override
+	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+		if(nbt.contains("gamedata"))
+			game.load(nbt.getCompound("gamedata"));
+		if(!descPacket) {
+			
+			ItemStackHelper.loadAllItems(nbt, inventory);
+		}
+			
+		
+	}
+	@Override
+	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+		nbt.put("gamedata",game.serialize());
+		if(!descPacket) {
+			
+			ItemStackHelper.saveAllItems(nbt, inventory);
+		}
+	}
+	public ResearchGame getGame() {
+		return game;
 	}
 
 }

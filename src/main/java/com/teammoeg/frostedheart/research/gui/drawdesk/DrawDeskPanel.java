@@ -7,69 +7,40 @@ import com.teammoeg.frostedheart.network.research.FHResearchControlPacket.Operat
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechButton;
-import com.teammoeg.frostedheart.research.gui.TechIcons;
-import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardStat;
-import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardType;
-import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchProgressPanel;
+
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.input.Key;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class DrawDeskPanel extends Panel {
-	ResearchGame rg = new ResearchGame();
 	DrawDeskScreen dd;
+	MainGamePanel mgp;
 	public DrawDeskPanel(DrawDeskScreen p) {
 		super(p);
 		dd=p;
+		
 	}
-
+	public void openHelp() {
+		showHelp=true;
+		mgp.setEnabled(false);
+		
+	}
+	public void closeHelp() {
+		showHelp=false;
+		mgp.setEnabled(true);
+	}
+	boolean showHelp;
 	@Override
 	public void addWidgets() {
-
+		mgp=new MainGamePanel(this,dd);
+		mgp.setPosAndSize(165, 25,218,164);
+		add(mgp);
+		HelpPanel hp=new HelpPanel(this);
+		hp.setPosAndSize(140, 19, 243, 170);
+		add(hp);
 		
-		for (int i = 0; i < 9; i++)
-			for (int j = 0; j < 9; j++) {
-				CardButton cb = new CardButton(this, rg, i, j);
-				cb.setPosAndSize(165 + 17 * i, 28 + 17 * j, 17, 17);
-				add(cb);
-			}
-		int cntcs = 0;
-		int cntad = 0;
-		for (CardStat cs : rg.getStats().values()) {
-			if (cs.type == CardType.ADDING) {
-				OrderWidget ow = new OrderWidget(this, rg, cs.pack());
-				ow.setPosAndSize(353, 25 + 28 * cntad, 16, 28);
-				add(ow);
-				cntad++;
-			} else {
-				CardStatPanel csp = new CardStatPanel(this, rg, cs.pack());
-				// System.out.println(cs.toString());
-				csp.setPosAndSize(319 + (cntcs % 2) * 15, 26 + (cntcs / 2) * 28, 16, 28);
-				add(csp);
-				cntcs++;
-			}
-		}
-
-		TechButton help = new TechButton(this, TechIcons.Question) {
-
-			@Override
-			public void onClicked(MouseButton arg0) {
-
-			}
-		};
-		help.setPosAndSize(322, 141, 27, 16);
-		add(help);
-		TechButton reset = new TechButton(this, DrawDeskIcons.RESET) {
-
-			@Override
-			public void onClicked(MouseButton arg0) {
-				rg.init();
-				refreshWidgets();
-			}
-		};
-		reset.setPosAndSize(322, 161, 27, 16);
-		add(reset);
 		ResearchProgressPanel p = new ResearchProgressPanel(this);
 		p.setPosAndSize(14, 19, 111, 68);
 		add(p);
@@ -120,4 +91,14 @@ public class DrawDeskPanel extends Panel {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+	@Override
+	public boolean keyPressed(Key k) {
+		if(showHelp&&k.esc()) {
+			closeHelp();
+			return true;
+		}
+		return super.keyPressed(k);
+	}
+
+
 }

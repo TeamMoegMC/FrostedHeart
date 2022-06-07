@@ -81,11 +81,14 @@ public class FHResearch {
 	}
 
 	public static Research getFirstResearchInCategory(ResearchCategory cate) {
-		List<Research> rs = getResearchesForRender(cate, false);
-		if (rs.size() != 0) {
-			return rs.get(0);
+		List<Research> all= getAllResearch();
+		Research unl=null;
+		for(Research r:all) {
+			if(r.getCategory()!=cate)continue;
+			if(r.isCompleted()&&unl==null)unl=r;
+			else if(r.isUnlocked())return r;
 		}
-		return null;
+		return unl;
 	}
 
 

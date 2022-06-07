@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.network.research.FHGameOperationPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
@@ -88,6 +89,8 @@ public class PacketHandler {
 				FHResearchControlPacket::new, FHResearchControlPacket::handle);
 		CHANNEL.registerMessage(id++,FHChangeActiveResearchPacket.class, FHChangeActiveResearchPacket::encode,
 				FHChangeActiveResearchPacket::new, FHChangeActiveResearchPacket::handle);
+		CHANNEL.registerMessage(id++,FHGameOperationPacket.class, FHGameOperationPacket::encode,
+				FHGameOperationPacket::new, FHGameOperationPacket::handle);
 	}
 
 }

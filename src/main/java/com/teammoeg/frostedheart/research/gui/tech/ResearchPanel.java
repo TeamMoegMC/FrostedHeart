@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
-import javax.annotation.Nullable;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
@@ -60,19 +58,21 @@ public abstract class ResearchPanel extends Panel {
     }
 
 
-    public void selectCategory(@Nullable ResearchCategory category) {
+    public void selectCategory(ResearchCategory category) {
         if (selectedCategory != category) {
             selectedCategory = category;
-            if (FHResearch.getFirstResearchInCategory(category) != null)
-				selectResearch(FHResearch.getFirstResearchInCategory(category));
+            /*if (FHResearch.getFirstResearchInCategory(category) != null)
+				selectResearch(FHResearch.getFirstResearchInCategory(category));*/
             this.refreshWidgets();
         }
     }
 
-    public void selectResearch(@Nullable Research research) {
+    public void selectResearch(Research research) {
         if (selectedResearch != research) {
             selectedResearch = research;
-            this.refreshWidgets();
+            if(selectedResearch!=null)
+            	selectCategory(selectedResearch.getCategory());
+            researchHierarchyPanel.refreshWidgets();
         }else {
         	detailframe.open(research);
         }

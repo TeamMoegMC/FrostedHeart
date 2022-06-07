@@ -11,7 +11,7 @@ public class DrawDeskIcons {
 	public static final ImageIcon ALL = (ImageIcon) Icon
 			.getIcon(new ResourceLocation(FHMain.MODID, "textures/gui/draw_desk.png"));
 	public static final Icon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
-	public static final Icon HELP = ALL.withUV(0, 267, 302, 170, 512, 512);
+	public static final Icon HELP = ALL.withUV(0, 267,243, 170, 512, 512);
 	public static final Icon[] icons=new Icon[16];
 	public static final Icon[] icons_grey=new Icon[16];
 	public static final Icon SELECTED=ALL.withUV(16*16,203,16,16,512,512);

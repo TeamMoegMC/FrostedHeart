@@ -103,7 +103,7 @@ public class ResearchDetailPanel extends Panel {
 		this.refreshWidgets();
 		researchScreen.setModal(this);
 		;
-		researchScreen.refreshWidgets();
+		//researchScreen.refreshWidgets();
 
 	}
 
@@ -111,7 +111,7 @@ public class ResearchDetailPanel extends Panel {
 		this.research = null;
 		this.refreshWidgets();
 		researchScreen.closeModal(this);
-		researchScreen.refreshWidgets();
+		//researchScreen.refreshWidgets();
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.Bits;
@@ -19,7 +20,7 @@ import net.minecraft.util.text.StringTextComponent;
 
 public class RTextField extends Widget {
 
-	public ITextComponent component = StringTextComponent.EMPTY;
+	private ITextComponent component = StringTextComponent.EMPTY;
 	private ITextProperties[] formattedText = new ITextProperties[0];
 	public int textFlags = 0;
 	public int minWidth = 0;
@@ -73,14 +74,15 @@ public class RTextField extends Widget {
 	}
 
 	public RTextField setText(ITextComponent txt) {
+		component=txt;
 		Theme theme = getGui().getTheme();
 
 		if (maxLine > 0) {
 			List<ITextProperties> ls = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt),
-					maxWidth);
-			formattedText = ls.subList(0, Math.min(ls.size(), maxLine)).toArray(new ITextProperties[0]);
+					(int) (maxWidth/scale));
+			formattedText = ls.subList(0, Math.min(ls.size(), (int)(maxLine/scale))).toArray(new ITextProperties[0]);
 		} else {
-			formattedText = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), maxWidth)
+			formattedText = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), (int) (maxWidth/scale))
 					.toArray(new ITextProperties[0]);
 		}
 
@@ -102,6 +104,7 @@ public class RTextField extends Widget {
 
 	@Override
 	public void addMouseOverText(TooltipList list) {
+		list.add(component);
 	}
 
 	@Override

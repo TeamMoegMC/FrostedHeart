@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import net.minecraft.nbt.CompoundNBT;
 
@@ -19,13 +20,12 @@ public class ResearchGame {
 	int addcur;
 	int addmax;
 	boolean finished=false;
-	CardPos lastSelect=null;//transient
-	Map<Integer,CardStat> stats=new LinkedHashMap<>();//transient
+	Consumer<ResearchGame> listener;
+	
 	public ResearchGame() {
 		for(int i=0;i<9;i++)
 			for(int j=0;j<9;j++) {
 				cards[i][j]=new Card();
-				cards[i][j].setPos(i, j);
 			}
 	}
 	public void reset() {
@@ -35,44 +35,18 @@ public class ResearchGame {
 	private void resetState() {
 		addcur=1;
 		finished=false;
-		lastSelect=null;
+
 	}
 
-	public void select(CardPos pos) {
-		if(!isTouchable(pos))return;
-		if(!pos.equals(lastSelect)&&tryCombine(pos,lastSelect)) {
-			lastSelect=null;
-			return;
-		}
-		if(lastSelect==null) {
-			lastSelect=pos;
-		}else
-			lastSelect=null;
-			
-	}
-	public void calculateCardNum() {
-		stats.clear();
-		Map<Integer,CardStat> stat=new HashMap<>();
-		for(int i=0;i<9;i++)
-			for(int j=0;j<9;j++) {
-				Card c=get(i,j);
-				CardStat cs=stat.computeIfAbsent(c.pack(),k->new CardStat(c.ct,c.card));
-				if(c.show) {
-					cs.num++;
-				}
-				cs.tot++;
-			}
-		stat.values().stream().filter(e->e.tot>0).filter(c->(c.type==CardType.SIMPLE)||(c.type==CardType.PAIR&&c.card%2==0)||(c.type==CardType.ADDING&&c.card!=0)
-			).sorted(Comparator.comparingInt(CardStat::pack)).forEach(e->stats.put(e.pack(), e));
-		
-	}
+
+
 	public boolean tryCombine(CardPos c1,CardPos c2) {
 		if(c2==null) {
 			if(addcur==addmax&&isTouchable(c1)) {
 				Card c=get(c1);
 				if(c.ct==CardType.ADDING&&c.card==8) {
 					c.show=false;
-					this.calculateCardNum();
+					doWinPending();
 					return true;
 				}
 			}
@@ -85,7 +59,7 @@ public class ResearchGame {
 				}
 				cc1.show=false;
 				cc2.show=false;
-				this.calculateCardNum();
+				doWinPending();
 				return true;
 			}
 		}
@@ -128,7 +102,6 @@ public class ResearchGame {
 				attempt=0;
 			}
 		}
-		this.calculateCardNum();
 	}
 	public boolean isTouchable(CardPos c1) {
 		return isTouchable(c1.x,c1.y);
@@ -315,15 +288,15 @@ public class ResearchGame {
 			for(int j=0;j<9;j++) {
 				cards[i][j].read(arr[i+j*9]);
 			}
-		this.calculateCardNum();
+		//this.calculateCardNum();
+		this.onUpdate();
 	}
-	public Map<Integer, CardStat> getStats() {
-		return stats;
-	}
-	public CardPos getLastSelect() {
-		return lastSelect;
+	public void onUpdate() {
+		if(listener!=null)
+			listener.accept(this);
 	}
 	public boolean isFinished() {
 		return finished;
 	}
+
 }
