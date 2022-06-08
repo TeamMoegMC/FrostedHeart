@@ -186,7 +186,6 @@ public class FHMain {
     }
     private void serverStart(final FMLServerAboutToStartEvent event) {
     	new ResearchDataManager(event.getServer());
-    	ResearchCategories.init();
         Researches.init();
     	
         ResearchDataManager.INSTANCE.load();

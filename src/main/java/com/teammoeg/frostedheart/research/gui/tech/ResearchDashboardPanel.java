@@ -6,6 +6,8 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.gui.RTextField;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechTextButton;
+import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.research.gui.editor.ResearchEditorDialog;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -47,7 +49,7 @@ public class ResearchDashboardPanel extends Panel {
 					Icon.EMPTY) {
 				@Override
 				public void onClicked(MouseButton mouseButton) {
-					//TODO Edit research
+					EditUtils.editResearch(this, detailPanel.research);
 				}
 			};
 			create.setPos(40,20);

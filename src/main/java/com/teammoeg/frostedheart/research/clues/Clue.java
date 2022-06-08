@@ -159,7 +159,9 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		buffer.writeString(nonce);
 	}
 	public abstract int getIntType();
-
+	public void delete() {
+		ResearchDataManager.INSTANCE.getAllData().forEach(t->end(t.getTeam().orElse(null)));
+	}
 	@Override
 	public final String getType() {
 		return "clue";

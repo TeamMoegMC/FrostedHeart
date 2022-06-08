@@ -30,23 +30,28 @@ public class FHResearch {
 	public static FHRegistry<Clue> clues=new FHRegistry<Clue>();
 	public static FHRegistry<Effect> effects=new FHRegistry<Effect>();
 	private static LazyOptional<List<Research>> allResearches=LazyOptional.of(()->researches.all());
-	private static LazyOptional<List<Clue>> allClues=LazyOptional.of(()->clues.all());
 	public static boolean editor=false;
 	public static CompoundNBT save(CompoundNBT cnbt) {
 		cnbt.put("clues", clues.serialize());
 		cnbt.put("researches", researches.serialize());
 		return cnbt;
 	}
+
+	//register for after init
 	public static void register(Research t) {
 		researches.register(t);
+		clearCache();
 	}
 	//called before reload
 	public static void prepareReload() {
 		researches.prepareReload();
 		clues.prepareReload();
 		effects.prepareReload();
+		clearCache();
+	}
+	//clear cache when modification applied
+	public static void clearCache() {
 		allResearches=LazyOptional.of(()->researches.all());
-		allClues=LazyOptional.of(()->clues.all());
 	}
 	//called after reload
 	public static void finishReload() {
@@ -117,8 +122,25 @@ public class FHResearch {
 			
 		}
 	}
-	public static List<Clue> getAllClue() {
-		return allClues.resolve().get();
+	public static void save(Research r) {
+		File folder=FMLPaths.CONFIGDIR.get().toFile();
+		File rf=new File(folder,"fhresearches");
+		rf.mkdirs();
+		Gson gs=new GsonBuilder().setPrettyPrinting().create();
+		File out=new File(rf,r.getId()+".json");
+		try {
+			FileUtil.transfer(gs.toJson(r.serialize()),out);
+		} catch (IOException e) {
+		}
+	}
+	public static void delete(Research r) {
+		researches.remove(r);
+		clearCache();
+		File folder=FMLPaths.CONFIGDIR.get().toFile();
+		File rf=new File(folder,"fhresearches");
+		rf.mkdirs();
+		new File(rf,r.getId()+".json").delete();
+		
 	}
 	public static void loadAll() {
 		File folder=FMLPaths.CONFIGDIR.get().toFile();
@@ -131,7 +153,7 @@ public class FHResearch {
 				JsonElement je=jp.parse(jr);
 				if(je.isJsonObject()) {
 					String id=f.getName();
-					register(new Research(id.substring(0,id.length()-5),je.getAsJsonObject()));
+					researches.register(new Research(id.substring(0,id.length()-5),je.getAsJsonObject()));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

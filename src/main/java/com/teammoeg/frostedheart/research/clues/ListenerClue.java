@@ -57,7 +57,10 @@ public abstract class ListenerClue extends Clue {
 
 	@Override
 	public void end(Team team) {
-		removeListener(team);
+		if(alwaysOn)
+			removeListener(null);
+		else
+			removeListener(team);
 	}
 
 	public abstract void initListener(Team t);

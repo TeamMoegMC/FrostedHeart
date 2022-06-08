@@ -69,29 +69,24 @@ public class FHIcons {
 
 	}
 
-	private static class FHItemIcon extends FHIcon {
+	public static class FHItemIcon extends FHIcon {
 		Icon nested;
-		String item;
 		ItemStack stack;
 
 		public FHItemIcon(JsonElement elm) {
 			if (elm.isJsonPrimitive()) {
-				item = elm.getAsString();
+				stack=SerializeUtil.fromJson(elm);
 
 			} else if (elm.isJsonObject()) {
 				if(elm.getAsJsonObject().has("item")) {
 					JsonElement it = elm.getAsJsonObject().get("item");
-					if (it.isJsonPrimitive())
-						item = it.getAsString();
-					else
-						stack = SerializeUtil.fromJson(it);
+					stack = SerializeUtil.fromJson(it);
 				}else stack = SerializeUtil.fromJson(elm);
 			}
 			init();
 		}
 
 		public FHItemIcon(PacketBuffer buffer) {
-			item = SerializeUtil.readOptional(buffer, PacketBuffer::readString).orElse(null);
 			stack = SerializeUtil.readOptional(buffer, PacketBuffer::readItemStack).orElse(null);
 			init();
 		}
@@ -100,20 +95,12 @@ public class FHIcons {
 			this.stack = stack;
 			init();
 		}
-
-		public FHItemIcon(String item) {
-			this.item = item;
-			init();
-		}
-
 		public FHItemIcon(IItemProvider item2) {
 			this(new ItemStack(item2));
 		}
 
 		private void init() {
-			if (item != null)
-				nested = ItemIcon.getItemIcon(item);
-			else if (stack != null)
+			if (stack != null)
 				nested = ItemIcon.getItemIcon(stack);
 		}
 
@@ -124,8 +111,6 @@ public class FHIcons {
 
 		@Override
 		public JsonElement serialize() {
-			if (item != null)
-				return new JsonPrimitive(item);
 			JsonElement je=SerializeUtil.toJson(stack);
 			if(je.isJsonPrimitive())return je;
 			JsonObject jo=new JsonObject();
@@ -137,8 +122,11 @@ public class FHIcons {
 		@Override
 		public void write(PacketBuffer buffer) {
 			buffer.writeVarInt(1);
-			SerializeUtil.writeOptional2(buffer, item, PacketBuffer::writeString);
 			SerializeUtil.writeOptional2(buffer, stack, PacketBuffer::writeItemStack);
+		}
+
+		public ItemStack getStack() {
+			return stack;
 		}
 	}
 
@@ -423,9 +411,6 @@ public class FHIcons {
 		return new FHItemIcon(item);
 	}
 
-	public static FHIcon getIcon(String item) {
-		return new FHItemIcon(item);
-	}
 
 	public static FHIcon getIcon(FHIcon base, FHIcon small) {
 		return new FHCombinedIcon(base, small);

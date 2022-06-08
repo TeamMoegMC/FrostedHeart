@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.research.gui.tech;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -11,6 +12,9 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.research.gui.ThickLine;
+import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.research.gui.editor.ResearchEditorDialog;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -72,35 +76,59 @@ public class ResearchHierarchyPanel extends Panel {
 	public void addWidgets() {
 		if (FHResearch.editor) {
 			int offset=5;
-			Button par = new TechTextButton(this, GuiUtils.str("add parent"), Icon.EMPTY) {
+			Button par = new TechTextButton(this, GuiUtils.str("edit parents"), Icon.EMPTY) {
 				@Override
 				public void onClicked(MouseButton mouseButton) {
 					// TODO Add parent
+					Research r=researchScreen.selectedResearch;
+					EditListDialog.RESEARCH_LIST.open(this,"Edit parents",r.getParents(),s->{
+						r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
+						EditUtils.saveResearch(r);
+					});
 				}
 			};
 			par.setPos(offset,130);
 			add(par);
 			offset += par.width + 3;
-			Button chd = new TechTextButton(this, GuiUtils.str("add children"), Icon.EMPTY) {
+			Button chd = new TechTextButton(this, GuiUtils.str("edit children"), Icon.EMPTY) {
 				@Override
 				public void onClicked(MouseButton mouseButton) {
 					// TODO Add children
+					Research r=researchScreen.selectedResearch;
+					EditListDialog.RESEARCH_LIST.open(this,"Edit children",r.getChildren(),s->{
+						r.getChildren().forEach(e->e.removeParent(r));
+						s.forEach(e->{e.addParent(r.getSupplier());e.doIndex();});
+						EditUtils.saveResearch(r);
+					});
 				}
 			};
 			chd.setPos(offset,130);
 			add(chd);
 			offset += chd.width + 3;
-
-			Button create = new TechTextButton(this, GuiUtils.str("new"), Icon.EMPTY) {
-				@Override
-				public void onClicked(MouseButton mouseButton) {
-					// TODO Add research
-				}
-			};
-			create.setPos(offset, 130);
-			add(create);
-			offset += create.width + 3;
-
+			{
+				Button create = new TechTextButton(this, GuiUtils.str("new"), Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						// TODO Add research
+						new ResearchEditorDialog(this,null,researchScreen.selectedCategory).open();
+					}
+				};
+				create.setPos(offset, 130);
+				add(create);
+				offset += create.width + 3;
+			}
+			if(researchScreen.selectedResearch!=null){
+				Button create = new TechTextButton(this, GuiUtils.str("edit"),
+						Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						EditUtils.editResearch(this,researchScreen.selectedResearch);
+					}
+				};
+				create.setPos(offset,130);
+				add(create);
+				offset += create.width + 3;
+			}
 		}
 		if (researchScreen.selectedResearch == null)
 			return;

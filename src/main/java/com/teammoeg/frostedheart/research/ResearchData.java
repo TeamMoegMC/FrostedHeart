@@ -61,6 +61,7 @@ public class ResearchData {
             	parent.grantEffect(e);
             for(Clue c:r.getClues())
             	c.end(t);
+            parent.clearCurrentResearch();
         }
     }
 

@@ -128,18 +128,24 @@ public class ResearchListeners {
 		private static final long serialVersionUID = -5579427246923453321L;
 
 		public boolean add(T c,Team t) {
-			for(ListenerInfo<T> cl:this) {
-				if(cl.getListener()==c) 
-					return cl.add(t);
-			}
+			if(t!=null) {
+				for(ListenerInfo<T> cl:this) {
+					if(cl.getListener()==c) 
+						return cl.add(t);
+				}
+			}else
+				this.removeIf(cl->cl.getListener()==c);
 			return super.add(new ListenerInfo<T>(c,t));
 		}
 
 		public boolean remove(T c,Team t) {
-			for(ListenerInfo<T> cl:this) {
-				if(cl.getListener()==c) 
-					return cl.remove(t);
-			}
+			if(t!=null)
+				for(ListenerInfo<T> cl:this) {
+					if(cl.getListener()==c)
+						return cl.remove(t);
+				}
+			else
+				this.removeIf(cl->cl.getListener()==c);
 			return false;
 		}
 		public void call(Team t,Consumer<T> c) {

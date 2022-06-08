@@ -22,7 +22,8 @@ import net.minecraft.nbt.StringNBT;
  */
 public class FHRegistry<T extends FHRegisteredItem> {
 	private ArrayList<T> items=new ArrayList<>();//registered objects
-	private ArrayList<String> rnames=new ArrayList<>();//registry mappings
+	private Map<String,Integer> rnames=new HashMap<>();//registry mappings
+	private ArrayList<String> rnamesl=new ArrayList<>();//reverse mappings
 	private Map<String,LazyOptional<T>> cache=new HashMap<>();//object cache
 	private final Function<String,LazyOptional<T>> cacheGen=(n)->LazyOptional.of(()->getByName(n));
 	private static final class RegisteredSupplier<T extends FHRegisteredItem> implements Supplier<T>{
@@ -77,19 +78,32 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	public void register(T item) {
 		if(item.getRId()==0) {
 			String lid=item.getLId();
-			int index=rnames.indexOf(lid);
+			int index=rnames.getOrDefault(lid,-1);
 			ensure();
 			if(index==-1) {
-				item.setRId(rnames.size()+1);
+				item.setRId(rnamesl.size()+1);
+				
+				rnames.put(item.getLId(),rnamesl.size());
+				rnamesl.add(item.getLId());
 				items.add(item);
-				rnames.add(item.getLId());
+				
 			}else {
 				item.setRId(index+1);
 				items.set(index,item);
 			}
 		}
 	}
-	
+	public void remove(T item) {
+		if(item.getRId()!=0) {
+			String lid=item.getLId();
+			int index=rnames.getOrDefault(lid,-1);
+			ensure();
+			if(index!=-1&&index==item.getRId()){
+				item.setRId(0);
+				items.set(index,null);
+			}
+		}
+	}
 	/**
 	 * Prepare to reload.
 	 */
@@ -115,7 +129,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 * @return by name<br>
 	 */
 	public T getByName(String lid){
-		int index=rnames.indexOf(lid);
+		int index=rnames.getOrDefault(lid,-1);
 		if(index!=-1)
 			return items.get(index);
 		return null;
@@ -141,8 +155,8 @@ public class FHRegistry<T extends FHRegisteredItem> {
 		return new RegisteredSupplier<>(id,strLazyGetter);
 	}
 	public Supplier<T> get(int id) {
-		if(rnames.size()>=id) {
-			String name=rnames.get(id-1);
+		if(rnamesl.size()>=id) {
+			String name=rnamesl.get(id-1);
 			if(name!=null)
 				return get(name);
 		}
@@ -163,8 +177,8 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 * Ensure Capacity.
 	 */
 	public void ensure() {
-		items.ensureCapacity(rnames.size());
-		while(items.size()<rnames.size())
+		items.ensureCapacity(rnamesl.size());
+		while(items.size()<rnamesl.size())
 			items.add(null);
 	}
 	
@@ -175,7 +189,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 */
 	public ListNBT serialize() {
 		ListNBT cn=new ListNBT();
-		rnames.stream().map(StringNBT::valueOf).forEach(e->cn.add(e));
+		rnamesl.stream().map(StringNBT::valueOf).forEach(e->cn.add(e));
 		return cn;
 	}
 	
@@ -186,9 +200,13 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 */
 	public void deserialize(ListNBT load) {
 		rnames.clear();
+		rnamesl.clear();
 		ArrayList<T> temp=new ArrayList<>(items);
 		temp.removeIf(Objects::isNull);
-		load.stream().map(INBT::getString).forEach(e->rnames.add(e));
+		load.stream().map(INBT::getString).forEach(e->rnamesl.add(e));
+		for(int i=0;i<rnamesl.size();i++) {
+			rnames.put(rnamesl.get(i),i);
+		}
 		if(!temp.isEmpty()) {//reset registries
 			items.clear();
 			ensure();
@@ -198,6 +216,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 			}
 		}
 		
+		
 	}
 	
 	/**
@@ -206,7 +225,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 * @return size<br>
 	 */
 	public int getSize() {
-		return rnames.size();
+		return rnamesl.size();
 	}
 	public static<T extends FHRegisteredItem> String serializeSupplier(Supplier<T> s) {
 		if(s instanceof RegisteredSupplier) {

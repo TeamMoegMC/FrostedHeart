@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.AutoIDItem;
+import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
@@ -153,7 +154,9 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 	public final String getType() {
 		return "effects";
 	}
-
+	public void delete() {
+		ResearchDataManager.INSTANCE.getAllData().forEach(t->{revoke(t);t.setGrant(this, false);});
+	}
 	public boolean isGranted() {
 		return ClientResearchDataAPI.getData().isEffectGranted(this);
 	}

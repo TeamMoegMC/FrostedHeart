@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
+import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -38,20 +39,28 @@ public class FHResearchDataUpdatePacket {
         this.data = rd.serialize();
         this.id=rd.getResearch().getRId();
     }
-
+    public FHResearchDataUpdatePacket(int rid) {
+    	this.data=null;
+    	this.id=rid;
+    }
     public FHResearchDataUpdatePacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
+        data = SerializeUtil.readOptional(buffer, PacketBuffer::readCompoundTag).orElse(null);
         id=buffer.readVarInt();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
+        SerializeUtil.writeOptional2(buffer, data,PacketBuffer::writeCompoundTag);
         buffer.writeVarInt(id);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
         	Research rs=FHResearch.researches.getById(id);
+        	if(data==null) {
+        		rs.resetData();
+        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,false));
+        		return;
+        	}
         	ResearchData datax=rs.getData();
         	boolean status=datax.isCompleted();
         	datax.deserialize(data);

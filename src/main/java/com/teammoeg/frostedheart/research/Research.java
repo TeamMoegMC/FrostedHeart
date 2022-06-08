@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -19,11 +21,16 @@ import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.research.gui.FHIcons.FHItemIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import dev.ftb.mods.ftblibrary.config.ConfigGroup;
+import dev.ftb.mods.ftblibrary.config.NameMap;
+import dev.ftb.mods.ftblibrary.config.StringConfig;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -32,6 +39,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -43,7 +51,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  */
 public class Research extends FHRegisteredItem implements Writeable {
 	private String id;// id of this research
-	private FHIcon icon;// icon for this research in term of item
+	public FHIcon icon;// icon for this research in term of item
 	private ResearchCategory category;
 	private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
 	private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
@@ -55,14 +63,31 @@ public class Research extends FHRegisteredItem implements Writeable {
 	public String name="";
 	public List<String> desc;
 
-	private int points = 2000;// research point
+	private long points = 2000;// research point
 
 	@SafeVarargs
 	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
 		this(path, category, new ItemStack(Items.AIR), parents);
 		
 	}
-
+	/*public ConfigGroup getConfigGroup() {
+		ConfigGroup cg=new ConfigGroup("research");
+		cg.addString("id", id,e->id=e,id);
+		cg.addString("name", name,e->name=e,"");
+		cg.addList("desc",desc,new StringConfig(null),"");
+		
+		cg.addItemStack("icon",icon instanceof FHItemIcon?((FHItemIcon) icon).getStack():ItemStack.EMPTY,i->{if(icon instanceof FHItemIcon||!i.isEmpty())icon=FHIcons.getIcon(i);},new ItemStack(FHItems.energy_core),true,true);
+		cg.addEnum("category", category,c->category=c,NameMap.of(ResearchCategory.RESCUE,ResearchCategory.values()).icon(r->Icon.getIcon(r.getIcon())).id(r->r.getId().toString()).name(r->new StringTextComponent(r.name())).create());
+		cg.addLong("points", points,l->this.points=l,2000, 0,Long.MAX_VALUE);
+		
+		return cg;
+	}*/
+	public Research() {
+		this.id = "";
+		this.icon=FHIcons.nop();
+		desc=new ArrayList<>();
+		
+	}
 	public Research(String id, JsonObject jo) {
 		this.id = id;
 		if(jo.has("name"))
@@ -72,7 +97,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		else
 			desc=new ArrayList<>();
 		icon = FHIcons.getIcon(jo.get("icon"));
-		category = ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString()));
+		setCategory(ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString())));
 		if(jo.has("parents"))
 			parents.addAll(
 				SerializeUtil.parseJsonElmList(jo.get("parents"), p -> FHResearch.researches.get(p.getAsString())));
@@ -105,7 +130,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		name=data.readString();
 		desc=SerializeUtil.readList(data,PacketBuffer::readString);
 		icon = FHIcons.readIcon(data);
-		category = ResearchCategories.ALL.get(data.readResourceLocation());
+		setCategory(ResearchCategories.ALL.get(data.readResourceLocation()));
 
 		parents.addAll(SerializeUtil.readList(data, p -> FHResearch.researches.get(p.readVarInt())));
 		clues.addAll(SerializeUtil.readList(data, Clues::read));
@@ -126,7 +151,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		SerializeUtil.writeList(buffer, clues,Clue::write);
 		SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
 		SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
-		buffer.writeVarInt(points);
+		buffer.writeVarLong(points);
 	}
 
 	public Set<Clue> getClues() {
@@ -167,7 +192,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		this.id = id;
 		this.parents.addAll(Arrays.asList(parents));
 		this.icon = FHIcons.getIcon(icon);
-		this.category = category;
+		this.setCategory(category);
 		desc=new ArrayList<>();
 	}
 
@@ -216,11 +241,11 @@ public class Research extends FHRegisteredItem implements Writeable {
 	}
 
 	public Set<Research> getChildren() {
-		return children.stream().map(r -> r.get()).collect(Collectors.toSet());
+		return children.stream().map(r -> r.get()).filter(e->e!=null).collect(Collectors.toSet());
 	}
 
 	public Set<Research> getParents() {
-		return parents.stream().filter(e->e!=null).map(r -> r.get()).collect(Collectors.toSet());
+		return parents.stream().filter(e->e!=null).map(r -> r.get()).filter(e->e!=null).collect(Collectors.toSet());
 	}
 
 	@SafeVarargs
@@ -245,7 +270,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		return category;
 	}
 
-	public int getRequiredPoints() {
+	public long getRequiredPoints() {
 		return points;
 	}
 
@@ -267,7 +292,10 @@ public class Research extends FHRegisteredItem implements Writeable {
 	public ResearchData getData() {
 		return TeamResearchData.getClientInstance().getData(this);
 	}
-
+	@OnlyIn(Dist.CLIENT)
+	public void resetData() {
+		TeamResearchData.getClientInstance().resetData(this);
+	}
 	public void sendProgressPacket(Team team) {
 		sendProgressPacket(team,getData(team));
 	}
@@ -312,6 +340,39 @@ public class Research extends FHRegisteredItem implements Writeable {
 		}
 		return true;
 	}
-
-
+	public void setCategory(ResearchCategory category) {
+		this.category = category;
+	}
+	private void deleteInTree() {
+		this.getChildren().forEach(e->e.removeParent(this));
+		this.getParents().forEach(e->e.children.removeIf(e2->e2.get()==this));
+	}
+	public void delete() {
+		deleteInTree();
+		this.effects.forEach(Effect::delete);
+		this.clues.forEach(Clue::delete);
+		ResearchDataManager.INSTANCE.getAllData().forEach(e->e.resetData(this));
+		FHResearch.delete(this);
+	}
+	public void setParents(Collection<Supplier<Research>> collect) {
+		this.parents.clear();
+		this.parents.addAll(collect);
+	}
+	public void removeParent(Research parent) {
+		this.parents.removeIf(e->parent==e.get());
+	}
+	public void addParent(Supplier<Research> par) {
+		this.parents.add(par);
+	}
+	public void setNewId(String nid) {
+		if(id!=nid) {
+			ResearchDataManager.INSTANCE.getAllData().forEach(e->e.resetData(this));
+			deleteInTree();//clear all reference, hope this could work
+			this.setId(nid);
+			this.setRId(0);
+			FHResearch.register(this);
+			this.getChildren().forEach(e->e.addParent(this.getSupplier()));
+			this.doIndex();
+		}
+	}
 }

@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.research.gui.tech;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
@@ -35,7 +34,7 @@ public abstract class ResearchPanel extends Panel {
         detailframe=new ResearchDetailPanel(this);
         //TODO default select on progress research
         Research cr=ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
-        selectedCategory = cr==null?ResearchCategories.RESCUE:cr.getCategory();
+        selectedCategory = cr==null?ResearchCategory.RESCUE:cr.getCategory();
         selectedResearch = cr==null?FHResearch.getFirstResearchInCategory(selectedCategory):cr;
     }
 

@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.research;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +30,9 @@ public class ResearchDataManager {
 		TeamResearchData cn=data.computeIfAbsent(id,c->new TeamResearchData(()->TeamManager.INSTANCE.getTeamByID(id)));
 		return cn;
 
+	}
+	public Collection<TeamResearchData> getAllData(){
+		return data.values();
 	}
 	public void load() {
 		local=server.func_240776_a_(dataFolder);

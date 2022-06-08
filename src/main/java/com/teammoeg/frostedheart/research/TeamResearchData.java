@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.network.research.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
@@ -113,6 +114,7 @@ public class TeamResearchData {
 				FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
 				for (ServerPlayerEntity spe : team.get().getOnlineMembers())
 					PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+				r.getData().checkComplete();
 			}
 		}
 	}
@@ -241,5 +243,13 @@ public class TeamResearchData {
 	public static void setActiveResearch(int id) {
 		INSTANCE.activeResearchId=id;
 		
+	}
+	public void resetData(Research r) {
+		if(r.getRId()<=this.rdata.size()) {
+			this.rdata.set(r.getRId()-1, null);
+			FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(r.getRId());
+			for (ServerPlayerEntity spe : team.get().getOnlineMembers())
+				PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+		}
 	}
 }

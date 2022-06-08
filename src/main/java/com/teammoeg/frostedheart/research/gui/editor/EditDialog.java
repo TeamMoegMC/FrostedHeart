@@ -3,14 +3,16 @@ package com.teammoeg.frostedheart.research.gui.editor;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
 
 public abstract class EditDialog extends Panel {
 	EditDialog previous;
 	DrawDeskScreen sc;
-	public EditDialog(DrawDeskScreen panel) {
-		super(panel);
-		sc=panel;
+	public EditDialog(Widget panel) {
+		super(panel.getGui());
+		if(panel.getGui() instanceof DrawDeskScreen)
+			sc=(DrawDeskScreen) panel.getGui();
 	}
 	public void open() {
 		previous=sc.getDialog();
@@ -29,7 +31,7 @@ public abstract class EditDialog extends Panel {
 	@Override
 	public boolean keyPressed(Key key) {
 		if(key.esc()) {
-			
+			close();
 			//this.closeGui(true);
 			return true;
 		}
