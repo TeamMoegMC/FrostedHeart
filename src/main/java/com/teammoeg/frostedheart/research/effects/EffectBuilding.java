@@ -28,7 +28,6 @@ import net.minecraft.util.text.StringTextComponent;
 public class EffectBuilding extends Effect {
 
     IMultiblock multiblock;
-    Block ico;
     public EffectBuilding(IETemplateMultiblock s, Block b) {
     	super();
     	super.icon=FHIcons.getIcon(b);
@@ -36,7 +35,12 @@ public class EffectBuilding extends Effect {
     	multiblock = s;
         
     }
-    public EffectBuilding(JsonObject jo) {
+    
+    public EffectBuilding() {
+		super();
+	}
+
+	public EffectBuilding(JsonObject jo) {
     	super(jo);
     	multiblock = MultiblockHandler.getByUniqueName(new ResourceLocation(jo.get("multiblock").getAsString()));
     }
@@ -98,6 +102,11 @@ public class EffectBuilding extends Effect {
 		ArrayList<ITextComponent> ar=new ArrayList<>();
 		ar.add(new StringTextComponent(multiblock.getUniqueName().toString()));
 		return ar;
+	}
+
+	@Override
+	public String getBrief() {
+		return "Build "+multiblock.getUniqueName();
 	}
 
 }

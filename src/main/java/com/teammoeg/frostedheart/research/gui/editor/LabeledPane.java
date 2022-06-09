@@ -17,10 +17,9 @@ public class LabeledPane<T extends Widget> extends Panel {
 
 	@Override
 	public void addWidgets() {
-		
 		add(label);
+		if(obj!=null);
 		add(obj);
-		
 	}
 
 	@Override

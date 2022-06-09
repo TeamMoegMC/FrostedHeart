@@ -5,20 +5,38 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.research.gui.editor.Editor;
+import com.teammoeg.frostedheart.research.gui.editor.EditorSelector;
+import com.teammoeg.frostedheart.research.gui.editor.IngredientEditor;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
+import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
+import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
+import com.teammoeg.frostedheart.research.gui.editor.SingleEditDialog;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
@@ -27,7 +45,7 @@ import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 
 public class FHIcons {
-	public static abstract class FHIcon extends Icon implements Writeable {
+	public static abstract class FHIcon extends Icon implements Writeable,Cloneable {
 		public FHIcon() {
 			super();
 		}
@@ -69,7 +87,7 @@ public class FHIcons {
 
 	}
 
-	public static class FHItemIcon extends FHIcon {
+	private static class FHItemIcon extends FHIcon {
 		Icon nested;
 		ItemStack stack;
 
@@ -105,8 +123,17 @@ public class FHIcons {
 		}
 
 		@Override
-		public void draw(MatrixStack ms, int x, int y, int w, int h) {
-			nested.draw(ms, x, y, w, h);
+		public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
+			nested.draw(matrixStack, x, y, w, h);
+			if(stack!=null&&stack.getCount()>1) {
+				matrixStack.push();
+				matrixStack.translate(x+w-8,y+h-7, 199);
+				matrixStack.push();
+				matrixStack.scale(w/16f,h/16f,0);
+				ClientUtils.mc().fontRenderer.drawStringWithShadow(matrixStack,String.valueOf(stack.getCount()), 0,0,0xffffffff);
+				matrixStack.pop();
+				matrixStack.pop();
+			}
 		}
 
 		@Override
@@ -154,10 +181,12 @@ public class FHIcons {
 		@Override
 		public void draw(MatrixStack ms, int x, int y, int w, int h) {
 			GuiHelper.setupDrawing();
+			if(large!=null)
 			large.draw(ms, x, y, w, h);
 			ms.push();
 			ms.translate(0, 0, 110);// let's get top most
 			GuiHelper.setupDrawing();
+			if(small!=null)
 			small.draw(ms, x + w / 2, y + h / 2, w / 2, h / 2);
 			ms.pop();
 		}
@@ -227,7 +256,6 @@ public class FHIcons {
 
 	private static class FHIngredientIcon extends FHAnimatedIcon {
 		Ingredient igd;
-
 		public FHIngredientIcon(JsonElement elm) {
 			this(Ingredient.deserialize(elm.getAsJsonObject().get("ingredient")));
 		}
@@ -322,13 +350,18 @@ public class FHIcons {
 			this.w = w;
 			this.h = h;
 			this.tw = tw;
-			this.th = th;
+			this.th = th;	
+			init();
+		}
+		public FHTextureUVIcon() {}
+		public void init() {
 			nested = ImageIcon.getIcon(rl).withUV(x, y, w, h);
 		}
 
 		@Override
 		public void draw(MatrixStack ms, int x, int y, int w, int h) {
 			GuiHelper.setupDrawing();
+			if(nested!=null)
 			nested.draw(ms, x, y, w, h);
 		}
 
@@ -383,7 +416,234 @@ public class FHIcons {
 			FHNopIcon.INSTANCE.write(buffer);
 		}
 	}
+	private static class FHTextIcon extends FHIcon {
+		String text;
 
+		public FHTextIcon(String text) {
+			super();
+			this.text = text;
+		}
+		public FHTextIcon(JsonElement elm) {
+			this(elm.getAsJsonObject().get("text").getAsString());
+		}
+
+		public FHTextIcon(PacketBuffer buffer) {
+			this(buffer.readString());
+		}
+
+
+		@Override
+		public void draw(MatrixStack ms, int x, int y, int w, int h) {
+			
+			ms.push();
+			ms.translate(x, y,0);
+			ms.scale(w/16f, h/16f, 0);
+			
+			ms.push();
+			
+			ms.scale(2.286f,2.286f,0);//scale font height 7 to height 16
+			ClientUtils.mc().fontRenderer.drawStringWithShadow(ms, text,0,0,0xFFFFFFFF);
+			ms.pop();
+			ms.pop();
+			GuiHelper.setupDrawing();
+		}
+
+		@Override
+		public JsonElement serialize() {
+			JsonObject jo = new JsonObject();
+			jo.addProperty("type", "text");
+			jo.addProperty("text", text);
+			return jo;
+		}
+
+		@Override
+		public void write(PacketBuffer buffer) {
+			buffer.writeVarInt(7);
+			buffer.writeString(text);
+		}
+	}
+	public static abstract class IconEditor<T extends FHIcon> extends BaseEditDialog {
+		
+		public static final Editor<FHIcon> EDITOR=(p,l,v,c)->{
+			if(v==null||v instanceof FHNopIcon) {
+				new EditorSelector<>(p,l,c)
+				.addEditor("Empty", IconEditor.NOP_EDITOR)
+				.addEditor("ItemStack", IconEditor.ITEM_EDITOR)
+				.addEditor("Texture", IconEditor.TEXTURE_EDITOR)
+				.addEditor("Texture with UV", IconEditor.UV_EDITOR)
+				.addEditor("Text", IconEditor.TEXT_EDITOR)
+				.addEditor("Ingredient",IconEditor.INGREDIENT_EDITOR)
+				.addEditor("IngredientWithSize",IconEditor.INGREDIENT_SIZE_EDITOR)
+				.addEditor("Combined", IconEditor.COMBINED_EDITOR)
+				.addEditor("Animated", IconEditor.ANIMATED_EDITOR)
+				.open();
+			}else
+				new EditorSelector<>(p,l,(o,t)->true,v,c)
+				.addEditor("Edit", IconEditor.CHANGE_EDITOR)
+				.addEditor("New", IconEditor.NOP_CHANGE_EDITOR)
+				.open();
+		};
+		
+		public static final Editor<FHIcon> CHANGE_EDITOR=(p,l,v,c)->{
+			if(v instanceof FHItemIcon) {
+				IconEditor.ITEM_EDITOR.open(p,l,(FHItemIcon) v,e->c.accept(e));
+			}else if(v instanceof FHCombinedIcon) {
+				IconEditor.COMBINED_EDITOR.open(p,l,(FHCombinedIcon) v,e->c.accept(e));
+			}else if(v instanceof FHIngredientIcon) {
+				IconEditor.INGREDIENT_EDITOR.open(p,l,(FHIngredientIcon) v,e->c.accept(e));
+			}else if(v instanceof FHAnimatedIcon) {
+				IconEditor.ANIMATED_EDITOR.open(p,l,(FHAnimatedIcon) v,e->c.accept(e));
+			}else if(v instanceof FHTextureIcon) {
+				IconEditor.TEXTURE_EDITOR.open(p,l,(FHTextureIcon) v,e->c.accept(e));
+			}else if(v instanceof FHTextureUVIcon) {
+				IconEditor.UV_EDITOR.open(p,l,(FHTextureUVIcon) v,e->c.accept(v));
+			}else if(v instanceof FHTextIcon) {
+				IconEditor.TEXT_EDITOR.open(p,l,(FHTextIcon) v,e->c.accept(e));
+			}else 
+				IconEditor.NOP_CHANGE_EDITOR.open(p, l, v, c);
+		};
+		public static final Editor<FHItemIcon> ITEM_EDITOR=(p,l,v,c)->{
+			SelectItemStackDialog.EDITOR.open(p,l,v==null?null:v.stack,e->c.accept(new FHItemIcon(e)));
+		};
+		public static final Editor<FHTextureIcon> TEXTURE_EDITOR=(p,l,v,c)->{
+			SingleEditDialog.TEXT_EDITOR.open(p,l,v==null?null:v.rl.toString(),e->c.accept(new FHTextureIcon(new ResourceLocation(e))));
+		};
+		public static final Editor<FHIngredientIcon> INGREDIENT_EDITOR=(p,l,v,c)->{
+			IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p,l,v==null?null:v.igd,e->c.accept(new FHIngredientIcon(e)));
+		};
+		public static final Editor<FHIcon> INGREDIENT_SIZE_EDITOR=(p,l,v,c)->{
+			IngredientEditor.EDITOR.open(p,l,null,e->c.accept(FHIcons.getIcon(e)));
+		};
+		public static final Editor<FHTextIcon> TEXT_EDITOR=(p,l,v,c)->{
+			SingleEditDialog.TEXT_EDITOR.open(p,l,v==null?null:v.text,e->c.accept(new FHTextIcon(e)));
+		};
+		public static final Editor<FHIcon> NOP_EDITOR=(p,l,v,c)->{
+			c.accept(FHNopIcon.INSTANCE);
+			p.getGui().refreshWidgets();
+		};
+		public static final Editor<FHIcon> NOP_CHANGE_EDITOR=(p,l,v,c)->{
+			EDITOR.open(p, l, null, c);
+		};
+		public static final Editor<FHAnimatedIcon> ANIMATED_EDITOR=(p,l,v,c)->{
+			new EditListDialog<>(p,l,v==null?null:v.icons,null,EDITOR,e->e.getClass().getSimpleName(),e->e,e->c.accept(new FHAnimatedIcon(e.toArray(new FHIcon[0])))).open();
+		};
+		public static final Editor<FHCombinedIcon> COMBINED_EDITOR=(p,l,v,c)->{
+			new Combined(p,l,v,c).open();
+		};
+		public static final Editor<FHTextureUVIcon> UV_EDITOR=(p,l,v,c)->{
+			new UV(p,l,v,c).open();
+		};
+		
+		T v;
+		public IconEditor(Widget panel,T v) {
+			super(panel);
+			this.v=v;
+		}
+		
+		private static class Combined extends IconEditor<FHCombinedIcon>{
+			String label;
+			Consumer<FHCombinedIcon> i;
+			public Combined(Widget panel,String label,FHCombinedIcon v,Consumer<FHCombinedIcon> i) {
+				super(panel,v==null?new FHCombinedIcon(null,null):v);
+				this.label=label;
+				this.i=i;
+			}
+
+			@Override
+			public void onClose() {
+				i.accept(v);
+				
+			}
+
+			@Override
+			public void addWidgets() {
+				add(EditUtils.getTitle(this,label));
+				add(new OpenEditorButton<>(this,"Edit base icon",EDITOR,v.large,e->v.large=e));
+				add(new OpenEditorButton<>(this,"Edit corner icon",EDITOR,v.small,e->v.small=e));
+			}
+			
+		}
+		private static class UV extends IconEditor<FHTextureUVIcon>{
+			String label;
+			Consumer<FHTextureUVIcon> i;
+			LabeledTextBox rl;
+			LabeledTextBox x;
+			LabeledTextBox y;
+			LabeledTextBox w;
+			LabeledTextBox h;
+			LabeledTextBox tw;
+			LabeledTextBox th;
+			public UV(Widget panel,String label,FHTextureUVIcon v,Consumer<FHTextureUVIcon> i) {
+				super(panel,v==null?new FHTextureUVIcon():v);
+				this.label=label;
+				this.i=i;
+				rl=new LabeledTextBox(this,"Texture",this.v.rl.toString());
+				x=new LabeledTextBox(this,"X",String.valueOf(v.x));
+				y=new LabeledTextBox(this,"Y",String.valueOf(v.y));
+				w=new LabeledTextBox(this,"Width",String.valueOf(v.w));
+				h=new LabeledTextBox(this,"Height",String.valueOf(v.h));
+				tw=new LabeledTextBox(this,"Texture Width",String.valueOf(v.tw));
+				th=new LabeledTextBox(this,"Texture Height",String.valueOf(v.th));
+			}
+
+			@Override
+			public void onClose() {
+				try {
+					v.rl=new ResourceLocation(rl.getText());
+					v.x=Integer.parseInt(x.getText());
+					v.y=Integer.parseInt(y.getText());
+					v.w=Integer.parseInt(w.getText());
+					v.h=Integer.parseInt(h.getText());
+					v.tw=Integer.parseInt(tw.getText());
+					v.th=Integer.parseInt(th.getText());
+					v.init();
+					i.accept(v);
+					
+				}catch(NumberFormatException ex) {
+					
+				}
+			}
+
+			@Override
+			public void addWidgets() {
+				add(EditUtils.getTitle(this,label));
+				add(rl);
+				add(x);
+				add(y);
+				add(w);
+				add(h);
+				add(tw);
+				add(th);
+				add(new SimpleTextButton(parent,GuiUtils.str("Commit"),Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton arg0) {
+						try {
+							v.rl=new ResourceLocation(rl.getText());
+							v.x=Integer.parseInt(x.getText());
+							v.y=Integer.parseInt(y.getText());
+							v.w=Integer.parseInt(w.getText());
+							v.h=Integer.parseInt(h.getText());
+							v.tw=Integer.parseInt(tw.getText());
+							v.th=Integer.parseInt(th.getText());
+							v.init();
+						}catch(NumberFormatException ex) {
+							
+						}
+						
+					}
+					
+				});
+			}
+			
+		}
+		@Override
+		public void draw(MatrixStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+			super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
+			v.draw(arg0, arg2+300, arg3+20,32,32);
+		}
+
+
+	}
 	public static final Map<String, Function<JsonElement, FHIcon>> JsonIcon = new HashMap<>();
 	public static final List<Function<PacketBuffer, FHIcon>> BufferIcon = new ArrayList<>();
 	static {
@@ -394,6 +654,7 @@ public class FHIcons {
 		JsonIcon.put("ingredient", FHIngredientIcon::new);
 		JsonIcon.put("texture", FHTextureIcon::new);
 		JsonIcon.put("texture_uv", FHTextureUVIcon::new);
+		JsonIcon.put("text", FHTextIcon::new);
 		BufferIcon.add(FHNopIcon::get);
 		BufferIcon.add(FHItemIcon::new);
 		BufferIcon.add(FHCombinedIcon::new);
@@ -401,6 +662,7 @@ public class FHIcons {
 		BufferIcon.add(FHIngredientIcon::new);
 		BufferIcon.add(FHTextureIcon::new);
 		BufferIcon.add(FHTextureUVIcon::new);
+		BufferIcon.add(FHTextIcon::new);
 	}
 
 	public static FHIcon getIcon(ItemStack item) {
@@ -415,7 +677,12 @@ public class FHIcons {
 	public static FHIcon getIcon(FHIcon base, FHIcon small) {
 		return new FHCombinedIcon(base, small);
 	}
-
+	public static FHIcon getIcon(String text) {
+		return new FHTextIcon(text);
+	}
+	public static FHIcon getIcon(IngredientWithSize i) {
+		return getIcon(getIcon(i.getBaseIngredient()),getIcon(String.valueOf(i.getCount())));
+	}
 	public static FHIcon getIcon(Ingredient i) {
 		return new FHIngredientIcon(i);
 	}

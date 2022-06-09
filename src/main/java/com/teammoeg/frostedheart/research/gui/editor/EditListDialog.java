@@ -8,11 +8,13 @@ import java.util.function.Function;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.effects.EffectEditor;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.icon.MutableColor4I;
-import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
@@ -20,9 +22,13 @@ import dev.ftb.mods.ftblibrary.ui.SimpleButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
-import dev.ftb.mods.ftblibrary.ui.input.Key;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -36,11 +42,23 @@ public class EditListDialog<T> extends EditDialog {
 		new EditListDialog<>(p,l,v,"",SingleEditDialog.TEXT_EDITOR,e->e,c).open();
 	};
 	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->{
-		new EditListDialog<>(p,l,v,null,ResearchSelectorDialog.EDITOR,e->e.getName().getString(),c).open();
+		new EditListDialog<>(p,l,v,null,SelectorDialog.EDITOR_RESEARCH,e->e.getName().getString(),Research::getIcon,c).open();
+	};
+	private static String fromItemStack(ItemStack s) {
+		return s.getDisplayName().getString()+" x "+s.getCount();
+	}
+	public static final Editor<Collection<ItemStack>> STACK_LIST=(p,l,v,c)->{
+		new EditListDialog<>(p,l,v,new ItemStack(Items.AIR),SelectItemStackDialog.EDITOR,EditListDialog::fromItemStack,ItemIcon::getItemIcon,c).open();
+	};
+	public static final Editor<Collection<Block>> BLOCK_LIST=(p,l,v,c)->{
+		new EditListDialog<>(p,l,v,Blocks.AIR,SelectItemStackDialog.EDITOR_BLOCK,e->e.getTranslatedName().getString(),e->ItemIcon.getItemIcon(e.asItem()),c).open();
+	};
+	public static final Editor<Collection<Effect>> EFFECT_LIST=(p,l,v,c)->{
+		new EditListDialog<>(p,l,v,null,EffectEditor.EDITOR,Effect::getBrief,Effect::getIcon,c).open();
 	};
 	public class ButtonConfigValue extends Button {
 		public final int index;
-
+		
 		public ButtonConfigValue(Panel panel, int i) {
 			super(panel);
 			index = i;
@@ -50,8 +68,11 @@ public class EditListDialog<T> extends EditDialog {
 		@Override
 		public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 			boolean mouseOver = getMouseY() >= 20 && isMouseOver();
-
-
+			int ioffset=0;
+			if(toicon!=null) {
+				toicon.apply(list.get(index)).draw(matrixStack, x+ioffset,y,12,12);
+				ioffset+=13;
+			}
 			if (mouseOver) {
 
 				Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
@@ -61,7 +82,7 @@ public class EditListDialog<T> extends EditDialog {
 				}
 			}
 
-			theme.drawString(matrixStack,read.apply(list.get(index)), x + 4, y + 2);
+			theme.drawString(matrixStack,read.apply(list.get(index)), x + 4+ioffset, y + 2);
 
 			if (mouseOver) {
 				theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.WHITE, 0);
@@ -76,10 +97,12 @@ public class EditListDialog<T> extends EditDialog {
 
 			if (getMouseX() >= getX() + width - 19) {
 					list.remove(index);
+					modified=true;
 					parent.refreshWidgets();
 				
 			} else {
 				editor.open(this,"Edit",list.get(index), s-> {
+					modified=true;
 					list.set(index, s);
 					parent.refreshWidgets();
 				});
@@ -118,12 +141,13 @@ public class EditListDialog<T> extends EditDialog {
 		@Override
 		public void onClicked(MouseButton button) {
 			playClickSound();
-			editor.open(this,"New",def, s-> {
-				if(s!=null) {
-					list.add(s);
-					parent.refreshWidgets();
-				}
-			});
+				editor.open(this,"New",def, s-> {
+					if(s!=null) {
+						modified=true;
+						list.add(s);
+						parent.refreshWidgets();
+					}
+				});
 			
 		}
 
@@ -142,15 +166,21 @@ public class EditListDialog<T> extends EditDialog {
 	private final PanelScrollBar scroll;
 	private final T def;
 	private final Function<T,String> read;
+	private final Function<T,Icon> toicon;
+	boolean modified;
 
-	public EditListDialog(Widget p,String label,Collection<T> vx,T def,Editor<T> editor,Function<T,String> toread,Consumer<Collection<T>> li) {
+	public EditListDialog(Widget p,String label,Collection<T> vx,T def,Editor<T> editor,Function<T,String> toread,Function<T,Icon> icon,Consumer<Collection<T>> li) {
 		super(p);
 		callback = li;
-		list=new ArrayList<>(vx);
+		if(vx!=null)
+			list=new ArrayList<>(vx);
+		else
+			list=new ArrayList<>();
 		title = new StringTextComponent(label).mergeStyle(TextFormatting.BOLD);
 		this.editor=editor;
 		this.def=def;
 		this.read=toread;
+		this.toicon=icon;
 		int sw = 387;
 		int sh = 203;
 		this.setSize(sw, sh);
@@ -176,11 +206,18 @@ public class EditListDialog<T> extends EditDialog {
 		scroll = new PanelScrollBar(this, configPanel);
 		buttonAccept = new SimpleButton(this, new TranslationTextComponent("gui.accept"), Icons.ACCEPT, (widget, button) ->{
 			callback.accept(list);
+			modified=false;
 			close();
 		});
 		buttonCancel = new SimpleButton(this, new TranslationTextComponent("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
 	}
-
+	
+	public EditListDialog(Widget p,String label,Collection<T> vx,T def,Editor<T> editor,Function<T,String> toread,Consumer<Collection<T>> li) {
+		this(p,label,vx,def,editor,toread,null,li);
+	}
+	public EditListDialog(Widget p,String label,Collection<T> vx,Editor<T> editor,Function<T,String> toread,Consumer<Collection<T>> li) {
+		this(p,label,vx,null,editor,toread,null,li);
+	}
 	@Override
 	public void addWidgets() {
 		add(buttonAccept);
@@ -191,7 +228,7 @@ public class EditListDialog<T> extends EditDialog {
 
 	@Override
 	public void alignWidgets() {
-		configPanel.setPosAndSize(0, 20, width, height - 20);
+		configPanel.setPosAndSize(5, 20, width-10, height - 20);
 		configPanel.alignWidgets();
 		scroll.setPosAndSize(width - 16, 20, 16, height - 20);
 
@@ -200,7 +237,7 @@ public class EditListDialog<T> extends EditDialog {
 	}
 	@Override
 	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		theme.drawPanelBackground(matrixStack, x, y, w, h);
+		theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
 		
 		theme.drawString(matrixStack, getTitle(), x,y-10);
 	}
@@ -208,6 +245,16 @@ public class EditListDialog<T> extends EditDialog {
 	@Override
 	public ITextComponent getTitle() {
 		return title;
+	}
+
+	@Override
+	public void onClosed() {
+		if(modified) {
+			ConfirmDialog.EDITOR.open(this,"Unsaved changes, discard?",true,e->{
+				System.out.println(e);
+				if(!e)open();
+			});
+		}
 	}
 
 	@Override

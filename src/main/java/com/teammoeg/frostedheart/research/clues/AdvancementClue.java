@@ -35,6 +35,10 @@ public class AdvancementClue extends TickListenerClue {
 		criterion = pb.readString();
 	}
 
+	public AdvancementClue() {
+		super();
+	}
+
 	@Override
 	public boolean isCompleted(TeamResearchData t, ServerPlayerEntity player) {
 		Advancement a = player.server.getAdvancementManager().getAdvancement(advancement);

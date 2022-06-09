@@ -26,6 +26,10 @@ public abstract class TickListenerClue extends ListenerClue {
 		super(pb);
 	}
 
+	public TickListenerClue() {
+		super();
+	}
+
 	@Override
 	public void initListener(Team t) {
 		ResearchListeners.getTickClues().add(this, t);

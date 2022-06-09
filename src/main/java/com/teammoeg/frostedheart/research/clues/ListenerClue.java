@@ -29,6 +29,10 @@ public abstract class ListenerClue extends Clue {
 		alwaysOn = pb.readBoolean();
 	}
 
+	public ListenerClue() {
+		super();
+	}
+
 	@Override
 	public JsonObject serialize() {
 		JsonObject jo = super.serialize();

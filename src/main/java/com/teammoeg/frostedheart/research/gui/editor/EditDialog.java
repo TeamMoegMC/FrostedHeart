@@ -16,18 +16,29 @@ public abstract class EditDialog extends Panel {
 	}
 	public void open() {
 		previous=sc.getDialog();
-		sc.openDialog(this);
+		sc.openDialog(this,true);
 	}
 	public void close() {
+		close(true);
+	}
+	public void close(boolean refresh) {
+		try {
 		onClose();
+		}catch(Exception ex) {};
 		
 		if(previous!=null) {
 			sc.closeDialog(false);
-			sc.openDialog(previous);
+			sc.openDialog(previous,refresh);
 		}else
-			sc.closeDialog(true);
+			sc.closeDialog(refresh);
+		try {
+		onClosed();
+		}catch(Exception ex) {};
 	}
 	public abstract void onClose();
+	public void onClosed() {
+		
+	}
 	@Override
 	public boolean keyPressed(Key key) {
 		if(key.esc()) {

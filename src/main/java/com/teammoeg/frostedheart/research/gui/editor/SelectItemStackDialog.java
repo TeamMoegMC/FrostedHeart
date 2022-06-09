@@ -10,10 +10,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterators;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ItemSearchMode;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -34,6 +36,8 @@ import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import me.shedaniel.architectury.registry.Registries;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -43,10 +47,12 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.registries.ForgeRegistries;
 /**
  * @author LatvianModder, khjxiaogu
  * */
@@ -54,22 +60,45 @@ public class SelectItemStackDialog extends EditDialog {
 	public static Editor<ItemStack> EDITOR=(p,l,v,c)->{
 		new SelectItemStackDialog(p,l,v,c).open();
 	};
+	public static Editor<Block> EDITOR_BLOCK=(p,l,v,c)->{
+		new SelectItemStackDialog(p,l+" (Blocks only)",new ItemStack(v),e->{
+			Block b=Block.getBlockFromItem(e.getItem());
+			if(b!=Blocks.AIR)
+				c.accept(b);
+		}).open();
+	};
 	private static final String fromNBT(INBT nbt) {
 		if(nbt==null)
 			return "";
 		return nbt.toString();
 	}
 	public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(task -> {
-		Thread thread = new Thread(task, "FH-FTB-ItemSearch");
+		Thread thread = new Thread(task, "FH-ItemSearch");
 		thread.setDaemon(true);
 		return thread;
 	});
 
 	public static final List<ItemSearchMode> modes = new ArrayList<>();
-
+	
 	static {
 		modes.add(ItemSearchMode.ALL_ITEMS);
 		modes.add(ItemSearchMode.INVENTORY);
+		modes.add(new ItemSearchMode() {
+
+			@Override
+			public Collection<ItemStack> getAllItems() {
+				return ForgeRegistries.BLOCKS.getValues().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
+			}
+
+			@Override
+			public IFormattableTextComponent getDisplayName() {
+				return GuiUtils.str("Blocks");
+			}
+
+			@Override
+			public Icon getIcon() {
+				return ItemIcon.getItemIcon(Blocks.STONE.asItem());
+			}});
 	}
 
 	private static ItemSearchMode activeMode = null;
@@ -313,7 +342,7 @@ public class SelectItemStackDialog extends EditDialog {
 		super(p);
 		setSize(211, 150);
 		callback = cb;
-		current = orig;
+		current = orig==null?new ItemStack(Items.AIR):orig.copy();
 
 		int bsize = width / 2 - 10;
 

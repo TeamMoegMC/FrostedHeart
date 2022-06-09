@@ -3,6 +3,8 @@ package com.teammoeg.frostedheart.research.gui.tech;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -15,9 +17,11 @@ import net.minecraft.item.ItemStack;
 
 public class RequirementSlot extends Widget {
 	ItemStack[] i;
-	public RequirementSlot(Panel panel,ItemStack... i) {
+	int cnt;
+	public RequirementSlot(Panel panel,IngredientWithSize iws) {
 		super(panel);
-		this.i=i;
+		this.i=iws.getMatchingStacks();
+		this.cnt=iws.getCount();
 		this.setSize(16,16);
 	}
 
@@ -47,6 +51,12 @@ public class RequirementSlot extends Widget {
 		matrixStack.push();
 		matrixStack.translate(0, 0, 100);
 		GuiHelper.drawItem(matrixStack,cur, x, y, w/16F, h/16F,true,null);
+		if(cnt>1) {
+			matrixStack.push();
+			matrixStack.translate(0, 0, 100);
+			theme.drawString(matrixStack,String.valueOf(cnt), x+8,y+9,Color4I.WHITE,Theme.SHADOW);
+			matrixStack.pop();
+		}
 		matrixStack.pop();
 	}
 

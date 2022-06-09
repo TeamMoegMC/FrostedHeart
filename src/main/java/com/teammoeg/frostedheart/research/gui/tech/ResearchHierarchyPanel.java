@@ -9,12 +9,12 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.ResearchEditorDialog;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.research.gui.ThickLine;
 import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
 import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
-import com.teammoeg.frostedheart.research.gui.editor.ResearchEditorDialog;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -83,6 +83,7 @@ public class ResearchHierarchyPanel extends Panel {
 					Research r=researchScreen.selectedResearch;
 					EditListDialog.RESEARCH_LIST.open(this,"Edit parents",r.getParents(),s->{
 						r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
+						r.doIndex();
 						EditUtils.saveResearch(r);
 					});
 				}
@@ -98,6 +99,7 @@ public class ResearchHierarchyPanel extends Panel {
 					EditListDialog.RESEARCH_LIST.open(this,"Edit children",r.getChildren(),s->{
 						r.getChildren().forEach(e->e.removeParent(r));
 						s.forEach(e->{e.addParent(r.getSupplier());e.doIndex();});
+						r.doIndex();
 						EditUtils.saveResearch(r);
 					});
 				}

@@ -2,21 +2,22 @@ package com.teammoeg.frostedheart.research.gui.editor;
 
 import java.util.function.Consumer;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
-public class SingleEditDialog extends EditDialog{
+public class SingleEditDialog extends BaseEditDialog{
 	public static Editor<String> TEXT_EDITOR=(p,l,v,c)->{
 		open(p,l,v,c);
+	};
+	public static Editor<JsonElement> JSON_EDITOR=(p,l,v,c)->{
+		open(p,l,v==null?"":v.toString(),e->c.accept(new JsonParser().parse(e)));
 	};
 	public static Editor<Long> LONG_EDITOR=(p,l,v,c)->{
 		open(p,l,String.valueOf(v),o->{
@@ -35,6 +36,7 @@ public class SingleEditDialog extends EditDialog{
 	};
 	LabeledTextBox box;
 	Button ok;
+	Button cancel;
 	public SingleEditDialog(Widget panel,String label,String val,Consumer<String> onFinished) {
 		super(panel);
 		box=new LabeledTextBox(this,label,val);
@@ -51,9 +53,16 @@ public class SingleEditDialog extends EditDialog{
 			}
 			
 		};
-		ok.setHeight(20);
-		ok.setWidth(200);
-		setSize(400,200);
+		cancel=new SimpleTextButton(this,GuiUtils.str("Cancel"),Icon.EMPTY) {
+
+			@Override
+			public void onClicked(MouseButton arg0) {
+				close();
+			}
+			
+		};
+		cancel.setSize(300, 20);
+		ok.setSize(300,20);
 	}
 	public static void open(Widget p,String l,String v,Consumer<String> f) {
 		new SingleEditDialog(p,l,v,f).open();
@@ -64,17 +73,11 @@ public class SingleEditDialog extends EditDialog{
 
 	@Override
 	public void addWidgets() {
+		
 		add(box);
 		add(ok);
+		add(cancel);
 	}
 
-	@Override
-	public void alignWidgets() {
-		setHeight(super.align(WidgetLayout.VERTICAL));
-	}
-	@Override
-	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
-	}
 
 }

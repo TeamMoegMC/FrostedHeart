@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.effects;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -40,11 +41,6 @@ public class EffectCrafting extends Effect{
     	super();
     
     	this.itemStack=item;
-    	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
-    		if(r.getRecipeOutput().equals(item)) {
-    			unlocks.add(r);
-    		}
-    	}
     }
     public EffectCrafting(IItemProvider item) {
     	super();
@@ -58,12 +54,29 @@ public class EffectCrafting extends Effect{
     		}
     	}
     }
+    private void initStack() {
+    	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
+    		if(r.getRecipeOutput().equals(item)) {
+    			unlocks.add(r);
+    		}
+    	}
+    }
     public EffectCrafting(ResourceLocation recipe) {
     	super("@gui." + FHMain.MODID + ".effect.crafting",new ArrayList<>());
     	Optional<? extends IRecipe<?>> r=ResearchDataManager.server.getRecipeManager().getRecipe(recipe);
     	
     	if(r.isPresent()) {
     		unlocks.add(r.get());
+    	}
+    }
+    public void setList(Collection<String> ls) {
+    	unlocks.clear();
+    	for(String s:ls) {
+    		Optional<? extends IRecipe<?>> r=ResearchDataManager.server.getRecipeManager().getRecipe(new ResourceLocation(s));
+        	
+        	if(r.isPresent()) {
+        		unlocks.add(r.get());
+        	}
     	}
     }
     public EffectCrafting(JsonObject jo) {
@@ -84,9 +97,14 @@ public class EffectCrafting extends Effect{
 		super(pb);
 		item=SerializeUtil.readOptional(pb,p->p.readRegistryIdUnsafe(ForgeRegistries.ITEMS)).orElse(null);
 		if(item==null) {
-			unlocks=SerializeUtil.readList(pb,p->ResearchDataManager.server.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
-			unlocks.removeIf(Objects::isNull);
+			itemStack=SerializeUtil.readOptional(pb, PacketBuffer::readItemStack).orElse(null);
+			if(itemStack==null) {
+				unlocks=SerializeUtil.readList(pb,p->ResearchDataManager.server.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
+				unlocks.removeIf(Objects::isNull);
+			}else initStack();
 		}else initItem();
+	}
+	public EffectCrafting() {
 	}
 	@Override
     public void init() {
@@ -126,6 +144,8 @@ public class EffectCrafting extends Effect{
 		super.write(buffer);
 		SerializeUtil.writeOptional(buffer,item,(o,b)->b.writeRegistryIdUnsafe(ForgeRegistries.ITEMS,o));
 		if(item==null)
+			SerializeUtil.writeOptional2(buffer, itemStack,PacketBuffer::writeItemStack);
+		if(itemStack==null)
 			SerializeUtil.writeList(buffer,unlocks,(o,b)->b.writeResourceLocation(o.getId()));
 	}
 	@Override
@@ -178,6 +198,16 @@ public class EffectCrafting extends Effect{
 		}
 		
 		return tooltip;
+	}
+	@Override
+	public String getBrief() {
+		if(item!=null)
+			return "Craft "+new TranslationTextComponent(item.getTranslationKey()).getString();
+		if(itemStack!=null)
+			return "Craft "+itemStack.getDisplayName().getString();
+		if(!unlocks.isEmpty())
+			return "Craft"+unlocks.get(0).getId()+(unlocks.size()>1?" ...":"");
+		return "Craft nothing";
 	}
 
 }

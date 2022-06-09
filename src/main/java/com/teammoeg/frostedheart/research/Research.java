@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHContent.FHItems;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -21,16 +20,11 @@ import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.research.gui.FHIcons.FHItemIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import dev.ftb.mods.ftblibrary.config.ConfigGroup;
-import dev.ftb.mods.ftblibrary.config.NameMap;
-import dev.ftb.mods.ftblibrary.config.StringConfig;
-import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -39,7 +33,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -51,17 +44,17 @@ import net.minecraftforge.fml.network.PacketDistributor;
  */
 public class Research extends FHRegisteredItem implements Writeable {
 	private String id;// id of this research
-	public FHIcon icon;// icon for this research in term of item
+	FHIcon icon;// icon for this research in term of item
 	private ResearchCategory category;
 	private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
 	private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
 																	// should not set manually.
 
 	private HashSet<Clue> clues = new HashSet<>();// research clues
-	private List<IngredientWithSize> requiredItems = new ArrayList<>();
+	List<IngredientWithSize> requiredItems = new ArrayList<>();
 	private List<Effect> effects = new ArrayList<>();// effects of this research
-	public String name="";
-	public List<String> desc;
+	String name="";
+	List<String> desc;
 
 	private long points = 2000;// research point
 
@@ -225,6 +218,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		int i=0;
 		for(Effect e:effects) {
 			e.addID(this.getLId(),i);
+			e.parent=getSupplier();
 			FHResearch.effects.register(e);
 			i++;
 		}
@@ -349,8 +343,8 @@ public class Research extends FHRegisteredItem implements Writeable {
 	}
 	public void delete() {
 		deleteInTree();
-		this.effects.forEach(Effect::delete);
-		this.clues.forEach(Clue::delete);
+		this.effects.forEach(Effect::deleteSelf);
+		this.clues.forEach(Clue::deleteSelf);
 		ResearchDataManager.INSTANCE.getAllData().forEach(e->e.resetData(this));
 		FHResearch.delete(this);
 	}
@@ -365,14 +359,14 @@ public class Research extends FHRegisteredItem implements Writeable {
 		this.parents.add(par);
 	}
 	public void setNewId(String nid) {
-		if(id!=nid) {
+		if(!id.equals(nid)) {
 			ResearchDataManager.INSTANCE.getAllData().forEach(e->e.resetData(this));
 			deleteInTree();//clear all reference, hope this could work
 			this.setId(nid);
-			this.setRId(0);
 			FHResearch.register(this);
 			this.getChildren().forEach(e->e.addParent(this.getSupplier()));
 			this.doIndex();
 		}
 	}
+	
 }

@@ -3,12 +3,15 @@ package com.teammoeg.frostedheart.research.effects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.AutoIDItem;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -36,7 +39,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 	String name = "";
 	String nonce;
 	List<String> tooltip;
-
+	public Supplier<Research> parent;
 	FHIcon icon;
 
 	// Init globally
@@ -154,8 +157,38 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 	public final String getType() {
 		return "effects";
 	}
-	public void delete() {
+	private void deleteInTree() {
 		ResearchDataManager.INSTANCE.getAllData().forEach(t->{revoke(t);t.setGrant(this, false);});
+	}
+	public void edit() {
+		deleteInTree();
+	}
+	public void deleteSelf() {
+		 deleteInTree();
+		 FHResearch.effects.remove(this);
+	}
+	public void delete() {
+		deleteSelf();
+		 if(parent!=null) {
+			 Research r=parent.get();
+			 if(r!=null) {
+				 r.getEffects().remove(this);
+			 }
+		 }
+	}
+	void setNewId(String id) {
+		if(!id.equals(this.nonce)) {
+			delete();
+			this.nonce=id;
+			FHResearch.effects.register(this);
+			if(parent!=null) {
+				 Research r=parent.get();
+				 if(r!=null) {
+					 r.attachEffect(this);
+					 r.doIndex();
+				 }
+			 }
+		}
 	}
 	public boolean isGranted() {
 		return ClientResearchDataAPI.getData().isEffectGranted(this);
@@ -163,7 +196,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 	public void setGranted(boolean b) {
 		ClientResearchDataAPI.getData().setGrant(this,b);
 	}
-
+	public abstract String getBrief();
 	@Override
 	public String getNonce() {
 		return nonce;

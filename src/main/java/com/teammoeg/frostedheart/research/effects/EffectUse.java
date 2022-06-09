@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
@@ -26,37 +25,42 @@ import net.minecraftforge.registries.ForgeRegistries;
  */
 public class EffectUse extends Effect {
 
-    List<Block> blocksToUse;
-    public EffectUse(Block... blocks) {
+    List<Block> blocks;
+    
+    public EffectUse() {
+		super();
+		this.blocks = new ArrayList<>();
+	}
+	public EffectUse(Block... blocks) {
     	super();
-        blocksToUse = new ArrayList<>();
+        this.blocks = new ArrayList<>();
         for (Block b : blocks) {
-            blocksToUse.add(b);
+            this.blocks.add(b);
         }
     }
     public EffectUse(JsonObject jo) {
     	super(jo);
-    	blocksToUse=SerializeUtil.parseJsonElmList(jo.get("blocks"),e->ForgeRegistries.BLOCKS.getValue(new ResourceLocation(e.getAsString())));
+    	blocks=SerializeUtil.parseJsonElmList(jo.get("blocks"),e->ForgeRegistries.BLOCKS.getValue(new ResourceLocation(e.getAsString())));
     }
     public EffectUse(PacketBuffer pb) {
 		super(pb);
-		blocksToUse=SerializeUtil.readList(pb, p->p.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
+		blocks=SerializeUtil.readList(pb, p->p.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
 		
 	}
 	@Override
     public void init() {
-    	ResearchListeners.block.addAll(blocksToUse);
+    	ResearchListeners.block.addAll(blocks);
     }
 
     @Override
     public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
-    	team.block.addAll(blocksToUse);
+    	team.block.addAll(blocks);
 		return true;
     }
 
     @Override
     public void revoke(TeamResearchData team) {
-    	team.block.removeAll(blocksToUse);
+    	team.block.removeAll(blocks);
     }
 
 
@@ -68,13 +72,13 @@ public class EffectUse extends Effect {
 	@Override
 	public JsonObject serialize() {
 		JsonObject jo=super.serialize();
-		jo.add("blocks",SerializeUtil.toJsonStringList(blocksToUse,Block::getRegistryName));
+		jo.add("blocks",SerializeUtil.toJsonStringList(blocks,Block::getRegistryName));
 		return jo;
 	}
 	@Override
 	public void write(PacketBuffer buffer) {
 		super.write(buffer);
-		SerializeUtil.writeList(buffer, blocksToUse,(b,p)->p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS,b));
+		SerializeUtil.writeList(buffer, blocks,(b,p)->p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS,b));
 	}
 	@Override
 	public int getIntID() {
@@ -82,7 +86,7 @@ public class EffectUse extends Effect {
 	}
 	@Override
 	public FHIcon getDefaultIcon() {
-		return FHIcons.getIcon(FHIcons.getIcon(blocksToUse.toArray(new Block[0])),FHIcons.getIcon(TechIcons.HAND));
+		return FHIcons.getIcon(FHIcons.getIcon(blocks.toArray(new Block[0])),FHIcons.getIcon(TechIcons.HAND));
 	}
 	@Override
 	public IFormattableTextComponent getDefaultName() {
@@ -91,10 +95,16 @@ public class EffectUse extends Effect {
 	@Override
 	public List<ITextComponent> getDefaultTooltip() {
 		List<ITextComponent> tooltip=new ArrayList<>();
-		for(Block b:blocksToUse) {
+		for(Block b:blocks) {
 			tooltip.add(b.getTranslatedName());
 		}
 		
 		return tooltip;
+	}
+	@Override
+	public String getBrief() {
+		if(blocks.isEmpty())
+			return "Use nothing";
+		return "Use "+blocks.get(0).getTranslatedName().getString()+(blocks.size()>1?" ...":"");
 	}
 }

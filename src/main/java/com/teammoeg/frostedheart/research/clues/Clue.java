@@ -1,11 +1,14 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.AutoIDItem;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
@@ -30,6 +33,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	String desc = "";
 	String hint = "";
 	String nonce;
+	public Supplier<Research> parent;
 	public float getResearchContribution() {
 		return contribution;
 	}
@@ -67,6 +71,10 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		this.hint = pb.readString();
 		this.contribution = pb.readFloat();
 		this.nonce=pb.readString();
+	}
+
+	public Clue() {
+		this.nonce="";
 	}
 
 	public void setCompleted(Team team, boolean trig) {
@@ -159,9 +167,6 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		buffer.writeString(nonce);
 	}
 	public abstract int getIntType();
-	public void delete() {
-		ResearchDataManager.INSTANCE.getAllData().forEach(t->end(t.getTeam().orElse(null)));
-	}
 	@Override
 	public final String getType() {
 		return "clue";
@@ -170,5 +175,38 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	@Override
 	public String getNonce() {
 		return nonce;
+	}
+	private void deleteInTree() {
+		ResearchDataManager.INSTANCE.getAllData().forEach(t->end(t.getTeam().orElse(null)));
+	}
+	public void edit() {
+		deleteInTree();
+	}
+	public void deleteSelf() {
+		 deleteInTree();
+		 FHResearch.clues.remove(this);
+	}
+	public void delete() {
+		deleteSelf();
+		 if(parent!=null) {
+			 Research r=parent.get();
+			 if(r!=null) {
+				 r.getClues().remove(this);
+			 }
+		 }
+	}
+	void setNewId(String id) {
+		if(!id.equals(this.nonce)) {
+			delete();
+			this.nonce=id;
+			FHResearch.clues.register(this);
+			if(parent!=null) {
+				 Research r=parent.get();
+				 if(r!=null) {
+					 r.attachClue(this);
+					 r.doIndex();
+				 }
+			 }
+		}
 	}
 }

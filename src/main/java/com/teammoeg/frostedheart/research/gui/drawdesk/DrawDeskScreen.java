@@ -47,9 +47,10 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui{
 		cx.setEnabled(true);
 		this.refreshWidgets();
 	}
-	public void openDialog(EditDialog dialog) {
+	public void openDialog(EditDialog dialog,boolean refresh) {
 		this.dialog=dialog;
 		r.setEnabled(false);
+		if(refresh)
 		this.refreshWidgets();
 	}
 	public void closeDialog(boolean refresh) {

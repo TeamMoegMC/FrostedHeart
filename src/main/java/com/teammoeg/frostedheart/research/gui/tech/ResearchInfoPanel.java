@@ -52,7 +52,7 @@ public class ResearchInfoPanel extends Panel {
 			int xoffset = 4;
 			for (IngredientWithSize ingredient : detailPanel.research.getRequiredItems()) {
 				if (ingredient.getMatchingStacks().length != 0) {
-					RequirementSlot button = new RequirementSlot(fp, ingredient.getMatchingStacks());
+					RequirementSlot button = new RequirementSlot(fp, ingredient);
 
 					button.setPosAndSize(xoffset, ioffset, 16, 16);
 					fp.add(button);
@@ -65,18 +65,6 @@ public class ResearchInfoPanel extends Panel {
 				}
 			}
 			ioffset += 23;
-			if(FHResearch.editor) {
-				Button create = new TechTextButton(fp, GuiUtils.str("add"),
-						Icon.EMPTY) {
-					@Override
-					public void onClicked(MouseButton mouseButton) {
-						//TODO Edit ingredient
-					}
-				};
-				create.setPos(0, ioffset);
-				fp.add(create);
-				ioffset+=create.height+1;
-			}
 			fp.setWidth(width);
 
 			fp.setHeight(ioffset);
@@ -184,18 +172,6 @@ public class ResearchInfoPanel extends Panel {
 				fp.add(claimRewards);
 				offset += claimRewards.height + 1;
 			}
-			if(FHResearch.editor) {
-				Button create = new TechTextButton(fp, GuiUtils.str("new"),
-						Icon.EMPTY) {
-					@Override
-					public void onClicked(MouseButton mouseButton) {
-						//TODO Edit Effects
-					}
-				};
-				create.setPos(0, offset);
-				fp.add(create);
-				offset+=create.height+1;
-			}
 			fp.setWidth(width);
 			fp.setHeight(offset);
 		});
@@ -214,18 +190,6 @@ public class ResearchInfoPanel extends Panel {
 				fp.add(cl);
 				offset += cl.height + 1;
 
-			}
-			if(FHResearch.editor) {
-				Button create = new TechTextButton(fp, GuiUtils.str("new"),
-						Icon.EMPTY) {
-					@Override
-					public void onClicked(MouseButton mouseButton) {
-						//TODO Edit clue
-					}
-				};
-				create.setPos(0, offset);
-				fp.add(create);
-				offset+=create.height+1;
 			}
 			fp.setWidth(width);
 			fp.setHeight(offset);

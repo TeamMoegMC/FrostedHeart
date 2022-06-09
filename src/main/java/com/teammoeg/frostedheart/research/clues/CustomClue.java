@@ -26,6 +26,10 @@ public class CustomClue extends Clue {
 		super(name, desc, hint, contribution);
 	}
 
+	public CustomClue() {
+		super();
+	}
+
 	@Override
 	public String getId() {
 		return "custom";

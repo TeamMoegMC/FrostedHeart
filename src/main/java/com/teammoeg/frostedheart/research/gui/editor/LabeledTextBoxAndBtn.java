@@ -8,7 +8,6 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
-import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class LabeledTextBoxAndBtn extends LabeledTextBox {
@@ -24,10 +23,7 @@ public class LabeledTextBoxAndBtn extends LabeledTextBox {
 	}
 	@Override
 	public void addWidgets() {
-		
-		add(label);
-		add(obj);
+		super.addWidgets();
 		add(btn);
-		setSize(super.align(WidgetLayout.HORIZONTAL),20);
 	}
 }

@@ -106,4 +106,11 @@ public class EffectItemReward extends Effect {
 	        }
 		return tooltip;
 	}
+	@Override
+	public String getBrief() {
+		if(rewards.isEmpty())
+			return "Reward nothing";
+					
+		return "Reward "+rewards.get(0).getDisplayName().getString()+(rewards.size()>1?" ...":"");
+	}
 }

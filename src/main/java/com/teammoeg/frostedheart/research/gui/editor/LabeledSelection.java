@@ -15,6 +15,9 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.StringTextComponent;
 
 public class LabeledSelection<R> extends LabeledPane<Button> {
+	public static LabeledSelection<Boolean> createBool(Panel p,String lab,boolean val){
+		return new LabeledSelection<>(p,lab,val,Arrays.asList(true,false),String::valueOf);
+	}
 	List<R> objs;
 	Function<R,String> tostr;
 	

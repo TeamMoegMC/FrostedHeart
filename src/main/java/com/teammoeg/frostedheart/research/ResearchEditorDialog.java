@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.research.gui.editor;
+package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -6,29 +6,30 @@ import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchCategory;
-import com.teammoeg.frostedheart.research.gui.FHIcons;
-import com.teammoeg.frostedheart.research.gui.FHIcons.FHItemIcon;
+import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.gui.FHIcons.IconEditor;
+import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.research.gui.editor.IngredientEditor;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledSelection;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
+import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import net.minecraft.item.ItemStack;
 
-public class ResearchEditorDialog extends EditDialog {
+public class ResearchEditorDialog extends BaseEditDialog {
 	Research r;
 	LabeledTextBox id,name;
 	LabeledSelection<ResearchCategory> cat;
 	public ResearchEditorDialog(Widget panel,Research r,ResearchCategory def) {
 		super(panel);
-		
-		setSize(400,800);
 		if(r==null) {
 			r=new Research();
 			r.setCategory(def==null?ResearchCategory.RESCUE:def);
@@ -56,21 +57,20 @@ public class ResearchEditorDialog extends EditDialog {
 			r.name=name.getText();
 			r.setCategory(cat.getSelection());
 			FHResearch.register(r);
+			r.doIndex();
 		}
 		EditUtils.saveResearch(r);
 	}
 
 	@Override
 	public void addWidgets() {
-		
+		add(EditUtils.getTitle(this,"Edit/New Research"));
 		add(id);
 		add(new SimpleTextButton(this,GuiUtils.str("Reset id"),Icon.EMPTY) {
-
 			@Override
 			public void onClicked(MouseButton arg0) {
 				id.setText(r.getId());
 			}
-			
 		});
 		add(name);
 		add(new OpenEditorButton<>(this,"Set Icon",IconEditor.EDITOR,r.icon,r.icon,s->r.icon=s));
@@ -85,23 +85,16 @@ public class ResearchEditorDialog extends EditDialog {
 			s.forEach(e->{e.addParent(r.getSupplier());e.doIndex();});
 			
 		}));
+		add(new OpenEditorButton<>(this,"Edit Effect",EditListDialog.EFFECT_LIST,r.getEffects(),s->{
+			r.getEffects().forEach(Effect::deleteSelf);
+			r.getEffects().clear();
+			r.getEffects().addAll(s);
+			r.doIndex();
+		}));
+		add(new OpenEditorButton<>(this,"Edit Ingredients",IngredientEditor.LIST_EDITOR,r.getRequiredItems(),s->{
+			r.requiredItems=new ArrayList<>(s);
+		}));
 		
-	}
-
-	@Override
-	public void alignWidgets() {
-		int offset=5;
-		for(Widget w:this.widgets) {
-			w.setPos(5, offset);
-			offset+=w.height+1;
-		}
-		setHeight(offset+5);
-	}
-
-
-	@Override
-	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
 	}
 
 
@@ -110,7 +103,7 @@ public class ResearchEditorDialog extends EditDialog {
 		super.draw(matrixStack, theme, x, y, w, h);
 		Research r=FHResearch.researches.getByName(id.getText());
 		if(r!=null&&r!=this.r)
-			theme.drawString(matrixStack,"ID Existed!", x+id.width+10, y+7,Color4I.RED,0);
+			theme.drawString(matrixStack,"ID Existed!", x+id.width+10, y+27,Color4I.RED,0);
 	}
 
 }
