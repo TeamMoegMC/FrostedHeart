@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.research.gui.editor;
 
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchEditorDialog;
 

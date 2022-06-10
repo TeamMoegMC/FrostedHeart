@@ -8,8 +8,12 @@ import com.simibubi.create.AllItems;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHContent.FHBlocks;
 import com.teammoeg.frostedheart.FHContent.FHMultiblocks;
-import com.teammoeg.frostedheart.research.effects.*;
-import com.teammoeg.frostedheart.research.clues.*;
+import com.teammoeg.frostedheart.research.clues.CustomClue;
+import com.teammoeg.frostedheart.research.effects.EffectBuilding;
+import com.teammoeg.frostedheart.research.effects.EffectCrafting;
+import com.teammoeg.frostedheart.research.effects.EffectItemReward;
+import com.teammoeg.frostedheart.research.effects.EffectStats;
+import com.teammoeg.frostedheart.research.effects.EffectUse;
 
 import blusunrize.immersiveengineering.api.EnumMetals;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
