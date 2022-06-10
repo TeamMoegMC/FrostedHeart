@@ -9,6 +9,7 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.ItemClue;
 import com.teammoeg.frostedheart.research.clues.KillClue;
+import com.teammoeg.frostedheart.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.research.clues.TickListenerClue;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
@@ -24,6 +25,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class ResearchListeners {
@@ -178,6 +181,58 @@ public class ResearchListeners {
 		for(Clue c:cur.orElse(null).getClues())
 			if(c instanceof ItemClue)
 				i.shrink(((ItemClue) c).test(trd, i));
+	}
+	public static int fetchGameLevel(ServerPlayerEntity s) {
+		TeamResearchData trd=ResearchDataAPI.getData(s);
+		LazyOptional<Research> cur=trd.getCurrentResearch();
+		if(cur.isPresent()) {
+			Research rs=cur.orElse(null);
+			if(rs!=null) {
+				for(Clue cl:rs.getClues()) {
+					if(trd.isClueTriggered(cl))continue;
+					if(cl instanceof MinigameClue) {
+						return ((MinigameClue) cl).getLevel();
+					}
+				}
+			}
+		}
+		return -1;
+	}
+	@OnlyIn(Dist.CLIENT)
+	public static int fetchGameLevel() {
+		TeamResearchData trd=ResearchDataAPI.getData(s);
+		LazyOptional<Research> cur=trd.getCurrentResearch();
+		if(cur.isPresent()) {
+			Research rs=cur.orElse(null);
+			if(rs!=null) {
+				for(Clue cl:rs.getClues()) {
+					if(trd.isClueTriggered(cl))continue;
+					if(cl instanceof MinigameClue) {
+						return ((MinigameClue) cl).getLevel();
+					}
+				}
+			}
+		}
+		return -1;
+	}
+	public static boolean commitGameLevel(ServerPlayerEntity s,int lvl) {
+		TeamResearchData trd=ResearchDataAPI.getData(s);
+		LazyOptional<Research> cur=trd.getCurrentResearch();
+		if(cur.isPresent()) {
+			Research rs=cur.orElse(null);
+			if(rs!=null) {
+				for(Clue cl:rs.getClues()) {
+					if(trd.isClueTriggered(cl))continue;
+					if(cl instanceof MinigameClue) {
+						if(((MinigameClue) cl).getLevel()<=lvl) {
+							cl.setCompleted(trd,true);
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 	@SuppressWarnings("resource")
 	public static boolean canUseRecipe(PlayerEntity s,IRecipe<?> r) {

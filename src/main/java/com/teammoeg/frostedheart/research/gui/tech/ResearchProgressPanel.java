@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
+import com.ibm.icu.text.NumberFormat;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
@@ -48,9 +49,10 @@ public class ResearchProgressPanel extends Panel {
         // float finTIme = researchScreen.getInProgressResearch().getRequiredPoints();
         Research inprog=ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
         if(inprog!=null) {
+        	float prog=inprog.getProgressFraction();
 	        TechIcons.SLIDER_FRAME.draw(matrixStack,x+40, y+32,70,8);
-	        TechIcons.drawTexturedRect(matrixStack,x+41, y+33,(int)(68f/100*35),6,true);
-	        theme.drawString(matrixStack,"35%", x +90, y +40,TechIcons.text,0);
+	        TechIcons.drawTexturedRect(matrixStack,x+41, y+33,(int)(68f*prog),6,true);
+	        theme.drawString(matrixStack,NumberFormat.getPercentInstance().format(prog), x +90, y +40,TechIcons.text,0);
 	        // research icon
 	        
 	        TechIcons.SHADOW.draw(matrixStack, x+1, y+38, 36, 9);

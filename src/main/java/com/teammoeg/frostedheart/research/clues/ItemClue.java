@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -31,6 +32,7 @@ public class ItemClue extends Clue {
 	}
 
 	 ItemClue() {
+		 super("@clue." + FHMain.MODID + ".item",0);
 	}
 
 	@Override
@@ -52,7 +54,7 @@ public class ItemClue extends Clue {
 
 	public int test(TeamResearchData t, ItemStack stack) {
 		if (this.stack.test(stack)) {
-			t.setClueTriggered(this, true);
+			this.setCompleted(t, true);
 			if (consume)
 				return this.stack.getCount();
 		}

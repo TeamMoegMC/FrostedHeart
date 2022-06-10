@@ -33,8 +33,7 @@ public class Researches {
 		FHResearch.prepareReload();
 		File folder=FMLPaths.CONFIGDIR.get().toFile();
 		File rf=new File(folder,"fhresearches");
-		if(!rf.exists())
-			createDefaultResearches();
+		
 
 		FHResearch.loadAll();
 		FHResearch.finishReload();

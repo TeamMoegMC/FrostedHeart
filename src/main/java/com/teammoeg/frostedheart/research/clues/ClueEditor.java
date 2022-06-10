@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -96,7 +97,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog{
 		e.name=name.getText();
 		e.desc=desc.getText();
 		e.hint=hint.getText();
-		e.contribution=(float) cont.getNum();
+		e.contribution=(float) cont.getNum()/100f;
 		if(e.getRId()!=0){
 			e.setNewId(nonce.getText());
 		}else {
@@ -186,7 +187,9 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog{
 		@Override
 		public void addWidgets() {
 			super.addWidgets();
-			add(new LabeledOpenEditorButton<>(this,e.advancement.toString(),"Select Advancement",SelectDialog.EDITOR_ADVANCEMENT,e.advancement,c->e.advancement=c));
+			add(new LabeledOpenEditorButton<>(this,e.advancement.toString(),"Select Advancement",SelectDialog.EDITOR_ADVANCEMENT,e.advancement,c->{
+				
+				e.advancement=c;}));
 			add(LabeledSelection.createCriterion(this,"Select Criterion",e.advancement,e.criterion,c->e.criterion=c));
 
 		}
@@ -204,15 +207,18 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog{
 		@Override
 		public void addWidgets() {
 			super.addWidgets();
-			add(new LabeledOpenEditorButton<>(this,e.type==null?"":e.type.getName().getString(),"Select Entity",SelectDialog.EDITOR_ENTITY,e.type,c->e.type=c));
+			add(new LabeledOpenEditorButton<>(this,e.type==null?"":e.type.getName().getString(),"Select Entity",SelectDialog.EDITOR_ENTITY,e.type,c->{
+				e.type=c;
+				desc.setText("@"+c.getTranslationKey());
+			}));
 		}
 
 	}
 	private static class Minigame extends ClueEditor<MinigameClue>{
-		NumberBox lvl;
+		LabeledSelection<Integer> lvl;
 		public Minigame(Widget panel, String lbl, MinigameClue e, Consumer<MinigameClue> cb) {
 			super(panel, lbl, e, cb);
-			lvl=new NumberBox(this,"Level",this.e.level);
+			lvl=new LabeledSelection<>(this,"Level",this.e.getLevel(),Arrays.asList(0,1,2,3),String::valueOf);
 		}
 		@Override
 		public void addWidgets() {
@@ -221,7 +227,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog{
 		}
 		@Override
 		public void onClose() {
-			e.level=(int) lvl.getNum();
+			e.setLevel(lvl.getSelection());
 			super.onClose();
 		}
 		@Override

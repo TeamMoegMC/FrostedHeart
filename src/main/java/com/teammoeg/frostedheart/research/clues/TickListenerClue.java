@@ -43,7 +43,7 @@ public abstract class TickListenerClue extends ListenerClue {
 	public final void tick(TeamResearchData t, ServerPlayerEntity player) {
 		if (!t.isClueTriggered(this))
 			if (this.isCompleted(t, player)) {
-				t.setClueTriggered(this, true);
+				this.setCompleted(t,true);
 				
 			}
 	}

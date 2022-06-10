@@ -118,7 +118,7 @@
   "gui.frostedheart.minigame.t2":"To free an element, You should make its two adjacent sides the corner between them empty, off the board is consider empty.",
   "gui.frostedheart.minigame.t3":"The four basic elements can match with others of the same type, while \"Discovery\" matches \"Dilemma\".",
   "gui.frostedheart.minigame.t4":"\"Transform\" matches with any of the basic elements or itself",
-  "gui.frostedheart.minigame.t5":"Roman numbers matches with \"Research\", but only in the ascending order. After all numbers are gone, click \"Paper\" to remove it.",
+  "gui.frostedheart.minigame.t5":"Roman numbers matches with \"Research\", but only in the ascending order. After all numbers are gone, click \"Conclusion\" to remove it.",
   "gui.frostedheart.minigame.display":"Game Rules(Hover on text to magnify)",
   "gui.frostedheart.minigame.match":"Matching Combinations",
 

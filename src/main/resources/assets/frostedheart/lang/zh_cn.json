@@ -105,10 +105,11 @@
   "gui.frostedheart.minigame.t2":"相邻两边和之间的夹角为空白的元素可动，棋盘外算空白。",
   "gui.frostedheart.minigame.t3":"四种基础元素可以与相同的元素匹配，“发现”和“谜题”相互匹配。",
   "gui.frostedheart.minigame.t4":"“转换”与任何基础元素或与“转换”匹配。",
-  "gui.frostedheart.minigame.t5":"数字按顺序与“研发”匹配，最后点“发现”移除它。",
+  "gui.frostedheart.minigame.t5":"数字按顺序与“研发”匹配，最后点“结论”移除它。",
   "gui.frostedheart.minigame.display":"游戏规则(鼠标放在文字上可以放大)",
   "gui.frostedheart.minigame.match":"元素配对",
   "gui.frostedheart.update_recommended": "建议更新《冬季救援》： ",
+  "gui.frostedheart.draw_desk.examine":"研究物品",
 
   "gui.frostedheart.save_updated": "已经自动更新您的存档，旧的配置备份在",
   "gui.frostedheart.save_update_needed": "自动更新未完成！请退出这个世界然后手动删除%s以完成更新！",
@@ -120,6 +121,10 @@
   "gui.jei.category.frostedheart.knife_cutting": "用刀切割",
   "gui.jei.category.frostedheart.defrost_campfire": "营火解冻",
   "gui.jei.category.frostedheart.defrost_smoking": "烟熏解冻",
+  
+  "clue.frostedheart.kill":"击杀生物",
+  "clue.frostedheart.item":"研究物品",
+  "clue.frostedheart.minigame":"完成研究论文",
 
   "container.relic_chest": "遗迹箱",
 
@@ -145,6 +150,7 @@
   "message.frostedheart.village.unknown": "哼哼，哼哼哼？*窝猫似烃薄懂尼硕脎*",
   "message.frostedheart.cow.nomilk.hungry": "这只牛太饿了，无法产奶。你可能需要喂食。",
   "message.frostedheart.cow.nomilk.digest": "这只牛暂时还没有牛奶。",
+  "message.frostedheart.toast.research_complete":"研究已完成",
 
   "tooltip.frostedheart.f3_average_temperature": "平均气温: %s°C",
   "tooltip.frostedheart.f3_invalid_chunk_data": "区块数据不可用",

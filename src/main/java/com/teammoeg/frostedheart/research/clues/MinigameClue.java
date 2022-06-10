@@ -6,22 +6,23 @@ import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.network.PacketBuffer;
 
 public class MinigameClue extends CustomClue {
-	public int level=1;
+	private int level=0;
 	public MinigameClue(float contribution) {
 		super("@clue." + FHMain.MODID + ".minigame", contribution);
 	}
 
 	public MinigameClue(JsonObject jo) {
 		super(jo);
-		level=jo.get("level").getAsInt();
+		setLevel(jo.get("level").getAsInt());
 	}
 
 	public MinigameClue(PacketBuffer pb) {
 		super(pb);
-		level=pb.readVarInt();
+		setLevel(pb.readVarInt());
 	}
 
 	MinigameClue() {
+		super("@clue." + FHMain.MODID + ".minigame",0);
 	}
 
 	@Override
@@ -37,14 +38,23 @@ public class MinigameClue extends CustomClue {
 	@Override
 	public JsonObject serialize() {
 		JsonObject jo=super.serialize();
-		jo.addProperty("level", level);
+		jo.addProperty("level", getLevel());
 		return jo;
 	}
 
 	@Override
 	public void write(PacketBuffer buffer) {
 		super.write(buffer);
-		buffer.writeVarInt(level);
+		buffer.writeVarInt(getLevel());
 		
 	}
+
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = Math.min(Math.max(level,0),3);
+	}
+	
 }

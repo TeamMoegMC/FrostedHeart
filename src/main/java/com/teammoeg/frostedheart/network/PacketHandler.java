@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
-import com.teammoeg.frostedheart.network.research.FHGameOperationPacket;
+import com.teammoeg.frostedheart.network.research.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
@@ -90,8 +90,8 @@ public class PacketHandler {
 				FHResearchControlPacket::new, FHResearchControlPacket::handle);
 		CHANNEL.registerMessage(id++,FHChangeActiveResearchPacket.class, FHChangeActiveResearchPacket::encode,
 				FHChangeActiveResearchPacket::new, FHChangeActiveResearchPacket::handle);
-		CHANNEL.registerMessage(id++,FHGameOperationPacket.class, FHGameOperationPacket::encode,
-				FHGameOperationPacket::new, FHGameOperationPacket::handle);
+		CHANNEL.registerMessage(id++,FHDrawingDeskOperationPacket.class, FHDrawingDeskOperationPacket::encode,
+				FHDrawingDeskOperationPacket::new, FHDrawingDeskOperationPacket::handle);
 		CHANNEL.registerMessage(id++, FHEffectProgressSyncPacket.class, FHEffectProgressSyncPacket::encode,
 				FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
 	}

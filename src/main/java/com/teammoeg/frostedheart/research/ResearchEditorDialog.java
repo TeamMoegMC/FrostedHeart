@@ -20,6 +20,7 @@ import com.teammoeg.frostedheart.research.gui.editor.IngredientEditor;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledSelection;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
+import com.teammoeg.frostedheart.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
 
@@ -34,6 +35,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
 	Research r;
 	LabeledTextBox id,name;
 	LabeledSelection<ResearchCategory> cat;
+	NumberBox pts;
 	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->{
 		new EditListDialog<>(p,l,v,null,SelectDialog.EDITOR_RESEARCH,e->e.getName().getString(),Research::getIcon,c).open();
 	};
@@ -48,6 +50,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
 		
 		cat=new LabeledSelection<ResearchCategory>(this,"category",r.getCategory(),ResearchCategory.values(),ResearchCategory::name);
 		name=new LabeledTextBox(this,"name",r.name);
+		pts=new NumberBox(this,"points",r.points);
 	}
 
 	
@@ -58,15 +61,16 @@ public class ResearchEditorDialog extends BaseEditDialog {
 				r.setId(id.getText());
 				r.name=name.getText();
 				r.setCategory(cat.getSelection());
+				r.points=pts.getNum();
 				FHResearch.register(r);
 				r.doIndex();
 			}
 		}else {//modify old research
-			r.setNewId(id.getText());
+			
 			r.name=name.getText();
+			r.points=pts.getNum();
 			r.setCategory(cat.getSelection());
-			FHResearch.register(r);
-			r.doIndex();
+			r.setNewId(id.getText());
 		}
 		EditUtils.saveResearch(r);
 	}
@@ -82,6 +86,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
 			}
 		});
 		add(name);
+		add(pts);
 		add(new OpenEditorButton<>(this,"Set Icon",IconEditor.EDITOR,r.icon,r.icon,s->r.icon=s));
 		add(cat);
 		

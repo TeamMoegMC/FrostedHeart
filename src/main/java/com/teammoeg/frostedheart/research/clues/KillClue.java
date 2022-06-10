@@ -30,6 +30,7 @@ public class KillClue extends ListenerClue {
 	}
 
 	KillClue() {
+		super("@clue." + FHMain.MODID + ".kill",0);
 	}
 
 
@@ -50,7 +51,7 @@ public class KillClue extends ListenerClue {
 	
 	public boolean isCompleted(TeamResearchData trd, LivingEntity e) {
 		if(type!=null&&type.equals(e.getType())) {
-			trd.setClueTriggered(this, true);
+			this.setCompleted(trd, true);
 			return true;
 		}
 		return false;

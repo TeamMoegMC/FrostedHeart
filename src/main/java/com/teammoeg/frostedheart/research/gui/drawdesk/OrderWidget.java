@@ -19,14 +19,18 @@ public class OrderWidget extends Widget {
 	}
 	@Override
 	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		CardStat cs=rg.getStats().get(cardstate);
+		
 		DrawDeskIcons.ORDER_FRAME.draw(matrixStack, x, y,16,16);
-		if(cs.card!=8)
-			DrawDeskIcons.ORDER_ARROW.draw(matrixStack,x,y+16,16, 12);
-		DrawDeskIcons.getIcon(cs.type,cs.card,true).draw(matrixStack, x, y, 16, 16);
-		if(cs.num<=0) {
-			TechIcons.FIN.draw(matrixStack, x, y, 16, 16);
-		}
+		if(cardstate!=0) {
+			CardStat cs=rg.getStats().get(cardstate);
+			if(cs.card!=8)
+				DrawDeskIcons.ORDER_ARROW.draw(matrixStack,x,y+16,16, 12);
+			DrawDeskIcons.getIcon(cs.type,cs.card,true).draw(matrixStack, x, y, 16, 16);
+			if(cs.num<=0) {
+				TechIcons.FIN.draw(matrixStack, x, y, 16, 16);
+			}
+		}else
+			TechIcons.DOTS.draw(matrixStack, x, y, 16,16);
 	}
 
 

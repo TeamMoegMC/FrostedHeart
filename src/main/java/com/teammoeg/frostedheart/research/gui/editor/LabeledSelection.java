@@ -55,9 +55,14 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
 
 			@Override
 			public void onClicked(MouseButton arg0) {
-				sel++;
+				if(arg0.isLeft())
+					sel++;
+				else if(arg0.isRight())
+					sel--;
 				if(sel>=objs.size())
 					sel=0;
+				if(sel<0)
+					sel=objs.size()-1;
 				this.setTitle(new StringTextComponent(tostr.apply(objs.get(sel))));
 				refreshWidgets();
 				onChange(objs.get(sel));

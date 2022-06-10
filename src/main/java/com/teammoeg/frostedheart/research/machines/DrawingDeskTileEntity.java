@@ -1,12 +1,17 @@
 package com.teammoeg.frostedheart.research.machines;
 
+import java.util.Random;
+
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.gui.drawdesk.game.GenerateInfo;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -63,13 +68,21 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 	public ResearchGame getGame() {
 		return game;
 	}
-	public void initGame() {
-		game.init();
+	public void initGame(ServerPlayerEntity player) {
+		int lvl=ResearchListeners.fetchGameLevel(player);
+		if(lvl<0)return;
+		game.init(GenerateInfo.all[lvl],new Random());
+		game.setLvl(lvl);
 	}
-	public void updateGame() {
+	public void updateGame(ServerPlayerEntity player) {
 		if(game.isFinished()) {
 			
+			ResearchListeners.commitGameLevel(player,game.getLvl());
+			game.reset();
 		}
+	}
+	public void submitItem(ServerPlayerEntity sender) {
+		ResearchListeners.submitItem(sender,inventory.get(0));
 	}
 
 }

@@ -186,6 +186,7 @@ public class ResearchInfoPanel extends Panel {
 
 				for (Clue clue : detailPanel.research.getClues()) {
 					CluePanel cl = new CluePanel(fp, clue, detailPanel.research);
+					cl.setY(offset);
 					cl.setWidth(width - 5);
 					cl.initWidgets();
 					fp.add(cl);

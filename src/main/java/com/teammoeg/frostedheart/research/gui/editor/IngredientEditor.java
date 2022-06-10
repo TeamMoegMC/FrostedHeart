@@ -29,7 +29,11 @@ import net.minecraftforge.common.crafting.NBTIngredient;
 public class IngredientEditor extends BaseEditDialog{
 	public static final Editor<SingleItemList> EDITOR_ITEMLIST=(p,l,v,c)->{
 		
-		SelectItemStackDialog.EDITOR.open(p, l,(v==null||v.stack==null)?new ItemStack(Items.AIR):v.stack,s->c.accept(new SingleItemList(s)));
+		SelectItemStackDialog.EDITOR.open(p, l,(v==null||v.stack==null)?new ItemStack(Items.AIR):v.stack,s->{
+			s=s.copy();
+			s.setCount(1);
+			c.accept(new SingleItemList(s));
+		});
 	};
 	public static final Editor<TagList> EDITOR_TAGLIST=(p,l,v,c)->{
 		

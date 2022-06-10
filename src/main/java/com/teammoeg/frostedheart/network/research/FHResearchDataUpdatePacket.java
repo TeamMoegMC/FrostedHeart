@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
+import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -65,8 +66,12 @@ public class FHResearchDataUpdatePacket {
         	boolean status=datax.isCompleted();
         	datax.deserialize(data);
         	ClientUtils.refreshResearchGui();
-        	if(status!=datax.isCompleted())
+        	if(status!=datax.isCompleted()) {
+        		if(datax.isCompleted()) {
+        			ClientUtils.mc().getToastGui().add(new ResearchToast(rs));
+        		}
         		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()));
+        	}
         });
         context.get().setPacketHandled(true);
     }

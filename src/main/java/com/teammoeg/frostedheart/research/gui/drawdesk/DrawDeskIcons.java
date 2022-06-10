@@ -22,6 +22,7 @@ public class DrawDeskIcons {
 	//public static final Icon STAT_FRAME=ALL.withUV(0,235,15,28,512,512);
 	public static final Icon ORDER_FRAME=ALL.withUV(16,235,16,16,512,512);
 	public static final Icon ORDER_ARROW=ALL.withUV(16,235+16,16,12,512,512);
+	public static final Icon EXAMINE=ALL.withUV(32,235,18,18,512,512);
 	static {
 		for(int i=0;i<16;i++) {
 			icons[i]=ALL.withUV(i*16,203,16,16,512,512);

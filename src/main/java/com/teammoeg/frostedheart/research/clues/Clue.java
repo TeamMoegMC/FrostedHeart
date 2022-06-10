@@ -34,6 +34,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	String hint = "";
 	String nonce;
 	public Supplier<Research> parent;
+
 	public float getResearchContribution() {
 		return contribution;
 	}
@@ -44,7 +45,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		this.name = name;
 		this.desc = desc;
 		this.hint = hint;
-		this.nonce=Long.toHexString(UUID.randomUUID().getMostSignificantBits());
+		this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
 	}
 
 	public Clue(String name, float contribution) {
@@ -60,7 +61,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		if (jo.has("hint"))
 			this.hint = jo.get("hint").getAsString();
 		this.contribution = jo.get("value").getAsFloat();
-		this.nonce=jo.get("id").getAsString();
+		this.nonce = jo.get("id").getAsString();
 
 	}
 
@@ -70,11 +71,11 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		this.desc = pb.readString();
 		this.hint = pb.readString();
 		this.contribution = pb.readFloat();
-		this.nonce=pb.readString();
+		this.nonce = pb.readString();
 	}
 
 	public Clue() {
-		this.nonce="";
+		this.nonce = "";
 	}
 
 	public void setCompleted(Team team, boolean trig) {
@@ -145,7 +146,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	@Override
 	public JsonObject serialize() {
 		JsonObject jo = new JsonObject();
-		jo.addProperty("type",this.getId());
+		jo.addProperty("type", this.getId());
 		if (!name.isEmpty())
 			jo.addProperty("name", name);
 		if (!desc.isEmpty())
@@ -156,7 +157,9 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		jo.addProperty("id", nonce);
 		return jo;
 	}
+
 	public abstract String getId();
+
 	@Override
 	public void write(PacketBuffer buffer) {
 		buffer.writeVarInt(getIntType());
@@ -166,7 +169,9 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 		buffer.writeFloat(contribution);
 		buffer.writeString(nonce);
 	}
+
 	public abstract int getIntType();
+
 	@Override
 	public final String getType() {
 		return "clue";
@@ -176,37 +181,53 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	public String getNonce() {
 		return nonce;
 	}
+
 	private void deleteInTree() {
-		ResearchDataManager.INSTANCE.getAllData().forEach(t->end(t.getTeam().orElse(null)));
+		ResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getTeam().ifPresent(this::end));
 	}
+
 	public void edit() {
 		deleteInTree();
 	}
+
 	public void deleteSelf() {
-		 deleteInTree();
-		 FHResearch.clues.remove(this);
+		deleteInTree();
+		FHResearch.clues.remove(this);
 	}
+
 	public void delete() {
 		deleteSelf();
-		 if(parent!=null) {
-			 Research r=parent.get();
-			 if(r!=null) {
-				 r.getClues().remove(this);
-			 }
-		 }
-	}
-	void setNewId(String id) {
-		if(!id.equals(this.nonce)) {
-			delete();
-			this.nonce=id;
-			FHResearch.clues.register(this);
-			if(parent!=null) {
-				 Research r=parent.get();
-				 if(r!=null) {
-					 r.attachClue(this);
-					 r.doIndex();
-				 }
-			 }
+		if (parent != null) {
+			Research r = parent.get();
+			if (r != null) {
+				r.getClues().remove(this);
+			}
 		}
+	}
+
+	void setNewId(String id) {
+		if (!id.equals(this.nonce)) {
+			delete();
+			this.nonce = id;
+			FHResearch.clues.register(this);
+			if (parent != null) {
+				Research r = parent.get();
+				if (r != null) {
+					r.attachClue(this);
+					r.doIndex();
+				}
+			}
+		}
+	}
+
+	public void setCompleted(TeamResearchData trd, boolean trig) {
+		trd.setClueTriggered(this, trig);
+		trd.getTeam().ifPresent(team -> {
+			if (trig)
+				end(team);
+			else
+				start(team);
+			this.sendProgressPacket(team);
+		});
 	}
 }

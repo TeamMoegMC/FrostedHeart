@@ -56,7 +56,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	String name="";
 	List<String> desc;
 
-	private long points = 2000;// research point
+	long points = 2000;// research point
 
 	@SafeVarargs
 	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
@@ -129,7 +129,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		clues.addAll(SerializeUtil.readList(data, Clues::read));
 		requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
 		effects = SerializeUtil.readList(data, Effects::deserialize);
-		points = data.readVarInt();
+		points = data.readVarLong();
 	}
 
 
