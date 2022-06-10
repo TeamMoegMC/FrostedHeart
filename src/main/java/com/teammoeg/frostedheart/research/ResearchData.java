@@ -140,7 +140,12 @@ public class ResearchData {
 
 
     public boolean commitItem(ServerPlayerEntity player) {
+    	
         Research research = getResearch();
+        if(research.getRequiredItems().isEmpty()) {
+        	setActive();
+            return true;
+        }
         //first do simple verify
         for(IngredientWithSize iws:research.getRequiredItems()) {
         	int count=iws.getCount();
