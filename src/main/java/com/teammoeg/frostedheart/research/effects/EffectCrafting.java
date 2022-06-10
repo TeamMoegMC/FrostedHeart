@@ -104,7 +104,7 @@ public class EffectCrafting extends Effect{
 			}else initStack();
 		}else initItem();
 	}
-	public EffectCrafting() {
+	EffectCrafting() {
 	}
 	@Override
     public void init() {

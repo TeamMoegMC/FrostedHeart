@@ -4,19 +4,43 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.client.multiplayer.ClientAdvancementManager;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 
 public class LabeledSelection<R> extends LabeledPane<Button> {
 	public static LabeledSelection<Boolean> createBool(Panel p,String lab,boolean val){
 		return new LabeledSelection<>(p,lab,val,Arrays.asList(true,false),String::valueOf);
+	}
+	public static LabeledSelection<String> createCriterion(Panel p,String lab,ResourceLocation adv,String val,Consumer<String> cb){
+		ClientAdvancementManager cam=ClientUtils.mc().player.connection.getAdvancementManager();
+		Advancement advx=cam.getAdvancementList().getAdvancement(adv);
+		List<String> cit=new ArrayList<>();
+		cit.add("");
+		if(advx!=null) {
+			cit.addAll(advx.getCriteria().keySet());
+		}
+		return new LabeledSelection<String>(p,lab,val,cit,String::valueOf) {
+
+			@Override
+			public void onChange(String current) {
+				cb.accept(current);
+				super.onChange(current);
+				
+			}
+			
+		};
 	}
 	List<R> objs;
 	Function<R,String> tostr;

@@ -30,6 +30,9 @@ public class ItemClue extends Clue {
 		consume = pb.readBoolean();
 	}
 
+	 ItemClue() {
+	}
+
 	@Override
 	public JsonObject serialize() {
 		JsonObject jo = super.serialize();

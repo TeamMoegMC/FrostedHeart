@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.effects;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -18,8 +19,9 @@ import com.teammoeg.frostedheart.research.gui.editor.LabeledSelection;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
+import com.teammoeg.frostedheart.research.gui.editor.RealBox;
 import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
-import com.teammoeg.frostedheart.research.gui.editor.SelectorDialog;
+import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
@@ -66,6 +68,9 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 	Consumer<T> cb;
 	protected LabeledTextBoxAndBtn nonce;
 	protected LabeledTextBox name;
+	public static final Editor<Collection<Effect>> EFFECT_LIST=(p,l,v,c)->{
+		new EditListDialog<>(p,l,v,null,EffectEditor.EDITOR,Effect::getBrief,Effect::getIcon,c).open();
+	};
 	public EffectEditor(Widget panel, String lbl,T e, Consumer<T> cb) {
 		super(panel);
 		
@@ -113,7 +118,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 		@Override
 		public void addWidgets() {
 			super.addWidgets();
-			add(new LabeledOpenEditorButton<>(this,e.multiblock==null?"":e.multiblock.getUniqueName().toString(),"Select Multiblock",SelectorDialog.EDITOR_MULTIBLOCK,e.multiblock,s->e.multiblock=s));
+			add(new LabeledOpenEditorButton<>(this,e.multiblock==null?"":e.multiblock.getUniqueName().toString(),"Select Multiblock",SelectDialog.EDITOR_MULTIBLOCK,e.multiblock,s->e.multiblock=s));
 			
 		}
 		@Override
@@ -167,7 +172,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 		@Override
 		public void addWidgets() {
 			super.addWidgets();
-			add(new LabeledOpenEditorButton<>(this,e.rewards.size()>0?fromItemStack(e.rewards.get(0)):"","Edit Rewards",EditListDialog.STACK_LIST,e.rewards,s->e.rewards=new ArrayList<>(s)));
+			add(new LabeledOpenEditorButton<>(this,e.rewards.size()>0?fromItemStack(e.rewards.get(0)):"","Edit Rewards",SelectItemStackDialog.STACK_LIST,e.rewards,s->e.rewards=new ArrayList<>(s)));
 			
 		}
 		@Override
@@ -179,12 +184,12 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 	private static class Stats extends EffectEditor<EffectStats>{
 		LabeledSelection<Boolean> perc;
 		LabeledTextBox name;
-		LabeledTextBox val;
+		RealBox val;
 		public Stats(Widget panel, String lbl, EffectStats e, Consumer<EffectStats> cb) {
 			super(panel, lbl, e, cb);
 			perc=LabeledSelection.createBool(this,"percent",this.e.isPercentage);
 			name=new LabeledTextBox(this,"Variant name",this.e.vars);
-			val=new LabeledTextBox(this,"Variant add",Double.toString(this.e.val));
+			val=new RealBox(this,"Variant add",this.e.val);
 			
 		}
 		
@@ -203,12 +208,8 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 
 		@Override
 		public void onClose() {
-			EffectStats e=(EffectStats) this.e;
 			e.isPercentage=perc.getSelection();
-			try {
-			e.val=Double.parseDouble(val.getText());
-			}catch(NumberFormatException ex) {
-			}
+			e.val=val.getNum();
 			e.name=name.getText();
 			super.onClose();
 		}
@@ -222,7 +223,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 		@Override
 		public void addWidgets() {
 			super.addWidgets();
-			add(new LabeledOpenEditorButton<>(this,e.blocks.isEmpty()?"":e.blocks.get(0).getTranslatedName().getString(),"Edit blocks",EditListDialog.BLOCK_LIST,e.blocks,e.blocks.isEmpty()?Icon.EMPTY:ItemIcon.getItemIcon(e.blocks.get(0).asItem()),s->e.blocks=new ArrayList<>(s)));
+			add(new LabeledOpenEditorButton<>(this,e.blocks.isEmpty()?"":e.blocks.get(0).getTranslatedName().getString(),"Edit blocks",SelectItemStackDialog.BLOCK_LIST,e.blocks,e.blocks.isEmpty()?Icon.EMPTY:ItemIcon.getItemIcon(e.blocks.get(0).asItem()),s->e.blocks=new ArrayList<>(s)));
 			
 		}
 		@Override

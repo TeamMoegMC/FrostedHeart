@@ -21,9 +21,10 @@ import com.teammoeg.frostedheart.research.gui.editor.Editor;
 import com.teammoeg.frostedheart.research.gui.editor.EditorSelector;
 import com.teammoeg.frostedheart.research.gui.editor.IngredientEditor;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
+import com.teammoeg.frostedheart.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
-import com.teammoeg.frostedheart.research.gui.editor.SingleEditDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditPrompt;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
@@ -506,7 +507,7 @@ public class FHIcons {
 			SelectItemStackDialog.EDITOR.open(p,l,v==null?null:v.stack,e->c.accept(new FHItemIcon(e)));
 		};
 		public static final Editor<FHTextureIcon> TEXTURE_EDITOR=(p,l,v,c)->{
-			SingleEditDialog.TEXT_EDITOR.open(p,l,v==null?null:v.rl.toString(),e->c.accept(new FHTextureIcon(new ResourceLocation(e))));
+			EditPrompt.TEXT_EDITOR.open(p,l,v==null?null:v.rl.toString(),e->c.accept(new FHTextureIcon(new ResourceLocation(e))));
 		};
 		public static final Editor<FHIngredientIcon> INGREDIENT_EDITOR=(p,l,v,c)->{
 			IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p,l,v==null?null:v.igd,e->c.accept(new FHIngredientIcon(e)));
@@ -515,7 +516,7 @@ public class FHIcons {
 			IngredientEditor.EDITOR.open(p,l,null,e->c.accept(FHIcons.getIcon(e)));
 		};
 		public static final Editor<FHTextIcon> TEXT_EDITOR=(p,l,v,c)->{
-			SingleEditDialog.TEXT_EDITOR.open(p,l,v==null?null:v.text,e->c.accept(new FHTextIcon(e)));
+			EditPrompt.TEXT_EDITOR.open(p,l,v==null?null:v.text,e->c.accept(new FHTextIcon(e)));
 		};
 		public static final Editor<FHIcon> NOP_EDITOR=(p,l,v,c)->{
 			c.accept(FHNopIcon.INSTANCE);
@@ -567,35 +568,35 @@ public class FHIcons {
 			String label;
 			Consumer<FHTextureUVIcon> i;
 			LabeledTextBox rl;
-			LabeledTextBox x;
-			LabeledTextBox y;
-			LabeledTextBox w;
-			LabeledTextBox h;
-			LabeledTextBox tw;
-			LabeledTextBox th;
+			NumberBox x;
+			NumberBox y;
+			NumberBox w;
+			NumberBox h;
+			NumberBox tw;
+			NumberBox th;
 			public UV(Widget panel,String label,FHTextureUVIcon v,Consumer<FHTextureUVIcon> i) {
 				super(panel,v==null?new FHTextureUVIcon():v);
 				this.label=label;
 				this.i=i;
 				rl=new LabeledTextBox(this,"Texture",this.v.rl.toString());
-				x=new LabeledTextBox(this,"X",String.valueOf(v.x));
-				y=new LabeledTextBox(this,"Y",String.valueOf(v.y));
-				w=new LabeledTextBox(this,"Width",String.valueOf(v.w));
-				h=new LabeledTextBox(this,"Height",String.valueOf(v.h));
-				tw=new LabeledTextBox(this,"Texture Width",String.valueOf(v.tw));
-				th=new LabeledTextBox(this,"Texture Height",String.valueOf(v.th));
+				x=new NumberBox(this,"X",(v.x));
+				y=new NumberBox(this,"Y",(v.y));
+				w=new NumberBox(this,"Width",(v.w));
+				h=new NumberBox(this,"Height",(v.h));
+				tw=new NumberBox(this,"Texture Width",(v.tw));
+				th=new NumberBox(this,"Texture Height",(v.th));
 			}
 
 			@Override
 			public void onClose() {
 				try {
 					v.rl=new ResourceLocation(rl.getText());
-					v.x=Integer.parseInt(x.getText());
-					v.y=Integer.parseInt(y.getText());
-					v.w=Integer.parseInt(w.getText());
-					v.h=Integer.parseInt(h.getText());
-					v.tw=Integer.parseInt(tw.getText());
-					v.th=Integer.parseInt(th.getText());
+					v.x=(int)x.getNum();
+					v.y=(int)y.getNum();
+					v.w=(int)w.getNum();
+					v.h=(int)h.getNum();
+					v.tw=(int)tw.getNum();
+					v.th=(int)th.getNum();
 					v.init();
 					i.accept(v);
 					
@@ -619,12 +620,12 @@ public class FHIcons {
 					public void onClicked(MouseButton arg0) {
 						try {
 							v.rl=new ResourceLocation(rl.getText());
-							v.x=Integer.parseInt(x.getText());
-							v.y=Integer.parseInt(y.getText());
-							v.w=Integer.parseInt(w.getText());
-							v.h=Integer.parseInt(h.getText());
-							v.tw=Integer.parseInt(tw.getText());
-							v.th=Integer.parseInt(th.getText());
+							v.x=(int)x.getNum();
+							v.y=(int)y.getNum();
+							v.w=(int)w.getNum();
+							v.h=(int)h.getNum();
+							v.tw=(int)tw.getNum();
+							v.th=(int)th.getNum();
 							v.init();
 						}catch(NumberFormatException ex) {
 							

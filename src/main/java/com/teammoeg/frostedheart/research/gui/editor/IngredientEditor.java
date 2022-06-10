@@ -42,7 +42,7 @@ public class IngredientEditor extends BaseEditDialog{
 			}catch(Exception ex) {	
 			}
 		}
-		SingleEditDialog.TEXT_EDITOR.open(p, l,vx,s->c.accept(new TagList(TagCollectionManager.getManager().getItemTags().getTagByID(new ResourceLocation(s)))));
+		EditPrompt.TEXT_EDITOR.open(p, l,vx,s->c.accept(new TagList(TagCollectionManager.getManager().getItemTags().getTagByID(new ResourceLocation(s)))));
 	};
 	public static final Editor<IItemList> EDITOR_LIST=(p,l,v,c)->{
 		if(v==null)
@@ -109,7 +109,7 @@ public class IngredientEditor extends BaseEditDialog{
 			EDITOR_TAGLIST.open(p, l,null, e->c.accept(Ingredient.fromItemListStream(Stream.of(e))));
 	};
 	public static final Editor<Ingredient> EDITOR_JSON=(p,l,v,c)->{
-		SingleEditDialog.JSON_EDITOR.open(p, l,v==null?null:v.serialize(),e->c.accept(Ingredient.deserialize(e)));
+		EditPrompt.JSON_EDITOR.open(p, l,v==null?null:v.serialize(),e->c.accept(Ingredient.deserialize(e)));
 	};
 	public static final Editor<Ingredient> EDITOR_INGREDIENT=(p,l,v,c)->{
 		if(v==null) {
@@ -146,7 +146,7 @@ public class IngredientEditor extends BaseEditDialog{
 	Consumer<IngredientWithSize> callback;
 	int cnt;
 	Ingredient orig;
-	LabeledTextBox count;
+	NumberBox count;
 
 
 	public IngredientEditor(Widget panel, String label, IngredientWithSize i, Consumer<IngredientWithSize> callback) {
@@ -159,16 +159,12 @@ public class IngredientEditor extends BaseEditDialog{
 			this.cnt=1;
 		}
 		this.callback = callback;
-		count=new LabeledTextBox(this,"Count",String.valueOf(cnt));
+		count=new NumberBox(this,"Count",cnt);
 	}
 
 	@Override
 	public void onClose() {
-		try {
-			cnt=Integer.valueOf(count.getText());
-		}catch(NumberFormatException ex) {
-			cnt=1;
-		}
+		cnt=(int) count.getNum();
 		if(orig!=null)
 		callback.accept(new IngredientWithSize(orig,cnt));
 	}

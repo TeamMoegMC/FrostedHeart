@@ -1,21 +1,27 @@
 package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.clues.ClueEditor;
 import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.effects.EffectEditor;
 import com.teammoeg.frostedheart.research.gui.FHIcons.IconEditor;
 import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
 import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.research.gui.editor.Editor;
 import com.teammoeg.frostedheart.research.gui.editor.IngredientEditor;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledSelection;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
+import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -28,6 +34,9 @@ public class ResearchEditorDialog extends BaseEditDialog {
 	Research r;
 	LabeledTextBox id,name;
 	LabeledSelection<ResearchCategory> cat;
+	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->{
+		new EditListDialog<>(p,l,v,null,SelectDialog.EDITOR_RESEARCH,e->e.getName().getString(),Research::getIcon,c).open();
+	};
 	public ResearchEditorDialog(Widget panel,Research r,ResearchCategory def) {
 		super(panel);
 		if(r==null) {
@@ -77,23 +86,30 @@ public class ResearchEditorDialog extends BaseEditDialog {
 		add(cat);
 		
 		add(new OpenEditorButton<>(this,"Edit Description",EditListDialog.STRING_LIST,r.desc,s->r.desc=new ArrayList<>(s)));
-		add(new OpenEditorButton<>(this,"Edit Parents",EditListDialog.RESEARCH_LIST,r.getParents(),s->{
+		add(new OpenEditorButton<>(this,"Edit Parents",ResearchEditorDialog.RESEARCH_LIST,r.getParents(),s->{
 			r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
 		}));
-		add(new OpenEditorButton<>(this,"Edit Children",EditListDialog.RESEARCH_LIST,r.getChildren(),s->{
+		add(new OpenEditorButton<>(this,"Edit Children",ResearchEditorDialog.RESEARCH_LIST,r.getChildren(),s->{
 			r.getChildren().forEach(e->e.removeParent(r));
 			s.forEach(e->{e.addParent(r.getSupplier());e.doIndex();});
 			
 		}));
-		add(new OpenEditorButton<>(this,"Edit Effect",EditListDialog.EFFECT_LIST,r.getEffects(),s->{
+		add(new OpenEditorButton<>(this,"Edit Ingredients",IngredientEditor.LIST_EDITOR,r.getRequiredItems(),s->{
+			r.requiredItems=new ArrayList<>(s);
+		}));
+		add(new OpenEditorButton<>(this,"Edit Effects",EffectEditor.EFFECT_LIST,r.getEffects(),s->{
 			r.getEffects().forEach(Effect::deleteSelf);
 			r.getEffects().clear();
 			r.getEffects().addAll(s);
 			r.doIndex();
 		}));
-		add(new OpenEditorButton<>(this,"Edit Ingredients",IngredientEditor.LIST_EDITOR,r.getRequiredItems(),s->{
-			r.requiredItems=new ArrayList<>(s);
+		add(new OpenEditorButton<>(this,"Edit Clues",ClueEditor.EDITOR_LIST,r.getClues(),s->{
+			r.getClues().forEach(Clue::deleteSelf);
+			r.getClues().clear();
+			r.getClues().addAll(s);
+			r.doIndex();
 		}));
+		
 		
 	}
 

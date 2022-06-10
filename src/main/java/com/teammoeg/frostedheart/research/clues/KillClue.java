@@ -29,6 +29,10 @@ public class KillClue extends ListenerClue {
 		type=pb.readRegistryIdUnsafe(ForgeRegistries.ENTITIES);
 	}
 
+	KillClue() {
+	}
+
+
 	@Override
 	public void initListener(Team t) {
 		ResearchListeners.getKillClues().add(this,t);
@@ -45,7 +49,7 @@ public class KillClue extends ListenerClue {
 	}
 	
 	public boolean isCompleted(TeamResearchData trd, LivingEntity e) {
-		if(type.equals(e.getType())) {
+		if(type!=null&&type.equals(e.getType())) {
 			trd.setClueTriggered(this, true);
 			return true;
 		}

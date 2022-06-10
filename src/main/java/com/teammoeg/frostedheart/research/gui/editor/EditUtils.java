@@ -16,7 +16,7 @@ public class EditUtils {
 	}
 	public static void saveResearch(Research r) {
 		//TODO save it on production
-		//FHResearch.save(r);
+		FHResearch.save(r);
 	}
 
 	public static TextField getTitle(Panel p,String title) {

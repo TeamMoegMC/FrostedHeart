@@ -68,7 +68,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 		nonce=jo.get("id").getAsString();
 	}
 
-	public Effect(PacketBuffer pb) {
+	Effect(PacketBuffer pb) {
 		name = pb.readString();
 		tooltip = SerializeUtil.readList(pb, PacketBuffer::readString);
 		icon = SerializeUtil.readOptional(pb, FHIcons::readIcon).orElse(null);

@@ -48,7 +48,7 @@ public class EffectStats extends Effect {
 		isPercentage=pb.readBoolean();
 	}
 
-	public EffectStats() {
+	EffectStats() {
 		this.vars="";
 		this.val=0;
 	}

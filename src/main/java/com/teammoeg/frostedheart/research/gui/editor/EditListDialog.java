@@ -7,14 +7,10 @@ import java.util.function.Function;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.effects.Effect;
-import com.teammoeg.frostedheart.research.effects.EffectEditor;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
@@ -25,10 +21,7 @@ import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -39,23 +32,9 @@ import net.minecraft.util.text.TranslationTextComponent;
  */
 public class EditListDialog<T> extends EditDialog {
 	public static final Editor<Collection<String>> STRING_LIST=(p,l,v,c)->{
-		new EditListDialog<>(p,l,v,"",SingleEditDialog.TEXT_EDITOR,e->e,c).open();
+		new EditListDialog<>(p,l,v,"",EditPrompt.TEXT_EDITOR,e->e,c).open();
 	};
-	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->{
-		new EditListDialog<>(p,l,v,null,SelectorDialog.EDITOR_RESEARCH,e->e.getName().getString(),Research::getIcon,c).open();
-	};
-	private static String fromItemStack(ItemStack s) {
-		return s.getDisplayName().getString()+" x "+s.getCount();
-	}
-	public static final Editor<Collection<ItemStack>> STACK_LIST=(p,l,v,c)->{
-		new EditListDialog<>(p,l,v,new ItemStack(Items.AIR),SelectItemStackDialog.EDITOR,EditListDialog::fromItemStack,ItemIcon::getItemIcon,c).open();
-	};
-	public static final Editor<Collection<Block>> BLOCK_LIST=(p,l,v,c)->{
-		new EditListDialog<>(p,l,v,Blocks.AIR,SelectItemStackDialog.EDITOR_BLOCK,e->e.getTranslatedName().getString(),e->ItemIcon.getItemIcon(e.asItem()),c).open();
-	};
-	public static final Editor<Collection<Effect>> EFFECT_LIST=(p,l,v,c)->{
-		new EditListDialog<>(p,l,v,null,EffectEditor.EDITOR,Effect::getBrief,Effect::getIcon,c).open();
-	};
+
 	public class ButtonConfigValue extends Button {
 		public final int index;
 		

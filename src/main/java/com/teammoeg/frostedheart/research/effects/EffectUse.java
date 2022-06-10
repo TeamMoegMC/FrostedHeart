@@ -27,7 +27,7 @@ public class EffectUse extends Effect {
 
     List<Block> blocks;
     
-    public EffectUse() {
+    EffectUse() {
 		super();
 		this.blocks = new ArrayList<>();
 	}

@@ -220,7 +220,7 @@ public class SelectItemStackDialog extends EditDialog {
 		@Override
 		public void onClicked(MouseButton button) {
 			playClickSound();
-			SingleEditDialog.open(this,"Data", current.write(new CompoundNBT()).toString(),s -> {
+			EditPrompt.open(this,"Data", current.write(new CompoundNBT()).toString(),s -> {
 					try {
 						current = ItemStack.read(JsonToNBT.getTagFromJson(s));
 					} catch (CommandSyntaxException e) {
@@ -239,7 +239,7 @@ public class SelectItemStackDialog extends EditDialog {
 		@Override
 		public void onClicked(MouseButton button) {
 			playClickSound();
-			SingleEditDialog.open(this,"count",String.valueOf(current.getCount()), val -> {
+			EditPrompt.open(this,"count",String.valueOf(current.getCount()), val -> {
 				current.setCount(Integer.parseInt(val));
 				
 			});
@@ -254,7 +254,7 @@ public class SelectItemStackDialog extends EditDialog {
 		@Override
 		public void onClicked(MouseButton button) {
 			playClickSound();
-			SingleEditDialog.open(this,"nbt", fromNBT(current.getTag()), s -> {
+			EditPrompt.open(this,"nbt", fromNBT(current.getTag()), s -> {
 				try {
 					current.setTag(JsonToNBT.getTagFromJson(s));
 				} catch (CommandSyntaxException e) {
@@ -277,7 +277,7 @@ public class SelectItemStackDialog extends EditDialog {
 			final CompoundNBT nbt = current.write(new CompoundNBT());
 	
 
-			SingleEditDialog.open(this,"caps", fromNBT(nbt.get("ForgeCaps")), s -> {
+			EditPrompt.open(this,"caps", fromNBT(nbt.get("ForgeCaps")), s -> {
 					if (s == null ||s.isEmpty()||s.equals("null")) {
 						nbt.remove("ForgeCaps");
 					} else {
@@ -337,7 +337,16 @@ public class SelectItemStackDialog extends EditDialog {
 	private final TextBox searchBox;
 	private final Panel tabs;
 	public long update = Long.MAX_VALUE;
-
+	
+	public static final Editor<Collection<ItemStack>> STACK_LIST=(p,l,v,c)->{
+		new EditListDialog<>(p,l,v,new ItemStack(Items.AIR),EDITOR,SelectItemStackDialog::fromItemStack,ItemIcon::getItemIcon,c).open();
+	};
+	public static final Editor<Collection<Block>> BLOCK_LIST=(p,l,v,c)->{
+		new EditListDialog<>(p,l,v,Blocks.AIR,EDITOR_BLOCK,e->e.getTranslatedName().getString(),e->ItemIcon.getItemIcon(e.asItem()),c).open();
+	};
+	private static String fromItemStack(ItemStack s) {
+		return s.getDisplayName().getString()+" x "+s.getCount();
+	}
 	public SelectItemStackDialog(Widget p,String label,ItemStack orig,Consumer<ItemStack> cb) {
 		super(p);
 		setSize(211, 150);

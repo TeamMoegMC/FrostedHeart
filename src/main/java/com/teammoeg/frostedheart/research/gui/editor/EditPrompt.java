@@ -12,7 +12,7 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
-public class SingleEditDialog extends BaseEditDialog{
+public class EditPrompt extends BaseEditDialog{
 	public static Editor<String> TEXT_EDITOR=(p,l,v,c)->{
 		open(p,l,v,c);
 	};
@@ -37,7 +37,7 @@ public class SingleEditDialog extends BaseEditDialog{
 	LabeledTextBox box;
 	Button ok;
 	Button cancel;
-	public SingleEditDialog(Widget panel,String label,String val,Consumer<String> onFinished) {
+	public EditPrompt(Widget panel,String label,String val,Consumer<String> onFinished) {
 		super(panel);
 		box=new LabeledTextBox(this,label,val);
 		ok=new SimpleTextButton(this,GuiUtils.str("OK"),Icon.EMPTY) {
@@ -65,7 +65,7 @@ public class SingleEditDialog extends BaseEditDialog{
 		ok.setSize(300,20);
 	}
 	public static void open(Widget p,String l,String v,Consumer<String> f) {
-		new SingleEditDialog(p,l,v,f).open();
+		new EditPrompt(p,l,v,f).open();
 	}
 	@Override
 	public void onClose() {

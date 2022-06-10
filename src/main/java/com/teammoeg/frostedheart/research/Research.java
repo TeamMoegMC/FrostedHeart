@@ -225,6 +225,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		i=0;
 		for(Clue c:clues) {
 			c.addID(this.getLId(), i);
+			c.parent=getSupplier();
 			FHResearch.clues.register(c);
 			i++;
 		}

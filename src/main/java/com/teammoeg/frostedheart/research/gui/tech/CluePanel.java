@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 
@@ -14,16 +15,17 @@ import net.minecraft.util.text.ITextComponent;
 
 public class CluePanel extends Panel {
 	Clue c;
+	Research r;
 	public static final String sq = "\u2610";
 	public static final String sq_v = "\u2611";
 	public static final String sq_x = "\u2612";
 	ITextComponent hover;
 	TextField clueName;
 	TextField desc;
-	public CluePanel(Panel panel, Clue c) {
+	public CluePanel(Panel panel, Clue c,Research r) {
 		super(panel);
 		this.c = c;
-
+		this.r=r;
 	}
 	public void initWidgets() {
 		int offset = 1;
@@ -68,6 +70,8 @@ public class CluePanel extends Panel {
 		// super.drawBackground(matrixStack, theme, x, y, w, h);
 		if(c.isCompleted())
 			TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);
+		else if(r.isCompleted())
+			TechIcons.CHECKBOX_CROSS.draw(matrixStack, x, y, 9, 9);
 		else
 			TechIcons.CHECKBOX.draw(matrixStack, x, y, 9, 9);
 	}

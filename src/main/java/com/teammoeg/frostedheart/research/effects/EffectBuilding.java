@@ -36,7 +36,7 @@ public class EffectBuilding extends Effect {
         
     }
     
-    public EffectBuilding() {
+    EffectBuilding() {
 		super();
 	}
 

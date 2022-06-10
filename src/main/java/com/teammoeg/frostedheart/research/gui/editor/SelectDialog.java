@@ -12,6 +12,7 @@ import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
@@ -22,25 +23,41 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementManager;
+import net.minecraft.client.multiplayer.ClientAdvancementManager;
+import net.minecraft.entity.EntityType;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.registries.ForgeRegistries;
 
-public class SelectorDialog<T> extends EditDialog {
+public class SelectDialog<T> extends EditDialog {
 	public static <R> Function<R,ITextComponent> wrap(Function<R,Object> str){
 		return e->new StringTextComponent(String.valueOf(str.apply(e)));
 	}
 	public static final Editor<Research> EDITOR_RESEARCH=(p,l,v,c)->{
-		new SelectorDialog<>(p,l,v,c,FHResearch::getAllResearch,
+		new SelectDialog<>(p,l,v,c,FHResearch::getAllResearch,
 				Research::getName,e->new String[]{e.getId(),e.getName().getString()},
 				Research::getIcon
 		).open();
 	};
 	public static final Editor<IMultiblock> EDITOR_MULTIBLOCK=(p,l,v,c)->{
-		new SelectorDialog<>(p,l,v,c,MultiblockHandler::getMultiblocks,
+		new SelectDialog<>(p,l,v,c,MultiblockHandler::getMultiblocks,
 				wrap(IMultiblock::getUniqueName)
 		).open();
 	};
-	
+	public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT=(p,l,v,c)->{
+		ClientAdvancementManager cam=ClientUtils.mc().player.connection.getAdvancementManager();
+		Advancement adv=cam.getAdvancementList().getAdvancement(v);
+		new SelectDialog<Advancement>(p,l,adv,e->c.accept(e.getId()),()->cam.getAdvancementList().getAll(),
+				Advancement::getDisplayText
+		).open();
+	};
+	public static final Editor<EntityType<?>> EDITOR_ENTITY=(p,l,v,c)->{
+		new SelectDialog<>(p,l,v,c,ForgeRegistries.ENTITIES::getValues,EntityType::getName
+		).open();
+	};
 	String lbl;
 	T val;
 	Consumer<T> cb;
@@ -49,19 +66,19 @@ public class SelectorDialog<T> extends EditDialog {
 	Function<T,String[]> tosearch;
 	Function<T,Icon> toicon;
 
-	public SelectorDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+	public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
 			Function<T, ITextComponent> tostr) {
 		this(panel,lbl,val,cb,fetcher,tostr,e->new String[] {tostr.apply(val).getString()},e->Icon.EMPTY);
 	}
-	public SelectorDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
+	public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
 		this(panel,lbl,val,cb,fetcher,e->new StringTextComponent(e.toString()),e->new String[] {e.toString()},e->Icon.EMPTY);
 	}
-	public SelectorDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+	public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
 			Function<T, ITextComponent> tostr, Function<T, String[]> tosearch) {
 		this(panel,lbl,val,cb,fetcher,tostr,tosearch,e->Icon.EMPTY);
 	}
 
-	public SelectorDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+	public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
 			Function<T, ITextComponent> tostr, Function<T, String[]> tosearch, Function<T, Icon> toicon) {
 		super(panel);
 		this.lbl = lbl;

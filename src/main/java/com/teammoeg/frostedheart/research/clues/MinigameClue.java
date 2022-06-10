@@ -21,6 +21,9 @@ public class MinigameClue extends CustomClue {
 		level=pb.readVarInt();
 	}
 
+	MinigameClue() {
+	}
+
 	@Override
 	public String getId() {
 		return "game";
