@@ -33,7 +33,7 @@ public class Researches {
 		FHResearch.prepareReload();
 		File folder=FMLPaths.CONFIGDIR.get().toFile();
 		File rf=new File(folder,"fhresearches");
-		
+		ResearchCategories.ALL.get("ARS");
 
 		FHResearch.loadAll();
 		FHResearch.finishReload();
