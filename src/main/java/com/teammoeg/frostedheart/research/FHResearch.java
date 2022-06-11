@@ -149,8 +149,8 @@ public class FHResearch {
 		JsonParser jp=new JsonParser();
 		
 		for(File f:rf.listFiles((dir,name)->name.endsWith(".json"))) {
-			try(FileReader fr=new FileReader(f);JsonReader jr=new JsonReader(fr)){
-				JsonElement je=jp.parse(jr);
+			try{
+				JsonElement je=jp.parse(FileUtil.readString(f));
 				if(je.isJsonObject()) {
 					String id=f.getName();
 					researches.register(new Research(id.substring(0,id.length()-5),je.getAsJsonObject()));

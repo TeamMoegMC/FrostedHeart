@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
+import com.ibm.icu.text.NumberFormat;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -12,6 +13,7 @@ import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 public class CluePanel extends Panel {
 	Clue c;
@@ -22,6 +24,7 @@ public class CluePanel extends Panel {
 	ITextComponent hover;
 	TextField clueName;
 	TextField desc;
+	TextField contribute;
 	public CluePanel(Panel panel, Clue c,Research r) {
 		super(panel);
 		this.c = c;
@@ -39,6 +42,12 @@ public class CluePanel extends Panel {
 			desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
 			offset += desc.height + 2;
 		}
+		contribute=new TextField(this)
+				.setMaxWidth(width)
+				.setText(new StringTextComponent("+"+NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+				.setColor(TechIcons.text);
+		contribute.setPos(0, offset);
+		offset+=contribute.height+2;
 		offset+=1;
 		hover = c.getHint();
 		this.setHeight(offset);
@@ -48,6 +57,7 @@ public class CluePanel extends Panel {
 		add(clueName);
 		if(desc!=null)
 		add(desc);
+		add(contribute);
 	}
 	@Override
 	public boolean mousePressed(MouseButton button) {

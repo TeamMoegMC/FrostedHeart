@@ -56,6 +56,9 @@ public class Research extends FHRegisteredItem implements Writeable {
 	private List<Effect> effects = new ArrayList<>();// effects of this research
 	String name="";
 	List<String> desc;
+	List<String> fdesc;
+	boolean showfdesc;
+	boolean hideEffects;
 
 	long points = 2000;// research point
 
@@ -80,7 +83,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		this.id =Long.toHexString(UUID.randomUUID().getMostSignificantBits());
 		this.icon=FHIcons.nop();
 		desc=new ArrayList<>();
-		
+		fdesc=new ArrayList<>();
 	}
 	public Research(String id, JsonObject jo) {
 		this.id = id;
@@ -90,6 +93,10 @@ public class Research extends FHRegisteredItem implements Writeable {
 			desc=SerializeUtil.parseJsonElmList(jo.get("desc"),JsonElement::getAsString);
 		else
 			desc=new ArrayList<>();
+		if(jo.has("descAlt"))
+			fdesc=SerializeUtil.parseJsonElmList(jo.get("descAlt"),JsonElement::getAsString);
+		else
+			fdesc=new ArrayList<>();
 		icon = FHIcons.getIcon(jo.get("icon"));
 		setCategory(ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString())));
 		if(jo.has("parents"))
@@ -99,6 +106,10 @@ public class Research extends FHRegisteredItem implements Writeable {
 		requiredItems = SerializeUtil.parseJsonElmList(jo.get("ingredients"), IngredientWithSize::deserialize);
 		effects = SerializeUtil.parseJsonList(jo.get("effects"), Effects::deserialize);
 		points = jo.get("points").getAsInt();
+		if(jo.has("showAltDesc"))
+			showfdesc=jo.get("showAltDesc").getAsBoolean();
+		if(jo.has("hideEffects"))
+			hideEffects=jo.get("hideEffects").getAsBoolean();
 		
 	}
 	@Override
@@ -108,6 +119,8 @@ public class Research extends FHRegisteredItem implements Writeable {
 			jo.addProperty("name",name);
 		if(!desc.isEmpty())
 			jo.add("desc",SerializeUtil.toJsonStringList(desc,e->e));
+		if(!fdesc.isEmpty())
+			jo.add("descAlt",SerializeUtil.toJsonStringList(fdesc,e->e));
 		jo.add("icon", icon.serialize());
 		jo.addProperty("category", category.getId().toString());
 		if(!parents.isEmpty())
@@ -116,6 +129,10 @@ public class Research extends FHRegisteredItem implements Writeable {
 		jo.add("ingredients", SerializeUtil.toJsonList(requiredItems, IngredientWithSize::serialize));
 		jo.add("effects", SerializeUtil.toJsonList(effects, Writeable::serialize));
 		jo.addProperty("points", points);
+		if(showfdesc)
+			jo.addProperty("showAltDesc", true);
+		if(isHideEffects())
+			jo.addProperty("hideEffects", true);
 
 		return jo;
 	}
@@ -123,6 +140,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		this.id = id;
 		name=data.readString();
 		desc=SerializeUtil.readList(data,PacketBuffer::readString);
+		fdesc=SerializeUtil.readList(data,PacketBuffer::readString);
 		icon = FHIcons.readIcon(data);
 		setCategory(ResearchCategories.ALL.get(data.readResourceLocation()));
 
@@ -131,6 +149,8 @@ public class Research extends FHRegisteredItem implements Writeable {
 		requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
 		effects = SerializeUtil.readList(data, Effects::deserialize);
 		points = data.readVarLong();
+		showfdesc=data.readBoolean();
+		hideEffects=data.readBoolean();
 	}
 
 
@@ -139,6 +159,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	public void write(PacketBuffer buffer) {
 		buffer.writeString(name);
 		SerializeUtil.writeList2(buffer, desc,PacketBuffer::writeString);
+		SerializeUtil.writeList2(buffer, fdesc,PacketBuffer::writeString);
 		icon.write(buffer);
 		buffer.writeResourceLocation(category.getId());
 		SerializeUtil.writeList(buffer, parents, (e, p) -> p.writeVarInt(e.get().getRId()));
@@ -146,6 +167,8 @@ public class Research extends FHRegisteredItem implements Writeable {
 		SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
 		SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
 		buffer.writeVarLong(points);
+		buffer.writeBoolean(showfdesc);
+		buffer.writeBoolean(isHideEffects());
 	}
 
 	public Set<Clue> getClues() {
@@ -257,11 +280,17 @@ public class Research extends FHRegisteredItem implements Writeable {
 	public TextComponent getName() {
 		return (TextComponent) FHTextUtil.get(name,"research",()-> id + ".name");
 	}
-
 	public List<ITextComponent> getDesc() {
+		if(showfdesc&&!isCompleted())
+			return getAltDesc();
+		return getODesc();
+	}
+	public List<ITextComponent> getODesc() {
 		return FHTextUtil.get(desc,"research",()->id + ".desc");
 	}
-
+	public List<ITextComponent> getAltDesc() {
+		return FHTextUtil.get(fdesc,"research",()->id + ".desc_alt");
+	}
 	public ResearchCategory getCategory() {
 		return category;
 	}
@@ -370,6 +399,9 @@ public class Research extends FHRegisteredItem implements Writeable {
 			this.getChildren().forEach(e->e.addParent(this.getSupplier()));
 			this.doIndex();
 		}
+	}
+	public boolean isHideEffects() {
+		return hideEffects;
 	}
 	
 }

@@ -33,6 +33,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	String desc = "";
 	String hint = "";
 	String nonce;
+	boolean showContribute;
 	public Supplier<Research> parent;
 
 	public float getResearchContribution() {
@@ -62,7 +63,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 			this.hint = jo.get("hint").getAsString();
 		this.contribution = jo.get("value").getAsFloat();
 		this.nonce = jo.get("id").getAsString();
-
+		
 	}
 
 	public Clue(PacketBuffer pb) {

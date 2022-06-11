@@ -75,37 +75,39 @@ public class ResearchHierarchyPanel extends Panel {
 	public void addWidgets() {
 		if (FHResearch.editor) {
 			int offset=5;
-			Button par = new TechTextButton(this, GuiUtils.str("edit parents"), Icon.EMPTY) {
-				@Override
-				public void onClicked(MouseButton mouseButton) {
-					// TODO Add parent
-					Research r=researchScreen.selectedResearch;
-					ResearchEditorDialog.RESEARCH_LIST.open(this,"Edit parents",r.getParents(),s->{
-						r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
-						r.doIndex();
-						EditUtils.saveResearch(r);
-					});
-				}
-			};
-			par.setPos(offset,130);
-			add(par);
-			offset += par.width + 3;
-			Button chd = new TechTextButton(this, GuiUtils.str("edit children"), Icon.EMPTY) {
-				@Override
-				public void onClicked(MouseButton mouseButton) {
-					// TODO Add children
-					Research r=researchScreen.selectedResearch;
-					ResearchEditorDialog.RESEARCH_LIST.open(this,"Edit children",r.getChildren(),s->{
-						r.getChildren().forEach(e->e.removeParent(r));
-						s.forEach(e->{e.addParent(r.getSupplier());e.doIndex();});
-						r.doIndex();
-						EditUtils.saveResearch(r);
-					});
-				}
-			};
-			chd.setPos(offset,130);
-			add(chd);
-			offset += chd.width + 3;
+			if(researchScreen.selectedResearch!=null){
+				Button par = new TechTextButton(this, GuiUtils.str("edit parents"), Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						// TODO Add parent
+						Research r=researchScreen.selectedResearch;
+						ResearchEditorDialog.RESEARCH_LIST.open(this,"Edit parents",r.getParents(),s->{
+							r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
+							r.doIndex();
+							EditUtils.saveResearch(r);
+						});
+					}
+				};
+				par.setPos(offset,130);
+				add(par);
+				offset += par.width + 3;
+				Button chd = new TechTextButton(this, GuiUtils.str("edit children"), Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						// TODO Add children
+						Research r=researchScreen.selectedResearch;
+						ResearchEditorDialog.RESEARCH_LIST.open(this,"Edit children",r.getChildren(),s->{
+							r.getChildren().forEach(e->e.removeParent(r));
+							s.forEach(e->{e.addParent(r.getSupplier());e.doIndex();});
+							r.doIndex();
+							EditUtils.saveResearch(r);
+						});
+					}
+				};
+				chd.setPos(offset,130);
+				add(chd);
+				offset += chd.width + 3;
+			}
 			{
 				Button create = new TechTextButton(this, GuiUtils.str("new"), Icon.EMPTY) {
 					@Override

@@ -17,6 +17,8 @@ import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectBuilding;
 import com.teammoeg.frostedheart.research.effects.EffectItemReward;
 import com.teammoeg.frostedheart.research.gui.FramedPanel;
+import com.teammoeg.frostedheart.research.gui.RTextField;
+import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechTextButton;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -71,7 +73,8 @@ public class ResearchInfoPanel extends Panel {
 		});
 		prl.setTitle(GuiUtils.translateGui("research.requirements"));
 		prl.setPos(0, 0);
-		if ((!detailPanel.research.getRequiredItems().isEmpty())&&(FHResearch.editor || !researchData.canResearch())) {
+		if ((!detailPanel.research.getRequiredItems().isEmpty())
+				&& (FHResearch.editor || !researchData.canResearch())) {
 			panels.add(prl);
 			add(prl);
 		}
@@ -109,68 +112,70 @@ public class ResearchInfoPanel extends Panel {
 			panels.add(commitItems);
 			add(commitItems);
 		}
-		
+
 		if (!detailPanel.research.getEffects().isEmpty()) {
 			FramedPanel ppl = new FramedPanel(this, fp -> {
 				int offset = 2;
 				int xoffset = 2;
-				boolean hasItemRewards = false;
-				boolean hasB = false;
-				for (Effect effect : detailPanel.research.getEffects()) {
-					if (!(effect instanceof EffectBuilding))
-						continue;
-					LEffectWidget button = new LEffectWidget(fp, effect);
-					button.setPos(xoffset, offset);
-					fp.add(button);
-					xoffset += 32;
-					if (xoffset >= 98) {
-						offset += 32;
-						xoffset = 2;
-					}
-					hasB = true;
-				}
-				if (hasB)
-					offset += 42;
-				hasB = false;
-				xoffset = 4;
-				for (Effect effect : detailPanel.research.getEffects()) {
-
-					// item reward
-					if (effect instanceof EffectItemReward) {
-						hasItemRewards = true;
-
-					}
-
-					// building
-					if (effect instanceof EffectBuilding) {
-						continue;
-					}
-					EffectWidget button = new EffectWidget(fp, effect);
-					button.setPos(xoffset, offset);
-					fp.add(button);
-					xoffset += 17;
-					if (xoffset >= 121) {
-						xoffset = 4;
-						offset += 17;
-					}
-					hasB = true;
-				}
-
-				if (hasB)
-					offset += 24;
-				TeamResearchData data = TeamResearchData.getClientInstance();
-				// TODO: remove || true after api works
-				if (hasItemRewards && (data.getData(detailPanel.research).isCompleted() || true)) {
-					Button claimRewards = new TechTextButton(fp, GuiUtils.translateGui("research.claim_rewards"),
-							Icon.EMPTY) {
-						@Override
-						public void onClicked(MouseButton mouseButton) {
-							PacketHandler.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
+				if ((!detailPanel.research.isHideEffects()) || detailPanel.research.isCompleted()||FHResearch.editor) {
+					boolean hasB = false;
+					for (Effect effect : detailPanel.research.getEffects()) {
+						if (!(effect instanceof EffectBuilding))
+							continue;
+						LEffectWidget button = new LEffectWidget(fp, effect);
+						button.setPos(xoffset, offset);
+						fp.add(button);
+						xoffset += 32;
+						if (xoffset >= 98) {
+							offset += 32;
+							xoffset = 2;
 						}
-					};
-					claimRewards.setPos(0, offset);
-					fp.add(claimRewards);
-					offset += claimRewards.height + 1;
+						hasB = true;
+					}
+					if (hasB)
+						offset += 42;
+					hasB = false;
+					xoffset = 4;
+					boolean hasUnclaimed=false;
+					for (Effect effect : detailPanel.research.getEffects()) {
+						if(!effect.isGranted())
+							hasUnclaimed=true;
+						// building
+						if (effect instanceof EffectBuilding) {
+							continue;
+						}
+						EffectWidget button = new EffectWidget(fp, effect);
+						button.setPos(xoffset, offset);
+						fp.add(button);
+						xoffset += 17;
+						if (xoffset >= 121) {
+							xoffset = 4;
+							offset += 17;
+						}
+						hasB = true;
+					}
+
+					if (hasB)
+						offset += 24;
+					TeamResearchData data = TeamResearchData.getClientInstance();
+					if (data.getData(detailPanel.research).isCompleted()&&hasUnclaimed) {
+						Button claimRewards = new TechTextButton(fp, GuiUtils.translateGui("research.claim_rewards"),
+								Icon.EMPTY) {
+							@Override
+							public void onClicked(MouseButton mouseButton) {
+								PacketHandler.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
+							}
+						};
+						claimRewards.setPos(0, offset);
+						fp.add(claimRewards);
+						offset += claimRewards.height + 1;
+					}
+				}else {
+					RTextField rt=new RTextField(fp).setColor(TechIcons.text).setMaxWidth(width-5).setText(GuiUtils.translateGui("effect_unknown"))
+							;
+					rt.setPos(xoffset,offset);
+					offset+=rt.height;
+					fp.add(rt);
 				}
 				fp.setWidth(width);
 				fp.setHeight(offset);
@@ -202,7 +207,7 @@ public class ResearchInfoPanel extends Panel {
 			add(pcl);
 			panels.add(pcl);
 		}
-		if (!detailPanel.research.getRequiredItems().isEmpty()&&(!FHResearch.editor) && researchData.canResearch()) {
+		if (!detailPanel.research.getRequiredItems().isEmpty() && (!FHResearch.editor) && researchData.canResearch()) {
 			panels.add(prl);
 			add(prl);
 		}

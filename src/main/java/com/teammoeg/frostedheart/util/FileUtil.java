@@ -51,10 +51,10 @@ public class FileUtil {
 		return ba.toByteArray();
 	}
 	public static String readString(InputStream i) throws IOException {
-		return new String(readAll(i));
+		return new String(readAll(i),StandardCharsets.UTF_8);
 	}
 	public static String readString(File f) throws IOException {
-		return new String(readAll(f));
+		return new String(readAll(f),StandardCharsets.UTF_8);
 	}
 	public static byte[] readAll(File f) throws IOException {
 		try(FileInputStream fis=new FileInputStream(f)){
