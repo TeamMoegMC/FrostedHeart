@@ -200,7 +200,7 @@ public class ResearchListeners {
 	}
 	@OnlyIn(Dist.CLIENT)
 	public static int fetchGameLevel() {
-		TeamResearchData trd=ResearchDataAPI.getData(s);
+		TeamResearchData trd=ClientResearchDataAPI.getData();
 		LazyOptional<Research> cur=trd.getCurrentResearch();
 		if(cur.isPresent()) {
 			Research rs=cur.orElse(null);
