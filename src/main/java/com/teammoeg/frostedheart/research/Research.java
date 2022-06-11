@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		return cg;
 	}*/
 	public Research() {
-		this.id = "";
+		this.id =Long.toHexString(UUID.randomUUID().getMostSignificantBits());
 		this.icon=FHIcons.nop();
 		desc=new ArrayList<>();
 		
@@ -363,6 +364,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		if(!id.equals(nid)) {
 			ResearchDataManager.INSTANCE.getAllData().forEach(e->e.resetData(this));
 			deleteInTree();//clear all reference, hope this could work
+			FHResearch.delete(this);
 			this.setId(nid);
 			FHResearch.register(this);
 			this.getChildren().forEach(e->e.addParent(this.getSupplier()));

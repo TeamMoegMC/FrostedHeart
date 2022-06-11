@@ -507,7 +507,7 @@ public class FHIcons {
 			SelectItemStackDialog.EDITOR.open(p,l,v==null?null:v.stack,e->c.accept(new FHItemIcon(e)));
 		};
 		public static final Editor<FHTextureIcon> TEXTURE_EDITOR=(p,l,v,c)->{
-			EditPrompt.TEXT_EDITOR.open(p,l,v==null?null:v.rl.toString(),e->c.accept(new FHTextureIcon(new ResourceLocation(e))));
+			EditPrompt.TEXT_EDITOR.open(p,l,v==null?"":(v.rl==null?"":v.rl.toString()),e->c.accept(new FHTextureIcon(new ResourceLocation(e))));
 		};
 		public static final Editor<FHIngredientIcon> INGREDIENT_EDITOR=(p,l,v,c)->{
 			IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p,l,v==null?null:v.igd,e->c.accept(new FHIngredientIcon(e)));
@@ -578,7 +578,7 @@ public class FHIcons {
 				super(panel,v==null?new FHTextureUVIcon():v);
 				this.label=label;
 				this.i=i;
-				rl=new LabeledTextBox(this,"Texture",this.v.rl.toString());
+				rl=new LabeledTextBox(this,"Texture",rl==null?"":this.v.rl.toString());
 				x=new NumberBox(this,"X",(v.x));
 				y=new NumberBox(this,"Y",(v.y));
 				w=new NumberBox(this,"Width",(v.w));
