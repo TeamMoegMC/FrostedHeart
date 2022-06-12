@@ -59,6 +59,7 @@ import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -87,10 +88,7 @@ import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.AnvilUpdateEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.*;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -118,12 +116,18 @@ public class ForgeEvents {
 	/*@SubscribeEvent
 	public void onServerStarted(FMLServerStartedEvent event) {
 
-	}
+	}*/
 
 	@SubscribeEvent
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
+		if (event.world.getServer() != null) {
+			long currentGameTick = event.world.getGameTime();
+			if (currentGameTick % 1000 == 0) {
+				//TODO: call ClimateData#updateHourTemp(currentGameTick)
+			}
+		}
 
-	}*/
+	}
 	
 	/*@SubscribeEvent(priority=EventPriority.HIGHEST)
 	public static void onBlockGenerate(FluidPlaceBlockEvent event) {

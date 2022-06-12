@@ -12,6 +12,9 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     @CapabilityInject(ClimateData.class)
     public static Capability<ClimateData> CAPABILITY;
@@ -49,13 +52,55 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         this.blizzardTime = blizzardTime;
     }
 
+    private float getCurrentHourTemp(long currentGameTick) {
+        //TODO: need initial tempevent
+        TempEvent head = tempEventStream.peek();
+        if (head != null) {
+            while (currentGameTick > head.calmEndTime) {
+                //TODO: add random temp event
+                tempEventStream.remove();
+                long prevEnd = head.calmEndTime;
+                while (tempEventStream.size() <= 2) {
+                    tempEventStream.add(TempEvent.getTempEvent(prevEnd));
+                    prevEnd = tempEventStream.peek().calmEndTime;
+                }
+                head = tempEventStream.peek();
+            }
+            TempEvent newHeadEvent = tempEventStream.peek();
+            return newHeadEvent.getHourTemp(currentGameTick);
+        } else {
+            //TODO: throw exception
+            return 0F;
+        }
+    }
+
+    /**
+     * Called every hour (1000 ticks) from ForgeEvents#onServerTick()
+     * to update the hourTemp;
+     * @param currentGameTick should be multiple of 1000
+     */
+    public void updateHourTemp(long currentGameTick) {
+        this.hourTemp = getCurrentHourTemp(currentGameTick);
+    }
+
+    /**
+     * Lightweight getter that can be called every tick from client
+     * @return the baseline temperature at this hour
+     */
+    public float getTemp() {
+        return hourTemp;
+    }
+
     private boolean isBlizzard;
     private int blizzardTime;
+    private Queue<TempEvent> tempEventStream;
+    private float hourTemp;
 
     public ClimateData() {
         capability = LazyOptional.of(() -> this);
         isBlizzard = false;
         blizzardTime = 0;
+        tempEventStream = new LinkedList<>();
     }
 
     @Override
