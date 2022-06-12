@@ -68,10 +68,9 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             }
             TempEvent newHeadEvent = tempEventStream.peek();
             return newHeadEvent.getHourTemp(currentGameTick);
-        } else {
-            //TODO: throw exception
-            return 0F;
         }
+		//TODO: throw exception
+		return 0F;
     }
 
     /**
