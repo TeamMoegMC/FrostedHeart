@@ -97,8 +97,8 @@ public class FHDrawingDeskOperationPacket {
         		boolean flag=true;
         		switch(op) {
         		case 0:((DrawingDeskTileEntity) tile).initGame(context.get().getSender());break;
-        		case 1:flag=rg.tryCombine(pos1, null);break;
-        		case 2:flag=rg.tryCombine(pos1, pos2);break;
+        		case 1:flag=((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(),pos1, null);break;
+        		case 2:flag=((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(),pos1, pos2);break;
         		case 3:((DrawingDeskTileEntity) tile).submitItem(context.get().getSender());break;
         		}
         		if(flag) {

@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
+import com.teammoeg.frostedheart.content.recipes.PaperRecipe;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
@@ -116,6 +117,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .filter(iRecipe -> iRecipe.getClass()==DietValueRecipe.class)
                 .map(e->(DietValueRecipe)e)
                 .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
+        PaperRecipe.recipes=filterRecipes(recipes, PaperRecipe.class, PaperRecipe.TYPE).values().stream().collect(Collectors.toList());
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {

@@ -64,6 +64,8 @@ import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipeSerializer;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.content.recipes.DietValueSerializer;
+import com.teammoeg.frostedheart.content.recipes.PaperRecipe;
+import com.teammoeg.frostedheart.content.recipes.PaperSerializer;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantle;
 import com.teammoeg.frostedheart.content.recipes.RecipeInnerDismantleSerializer;
@@ -98,6 +100,8 @@ import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.research.machines.FHBasePen;
+import com.teammoeg.frostedheart.research.machines.FHReusablePen;
 import com.teammoeg.frostedheart.util.FHFoods;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
@@ -253,8 +257,8 @@ public class FHContent {
         public static Item red_mushroombed=new MushroomBed("straw_briquette_red_mushroom",Items.RED_MUSHROOM,createProps().defaultMaxDamage(4800));
         public static Item brown_mushroombed=new MushroomBed("straw_briquette_brown_mushroom",Items.BROWN_MUSHROOM,createProps().defaultMaxDamage(4800));
         public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", createProps().maxStackSize(1));
-        public static Item charcoal = new FHBaseItem("charcoal", createProps().maxDamage(50).setNoRepair().maxStackSize(1));
-        public static Item quill_and_ink = new FHBaseItem("quill_and_ink", createProps().maxDamage(100).setNoRepair());
+        public static Item charcoal = new FHBasePen("charcoal", createProps().maxDamage(50).setNoRepair());
+        public static Item quill_and_ink = new FHReusablePen("quill_and_ink", createProps().maxDamage(101).setNoRepair());
     }
 
     public static class FHMultiblocks {
@@ -337,6 +341,7 @@ public class FHContent {
             RecipeFueling.SERIALIZER=RECIPE_SERIALIZERS.register("fuel_stove",RecipeFuelingSerializer::new);
             DietValueRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("diet_override",DietValueSerializer::new);
             IncubateRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("incubate",IncubateRecipeSerializer::new);
+            PaperRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("paper",PaperSerializer::new);
         }
 
         public static void registerRecipeTypes() {
@@ -345,6 +350,7 @@ public class FHContent {
             ChargerRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":charger");
             DietValueRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":diet_override");
             IncubateRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":incubate");
+            PaperRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":paper");
         }
     }
 

@@ -45,6 +45,8 @@ public class HandCrankBlockMixin {
         if (player instanceof FakePlayer) {
             worldIn.destroyBlock(pos, true);
             ci.setReturnValue(ActionResultType.FAIL);
+        }else if(player.getFoodStats().getFoodLevel()<4) {
+        	 ci.setReturnValue(ActionResultType.FAIL);
         }
     }
 }

@@ -43,20 +43,20 @@ public class DrawDeskContainer extends IEBaseContainer<DrawingDeskTileEntity> {
 		this.addSlot(new EnableIESlot(this, this.inv, 0, 114, 93) {// research
 			@Override
 			public boolean isItemValid(ItemStack itemStack) {
-				return true;
+				return tile.isStackValid(0, itemStack);
 			}
 			
 		});
 		this.addSlot(new EnableIESlot(this, this.inv, 1, 114, 161) {// paper
 			@Override
 			public boolean isItemValid(ItemStack itemStack) {
-				return true;
+				return tile.isStackValid(1, itemStack);
 			}
 		});
 		this.addSlot(new EnableIESlot(this, this.inv, 2, 114, 178) {// pen
 			@Override
 			public boolean isItemValid(ItemStack itemStack) {
-				return true;
+				return tile.isStackValid(2, itemStack);
 			}
 		});
 
