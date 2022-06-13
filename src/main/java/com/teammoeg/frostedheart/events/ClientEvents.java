@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
@@ -78,6 +79,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -203,7 +205,11 @@ public class ClientEvents {
             HeaterVestRenderer.rendersAssigned = true;
         }
     }
-
+	@SubscribeEvent
+    public void onWorldUnLoad(Unload event) {
+        TeamResearchData.resetClientInstance();
+    }
+	
 	@SubscribeEvent
 	public static void onResearchStatus(ClientResearchStatusEvent event) {
 		for(Effect e:event.getResearch().getEffects())

@@ -6,9 +6,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 
 public class FHReusablePen extends FHBaseItem implements IPen {
-
-	public FHReusablePen(String name, Properties properties) {
+	int lvl;
+	public FHReusablePen(String name, Properties properties,int lvl) {
 		super(name, properties);
+		this.lvl=lvl;
 	}
 
 	@Override
@@ -19,6 +20,11 @@ public class FHReusablePen extends FHBaseItem implements IPen {
 	@Override
 	public boolean canUse(PlayerEntity e,ItemStack stack,int val) {
 		return stack.getDamage()<stack.getMaxDamage()-val;
+	}
+
+	@Override
+	public int getLevel(ItemStack is, PlayerEntity player) {
+		return lvl;
 	}
 
 }

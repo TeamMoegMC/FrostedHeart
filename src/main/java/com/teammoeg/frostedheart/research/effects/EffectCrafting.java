@@ -83,10 +83,13 @@ public class EffectCrafting extends Effect{
     	super(jo);
     	if(jo.has("item")) {
     		JsonElement je=jo.get("item");
-    		if(je.isJsonPrimitive())
+    		if(je.isJsonPrimitive()) {
     			item=ForgeRegistries.ITEMS.getValue(new ResourceLocation(je.getAsString()));
-    		else
+    			initItem();
+    		}else {
     			itemStack=SerializeUtil.fromJson(je);
+    			initStack();
+    		}
     	}else if(jo.has("recipes")) {
     		unlocks=SerializeUtil.parseJsonElmList(jo.get("recipes"),e->ResearchDataManager.server.getRecipeManager().getRecipe(new ResourceLocation(e.getAsString())).orElse(null));
     		unlocks.removeIf(Objects::isNull);
@@ -119,7 +122,7 @@ public class EffectCrafting extends Effect{
 
     @Override
     public void revoke(TeamResearchData team) {
-    	team.crafting.addAll(unlocks);
+    	team.crafting.removeAll(unlocks);
     }
 
 	@Override

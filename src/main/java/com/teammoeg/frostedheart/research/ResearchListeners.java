@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -243,6 +244,14 @@ public class ResearchListeners {
 		}
 		return true;
 	}
+	@SuppressWarnings("resource")
+	public static boolean canUseRecipe(UUID team,IRecipe<?> r) {
+		if(recipe.has(r)) {
+			if(team==null)return false;
+			return ResearchDataAPI.getData(team).crafting.has(r);
+		}
+		return true;
+	}
 	public static ListenerList<KillClue> getKillClues() {
 		return killClues;
 	}
@@ -250,5 +259,11 @@ public class ResearchListeners {
 		Team t=FTBTeamsAPI.getPlayerTeam(s);
 		TeamResearchData trd=ResearchDataAPI.getData(s);
 		killClues.call(t,c->c.isCompleted(trd, e));
+	}
+	public static boolean canUseRecipe(IRecipe<?> r) {
+		if(recipe.has(r)) {
+			return ClientResearchDataAPI.getData().crafting.has(r);
+		}
+		return true;
 	}
 }

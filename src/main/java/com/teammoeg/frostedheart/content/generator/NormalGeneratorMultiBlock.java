@@ -63,8 +63,7 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
 		if(!world.isRemote) {
 			TileEntity te=Utils.getExistingTileEntity(world, pos);
 			if(te instanceof AbstractGenerator&&((AbstractGenerator) te).shouldUnique()) {
-				if(((AbstractGenerator) te).owner==null) {
-					((AbstractGenerator) te).owner=player.getUniqueID();
+				if(((AbstractGenerator) te).getOwner()==null) {
 					((AbstractGenerator) te).setOwner(player.getUniqueID());
 					((AbstractGenerator) te).regist();
 				}

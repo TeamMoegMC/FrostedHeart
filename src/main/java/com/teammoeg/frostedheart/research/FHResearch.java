@@ -34,6 +34,7 @@ public class FHResearch {
 	public static CompoundNBT save(CompoundNBT cnbt) {
 		cnbt.put("clues", clues.serialize());
 		cnbt.put("researches", researches.serialize());
+		cnbt.put("effects",effects.serialize());
 		return cnbt;
 	}
 

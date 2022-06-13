@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.util.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
@@ -44,7 +45,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     boolean isDirty;//mark if temperature change required
     boolean isLocked=false;
     private int checkInterval=0;
-    UUID owner;//owner bind
     public AbstractGenerator(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
     }
@@ -63,8 +63,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         isWorking=nbt.getBoolean("isWorking");
         isOverdrive=nbt.getBoolean("isOverdrive");
         isActualOverdrive=nbt.getBoolean("Overdriven");
-        if(nbt.contains("Owner"))
-        owner=nbt.getUniqueId("Owner");
     }
 
     @Override
@@ -73,8 +71,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         nbt.putBoolean("isWorking",isWorking);
         nbt.putBoolean("isOverdrive",isOverdrive);
         nbt.putBoolean("Overdriven",isActualOverdrive);
-        if(owner!=null)
-        nbt.putUniqueId("Owner",owner);
     }
 
     @Override
@@ -85,6 +81,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         super.disassemble();
     }
     public void unregist() {
+    	UUID owner=getOwner();
     	if(owner==null)return;
     	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
     	if(!vars.contains("generator_loc"))return;
@@ -94,13 +91,14 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         	vars.remove("generator_loc");
     }
     public void regist() {
-    	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
+    	CompoundNBT vars=ResearchDataAPI.getVariants(getOwner());
         vars.putLong("generator_loc",master().pos.toLong());
     }
     public void setOwner(UUID owner){
-    	forEachBlock(s->s.owner=owner);
+    	forEachBlock(s->IOwnerTile.setOwner(s,owner));
     }
     public boolean shouldWork() {
+    	UUID owner=getOwner();
     	if(owner==null)return false;
     	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
     	if(!vars.contains("generator_loc")) {
@@ -138,7 +136,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
         	if(shouldUnique()) {
         		if(checkInterval<=0) {
-        			if(owner!=null)
+        			if(getOwner()!=null)
         				checkInterval=10;
         			isLocked=!shouldWork();
         		}else checkInterval--;
@@ -245,4 +243,8 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         forEachBlock(s->s.setActive(state));
     }
     public abstract void forEachBlock(Consumer<T> consumer);
+
+	UUID getOwner() {
+		return IOwnerTile.getOwner(this);
+	}
 }

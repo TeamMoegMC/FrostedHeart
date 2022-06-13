@@ -21,4 +21,9 @@ public class FHBasePen extends FHBaseItem implements IPen {
 		return true;
 	}
 
+	@Override
+	public int getLevel(ItemStack is, PlayerEntity player) {
+		return 0;
+	}
+
 }

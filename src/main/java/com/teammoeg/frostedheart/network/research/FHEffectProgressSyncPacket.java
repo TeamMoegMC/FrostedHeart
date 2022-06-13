@@ -51,7 +51,12 @@ public class FHEffectProgressSyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHResearch.effects.getById(id).setGranted(data);
+        	Effect e=FHResearch.effects.getById(id);
+        	if(data)
+        		e.grant(TeamResearchData.getClientInstance(),null);
+        	else
+        		e.revoke(TeamResearchData.getClientInstance());
+        	e.setGranted(data);
         });
         context.get().setPacketHandled(true);
     }

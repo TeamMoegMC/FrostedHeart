@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat.jei;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -72,6 +73,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
@@ -122,26 +124,41 @@ public class JEICompat implements IModPlugin {
 		man.hideRecipeCategory(VanillaRecipeCategoryUid.SMOKING);
 		man.hideRecipeCategory(VanillaRecipeCategoryUid.FURNACE);
 	}
-	static Map<IRecipeType<?>,ResourceLocation> types=new HashMap<>();
+	static Map<IRecipeType<?>,Set<ResourceLocation>> types=new HashMap<>();
 	static {
-		types.put(IRecipeType.CRAFTING,VanillaRecipeCategoryUid.CRAFTING);
+		types.computeIfAbsent(IRecipeType.CRAFTING,i->new HashSet<>()).add(VanillaRecipeCategoryUid.CRAFTING);
 	}
 	public static void syncJEI() {
+		//System.out.println("syncJEI");
 		if(man==null)return;
-		Map<Class<?>,ResourceLocation> cates=new HashMap<>();
+		Map<Class<?>,Set<ResourceLocation>> cates=new HashMap<>();
 		for(IRecipeCategory<?> rg:man.getRecipeCategories()) {
-			cates.put(rg.getRecipeClass(),rg.getUid());
+			if(rg.getRecipeClass() ==ICraftingRecipe.class)
+				types.computeIfAbsent(IRecipeType.CRAFTING,i->new HashSet<>()).add(rg.getUid());
+			else
+				cates.computeIfAbsent(rg.getRecipeClass(),i->new HashSet<>()).add(rg.getUid());
+			//System.out.println(rg.getRecipeClass().getSimpleName()+":"+rg.getUid());
 		}
 		//ClientWorld world = Minecraft.getInstance().world;
         //checkNotNull(world, "minecraft world");
         //RecipeManager recipeManager = world.getRecipeManager();
 		
 		for(IRecipe<?> i:ResearchListeners.recipe) {
+			Set<ResourceLocation> hs=cates.remove(i.getClass());
+			Set<ResourceLocation> all=types.computeIfAbsent(i.getType(),d->new HashSet<>());
+			if(hs!=null) {
+				all.addAll(hs);
+			}
 			
-			if(!TeamResearchData.getClientInstance().crafting.has(i))
-				man.hideRecipe(i,types.computeIfAbsent(i.getType(),t->cates.getOrDefault(i.getClass(),VanillaRecipeCategoryUid.CRAFTING)));
-			else
-				man.unhideRecipe(i,types.computeIfAbsent(i.getType(),t->cates.getOrDefault(i.getClass(),VanillaRecipeCategoryUid.CRAFTING)));
+	
+			
+			if(!TeamResearchData.getClientInstance().crafting.has(i)) {
+				//System.out.println(i.getId());
+				for(ResourceLocation rl:all)
+					man.hideRecipe(i,rl);
+			}else
+				for(ResourceLocation rl:all)
+					man.unhideRecipe(i,rl);
 		}
 	}
 	@Override

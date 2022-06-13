@@ -179,9 +179,8 @@ public class TeamResearchData {
 	public void setGrant(Effect e, boolean flag) {
 		int id = e.getRId();
 		ensureEffect(id);
-		if (!grantedEffects.get(id - 1)) {
-			grantedEffects.set(id - 1, flag);
-		}
+		grantedEffects.set(id - 1, flag);
+		
 	}
 
 	public boolean isEffectGranted(int id) {
@@ -233,11 +232,11 @@ public class TeamResearchData {
 		nbt.put("researches", rs);
 		nbt.putInt("active", activeResearchId);
 		// these data does not send to client
-		if (!updatePacket) {
+		//if (!updatePacket) {
 			nbt.put("crafting", crafting.serialize());
 			nbt.put("building", building.serialize());
 			nbt.put("block", block.serialize());
-		}
+		//}
 		return nbt;
 	}
 
@@ -263,18 +262,19 @@ public class TeamResearchData {
 			INBT e = li.get(i);
 			rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
 		}
-		if (!updatePacket) {
+		//if (!updatePacket) {
 			crafting.load(data.getList("crafting", 8));
 			building.load(data.getList("building", 8));
 			block.load(data.getList("block", 8));
-		}
-
+		//}
 	}
 
 	public static TeamResearchData getClientInstance() {
 		return INSTANCE;
 	}
-
+	public static void resetClientInstance() {
+		INSTANCE=new TeamResearchData(null);
+	}
 	@OnlyIn(Dist.CLIENT)
 	public static void setActiveResearch(int id) {
 		INSTANCE.activeResearchId = id;
@@ -292,8 +292,11 @@ public class TeamResearchData {
 			}
 			for (Effect e : r.getEffects()) {
 				this.setGrant(e, false);
-				if (t != null)
+				e.revoke(this);
+				if (t != null) {
+					
 					e.sendProgressPacket(t);
+				}
 			}
 			if (t != null) {
 				FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(r.getRId());

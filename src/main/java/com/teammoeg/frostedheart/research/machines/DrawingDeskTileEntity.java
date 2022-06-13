@@ -87,20 +87,25 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 		if(lvl<0)return;
 		Optional<PaperRecipe> pr=PaperRecipe.recipes.stream().filter(r->r.maxlevel>=lvl&&r.paper.test(inventory.get(PAPER_SLOT))).findAny();
 		if(!pr.isPresent())return;
-		if(!damageInk(player,5))return;
+		if(!damageInk(player,5,lvl))return;
 		inventory.get(PAPER_SLOT).shrink(1);
 		game.init(GenerateInfo.all[lvl],new Random());
 		game.setLvl(lvl);
 	}
-	private boolean damageInk(ServerPlayerEntity spe,int val) {
+	private boolean damageInk(ServerPlayerEntity spe,int val,int lvl) {
 		ItemStack is=inventory.get(INK_SLOT);
 		if(is.isEmpty()||!(is.getItem() instanceof IPen))return false;
 		IPen pen=(IPen) is.getItem();
+		if(pen.getLevel(is, spe)<lvl)return false;
 		return pen.damage(spe, is, val);
 	}
 	public boolean tryCombine(ServerPlayerEntity player,CardPos cp1,CardPos cp2) {
-		if(!damageInk(player,1))return false;
-		return game.tryCombine(cp1, cp2);
+		ItemStack is=inventory.get(INK_SLOT);
+		if(is.isEmpty()||!(is.getItem() instanceof IPen))return false;
+		IPen pen=(IPen) is.getItem();
+		if(pen.getLevel(is, player)<game.getLvl())
+			return false;
+		return pen.tryDamage(player, is,1,()->game.tryCombine(cp1, cp2));
 	}
 	public void updateGame(ServerPlayerEntity player) {
 		if(game.isFinished()) {

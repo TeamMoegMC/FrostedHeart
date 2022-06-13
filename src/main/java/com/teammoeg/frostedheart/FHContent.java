@@ -258,7 +258,7 @@ public class FHContent {
         public static Item brown_mushroombed=new MushroomBed("straw_briquette_brown_mushroom",Items.BROWN_MUSHROOM,createProps().defaultMaxDamage(4800));
         public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", createProps().maxStackSize(1));
         public static Item charcoal = new FHBasePen("charcoal", createProps().maxDamage(50).setNoRepair());
-        public static Item quill_and_ink = new FHReusablePen("quill_and_ink", createProps().maxDamage(101).setNoRepair());
+        public static Item quill_and_ink = new FHReusablePen("quill_and_ink", createProps().maxDamage(101).setNoRepair(),1);
     }
 
     public static class FHMultiblocks {
