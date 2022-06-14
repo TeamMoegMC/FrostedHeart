@@ -68,6 +68,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 	Consumer<T> cb;
 	protected LabeledTextBoxAndBtn nonce;
 	protected LabeledTextBox name;
+	protected LabeledSelection<Boolean> sd;
 	public static final Editor<Collection<Effect>> EFFECT_LIST=(p,l,v,c)->{
 		new EditListDialog<>(p,l,v,null,EffectEditor.EDITOR,Effect::getBrief,Effect::getIcon,c).open();
 	};
@@ -81,16 +82,16 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 			e=createEffect();	
 		}
 		this.e = e;
-		nonce=new LabeledTextBoxAndBtn(this,"nonce",e!=null?e.getNonce():"","Random",t->t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
+		nonce=new LabeledTextBoxAndBtn(this,"nonce",e.getNonce(),"Random",t->t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
 		name=new LabeledTextBox(this,"name",e.name);
-		
+		sd=LabeledSelection.createBool(this,"Hide",e.isHidden());
 		this.cb = cb;
 	}
 	public abstract T createEffect();
 	@Override
 	public void onClose() {
 		e.name=name.getText();
-		
+		e.hidden=sd.getSelection();
 		if(e.getRId()!=0){
 			e.setNewId(nonce.getText());
 		}else {

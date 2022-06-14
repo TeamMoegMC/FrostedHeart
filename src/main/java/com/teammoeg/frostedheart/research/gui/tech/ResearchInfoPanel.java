@@ -122,6 +122,7 @@ public class ResearchInfoPanel extends Panel {
 					for (Effect effect : detailPanel.research.getEffects()) {
 						if (!(effect instanceof EffectBuilding))
 							continue;
+						if(effect.isHidden())continue;
 						LEffectWidget button = new LEffectWidget(fp, effect);
 						button.setPos(xoffset, offset);
 						fp.add(button);
@@ -144,6 +145,7 @@ public class ResearchInfoPanel extends Panel {
 						if (effect instanceof EffectBuilding) {
 							continue;
 						}
+						if(effect.isHidden())continue;
 						EffectWidget button = new EffectWidget(fp, effect);
 						button.setPos(xoffset, offset);
 						fp.add(button);

@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
@@ -75,6 +76,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
@@ -96,6 +98,7 @@ import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -342,6 +345,15 @@ public class ForgeEvents {
 			}
 		}
 	}
+	@SubscribeEvent
+	public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
+		if(!ResearchListeners.canUseBlock(event.getPlayer(),event.getWorld().getBlockState(event.getHitVec().getPos()).getBlock())) {
+			event.setCanceled(true);
+			event.setCancellationResult(ActionResultType.FAIL);
+			event.getPlayer().sendMessage(GuiUtils.translateMessage("research_no_use"),event.getPlayer().getUniqueID());
+		}
+	}
+		
 	@SubscribeEvent
 	public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
 		Block growBlock = event.getState().getBlock();

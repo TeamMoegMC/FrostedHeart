@@ -266,4 +266,13 @@ public class ResearchListeners {
 		}
 		return true;
 	}
+	public static boolean canUseBlock(PlayerEntity player, Block b) {
+		if(block.has(b)) {
+			if(player.getEntityWorld().isRemote)
+				return ClientResearchDataAPI.getData().block.has(b);
+			return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
+		}
+		return true;
+		
+	}
 }

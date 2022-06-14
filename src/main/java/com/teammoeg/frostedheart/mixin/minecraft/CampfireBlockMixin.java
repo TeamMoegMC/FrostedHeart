@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.ICampfireExtra;
 
 import net.minecraft.block.BlockState;
@@ -131,7 +132,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                 }
                 Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
                 if (optional.isPresent()) {
-                    if (!worldIn.isRemote && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
+                    if (!worldIn.isRemote&&ResearchListeners.canUseRecipe(player,optional.get())&&campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
                         player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
                         return ActionResultType.CONSUME;
                     }

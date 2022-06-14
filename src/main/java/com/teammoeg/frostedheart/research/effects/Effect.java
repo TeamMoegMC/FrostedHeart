@@ -41,7 +41,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 	List<String> tooltip;
 	public Supplier<Research> parent;
 	FHIcon icon;
-
+	boolean hidden;
 	// Init globally
 	public abstract void init();
 
@@ -66,6 +66,8 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 		if(jo.has("icon"))
 			icon = FHIcons.getIcon(jo.get("icon"));
 		nonce=jo.get("id").getAsString();
+		if(jo.has("hidden"))
+			hidden=jo.get("hidden").getAsBoolean();
 	}
 
 	Effect(PacketBuffer pb) {
@@ -73,6 +75,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 		tooltip = SerializeUtil.readList(pb, PacketBuffer::readString);
 		icon = SerializeUtil.readOptional(pb, FHIcons::readIcon).orElse(null);
 		nonce=pb.readString();
+		hidden=pb.readBoolean();
 	}
 
 	public Effect(String name, List<String> tooltip, FHIcon icon) {
@@ -141,6 +144,8 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 		if (icon != null)
 			jo.add("icon", icon.serialize());
 		jo.addProperty("id", nonce);
+		if(isHidden())
+			jo.addProperty("hidden", true);
 		return jo;
 	}
 
@@ -151,6 +156,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 		SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
 		SerializeUtil.writeOptional(buffer, icon, FHIcon::write);
 		buffer.writeString(nonce);
+		buffer.writeBoolean(isHidden());
 	}
 
 	@Override
@@ -200,5 +206,9 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 	@Override
 	public String getNonce() {
 		return nonce;
+	}
+
+	public boolean isHidden() {
+		return hidden;
 	}
 }
