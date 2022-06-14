@@ -524,8 +524,16 @@ public class ForgeEvents {
 	}
 	@SubscribeEvent
 	public static void death(PlayerEvent.Clone ev) {
-		if(ev.isWasDeath()&&FHConfig.SERVER.keepEquipments.get()) {
-			 ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
+		if(ev.isWasDeath()) {
+			if(FHConfig.SERVER.keepEquipments.get()) {
+				 ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
+			}
+			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getPlayer());
+			cnbt.putLong("penergy",TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
+			TemperatureCore.setFHData(ev.getPlayer(), cnbt);
+		}else {
+			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getOriginal());
+			TemperatureCore.setFHData(ev.getPlayer(),cnbt);
 		}
 	}
 	@SubscribeEvent
