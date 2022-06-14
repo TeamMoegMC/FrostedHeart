@@ -2,8 +2,11 @@ package com.teammoeg.frostedheart.research.inspire;
 
 import java.util.Map.Entry;
 
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
 import com.teammoeg.frostedheart.data.FHDataManager;
@@ -20,9 +23,17 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.PlayerTickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.SleepingTimeCheckEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.common.Mod;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 
+@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class EnergyCore {
 	public EnergyCore() {
 	}
@@ -126,5 +137,32 @@ public class EnergyCore {
 	public static boolean hasEnoughEnergy(PlayerEntity player,int val) {
 		CompoundNBT data=TemperatureCore.getFHData(player);
 		return data.getLong("penergy")>val+1||data.getLong("penergy")>val;
+	}
+	@SubscribeEvent
+	public static void updateTemperature(PlayerTickEvent event) {
+		if (event.side == LogicalSide.SERVER && event.phase == Phase.START
+				&& event.player instanceof ServerPlayerEntity) {
+			
+			ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+			if (player.ticksExisted % 20 == 0)
+				EnergyCore.dT(player);
+		}
+	}
+	@SubscribeEvent
+	public static void death(PlayerEvent.Clone ev) {
+		if(ev.isWasDeath()) {
+			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getPlayer());
+			cnbt.putLong("penergy",TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
+			TemperatureCore.setFHData(ev.getPlayer(), cnbt);
+		}else {
+			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getOriginal());
+			TemperatureCore.setFHData(ev.getPlayer(),cnbt);
+		}
+	}
+	@SubscribeEvent
+	public static void checkSleep(SleepingTimeCheckEvent event) {
+		if(event.getPlayer().getSleepTimer()>=100&&!event.getPlayer().getEntityWorld().isRemote) {
+			EnergyCore.applySleep(ChunkData.getTemperature(event.getPlayer().getEntityWorld(),event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)),(ServerPlayerEntity) event.getPlayer());
+		}
 	}
 }

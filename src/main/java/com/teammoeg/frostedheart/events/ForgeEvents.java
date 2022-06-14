@@ -60,7 +60,6 @@ import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -151,7 +150,7 @@ public class ForgeEvents {
 		ResearchListeners.kill(p,event.getEntityLiving());
 	}
 	@SubscribeEvent
-	public static void updateTemperature(PlayerTickEvent event) {
+	public static void tickResearch(PlayerTickEvent event) {
 		if (event.side == LogicalSide.SERVER && event.phase == Phase.START
 				&& event.player instanceof ServerPlayerEntity) {
 			ResearchListeners.tick((ServerPlayerEntity) event.player);
@@ -524,16 +523,8 @@ public class ForgeEvents {
 	}
 	@SubscribeEvent
 	public static void death(PlayerEvent.Clone ev) {
-		if(ev.isWasDeath()) {
-			if(FHConfig.SERVER.keepEquipments.get()) {
-				 ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
-			}
-			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getPlayer());
-			cnbt.putLong("penergy",TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
-			TemperatureCore.setFHData(ev.getPlayer(), cnbt);
-		}else {
-			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getOriginal());
-			TemperatureCore.setFHData(ev.getPlayer(),cnbt);
+		if(ev.isWasDeath()&&FHConfig.SERVER.keepEquipments.get()) {
+			 ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
 		}
 	}
 	@SubscribeEvent
