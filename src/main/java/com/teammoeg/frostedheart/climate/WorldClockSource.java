@@ -17,10 +17,11 @@ public class WorldClockSource {
 	public void update(long newTime) {
 		long cdt=newTime;
 		long dt=cdt-lastdaytime;
-		if(dt<0) {
+		if(dt<0) {// if time run backwards, it's command done the trick
+			cdt%=24000L;//more than one day is ignored
 			long nextday=lastdaytime+24000L;
-			nextday=nextday-nextday%24000L;//assumpt it's next day and continue
-			dt=cdt+nextday-lastdaytime;
+			nextday=nextday-nextday%24000L;
+			dt=cdt+nextday-lastdaytime;//assumpt it's next day and continue
 		}
 		
 		long ndt=cdt-dt%20;
