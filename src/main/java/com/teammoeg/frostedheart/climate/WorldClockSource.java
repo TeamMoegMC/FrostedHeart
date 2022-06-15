@@ -1,11 +1,18 @@
 package com.teammoeg.frostedheart.climate;
 
 import net.minecraft.nbt.CompoundNBT;
-
+import net.minecraft.world.server.ServerWorld;
+/**
+ * An anti command and sleep clock source
+ * 
+ * */
 public class WorldClockSource {
 	long secs;
 	long lastdaytime;
 	public WorldClockSource() {
+	}
+	public void update(ServerWorld w) {
+		update(w.getDayTime());
 	}
 	public void update(long newTime) {
 		long cdt=newTime;
