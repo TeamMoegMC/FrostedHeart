@@ -40,6 +40,7 @@ public class Researches {
 		//FHResearch.saveAll();
 	}
 	public static void createDefaultResearches() {
+		FHResearch.prepareReload();
 		CustomClue ROOT_CLUE = new CustomClue("rootclue", 1.0F);
 
 		Research GEN_T1 = new Research("generator_t1", ResearchCategory.RESCUE,
@@ -114,6 +115,8 @@ public class Researches {
 		FHResearch.researches.register(
 				new Research("charger", ResearchCategory.LIVING, FHBlocks.charger.asItem(), GEN_T2.getSupplier()));
 		FHResearch.saveAll();
+		FHResearch.loadAll();
+		FHResearch.finishReload();
 	}
 
 }

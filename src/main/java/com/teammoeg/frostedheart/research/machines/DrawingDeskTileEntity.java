@@ -4,11 +4,13 @@ import java.util.Optional;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.PaperRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.GenerateInfo;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
@@ -19,6 +21,8 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteractionObjectIE,IIEInventory{
 	protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
@@ -26,6 +30,8 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 	public static final int INK_SLOT=2;
 	public static final int PAPER_SLOT=1;
 	public static final int EXAMINE_SLOT=0;
+	public static int ENERGY_PER_COMBINE=300;
+	public static int ENERGY_PER_PAPER=3000;
     public DrawingDeskTileEntity() {
         super(FHContent.FHTileTypes.DRAWING_DESK.get());
     }
@@ -87,7 +93,9 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 		if(lvl<0)return;
 		Optional<PaperRecipe> pr=PaperRecipe.recipes.stream().filter(r->r.maxlevel>=lvl&&r.paper.test(inventory.get(PAPER_SLOT))).findAny();
 		if(!pr.isPresent())return;
+		if(!EnergyCore.hasEnoughEnergy(player, ENERGY_PER_PAPER))return;
 		if(!damageInk(player,5,lvl))return;
+		EnergyCore.consumeEnergy(player, ENERGY_PER_PAPER);
 		inventory.get(PAPER_SLOT).shrink(1);
 		game.init(GenerateInfo.all[lvl],new Random());
 		game.setLvl(lvl);
@@ -99,13 +107,35 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 		if(pen.getLevel(is, spe)<lvl)return false;
 		return pen.damage(spe, is, val);
 	}
+	@OnlyIn(Dist.CLIENT)
+	public boolean isInkSatisfied(int val) {
+		ItemStack is=inventory.get(INK_SLOT);
+		if(is.isEmpty()||!(is.getItem() instanceof IPen))return false;
+		IPen pen=(IPen) is.getItem();
+		return pen.getLevel(is,ClientUtils.getPlayer())>=ResearchListeners.fetchGameLevel()&&pen.canUse(ClientUtils.getPlayer(),is, val);
+	}
+	@OnlyIn(Dist.CLIENT)
+	public boolean isPaperSatisfied() {
+		ItemStack is=inventory.get(PAPER_SLOT);
+		if(is.isEmpty())return false;
+		int lvl=ResearchListeners.fetchGameLevel();
+		return PaperRecipe.recipes.stream().anyMatch(r->r.maxlevel>=lvl&&r.paper.test(is));
+	}
 	public boolean tryCombine(ServerPlayerEntity player,CardPos cp1,CardPos cp2) {
 		ItemStack is=inventory.get(INK_SLOT);
 		if(is.isEmpty()||!(is.getItem() instanceof IPen))return false;
 		IPen pen=(IPen) is.getItem();
 		if(pen.getLevel(is, player)<game.getLvl())
 			return false;
-		return pen.tryDamage(player, is,1,()->game.tryCombine(cp1, cp2));
+		return pen.tryDamage(player, is,1,()->{
+			if(EnergyCore.hasEnoughEnergy(player,ENERGY_PER_COMBINE)) {
+				if(game.tryCombine(cp1, cp2)) {
+					EnergyCore.consumeEnergy(player,ENERGY_PER_COMBINE);
+					return true;
+				}
+			}
+			return false;
+		});
 	}
 	public void updateGame(ServerPlayerEntity player) {
 		if(game.isFinished()) {

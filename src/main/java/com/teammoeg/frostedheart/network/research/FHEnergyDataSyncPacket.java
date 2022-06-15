@@ -26,32 +26,36 @@ import com.teammoeg.frostedheart.climate.TemperatureCore;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class FHInspireDataSyncPacket {
-    private final CompoundNBT data;
-
-    public FHInspireDataSyncPacket(PlayerEntity pe) {
-        this.data = TemperatureCore.getFHData(pe);
+public class FHEnergyDataSyncPacket {
+    private final long energy;
+    private final long penergy;
+    public FHEnergyDataSyncPacket(CompoundNBT data) {
+        this.energy = data.getLong("energy");
+        this.penergy =data.getLong("penergy");
     }
 
-    public FHInspireDataSyncPacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
+    public FHEnergyDataSyncPacket(PacketBuffer buffer) {
+        energy=buffer.readVarLong();
+        penergy=buffer.readVarLong();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
+        buffer.writeVarLong(energy);
+        buffer.writeVarLong(penergy);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
-            if (world != null) {
+            if (player != null) {
+            	CompoundNBT data=TemperatureCore.getFHData(player);
+            	data.putLong("energy", energy);
+            	data.putLong("penergy", penergy);
                 TemperatureCore.setFHData(player, data);
             }
         });

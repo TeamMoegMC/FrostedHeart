@@ -36,6 +36,7 @@ public class DrawDeskPanel extends Panel {
 		showHelp=false;
 		mgp.setEnabled(true);
 	}
+	
 	boolean showHelp;
 	@Override
 	public void addWidgets() {

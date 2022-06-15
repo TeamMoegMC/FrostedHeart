@@ -15,7 +15,7 @@ public class ResearchGame {
 	Card[][] cards = new Card[9][9];
 	int addcur;
 	int addmax;
-	int lvl;
+	int lvl=-1;
 	boolean finished = false;
 	Consumer<ResearchGame> listener;
 
@@ -300,6 +300,7 @@ public class ResearchGame {
 	public void load(CompoundNBT data) {
 		addcur = data.getInt("cur");
 		addmax = data.getInt("max");
+		
 		lvl=data.getInt("lvl");
 		int[] arr = data.getIntArray("cards");
 		for (int i = 0; i < 9; i++)

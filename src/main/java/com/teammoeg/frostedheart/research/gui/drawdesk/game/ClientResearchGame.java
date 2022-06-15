@@ -105,4 +105,7 @@ public class ClientResearchGame implements Consumer<ResearchGame>{
 		this.calculateCardNum();
 		ClientUtils.refreshResearchGui();
 	}
+	public int getLevel() {
+		return rg.lvl;
+	}
 }

@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.network.research.FHEnergyDataSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataSyncPacket;
@@ -94,6 +95,8 @@ public class PacketHandler {
 				FHDrawingDeskOperationPacket::new, FHDrawingDeskOperationPacket::handle);
 		CHANNEL.registerMessage(id++, FHEffectProgressSyncPacket.class, FHEffectProgressSyncPacket::encode,
 				FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
+		CHANNEL.registerMessage(id++, FHEnergyDataSyncPacket.class, FHEnergyDataSyncPacket::encode,
+				FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
 	}
 
 }

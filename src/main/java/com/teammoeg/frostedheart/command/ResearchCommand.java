@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -36,14 +37,21 @@ public class ResearchCommand {
 					rd.announceCompletion();
 					ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
 				return Command.SINGLE_SUCCESS;
-				}))).then(Commands.literal("edit").then(Commands.argument("enable",BoolArgumentType.bool()).executes(ct->{
+				})))
+				.then(Commands.literal("edit").then(Commands.argument("enable",BoolArgumentType.bool()).executes(ct->{
 					FHResearch.editor=ct.getArgument("enable",Boolean.class);
 					ct.getSource().sendFeedback(new StringTextComponent("Editing mode set"+String.valueOf(FHResearch.editor)).mergeStyle(TextFormatting.GREEN), false);
 				return Command.SINGLE_SUCCESS;
-				}))).then(Commands.literal("default").executes(ct->{
+				})))
+				.then(Commands.literal("default").executes(ct->{
 					Researches.createDefaultResearches();
 				return Command.SINGLE_SUCCESS;
-				})).then(Commands.literal("reset").then(Commands.argument("name",StringArgumentType.string()).suggests((ct,s)->{
+				}))
+				.then(Commands.literal("energy").executes(ct->{
+					EnergyCore.reportEnergy(ct.getSource().asPlayer());
+					return Command.SINGLE_SUCCESS;
+				}))
+				.then(Commands.literal("reset").then(Commands.argument("name",StringArgumentType.string()).suggests((ct,s)->{
 					for(Research r:FHResearch.getAllResearch())
 						if(r.getId().startsWith(s.getRemaining()))
 							s.suggest(r.getId());

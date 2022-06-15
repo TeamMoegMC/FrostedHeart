@@ -20,6 +20,7 @@ public class DrawDeskIcons {
 	public static final Icon STOP=ALL.withUV(17*16,219,16,16,512,512);
 	
 	//public static final Icon STAT_FRAME=ALL.withUV(0,235,15,28,512,512);
+	public static final Icon DIALOG_FRAME=ALL.withUV(243,267,137,52,512,512);
 	public static final Icon ORDER_FRAME=ALL.withUV(16,235,16,16,512,512);
 	public static final Icon ORDER_ARROW=ALL.withUV(16,235+16,16,12,512,512);
 	public static final Icon EXAMINE=ALL.withUV(32,235,18,18,512,512);

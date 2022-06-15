@@ -239,7 +239,13 @@ public class TeamResearchData {
 		//}
 		return nbt;
 	}
-
+	/**
+ 	* get Variants for team, used to provide stats upgrade
+ 	* Current:
+ 	* maxEnergy| max Energy increasement
+ 	* pmaxEnergy| max Energy multiplier
+ 	* generator_loc| generator location, to keep generators unique
+	* */
 	public CompoundNBT getVariants() {
 		return variants;
 	}
