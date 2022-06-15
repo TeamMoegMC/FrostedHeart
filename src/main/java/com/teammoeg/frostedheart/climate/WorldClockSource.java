@@ -15,18 +15,14 @@ public class WorldClockSource {
 		update(w.getDayTime());
 	}
 	public void update(long newTime) {
-		long cdt=newTime;
-		long dt=cdt-lastdaytime;
+		long dt=newTime-lastdaytime;
 		if(dt<0) {// if time run backwards, it's command done the trick
-			cdt%=24000L;//more than one day is ignored
 			long nextday=lastdaytime+24000L;
 			nextday=nextday-nextday%24000L;
-			dt=cdt+nextday-lastdaytime;//assumpt it's next day and continue
+			dt=newTime%24000L+nextday-lastdaytime;//assumpt it's next day and continue
 		}
-		
-		long ndt=cdt-dt%20;
 		secs+=dt/20;
-		lastdaytime=ndt;
+		lastdaytime=newTime-newTime%20;
 	}
 	public int getHourInDay() {
 		return (int) ((secs/50)%24);
