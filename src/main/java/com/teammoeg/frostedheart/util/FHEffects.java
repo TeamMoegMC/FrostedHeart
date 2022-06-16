@@ -24,7 +24,6 @@ import java.util.List;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.HyperthermiaEffect;
 import com.teammoeg.frostedheart.climate.HypothermiaEffect;
-import com.teammoeg.frostedheart.climate.WetEffect;
 
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
@@ -35,7 +34,8 @@ public class FHEffects {
 
     public static final Effect HYPOTHERMIA = register("hypothermia", new HypothermiaEffect(EffectType.HARMFUL, 5750248));
     public static final Effect HYPERTHERMIA = register("hyperthermia", new HyperthermiaEffect(EffectType.HARMFUL, 16750592));
-    public static final Effect WET = register("wet", new WetEffect(EffectType.NEUTRAL, 816760296));
+    public static final Effect NYCTALOPIA = register("nyctalopia", new Effect(EffectType.HARMFUL,0x000000) {});
+    public static final Effect WET = register("wet", new Effect(EffectType.NEUTRAL, 816760296) {});
 
     public static void registerAll(IForgeRegistry<Effect> registry) {
         for (Effect effect : EFFECTS) {

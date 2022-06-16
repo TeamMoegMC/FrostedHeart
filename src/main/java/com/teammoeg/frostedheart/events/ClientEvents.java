@@ -38,11 +38,13 @@ import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
+import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHVersion;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
@@ -57,6 +59,7 @@ import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -65,6 +68,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
@@ -76,18 +80,38 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent.ClientTickEvent;
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
-
+	@SubscribeEvent
+	public static void tickClient(ClientTickEvent event) {
+		if (event.phase == Phase.START) {
+			PlayerEntity pe=ClientUtils.getPlayer();
+			if(pe!=null&&pe.getActivePotionEffect(FHEffects.NYCTALOPIA)!=null) {
+				ClientUtils.applyspg=true;
+				ClientUtils.spgamma=MathHelper.clamp((float) (ClientUtils.mc().gameSettings.gamma), 0f, 1f)*0.1f-1f;
+			}else {
+				ClientUtils.applyspg=false;
+			}
+			
+		}
+	}
+	@SubscribeEvent
+	public static void tickClient(Unload event) {
+		ClientUtils.applyspg=false;
+	}
     @SuppressWarnings({ "unchecked", "resource" })
 	@SubscribeEvent
     public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {

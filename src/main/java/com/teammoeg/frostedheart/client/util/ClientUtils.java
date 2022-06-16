@@ -33,6 +33,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientUtils {
+	public static float spgamma;
+	public static boolean applyspg;
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }

@@ -84,6 +84,7 @@
   ],
   "client": [
     "client.ForgeIngameGuiMixin",
+    "client.MixinLightTexture",
     "client.IngameGuiAccess",
     "client.IngameGuiMixin",
     "client.MixinClientEvents",
