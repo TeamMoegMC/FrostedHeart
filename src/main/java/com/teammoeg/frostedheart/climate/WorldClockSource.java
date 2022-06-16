@@ -33,6 +33,9 @@ public class WorldClockSource {
 	public long getMonth() {
 		return (secs/50)/24/30;
 	}
+	public long getHours() {
+		return (secs/50);
+	}
 	public long getTimeSecs() {
 		return secs;
 	}
