@@ -122,13 +122,6 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
-		if (event.world.getServer() != null) {
-			long currentGameTick = event.world.getGameTime();
-			if (currentGameTick % 1000 == 0) {
-				//TODO: call ClimateData#updateHourTemp(currentGameTick)
-			}
-		}
-
 	}
 	
 	/*@SubscribeEvent(priority=EventPriority.HIGHEST)

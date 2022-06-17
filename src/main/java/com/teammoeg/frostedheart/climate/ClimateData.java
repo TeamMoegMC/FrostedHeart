@@ -54,27 +54,6 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         this.blizzardTime = blizzardTime;
     }
 
-    private float getCurrentHourTemp(long currentGameTick) {
-        //TODO: need initial tempEvent
-        TempEvent head = tempEventStream.peek();
-        if (head != null) {
-            while (currentGameTick > head.calmEndTime) {
-                //TODO: add random temp event
-                tempEventStream.remove();
-                long prevEnd = head.calmEndTime;
-                while (tempEventStream.size() <= 2) {
-                    tempEventStream.add(TempEvent.getTempEvent(prevEnd));
-                    prevEnd = tempEventStream.peek().calmEndTime;
-                }
-                head = tempEventStream.peek();
-            }
-            TempEvent newHeadEvent = tempEventStream.peek();
-            return newHeadEvent.getHourTemp(currentGameTick);
-        }
-		//TODO: throw exception
-		return 0F;
-    }
-
     /**
      * Get temperature at given time.
      * Grow tempEventStream as needed.
@@ -127,27 +106,9 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
     }
 
-    /**
-     * Called every hour (1000 ticks) from ForgeEvents#onServerTick()
-     * to update the hourTemp;
-     * @param currentGameTick should be multiple of 1000
-     */
-    public void updateHourTemp(long currentGameTick) {
-        this.hourTemp = getCurrentHourTemp(currentGameTick);
-    }
-
-    /**
-     * Lightweight getter that can be called every tick from client
-     * @return the baseline temperature at this hour
-     */
-    public float getTemp() {
-        return hourTemp;
-    }
-
     private boolean isBlizzard;
     private int blizzardTime;
     private LinkedList<TempEvent> tempEventStream;
-    private float hourTemp;
 
     public ClimateData() {
         capability = LazyOptional.of(() -> this);
