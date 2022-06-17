@@ -12,8 +12,10 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.stream.Stream;
 
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     @CapabilityInject(ClimateData.class)
@@ -53,7 +55,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     private float getCurrentHourTemp(long currentGameTick) {
-        //TODO: need initial tempevent
+        //TODO: need initial tempEvent
         TempEvent head = tempEventStream.peek();
         if (head != null) {
             while (currentGameTick > head.calmEndTime) {
@@ -71,6 +73,58 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
 		//TODO: throw exception
 		return 0F;
+    }
+
+    /**
+     * Get temperature at given time.
+     * Grow tempEventStream as needed.
+     * No trimming will be performed.
+     * To perform trimming,
+     * use {@link #tempEventStreamTrim(long) tempEventStreamTrim}.
+     * @param time given in seconds
+     * @return temperature at given time
+     */
+    public float getTemp(long time) {
+        tempEventStreamGrow(time);
+        return tempEventStream
+                .stream()
+                .filter(e -> time <= e.calmEndTime && time >= e.startTime)
+                .findFirst()
+                .map(e -> e.getHourTemp(time))
+                .get();
+    }
+
+    // Grows tempEventStream to contain temp events
+    // that cover the given point of time
+    private void tempEventStreamGrow(long time) {
+        // If tempEventStream becomes empty for some reason,
+        // start generating TempEvent from current time.
+        // TODO: get current time from WorldClockSource
+        long currentTime = 0;
+        if (tempEventStream.isEmpty()) {
+            tempEventStream.add(TempEvent.getTempEvent(currentTime));
+        }
+
+        TempEvent head = tempEventStream.getLast();
+        while (head.calmEndTime < time) {
+            tempEventStream.add(head = TempEvent.getTempEvent(head.calmEndTime));
+        }
+    }
+
+    // Trims all TempEvents that end before given time
+    public void tempEventStreamTrim(long time) {
+        TempEvent head = tempEventStream.peek();
+        if (head != null) {
+            while (head.calmEndTime < time) {
+                // Protection mechanism:
+                // it would be a disaster if the stream is trimmed to empty
+                if (tempEventStream.size() <= 1) {
+                    break;
+                }
+                tempEventStream.remove();
+                head = tempEventStream.peek();
+            }
+        }
     }
 
     /**
@@ -92,7 +146,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 
     private boolean isBlizzard;
     private int blizzardTime;
-    private Queue<TempEvent> tempEventStream;
+    private LinkedList<TempEvent> tempEventStream;
     private float hourTemp;
 
     public ClimateData() {
