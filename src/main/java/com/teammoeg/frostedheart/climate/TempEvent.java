@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.climate;
 
+import net.minecraft.nbt.CompoundNBT;
+
 import java.util.ArrayList;
 
 public class TempEvent {
@@ -12,6 +14,10 @@ public class TempEvent {
     public boolean isCold;
     public long calmEndTime;
 
+    public TempEvent() {
+
+    }
+
     public TempEvent(long startTime, long peakTime, float peakTemp, long bottomTime, float bottomTemp, long endTime,
                      long calmEndTime, boolean isCold) {
         this.startTime = startTime;
@@ -20,8 +26,31 @@ public class TempEvent {
         this.bottomTime = bottomTime;
         this.bottomTemp = bottomTemp;
         this.endTime = endTime;
-        this.calmEndTime = calmEndTime;
         this.isCold = isCold;
+        this.calmEndTime = calmEndTime;
+    }
+
+    public CompoundNBT serialize(CompoundNBT cnbt) {
+        cnbt.putLong("startTime", startTime);
+        cnbt.putLong("peakTime", peakTime);
+        cnbt.putFloat("peakTemp", peakTemp);
+        cnbt.putLong("bottomTime", bottomTime);
+        cnbt.putFloat("bottomTemp", bottomTemp);
+        cnbt.putLong("endTime", endTime);
+        cnbt.putBoolean("isCold", isCold);
+        cnbt.putLong("calmEndTime", calmEndTime);
+        return cnbt;
+    }
+
+    public void deserialize(CompoundNBT cnbt) {
+        startTime = cnbt.getLong("startTime");
+        peakTime = cnbt.getLong("peakTime");
+        peakTemp = cnbt.getFloat("peakTemp");
+        bottomTime = cnbt.getLong("bottomTime");
+        bottomTemp = cnbt.getFloat("bottomTemp");
+        endTime = cnbt.getLong("endTime");
+        isCold = cnbt.getBoolean("isCold");
+        calmEndTime = cnbt.getLong("calmEndTime");
     }
 
     //TODO: impl random

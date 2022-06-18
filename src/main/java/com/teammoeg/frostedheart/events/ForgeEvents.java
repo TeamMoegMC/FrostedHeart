@@ -115,22 +115,29 @@ import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
-	/*@SubscribeEvent
-	public void onServerStarted(FMLServerStartedEvent event) {
-
-	}*/
 
 	@SubscribeEvent
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
-	}
-	
-	/*@SubscribeEvent(priority=EventPriority.HIGHEST)
-	public static void onBlockGenerate(FluidPlaceBlockEvent event) {
-		if(event.getWorld().getEntitiesWithinAABB(Entity.class,new AxisAlignedBB(event.getLiquidPos())).size()>0) {
-			event.setCanceled(true);
-			event.setNewState(event.getOriginalState());
+		World world = event.world;
+		if (!world.isRemote && world instanceof ServerWorld) {
+			ServerWorld serverWorld = (ServerWorld) world;
+			// Update clock source every second
+			if (serverWorld.getDayTime() % 20 == 0) {
+				ClimateData.updateClock(serverWorld);
+			}
+			// Update hourly temperature stream cache
+			if (serverWorld.getDayTime() % 1000 == 0) {
+				ClimateData.updateHourlyTempStream(serverWorld);
+				ClimateData.trimTempEventStream(serverWorld);
+			}
+			// DEBUG
+			if (serverWorld.getDayTime() % 20 == 0) {
+				System.out.println("Hour Temp: " + ClimateData.getTemp(serverWorld));
+			}
 		}
-	}*/
+
+	}
+
 	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void onPlayerKill(LivingDeathEvent event) {
@@ -298,13 +305,10 @@ public class ForgeEvents {
 	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
-		if (!event.getObject().isRemote) {
-			World world = event.getObject();
-			if (!world.isRemote) {
-				if (!event.getCapabilities().containsKey(ClimateData.ID))
-					event.addCapability(ClimateData.ID, new ClimateData());
-			}
-
+		World world = event.getObject();
+		if (!world.isRemote) {
+			if (!event.getCapabilities().containsKey(ClimateData.ID))
+				event.addCapability(ClimateData.ID, new ClimateData());
 		}
 	}
 
