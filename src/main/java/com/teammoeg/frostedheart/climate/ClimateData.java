@@ -12,8 +12,10 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.stream.Stream;
 
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     @CapabilityInject(ClimateData.class)
@@ -52,48 +54,61 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         this.blizzardTime = blizzardTime;
     }
 
-    private float getCurrentHourTemp(long currentGameTick) {
-        //TODO: need initial tempevent
+    /**
+     * Get temperature at given time.
+     * Grow tempEventStream as needed.
+     * No trimming will be performed.
+     * To perform trimming,
+     * use {@link #tempEventStreamTrim(long) tempEventStreamTrim}.
+     * @param time given in seconds
+     * @return temperature at given time
+     */
+    public float getTemp(long time) {
+        tempEventStreamGrow(time);
+        return tempEventStream
+                .stream()
+                .filter(e -> time <= e.calmEndTime && time >= e.startTime)
+                .findFirst()
+                .map(e -> e.getHourTemp(time))
+                .get();
+    }
+
+    // Grows tempEventStream to contain temp events
+    // that cover the given point of time
+    private void tempEventStreamGrow(long time) {
+        // If tempEventStream becomes empty for some reason,
+        // start generating TempEvent from current time.
+        // TODO: get current time from WorldClockSource
+        long currentTime = 0;
+        if (tempEventStream.isEmpty()) {
+            tempEventStream.add(TempEvent.getTempEvent(currentTime));
+        }
+
+        TempEvent head = tempEventStream.getLast();
+        while (head.calmEndTime < time) {
+            tempEventStream.add(head = TempEvent.getTempEvent(head.calmEndTime));
+        }
+    }
+
+    // Trims all TempEvents that end before given time
+    public void tempEventStreamTrim(long time) {
         TempEvent head = tempEventStream.peek();
         if (head != null) {
-            while (currentGameTick > head.calmEndTime) {
-                //TODO: add random temp event
-                tempEventStream.remove();
-                long prevEnd = head.calmEndTime;
-                while (tempEventStream.size() <= 2) {
-                    tempEventStream.add(TempEvent.getTempEvent(prevEnd));
-                    prevEnd = tempEventStream.peek().calmEndTime;
+            while (head.calmEndTime < time) {
+                // Protection mechanism:
+                // it would be a disaster if the stream is trimmed to empty
+                if (tempEventStream.size() <= 1) {
+                    break;
                 }
+                tempEventStream.remove();
                 head = tempEventStream.peek();
             }
-            TempEvent newHeadEvent = tempEventStream.peek();
-            return newHeadEvent.getHourTemp(currentGameTick);
         }
-		//TODO: throw exception
-		return 0F;
-    }
-
-    /**
-     * Called every hour (1000 ticks) from ForgeEvents#onServerTick()
-     * to update the hourTemp;
-     * @param currentGameTick should be multiple of 1000
-     */
-    public void updateHourTemp(long currentGameTick) {
-        this.hourTemp = getCurrentHourTemp(currentGameTick);
-    }
-
-    /**
-     * Lightweight getter that can be called every tick from client
-     * @return the baseline temperature at this hour
-     */
-    public float getTemp() {
-        return hourTemp;
     }
 
     private boolean isBlizzard;
     private int blizzardTime;
-    private Queue<TempEvent> tempEventStream;
-    private float hourTemp;
+    private LinkedList<TempEvent> tempEventStream;
 
     public ClimateData() {
         capability = LazyOptional.of(() -> this);
