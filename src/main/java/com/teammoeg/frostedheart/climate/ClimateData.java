@@ -81,9 +81,14 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      */
     public static void updateHourlyTempStream(ServerWorld world) {
         ClimateData data = get(world);
-        data.hourlyTempStream.remove();
         WorldClockSource clock = data.clockSource;
+        if (data.hourlyTempStream.isEmpty()) {
+            for (long i = 0; i < HOURLY_CACHE_LENGTH; i++) {
+                data.hourlyTempStream.add(data.computeTemp(clock.getTimeSecs() + i * 50));
+            }
+        }
         data.hourlyTempStream.add(data.computeTemp(clock.getTimeSecs() + HOURLY_CACHE_LENGTH * 50));
+        data.hourlyTempStream.remove();
     }
 
     /**
