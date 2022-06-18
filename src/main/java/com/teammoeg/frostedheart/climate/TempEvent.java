@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.climate;
 
 import net.minecraft.nbt.CompoundNBT;
 
-import java.util.ArrayList;
+import java.util.Random;
 
 public class TempEvent {
     public long startTime;
@@ -53,9 +53,22 @@ public class TempEvent {
         calmEndTime = cnbt.getLong("calmEndTime");
     }
 
-    //TODO: impl random
-    public static TempEvent getTempEvent(long prevEndTime) {
-        return new TempEvent(prevEndTime, 0, 0, 0, 0, 0, 0, true);
+    // Generate TempEvent parameters
+    public static TempEvent getTempEvent(long nextStart) {
+        Random random = new Random();
+        long length = 24*5 + random.nextInt(24*3);
+
+        long nextPeak = nextStart + 8 + random.nextInt(16); // reach peak within 8-24h
+        long nextBottom = nextPeak + (length / 5) + random.nextInt(24); // reach bottom around 20% length
+        long nextEnd = nextStart + length;
+
+        long calmLength = 24*5 + random.nextInt(24*3);
+        long nextCalmEnd = nextEnd + calmLength;
+
+        float peakTemp = 4 + (float) (random.nextGaussian());
+        float bottomTemp = - 20 + (float) (random.nextGaussian());
+
+        return new TempEvent(nextStart, nextPeak, peakTemp, nextBottom, bottomTemp, nextEnd, nextCalmEnd, true);
     }
 
     public float getHourTemp(long t) {

@@ -122,6 +122,10 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         if (index < 0 || index > HOURLY_CACHE_LENGTH) {
             return 0F;
         } else {
+            // initialization
+            if (data.hourlyTempStream.size() < HOURLY_CACHE_LENGTH) {
+                updateHourlyTempStream(world);
+            }
             return data.hourlyTempStream.get(index);
         }
     }
@@ -232,12 +236,15 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             list1.add(event.serialize(new CompoundNBT()));
         }
         nbt.put("tempEventStream", list1);
+        System.out.println("Serialized TES");
 
         ListNBT list2 = new ListNBT();
         for (float temp : hourlyTempStream) {
             list2.add(FloatNBT.valueOf(temp));
         }
         nbt.put("hourlyTempStream", list1);
+        System.out.println("Serialized HTS");
+
         return nbt;
     }
 
@@ -252,9 +259,13 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             event.deserialize(list1.getCompound(i));
             tempEventStream.add(event);
         }
+        System.out.println("DESerialized TES");
+
         ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_FLOAT);
         for (int i = 0; i < list2.size(); i++) {
             hourlyTempStream.add(list2.getFloat(i));
         }
+        System.out.println("DESerialized HTS");
+
     }
 }
