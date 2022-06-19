@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart;
 
 import net.minecraft.item.Food;
 

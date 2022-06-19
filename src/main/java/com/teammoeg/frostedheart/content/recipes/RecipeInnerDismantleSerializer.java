@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.recipes;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHContent.FHItems;
+import com.teammoeg.frostedheart.FHItems;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.ItemStack;

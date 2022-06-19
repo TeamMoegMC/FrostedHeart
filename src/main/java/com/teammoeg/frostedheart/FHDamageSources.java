@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.util.DamageSource;
@@ -24,6 +24,7 @@ import net.minecraft.util.DamageSource;
 public class FHDamageSources {
     public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).setDamageBypassesArmor().setDamageIsAbsolute();
     public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).setDamageBypassesArmor().setDamageIsAbsolute();
+    public static final DamageSource RAD = (new DamageSource("radiation")).setDamageBypassesArmor().setDamageIsAbsolute();
     public static final DamageSource HYPOTHERMIA_INSTANT = (new DamageSource("hypothermia_instant")).setDamageBypassesArmor();
     public static final DamageSource HYPERTHERMIA_INSTANT = (new DamageSource("hyperthermia_instant")).setDamageBypassesArmor().setFireDamage();
     public static DamageSource hypothermiaFrom(Entity e) {

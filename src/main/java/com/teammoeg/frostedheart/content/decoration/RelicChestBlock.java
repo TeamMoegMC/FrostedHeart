@@ -2,7 +2,8 @@ package com.teammoeg.frostedheart.content.decoration;
 
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.FHContent;
+
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import net.minecraft.block.Block;
@@ -60,7 +61,7 @@ public class RelicChestBlock extends FHBaseBlock {
     @Nullable
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return FHContent.FHTileTypes.RELIC_CHEST.get().create();
+        return FHTileTypes.RELIC_CHEST.get().create();
     }
 
     @Override

@@ -16,12 +16,16 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.effects;
 
-import com.teammoeg.frostedheart.util.FHDamageSources;
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.FHDamageSources;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
 
@@ -53,4 +57,8 @@ public class HyperthermiaEffect extends Effect {
         }
         return true;
     }
+	@Override
+	public List<ItemStack> getCurativeItems() {
+		return ImmutableList.of();
+	}
 }

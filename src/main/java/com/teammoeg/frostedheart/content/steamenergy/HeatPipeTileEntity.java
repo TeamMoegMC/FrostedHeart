@@ -18,7 +18,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -34,7 +34,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     private boolean isPathFinding;
     private boolean justPropagated;
     public HeatPipeTileEntity() {
-        super(FHContent.FHTileTypes.HEATPIPE.get());
+        super(FHTileTypes.HEATPIPE.get());
     }
 
     @Override

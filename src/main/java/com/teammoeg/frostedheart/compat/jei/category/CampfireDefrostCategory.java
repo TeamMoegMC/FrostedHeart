@@ -25,7 +25,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
-import com.teammoeg.frostedheart.FHContent.FHItems;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 

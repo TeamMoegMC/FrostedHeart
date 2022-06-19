@@ -20,7 +20,8 @@ package com.teammoeg.frostedheart.content.steamenergy.radiator;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.AbstractGenerator;
@@ -50,7 +51,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     public static final int OUTPUT_SLOT = 1;
 
     public RadiatorTileEntity() {
-        super(FHContent.FHMultiblocks.RADIATOR, FHContent.FHTileTypes.RADIATOR.get(), false);
+        super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
     }
 
     NetworkHolder network=new NetworkHolder();

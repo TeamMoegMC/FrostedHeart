@@ -20,7 +20,7 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import java.util.function.BiFunction;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHBlocks;
 
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -54,7 +54,7 @@ public class WhiteTurnipBlock extends FHCropBlock {
     }
 
     protected IItemProvider getSeedsItem() {
-        return FHContent.FHBlocks.white_turnip_block.asItem();
+        return FHBlocks.white_turnip_block.asItem();
     }
 
     protected int getBonemealAgeIncrease(World worldIn) {

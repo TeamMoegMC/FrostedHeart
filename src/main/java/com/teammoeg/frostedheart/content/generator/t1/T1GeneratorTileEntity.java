@@ -20,7 +20,8 @@ package com.teammoeg.frostedheart.content.generator.t1;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -31,7 +32,7 @@ public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Generator
     public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
 
     public T1GeneratorTileEntity(int temperatureLevelIn, int overdriveBoostIn, int rangeLevelIn) {
-        super(FHContent.FHMultiblocks.GENERATOR, FHContent.FHTileTypes.GENERATOR_T1.get(), false, temperatureLevelIn, overdriveBoostIn, rangeLevelIn);
+        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false, temperatureLevelIn, overdriveBoostIn, rangeLevelIn);
     }
 	@Override
 	public void forEachBlock(Consumer<T1GeneratorTileEntity> consumer) {

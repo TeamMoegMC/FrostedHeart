@@ -22,6 +22,8 @@ import javax.annotation.Nonnull;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
@@ -48,7 +50,6 @@ import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.util.FHDamageSources;
 import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -94,7 +95,9 @@ import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.PotionEvent.PotionRemoveEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -155,6 +158,18 @@ public class ForgeEvents {
 				&& event.player instanceof ServerPlayerEntity) {
 			ResearchListeners.tick((ServerPlayerEntity) event.player);
 		}
+	}
+	@SubscribeEvent
+	public static void onHeal(LivingHealEvent event) {
+		EffectInstance ei=event.getEntityLiving().getActivePotionEffect(FHEffects.SCURVY);
+		if(ei != null)
+			event.setAmount(event.getAmount()*(0.2f/(ei.getAmplifier()+1)));
+	}
+	@SubscribeEvent
+	public static void onPotionRemove(PotionRemoveEvent event) {
+		if(event.getPotion()==FHEffects.ION)
+			event.setCanceled(true);
+		
 	}
 	@SuppressWarnings("resource")
 	@SubscribeEvent

@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.FileUtil;
-import com.teammoeg.frostedheart.util.ZipMaker;
+import com.teammoeg.frostedheart.util.ZipFile;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.storage.FolderName;
@@ -56,7 +56,7 @@ public class ServerLifecycleHooksMixin {
 		try {
 			configbkf.toFile().mkdirs();
 			File backup=new File(configbkf.toFile(),"backup-"+(new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date())+".zip");
-			ZipMaker zf=new ZipMaker(backup,config);
+			ZipFile zf=new ZipFile(backup,config);
 			zf.addAndDel(config.toFile(),f->!f.getName().startsWith(".")&&f.getName().endsWith(".toml"));
 			zf.close();
 			fconfig.mkdirs();

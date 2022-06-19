@@ -18,7 +18,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -30,7 +30,7 @@ import net.minecraft.util.Direction;
 
 public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider, INetworkConsumer,ITickableTileEntity {
     public DebugHeaterTileEntity() {
-        super(FHContent.FHTileTypes.DEBUGHEATER.get());
+        super(FHTileTypes.DEBUGHEATER.get());
     }
 
     SteamEnergyNetwork network = new SteamEnergyNetwork(this);

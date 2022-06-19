@@ -23,7 +23,7 @@ import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -55,7 +55,7 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
     @Nullable
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHContent.FHTileTypes.HEATPIPE.get().create();
+        return FHTileTypes.HEATPIPE.get().create();
     }
 
     @Override

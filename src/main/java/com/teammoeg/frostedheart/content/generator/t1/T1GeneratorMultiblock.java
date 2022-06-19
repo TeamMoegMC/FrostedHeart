@@ -19,8 +19,8 @@
 package com.teammoeg.frostedheart.content.generator.t1;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -33,7 +33,7 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
     public T1GeneratorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3),
-                () -> FHContent.FHMultiblocks.generator.getDefaultState());
+                () -> FHMultiblocks.generator.getDefaultState());
     }
 
     @Override

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 import java.util.Collection;
 import java.util.List;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
@@ -62,7 +62,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     public static final int OUTPUT_SLOT = 1;
 
     public ChargerTileEntity() {
-        super(FHContent.FHTileTypes.CHARGER.get());
+        super(FHTileTypes.CHARGER.get());
     }
 
     NetworkHolder network=new NetworkHolder();

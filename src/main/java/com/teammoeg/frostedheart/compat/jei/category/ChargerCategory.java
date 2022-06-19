@@ -23,8 +23,7 @@ import java.util.Arrays;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHContent.FHBlocks;
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
@@ -48,7 +47,7 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     private IDrawable ICON;
     private StaticBlock charger = new StaticBlock(FHBlocks.charger.getDefaultState().with(BlockStateProperties.FACING,Direction.EAST));
     public ChargerCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHContent.FHBlocks.charger));
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.charger));
         this.BACKGROUND = new EmptyBackground(177,70);
     }
 

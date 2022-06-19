@@ -19,8 +19,8 @@
 package com.teammoeg.frostedheart.content.steamenergy.radiator;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -33,7 +33,7 @@ public class RadiatorMultiblock extends FHBaseMultiblock {
     public RadiatorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/heat_radiator"),
                 new BlockPos(0, 0, 0), new BlockPos(0, 0, 0), new BlockPos(1, 3, 1),
-                () -> FHContent.FHMultiblocks.radiator.getDefaultState());
+                () -> FHMultiblocks.radiator.getDefaultState());
     }
 
     @Override

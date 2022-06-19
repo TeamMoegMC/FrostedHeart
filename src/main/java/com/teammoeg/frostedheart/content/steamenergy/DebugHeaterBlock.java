@@ -23,7 +23,7 @@ import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -56,7 +56,7 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     @Nullable
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHContent.FHTileTypes.DEBUGHEATER.get().create();
+        return FHTileTypes.DEBUGHEATER.get().create();
     }
     @Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,

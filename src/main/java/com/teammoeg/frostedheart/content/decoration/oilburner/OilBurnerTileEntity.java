@@ -19,7 +19,7 @@
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import com.simibubi.create.foundation.fluid.FluidHelper;
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -43,7 +43,7 @@ public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveStat
     private LazyOptional<IFluidHandler> holder=LazyOptional.empty();
 
     public OilBurnerTileEntity() {
-    	super(FHContent.FHTileTypes.OIL_BURNER.get());
+    	super(FHTileTypes.OIL_BURNER.get());
     }
 
     @Override

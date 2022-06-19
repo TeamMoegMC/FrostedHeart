@@ -24,7 +24,7 @@ import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
@@ -62,7 +62,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     @Nullable
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHContent.FHTileTypes.CHARGER.get().create();
+        return FHTileTypes.CHARGER.get().create();
     }
 
     @Override

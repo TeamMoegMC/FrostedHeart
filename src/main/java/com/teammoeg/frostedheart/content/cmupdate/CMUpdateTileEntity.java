@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.cmupdate;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -52,7 +52,7 @@ public class CMUpdateTileEntity extends IEBaseTileEntity implements ITickableTil
 		return sp;
 	}
     public CMUpdateTileEntity() {
-    	super(FHContent.FHTileTypes.OIL_BURNER.get());
+    	super(FHTileTypes.OIL_BURNER.get());
     }
 
     @Override

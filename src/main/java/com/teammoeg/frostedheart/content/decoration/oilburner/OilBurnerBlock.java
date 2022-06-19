@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.decoration.oilburner;
 import java.util.Random;
 import java.util.function.BiFunction;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -62,7 +62,7 @@ public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
 
     @Override
     public TileEntity createTileEntity(BlockState state,IBlockReader world) {
-        return FHContent.FHTileTypes.OIL_BURNER.get().create();
+        return FHTileTypes.OIL_BURNER.get().create();
     }
     @Override
     public boolean hasTileEntity(BlockState state) {

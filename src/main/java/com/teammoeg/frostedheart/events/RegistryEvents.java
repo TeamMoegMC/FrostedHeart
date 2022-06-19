@@ -25,7 +25,8 @@ import static com.teammoeg.frostedheart.FHContent.registeredFHItems;
 import javax.annotation.Nonnull;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
@@ -36,7 +37,6 @@ import com.teammoeg.frostedheart.loot.ReplaceLootModifier;
 import com.teammoeg.frostedheart.loot.TagLootCondition;
 import com.teammoeg.frostedheart.loot.TemperatureLootCondition;
 import com.teammoeg.frostedheart.loot.TreasureLootCondition;
-import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
@@ -61,7 +61,7 @@ import net.minecraftforge.registries.IForgeRegistry;
 public class RegistryEvents {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        FHContent.FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
+        FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
 
         for (Block block : registeredFHBlocks) {
             try {

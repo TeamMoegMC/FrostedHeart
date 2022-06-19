@@ -23,6 +23,7 @@ import java.util.function.ToIntFunction;
 
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 
@@ -40,6 +41,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
@@ -149,6 +151,10 @@ public class FHUtils {
 		}
 	
 		return 0;
+	}
+	public static EffectInstance noHeal(EffectInstance ei) {
+		ei.setCurativeItems(ImmutableList.of());
+		return ei;
 	}
 	public static boolean canGrassSurvive(IWorldReader world,BlockPos pos) {
 		float t=ChunkData.getTemperature(world, pos);

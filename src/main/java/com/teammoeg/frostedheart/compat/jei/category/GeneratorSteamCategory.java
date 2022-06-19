@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
@@ -58,7 +58,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     
     public GeneratorSteamCategory(IGuiHelper guiHelper) {
     	ResourceLocation guiMain=new ResourceLocation(FHMain.MODID, "textures/gui/generator_t2.png");
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHContent.FHMultiblocks.generator_t2));
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHMultiblocks.generator_t2));
         this.TANK=guiHelper.createDrawable(guiMain, 178, 87, 16, 47);
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);

@@ -230,7 +230,6 @@ public class EditListDialog<T> extends EditDialog {
 	public void onClosed() {
 		if(modified) {
 			ConfirmDialog.EDITOR.open(this,"Unsaved changes, discard?",true,e->{
-				System.out.println(e);
 				if(!e)open();
 			});
 		}

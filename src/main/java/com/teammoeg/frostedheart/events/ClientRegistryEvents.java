@@ -21,9 +21,10 @@ package com.teammoeg.frostedheart.events;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHContent.FHTileTypes;
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
@@ -79,17 +80,17 @@ public class ClientRegistryEvents {
         ClientRegistryEvents.<DrawDeskContainer,MenuScreenWrapper<DrawDeskContainer>>registerIEScreen(new ResourceLocation(FHMain.MODID,"draw_desk"),(c,i,t)->new MenuScreenWrapper<DrawDeskContainer>(new DrawDeskScreen(c),c,i,t).disableSlotDrawing());
         // Register translucent render type
 
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.rye_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.white_turnip_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.wolfberry_bush_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.generator_t2, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.drawing_desk, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.charger, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHMultiblocks.radiator, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.debug_heater, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.relic_chest, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHContent.FHBlocks.fluorite_ore, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.wolfberry_bush_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHMultiblocks.generator_t2, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore, RenderType.getCutout());
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);

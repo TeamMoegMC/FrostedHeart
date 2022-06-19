@@ -1,0 +1,38 @@
+package com.teammoeg.frostedheart.effects;
+
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.util.FHUtils;
+
+import gloridifice.watersource.registry.EffectRegistry;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Effect;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.EffectType;
+import net.minecraft.potion.Effects;
+
+public class AnemiaEffect extends Effect {
+
+	public AnemiaEffect(EffectType typeIn, int liquidColorIn) {
+		super(typeIn, liquidColorIn);
+	}
+
+	@Override
+	public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.SLOWNESS,20,amplifier)));
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE,20,amplifier)));
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS,20,amplifier*2)));
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST,20,amplifier*2)));
+	}
+
+	@Override
+	public boolean isReady(int duration, int amplifier) {
+		return duration%20==0;
+	}
+	@Override
+	public List<ItemStack> getCurativeItems() {
+		return ImmutableList.of();
+	}
+}

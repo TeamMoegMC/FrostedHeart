@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHContent.FHMultiblocks;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;

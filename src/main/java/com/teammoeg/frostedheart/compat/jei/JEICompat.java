@@ -29,9 +29,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHContent.FHItems;
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
@@ -89,9 +90,9 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator), GeneratorFuelCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHContent.FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
-        registration.addRecipeCatalyst(new ItemStack(FHContent.FHBlocks.charger), ChargerCategory.UID,ChargerCookingCategory.UID,ChargerDefrostCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator), GeneratorFuelCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHMultiblocks.generator_t2), GeneratorFuelCategory.UID,GeneratorSteamCategory.UID);
+        registration.addRecipeCatalyst(new ItemStack(FHBlocks.charger), ChargerCategory.UID,ChargerCookingCategory.UID,ChargerDefrostCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE),CampfireDefrostCategory.UID);
         registration.addRecipeCatalyst(new ItemStack(Blocks.SMOKER),SmokingDefrostCategory.UID);
     }

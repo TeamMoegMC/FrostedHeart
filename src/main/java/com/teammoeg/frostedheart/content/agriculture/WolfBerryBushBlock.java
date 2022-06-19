@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHItems;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -37,7 +37,7 @@ public class WolfBerryBushBlock extends FHBerryBushBlock{
     }
 
     public ItemStack getItem(IBlockReader worldIn, BlockPos pos, BlockState state) {
-        return new ItemStack(FHContent.FHItems.wolfberries);
+        return new ItemStack(FHItems.wolfberries);
     }
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         int i = state.get(AGE);
@@ -46,7 +46,7 @@ public class WolfBerryBushBlock extends FHBerryBushBlock{
             return ActionResultType.PASS;
         } else if (i > 2) {
             int j = 1 + worldIn.rand.nextInt(2);
-            spawnAsEntity(worldIn, pos, new ItemStack(FHContent.FHItems.wolfberries, j + (flag ? 1 : 0)));
+            spawnAsEntity(worldIn, pos, new ItemStack(FHItems.wolfberries, j + (flag ? 1 : 0)));
             worldIn.playSound((PlayerEntity)null, pos, SoundEvents.ITEM_SWEET_BERRIES_PICK_FROM_BUSH, SoundCategory.BLOCKS, 1.0F, 0.8F + worldIn.rand.nextFloat() * 0.4F);
             worldIn.setBlockState(pos, state.with(AGE, Integer.valueOf(1)), 2);
             return ActionResultType.func_233537_a_(worldIn.isRemote);

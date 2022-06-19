@@ -24,8 +24,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHContent.FHBlocks;
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 
@@ -53,7 +52,7 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
 	 * @param guiHelper  
 	 */
     public ChargerCookingCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(()->new ItemStack(FHContent.FHBlocks.charger),()->new ItemStack(Items.COOKED_BEEF));
+        this.ICON = new DoubleItemIcon(()->new ItemStack(FHBlocks.charger),()->new ItemStack(Items.COOKED_BEEF));
         this.BACKGROUND = new EmptyBackground(177,70);
     }
 

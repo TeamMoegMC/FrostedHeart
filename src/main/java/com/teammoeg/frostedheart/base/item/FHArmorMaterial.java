@@ -20,7 +20,7 @@ package com.teammoeg.frostedheart.base.item;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.inventory.EquipmentSlotType;
@@ -38,7 +38,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public enum FHArmorMaterial implements IArmorMaterial {
     HIDE("hide", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
-        return Ingredient.fromItems(FHContent.FHItems.raw_hide);
+        return Ingredient.fromItems(FHItems.raw_hide);
     }),
     HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
         return Ingredient.fromItems(ModList.get().isLoaded("charcoal_pit") ? ForgeRegistries.ITEMS.getValue(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT);

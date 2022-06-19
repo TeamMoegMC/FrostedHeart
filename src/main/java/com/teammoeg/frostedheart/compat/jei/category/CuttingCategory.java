@@ -27,7 +27,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHContent.FHItems;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.CuttingRecipe;
 

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.generator;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMultiblocks;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -33,7 +33,7 @@ import net.minecraft.util.ResourceLocation;
 public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecipe> {
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(FHContent.FHMultiblocks.generator);
+        return new ItemStack(FHMultiblocks.generator);
     }
 
     @Override

@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.content.incubator;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
@@ -38,7 +38,7 @@ import net.minecraftforge.fluids.FluidStack;
 public class IncubateRecipeSerializer extends IERecipeSerializer<IncubateRecipe> {
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(FHContent.FHMultiblocks.generator);
+        return new ItemStack(FHMultiblocks.generator);
     }
 
     @Override

@@ -26,12 +26,12 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
-import com.teammoeg.frostedheart.util.FHEffects;
 
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;

@@ -98,7 +98,7 @@ public class FHMain {
         @Override
         @Nonnull
         public ItemStack createIcon() {
-            return new ItemStack(FHContent.FHBlocks.generator_core_t1.asItem());
+            return new ItemStack(FHBlocks.generator_core_t1.asItem());
         }
     };
 
@@ -123,18 +123,18 @@ public class FHMain {
         PacketHandler.register();
 
         FHProps.init();
-        FHContent.FHItems.init();
-        FHContent.FHBlocks.init();
-        FHContent.FHMultiblocks.init();
+        FHItems.init();
+        FHBlocks.init();
+        FHMultiblocks.init();
         FHContent.registerContainers();
-        FHContent.FHTileTypes.REGISTER.register(mod);
+        FHTileTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
-        FHContent.FHRecipes.RECIPE_SERIALIZERS.register(mod);
+        FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
 //        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID,"blacklist"),BlackListPredicate::new);
-        DeferredWorkQueue.runLater(FHContent.FHRecipes::registerRecipeTypes);
+        DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
     	JsonParser gs=new JsonParser();
     	JsonObject jo=gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID+".mixins.json"))).getAsJsonObject();
     	JsonArray mixins=jo.get("mixins").getAsJsonArray();

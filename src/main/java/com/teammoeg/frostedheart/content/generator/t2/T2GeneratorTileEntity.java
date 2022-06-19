@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.content.generator.t2;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
@@ -54,7 +55,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     public T2GeneratorTileEntity.GeneratorData guiData = new T2GeneratorTileEntity.GeneratorData();
 
     public T2GeneratorTileEntity(int temperatureLevelIn, int overdriveBoostIn, int rangeLevelIn) {
-        super(FHContent.FHMultiblocks.GENERATOR_T2, FHContent.FHTileTypes.GENERATOR_T2.get(), false, temperatureLevelIn, overdriveBoostIn, rangeLevelIn);
+        super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false, temperatureLevelIn, overdriveBoostIn, rangeLevelIn);
     }
 
     float power = 0;

@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -44,7 +45,6 @@ import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
-import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHVersion;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;

@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.Arrays;
 
-import com.teammoeg.frostedheart.FHContent.FHItems;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
 

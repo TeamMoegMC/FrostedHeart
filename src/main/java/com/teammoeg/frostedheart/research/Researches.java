@@ -5,9 +5,9 @@ import java.io.File;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.simibubi.create.AllItems;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHContent.FHBlocks;
-import com.teammoeg.frostedheart.FHContent.FHMultiblocks;
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.research.clues.CustomClue;
 import com.teammoeg.frostedheart.research.effects.EffectBuilding;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
@@ -44,29 +44,29 @@ public class Researches {
 		CustomClue ROOT_CLUE = new CustomClue("rootclue", 1.0F);
 
 		Research GEN_T1 = new Research("generator_t1", ResearchCategory.RESCUE,
-				FHContent.FHItems.energy_core);
+				FHItems.energy_core);
 		Research GEN_T2 = new Research("generator_t2", ResearchCategory.RESCUE,
 				FHMultiblocks.generator_t2);
 		Research GEN_T3 = new Research("generator_t3", ResearchCategory.RESCUE,
-				FHContent.FHItems.energy_core);
+				FHItems.energy_core);
 		Research GEN_T4 = new Research("generator_t4", ResearchCategory.RESCUE,
-				FHContent.FHItems.energy_core);
+				FHItems.energy_core);
 
 		Research COAL_HAND_STOVE = new Research("coal_hand_stove", ResearchCategory.LIVING,
-				FHContent.FHItems.hand_stove);
+				FHItems.hand_stove);
 
 		Research SNOW_BOOTS = new Research("snow_boots", ResearchCategory.EXPLORATION,
 				RankineItems.SNOWSHOES.get());
-		COAL_HAND_STOVE.attachRequiredItem(IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_core_spade)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_geologists_hammer)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.copper_pro_pick)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.iron_core_spade)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.iron_geologists_hammer)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.iron_pro_pick)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.steel_core_spade)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.steel_geologists_hammer)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHItems.steel_pro_pick)));
-		COAL_HAND_STOVE.attachEffect(new EffectItemReward(new ItemStack(FHContent.FHItems.hand_stove)));
+		COAL_HAND_STOVE.attachRequiredItem(IngredientWithSize.of(new ItemStack(FHItems.copper_core_spade)),
+				IngredientWithSize.of(new ItemStack(FHItems.copper_geologists_hammer)),
+				IngredientWithSize.of(new ItemStack(FHItems.copper_pro_pick)),
+				IngredientWithSize.of(new ItemStack(FHItems.iron_core_spade)),
+				IngredientWithSize.of(new ItemStack(FHItems.iron_geologists_hammer)),
+				IngredientWithSize.of(new ItemStack(FHItems.iron_pro_pick)),
+				IngredientWithSize.of(new ItemStack(FHItems.steel_core_spade)),
+				IngredientWithSize.of(new ItemStack(FHItems.steel_geologists_hammer)),
+				IngredientWithSize.of(new ItemStack(FHItems.steel_pro_pick)));
+		COAL_HAND_STOVE.attachEffect(new EffectItemReward(new ItemStack(FHItems.hand_stove)));
 		FHResearch.researches.register(COAL_HAND_STOVE);
 
 		SNOW_BOOTS.attachEffect(new EffectItemReward(new ItemStack(RankineItems.SNOWSHOES.get())));
@@ -74,7 +74,7 @@ public class Researches {
 
 		FHResearch.researches.register(new Research("mechanics", ResearchCategory.ARS, AllItems.GOGGLES.get()));
 		FHResearch.researches
-				.register(new Research("steam_properties", ResearchCategory.ARS, FHContent.FHItems.steam_bottle));
+				.register(new Research("steam_properties", ResearchCategory.ARS, FHItems.steam_bottle));
 		FHResearch.researches
 				.register(new Research("steam_cannon", ResearchCategory.ARS, AllItems.POTATO_CANNON.get(),
 						FHResearch.getResearch("mechanics"), FHResearch.getResearch("steam_properties")));
@@ -86,22 +86,22 @@ public class Researches {
 				IEBlocks.MetalDecoration.engineeringLight.asItem(), FHResearch.getResearch("aluminum_extraction")));
 		FHResearch.researches.register(
 				new Research("steel", ResearchCategory.PRODUCTION, IEItems.Metals.ingots.get(EnumMetals.STEEL)));
-		GEN_T1.attachRequiredItem(IngredientWithSize.of(new ItemStack(FHContent.FHItems.energy_core)),
-				IngredientWithSize.of(new ItemStack(FHContent.FHBlocks.generator_brick.asItem(), 2)));
-		GEN_T1.attachEffect(new EffectItemReward(new ItemStack(FHContent.FHItems.energy_core)),
-				new EffectBuilding(FHContent.FHMultiblocks.GENERATOR, FHContent.FHMultiblocks.generator),
-				new EffectCrafting(FHContent.FHBlocks.generator_core_t1.asItem()),
-				new EffectCrafting(FHContent.FHBlocks.generator_amplifier_r1.asItem()),
-				new EffectUse(FHContent.FHBlocks.generator_core_t1, FHContent.FHBlocks.generator_amplifier_r1),
+		GEN_T1.attachRequiredItem(IngredientWithSize.of(new ItemStack(FHItems.energy_core)),
+				IngredientWithSize.of(new ItemStack(FHBlocks.generator_brick.asItem(), 2)));
+		GEN_T1.attachEffect(new EffectItemReward(new ItemStack(FHItems.energy_core)),
+				new EffectBuilding(FHMultiblocks.GENERATOR, FHMultiblocks.generator),
+				new EffectCrafting(FHBlocks.generator_core_t1.asItem()),
+				new EffectCrafting(FHBlocks.generator_amplifier_r1.asItem()),
+				new EffectUse(FHBlocks.generator_core_t1, FHBlocks.generator_amplifier_r1),
 				new EffectStats("Generator Burning Efficiency",25));
 		GEN_T1.attachClue(ROOT_CLUE);
 		FHResearch.researches.register(GEN_T1);
 
 		GEN_T2.setParents(GEN_T1.getSupplier(), FHResearch.getResearch("mechanic"));
-		GEN_T2.attachRequiredItem(IngredientWithSize.of(new ItemStack(FHContent.FHItems.energy_core)),
+		GEN_T2.attachRequiredItem(IngredientWithSize.of(new ItemStack(FHItems.energy_core)),
 				IngredientWithSize.of(new ItemStack(RankineBlocks.INVAR_BLOCK.get(), 2)));
-		GEN_T2.attachEffect(new EffectItemReward(new ItemStack(FHContent.FHItems.energy_core)),
-				new EffectBuilding(FHContent.FHMultiblocks.GENERATOR_T2, FHContent.FHMultiblocks.generator_t2));
+		GEN_T2.attachEffect(new EffectItemReward(new ItemStack(FHItems.energy_core)),
+				new EffectBuilding(FHMultiblocks.GENERATOR_T2, FHMultiblocks.generator_t2));
 
 		GEN_T3.setParents(FHResearch.getResearch("generator_t2"));
 		GEN_T4.setParents(FHResearch.getResearch("generator_t3"));

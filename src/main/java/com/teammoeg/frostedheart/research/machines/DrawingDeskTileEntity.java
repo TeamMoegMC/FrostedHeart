@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.research.machines;
 import java.util.Optional;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.PaperRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
@@ -33,7 +33,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 	public static int ENERGY_PER_COMBINE=300;
 	public static int ENERGY_PER_PAPER=3000;
     public DrawingDeskTileEntity() {
-        super(FHContent.FHTileTypes.DRAWING_DESK.get());
+        super(FHTileTypes.DRAWING_DESK.get());
     }
 	@Override
 	public boolean canUseGui(PlayerEntity arg0) {

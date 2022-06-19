@@ -5,7 +5,7 @@ import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.google.common.base.Preconditions;
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import net.minecraft.block.BlockState;
@@ -35,7 +35,7 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
     public RelicChestTileEntity() {
-        super(FHContent.FHTileTypes.RELIC_CHEST.get());
+        super(FHTileTypes.RELIC_CHEST.get());
         this.inventory = NonNullList.withSize(15, ItemStack.EMPTY);
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(15, this));
 

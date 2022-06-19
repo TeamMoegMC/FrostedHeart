@@ -20,7 +20,7 @@ package com.teammoeg.frostedheart.content.cmupdate;
 
 import java.util.function.BiFunction;
 
-import com.teammoeg.frostedheart.FHContent;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 
 import net.minecraft.block.Block;
@@ -42,7 +42,7 @@ public class CMUpdateBlock extends FHBaseBlock {
 
     @Override
     public TileEntity createTileEntity(BlockState state,IBlockReader world) {
-        return FHContent.FHTileTypes.CMUPDATE.get().create();
+        return FHTileTypes.CMUPDATE.get().create();
     }
     @Override
     public boolean hasTileEntity(BlockState state) {

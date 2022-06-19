@@ -10,10 +10,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
 
-public class ZipMaker implements AutoCloseable{
+public class ZipFile implements AutoCloseable{
 	Path fd;
 	ZipOutputStream bkf;
-	public ZipMaker(File output,Path indir) throws ZipException, IOException {
+	public ZipFile(File output,Path indir) throws ZipException, IOException {
 		fd=indir.toAbsolutePath();
 		bkf=new ZipOutputStream(new FileOutputStream(output));
 	}

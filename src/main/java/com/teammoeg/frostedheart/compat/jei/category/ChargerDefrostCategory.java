@@ -24,9 +24,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHContent.FHBlocks;
-import com.teammoeg.frostedheart.FHContent.FHItems;
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
@@ -53,7 +52,7 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
 	 * @param guiHelper  
 	 */
     public ChargerDefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(()->new ItemStack(FHContent.FHBlocks.charger),()->new ItemStack(FHItems.frozen_seeds));
+        this.ICON = new DoubleItemIcon(()->new ItemStack(FHBlocks.charger),()->new ItemStack(FHItems.frozen_seeds));
         this.BACKGROUND = new EmptyBackground(177,70);
     }
 

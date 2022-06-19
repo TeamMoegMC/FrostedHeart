@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.climate;
 import java.util.ArrayList;
 
 import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
-import com.teammoeg.frostedheart.util.FHDamageSources;
-import com.teammoeg.frostedheart.util.FHEffects;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
@@ -204,38 +204,38 @@ public class TemperatureUpdate {
 						if (calculatedTarget > 1) { // too hot
 							if (calculatedTarget <= 2) {
 								player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 0));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							} else if (calculatedTarget <= 3) {
 								player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 1));
-								player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							} else if (calculatedTarget <= 5) {
 								player.addPotionEffect(new EffectInstance(FHEffects.HYPERTHERMIA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							} else {
 								player.addPotionEffect(
 										new EffectInstance(FHEffects.HYPERTHERMIA, 100, (int) (calculatedTarget - 2)));
-								player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							}
 						} else { // too cold
 							if (calculatedTarget >= -2) {
 								player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 0));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							} else if (calculatedTarget >= -3) {
 								player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 1));
-								player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							} else if (calculatedTarget >= -5) {
 								player.addPotionEffect(new EffectInstance(FHEffects.HYPOTHERMIA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							} else {
 								player.addPotionEffect(
 										new EffectInstance(FHEffects.HYPOTHERMIA, 100, (int) (-calculatedTarget - 2)));
-								player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 100, 2));
-								player.addPotionEffect(new EffectInstance(Effects.MINING_FATIGUE, 100, 0));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.NAUSEA, 100, 2)));
+								player.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, 0)));
 							}
 						}
 					}
