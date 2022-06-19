@@ -105,7 +105,6 @@ public class ClientEvents {
 			}else {
 				ClientUtils.applyspg=false;
 			}
-			
 		}
 	}
 	@SubscribeEvent
