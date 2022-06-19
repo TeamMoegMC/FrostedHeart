@@ -18,8 +18,10 @@ public abstract class EditDialog extends Panel {
 			sc=(DrawDeskScreen) panel.getGui();
 	}
 	public void open() {
-		previous=sc.getDialog();
-		sc.openDialog(this,true);
+		if(sc.getDialog()!=this) {
+			previous=sc.getDialog();
+			sc.openDialog(this,true);
+		}
 	}
 	public void close() {
 		close(true);
