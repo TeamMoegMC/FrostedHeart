@@ -81,6 +81,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -121,24 +122,28 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onServerTick(TickEvent.WorldTickEvent event) {
-		World world = event.world;
-		if (!world.isRemote && world instanceof ServerWorld) {
-			ServerWorld serverWorld = (ServerWorld) world;
-			// Update clock source every second
-			if (serverWorld.getDayTime() % 20 == 0) {
-				ClimateData.updateClock(serverWorld);
-			}
-			// Update hourly temperature stream cache
-			if (serverWorld.getDayTime() % 1000 == 0) {
-				ClimateData.updateHourlyTempStream(serverWorld);
-				ClimateData.trimTempEventStream(serverWorld);
-			}
-			// DEBUG
-			if (serverWorld.getDayTime() % 20 == 0) {
-				System.out.println("Hour Temp: " + ClimateData.getTemp(serverWorld));
+		if (event.side == LogicalSide.SERVER && event.phase == Phase.START) {
+			World world = event.world;
+			if (!world.isRemote && world instanceof ServerWorld) {
+				ServerWorld serverWorld = (ServerWorld) world;
+				if(serverWorld.getDimensionType().doesFixedTimeExist())return;//don't update for fixed time world
+				// Update clock source every second, and check hour data if it needs an update
+			
+				if (serverWorld.getGameTime() % 20 == 0) {
+					ClimateData.updateClock(serverWorld);
+					ClimateData.updateTemperature(serverWorld);
+				}
+				// Update hourly temperature stream cache
+				if (serverWorld.getDayTime() % 1000 == 0) {
+					
+					ClimateData.trimTempEventStream(serverWorld);
+				}
+				// DEBUG
+				if (serverWorld.getDayTime() % 20 == 0) {
+					System.out.println("Hour Temp: " + ClimateData.getTemp(serverWorld));
+				}
 			}
 		}
-
 	}
 
 	@SuppressWarnings("resource")

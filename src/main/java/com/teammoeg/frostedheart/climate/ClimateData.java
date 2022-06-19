@@ -8,6 +8,7 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
@@ -19,6 +20,7 @@ import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
 import java.util.LinkedList;
+import java.util.Random;
 
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 
@@ -28,6 +30,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     public static Capability<ClimateData> CAPABILITY;
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
     private final LazyOptional<ClimateData> capability;
+    public static final int DAY_CACHE_LENGTH=7;
 
     public static void setup() {
         CapabilityManager.INSTANCE.register(ClimateData.class, new Capability.IStorage<ClimateData>() {
@@ -65,7 +68,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     /**
-     * Server call this each second (20 ticks) to update the clock source
+     * Server call this any time(recommend:1sec/20t) to update the clock source
      * @param world server side
      */
     public static void updateClock(ServerWorld world) {
@@ -74,21 +77,22 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     /**
-     * Server call this each game hour (1000 ticks) to update the hourly temperature cache
+     * Server call this any time(recommend:1sec/20t) to update the hourly temperature cache
      * Removes the most recent hour temperature from the cache
      * Adds the hour temperature HOURLY_CACHE_LENGTH after the current hour to the cache
      * @param world server side
      */
-    public static void updateHourlyTempStream(ServerWorld world) {
-        ClimateData data = get(world);
+    public static void updateTemperature(ServerWorld world) {
+      /*  ClimateData data = get(world);
         WorldClockSource clock = data.clockSource;
-        if (data.hourlyTempStream.isEmpty()) {
+        if (data.dailyTempData.isEmpty()) {
             for (long i = 0; i < HOURLY_CACHE_LENGTH; i++) {
-                data.hourlyTempStream.add(data.computeTemp(clock.getTimeSecs() + i * 50));
+                data.dailyTempData.add(data.computeTemp(clock.getTimeSecs() + i * 50));
             }
         }
-        data.hourlyTempStream.add(data.computeTemp(clock.getTimeSecs() + HOURLY_CACHE_LENGTH * 50));
-        data.hourlyTempStream.remove();
+        data.dailyTempData.add(data.computeTemp(clock.getTimeSecs() + HOURLY_CACHE_LENGTH * 50));
+        data.dailyTempData.remove();*/
+    	get(world).updateCache();
     }
 
     /**
@@ -107,27 +111,112 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * @return temperature at current hour
      */
     public static float getTemp(ServerWorld world) {
-        return getFutureTemp(world, 0);
+        return get(world).hourcache;
     }
-
+    /**
+     * Check and refresh whole cache.
+     * 
+     * */
+    private void updateCache() {
+    	long hours=clockSource.getHours();
+    	if(hours!=lasthour) {
+	    	long date=clockSource.getDate();
+	    	if(date!=lastday) {
+	    		updateDayCache(date);
+	    	}
+	    	updateHourCache(hours);
+    	}
+    }
+    private void readCache() {
+    	long hours=clockSource.getHours();
+    	long date=clockSource.getDate();
+    	updateDayCache(date);
+    	updateHourCache(hours);
+    }
+    private void updateDayCache(long date) {
+		if(dailyTempData.isEmpty()) {
+			dailyTempData.offer(generateDay(date,0,0));
+		}
+		while(dailyTempData.peek().day<date) {
+			dailyTempData.poll();
+			DayTemperatureData last=dailyTempData.peekLast();
+			dailyTempData.offer(generateDay(last.day+1,last.dayNoise,last.dayHumidity));
+		}
+		populateDays();
+		daycache=dailyTempData.peek();
+		lastday=daycache.day;
+		if(daycache.day!=date){
+			clockSource.setDate(daycache.day);//Clock Source goes a little slow, so update.
+		}
+    }
+    private void populateDays() {
+    	if(dailyTempData.isEmpty()) {
+			dailyTempData.offer(generateDay(clockSource.getDate(),0,0));
+		}
+		while(dailyTempData.size()<DAY_CACHE_LENGTH) {
+			DayTemperatureData last=dailyTempData.peekLast();
+			dailyTempData.offer(generateDay(last.day+1,last.dayNoise,last.dayHumidity));
+		}
+    }
+    private void updateHourCache(long hours) {
+    	hourcache=daycache.getTemp(clockSource);
+    	lasthour=hours;
+    }
+    private DayTemperatureData generateDay(long day,float lastnoise,float lasthumid) {
+    	DayTemperatureData dtd=new DayTemperatureData();
+    	Random rnd=new Random();
+    	long startTime=day*1200;
+    	dtd.day=day;
+    	dtd.dayNoise=(float) MathHelper.clamp(rnd.nextGaussian()*5+lastnoise,-5d,5d);
+    	dtd.dayHumidity=(float) MathHelper.clamp(rnd.nextGaussian()*5+lasthumid,0d,50d);
+    	for(int i=0;i<24;i++) {
+    		dtd.setHourTemp(i,this.computeTemp(startTime+i*50)+dtd.dayNoise);
+    	}
+    	return dtd;
+    }
     /**
      * Retrieves hourly updated temperature from cache
-     * If exceeds cache size, return 0
+     * If exceeds cache size, return NaN
      * Useful in long range weather forecast
-     * @param index number of hours after current hour, range: 0 - HOURLY_CACHE_LENGTH
+     * @param ddate delta days from now to forecast
+     * @param hour in that day to forecast
      * @return temperature at hour at index
      */
-    public static float getFutureTemp(ServerWorld world, int index) {
-        ClimateData data = get(world);
-        if (index < 0 || index > HOURLY_CACHE_LENGTH) {
-            return 0F;
-        } else {
-            // initialization
-            if (data.hourlyTempStream.size() < HOURLY_CACHE_LENGTH) {
-                updateHourlyTempStream(world);
-            }
-            return data.hourlyTempStream.get(index);
+    public static float getFutureTemp(ServerWorld world, int ddate,int dhours) {
+        return getFutureTemp(get(world),ddate,dhours);
+    }
+    /**
+     * Retrieves hourly updated temperature from cache
+     * If exceeds cache size, return NaN
+     * Useful in long range weather forecast
+     * @param days delta days from now to forecast
+     * @param hour in that day to forecast
+     * @return temperature at hour at index
+     */
+    public static float getFutureTemp(ClimateData data,int days,int hours) {
+        if (days < 0 || days > DAY_CACHE_LENGTH) {
+            return Float.NaN;
         }
+        if(hours<0||hours>=24)
+        	throw new IllegalArgumentException("Hours must be in range [0,24)");
+		if (data.dailyTempData.size() < DAY_CACHE_LENGTH) {//this rarely happens, but for safety
+			data.populateDays();
+		}
+		return data.dailyTempData.get(days).getTemp(hours);
+    }
+    /**
+     * Retrieves hourly updated temperature from cache
+     * If exceeds cache size, return NaN
+     * Useful in long range weather forecast
+     * @param hours delta hours from now to forecast;
+     * @return temperature at hour at index
+     */
+    public static float getFutureTemp(ServerWorld world,int hours) {
+        ClimateData data = get(world);
+        long thours=data.clockSource.getHours()+hours;
+        long ddate=thours/24-data.clockSource.getDate();
+        long dhours=thours%24;
+        return getFutureTemp(data,(int)ddate,(int)dhours);
     }
 
     /* Private helper methods */
@@ -204,22 +293,23 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 
     /* Object structure */
 
-    public static long HOURLY_CACHE_LENGTH = 7 * 24;
-    public static long DAILY_CACHE_LENGTH = 7;
 
     private boolean isBlizzard;
     private int blizzardTime;
     private LinkedList<TempEvent> tempEventStream;
     private WorldClockSource clockSource;
-    private LinkedList<Float> hourlyTempStream;
-
+    private LinkedList<DayTemperatureData> dailyTempData;
+    private float hourcache=0;
+    private long lasthour=-1;
+    private DayTemperatureData daycache;
+    private long lastday=-1;
     public ClimateData() {
         capability = LazyOptional.of(() -> this);
         isBlizzard = false;
         blizzardTime = 0;
         tempEventStream = new LinkedList<>();
         clockSource = new WorldClockSource();
-        hourlyTempStream = new LinkedList<>();
+        dailyTempData = new LinkedList<>();
     }
 
     /* Serialization */
@@ -239,8 +329,8 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         System.out.println("Serialized TES");
 
         ListNBT list2 = new ListNBT();
-        for (float temp : hourlyTempStream) {
-            list2.add(FloatNBT.valueOf(temp));
+        for (DayTemperatureData temp : dailyTempData) {
+            list2.add(temp.serialize());
         }
         nbt.put("hourlyTempStream", list1);
         System.out.println("Serialized HTS");
@@ -261,10 +351,11 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
         System.out.println("DESerialized TES");
 
-        ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_FLOAT);
+        ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list2.size(); i++) {
-            hourlyTempStream.add(list2.getFloat(i));
+            dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
         }
+        readCache();
         System.out.println("DESerialized HTS");
 
     }

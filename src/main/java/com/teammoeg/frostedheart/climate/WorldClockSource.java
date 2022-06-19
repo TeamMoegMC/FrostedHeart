@@ -35,7 +35,9 @@ public class WorldClockSource {
     public long getDate() {
         return (secs / 50) / 24;
     }
-
+    public void setDate(long date) {
+    	secs=(secs%1200)+date*1200;
+    }
     public long getMonth() {
         return (secs / 50) / 24 / 30;
     }
