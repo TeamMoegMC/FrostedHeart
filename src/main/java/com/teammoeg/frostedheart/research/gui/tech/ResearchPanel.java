@@ -6,9 +6,11 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -25,12 +27,14 @@ public abstract class ResearchPanel extends Panel {
     public Research selectedResearch;
     public ResearchDetailPanel detailframe;
     public Panel modalPanel=null;
+    public TechScrollBar hierarchyBar;
     public ResearchPanel(Panel p) {
     	super(p);
         researchCategoryPanel = new ResearchCategoryPanel(this);
         researchListPanel = new ResearchListPanel(this);
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
         progressPanel = new ResearchProgressPanel(this);
+        hierarchyBar=new TechScrollBar(this,Plane.HORIZONTAL,researchHierarchyPanel);
         detailframe=new ResearchDetailPanel(this);
         //TODO default select on progress research
         Research cr=ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
@@ -49,11 +53,13 @@ public abstract class ResearchPanel extends Panel {
     	researchHierarchyPanel.setPosAndSize(160,23,210,160);
         progressPanel.setPosAndSize(14,19,111,51);
         detailframe.setPosAndSize((width-302)/2,(height-170)/2,302,170);
+        hierarchyBar.setPosAndSize(170,175,190,8);
         add(researchCategoryPanel);
         add(researchListPanel);
         add(researchHierarchyPanel);
         add(progressPanel);
         add(detailframe);
+        add(hierarchyBar);
     }
 
 

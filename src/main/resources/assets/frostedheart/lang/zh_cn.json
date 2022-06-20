@@ -224,7 +224,7 @@
   "tooltip.frostedheart.meme.thermos": "不要与同名服务端混淆！",
   "tooltip.frostedheart.mushroom": "单手拿刀，另一只手使用以切割",
   "tooltip.frostedheart.rankine.dry_mortar": "在水中浸泡一段时间以获得砂浆",
-  "tooltip.frostedheart.research_is_locked": "研究已锁定！",
+  "tooltip.frostedheart.research_is_locked": "研究已锁定！需要完成以下前置：",
   "tooltip.frostedheart.steam_stored": "蒸汽:%s su",
   "tooltip.frostedheart.survive_armor_temp_mod": "保暖指数：",
   "tooltip.frostedheart.survive_block_temp_mod": "温度指数：",

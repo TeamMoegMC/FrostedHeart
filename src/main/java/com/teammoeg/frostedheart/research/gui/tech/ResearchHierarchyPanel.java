@@ -47,6 +47,27 @@ public class ResearchHierarchyPanel extends Panel {
 		}
 	}
 
+	public static class MoreResearchHierarchyLine extends ThickLine {
+		List<Research> r;
+
+		public MoreResearchHierarchyLine(List<Research> r) {
+			this.r = r;
+		}
+
+		public boolean doShow() {
+			return r.stream().allMatch(Research::isCompleted);
+		}
+
+		@Override
+		public void draw(MatrixStack matrixStack, int x, int y) {
+			if (doShow())
+				color = TechIcons.text;
+			else
+				color = Color4I.rgb(0xADA691);
+			super.draw(matrixStack, x, y);
+		}
+	}
+
 	public static class ResearchCombinatorLine extends ResearchHierarchyLine {
 
 		public ResearchCombinatorLine(Research r) {
@@ -59,13 +80,13 @@ public class ResearchHierarchyPanel extends Panel {
 
 	}
 
-	public ResearchPanel researchScreen;
+	public ResearchPanel researchPanel;
 
 	public ResearchHierarchyPanel(ResearchPanel panel) {
 		super(panel);
 		this.setOnlyInteractWithWidgetsInside(true);
 		this.setOnlyRenderWidgetsInside(true);
-		researchScreen = panel;
+		researchPanel = panel;
 	}
 
 	private static int[] ButtonPos = new int[] { 76, 44, 108, 12, 140 };
@@ -74,37 +95,40 @@ public class ResearchHierarchyPanel extends Panel {
 	@Override
 	public void addWidgets() {
 		if (FHResearch.editor) {
-			int offset=5;
-			if(researchScreen.selectedResearch!=null){
+			int offset = 5;
+			if (researchPanel.selectedResearch != null) {
 				Button par = new TechTextButton(this, GuiUtils.str("parents"), Icon.EMPTY) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add parent
-						Research r=researchScreen.selectedResearch;
-						ResearchEditorDialog.RESEARCH_LIST.open(this,"Edit parents",r.getParents(),s->{
+						Research r = researchPanel.selectedResearch;
+						ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit parents", r.getParents(), s -> {
 							r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
 							r.doIndex();
 							EditUtils.saveResearch(r);
 						});
 					}
 				};
-				par.setPos(offset,130);
+				par.setPos(offset, 130);
 				add(par);
 				offset += par.width + 3;
 				Button chd = new TechTextButton(this, GuiUtils.str("children"), Icon.EMPTY) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add children
-						Research r=researchScreen.selectedResearch;
-						ResearchEditorDialog.RESEARCH_LIST.open(this,"Edit children",r.getChildren(),s->{
-							r.getChildren().forEach(e->e.removeParent(r));
-							s.forEach(e->{e.addParent(r.getSupplier());e.doIndex();});
+						Research r = researchPanel.selectedResearch;
+						ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit children", r.getChildren(), s -> {
+							r.getChildren().forEach(e ->{ e.removeParent(r);EditUtils.saveResearch(e);});
+							s.forEach(e -> {
+								e.addParent(r.getSupplier());
+								e.doIndex();
+							});
 							r.doIndex();
 							EditUtils.saveResearch(r);
 						});
 					}
 				};
-				chd.setPos(offset,130);
+				chd.setPos(offset, 130);
 				add(chd);
 				offset += chd.width + 3;
 			}
@@ -113,64 +137,67 @@ public class ResearchHierarchyPanel extends Panel {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add research
-						new ResearchEditorDialog(this,null,researchScreen.selectedCategory).open();
+						new ResearchEditorDialog(this, null, researchPanel.selectedCategory).open();
 					}
 				};
 				create.setPos(offset, 130);
 				add(create);
 				offset += create.width + 3;
 			}
-			if(researchScreen.selectedResearch!=null){
-				Button create = new TechTextButton(this, GuiUtils.str("edit"),
-						Icon.EMPTY) {
+			if (researchPanel.selectedResearch != null) {
+				Button create = new TechTextButton(this, GuiUtils.str("edit"), Icon.EMPTY) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
-						EditUtils.editResearch(this,researchScreen.selectedResearch);
+						EditUtils.editResearch(this, researchPanel.selectedResearch);
 					}
 				};
-				create.setPos(offset,130);
+				create.setPos(offset, 130);
 				add(create);
 				offset += create.width + 3;
-				Button rem = new TechTextButton(this, GuiUtils.str("delete"),
-						Icon.EMPTY) {
+				Button rem = new TechTextButton(this, GuiUtils.str("delete"), Icon.EMPTY) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
-						researchScreen.selectedResearch.delete();
+						researchPanel.selectedResearch.delete();
 					}
 				};
-				rem.setPos(offset,130);
+				rem.setPos(offset, 130);
 				add(rem);
 				offset += rem.width + 3;
 			}
 		}
-		if (researchScreen.selectedResearch == null)
+		if (researchPanel.selectedResearch == null)
 			return;
-		ResearchDetailButton button = new ResearchDetailButton(this, researchScreen.selectedResearch);
+		ResearchDetailButton button = new ResearchDetailButton(this, researchPanel.selectedResearch);
 		add(button);
 		button.setPos(70, 48);
 		int k = 0;
-		Set<Research> parents = researchScreen.selectedResearch.getParents();
+		int trmost=0;
+		Set<Research> parents = researchPanel.selectedResearch.getParents();
 		for (Research parent : parents) {
-			if (k >= 4)
-				break;
+			int x;
+			if (k >= 4) {
+				x = ButtonPos[4] + (k - 4) * 32;
+			} else
+				x = ButtonPos[k];
 			ResearchSimpleButton parentButton = new ResearchSimpleButton(this, parent);
 			add(parentButton);
-			parentButton.setPos(ButtonPos[k], 16);
+			parentButton.setPos(x, 16);
 			ThickLine l = new ResearchHierarchyLine(parent);
 			lines.add(l);
 
-			l.setPosAndDelta(ButtonPos[k] + 12, 34, 0, 8);
+			l.setPosAndDelta(x + 12, 34, 0, 8);
 			k++;
 		}
 
 		if (k > 1) {
 			int lmost = 0;
 			int rmost = 0;
-			ThickLine lu = new ResearchCombinatorLine(researchScreen.selectedResearch);
+			
+			ThickLine lu = new ResearchCombinatorLine(researchPanel.selectedResearch);
 			lines.add(lu);
-			if (k == 5)
-				rmost = ButtonPos[5] + 12;
-			else if (k >= 3)
+			if (k > 4) {
+				rmost = ButtonPos[4] + (k - 5) * 32 + 12;
+			} else if (k >= 3)
 				rmost = ButtonPos[2] + 12;
 			else
 				rmost = ButtonPos[0] + 12;
@@ -178,39 +205,43 @@ public class ResearchHierarchyPanel extends Panel {
 				lmost = ButtonPos[3] + 12;
 			else
 				lmost = ButtonPos[1] + 12;
+			trmost=rmost;
 			lu.setPoints(lmost, 42, rmost, 42);
 
 		}
 		if (k > 0) {
-			ThickLine lux = new ResearchCombinatorLine(researchScreen.selectedResearch);
+			ThickLine lux = new ResearchCombinatorLine(researchPanel.selectedResearch);
 			lines.add(lux);
 			lux.setPosAndDelta(ButtonPos[0] + 12, 42, 0, 6);
 		}
 		k = 0;
 
-		if (FHResearch.editor || researchScreen.selectedResearch.isUnlocked()) {
+		if (FHResearch.editor || researchPanel.selectedResearch.isUnlocked()) {
 
-			Set<Research> children = researchScreen.selectedResearch.getChildren();
+			Set<Research> children = researchPanel.selectedResearch.getChildren();
 			for (Research child : children) {
-				if (k >= 4)
-					break;
+				int x;
+				if (k >= 4) {
+					x = ButtonPos[4] + (k - 4) * 32;
+				} else
+					x = ButtonPos[k];
 				ResearchSimpleButton childButton = new ResearchSimpleButton(this, child);
-				childButton.setChildren(researchScreen.selectedResearch);
+				childButton.setChildren(researchPanel.selectedResearch);
 				add(childButton);
-				childButton.setPos(ButtonPos[k], 92);
-				ThickLine l = new ResearchHierarchyLine(researchScreen.selectedResearch);
+				childButton.setPos(x, 92);
+				ThickLine l = new ResearchHierarchyLine(researchPanel.selectedResearch);
 				lines.add(l);
-				l.setPosAndDelta(ButtonPos[k] + 12, 90, 0, 24);
+				l.setPosAndDelta(x + 12, 90, 0, 24);
 				k++;
 			}
 			if (k > 1) {
 				int lmost = 0;
 				int rmost = 0;
-				ThickLine lu = new ResearchHierarchyLine(researchScreen.selectedResearch);
+				ThickLine lu = new ResearchHierarchyLine(researchPanel.selectedResearch);
 				lines.add(lu);
-				if (k == 5)
-					rmost = ButtonPos[5] + 12;
-				else if (k >= 3)
+				if (k > 4) {
+					rmost = ButtonPos[4] + (k - 5) * 32 + 12;
+				} else if (k >= 3)
 					rmost = ButtonPos[2] + 12;
 				else
 					rmost = ButtonPos[0] + 12;
@@ -218,14 +249,16 @@ public class ResearchHierarchyPanel extends Panel {
 					lmost = ButtonPos[3] + 12;
 				else
 					lmost = ButtonPos[1] + 12;
+				trmost=Math.max(rmost, trmost);
 				lu.setPoints(lmost, 90, rmost, 90);
 			}
 			if (k > 0) {
-				ThickLine lux2 = new ResearchHierarchyLine(researchScreen.selectedResearch);
+				ThickLine lux2 = new ResearchHierarchyLine(researchPanel.selectedResearch);
 				lines.add(lux2);
 				lux2.setPosAndDelta(ButtonPos[0] + 12, 66, 0, 24);
 			}
 		}
+		researchPanel.hierarchyBar.setMaxValue(trmost+24);
 
 	}
 
@@ -256,7 +289,7 @@ public class ResearchHierarchyPanel extends Panel {
 		public ResearchDetailButton(ResearchHierarchyPanel panel, Research research) {
 			super(panel, research.getName(), research.getIcon());
 			this.research = research;
-			this.researchScreen = panel.researchScreen;
+			this.researchScreen = panel.researchPanel;
 			setSize(36, 36);
 		}
 
@@ -296,7 +329,7 @@ public class ResearchHierarchyPanel extends Panel {
 		public ResearchSimpleButton(ResearchHierarchyPanel panel, Research research) {
 			super(panel, research.getName(), research.getIcon());
 			this.research = research;
-			this.researchScreen = panel.researchScreen;
+			this.researchScreen = panel.researchPanel;
 			setSize(24, 24);
 		}
 
@@ -343,7 +376,7 @@ public class ResearchHierarchyPanel extends Panel {
 
 	@Override
 	public boolean isEnabled() {
-		return researchScreen.canEnable(this);
+		return researchPanel.canEnable(this);
 	}
 
 	@Override

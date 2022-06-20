@@ -11,6 +11,7 @@ import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.util.text.TextFormatting;
 
 public class ResearchCategoryPanel extends Panel {
 	public static final int CAT_PANEL_HEIGHT = 40;
@@ -41,7 +42,8 @@ public class ResearchCategoryPanel extends Panel {
 
 		@Override
 		public void addMouseOverText(TooltipList list) {
-			list.add(category.getDesc());
+			list.add(category.getName());
+			list.add(category.getDesc().mergeStyle(TextFormatting.GRAY));
 		}
 
 		@Override
