@@ -20,6 +20,7 @@ import net.minecraftforge.common.util.LazyOptional;
 
 import javax.annotation.Nullable;
 import java.util.LinkedList;
+import java.util.Optional;
 import java.util.Random;
 
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
@@ -231,13 +232,18 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * @return temperature at given time
      */
     private float computeTemp(long time) {
+    	if(time<clockSource.getTimeSecs())return 0;
         tempEventStreamGrow(time);
-        return tempEventStream
+        while(true) {
+        Optional<Float> f=tempEventStream
                 .stream()
                 .filter(e -> time <= e.calmEndTime && time >= e.startTime)
                 .findFirst()
-                .map(e -> e.getHourTemp(time))
-                .get();
+                .map(e -> e.getHourTemp(time));
+	        if(f.isPresent())
+	        	return f.get();
+	        rebuildtempEventStream(time);
+        }
     }
 
     // Grows tempEventStream to contain temp events
@@ -245,6 +251,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     private void tempEventStreamGrow(long time) {
         // If tempEventStream becomes empty for some reason,
         // start generating TempEvent from current time.
+
         long currentTime = clockSource.getTimeSecs();
         if (tempEventStream.isEmpty()) {
             tempEventStream.add(TempEvent.getTempEvent(currentTime));
@@ -255,7 +262,25 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             tempEventStream.add(head = TempEvent.getTempEvent(head.calmEndTime));
         }
     }
+    // Grows tempEventStream to contain temp events
+    // that cover the given point of time
+    private void rebuildtempEventStream(long time) {
+        // If tempEventStream becomes empty for some reason,
+        // start generating TempEvent from current time.
+    	FHMain.LOGGER.error("Temperature Data corrupted, rebuilding temperature data");
+        long currentTime = clockSource.getTimeSecs();
+        if (tempEventStream.isEmpty()||tempEventStream.getFirst().startTime>currentTime) {
+        	tempEventStream.clear();
+            tempEventStream.add(TempEvent.getTempEvent(currentTime));
+        }
 
+        TempEvent head = tempEventStream.getFirst();
+        tempEventStream.clear();
+        tempEventStream.add(head);
+        while (head.calmEndTime < time) {
+            tempEventStream.add(head = TempEvent.getTempEvent(head.calmEndTime));
+        }
+    }
     // Trims all TempEvents that end before given time
     // time given in seconds
     private void tempEventStreamTrim(long time) {

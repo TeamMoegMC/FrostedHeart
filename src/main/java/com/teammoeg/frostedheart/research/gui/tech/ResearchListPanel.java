@@ -32,6 +32,7 @@ public class ResearchListPanel extends Panel {
 			super(panel);
 			researchScreen=panel.researchScreen;
 			this.setWidth(103);
+			this.setHeight(118);
 		}
 
 		@Override
@@ -44,7 +45,7 @@ public class ResearchListPanel extends Panel {
 	            button.setPos(4,offset);
 	            offset += 18;
 	        }
-	        this.setHeight(offset+1);
+	        //this.setHeight(offset+1);
             researchScreen.researchListPanel.scroll.setMaxValue(offset+1);
 		}
 

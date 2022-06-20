@@ -76,7 +76,7 @@ public class ResearchHierarchyPanel extends Panel {
 		if (FHResearch.editor) {
 			int offset=5;
 			if(researchScreen.selectedResearch!=null){
-				Button par = new TechTextButton(this, GuiUtils.str("edit parents"), Icon.EMPTY) {
+				Button par = new TechTextButton(this, GuiUtils.str("parents"), Icon.EMPTY) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add parent
@@ -91,7 +91,7 @@ public class ResearchHierarchyPanel extends Panel {
 				par.setPos(offset,130);
 				add(par);
 				offset += par.width + 3;
-				Button chd = new TechTextButton(this, GuiUtils.str("edit children"), Icon.EMPTY) {
+				Button chd = new TechTextButton(this, GuiUtils.str("children"), Icon.EMPTY) {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						// TODO Add children
@@ -131,6 +131,16 @@ public class ResearchHierarchyPanel extends Panel {
 				create.setPos(offset,130);
 				add(create);
 				offset += create.width + 3;
+				Button rem = new TechTextButton(this, GuiUtils.str("delete"),
+						Icon.EMPTY) {
+					@Override
+					public void onClicked(MouseButton mouseButton) {
+						researchScreen.selectedResearch.delete();
+					}
+				};
+				rem.setPos(offset,130);
+				add(rem);
+				offset += rem.width + 3;
 			}
 		}
 		if (researchScreen.selectedResearch == null)

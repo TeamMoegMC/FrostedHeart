@@ -75,6 +75,7 @@
   "gui.frostedheart.research.requirements": "实验器材",
   "gui.frostedheart.research.start": "开始研究",
   "gui.frostedheart.research.stop": "暂停研究",
+  "gui.frostedheart.reasearch.points": "科技点",
   "gui.frostedheart.research_hierarchy": "研究关系",
   "gui.frostedheart.research_progress": "研究进度",
   "gui.frostedheart.save_update_needed": "自动更新未完成！请退出这个世界然后手动删除%s以完成更新！",

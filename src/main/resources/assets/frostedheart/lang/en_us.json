@@ -75,6 +75,7 @@
   "gui.frostedheart.research.requirements": "Experiment Materials",
   "gui.frostedheart.research.start": "Start Research",
   "gui.frostedheart.research.stop": "Pause Research",
+  "gui.frostedheart.reasearch.points": "Tech pts:",
   "gui.frostedheart.research_hierarchy": "Research Relationship",
   "gui.frostedheart.research_progress": "Research Progress",
   "gui.frostedheart.save_update_needed": "Your save is outdated, Cannot auto update your save! Please exit world and delete %s to complete update!",

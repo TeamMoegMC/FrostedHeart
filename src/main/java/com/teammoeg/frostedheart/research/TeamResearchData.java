@@ -100,6 +100,7 @@ public class TeamResearchData {
 	}
 
 	public ResearchData getData(int id) {
+		if(id==0)return null;
 		ensureResearch(id);
 		ResearchData rnd = rdata.get(id - 1);
 		if (rnd == null) {

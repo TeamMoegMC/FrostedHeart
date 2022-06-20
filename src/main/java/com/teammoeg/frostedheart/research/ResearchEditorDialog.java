@@ -38,6 +38,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
 	NumberBox pts;
 	LabeledSelection<Boolean> hide;
 	LabeledSelection<Boolean> alt;
+	boolean removed;
 	public static final Editor<Collection<Research>> RESEARCH_LIST=(p,l,v,c)->{
 		new EditListDialog<>(p,l,v,null,SelectDialog.EDITOR_RESEARCH,e->e.getName().getString(),Research::getIcon,c).open();
 	};
@@ -60,21 +61,27 @@ public class ResearchEditorDialog extends BaseEditDialog {
 	
 	@Override
 	public void onClose() {
-		r.name=name.getText();
-		r.setCategory(cat.getSelection());
-		r.points=pts.getNum();
-		r.hideEffects=hide.getSelection();
-		r.showfdesc=alt.getSelection();
-		if(r.getRId()==0) {//creating new research
-			if(!id.getText().isEmpty()) {
-				r.setId(id.getText());
-				FHResearch.register(r);
-				r.doIndex();
+		if(removed) {
+			if(r.getRId()!=0)
+				r.delete();
+			
+		}else {
+			r.name=name.getText();
+			r.setCategory(cat.getSelection());
+			r.points=pts.getNum();
+			r.hideEffects=hide.getSelection();
+			r.showfdesc=alt.getSelection();
+			if(r.getRId()==0) {//creating new research
+				if(!id.getText().isEmpty()) {
+					r.setId(id.getText());
+					FHResearch.register(r);
+					r.doIndex();
+				}
+			}else {//modify old research
+				r.setNewId(id.getText());
 			}
-		}else {//modify old research
-			r.setNewId(id.getText());
+			EditUtils.saveResearch(r);
 		}
-		EditUtils.saveResearch(r);
 	}
 
 	@Override
@@ -117,6 +124,15 @@ public class ResearchEditorDialog extends BaseEditDialog {
 			r.getClues().addAll(s);
 			r.doIndex();
 		}));
+		add(new SimpleTextButton(this,GuiUtils.str("Remove"),Icon.EMPTY){
+
+			@Override
+			public void onClicked(MouseButton arg0) {
+				removed=true;
+				close();
+			}
+			
+		});
 		add(hide);
 		add(alt);
 		

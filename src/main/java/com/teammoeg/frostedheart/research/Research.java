@@ -44,6 +44,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * Part of Research Category {@link ResearchCategory}
  */
 public class Research extends FHRegisteredItem implements Writeable {
+	
 	private String id;// id of this research
 	FHIcon icon;// icon for this research in term of item
 	private ResearchCategory category;
@@ -377,6 +378,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		this.effects.forEach(Effect::deleteSelf);
 		this.clues.forEach(Clue::deleteSelf);
 		ResearchDataManager.INSTANCE.getAllData().forEach(e->e.resetData(this));
+		
 		FHResearch.delete(this);
 	}
 	public void setParents(Collection<Supplier<Research>> collect) {

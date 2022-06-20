@@ -98,8 +98,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 			String lid=item.getLId();
 			int index=rnames.getOrDefault(lid,-1);
 			ensure();
-			if(index!=-1&&index==item.getRId()){
-				item.setRId(0);
+			if(index!=-1&&index+1==item.getRId()){
 				items.set(index,null);
 			}
 		}
