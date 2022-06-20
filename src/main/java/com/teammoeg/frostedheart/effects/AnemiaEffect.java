@@ -21,15 +21,15 @@ public class AnemiaEffect extends Effect {
 
 	@Override
 	public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
-		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.SLOWNESS,20,amplifier)));
-		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE,20,amplifier)));
-		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS,20,amplifier*2)));
-		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST,20,amplifier*2)));
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.SLOWNESS,100,amplifier)));
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE,100,amplifier)));
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS,100,amplifier*2)));
+		entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST,100,amplifier*2)));
 	}
 
 	@Override
 	public boolean isReady(int duration, int amplifier) {
-		return duration%20==0;
+		return duration%100==0;
 	}
 	@Override
 	public List<ItemStack> getCurativeItems() {
