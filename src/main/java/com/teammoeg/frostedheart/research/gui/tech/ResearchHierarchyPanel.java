@@ -158,6 +158,7 @@ public class ResearchHierarchyPanel extends Panel {
 					@Override
 					public void onClicked(MouseButton mouseButton) {
 						researchPanel.selectedResearch.delete();
+						researchPanel.refreshWidgets();
 					}
 				};
 				rem.setPos(offset, 130);
