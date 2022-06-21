@@ -9,7 +9,7 @@
           "children": [
             {
               "type": "minecraft:item",
-              "name": "rankine:malachite"
+              "name": "frostedheart:copper_gravel"
             }
           ]
         }
