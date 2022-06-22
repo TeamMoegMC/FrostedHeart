@@ -65,9 +65,9 @@ public class FHFeatures {
         ImmutableList<BlockState> disk_target = ImmutableList.of(RankineBlocks.SANDY_CLAY_LOAM.get().getDefaultState(),RankineBlocks.SILTY_CLAY_LOAM.get().getDefaultState(),Blocks.GRAVEL.getDefaultState(),Blocks.SAND.getDefaultState(),Blocks.DIRT.getDefaultState(),RankineBlocks.CLAY_LOAM.get().getDefaultState(),RankineBlocks.SILTY_CLAY.get().getDefaultState(), RankineBlocks.SILTY_CLAY_MUD.get().getDefaultState(), RankineBlocks.SANDY_CLAY.get().getDefaultState(),RankineBlocks.SANDY_CLAY_MUD.get().getDefaultState());
 
         registerFHDisk("copper_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 2), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
-        registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.CLAY.getDefaultState(), FeatureSpread.create(2, 3), 1, clay_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(1));
+        registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.CLAY.getDefaultState(), FeatureSpread.create(2, 3), 1, clay_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
         registerFHDisk("fh_disk_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.GRAVEL.getDefaultState(), FeatureSpread.create(2, 3), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
-        registerFHDisk("fh_disk_sand", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.SAND.getDefaultState(), FeatureSpread.create(2, 2), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
+        registerFHDisk("fh_disk_sand", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.SAND.getDefaultState(), FeatureSpread.create(2, 4), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).count(3));
     }
 
     private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> registerFHOre(String key, ConfiguredFeature<FC, ?> configuredFeature) {
