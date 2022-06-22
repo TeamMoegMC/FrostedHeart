@@ -10,6 +10,8 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class KillClue extends ListenerClue {
@@ -32,7 +34,12 @@ public class KillClue extends ListenerClue {
 	KillClue() {
 		super("@clue." + FHMain.MODID + ".kill",0);
 	}
-
+	@Override
+	public ITextComponent getDescription() {
+		ITextComponent itc=super.getDescription();
+		if(itc!=null||type==null)return itc;
+		return type.getName();
+	}
 
 	@Override
 	public void initListener(Team t) {

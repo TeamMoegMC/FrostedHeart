@@ -8,6 +8,8 @@ import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 public class ItemClue extends Clue {
 	boolean consume;
@@ -81,6 +83,15 @@ public class ItemClue extends Clue {
 	@Override
 	public int getIntType() {
 		return 2;
+		
+	}
+
+	@Override
+	public ITextComponent getDescription() {
+		ITextComponent itc=super.getDescription();
+		if(itc!=null||stack==null)return itc;
+		if(stack.hasNoMatchingItems())return null;
+		return stack.getMatchingStacks()[0].getDisplayName().copyRaw().appendSibling(new StringTextComponent(" x"+stack.getCount()));
 	}
 
 }

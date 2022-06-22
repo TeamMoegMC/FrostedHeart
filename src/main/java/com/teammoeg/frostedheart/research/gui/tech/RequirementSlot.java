@@ -54,7 +54,10 @@ public class RequirementSlot extends Widget {
 		if(cnt>1) {
 			matrixStack.push();
 			matrixStack.translate(0, 0, 100);
-			theme.drawString(matrixStack,String.valueOf(cnt), x+8,y+9,Color4I.WHITE,Theme.SHADOW);
+			int dx=5;
+			if(cnt>=10)
+				dx=0;
+			theme.drawString(matrixStack,String.valueOf(cnt), dx+x+8,y+9,Color4I.WHITE,Theme.SHADOW);
 			matrixStack.pop();
 		}
 		matrixStack.pop();

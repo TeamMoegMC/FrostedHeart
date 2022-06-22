@@ -1,14 +1,18 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.CriterionProgress;
+import net.minecraft.client.multiplayer.ClientAdvancementManager;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 public class AdvancementClue extends TickListenerClue {
 	ResourceLocation advancement = new ResourceLocation("minecraft:story/root");
@@ -38,7 +42,18 @@ public class AdvancementClue extends TickListenerClue {
 	public AdvancementClue() {
 		super();
 	}
-
+	@Override
+	public ITextComponent getDescription() {
+		ITextComponent itc=super.getDescription();
+		if(itc!=null)return itc;
+		ClientAdvancementManager cam=ClientUtils.mc().player.connection.getAdvancementManager();
+		Advancement adv=cam.getAdvancementList().getAdvancement(advancement);
+		if(adv!=null)
+			return adv.getDisplayText();
+		else
+			return null;
+	
+	}
 	@Override
 	public boolean isCompleted(TeamResearchData t, ServerPlayerEntity player) {
 		Advancement a = player.server.getAdvancementManager().getAdvancement(advancement);
