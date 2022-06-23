@@ -41,6 +41,8 @@ public class MixinCommandUtilServer {
 			MinecraftServer s=sender.getServer();
 			if(s!=null)
 				cbib.setReturnValue(sender.getCommandSource().hasPermissionLevel(s.getOpPermissionLevel()));
+			else
+				cbib.setReturnValue(false);
 		}
     }
 }

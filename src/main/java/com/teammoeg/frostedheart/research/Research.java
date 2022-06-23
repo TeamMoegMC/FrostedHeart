@@ -52,7 +52,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
 																	// should not set manually.
 
-	private HashSet<Clue> clues = new HashSet<>();// research clues
+	private List<Clue> clues = new ArrayList<>();// research clues
 	List<IngredientWithSize> requiredItems = new ArrayList<>();
 	private List<Effect> effects = new ArrayList<>();// effects of this research
 	String name="";
@@ -172,7 +172,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 		buffer.writeBoolean(isHideEffects());
 	}
 
-	public Set<Clue> getClues() {
+	public List<Clue> getClues() {
 		return clues;
 	}
 
