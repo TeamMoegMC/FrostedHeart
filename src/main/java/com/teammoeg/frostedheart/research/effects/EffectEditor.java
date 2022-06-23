@@ -108,6 +108,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 		add(name);
 		add(new OpenEditorButton<>(this,"Edit Description",EditListDialog.STRING_LIST,e.tooltip,s->e.tooltip=new ArrayList<>(s)));
 		add(new OpenEditorButton<>(this,"Edit icon",IconEditor.EDITOR,e.icon==null?e.getDefaultIcon():e.icon,s->e.icon=s));
+		add(sd);
 	}
 
 	private static class Building extends EffectEditor<EffectBuilding>{

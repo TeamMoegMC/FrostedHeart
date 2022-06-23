@@ -39,4 +39,9 @@ public class TechScrollBar extends PanelScrollBar {
 		super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
 	}
 
+	@Override
+	public boolean canMouseScroll() {
+		return super.canMouseScroll()&&panel.isEnabled();
+	}
+
 }
