@@ -20,6 +20,7 @@ public class EditPrompt extends BaseEditDialog{
 		open(p,l,v==null?"":v.toString(),e->c.accept(new JsonParser().parse(e)));
 	};
 	public static Editor<Long> LONG_EDITOR=(p,l,v,c)->{
+		
 		open(p,l,String.valueOf(v),o->{
 			c.accept(Long.parseLong(o));
 		});

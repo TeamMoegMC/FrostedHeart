@@ -129,6 +129,7 @@ public class FHMain {
         FHContent.registerContainers();
         FHTileTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
+        FHSounds.SOUNDS.register(mod);
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);

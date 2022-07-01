@@ -22,6 +22,7 @@
   "block.frostedheart.steam_turbine": "Industrial Steam Turbine",
   "block.frostedheart.white_turnip_block": "White Turnip",
   "block.frostedheart.wolfberry_bush_block": "Chinese Wolfberries",
+  "block.frostedheart.mechanical_calculator": "Mechanical Calculator",
   "clue.frostedheart.item": "Examine Item",
   "clue.frostedheart.kill": "Kill Mob",
   "clue.frostedheart.minigame": "Finish paper",
@@ -211,6 +212,8 @@
   "research.steam_properties.name": "Steam Properties",
   "research.sulfuric_acid.desc": "Your scientists have a brilliant method to produce sulfuric acid experimentally. The substance may be proven useful for various production.",
   "research.sulfuric_acid.name": "Sulfuric Acid Preparation",
+  "subtitle.frostedheart.mechanical_calculator_bell":"Mechanical calculator bell rings",
+  "subtitle.frostedheart.mechanical_calculator_roll":"Mechanical calculator rolls",
   "tooltip.frostedheart.armor_heating": "Heating rate:%s °C/s",
   "tooltip.frostedheart.armor_warm": "Warming Modifier:%s %%",
   "tooltip.frostedheart.block_temp": "Temperature change:%s °C",
@@ -233,5 +236,9 @@
   "tooltip.frostedheart.mushroom": "Hold knife in one hand and use this to cut down. ",
   "tooltip.frostedheart.rankine.dry_mortar": "Soak in water for a while to get mortar",
   "tooltip.frostedheart.research_is_locked": "Research is locked!Complete these research:",
-  "tooltip.frostedheart.steam_stored": "Steam:%s su"
+  "tooltip.frostedheart.steam_stored": "Steam:%s su",
+  "tooltip.frostedheart.mechanical_calculator.working": "    Calculating",
+  "tooltip.frostedheart.mechanical_calculator.full":"    Calculate points full!",
+  "tooltip.frostedheart.mechanical_calculator.too_fast":"    Too fast! Speed must under 64RPM",
+  "tooltip.frostedheart.mechanical_calculator.points":"    Calculate points: %s/%s"
 }

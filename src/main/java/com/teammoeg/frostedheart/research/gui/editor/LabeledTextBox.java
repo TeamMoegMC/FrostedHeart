@@ -10,6 +10,7 @@ public class LabeledTextBox extends LabeledPane<TextBox> {
 		obj=new TextBox(this);
 		
 		obj.allowInput();
+		if(txt==null)txt="";
 		obj.setText(txt);
 		obj.setSize(200, 16);
 		orig=txt;

@@ -22,13 +22,20 @@ import java.util.List;
 
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
+import com.simibubi.create.content.contraptions.relays.elementary.ICogWheel;
+import com.simibubi.create.content.contraptions.relays.gearbox.GearboxBlock;
+import com.simibubi.create.foundation.sound.SoundScapes;
+import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
+import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -36,16 +43,20 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Direction.Axis;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggleInformation {
 	int processMax=6400;
 	public int process=0;
 	int currentPoints=0;
-	int maxPoints=40;
+	int lastact;
+	int maxPoints=80;
 	public MechCalcTileEntity() {
 		super(FHTileTypes.MECH_CALC.get());
 	}
@@ -70,12 +81,6 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 	public Axis getAxis() {
 		return this.getDirection().rotateY().getAxis();
 	}
-/*
-	@Override
-	public boolean isCustomConnection(KineticTileEntity other, BlockState state, BlockState otherState) {
-		return true;
-	}
-*/
 	@Override
 	public boolean shouldRenderNormally() {
 		return true;
@@ -87,13 +92,21 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 			float spd=MathHelper.abs(super.getSpeed());
 			if(spd<=64&&currentPoints<maxPoints) {
 				process+=spd;
+				int curact=process/1067;
+				if(lastact!=curact) {
+					lastact=curact;
+					world.playSound(null, pos,FHSounds.MC_BELL.get(),SoundCategory.BLOCKS,0.75f,1f);
+				}
 				if(process>=processMax) {
 					process=0;
+					lastact=0;
 					currentPoints+=20;
 					this.needsSpeedUpdate();
 				}
 				this.notifyUpdate();
 			}
+		}else {
+			if(ticsSlp>0)ticsSlp--;
 		}
 	}
     @Override
@@ -129,6 +142,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 		super.fromTag(state, tag, client);
 		process=tag.getInt("process");
 		currentPoints=tag.getInt("pts");
+		lastact=tag.getInt("last_calc");
 	}
 
 	@Override
@@ -136,13 +150,20 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 		super.write(tag, client);
 		tag.putInt("process",process);
 		tag.putInt("pts",currentPoints);
+		tag.putInt("last_calc",lastact);
 	}
-
-/*
-	public float propagateRotationTo(KineticTileEntity target, BlockState stateFrom, BlockState stateTo, BlockPos diff,
-			boolean connectedViaAxes, boolean connectedViaCogs) {
-		if (connectedViaAxes)
-			return 1f;
-		return 0f;
-	}*/
+	@OnlyIn(Dist.CLIENT)
+	int ticsSlp;//ticks since last sound play
+	@OnlyIn(Dist.CLIENT)
+	public void tickAudio() {
+		float componentSpeed = Math.abs(getSpeed());
+		if (componentSpeed == 0||componentSpeed>64||currentPoints>=maxPoints)
+			return;
+		float pitch = MathHelper.clamp((componentSpeed / 32f)+0.5f, 0.5f, 2f);
+		
+		if (ticsSlp<=0) {
+			((ClientWorld)world).playSound(pos,FHSounds.MC_ROLL.get(),SoundCategory.BLOCKS,0.75f, pitch,true);
+			ticsSlp=MathHelper.ceil(20/pitch);
+		}
+	}
 }

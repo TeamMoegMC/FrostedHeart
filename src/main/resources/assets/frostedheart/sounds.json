@@ -1,0 +1,10 @@
+{
+  "mc_bell": {
+    "subtitle": "subtitle.frostedheart.mechanical_calculator_bell",
+    "sounds": [ "frostedheart:mech_calc_bell" ]
+  },
+  "mc_roll": {
+    "subtitle": "subtitle.frostedheart.mechanical_calculator_roll",
+    "sounds": [ "frostedheart:mech_calc_roll" ]
+  }
+}
