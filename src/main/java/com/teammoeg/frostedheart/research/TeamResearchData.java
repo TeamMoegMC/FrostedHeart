@@ -208,7 +208,10 @@ public class TeamResearchData {
 		LazyOptional<Research> rs = getCurrentResearch();
 		if (rs.isPresent()) {
 			Research r = rs.resolve().get();
-			return this.getData(r).commitPoints(points);
+			ResearchData rd=this.getData(r);
+			long remain=rd.commitPoints(points);
+			rd.sendProgressPacket();
+			return remain;
 		}
 		return points;
 	}

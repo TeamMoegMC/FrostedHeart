@@ -238,7 +238,7 @@
   "tooltip.frostedheart.research_is_locked": "Research is locked!Complete these research:",
   "tooltip.frostedheart.steam_stored": "Steam:%s su",
   "tooltip.frostedheart.mechanical_calculator.working": "    Calculating",
-  "tooltip.frostedheart.mechanical_calculator.full":"    Calculate points full!",
+  "tooltip.frostedheart.mechanical_calculator.full":"    Calculation points full!",
   "tooltip.frostedheart.mechanical_calculator.too_fast":"    Too fast! Speed must under 64RPM",
-  "tooltip.frostedheart.mechanical_calculator.points":"    Calculate points: %s/%s"
+  "tooltip.frostedheart.mechanical_calculator.points":"    Calculation points: %s/%s"
 }
