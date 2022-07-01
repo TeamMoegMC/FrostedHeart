@@ -95,7 +95,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 				int curact=process/1067;
 				if(lastact!=curact) {
 					lastact=curact;
-					world.playSound(null, pos,FHSounds.MC_BELL.get(),SoundCategory.BLOCKS,0.75f,1f);
+					world.playSound(null, pos,FHSounds.MC_BELL.get(),SoundCategory.BLOCKS,0.5f,1f);
 				}
 				if(process>=processMax) {
 					process=0;
@@ -103,10 +103,15 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 					currentPoints+=20;
 					this.needsSpeedUpdate();
 				}
+				
+				
+				if (ticsSlp<=0) {
+					float pitch = MathHelper.clamp((spd / 32f)+0.5f, 0.5f, 2f);
+					world.playSound(null,pos,FHSounds.MC_ROLL.get(),SoundCategory.BLOCKS,0.5f, pitch);
+					ticsSlp=MathHelper.ceil(20/pitch);
+				}else ticsSlp--;
 				this.notifyUpdate();
 			}
-		}else {
-			if(ticsSlp>0)ticsSlp--;
 		}
 	}
     @Override
@@ -156,14 +161,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 	int ticsSlp;//ticks since last sound play
 	@OnlyIn(Dist.CLIENT)
 	public void tickAudio() {
-		float componentSpeed = Math.abs(getSpeed());
-		if (componentSpeed == 0||componentSpeed>64||currentPoints>=maxPoints)
-			return;
-		float pitch = MathHelper.clamp((componentSpeed / 32f)+0.5f, 0.5f, 2f);
+
 		
-		if (ticsSlp<=0) {
-			((ClientWorld)world).playSound(pos,FHSounds.MC_ROLL.get(),SoundCategory.BLOCKS,0.75f, pitch,true);
-			ticsSlp=MathHelper.ceil(20/pitch);
-		}
 	}
 }
