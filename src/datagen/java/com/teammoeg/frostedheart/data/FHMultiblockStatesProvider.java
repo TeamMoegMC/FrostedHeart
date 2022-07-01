@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHContent;
 
 import blusunrize.immersiveengineering.api.IEProperties;
@@ -64,6 +65,9 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
         //createMultiblock(FHContent.FHMultiblocks.generator, split(obj("block/multiblocks/generator.obj"), FHContent.FHMultiblocks.GENERATOR));
 //        createMultiblock(FHBlocks.Multi.crucible, split(obj("block/multiblocks/crucible.obj"), FHMultiblocks.CRUCIBLE));
         //createMultiblock(FHContent.FHMultiblocks.generator_t2,split(obj("block/multiblocks/generator_t2.obj"), FHContent.FHMultiblocks.GENERATOR_T2));
+    	super.horizontalBlock(FHBlocks.mech_calc,obj("block/mechanical_calculator_base.obj"));
+    	obj("block/mechanical_calculator.obj");
+    	//super.itemModel(FHBlocks.mech_calc,models().withExistingParent("block/mechanical_calculator", modLoc("block/mechanical_calculator")));
     }
 
     @Nonnull

@@ -61,7 +61,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 	boolean showfdesc;
 	boolean hideEffects;
 
-	long points = 2000;// research point
+	long points = 1000;// research point
 
 	@SafeVarargs
 	public Research(String path, ResearchCategory category, Supplier<Research>... parents) {

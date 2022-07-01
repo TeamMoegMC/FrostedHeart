@@ -55,8 +55,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 public class ChargerTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, IIEInventory, IEBlockInterfaces.IInteractionObjectIE, ITickableTileEntity, FHBlockInterfaces.IActiveState {
-    NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
+        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
     public float power = 0;
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
@@ -66,7 +65,6 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     }
 
     NetworkHolder network=new NetworkHolder();
-    Direction last;
 
 
     public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
@@ -154,18 +152,12 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        ItemStackHelper.loadAllItems(nbt, inventory);
         power = nbt.getFloat("power");
-        if (nbt.contains("dir"))
-            last = Direction.values()[nbt.getInt("dir")];
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        ItemStackHelper.saveAllItems(nbt, inventory);
         nbt.putFloat("power", power);
-        if (last != null)
-            nbt.putInt("dir", last.ordinal());
     }
 
     @Override
@@ -184,34 +176,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     }
 
 
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
-    }
 
-    @Override
-    public boolean canUseGui(PlayerEntity player) {
-        return true;
-    }
-
-    @Override
-    public NonNullList<ItemStack> getInventory() {
-        return inventory;
-    }
-
-    @Override
-    public boolean isStackValid(int slot, ItemStack stack) {
-        if (stack.isEmpty())
-            return false;
-        if (slot == INPUT_SLOT)
-            return (stack.getItem() instanceof IChargable);
-        return false;
-    }
-
-    @Override
-    public int getSlotLimit(int slot) {
-        return 1;
-    }
 
 
     public float getMaxPower() {
@@ -246,10 +211,6 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
         return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
     }
-
-	@Override
-	public void doGraphicalUpdates() {
-	}
 	@Override
 	public NetworkHolder getHolder() {
 		return network;

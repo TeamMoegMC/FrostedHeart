@@ -54,8 +54,8 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     public T2GeneratorTileEntity.GeneratorData guiData = new T2GeneratorTileEntity.GeneratorData();
 
-    public T2GeneratorTileEntity(int temperatureLevelIn, int overdriveBoostIn, int rangeLevelIn) {
-        super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false, temperatureLevelIn, overdriveBoostIn, rangeLevelIn);
+    public T2GeneratorTileEntity() {
+        super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false,1,2,1);
     }
 
     float power = 0;

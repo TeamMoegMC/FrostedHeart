@@ -115,6 +115,7 @@ public class Researches {
 		FHResearch.researches.register(
 				new Research("charger", ResearchCategory.LIVING, FHBlocks.charger.asItem(), GEN_T2.getSupplier()));
 		FHResearch.saveAll();
+		FHResearch.prepareReload();
 		FHResearch.loadAll();
 		FHResearch.finishReload();
 	}

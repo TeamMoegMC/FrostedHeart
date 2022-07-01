@@ -33,7 +33,6 @@ public class T2GeneratorRenderer extends TileEntityRenderer<T2GeneratorTileEntit
 			IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
 		if(!te.formed||te.isDummy()||!te.getWorldNonnull().isBlockLoaded(te.getPos()))
 			return;
-		List<String> renderedParts = new ArrayList<>();
 		if(te.process>0||!te.getInventory().get(0).isEmpty()) {
 		
 		}else

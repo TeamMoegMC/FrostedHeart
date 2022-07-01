@@ -31,8 +31,8 @@ import net.minecraft.util.math.BlockPos;
 public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
 
-    public T1GeneratorTileEntity(int temperatureLevelIn, int overdriveBoostIn, int rangeLevelIn) {
-        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false, temperatureLevelIn, overdriveBoostIn, rangeLevelIn);
+    public T1GeneratorTileEntity() {
+        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false,1,2,1);
     }
 	@Override
 	public void forEachBlock(Consumer<T1GeneratorTileEntity> consumer) {

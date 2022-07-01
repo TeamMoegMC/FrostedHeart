@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
 import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
+import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
@@ -87,6 +88,7 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHMultiblocks.generator_t2, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest, RenderType.getCutout());
@@ -94,6 +96,7 @@ public class ClientRegistryEvents {
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);
+        ClientRegistry.bindTileEntityRenderer(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
         PlayerRenderer render = skinMap.get("default");

@@ -33,7 +33,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.teammoeg.frostedheart.client.ClientProxy;
+import com.teammoeg.frostedheart.client.DynamicModelSetup;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
@@ -118,7 +118,7 @@ public class FHMain {
         mod.addListener(this::setup);
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT,()->ClientProxy::setup);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT,()->DynamicModelSetup::setup);
         FHConfig.register();
         PacketHandler.register();
 

@@ -19,6 +19,7 @@ import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
+import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -26,7 +27,8 @@ import net.minecraft.block.material.Material;
 import net.minecraftforge.common.ToolType;
 
 public class FHBlocks {
-        public static Block cmupdate = new CMUpdateBlock("cmupdate",Block.Properties.create(Material.ROCK), FHBlockItem::new);
+        
+		public static Block cmupdate = new CMUpdateBlock("cmupdate",Block.Properties.create(Material.ROCK), FHBlockItem::new);
 		public static void init() {
         }
 
@@ -89,4 +91,11 @@ public class FHBlocks {
                 .hardnessAndResistance(45, 800)
                 .harvestLevel(3)
                 ,FHBlockItem::new);
+        public static Block mech_calc = new MechCalcBlock("mechanical_calculator", Block.Properties
+                .create(Material.IRON)
+                .sound(SoundType.METAL)
+                .setRequiresTool()
+                .harvestTool(ToolType.PICKAXE)
+                .hardnessAndResistance(2, 10)
+                .notSolid(), FHBlockItem::new);
     }

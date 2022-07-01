@@ -229,5 +229,9 @@
   "tooltip.frostedheart.survive_armor_temp_mod": "保暖指数：",
   "tooltip.frostedheart.survive_block_temp_mod": "温度指数：",
   "tooltip.frostedheart.survive_range": "范围:",
-  "tooltip.frostedheart.survive_weight_mod": "沉重指数："
+  "tooltip.frostedheart.survive_weight_mod": "沉重指数：",
+  "tooltip.frostedheart.mechanical_calculator.working": "    正在计算",
+  "tooltip.frostedheart.mechanical_calculator.full":"    累积计算点数已满",
+  "tooltip.frostedheart.mechanical_calculator.too_fast":"    速度太快了，速度必须在64RPM以下",
+  "tooltip.frostedheart.mechanical_calculator.points":"    累积计算点数：%s/%s"
 }
