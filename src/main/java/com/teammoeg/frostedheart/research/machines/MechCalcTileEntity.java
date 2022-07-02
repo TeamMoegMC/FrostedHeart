@@ -18,24 +18,14 @@
 
 package com.teammoeg.frostedheart.research.machines;
 
-import java.util.List;
-
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
-import com.simibubi.create.content.contraptions.relays.elementary.ICogWheel;
-import com.simibubi.create.content.contraptions.relays.gearbox.GearboxBlock;
-import com.simibubi.create.foundation.sound.SoundScapes;
-import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -44,12 +34,13 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.List;
 
 public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggleInformation {
 	int processMax=6400;
@@ -67,6 +58,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 	public ActionResultType onClick(PlayerEntity pe) {
 		if(!pe.world.isRemote) {
 			currentPoints=(int) ResearchDataAPI.getData((ServerPlayerEntity) pe).doResearch(currentPoints);
+			this.notifyUpdate();
 		}
 		return ActionResultType.func_233537_a_(pe.world.isRemote);
 	}
@@ -90,12 +82,12 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 		super.tick();
 		if(!world.isRemote) {
 			float spd=MathHelper.abs(super.getSpeed());
-			if(spd<=64&&currentPoints<maxPoints) {
+			if(spd>0&&spd<=64&&currentPoints<maxPoints) {
 				process+=spd;
 				int curact=process/1067;
 				if(lastact!=curact) {
 					lastact=curact;
-					world.playSound(null, pos,FHSounds.MC_BELL.get(),SoundCategory.BLOCKS,0.5f,1f);
+					world.playSound(null, pos,FHSounds.MC_BELL.get(),SoundCategory.BLOCKS,0.3f,1f);
 				}
 				if(process>=processMax) {
 					process=0;
@@ -107,7 +99,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 				
 				if (ticsSlp<=0) {
 					float pitch = MathHelper.clamp((spd / 32f)+0.5f, 0.5f, 2f);
-					world.playSound(null,pos,FHSounds.MC_ROLL.get(),SoundCategory.BLOCKS,0.5f, pitch);
+					world.playSound(null,pos,FHSounds.MC_ROLL.get(),SoundCategory.BLOCKS,0.3f, pitch);
 					ticsSlp=MathHelper.ceil(20/pitch);
 				}else ticsSlp--;
 				this.notifyUpdate();
@@ -128,7 +120,8 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 	public boolean addToGoggleTooltip(List<ITextComponent> tooltip, boolean isPlayerSneaking) {
 		super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 		boolean flag=true;
-		if(this.getSpeed()>64||this.getSpeed()<-64) {
+		float spd=MathHelper.abs(super.getSpeed());
+		if(spd>64) {
 			tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.too_fast").mergeStyle(TextFormatting.RED));
 			flag=false;
 		}
@@ -136,7 +129,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 			tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.full").mergeStyle(TextFormatting.RED));
 			flag=false;
 		}
-		if(flag)
+		if(flag && spd>0)
 			tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.working").mergeStyle(TextFormatting.GREEN));
 		tooltip.add(GuiUtils.translateTooltip("mechanical_calculator.points",currentPoints,maxPoints));
 		return true;

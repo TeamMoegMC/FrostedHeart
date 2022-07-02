@@ -11,7 +11,7 @@
               "condition": "minecraft:block_state_property",
               "block": "frostedheart:drawing_desk",
               "properties": {
-                "not_multi_main": "false"
+                "not_multi_main": "true"
               }
             }
           ],
