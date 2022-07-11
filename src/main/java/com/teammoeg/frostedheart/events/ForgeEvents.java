@@ -363,6 +363,7 @@ public class ForgeEvents {
 	}
 	@SubscribeEvent
 	public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
+		if(event.getPlayer().isSneaking())return;
 		if(!ResearchListeners.canUseBlock(event.getPlayer(),event.getWorld().getBlockState(event.getHitVec().getPos()).getBlock())) {
 			event.setCanceled(true);
 			event.setCancellationResult(ActionResultType.FAIL);
