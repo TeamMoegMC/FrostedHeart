@@ -18,8 +18,8 @@
 
 package com.teammoeg.frostedheart.events;
 
-import javax.annotation.Nonnull;
-
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
@@ -54,9 +54,6 @@ import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
-
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
@@ -81,13 +78,13 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Features;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
@@ -116,6 +113,9 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
+
+import javax.annotation.Nonnull;
+import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
@@ -348,15 +348,25 @@ public class ForgeEvents {
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void addOreGenFeatures(BiomeLoadingEvent event) {
         if (event.getName() != null) {
-            if (event.getCategory() != Biome.Category.NETHER && event.getCategory() != Biome.Category.THEEND) {
-                if (event.getCategory() == Biome.Category.RIVER || event.getCategory() == Biome.Category.BEACH) {
+			Biome.Category category = event.getCategory();
+            if (category != Biome.Category.NETHER && category != Biome.Category.THEEND) {
+                if (category == Biome.Category.RIVER || category == Biome.Category.BEACH) {
                     for (ConfiguredFeature<?,?> feature : FHFeatures.FH_DISK)
                         event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
                 }
+				if (category == Biome.Category.PLAINS || category == Biome.Category.SAVANNA || category == Biome.Category.TAIGA) {
+					List vegetal = event.getGeneration().getFeatures(GenerationStage.Decoration.VEGETAL_DECORATION);
+					vegetal.remove(Features.PATCH_LARGE_FERN);
+					vegetal.remove(Features.PATCH_TALL_GRASS);
+					vegetal.remove(Features.PATCH_TALL_GRASS_2);
+				}
+
                 for (ConfiguredFeature<?,?> feature : FHFeatures.FH_ORES)
                     event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
+
             }
-			if(event.getCategory()==Biome.Category.EXTREME_HILLS||event.getCategory()==Biome.Category.TAIGA) {
+            //Structures
+			if(category==Biome.Category.EXTREME_HILLS||category==Biome.Category.TAIGA) {
 				event.getGeneration().withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
 			}
 		}

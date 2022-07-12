@@ -18,16 +18,6 @@
 
 package com.teammoeg.frostedheart;
 
-import java.io.File;
-import java.io.InputStreamReader;
-
-import javax.annotation.Nonnull;
-
-import com.teammoeg.frostedheart.research.*;
-import com.teammoeg.frostedheart.world.FHFeatures;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -43,16 +33,13 @@ import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.PEEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.research.ResearchDataManager;
+import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.util.BlackListPredicate;
-import com.teammoeg.frostedheart.util.ChException;
-import com.teammoeg.frostedheart.util.FHProps;
-import com.teammoeg.frostedheart.util.FHRemote;
-import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.frostedheart.util.RankineRemap;
+import com.teammoeg.frostedheart.util.*;
 import com.teammoeg.frostedheart.world.FHBiomes;
+import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
-
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -80,6 +67,12 @@ import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.InputStreamReader;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -147,9 +140,6 @@ public class FHMain {
         //remove primal winter blocks not to temper rankine world
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.COARSE_DIRT);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.SAND);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.RED_SAND);
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
