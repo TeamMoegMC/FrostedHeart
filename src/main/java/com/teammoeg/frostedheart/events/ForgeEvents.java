@@ -130,18 +130,20 @@ public class ForgeEvents {
 				// Update clock source every second, and check hour data if it needs an update
 			
 				if (serverWorld.getGameTime() % 20 == 0) {
-					ClimateData.updateClock(serverWorld);
-					ClimateData.updateTemperature(serverWorld);
+					ClimateData data=ClimateData.get(serverWorld);
+					data.updateClock(serverWorld);
+					data.updateCache();
+					data.trimTempEventStream();
 				}
 				// Update hourly temperature stream cache
-				if (serverWorld.getDayTime() % 1000 == 0) {
+				/*if (serverWorld.getDayTime() % 1000 == 0) {
 					
-					ClimateData.trimTempEventStream(serverWorld);
-				}
+					
+				}*/
 				// DEBUG
-				if (serverWorld.getDayTime() % 20 == 0) {
+				/*if (serverWorld.getDayTime() % 20 == 0) {
 					System.out.println("Hour Temp: " + ClimateData.getTemp(serverWorld));
-				}
+				}*/
 			}
 		}
 	}

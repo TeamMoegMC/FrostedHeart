@@ -53,7 +53,7 @@ public class FHEffectProgressSyncPacket {
         context.get().enqueueWork(() -> {
         	Effect e=FHResearch.effects.getById(id);
         	if(data)
-        		e.grant(TeamResearchData.getClientInstance(),null);
+        		e.grant(TeamResearchData.getClientInstance(),null,false);
         	else
         		e.revoke(TeamResearchData.getClientInstance());
         	e.setGranted(data);

@@ -59,7 +59,8 @@ public class EffectStats extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    	if(isload)return false;
     	double var=team.getVariants().getDouble(vars);
     	if(isPercentage)
     		var+=val/100;

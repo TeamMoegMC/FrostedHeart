@@ -172,7 +172,7 @@ public class TeamResearchData {
 		int id = e.getRId();
 		ensureEffect(id);
 		if (!grantedEffects.get(id - 1)) {
-			grantedEffects.set(id - 1, e.grant(this, null));
+			grantedEffects.set(id - 1, e.grant(this, null, false));
 			getTeam().ifPresent(t -> e.sendProgressPacket(t));
 		}
 	}
@@ -199,7 +199,7 @@ public class TeamResearchData {
 		int id = e.getRId();
 		ensureEffect(id);
 		if (!grantedEffects.get(id - 1)) {
-			grantedEffects.set(id - 1, e.grant(this, player));
+			grantedEffects.set(id - 1, e.grant(this, player, false));
 			getTeam().ifPresent(t -> e.sendProgressPacket(t));
 		}
 	}
@@ -237,9 +237,9 @@ public class TeamResearchData {
 		nbt.putInt("active", activeResearchId);
 		// these data does not send to client
 		//if (!updatePacket) {
-			nbt.put("crafting", crafting.serialize());
-			nbt.put("building", building.serialize());
-			nbt.put("block", block.serialize());
+			//nbt.put("crafting", crafting.serialize());
+			//nbt.put("building", building.serialize());
+			//nbt.put("block", block.serialize());
 		//}
 		return nbt;
 	}
@@ -263,8 +263,12 @@ public class TeamResearchData {
 			clueComplete.set(i, ba[i] != 0);
 		byte[] bd = data.getByteArray("effects");
 		ensureEffect(bd.length);
-		for (int i = 0; i < bd.length; i++)
-			grantedEffects.set(i, bd[i] != 0);
+		for (int i = 0; i < bd.length; i++) {
+			boolean state=bd[i] != 0;
+			grantedEffects.set(i, state);
+			if(state)
+				FHResearch.effects.runIfPresent(i+1,e->e.grant(this, null,true));
+		}
 		variants = data.getCompound("vars");
 		ListNBT li = data.getList("researches", 10);
 		activeResearchId = data.getInt("active");
@@ -272,10 +276,11 @@ public class TeamResearchData {
 			INBT e = li.get(i);
 			rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
 		}
+		
 		//if (!updatePacket) {
-			crafting.load(data.getList("crafting", 8));
-			building.load(data.getList("building", 8));
-			block.load(data.getList("block", 8));
+			//crafting.load(data.getList("crafting", 8));
+			//building.load(data.getList("building", 8));
+			//block.load(data.getList("block", 8));
 		//}
 	}
 

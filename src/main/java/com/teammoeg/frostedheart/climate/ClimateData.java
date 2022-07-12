@@ -68,43 +68,6 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         return getCapability(world).resolve().orElse(new ClimateData());
     }
 
-    /**
-     * Server call this any time(recommend:1sec/20t) to update the clock source
-     * @param world server side
-     */
-    public static void updateClock(ServerWorld world) {
-        ClimateData data = get(world);
-        data.clockSource.update(world);
-    }
-
-    /**
-     * Server call this any time(recommend:1sec/20t) to update the hourly temperature cache
-     * Removes the most recent hour temperature from the cache
-     * Adds the hour temperature HOURLY_CACHE_LENGTH after the current hour to the cache
-     * @param world server side
-     */
-    public static void updateTemperature(ServerWorld world) {
-      /*  ClimateData data = get(world);
-        WorldClockSource clock = data.clockSource;
-        if (data.dailyTempData.isEmpty()) {
-            for (long i = 0; i < HOURLY_CACHE_LENGTH; i++) {
-                data.dailyTempData.add(data.computeTemp(clock.getTimeSecs() + i * 50));
-            }
-        }
-        data.dailyTempData.add(data.computeTemp(clock.getTimeSecs() + HOURLY_CACHE_LENGTH * 50));
-        data.dailyTempData.remove();*/
-    	get(world).updateCache();
-    }
-
-    /**
-     * Server call this each game hour (1000 ticks) to trim the temperature event stream
-     * Trims all TempEvents that end before current time
-     * @param world server side
-     */
-    public static void trimTempEventStream(ServerWorld world) {
-        ClimateData data = get(world);
-        data.tempEventStreamTrim(data.clockSource.getTimeSecs());
-    }
 
     /**
      * Retrieves hourly updated temperature from cache
@@ -118,7 +81,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * Check and refresh whole cache.
      * 
      * */
-    private void updateCache() {
+    public void updateCache() {
     	long hours=clockSource.getHours();
     	if(hours!=lasthour) {
 	    	long date=clockSource.getDate();
@@ -351,14 +314,14 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             list1.add(event.serialize(new CompoundNBT()));
         }
         nbt.put("tempEventStream", list1);
-        System.out.println("Serialized TES");
+        //System.out.println("Serialized TES");
 
         ListNBT list2 = new ListNBT();
         for (DayTemperatureData temp : dailyTempData) {
             list2.add(temp.serialize());
         }
-        nbt.put("hourlyTempStream", list1);
-        System.out.println("Serialized HTS");
+        nbt.put("hourlyTempStream", list2);
+        //System.out.println("Serialized HTS");
 
         return nbt;
     }
@@ -374,14 +337,22 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             event.deserialize(list1.getCompound(i));
             tempEventStream.add(event);
         }
-        System.out.println("DESerialized TES");
+        //System.out.println("DESerialized TES");
 
         ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list2.size(); i++) {
             dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
         }
         readCache();
-        System.out.println("DESerialized HTS");
+       // System.out.println("DESerialized HTS");
 
     }
+
+	public void updateClock(ServerWorld w) {
+		this.clockSource.update(w);
+	}
+
+	public void trimTempEventStream() {
+		this.tempEventStreamTrim(this.clockSource.getTimeSecs());
+	}
 }

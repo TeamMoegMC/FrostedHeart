@@ -59,7 +59,7 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
     	team.building.add(multiblock);
 		return true;
     	

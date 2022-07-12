@@ -53,7 +53,7 @@ public class EffectUse extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
     	team.block.addAll(blocks);
 		return true;
     }

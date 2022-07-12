@@ -48,6 +48,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 	int currentPoints=0;
 	int lastact;
 	int maxPoints=80;
+	boolean doProduct=true;
 	public MechCalcTileEntity() {
 		super(FHTileTypes.MECH_CALC.get());
 	}
@@ -92,7 +93,8 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 				if(process>=processMax) {
 					process=0;
 					lastact=0;
-					currentPoints+=20;
+					if(doProduct)
+						currentPoints+=20;
 					this.needsSpeedUpdate();
 				}
 				
@@ -141,6 +143,8 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 		process=tag.getInt("process");
 		currentPoints=tag.getInt("pts");
 		lastact=tag.getInt("last_calc");
+		if(tag.contains("prod"))
+			doProduct=tag.getBoolean("prod");
 	}
 
 	@Override
@@ -149,6 +153,8 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 		tag.putInt("process",process);
 		tag.putInt("pts",currentPoints);
 		tag.putInt("last_calc",lastact);
+		if(!doProduct)
+			tag.putBoolean("prod",doProduct);
 	}
 	@OnlyIn(Dist.CLIENT)
 	int ticsSlp;//ticks since last sound play

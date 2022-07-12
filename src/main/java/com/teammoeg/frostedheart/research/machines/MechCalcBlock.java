@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.research.machines;
 
+import java.util.List;
 import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
@@ -26,23 +27,30 @@ import javax.annotation.Nullable;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Hand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
@@ -95,6 +103,39 @@ public class MechCalcBlock extends FHKineticBlock{
 	@Override
 	public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
 		return state.get(BlockStateProperties.HORIZONTAL_FACING).rotateY().getAxis()==dir.getAxis();
+	}
+
+
+	@Override
+	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+		if(stack.hasTag()&&stack.getTag().getBoolean("prod")) {
+			TileEntity te=Utils.getExistingTileEntity(worldIn, pos);
+	        if(te instanceof MechCalcTileEntity) {
+	        	((MechCalcTileEntity) te).doProduct=false;
+	        }
+		}
+			
+		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+		
+	}
+
+
+	@Override
+	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+		super.fillItemGroup(group, items);
+		ItemStack is=new ItemStack(this);
+		is.getOrCreateTag().putBoolean("prod",true);
+		items.add(is);
+	}
+
+
+	@Override
+	public void addInformation(ItemStack stack, IBlockReader worldIn, List<ITextComponent> tooltip,
+			ITooltipFlag flagIn) {
+		super.addInformation(stack, worldIn, tooltip, flagIn);
+		if(stack.hasTag()&&stack.getTag().getBoolean("prod")) {
+			tooltip.add(GuiUtils.str("For Display Only"));
+		}
 	}
 
 

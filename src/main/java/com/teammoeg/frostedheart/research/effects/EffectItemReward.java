@@ -51,8 +51,8 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
-    	if(triggerPlayer==null)return false;
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+    	if(triggerPlayer==null||isload)return false;
     	for(ItemStack s:rewards) {
     		FHUtils.giveItem(triggerPlayer,s.copy());
     		

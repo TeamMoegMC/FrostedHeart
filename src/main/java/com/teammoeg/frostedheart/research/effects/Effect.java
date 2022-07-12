@@ -45,7 +45,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 	// Init globally
 	public abstract void init();
 
-	public abstract boolean grant(TeamResearchData team, PlayerEntity triggerPlayer);
+	public abstract boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload);
 
 	/**
 	 * This is not necessary to implement as this is just for debugging propose

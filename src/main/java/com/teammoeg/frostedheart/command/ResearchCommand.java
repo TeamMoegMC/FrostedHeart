@@ -10,6 +10,7 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.Researches;
+import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 
@@ -27,14 +28,24 @@ public class ResearchCommand {
 							s.suggest(r.getId());
 					return s.buildFuture();
 				}).executes(ct->{
-					Research rs=FHResearch.getResearch(ct.getArgument("name",String.class).toString()).get();
-					if(rs==null) {
-						ct.getSource().sendErrorMessage(new StringTextComponent("Research not found").mergeStyle(TextFormatting.RED));
-						return Command.SINGLE_SUCCESS;
+					String rsn=ct.getArgument("name",String.class).toString();
+					if(rsn.equals("all")) {
+						TeamResearchData trd=ResearchDataAPI.getData(ct.getSource().asPlayer());
+						for(Research r:FHResearch.getAllResearch()) {
+							ResearchData rd=trd.getData(r);
+							rd.setFinished(true);
+							rd.announceCompletion();
+						}
+					}else {
+						Research rs=FHResearch.getResearch(rsn).get();
+						if(rs==null) {
+							ct.getSource().sendErrorMessage(new StringTextComponent("Research not found").mergeStyle(TextFormatting.RED));
+							return Command.SINGLE_SUCCESS;
+						}
+						ResearchData rd=ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
+						rd.setFinished(true);
+						rd.announceCompletion();
 					}
-					ResearchData rd=ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
-					rd.setFinished(true);
-					rd.announceCompletion();
 					ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
 				return Command.SINGLE_SUCCESS;
 				})))

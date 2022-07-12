@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -158,6 +159,18 @@ public class FHRegistry<T extends FHRegisteredItem> {
 			String name=rnamesl.get(id-1);
 			if(name!=null)
 				return get(name);
+		}
+		throw new IllegalStateException("Cannot get data by id before initialize");
+	}
+	public void runIfPresent(String id,Consumer<T> in) {
+		lazyGet(id).ifPresent(t->in.accept(t));
+	}
+	public void runIfPresent(int id,Consumer<T> in) {
+		if(items.size()>=id) {
+			T t=items.get(id-1);
+			if(t!=null)
+				in.accept(t);
+			return;
 		}
 		throw new IllegalStateException("Cannot get data by id before initialize");
 	}

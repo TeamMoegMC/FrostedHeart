@@ -65,8 +65,8 @@ public class TempEvent {
 
         long calmLength = secondsPerDay*5 + random.nextInt((int) (secondsPerDay*3));
         long nextCalmEnd = nextEnd + calmLength;
-        System.out.println(nextStart);
-        System.out.println(nextCalmEnd-nextStart);
+        //System.out.println(nextStart);
+        //System.out.println(nextCalmEnd-nextStart);
         float peakTemp = 4 + (float) (random.nextGaussian());
         float bottomTemp = - 20 + (float) (random.nextGaussian());
 

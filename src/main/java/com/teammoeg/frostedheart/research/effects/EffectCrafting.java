@@ -115,7 +115,7 @@ public class EffectCrafting extends Effect{
     }
 
     @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer) {
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
     	team.crafting.addAll(unlocks);
 		return true;
     }

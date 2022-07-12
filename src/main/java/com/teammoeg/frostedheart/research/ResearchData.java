@@ -156,10 +156,22 @@ public class ResearchData {
 	public boolean canResearch() {
 		return active;
 	}
-
-	public boolean commitItem(ServerPlayerEntity player) {
-
+	public boolean isUnlocked() {
 		Research research = getResearch();
+		for (Research par : research.getParents()) {
+			if (!parent.getData(par).isCompleted()) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public boolean commitItem(ServerPlayerEntity player) {
+		Research research = getResearch();
+		for (Research par : research.getParents()) {
+			if (!parent.getData(par).isCompleted()) {
+				return false;
+			}
+		}
 		if (research.getRequiredItems().isEmpty()) {
 			setActive();
 			return true;
