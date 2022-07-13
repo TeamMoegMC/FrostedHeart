@@ -127,8 +127,8 @@ public class IngredientEditor extends BaseEditDialog{
 	};
 	public static final Editor<Ingredient> EDITOR_INGREDIENT_EXTERN=(p,l,v,c)->{
 		EditorSelector<Ingredient> igd=new EditorSelector<>(p,l,(o,t)->true,v,c);
+		igd.addEditor("Edit",EDITOR_INGREDIENT);
 		if(v!=null) {
-			igd.addEditor("Edit",EDITOR_INGREDIENT);
 			if(v.acceptedItems.length==1)
 				igd.addEditor("Change to Multiple",EDITOR_MULTIPLE);
 			else

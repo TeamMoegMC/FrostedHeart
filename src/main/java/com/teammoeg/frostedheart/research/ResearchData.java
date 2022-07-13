@@ -42,9 +42,11 @@ public class ResearchData {
 	public long getTotalCommitted() {
 		Research r = getResearch();
 		long currentProgress = committed;
+		float contribution=0;
 		for (Clue ac : r.getClues())
 			if (ac.isCompleted(parent))
-				currentProgress += r.getRequiredPoints() * ac.getResearchContribution();
+				contribution += ac.getResearchContribution();
+		currentProgress+=contribution*r.getRequiredPoints();
 		return currentProgress;
 	}
 

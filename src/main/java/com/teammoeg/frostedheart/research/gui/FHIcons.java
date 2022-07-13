@@ -578,6 +578,7 @@ public class FHIcons {
 				super(panel,v==null?new FHTextureUVIcon():v);
 				this.label=label;
 				this.i=i;
+				v=this.v;
 				rl=new LabeledTextBox(this,"Texture",rl==null?"":this.v.rl.toString());
 				x=new NumberBox(this,"X",(v.x));
 				y=new NumberBox(this,"Y",(v.y));
@@ -589,7 +590,7 @@ public class FHIcons {
 
 			@Override
 			public void onClose() {
-				try {
+
 					v.rl=new ResourceLocation(rl.getText());
 					v.x=(int)x.getNum();
 					v.y=(int)y.getNum();
@@ -599,10 +600,7 @@ public class FHIcons {
 					v.th=(int)th.getNum();
 					v.init();
 					i.accept(v);
-					
-				}catch(NumberFormatException ex) {
-					
-				}
+	
 			}
 
 			@Override
@@ -618,7 +616,6 @@ public class FHIcons {
 				add(new SimpleTextButton(parent,GuiUtils.str("Commit"),Icon.EMPTY) {
 					@Override
 					public void onClicked(MouseButton arg0) {
-						try {
 							v.rl=new ResourceLocation(rl.getText());
 							v.x=(int)x.getNum();
 							v.y=(int)y.getNum();
@@ -627,9 +624,6 @@ public class FHIcons {
 							v.tw=(int)tw.getNum();
 							v.th=(int)th.getNum();
 							v.init();
-						}catch(NumberFormatException ex) {
-							
-						}
 						
 					}
 					
@@ -682,6 +676,10 @@ public class FHIcons {
 		return new FHTextIcon(text);
 	}
 	public static FHIcon getIcon(IngredientWithSize i) {
+		if(i.getCount()==1)
+			return getIcon(i.getBaseIngredient());
+		if(i.getCount()<10)
+			return getIcon(getIcon(i.getBaseIngredient()),getIcon(" "+String.valueOf(i.getCount())));
 		return getIcon(getIcon(i.getBaseIngredient()),getIcon(String.valueOf(i.getCount())));
 	}
 	public static FHIcon getIcon(Ingredient i) {

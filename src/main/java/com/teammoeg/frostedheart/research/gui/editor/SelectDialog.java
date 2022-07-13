@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
@@ -50,8 +51,10 @@ public class SelectDialog<T> extends EditDialog {
 	public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT=(p,l,v,c)->{
 		ClientAdvancementManager cam=ClientUtils.mc().player.connection.getAdvancementManager();
 		Advancement adv=cam.getAdvancementList().getAdvancement(v);
+
 		new SelectDialog<Advancement>(p,l,adv,e->c.accept(e.getId()),()->cam.getAdvancementList().getAll(),
-				Advancement::getDisplayText
+				Advancement::getDisplayText,advx->new String[] {advx.getDisplayText().getString(),advx.getId().toString()},
+				advx->FHIcons.getIcon(advx.getDisplay().getIcon())
 		).open();
 	};
 	public static final Editor<EntityType<?>> EDITOR_ENTITY=(p,l,v,c)->{

@@ -212,7 +212,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 		public void onClose() {
 			e.isPercentage=perc.getSelection();
 			e.val=val.getNum();
-			e.name=name.getText();
+			e.vars=name.getText();
 			super.onClose();
 		}
 		

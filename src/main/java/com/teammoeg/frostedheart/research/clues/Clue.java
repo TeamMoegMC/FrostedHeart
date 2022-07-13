@@ -76,7 +76,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 	}
 
 	public Clue() {
-		this.nonce = "";
+		this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
 	}
 
 	public void setCompleted(Team team, boolean trig) {
