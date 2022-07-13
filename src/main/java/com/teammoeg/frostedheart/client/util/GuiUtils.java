@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.client.util;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -58,4 +59,7 @@ public class GuiUtils {
     public static TranslationTextComponent translateResearchCategoryDesc(String name, Object... args) {
         return new TranslationTextComponent("research.category.desc." + FHMain.MODID + "." + name, args);
     }
+	public static ITextComponent translate(String string) {
+		return new TranslationTextComponent(string);
+	}
 }

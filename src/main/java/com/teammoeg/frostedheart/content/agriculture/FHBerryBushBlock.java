@@ -57,7 +57,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
             }
             //我也不知道这玩意干啥用的，我看FHCropBlock里有就加上了
         }else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state,random.nextInt(5) == 0) && this.growSpeed > random.nextInt(100)) {
-            worldIn.setBlockState(pos, state.with(AGE, Integer.valueOf(i + 1)), 2);
+            worldIn.setBlockState(pos, state.with(AGE, i + 1), 2);
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
         }
     }

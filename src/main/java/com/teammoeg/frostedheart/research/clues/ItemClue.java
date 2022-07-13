@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -33,8 +34,15 @@ public class ItemClue extends Clue {
 		consume = pb.readBoolean();
 	}
 
-	 ItemClue() {
-		 super("@clue." + FHMain.MODID + ".item",0);
+	ItemClue() {
+		super();
+	}
+
+	@Override
+	public ITextComponent getName() {
+		if (name != null && !name.isEmpty())
+			return super.getName();
+		return GuiUtils.translate("clue." + FHMain.MODID + ".item");
 	}
 
 	@Override
@@ -52,7 +60,6 @@ public class ItemClue extends Clue {
 		stack.write(buffer);
 		buffer.writeBoolean(consume);
 	}
-
 
 	public int test(TeamResearchData t, ItemStack stack) {
 		if (this.stack.test(stack)) {
@@ -83,15 +90,18 @@ public class ItemClue extends Clue {
 	@Override
 	public int getIntType() {
 		return 2;
-		
+
 	}
 
 	@Override
 	public ITextComponent getDescription() {
-		ITextComponent itc=super.getDescription();
-		if(itc!=null||stack==null)return itc;
-		if(stack.hasNoMatchingItems())return null;
-		return stack.getMatchingStacks()[0].getDisplayName().copyRaw().appendSibling(new StringTextComponent(" x"+stack.getCount()));
+		ITextComponent itc = super.getDescription();
+		if (itc != null || stack == null)
+			return itc;
+		if (stack.hasNoMatchingItems())
+			return null;
+		return stack.getMatchingStacks()[0].getDisplayName().copyRaw()
+				.appendSibling(new StringTextComponent(" x" + stack.getCount()));
 	}
 
 }

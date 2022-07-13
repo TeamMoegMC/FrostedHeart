@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 
@@ -32,7 +33,13 @@ public class KillClue extends ListenerClue {
 	}
 
 	KillClue() {
-		super("@clue." + FHMain.MODID + ".kill",0);
+		super();
+	}
+	@Override
+	public ITextComponent getName() {
+		if (name != null && !name.isEmpty())
+			return super.getName();
+		return GuiUtils.translate("clue." + FHMain.MODID + ".kill");
 	}
 	@Override
 	public ITextComponent getDescription() {

@@ -2,8 +2,10 @@ package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.ITextComponent;
 
 public class MinigameClue extends CustomClue {
 	private int level=0;
@@ -22,9 +24,14 @@ public class MinigameClue extends CustomClue {
 	}
 
 	MinigameClue() {
-		super("@clue." + FHMain.MODID + ".minigame",0);
+		super();
 	}
-
+	@Override
+	public ITextComponent getName() {
+		if (name != null && !name.isEmpty())
+			return super.getName();
+		return GuiUtils.translate("clue." + FHMain.MODID + ".minigame");
+	}
 	@Override
 	public String getId() {
 		return "game";

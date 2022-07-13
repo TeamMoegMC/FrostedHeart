@@ -157,5 +157,6 @@ public class RankineRemap {
 		rankineremap.put(new ResourceLocation("rankine:polished_tufa_limestone"),new ResourceLocation("rankine:polished_limestone"));
 		rankineremap.put(new ResourceLocation("rankine:polished_tufa_limestone_slab"),new ResourceLocation("rankine:polished_limestone_slab"));
 		rankineremap.put(new ResourceLocation("rankine:skarn_bricks_slab"),new ResourceLocation("rankine:skarn_slab"));
+		rankineremap.put(new ResourceLocation("modularrouters:item_router"),new ResourceLocation("immersiveengineering:storage_aluminum"));
 	}
 }
