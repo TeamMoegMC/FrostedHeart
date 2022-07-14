@@ -48,14 +48,14 @@ public class EffectCrafting extends Effect{
     	initItem();
     }
     private void initItem() {
-    	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
+    	for(IRecipe<?> r:ResearchDataManager.getRecipeManager().getRecipes()) {
     		if(r.getRecipeOutput().getItem().equals(this.item)) {
     			unlocks.add(r);
     		}
     	}
     }
     private void initStack() {
-    	for(IRecipe<?> r:ResearchDataManager.server.getRecipeManager().getRecipes()) {
+    	for(IRecipe<?> r:ResearchDataManager.getRecipeManager().getRecipes()) {
     		if(r.getRecipeOutput().equals(item)) {
     			unlocks.add(r);
     		}
@@ -63,7 +63,7 @@ public class EffectCrafting extends Effect{
     }
     public EffectCrafting(ResourceLocation recipe) {
     	super("@gui." + FHMain.MODID + ".effect.crafting",new ArrayList<>());
-    	Optional<? extends IRecipe<?>> r=ResearchDataManager.server.getRecipeManager().getRecipe(recipe);
+    	Optional<? extends IRecipe<?>> r=ResearchDataManager.getRecipeManager().getRecipe(recipe);
     	
     	if(r.isPresent()) {
     		unlocks.add(r.get());
@@ -72,7 +72,7 @@ public class EffectCrafting extends Effect{
     public void setList(Collection<String> ls) {
     	unlocks.clear();
     	for(String s:ls) {
-    		Optional<? extends IRecipe<?>> r=ResearchDataManager.server.getRecipeManager().getRecipe(new ResourceLocation(s));
+    		Optional<? extends IRecipe<?>> r=ResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
         	
         	if(r.isPresent()) {
         		unlocks.add(r.get());
@@ -91,7 +91,7 @@ public class EffectCrafting extends Effect{
     			initStack();
     		}
     	}else if(jo.has("recipes")) {
-    		unlocks=SerializeUtil.parseJsonElmList(jo.get("recipes"),e->ResearchDataManager.server.getRecipeManager().getRecipe(new ResourceLocation(e.getAsString())).orElse(null));
+    		unlocks=SerializeUtil.parseJsonElmList(jo.get("recipes"),e->ResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(e.getAsString())).orElse(null));
     		unlocks.removeIf(Objects::isNull);
     	}
     }
@@ -102,7 +102,7 @@ public class EffectCrafting extends Effect{
 		if(item==null) {
 			itemStack=SerializeUtil.readOptional(pb, PacketBuffer::readItemStack).orElse(null);
 			if(itemStack==null) {
-				unlocks=SerializeUtil.readList(pb,p->ResearchDataManager.server.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
+				unlocks=SerializeUtil.readList(pb,p->ResearchDataManager.getRecipeManager().getRecipe(p.readResourceLocation()).orElse(null));
 				unlocks.removeIf(Objects::isNull);
 			}else initStack();
 		}else initItem();
@@ -146,10 +146,11 @@ public class EffectCrafting extends Effect{
 	public void write(PacketBuffer buffer) {
 		super.write(buffer);
 		SerializeUtil.writeOptional(buffer,item,(o,b)->b.writeRegistryIdUnsafe(ForgeRegistries.ITEMS,o));
-		if(item==null)
+		if(item==null) {
 			SerializeUtil.writeOptional2(buffer, itemStack,PacketBuffer::writeItemStack);
-		if(itemStack==null)
-			SerializeUtil.writeList(buffer,unlocks,(o,b)->b.writeResourceLocation(o.getId()));
+			if(itemStack==null)
+				SerializeUtil.writeList(buffer,unlocks,(o,b)->b.writeResourceLocation(o.getId()));
+		}
 	}
 	@Override
 	public int getIntID() {

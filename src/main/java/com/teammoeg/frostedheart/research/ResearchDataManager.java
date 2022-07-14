@@ -9,7 +9,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+
 import dev.ftb.mods.ftbteams.data.TeamManager;
+import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.server.MinecraftServer;
@@ -30,6 +33,11 @@ public class ResearchDataManager {
 		TeamResearchData cn=data.computeIfAbsent(id,c->new TeamResearchData(()->TeamManager.INSTANCE.getTeamByID(id)));
 		return cn;
 
+	}
+	public static RecipeManager getRecipeManager() {
+		if(server!=null)
+			return server.getRecipeManager();
+		return ClientUtils.mc().world.getRecipeManager();
 	}
 	public Collection<TeamResearchData> getAllData(){
 		return data.values();

@@ -48,6 +48,7 @@ public class FHResearchDataSyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
+        	TeamResearchData.resetClientInstance();
         	TeamResearchData.getClientInstance().deserialize(data,true);
         	DistExecutor.safeRunWhenOn(Dist.CLIENT,()->JEICompat::syncJEI);
         });

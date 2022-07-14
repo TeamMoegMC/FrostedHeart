@@ -65,6 +65,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
@@ -147,6 +148,7 @@ public class FHMain {
     	
     	MinecraftForge.EVENT_BUS.addListener(this::serverStart);
     	MinecraftForge.EVENT_BUS.addListener(this::serverSave);
+    	MinecraftForge.EVENT_BUS.addListener(this::serverStop);
     	MinecraftForge.EVENT_BUS.register(new FHRecipeReloadListener(null));
     	
     	MinecraftForge.EVENT_BUS.addGenericListener(Fluid.class,this::missingMapping);
@@ -180,6 +182,10 @@ public class FHMain {
         Researches.init();
     	
         ResearchDataManager.INSTANCE.load();
+    	
+    }
+    private void serverStop(final FMLServerStoppedEvent event) {
+    	ResearchDataManager.server=null;
     	
     }
     private void serverSave(final WorldEvent.Save event) {

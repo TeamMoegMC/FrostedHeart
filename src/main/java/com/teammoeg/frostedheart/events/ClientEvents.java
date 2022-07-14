@@ -40,6 +40,7 @@ import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRender
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
@@ -227,10 +228,12 @@ public class ClientEvents {
                     ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
             HeaterVestRenderer.rendersAssigned = true;
         }
+        
+        
     }
 	@SubscribeEvent
     public void onWorldUnLoad(Unload event) {
-        TeamResearchData.resetClientInstance();
+        
     }
 	
 	@SubscribeEvent

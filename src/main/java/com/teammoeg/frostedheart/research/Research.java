@@ -137,15 +137,17 @@ public class Research extends FHRegisteredItem implements Writeable {
 
 		return jo;
 	}
-	public Research(String id, PacketBuffer data) {
-		this.id = id;
+	public Research(PacketBuffer data) {
+		id=data.readString();
+		//System.out.println("read "+id);
 		name=data.readString();
 		desc=SerializeUtil.readList(data,PacketBuffer::readString);
 		fdesc=SerializeUtil.readList(data,PacketBuffer::readString);
 		icon = FHIcons.readIcon(data);
-		setCategory(ResearchCategories.ALL.get(data.readResourceLocation()));
-
-		parents.addAll(SerializeUtil.readList(data, p -> FHResearch.researches.get(p.readVarInt())));
+		ResourceLocation rl=data.readResourceLocation();
+		setCategory(ResearchCategories.ALL.get(rl));
+		//System.out.println("category "+rl.toString());
+		parents.addAll(SerializeUtil.readList(data, FHResearch.researches::readSupplier));
 		clues.addAll(SerializeUtil.readList(data, Clues::read));
 		requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
 		effects = SerializeUtil.readList(data, Effects::deserialize);
@@ -158,12 +160,13 @@ public class Research extends FHRegisteredItem implements Writeable {
 
 	@Override
 	public void write(PacketBuffer buffer) {
+		buffer.writeString(id);
 		buffer.writeString(name);
 		SerializeUtil.writeList2(buffer, desc,PacketBuffer::writeString);
 		SerializeUtil.writeList2(buffer, fdesc,PacketBuffer::writeString);
 		icon.write(buffer);
 		buffer.writeResourceLocation(category.getId());
-		SerializeUtil.writeList(buffer, parents, (e, p) -> p.writeVarInt(e.get().getRId()));
+		SerializeUtil.writeList2(buffer, parents, FHRegistry::writeSupplier);
 		SerializeUtil.writeList(buffer, clues,Clue::write);
 		SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
 		SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));

@@ -18,8 +18,10 @@ import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.loading.FMLPaths;
 /**
  * Main Research System.
@@ -162,6 +164,22 @@ public class FHResearch {
 			}
 			
 		}
+	}
+	public static void readAll(PacketBuffer pb) {
+		List<Research> rss=SerializeUtil.readList(pb,Research::new);
+		
+		for(Research r:rss) {
+			researches.register(r);
+		}
+	}
+	public static void readAll(List<Research> rss) {
+		
+		for(Research r:rss) {
+			researches.register(r);
+		}
+	}
+	public static void saveAll(PacketBuffer pb) {
+		SerializeUtil.writeList(pb,getAllResearch(),Research::write);
 	}
 	public static boolean isEditor() {
 		return editor;

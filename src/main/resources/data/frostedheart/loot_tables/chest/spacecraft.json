@@ -60,21 +60,6 @@
           ]
         }
       ]
-    },
-    {
-      "rolls":1,
-      "entries": [
-        {
-          "type": "minecraft:item",
-          "name": "rankine:invar_shovel",
-          "functions": [
-            {
-              "function": "minecraft:set_nbt",
-              "tag": "{Damage:80}"
-            }
-          ]
-        }
-      ]
     }
   ]
 }

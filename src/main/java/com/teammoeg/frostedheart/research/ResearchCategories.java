@@ -12,5 +12,6 @@ public class ResearchCategories {
 	static {
 		ResearchCategory.values();
 	}
+	public static void init() {}
 
 }

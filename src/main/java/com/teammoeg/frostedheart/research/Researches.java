@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research;
 
 import java.io.File;
+import java.util.List;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.cannolicatfish.rankine.init.RankineItems;
@@ -33,9 +34,16 @@ public class Researches {
 		FHResearch.prepareReload();
 		File folder=FMLPaths.CONFIGDIR.get().toFile();
 		File rf=new File(folder,"fhresearches");
-		ResearchCategories.ALL.get("ARS");
+		ResearchCategories.init();
 
 		FHResearch.loadAll();
+		FHResearch.finishReload();
+		//FHResearch.saveAll();
+	}
+	public static void initFromPacket(List<Research> rs) {
+		FHResearch.prepareReload();
+		ResearchCategories.init();
+		FHResearch.readAll(rs);
 		FHResearch.finishReload();
 		//FHResearch.saveAll();
 	}

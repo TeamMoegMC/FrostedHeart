@@ -14,6 +14,7 @@ import com.teammoeg.frostedheart.util.LazyOptional;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
+import net.minecraft.network.PacketBuffer;
 
 /**
  * Our own registry type to reduce network and storage cost.
@@ -78,10 +79,12 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 */
 	public void register(T item) {
 		if(item.getRId()==0) {
+			System.out.println("trying to register "+item.getLId());
 			String lid=item.getLId();
 			int index=rnames.getOrDefault(lid,-1);
 			ensure();
 			if(index==-1) {
+				System.out.println("new entry");
 				item.setRId(rnamesl.size()+1);
 				
 				rnames.put(item.getLId(),rnamesl.size());
@@ -89,6 +92,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 				items.add(item);
 				
 			}else {
+				System.out.println("existed!");
 				item.setRId(index+1);
 				items.set(index,item);
 			}
@@ -155,12 +159,14 @@ public class FHRegistry<T extends FHRegisteredItem> {
 		return new RegisteredSupplier<>(id,strLazyGetter);
 	}
 	public Supplier<T> get(int id) {
+		if(id==0)
+			return ()->null;
 		if(rnamesl.size()>=id) {
 			String name=rnamesl.get(id-1);
 			if(name!=null)
 				return get(name);
 		}
-		throw new IllegalStateException("Cannot get data by id before initialize");
+		return ()->getById(id);
 	}
 	public void runIfPresent(String id,Consumer<T> in) {
 		lazyGet(id).ifPresent(t->in.accept(t));
@@ -172,7 +178,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 				in.accept(t);
 			return;
 		}
-		throw new IllegalStateException("Cannot get data by id before initialize");
+		return;
 	}
 	/**
 	 * Get all non-null items.<br>
@@ -239,6 +245,11 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	public int getSize() {
 		return rnamesl.size();
 	}
+	public Supplier<T> toSupplier(String s){
+		if(s!=null&&!s.isEmpty())
+		return get(s);
+		return ()->null;
+	}
 	public static<T extends FHRegisteredItem> String serializeSupplier(Supplier<T> s) {
 		if(s instanceof RegisteredSupplier) {
 			return ((RegisteredSupplier<T>)s).key;
@@ -247,5 +258,19 @@ public class FHRegistry<T extends FHRegisteredItem> {
 		if(r!=null)
 			return r.getLId();
 		return "";
+	}
+	public static<T extends FHRegisteredItem> void writeSupplier(PacketBuffer pb,Supplier<T> s) {
+		if(s!=null) {
+			T t=s.get();
+			if(t!=null) {
+				pb.writeVarInt(t.getRId());
+				return;
+			}
+		}
+		pb.writeVarInt(0);
+		return;
+	}
+	public Supplier<T> readSupplier(PacketBuffer pb) {
+		return this.get(pb.readVarInt());
 	}
 }

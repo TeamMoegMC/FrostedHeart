@@ -738,6 +738,7 @@ public class FHIcons {
 		Function<PacketBuffer, FHIcon> func = BufferIcon.get(type);
 		if (func != null)
 			return func.apply(elm);
+		
 		return FHNopIcon.INSTANCE;
 	}
 

@@ -27,6 +27,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.PushReaction;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
@@ -121,6 +122,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                 BlockState blockstate = worldIn.getBlockState(blockpos);
                 if (blockstate.getBlock() == this && blockstate.get(IS_NOT_MAIN) == true) {
                     worldIn.setBlockState(blockpos, Blocks.AIR.getDefaultState(), 35);
+                    worldIn.addEntity(new ItemEntity(worldIn,pos.getX(),pos.getY(),pos.getZ(), new ItemStack(this.asItem())));
                     worldIn.playEvent(player, 2001, blockpos, Block.getStateId(blockstate));
                 }
             }
@@ -171,6 +173,9 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                 pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
             }
             TileEntity ii=Utils.getExistingTileEntity(worldIn, pos);
+            if(ii instanceof DrawingDeskTileEntity) {
+            	((DrawingDeskTileEntity) ii).markContainingBlockForUpdate(null);
+            }
             NetworkHooks.openGui((ServerPlayerEntity)player,(IInteractionObjectIE)ii,ii.getPos());
         }
         //todo: actually add some server-side functions in TE to provide the level and in progress research

@@ -32,7 +32,6 @@ import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.network.research.FHResearchRegistrtySyncPacket;
-
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -97,6 +96,8 @@ public class PacketHandler {
 				FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
 		CHANNEL.registerMessage(id++, FHEnergyDataSyncPacket.class, FHEnergyDataSyncPacket::encode,
 				FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
+
+		
 	}
 
 }

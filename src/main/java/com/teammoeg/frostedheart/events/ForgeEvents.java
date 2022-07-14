@@ -518,13 +518,16 @@ public class ForgeEvents {
 		if (event.getEntity() instanceof ServerPlayerEntity) {
 			ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-					new FHDatapackSyncPacket());
-			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHResearchRegistrtySyncPacket());
+		
+			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+					new FHDatapackSyncPacket());
+			
 			PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 					new FHResearchDataSyncPacket(
 							FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
-
+			
+			
 			serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
 				PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
 						new FHClimatePacket(cap));

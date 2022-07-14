@@ -30,6 +30,6 @@ public class Effects {
 		return fromJson.get(jo.get("type").getAsString()).apply(jo);
 	}
 	public static Effect deserialize(PacketBuffer data) {
-		return fromPacket.get(data.readVarInt()).apply(data);
+		return fromPacket.get(data.readVarInt()-1).apply(data);
 	}
 }

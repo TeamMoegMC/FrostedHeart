@@ -134,7 +134,7 @@ public class TeamResearchData {
 					for (ServerPlayerEntity spe : t.getOnlineMembers())
 						PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
 				});
-				r.getData().checkComplete();
+				this.getData(r).checkComplete();
 			}
 		}
 	}
@@ -283,7 +283,7 @@ public class TeamResearchData {
 			//block.load(data.getList("block", 8));
 		//}
 	}
-
+	@OnlyIn(Dist.CLIENT)
 	public static TeamResearchData getClientInstance() {
 		return INSTANCE;
 	}

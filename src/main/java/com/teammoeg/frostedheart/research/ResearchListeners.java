@@ -48,7 +48,7 @@ public class ResearchListeners {
 
 		@Override
 		public IRecipe<?> getObject(String s) {
-			return ResearchDataManager.server.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
+			return ResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
 		}
 		
 	}
