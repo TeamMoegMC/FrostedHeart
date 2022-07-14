@@ -79,12 +79,12 @@ public class FHRegistry<T extends FHRegisteredItem> {
 	 */
 	public void register(T item) {
 		if(item.getRId()==0) {
-			System.out.println("trying to register "+item.getLId());
+			//System.out.println("trying to register "+item.getLId());
 			String lid=item.getLId();
 			int index=rnames.getOrDefault(lid,-1);
 			ensure();
 			if(index==-1) {
-				System.out.println("new entry");
+				//System.out.println("new entry");
 				item.setRId(rnamesl.size()+1);
 				
 				rnames.put(item.getLId(),rnamesl.size());
@@ -92,7 +92,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
 				items.add(item);
 				
 			}else {
-				System.out.println("existed!");
+				//System.out.println("existed!");
 				item.setRId(index+1);
 				items.set(index,item);
 			}
