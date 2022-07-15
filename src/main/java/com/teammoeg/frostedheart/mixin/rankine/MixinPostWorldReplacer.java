@@ -32,7 +32,7 @@ public class MixinPostWorldReplacer {
 			for (int z = chunk.getPos().getZStart(); z <= chunk.getPos().getZEnd(); ++z) {
 				int endY = reader.getHeight(Heightmap.Type.OCEAN_FLOOR_WG, x, z);
 
-				for (int y = 0; y < endY; ++y) {
+				for (int y = 52; y < endY; ++y) {
 					BlockPos TARGET_POS = new BlockPos(x, y, z);
 					Block TARGET = reader.getBlockState(TARGET_POS).getBlock();
 					ResourceLocation TARGET_BIOME = reader.getBiome(TARGET_POS).getRegistryName();

@@ -33,7 +33,6 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
-import com.teammoeg.frostedheart.command.GenSC;
 import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -84,7 +83,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.Features;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
@@ -115,7 +113,6 @@ import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEvents {
@@ -356,12 +353,11 @@ public class ForgeEvents {
                     for (ConfiguredFeature<?,?> feature : FHFeatures.FH_DISK)
                         event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
                 }
-				if (category == Biome.Category.PLAINS || category == Biome.Category.SAVANNA || category == Biome.Category.TAIGA) {
-					List vegetal = event.getGeneration().getFeatures(GenerationStage.Decoration.VEGETAL_DECORATION);
-					vegetal.remove(Features.PATCH_LARGE_FERN);
-					vegetal.remove(Features.PATCH_TALL_GRASS);
-					vegetal.remove(Features.PATCH_TALL_GRASS_2);
-				}
+
+				/*if (category == Biome.Category.PLAINS) {
+					event.getGeneration().getFeatures(GenerationStage.Decoration.VEGETAL_DECORATION)
+							.removeIf(featureSupplier -> featureSupplier.get().getConfig() == Features.PATCH_TALL_GRASS_2.getConfig());
+				}*/
 
                 for (ConfiguredFeature<?,?> feature : FHFeatures.FH_ORES)
                     event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
@@ -638,7 +634,7 @@ public class ForgeEvents {
 		CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
 		AddTempCommand.register(dispatcher);
 		ResearchCommand.register(dispatcher);
-		GenSC.register(dispatcher);
+//		GenSC.register(dispatcher);
 	}
 
 	public static void attachWorldCapabilities(AttachCapabilitiesEvent<World> event) {
