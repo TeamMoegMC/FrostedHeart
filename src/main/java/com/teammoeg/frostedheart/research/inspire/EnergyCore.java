@@ -198,13 +198,13 @@ public class EnergyCore {
 	@SubscribeEvent
 	public static void death(PlayerEvent.Clone ev) {
 		if(ev.isWasDeath()) {
-			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getPlayer());
+			CompoundNBT cnbt=new CompoundNBT();
 			cnbt.putLong("penergy",TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
 			TemperatureCore.setFHData(ev.getPlayer(), cnbt);
-		}else {
+		}/*else {
 			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getOriginal());
 			TemperatureCore.setFHData(ev.getPlayer(),cnbt);
-		}
+		}*/
 	}
 	@SubscribeEvent
 	public static void checkSleep(SleepingTimeCheckEvent event) {
