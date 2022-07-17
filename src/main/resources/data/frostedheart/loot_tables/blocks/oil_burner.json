@@ -9,7 +9,7 @@
           "children": [
             {
               "type": "minecraft:item",
-              "name": "frostedheart:mechanical_calculator"
+              "name": "frostedheart:oil_burner"
             }
           ]
         }

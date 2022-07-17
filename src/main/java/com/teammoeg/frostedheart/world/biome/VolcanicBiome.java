@@ -19,7 +19,7 @@ public class VolcanicBiome {
         biomeBuilder.precipitation(Biome.RainType.RAIN)
         .category(Biome.Category.NONE)
         .depth(1F)
-        .scale(1F)
+        .scale(0.8F)
         .temperature(1.0F)
         .downfall(0.1F)
         .setEffects((new BiomeAmbience.Builder()).setWaterColor(4159204).setWaterFogColor(329011).setFogColor(12638463).withSkyColor(calculateSkyColor(0.8F)).setMoodSound(MoodSoundAmbience.DEFAULT_CAVE).setParticle(new ParticleEffectAmbience(ParticleTypes.WHITE_ASH, 0.068093334F)).build());

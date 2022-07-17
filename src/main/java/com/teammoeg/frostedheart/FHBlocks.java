@@ -78,14 +78,14 @@ public class FHBlocks {
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(2, 10)
                 .notSolid(), FHBlockItem::new);
-        public static Block high_strength_concrete=new FHBaseBlock("high_strength_concrete", Block.Properties
+        /*public static Block high_strength_concrete=new FHBaseBlock("high_strength_concrete", Block.Properties
                 .create(Material.ROCK)
                 .sound(SoundType.STONE)
                 .setRequiresTool()
                 .harvestTool(ToolType.PICKAXE)
                 .hardnessAndResistance(45, 800)
                 .harvestLevel(3)
-                ,FHBlockItem::new);
+                ,FHBlockItem::new);*/
         public static Block mech_calc = new MechCalcBlock("mechanical_calculator", Block.Properties
                 .create(Material.IRON)
                 .sound(SoundType.METAL)
