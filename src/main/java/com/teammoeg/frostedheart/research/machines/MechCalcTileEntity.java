@@ -156,7 +156,6 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 		if(!doProduct)
 			tag.putBoolean("prod",doProduct);
 	}
-	@OnlyIn(Dist.CLIENT)
 	int ticsSlp;//ticks since last sound play
 	@OnlyIn(Dist.CLIENT)
 	public void tickAudio() {
