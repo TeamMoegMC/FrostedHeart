@@ -27,7 +27,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.PushReaction;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
@@ -115,15 +114,13 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
 
     @Override
     public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
-        if (!worldIn.isRemote) {
+        if (!worldIn.isRemote && player.isCreative()) {
             boolean block = state.get(IS_NOT_MAIN);
             if (block == false) {
                 BlockPos blockpos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
                 BlockState blockstate = worldIn.getBlockState(blockpos);
                 if (blockstate.getBlock() == this && blockstate.get(IS_NOT_MAIN) == true) {
                     worldIn.setBlockState(blockpos, Blocks.AIR.getDefaultState(), 35);
-                    worldIn.addEntity(new ItemEntity(worldIn,pos.getX(),pos.getY(),pos.getZ(), new ItemStack(this.asItem())));
-                    worldIn.playEvent(player, 2001, blockpos, Block.getStateId(blockstate));
                 }
             }
         }
