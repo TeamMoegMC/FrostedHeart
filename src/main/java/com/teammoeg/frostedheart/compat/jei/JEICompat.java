@@ -151,6 +151,7 @@ public class JEICompat implements IModPlugin {
 				all.addAll(hs);
 			}
 			
+			
 	
 			
 			if(!TeamResearchData.getClientInstance().crafting.has(i)) {
@@ -160,6 +161,12 @@ public class JEICompat implements IModPlugin {
 			}else
 				for(ResourceLocation rl:all)
 					man.unhideRecipe(i,rl);
+		}
+		for(ResourceLocation rl:ResearchListeners.categories) {
+			if(!TeamResearchData.getClientInstance().categories.has(rl))
+				man.hideRecipeCategory(rl);
+			else
+				man.unhideRecipeCategory(rl);
 		}
 	}
 	@Override

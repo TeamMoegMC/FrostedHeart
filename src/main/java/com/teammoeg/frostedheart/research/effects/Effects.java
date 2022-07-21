@@ -23,6 +23,7 @@ public class Effects {
 		register("item",EffectItemReward::new,EffectItemReward::new);
 		register("stats",EffectStats::new,EffectStats::new);
 		register("use",EffectUse::new,EffectUse::new);
+		register("category",EffectShowCategory::new,EffectShowCategory::new);
 	}
 	private Effects() {
 	}

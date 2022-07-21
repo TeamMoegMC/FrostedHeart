@@ -94,6 +94,26 @@ public class ResearchListeners {
 			return ForgeRegistries.BLOCKS.getValue(new ResourceLocation(s));
 		}
 	}
+	public static class CategoryUnlockList extends UnlockList<ResourceLocation>{
+		public CategoryUnlockList() {
+			super();
+		}
+
+		public CategoryUnlockList(ListNBT nbt) {
+			super(nbt);
+		}
+
+		@Override
+		public String getString(ResourceLocation item) {
+			return item.toString();
+		}
+
+		@Override
+		public ResourceLocation getObject(String s) {
+			return new ResourceLocation(s);
+		}
+
+	}
 	private static class ListenerInfo<T extends Clue>{
 		T listener;
 		List<Team> trigger;
@@ -162,6 +182,7 @@ public class ResearchListeners {
 	public static RecipeUnlockList recipe=new RecipeUnlockList();
 	public static MultiblockUnlockList multiblock=new MultiblockUnlockList();
 	public static BlockUnlockList block=new BlockUnlockList();
+	public static CategoryUnlockList categories=new CategoryUnlockList();
 	private static ListenerList<TickListenerClue> tickClues=new ListenerList<>();
 	private static ListenerList<KillClue> killClues=new ListenerList<>();
 	private ResearchListeners() {

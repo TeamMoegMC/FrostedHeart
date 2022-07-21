@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
+import com.teammoeg.frostedheart.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.util.FHVersion;
@@ -239,7 +240,7 @@ public class ClientEvents {
 	@SubscribeEvent
 	public static void onResearchStatus(ClientResearchStatusEvent event) {
 		for(Effect e:event.getResearch().getEffects())
-			if(e instanceof EffectCrafting) {
+			if(e instanceof EffectCrafting||e instanceof EffectShowCategory) {
 				JEICompat.syncJEI();
 				return;
 			}

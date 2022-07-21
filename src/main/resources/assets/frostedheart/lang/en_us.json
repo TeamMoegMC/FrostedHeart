@@ -50,6 +50,7 @@
   "gui.frostedheart.effect.item_reward": "Item Rewards",
   "gui.frostedheart.effect.stats": "Stats Upgrade",
   "gui.frostedheart.effect.use": "New Usage",
+  "gui.frostedheart.effect.category": "New Recipes",
   "gui.frostedheart.effect_unknown": "Reveals after research complete",
   "gui.frostedheart.generator.mode.off": "Turn Off Generator",
   "gui.frostedheart.generator.mode.on": "Turn On Generator",

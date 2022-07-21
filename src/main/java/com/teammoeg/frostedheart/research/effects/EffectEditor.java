@@ -30,6 +30,7 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.ResourceLocation;
 
 public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 	public static final Editor<EffectBuilding> BUILD=(p,l,v,c)->{
@@ -47,6 +48,9 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 	public static final Editor<EffectUse> USE=(p,l,v,c)->{
 		new Use(p,l,v,c).open();
 	};
+	public static final Editor<EffectShowCategory> CAT=(p,l,v,c)->{
+		new Category(p,l,v,c).open();
+	};
 	public static final Editor<Effect> EDITOR=(p,l,v,c)->{
 		if(v instanceof EffectBuilding)
 			BUILD.open(p,l,(EffectBuilding) v,e->c.accept(e));
@@ -58,8 +62,10 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 			STATS.open(p, l, (EffectStats) v, e->c.accept(e));
 		else if(v instanceof EffectUse)
 			USE.open(p,l,(EffectUse) v,e->c.accept(e));
+		else if(v instanceof EffectShowCategory)
+			CAT.open(p,l,(EffectShowCategory)v,e->c.accept(e));
 		else
-			new EditorSelector<>(p,l,c).addEditor("Building",BUILD).addEditor("Craft",CRAFT).addEditor("Item Reward", ITEM).addEditor("Add Stats", STATS).addEditor("Add Usage",USE).open();
+			new EditorSelector<>(p,l,c).addEditor("Building",BUILD).addEditor("Craft",CRAFT).addEditor("Item Reward", ITEM).addEditor("Add Stats", STATS).addEditor("Add Usage",USE).addEditor("Recipe Category",CAT).open();
 		
 	};
 
@@ -112,9 +118,10 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 	}
 
 	private static class Building extends EffectEditor<EffectBuilding>{
-
+		
 		public Building(Widget panel, String lbl, EffectBuilding e, Consumer<EffectBuilding> cb) {
 			super(panel, lbl, e, cb);
+			
 		}
 		
 		@Override
@@ -132,6 +139,31 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog{
 		public void onClose() {
 			if(e.multiblock!=null)
 				super.onClose();
+		}
+		
+	}
+	private static class Category extends EffectEditor<EffectShowCategory>{
+		LabeledTextBox category;
+		public Category(Widget panel, String lbl, EffectShowCategory e, Consumer<EffectShowCategory> cb) {
+			super(panel, lbl, e, cb);
+			category=new LabeledTextBox(this,"category id",this.e.cate==null?"":this.e.cate.toString());
+		}
+		
+		@Override
+		public void addWidgets() {
+			super.addWidgets();
+			add(category);
+		}
+		@Override
+		public EffectShowCategory createEffect() {
+			return new EffectShowCategory();
+		}
+
+		@Override
+		public void onClose() {
+			if(category.getText().isEmpty())return;
+			e.cate=new ResourceLocation(category.getText());
+			super.onClose();
 		}
 		
 	}

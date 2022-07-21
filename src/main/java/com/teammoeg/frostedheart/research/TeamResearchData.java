@@ -8,6 +8,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
+import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -34,6 +35,7 @@ public class TeamResearchData {
 	public RecipeUnlockList crafting = new RecipeUnlockList();
 	public MultiblockUnlockList building = new MultiblockUnlockList();
 	public BlockUnlockList block = new BlockUnlockList();
+	public CategoryUnlockList categories=new CategoryUnlockList();
 	public TeamResearchData(Supplier<Team> team) {
 		this.team = team;
 	}
