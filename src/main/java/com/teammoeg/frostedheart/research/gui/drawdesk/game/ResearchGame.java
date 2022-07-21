@@ -97,12 +97,16 @@ public class ResearchGame {
 		resetState();
 		List<CardCombo> sol = generateSolution(gen, rnd);
 		int attempt = 0;
+		try {
 		while (!placeSolution(sol, gen, rnd)) {
 			attempt++;
 			if (attempt >= 10) {// maybe it is impossible? change another solution.
 				sol = generateSolution(gen, rnd);
 				attempt = 0;
 			}
+		}
+		}catch(Throwable t){
+			resetState();
 		}
 	}
 
