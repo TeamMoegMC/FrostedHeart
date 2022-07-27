@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.mixin.client;
 
+import com.teammoeg.frostedheart.climate.BlizzardRenderer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,7 +23,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  * Used to render blizzard
  */
 @OnlyIn(Dist.CLIENT)
-@Mixin(WorldRenderer.class)
+//@Mixin(value = WorldRenderer.class, priority = 1)
+@Mixin(value = WorldRenderer.class)
 public abstract class WorldRendererMixin
 {
     private static final ResourceLocation RAIN_TEXTURES = new ResourceLocation("textures/environment/rain.png");
@@ -38,12 +40,24 @@ public abstract class WorldRendererMixin
 
     @SuppressWarnings({"deprecation"})
     @Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)
-    public void inject$renderWeather(LightTexture manager, float partialTicks, double xIn, double yIn, double zIn, CallbackInfo ci) {
-        world.getCapability(ClimateData.CAPABILITY).ifPresent((cap)->{
-            // todo: render when blizzard
+    public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
+        world.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
+//            if (cap.isBlizzard()) {
+//                BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+//            }
         });
+
+        // Uncomment the following line to get an always-blowing blizzard
+        // for testing purpose
+//        BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+
+        // Road-block injection to remove any Vanilla weather rendering code
+        ci.cancel();
     }
 
+    // Render the particle when precipitation hit the ground
+    // (e.g. the splash of rain drops).
+    // Not required for blizzard.
     @Inject(method = "addRainParticles", at = @At("RETURN"))
     public void inject$tickRain(ActiveRenderInfo renderInfo, CallbackInfo ci) {
         world.getCapability(ClimateData.CAPABILITY).ifPresent((cap)->{
