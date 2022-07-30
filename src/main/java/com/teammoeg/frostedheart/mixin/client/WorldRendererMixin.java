@@ -51,22 +51,10 @@ public abstract class WorldRendererMixin
                     BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
                 }
             }
-
-
-//            world.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
-//                System.out.println("Has Climate Cap");
-//                if (cap.isBlizzard()) {
-//                    System.out.println("Has Blizzard");
-//                    BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
-//                }
-//            });
         }
 
-
-        System.out.println("Render TWR Weather");
-
         // Uncomment the following line to get an always-blowing blizzard for testing purpose
-        // BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+//        BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
 
         // Road-block injection to remove any Vanilla weather rendering code
         ci.cancel();
