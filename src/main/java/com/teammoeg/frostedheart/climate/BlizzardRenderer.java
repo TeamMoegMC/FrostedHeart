@@ -81,7 +81,7 @@ public class BlizzardRenderer {
                 double rainSizeX = (double) rainSizeXMemento[rainSizeIdx] * 0.5D;
                 double rainSizeZ = (double) rainSizeZMemento[rainSizeIdx] * 0.5D;
                 blockPos.setPos(graphicQualityX, 0, graphicQualityZ);
-                int topPosY = mc.world.getHeight(Heightmap.Type.MOTION_BLOCKING, blockPos.getX(), blockPos.getY());
+                int topPosY = mc.world.getHeight(Heightmap.Type.MOTION_BLOCKING, blockPos.getX(), blockPos.getZ());
                 int floorYMinusGraphicsQuality = floorY - graphicsQuality;
                 int floorYPlusGraphicsQuality = floorY + graphicsQuality;
                 if (floorYMinusGraphicsQuality < topPosY) {
