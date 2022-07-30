@@ -131,16 +131,11 @@ public class ForgeEvents {
 					data.updateClock(serverWorld);
 					data.updateCache();
 					data.trimTempEventStream();
+					// Distribute data to client
+					PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(data));
+					// Debug
+					// System.out.println("Hour Temp: " + ClimateData.getTemp(serverWorld));
 				}
-				// Update hourly temperature stream cache
-				/*if (serverWorld.getDayTime() % 1000 == 0) {
-					
-					
-				}*/
-				// DEBUG
-				/*if (serverWorld.getDayTime() % 20 == 0) {
-					System.out.println("Hour Temp: " + ClimateData.getTemp(serverWorld));
-				}*/
 			}
 		}
 	}
