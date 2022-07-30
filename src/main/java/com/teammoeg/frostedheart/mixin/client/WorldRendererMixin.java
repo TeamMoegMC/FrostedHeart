@@ -22,9 +22,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 /**
  * Used to render blizzard
  */
+// @Mixin(value = WorldRenderer.class)
 @OnlyIn(Dist.CLIENT)
-//@Mixin(value = WorldRenderer.class, priority = 1)
-@Mixin(value = WorldRenderer.class)
+@Mixin(value = WorldRenderer.class, priority = 1)
 public abstract class WorldRendererMixin
 {
     private static final ResourceLocation RAIN_TEXTURES = new ResourceLocation("textures/environment/rain.png");
@@ -41,15 +41,32 @@ public abstract class WorldRendererMixin
     @SuppressWarnings({"deprecation"})
     @Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)
     public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
-        world.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
-//            if (cap.isBlizzard()) {
-//                BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
-//            }
-        });
+        if (this.mc != null && this.mc.gameRenderer != null) {
+            System.out.println("Has Client World");
+            ClimateData data = ClimateData.get(world);
+            if (data != null) {
+                System.out.println("Has Climate Cap");
+                if (data.isBlizzard()) {
+                    System.out.println("Has Blizzard");
+                    BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+                }
+            }
 
-        // Uncomment the following line to get an always-blowing blizzard
-        // for testing purpose
-//        BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+
+//            world.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
+//                System.out.println("Has Climate Cap");
+//                if (cap.isBlizzard()) {
+//                    System.out.println("Has Blizzard");
+//                    BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+//                }
+//            });
+        }
+
+
+        System.out.println("Render TWR Weather");
+
+        // Uncomment the following line to get an always-blowing blizzard for testing purpose
+        // BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
 
         // Road-block injection to remove any Vanilla weather rendering code
         ci.cancel();
