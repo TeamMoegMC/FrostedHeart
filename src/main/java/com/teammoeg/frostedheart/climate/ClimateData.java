@@ -10,6 +10,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -46,8 +47,8 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     private static LazyOptional<ClimateData> getCapability(@Nullable IWorld world) {
-        if (world instanceof ServerWorld) {
-            return ((ServerWorld) world).getCapability(CAPABILITY);
+        if (world instanceof World) {
+            return ((World) world).getCapability(CAPABILITY);
         }
         return LazyOptional.empty();
     }
@@ -61,13 +62,12 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 
     /**
      * Get ClimateData attached to this world
-     * @param world instance of ServerWorld
+     * @param world server or client
      * @return An instance of ClimateData
      */
-    public static ClimateData get(ServerWorld world) {
+    public static ClimateData get(IWorld world) {
         return getCapability(world).resolve().orElse(new ClimateData());
     }
-
 
     /**
      * Retrieves hourly updated temperature from cache
