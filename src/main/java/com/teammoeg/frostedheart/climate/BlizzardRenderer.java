@@ -44,7 +44,7 @@ public class BlizzardRenderer {
                               double x,
                               double y,
                               double z) {
-        float rainStrength = world.getRainStrength(partialTicks);
+        float rainStrength = world.getThunderStrength(partialTicks);
         lightTexture.enableLightmap();
 
         int floorX = MathHelper.floor(x);
