@@ -18,45 +18,44 @@
 
 package com.teammoeg.frostedheart.network.research;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.effects.Effect;
-
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
+import java.util.function.Supplier;
+
 public class FHEffectTriggerPacket {
-	private final int researchID;
+    private final int researchID;
 
-	public FHEffectTriggerPacket(Research r) {
-		this.researchID = r.getRId();
-	}
+    public FHEffectTriggerPacket(Research r) {
+        this.researchID = r.getRId();
+    }
 
-	public FHEffectTriggerPacket(PacketBuffer buffer) {
-		researchID = buffer.readVarInt();
+    public FHEffectTriggerPacket(PacketBuffer buffer) {
+        researchID = buffer.readVarInt();
 
-	}
+    }
 
-	public void encode(PacketBuffer buffer) {
-		buffer.writeVarInt(researchID);
-	}
+    public void encode(PacketBuffer buffer) {
+        buffer.writeVarInt(researchID);
+    }
 
-	public void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<NetworkEvent.Context> context) {
 
-		context.get().enqueueWork(() -> {
-			Research r=FHResearch.researches.getById(researchID);
-			TeamResearchData trd=ResearchDataAPI.getData(context.get().getSender());
-			ServerPlayerEntity spe=context.get().getSender();
-			if(trd.getData(r).isCompleted()) {
-				for(Effect e:r.getEffects())
-				trd.grantEffect(e,spe);
-			}
-		});
-		context.get().setPacketHandled(true);
-	}
+        context.get().enqueueWork(() -> {
+            Research r = FHResearch.researches.getById(researchID);
+            TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender());
+            ServerPlayerEntity spe = context.get().getSender();
+            if (trd.getData(r).isCompleted()) {
+                for (Effect e : r.getEffects())
+                    trd.grantEffect(e, spe);
+            }
+        });
+        context.get().setPacketHandled(true);
+    }
 }

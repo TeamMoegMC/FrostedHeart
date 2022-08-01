@@ -18,20 +18,11 @@
 
 package com.teammoeg.frostedheart.content.temperature.heatervest;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import org.apache.commons.lang3.tuple.Pair;
-
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.util.FHNBT;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
@@ -43,6 +34,12 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.ModList;
+import org.apache.commons.lang3.tuple.Pair;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class HeaterVestRenderer<E extends LivingEntity, M extends BipedModel<E>> extends LayerRenderer<E, M> {
     public static boolean rendersAssigned = false;

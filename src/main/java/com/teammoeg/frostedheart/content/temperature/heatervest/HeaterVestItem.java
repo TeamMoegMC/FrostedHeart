@@ -18,17 +18,12 @@
 
 package com.teammoeg.frostedheart.content.temperature.heatervest;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
-
-import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -42,6 +37,9 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * Heater Vest: wear it to warm yourself from the coldness.
@@ -103,7 +101,7 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
                 delta = 0.1F;
             float rex = Math.max(this.extractEnergy(stack, energycost + (int) (delta * 120F), false) - energycost, 0F);
             return rex / 120F;
-        }else this.extractEnergy(stack,energycost,false);
+        } else this.extractEnergy(stack, energycost, false);
         return 0;
     }
 

@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.data.FHDataManager.FHDataType;
-
 import net.minecraft.network.PacketBuffer;
 
 public class DataEntry {

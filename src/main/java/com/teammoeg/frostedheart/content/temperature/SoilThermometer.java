@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.temperature;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -48,12 +47,12 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-    	if(worldIn.isRemote)return stack;
+        if (worldIn.isRemote) return stack;
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
-        	BlockRayTraceResult brtr=rayTrace(worldIn,entityplayer,FluidMode.ANY);
-        	if(brtr.getType()==Type.MISS)return stack;
-            entityplayer.sendMessage(GuiUtils.translateMessage("info.soil_thermometerbody", ChunkData.getTemperature(entityplayer.world,brtr.getPos())), entityplayer.getUniqueID());
+            BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.ANY);
+            if (brtr.getType() == Type.MISS) return stack;
+            entityplayer.sendMessage(GuiUtils.translateMessage("info.soil_thermometerbody", ChunkData.getTemperature(entityplayer.world, brtr.getPos())), entityplayer.getUniqueID());
         }
         return stack;
     }

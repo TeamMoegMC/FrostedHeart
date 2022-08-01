@@ -18,11 +18,7 @@
 
 package com.teammoeg.frostedheart.compat;
 
-import java.util.Iterator;
-import java.util.function.Predicate;
-
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
-
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
@@ -33,6 +29,9 @@ import top.theillusivec4.curios.api.SlotTypePreset;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
+
+import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class CuriosCompat {
     public static void sendIMCS() {
@@ -92,14 +91,14 @@ public class CuriosCompat {
 
         @Override
         public boolean hasNext() {
-            if(cur != null && cur.hasNext())return true;
+            if (cur != null && cur.hasNext()) return true;
             ICurioStacksHandler current;
-            while(it.hasNext()) {
-            	current = it.next();
-            	if (current.isVisible()) {
+            while (it.hasNext()) {
+                current = it.next();
+                if (current.isVisible()) {
                     cur = new ItemIterator(current.getSlots(), current.getStacks());
-                    if(cur.hasNext())
-                    	return true;
+                    if (cur.hasNext())
+                        return true;
                 }
             }
             return false;

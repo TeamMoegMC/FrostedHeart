@@ -18,18 +18,18 @@
 
 package com.teammoeg.frostedheart.network.research;
 
-import java.util.UUID;
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.UUID;
+import java.util.function.Supplier;
+
 // send when player join
 public class FHResearchDataSyncPacket {
     private final CompoundNBT data;
@@ -48,9 +48,9 @@ public class FHResearchDataSyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	TeamResearchData.resetClientInstance();
-        	TeamResearchData.getClientInstance().deserialize(data,true);
-        	DistExecutor.safeRunWhenOn(Dist.CLIENT,()->JEICompat::syncJEI);
+            TeamResearchData.resetClientInstance();
+            TeamResearchData.getClientInstance().deserialize(data, true);
+            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
         });
         context.get().setPacketHandled(true);
     }

@@ -18,22 +18,19 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.api.ApiUtils;
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.util.SerializeUtil;
-
-import blusunrize.immersiveengineering.api.ApiUtils;
-import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
+
+import javax.annotation.Nullable;
 
 public class IncubateRecipeSerializer extends IERecipeSerializer<IncubateRecipe> {
     @Override
@@ -44,31 +41,31 @@ public class IncubateRecipeSerializer extends IERecipeSerializer<IncubateRecipe>
     @Override
     public IncubateRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
         IngredientWithSize input = IngredientWithSize.deserialize(JSONUtils.getJsonObject(json, "input"));
-        ItemStack output=ItemStack.EMPTY;
-        if(json.has("output"))
-        	output=readOutput(json.get("output"));
-        FluidStack output_fluid=FluidStack.EMPTY;
-        if(json.has("fluid"))
-        output_fluid=ApiUtils.jsonDeserializeFluidStack(json.get("fluid").getAsJsonObject());
-        IngredientWithSize seed=null;
-        if(json.has("seed"))
-        	seed=IngredientWithSize.deserialize(json.get("seed"));
-		float seed_conserve=0;
-		if(json.has("seed_cost"))
-			seed_conserve=json.get("seed_cost").getAsFloat();
-		int water=0;
-		if(json.has("water"))
-			water=json.get("water").getAsInt();
-		int time=100;
-		if(json.has("time"))
-			time=json.get("time").getAsInt();
-        return new IncubateRecipe(recipeId, input,output,output_fluid,seed,seed_conserve,water,time);
+        ItemStack output = ItemStack.EMPTY;
+        if (json.has("output"))
+            output = readOutput(json.get("output"));
+        FluidStack output_fluid = FluidStack.EMPTY;
+        if (json.has("fluid"))
+            output_fluid = ApiUtils.jsonDeserializeFluidStack(json.get("fluid").getAsJsonObject());
+        IngredientWithSize seed = null;
+        if (json.has("seed"))
+            seed = IngredientWithSize.deserialize(json.get("seed"));
+        float seed_conserve = 0;
+        if (json.has("seed_cost"))
+            seed_conserve = json.get("seed_cost").getAsFloat();
+        int water = 0;
+        if (json.has("water"))
+            water = json.get("water").getAsInt();
+        int time = 100;
+        if (json.has("time"))
+            time = json.get("time").getAsInt();
+        return new IncubateRecipe(recipeId, input, output, output_fluid, seed, seed_conserve, water, time);
     }
 
     @Nullable
     @Override
     public IncubateRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-        return new IncubateRecipe(recipeId,IngredientWithSize.read(buffer),buffer.readItemStack(),buffer.readFluidStack(),SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null),buffer.readFloat(),buffer.readVarInt(),buffer.readVarInt());
+        return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), buffer.readItemStack(), buffer.readFluidStack(), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readFloat(), buffer.readVarInt(), buffer.readVarInt());
     }
 
     @Override
@@ -76,7 +73,7 @@ public class IncubateRecipeSerializer extends IERecipeSerializer<IncubateRecipe>
         recipe.input.write(buffer);
         buffer.writeItemStack(recipe.output);
         buffer.writeFluidStack(recipe.output_fluid);
-        SerializeUtil.writeOptional(buffer,recipe.seed,IngredientWithSize::write);
+        SerializeUtil.writeOptional(buffer, recipe.seed, IngredientWithSize::write);
         buffer.writeFloat(recipe.seed_conserve);
         buffer.writeVarInt(recipe.water);
         buffer.writeVarInt(recipe.time);

@@ -18,29 +18,30 @@
 
 package com.teammoeg.frostedheart.network.research;
 
-import java.util.UUID;
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.clues.Clue;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.UUID;
+import java.util.function.Supplier;
+
 // send when player join
 public class FHClueProgressSyncPacket {
     private final boolean data;
     private final int id;
-    public FHClueProgressSyncPacket(UUID team,Clue rs) {
-    	TeamResearchData rd=ResearchDataManager.INSTANCE.getData(team);
+
+    public FHClueProgressSyncPacket(UUID team, Clue rs) {
+        TeamResearchData rd = ResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isClueTriggered(rs);
-        this.id=rs.getRId();
+        this.id = rs.getRId();
     }
 
     public FHClueProgressSyncPacket(PacketBuffer buffer) {
         data = buffer.readBoolean();
-        id=buffer.readVarInt();
+        id = buffer.readVarInt();
     }
 
     public void encode(PacketBuffer buffer) {
@@ -50,7 +51,7 @@ public class FHClueProgressSyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHResearch.clues.getById(id).setCompleted(data);
+            FHResearch.clues.getById(id).setCompleted(data);
         });
         context.get().setPacketHandled(true);
     }

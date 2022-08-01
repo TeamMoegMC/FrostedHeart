@@ -18,9 +18,7 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import com.teammoeg.frostedheart.content.decoration.RelicChestContainer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorContainer;
@@ -29,12 +27,13 @@ import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorContainer;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
-
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FHContent {
 
@@ -45,7 +44,7 @@ public class FHContent {
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
-        GuiHandler.register(RelicChestTileEntity.class,new ResourceLocation(FHMain.MODID,"relic_chest"), RelicChestContainer::new);
-        GuiHandler.register(DrawingDeskTileEntity.class,new ResourceLocation(FHMain.MODID,"draw_desk"), DrawDeskContainer::new);
+        GuiHandler.register(RelicChestTileEntity.class, new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestContainer::new);
+        GuiHandler.register(DrawingDeskTileEntity.class, new ResourceLocation(FHMain.MODID, "draw_desk"), DrawDeskContainer::new);
     }
 }

@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.content.temperature;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -28,7 +27,6 @@ import net.minecraft.item.Items;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.ModList;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 
@@ -51,9 +49,9 @@ public class FHSoupItem extends FHBaseItem {
             if (worldIn.getRandom().nextInt(3) == 0) {
                 player.addPotionEffect(new EffectInstance(Effects.HUNGER, 100, 1));
                 player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 40, 1));
-                IDietTracker idt=DietCapability.get(player).orElse(null);
-                float nv=idt.getValue("protein")-0.01f;
-                idt.setValue("protein",nv>0?nv:0);
+                IDietTracker idt = DietCapability.get(player).orElse(null);
+                float nv = idt.getValue("protein") - 0.01f;
+                idt.setValue("protein", nv > 0 ? nv : 0);
             }
         }
 

@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.research;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -15,6 +14,7 @@ public enum ResearchLevel {
 
     ResourceLocation icon;
     TranslationTextComponent name;
+
     ResearchLevel(String levelName) {
         icon = FHMain.rl("textures/gui/research/level/" + levelName);
         name = GuiUtils.translateResearchLevel(levelName);

@@ -1,10 +1,7 @@
 package com.teammoeg.frostedheart.client.model;
 
-import javax.annotation.Nullable;
-
-import com.teammoeg.frostedheart.FHMain;
-
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.world.ClientWorld;
@@ -13,6 +10,8 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
 
 public class LiningItemOverrideList extends ItemOverrideList {
 

@@ -5,8 +5,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 
-public interface DefrostRecipe extends IRecipe<IInventory>{
-	Ingredient getIngredient();
+public interface DefrostRecipe extends IRecipe<IInventory> {
+    Ingredient getIngredient();
 
-	ItemStack[] getIss();
+    ItemStack[] getIss();
 }

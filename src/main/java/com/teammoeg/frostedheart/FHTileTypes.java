@@ -1,8 +1,5 @@
 package com.teammoeg.frostedheart;
 
-import java.util.Collection;
-import java.util.function.Supplier;
-
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
@@ -15,13 +12,15 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
-
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.Collection;
+import java.util.function.Supplier;
 
 public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
@@ -51,7 +50,7 @@ public class FHTileTypes {
             "oil_burner", makeType(OilBurnerTileEntity::new, () -> FHBlocks.oilburner)
     );
 
-	public static final RegistryObject<TileEntityType<CMUpdateTileEntity>> CMUPDATE = REGISTER.register(
+    public static final RegistryObject<TileEntityType<CMUpdateTileEntity>> CMUPDATE = REGISTER.register(
             "cm_update", makeType(CMUpdateTileEntity::new, () -> FHBlocks.cmupdate)
     );
 
@@ -59,12 +58,13 @@ public class FHTileTypes {
             "drawing_desk", makeType(DrawingDeskTileEntity::new, () -> FHBlocks.drawing_desk)
     );
     public static final RegistryObject<TileEntityType<RelicChestTileEntity>> RELIC_CHEST = REGISTER.register(
-            "relic_chest", makeType(RelicChestTileEntity::new,()->FHBlocks.relic_chest)
+            "relic_chest", makeType(RelicChestTileEntity::new, () -> FHBlocks.relic_chest)
     );
 
-	public static final RegistryObject<TileEntityType<MechCalcTileEntity>> MECH_CALC = REGISTER.register(
+    public static final RegistryObject<TileEntityType<MechCalcTileEntity>> MECH_CALC = REGISTER.register(
             "mechanical_calculator", makeType(MechCalcTileEntity::new, () -> FHBlocks.mech_calc)
-    );;
+    );
+    ;
 
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));

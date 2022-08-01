@@ -7,7 +7,6 @@ import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechScrollBar;
-
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
@@ -26,34 +25,35 @@ public abstract class ResearchPanel extends Panel {
     public ResearchCategory selectedCategory;
     public Research selectedResearch;
     public ResearchDetailPanel detailframe;
-    public Panel modalPanel=null;
+    public Panel modalPanel = null;
     public TechScrollBar hierarchyBar;
+
     public ResearchPanel(Panel p) {
-    	super(p);
+        super(p);
         researchCategoryPanel = new ResearchCategoryPanel(this);
         researchListPanel = new ResearchListPanel(this);
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
         progressPanel = new ResearchProgressPanel(this);
-        hierarchyBar=new TechScrollBar(this,Plane.HORIZONTAL,researchHierarchyPanel);
-        detailframe=new ResearchDetailPanel(this);
+        hierarchyBar = new TechScrollBar(this, Plane.HORIZONTAL, researchHierarchyPanel);
+        detailframe = new ResearchDetailPanel(this);
         //TODO default select on progress research
-        Research cr=ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
-        selectedCategory = cr==null?ResearchCategory.RESCUE:cr.getCategory();
-        selectedResearch = cr==null?FHResearch.getFirstResearchInCategory(selectedCategory):cr;
+        Research cr = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+        selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
+        selectedResearch = cr == null ? FHResearch.getFirstResearchInCategory(selectedCategory) : cr;
     }
 
     @Override
     public void addWidgets() {
-    	int sw=387;
-    	int sh=203;
-    	this.setSize(sw,sh);
-        
-    	researchCategoryPanel.setPosAndSize(165,0,190,21);
-    	researchListPanel.setPosAndSize(12,74,114,118);
-    	researchHierarchyPanel.setPosAndSize(160,23,210,160);
-        progressPanel.setPosAndSize(14,19,111,51);
-        detailframe.setPosAndSize((width-302)/2,(height-170)/2,302,170);
-        hierarchyBar.setPosAndSize(170,175,190,8);
+        int sw = 387;
+        int sh = 203;
+        this.setSize(sw, sh);
+
+        researchCategoryPanel.setPosAndSize(165, 0, 190, 21);
+        researchListPanel.setPosAndSize(12, 74, 114, 118);
+        researchHierarchyPanel.setPosAndSize(160, 23, 210, 160);
+        progressPanel.setPosAndSize(14, 19, 111, 51);
+        detailframe.setPosAndSize((width - 302) / 2, (height - 170) / 2, 302, 170);
+        hierarchyBar.setPosAndSize(170, 175, 190, 8);
         add(researchCategoryPanel);
         add(researchListPanel);
         add(researchHierarchyPanel);
@@ -75,11 +75,11 @@ public abstract class ResearchPanel extends Panel {
     public void selectResearch(Research research) {
         if (selectedResearch != research) {
             selectedResearch = research;
-            if(selectedResearch!=null)
-            	selectCategory(selectedResearch.getCategory());
+            if (selectedResearch != null)
+                selectCategory(selectedResearch.getCategory());
             researchHierarchyPanel.refreshWidgets();
-        }else {
-        	detailframe.open(research);
+        } else {
+            detailframe.open(research);
         }
     }
 
@@ -99,58 +99,63 @@ public abstract class ResearchPanel extends Panel {
         super.addMouseOverText(list);
     }
 
-	public void setModal(Panel p) {
-		modalPanel=p;
-	}
-	public void closeModal(Panel p) {
-		if(p==modalPanel)
-		modalPanel=null;
-	}
-	public boolean canEnable(Panel p) {
-		return modalPanel==null||modalPanel==p;
-	}
+    public void setModal(Panel p) {
+        modalPanel = p;
+    }
 
-	@Override
-	public void drawWidget(MatrixStack arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6,
-			int arg7) {
-		GuiHelper.setupDrawing();
-		super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-	}
+    public void closeModal(Panel p) {
+        if (p == modalPanel)
+            modalPanel = null;
+    }
+
+    public boolean canEnable(Panel p) {
+        return modalPanel == null || modalPanel == p;
+    }
+
+    @Override
+    public void drawWidget(MatrixStack arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6,
+                           int arg7) {
+        GuiHelper.setupDrawing();
+        super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+    }
 
 
-	@Override
-	public boolean keyPressed(Key key) {
-		if(key.esc()) {
-			if(modalPanel!=null) {
-				detailframe.close();
-				return true;
-			}
-			this.onDisabled();
-			//this.closeGui(true);
-			return true;
-		}
-		return super.keyPressed(key);
-	}
-	public abstract void onDisabled();
-	@Override
-	public void alignWidgets() {
-	}
-	boolean enabled;
+    @Override
+    public boolean keyPressed(Key key) {
+        if (key.esc()) {
+            if (modalPanel != null) {
+                detailframe.close();
+                return true;
+            }
+            this.onDisabled();
+            //this.closeGui(true);
+            return true;
+        }
+        return super.keyPressed(key);
+    }
 
-	@Override
-	public boolean isEnabled() {
-		return enabled;
-	}
+    public abstract void onDisabled();
 
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
+    @Override
+    public void alignWidgets() {
+    }
 
-	@Override
-	public void draw(MatrixStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
-		if(enabled)
-		super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
-	}
+    boolean enabled;
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @Override
+    public void draw(MatrixStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+        if (enabled)
+            super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
+    }
 
 
 }

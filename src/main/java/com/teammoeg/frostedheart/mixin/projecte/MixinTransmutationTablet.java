@@ -1,13 +1,7 @@
 package com.teammoeg.frostedheart.mixin.projecte;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.util.FHUtils;
-
 import moze_intel.projecte.gameObjs.items.TransmutationTablet;
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
@@ -24,12 +18,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TransmutationTablet.class)
 public class MixinTransmutationTablet {
-	@Inject(method = "onItemRightClick", at = @At("HEAD"), remap = true, cancellable = true)
-	public void onItemRightClick(World world,PlayerEntity player,Hand hand,CallbackInfoReturnable<ActionResult> cbi) {
-    	if (!world.isRemote) {
+    @Inject(method = "onItemRightClick", at = @At("HEAD"), remap = true, cancellable = true)
+    public void onItemRightClick(World world, PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cbi) {
+        if (!world.isRemote) {
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
 
             ServerWorld serverWorld = (ServerWorld) world;
@@ -39,13 +37,13 @@ public class MixinTransmutationTablet {
             serverPlayerEntity.connection.sendPacket(new STitlePacket(STitlePacket.Type.SUBTITLE, GuiUtils.translateMessage("magical_backslash")));
 
             double posX = serverPlayerEntity.getPosX() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
-            double posY =serverPlayerEntity.getPosY() + world.rand.nextInt(3) - 1;
+            double posY = serverPlayerEntity.getPosY() + world.rand.nextInt(3) - 1;
             double posZ = serverPlayerEntity.getPosZ() + (world.rand.nextDouble() - world.rand.nextDouble()) * 4.5D;
             if (world.hasNoCollisions(EntityType.WITCH.getBoundingBoxWithSizeApplied(posX, posY, posZ))
                     && EntitySpawnPlacementRegistry.canSpawnEntity(EntityType.WITCH, serverWorld, SpawnReason.NATURAL, new BlockPos(posX, posY, posZ), world.getRandom())) {
                 FHUtils.spawnMob(serverWorld, new BlockPos(posX, posY, posZ), new CompoundNBT(), new ResourceLocation("minecraft", "witch"));
             }
         }
-    	cbi.setReturnValue(ActionResult.resultConsume(player.getHeldItem(hand)));
-	}
+        cbi.setReturnValue(ActionResult.resultConsume(player.getHeldItem(hand)));
+    }
 }

@@ -18,28 +18,32 @@
 
 package com.teammoeg.frostedheart.network.research;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.TeamResearchData;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.function.Supplier;
+
 // send when data update
 public class FHChangeActiveResearchPacket {
     private final int id;
+
     public FHChangeActiveResearchPacket(Research rs) {
-        this.id=rs.getRId();
+        this.id = rs.getRId();
     }
+
     public FHChangeActiveResearchPacket(int rid) {
-        this.id=rid;
+        this.id = rid;
     }
+
     public FHChangeActiveResearchPacket() {
-        this.id=0;
+        this.id = 0;
     }
+
     public FHChangeActiveResearchPacket(PacketBuffer buffer) {
-        id=buffer.readVarInt();
+        id = buffer.readVarInt();
     }
 
     public void encode(PacketBuffer buffer) {
@@ -48,8 +52,8 @@ public class FHChangeActiveResearchPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	TeamResearchData.setActiveResearch(id);
-        	ClientUtils.refreshResearchGui();
+            TeamResearchData.setActiveResearch(id);
+            ClientUtils.refreshResearchGui();
         });
         context.get().setPacketHandled(true);
     }

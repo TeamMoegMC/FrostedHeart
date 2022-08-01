@@ -18,25 +18,25 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
-import java.util.function.Consumer;
-
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+
+import java.util.function.Consumer;
 
 public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
 
     public T1GeneratorTileEntity() {
-        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false,1,2,1);
+        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false, 1, 2, 1);
     }
-	@Override
-	public void forEachBlock(Consumer<T1GeneratorTileEntity> consumer) {
-		for (int x = 0; x < 3; ++x)
+
+    @Override
+    public void forEachBlock(Consumer<T1GeneratorTileEntity> consumer) {
+        for (int x = 0; x < 3; ++x)
             for (int y = 0; y < 4; ++y)
                 for (int z = 0; z < 3; ++z) {
                     BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
@@ -44,5 +44,5 @@ public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Generator
                     if (te instanceof T1GeneratorTileEntity)
                         consumer.accept((T1GeneratorTileEntity) te);
                 }
-	}
+    }
 }

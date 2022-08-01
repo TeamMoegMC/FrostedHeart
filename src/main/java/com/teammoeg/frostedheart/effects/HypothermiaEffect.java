@@ -18,16 +18,15 @@
 
 package com.teammoeg.frostedheart.effects;
 
-import java.util.List;
-
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHDamageSources;
-
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
+
+import java.util.List;
 
 public class HypothermiaEffect extends Effect {
     public HypothermiaEffect(EffectType typeIn, int liquidColorIn) {
@@ -37,7 +36,7 @@ public class HypothermiaEffect extends Effect {
     @Override
     public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
         if (entityLivingBaseIn instanceof ServerPlayerEntity) {
-        	if (entityLivingBaseIn.getHealth() > 20.0F) {
+            if (entityLivingBaseIn.getHealth() > 20.0F) {
                 entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 1F);
             } else if (entityLivingBaseIn.getHealth() > 10.0F) {
                 entityLivingBaseIn.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 0.5F);
@@ -57,8 +56,9 @@ public class HypothermiaEffect extends Effect {
         }
         return true;
     }
-	@Override
-	public List<ItemStack> getCurativeItems() {
-		return ImmutableList.of();
-	}
+
+    @Override
+    public List<ItemStack> getCurativeItems() {
+        return ImmutableList.of();
+    }
 }

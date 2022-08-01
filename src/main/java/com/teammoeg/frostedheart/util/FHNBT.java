@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.item.ItemStack;
 
 public class FHNBT {
@@ -29,14 +28,16 @@ public class FHNBT {
 
     public static ItemStack ArmorLiningNBT(ItemStack stack) {
         stack.getOrCreateTag().putString("inner_cover", "frostedheart:gambeson");
-        stack.getTag().putBoolean("inner_bounded",true);//bound lining to armor
-        return ArmorNBT(stack,107,6);
+        stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor
+        return ArmorNBT(stack, 107, 6);
     }
-    public static ItemStack ArmorNBT(ItemStack stack,int base,int mult) {
-        stack.setDamage((int) (stack.getMaxDamage()-base-Math.random()*mult));
+
+    public static ItemStack ArmorNBT(ItemStack stack, int base, int mult) {
+        stack.setDamage((int) (stack.getMaxDamage() - base - Math.random() * mult));
         return stack;
     }
-    public static ItemStack Damage(ItemStack stack,int dmg) {
+
+    public static ItemStack Damage(ItemStack stack, int dmg) {
         stack.setDamage(dmg);
         return stack;
     }

@@ -20,29 +20,28 @@ package com.teammoeg.frostedheart.research;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public enum ResearchCategory {
-	
-	RESCUE("rescue"),
-	LIVING("living"),
-	PRODUCTION("production"),
-	ARS("ars"),
-	EXPLORATION("exploration");
+
+    RESCUE("rescue"),
+    LIVING("living"),
+    PRODUCTION("production"),
+    ARS("ars"),
+    EXPLORATION("exploration");
     private ResourceLocation id;
     private TranslationTextComponent name;
     private TranslationTextComponent desc;
     private ResourceLocation icon;
-    
+
     ResearchCategory(String id) {
         this.id = FHMain.rl(id);
         this.name = GuiUtils.translateResearchCategoryName(id);
         this.desc = GuiUtils.translateResearchCategoryDesc(id);
         this.icon = FHMain.rl("textures/gui/research/category/" + id + ".png");
-       //FHMain.rl("textures/gui/research/category/background/" + id + ".png");
-        ResearchCategories.ALL.put(this.id,this);
+        //FHMain.rl("textures/gui/research/category/background/" + id + ".png");
+        ResearchCategories.ALL.put(this.id, this);
     }
 
     public ResourceLocation getIcon() {

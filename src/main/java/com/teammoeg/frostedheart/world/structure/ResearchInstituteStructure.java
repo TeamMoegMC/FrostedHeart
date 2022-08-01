@@ -1,9 +1,7 @@
 package com.teammoeg.frostedheart.world.structure;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.world.FHBiomes;
 import net.minecraft.block.BlockState;
-import net.minecraft.util.Rotation;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;

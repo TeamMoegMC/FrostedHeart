@@ -18,15 +18,10 @@
 
 package com.teammoeg.frostedheart.world.feature;
 
-import java.util.BitSet;
-import java.util.Random;
-
 import com.cannolicatfish.rankine.blocks.RankineOreBlock;
 import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.mojang.serialization.Codec;
-
 import net.minecraft.block.Block;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.ISeedReader;
@@ -34,6 +29,9 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.Feature;
+
+import java.util.BitSet;
+import java.util.Random;
 
 public class FHOreFeature extends Feature<FHOreFeatureConfig> {
     public FHOreFeature(Codec<FHOreFeatureConfig> codec) {
@@ -70,7 +68,7 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
     }
 
     protected boolean generate(IWorld worldIn, Random random, FHOreFeatureConfig config, double maxX, double minX,
-    		double maxZ, double minZ, double maxY, double minY, int startX, int startY, int startZ, int maxSizeXZ, int maxSizeY) {
+                               double maxZ, double minZ, double maxY, double minY, int startX, int startY, int startZ, int maxSizeXZ, int maxSizeY) {
         int totalGenerated = 0;
         BitSet generated = new BitSet(maxSizeXZ * maxSizeY * maxSizeXZ);
         BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable();

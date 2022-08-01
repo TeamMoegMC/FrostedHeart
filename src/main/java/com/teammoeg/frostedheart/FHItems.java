@@ -5,12 +5,7 @@ import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
-import com.teammoeg.frostedheart.content.temperature.FHSoupItem;
-import com.teammoeg.frostedheart.content.temperature.MushroomBed;
-import com.teammoeg.frostedheart.content.temperature.SoilThermometer;
-import com.teammoeg.frostedheart.content.temperature.SteamBottleItem;
-import com.teammoeg.frostedheart.content.temperature.ThermometerItem;
-import com.teammoeg.frostedheart.content.temperature.ThermosItem;
+import com.teammoeg.frostedheart.content.temperature.*;
 import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
 import com.teammoeg.frostedheart.content.tools.CeramicBucket;
@@ -19,19 +14,20 @@ import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.research.machines.FHBasePen;
 import com.teammoeg.frostedheart.research.machines.FHReusablePen;
-
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 import net.minecraft.item.Item.Properties;
+import net.minecraft.item.Items;
 
 public class FHItems {
     public static void init() {
     }
+
     static Properties createProps() {
-    	return new Item.Properties().group(FHMain.itemGroup);
+        return new Item.Properties().group(FHMain.itemGroup);
     }
-    public static Item hand_stove=new CoalHandStove("hand_stove",createProps().defaultMaxDamage(10));
+
+    public static Item hand_stove = new CoalHandStove("hand_stove", createProps().defaultMaxDamage(10));
     public static Item coal_stick = new FHBaseItem("coal_stick", createProps());
     public static Item charcoal_stick = new FHBaseItem("charcoal_stick", createProps());
     public static Item energy_core = new FHBaseItem("energy_core", createProps());
@@ -71,20 +67,20 @@ public class FHItems {
     public static Item heater_vest = new HeaterVestItem("heater_vest", createProps().maxStackSize(1).setNoRepair());
     public static Item thermos = new ThermosItem("thermos", 1500, 250);
     public static Item advanced_thermos = new ThermosItem("advanced_thermos", 3000, 250);
-    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick",8,4,createProps().defaultMaxDamage(128));
-    public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick",8,4,createProps().defaultMaxDamage(192));
-    public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick",9,5, createProps().defaultMaxDamage(256));
-    public static Item copper_core_spade = new CoreSpade("copper_core_spade",1,32, createProps().defaultMaxDamage(96));
-    public static Item iron_core_spade = new CoreSpade("iron_core_spade",2,64, createProps().defaultMaxDamage(128));
-    public static Item steel_core_spade = new CoreSpade("steel_core_spade",4,72, createProps().defaultMaxDamage(160));
-    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer",4,4, createProps().defaultMaxDamage(96));
-    public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer",5,5, createProps().defaultMaxDamage(128));
-    public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer",6,6, createProps().defaultMaxDamage(160));
+    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", 8, 4, createProps().defaultMaxDamage(128));
+    public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 8, 4, createProps().defaultMaxDamage(192));
+    public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 9, 5, createProps().defaultMaxDamage(256));
+    public static Item copper_core_spade = new CoreSpade("copper_core_spade", 1, 32, createProps().defaultMaxDamage(96));
+    public static Item iron_core_spade = new CoreSpade("iron_core_spade", 2, 64, createProps().defaultMaxDamage(128));
+    public static Item steel_core_spade = new CoreSpade("steel_core_spade", 4, 72, createProps().defaultMaxDamage(160));
+    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer", 4, 4, createProps().defaultMaxDamage(96));
+    public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer", 5, 5, createProps().defaultMaxDamage(128));
+    public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer", 6, 6, createProps().defaultMaxDamage(160));
     public static Item soil_thermometer = new SoilThermometer("soil_thermometer", createProps());
     public static Item heat_debuger = new HeatDebugItem("heat_debugger");
-    public static Item red_mushroombed=new MushroomBed("straw_briquette_red_mushroom",Items.RED_MUSHROOM,createProps().defaultMaxDamage(4800));
-    public static Item brown_mushroombed=new MushroomBed("straw_briquette_brown_mushroom",Items.BROWN_MUSHROOM,createProps().defaultMaxDamage(4800));
+    public static Item red_mushroombed = new MushroomBed("straw_briquette_red_mushroom", Items.RED_MUSHROOM, createProps().defaultMaxDamage(4800));
+    public static Item brown_mushroombed = new MushroomBed("straw_briquette_brown_mushroom", Items.BROWN_MUSHROOM, createProps().defaultMaxDamage(4800));
     public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", createProps().maxStackSize(1));
     public static Item charcoal = new FHBasePen("charcoal", createProps().maxDamage(50).setNoRepair());
-    public static Item quill_and_ink = new FHReusablePen("quill_and_ink", createProps().maxDamage(101).setNoRepair(),1);
+    public static Item quill_and_ink = new FHReusablePen("quill_and_ink", createProps().maxDamage(101).setNoRepair(), 1);
 }

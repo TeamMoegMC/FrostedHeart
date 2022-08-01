@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.world.structure;
 
-import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
@@ -15,11 +14,11 @@ import net.minecraft.world.gen.feature.template.TemplateManager;
 import java.util.Random;
 
 
-
 public class VolcanicVentPiece extends StructurePiece {
     protected int centerX;
     protected int centerZ;
     protected int centerY;
+
     public VolcanicVentPiece(BlockPos center) {
         super(null, 0);
         this.centerX = center.getX();
@@ -30,20 +29,20 @@ public class VolcanicVentPiece extends StructurePiece {
 
         this.boundingBox = new MutableBoundingBox(
                 center.getX() - range, center.getY(), center.getZ() - range,
-                center.getX() + range, center.getY()+ 32 , center.getZ() + range);
+                center.getX() + range, center.getY() + 32, center.getZ() + range);
     }
 
-    public VolcanicVentPiece(TemplateManager templateManager,CompoundNBT nbt) {
+    public VolcanicVentPiece(TemplateManager templateManager, CompoundNBT nbt) {
         super(null, nbt);
-        this.centerX =nbt.getInt("x");
-        this.centerY =nbt.getInt("y");
-        this.centerZ =nbt.getInt("z");
+        this.centerX = nbt.getInt("x");
+        this.centerY = nbt.getInt("y");
+        this.centerZ = nbt.getInt("z");
     }
 
     protected void readAdditional(CompoundNBT nbt) {
-        nbt.putInt("x",this.centerX);
-        nbt.putInt("y",this.centerY);
-        nbt.putInt("z",this.centerZ);
+        nbt.putInt("x", this.centerX);
+        nbt.putInt("y", this.centerY);
+        nbt.putInt("z", this.centerZ);
     }
 
     @Override
@@ -56,10 +55,10 @@ public class VolcanicVentPiece extends StructurePiece {
                 int distX = x - centerX;
                 int distZ = z - centerZ;
                 double dist = Math.sqrt(distX * distX + distZ * distZ);
-                for (int y = centerY; y <= centerY+32;y++) {
+                for (int y = centerY; y <= centerY + 32; y++) {
                     mutablePos.setY(y);
-                    if (y <  centerY+32 - dist){
-                        reader.setBlockState(mutablePos, Blocks.BASALT.getDefaultState(),2);
+                    if (y < centerY + 32 - dist) {
+                        reader.setBlockState(mutablePos, Blocks.BASALT.getDefaultState(), 2);
                     }
                 }
             }

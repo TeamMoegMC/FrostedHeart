@@ -18,14 +18,11 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.Arrays;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -39,20 +36,22 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.Arrays;
+
 public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "generator_fuel");
     private IDrawable BACKGROUND;
     private IDrawable SWITCH;
     private IDrawable ICON;
     private IDrawableAnimated FIRE;
-    
+
     public GeneratorFuelCategory(IGuiHelper guiHelper) {
         this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHMultiblocks.generator));
-        ResourceLocation guiMain=new ResourceLocation(FHMain.MODID, "textures/gui/generator_t1.png");
+        ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/generator_t1.png");
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 24, 3, 134, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);
         this.FIRE = guiHelper.createAnimatedDrawable(tfire, 80, IDrawableAnimated.StartDirection.TOP, true);
-        this.SWITCH=guiHelper.createDrawable(guiMain, 232, 1, 19, 10);
+        this.SWITCH = guiHelper.createDrawable(guiMain, 232, 1, 19, 10);
     }
 
     @Override
@@ -69,14 +68,15 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     public String getTitle() {
         return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_fuel").getString());
     }
-	@Override
-	public void draw(GeneratorRecipe recipe, MatrixStack transform, double mouseX, double mouseY)
-	{
-		FIRE.draw(transform,60, 30);
-		SWITCH.draw(transform,32,32);
-		String burnTime = String.valueOf(recipe.time)+" ticks";
-		ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 80,60, 0xFFFFFF);
-	}
+
+    @Override
+    public void draw(GeneratorRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+        FIRE.draw(transform, 60, 30);
+        SWITCH.draw(transform, 32, 32);
+        String burnTime = String.valueOf(recipe.time) + " ticks";
+        ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 80, 60, 0xFFFFFF);
+    }
+
     @Override
     public IDrawable getBackground() {
         return BACKGROUND;
@@ -89,7 +89,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
 
     @Override
     public void setIngredients(GeneratorRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM,Arrays.asList(Arrays.asList(recipe.input.getMatchingStacks())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.input.getMatchingStacks())));
         ingredients.setOutput(VanillaTypes.ITEM, recipe.output);
     }
 
@@ -97,7 +97,7 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, GeneratorRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
-       
+
         guiItemStacks.init(0, true, 55, 8);
         guiItemStacks.init(1, false, 55, 47);
         guiItemStacks.set(ingredients);

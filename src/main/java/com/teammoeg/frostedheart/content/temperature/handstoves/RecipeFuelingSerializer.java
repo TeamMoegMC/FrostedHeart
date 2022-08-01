@@ -18,17 +18,16 @@
 
 package com.teammoeg.frostedheart.content.temperature.handstoves;
 
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.data.JsonHelper;
-
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
 
 public class RecipeFuelingSerializer extends IERecipeSerializer<RecipeFueling> {
     @Override
@@ -39,16 +38,16 @@ public class RecipeFuelingSerializer extends IERecipeSerializer<RecipeFueling> {
     @Override
     public RecipeFueling readFromJson(ResourceLocation recipeId, JsonObject json) {
         Ingredient input = Ingredient.deserialize(json.get("input"));
-        int fuel=JsonHelper.getIntOrDefault(json,"fuel",400);
-        return new RecipeFueling(recipeId, input,fuel);
+        int fuel = JsonHelper.getIntOrDefault(json, "fuel", 400);
+        return new RecipeFueling(recipeId, input, fuel);
     }
 
     @Nullable
     @Override
     public RecipeFueling read(ResourceLocation recipeId, PacketBuffer buffer) {
         Ingredient input = Ingredient.read(buffer);
-        int f=buffer.readVarInt();
-        return new RecipeFueling(recipeId, input,f);
+        int f = buffer.readVarInt();
+        return new RecipeFueling(recipeId, input, f);
     }
 
     @Override

@@ -18,18 +18,11 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
-import java.util.Random;
-import java.util.function.BiFunction;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -45,11 +38,14 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Random;
+import java.util.function.BiFunction;
 
 public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -57,7 +53,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public ChargerBlock(String name, Properties blockProps,
                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING,Direction.SOUTH));
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
 
@@ -83,8 +79,6 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     }
 
 
-
-
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
         if (context.getFace() == Direction.UP || context.getPlayer().isSneaking()) {
@@ -100,7 +94,7 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
         if (superResult.isSuccessOrConsume() || player.isSneaking())
             return superResult;
         ItemStack item = player.getHeldItem(hand);
-        
+
         TileEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof ChargerTileEntity) {
             return ((ChargerTileEntity) te).onClick(player, item);
@@ -120,8 +114,6 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
         Direction bd = state.get(BlockStateProperties.FACING);
         return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
     }
-
-
 
 
 }

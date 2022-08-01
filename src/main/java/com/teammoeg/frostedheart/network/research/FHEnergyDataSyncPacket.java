@@ -18,11 +18,8 @@
 
 package com.teammoeg.frostedheart.network.research;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -30,17 +27,20 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
+import java.util.function.Supplier;
+
 public class FHEnergyDataSyncPacket {
     private final long energy;
     private final long penergy;
+
     public FHEnergyDataSyncPacket(CompoundNBT data) {
         this.energy = data.getLong("energy");
-        this.penergy =data.getLong("penergy");
+        this.penergy = data.getLong("penergy");
     }
 
     public FHEnergyDataSyncPacket(PacketBuffer buffer) {
-        energy=buffer.readVarLong();
-        penergy=buffer.readVarLong();
+        energy = buffer.readVarLong();
+        penergy = buffer.readVarLong();
     }
 
     public void encode(PacketBuffer buffer) {
@@ -53,9 +53,9 @@ public class FHEnergyDataSyncPacket {
             // Update client-side nbt
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (player != null) {
-            	CompoundNBT data=TemperatureCore.getFHData(player);
-            	data.putLong("energy", energy);
-            	data.putLong("penergy", penergy);
+                CompoundNBT data = TemperatureCore.getFHData(player);
+                data.putLong("energy", energy);
+                data.putLong("penergy", penergy);
                 TemperatureCore.setFHData(player, data);
             }
         });

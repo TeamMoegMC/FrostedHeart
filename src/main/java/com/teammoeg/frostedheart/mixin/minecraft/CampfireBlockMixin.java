@@ -18,21 +18,9 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import java.util.Optional;
-import java.util.Random;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.util.ICampfireExtra;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.block.ContainerBlock;
@@ -57,6 +45,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Optional;
+import java.util.Random;
 
 @Mixin(CampfireBlock.class)
 public abstract class CampfireBlockMixin extends ContainerBlock {
@@ -132,7 +130,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                 }
                 Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
                 if (optional.isPresent()) {
-                    if (!worldIn.isRemote&&ResearchListeners.canUseRecipe(player,optional.get())&&campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
+                    if (!worldIn.isRemote && ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
                         player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
                         return ActionResultType.CONSUME;
                     }

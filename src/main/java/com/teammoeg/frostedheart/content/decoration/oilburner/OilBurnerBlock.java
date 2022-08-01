@@ -18,14 +18,10 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
-import java.util.Random;
-import java.util.function.BiFunction;
-
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.util.FHUtils;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ILiquidContainer;
@@ -45,15 +41,19 @@ import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 
-public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
+import java.util.Random;
+import java.util.function.BiFunction;
+
+public class OilBurnerBlock extends FHBaseBlock implements ILiquidContainer {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public OilBurnerBlock(String name, Properties blockProps,
-                        BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
+                          BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps.setLightLevel(FHUtils.getLightValueLit(15)), createItemBlock);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
+
     @Override
     protected void fillStateContainer(Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);
@@ -61,9 +61,10 @@ public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
     }
 
     @Override
-    public TileEntity createTileEntity(BlockState state,IBlockReader world) {
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
         return FHTileTypes.OIL_BURNER.get().create();
     }
+
     @Override
     public boolean hasTileEntity(BlockState state) {
         return true;
@@ -75,17 +76,19 @@ public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
             if (e instanceof LivingEntity)
                 e.setFire(60);
     }
-	@Override
-	public boolean canContainFluid(IBlockReader w, BlockPos p, BlockState s, Fluid f) {
-    	TileEntity te=w.getTileEntity(p);
-    	if(te instanceof OilBurnerTileEntity) {
-			OilBurnerTileEntity boiler=(OilBurnerTileEntity)te;
-			if(boiler.input.fill(new FluidStack(f,1000),FluidAction.SIMULATE)==1000)
-				return true;
-    	}
-    	return false;
 
-	}
+    @Override
+    public boolean canContainFluid(IBlockReader w, BlockPos p, BlockState s, Fluid f) {
+        TileEntity te = w.getTileEntity(p);
+        if (te instanceof OilBurnerTileEntity) {
+            OilBurnerTileEntity boiler = (OilBurnerTileEntity) te;
+            if (boiler.input.fill(new FluidStack(f, 1000), FluidAction.SIMULATE) == 1000)
+                return true;
+        }
+        return false;
+
+    }
+
     @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
@@ -97,16 +100,16 @@ public class OilBurnerBlock extends FHBaseBlock  implements  ILiquidContainer{
         }
     }
 
-	@Override
-	public boolean receiveFluid(IWorld w, BlockPos p, BlockState s, FluidState f) {
-		TileEntity te=w.getTileEntity(p);
-		if(te instanceof OilBurnerTileEntity) {
-			OilBurnerTileEntity boiler=(OilBurnerTileEntity)te;
-			if(boiler.input.fill(new FluidStack(f.getFluid(),1000),FluidAction.SIMULATE)==1000) {
-				boiler.input.fill(new FluidStack(f.getFluid(),1000),FluidAction.EXECUTE);
-				return true;
-			}
-		}
-		return false;
-	}
+    @Override
+    public boolean receiveFluid(IWorld w, BlockPos p, BlockState s, FluidState f) {
+        TileEntity te = w.getTileEntity(p);
+        if (te instanceof OilBurnerTileEntity) {
+            OilBurnerTileEntity boiler = (OilBurnerTileEntity) te;
+            if (boiler.input.fill(new FluidStack(f.getFluid(), 1000), FluidAction.SIMULATE) == 1000) {
+                boiler.input.fill(new FluidStack(f.getFluid(), 1000), FluidAction.EXECUTE);
+                return true;
+            }
+        }
+        return false;
+    }
 }

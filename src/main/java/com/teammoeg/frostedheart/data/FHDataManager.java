@@ -18,16 +18,10 @@
 
 package com.teammoeg.frostedheart.data;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
-
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -35,56 +29,63 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 public class FHDataManager {
-	public static enum FHDataType {
-	    Armor(new DataType<>(ArmorTempData.class,"temperature", "armor")),
-	    Biome(new DataType<>(BiomeTempData.class,"temperature", "biome")),
-	    Food (new DataType<>( FoodTempData.class,"temperature", "food" )),
-	    Block(new DataType<>(BlockTempData.class,"temperature", "block")),
-	    Drink(new DataType<>(DrinkTempData.class,"temperature", "drink")),
-	    Cup  (new DataType<>(      CupData.class,"temperature", "cup"  )),
-	    World(new DataType<>(WorldTempData.class,"temperature", "world"));
+    public static enum FHDataType {
+        Armor(new DataType<>(ArmorTempData.class, "temperature", "armor")),
+        Biome(new DataType<>(BiomeTempData.class, "temperature", "biome")),
+        Food(new DataType<>(FoodTempData.class, "temperature", "food")),
+        Block(new DataType<>(BlockTempData.class, "temperature", "block")),
+        Drink(new DataType<>(DrinkTempData.class, "temperature", "drink")),
+        Cup(new DataType<>(CupData.class, "temperature", "cup")),
+        World(new DataType<>(WorldTempData.class, "temperature", "world"));
 
-	    static class DataType<T extends JsonDataHolder> {
-	        final Class<T> dataCls;
-	        final String location;
-	        final String domain;
+        static class DataType<T extends JsonDataHolder> {
+            final Class<T> dataCls;
+            final String location;
+            final String domain;
 
-	        public DataType(Class<T> dataCls,String domain, String location) {
-	            this.location = location;
-	            this.dataCls = dataCls;
-	            this.domain = domain;
-	        }
+            public DataType(Class<T> dataCls, String domain, String location) {
+                this.location = location;
+                this.dataCls = dataCls;
+                this.domain = domain;
+            }
 
-	        public T create(JsonObject jo) {
-	            try {
-	                return dataCls.getConstructor(JsonObject.class).newInstance(jo);
-	            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-	                    | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-	                // TODO Auto-generated catch block
-	                throw new RuntimeException(e);
-	            }
-	        }
+            public T create(JsonObject jo) {
+                try {
+                    return dataCls.getConstructor(JsonObject.class).newInstance(jo);
+                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                        | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                    // TODO Auto-generated catch block
+                    throw new RuntimeException(e);
+                }
+            }
 
-	        public String getLocation() {
-	            return domain+"/"+location;
-	        }
-	    }
+            public String getLocation() {
+                return domain + "/" + location;
+            }
+        }
 
-	    public final DataType<? extends JsonDataHolder> type;
+        public final DataType<? extends JsonDataHolder> type;
 
-	    private FHDataType(DataType<? extends JsonDataHolder> type) {
-	        this.type = type;
-	    }
+        private FHDataType(DataType<? extends JsonDataHolder> type) {
+            this.type = type;
+        }
 
-	}
+    }
+
     public static class ResourceMap<T extends JsonDataHolder> extends HashMap<ResourceLocation, T> {
         /**
-		 * 
-		 */
-		private static final long serialVersionUID = 1564047056157250446L;
+         *
+         */
+        private static final long serialVersionUID = 1564047056157250446L;
 
-		public ResourceMap() {
+        public ResourceMap() {
             super();
         }
 
@@ -105,13 +106,14 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("rawtypes")
-	public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
+    public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
     public static boolean synched = false;
     private static final JsonParser parser = new JsonParser();
+
     static {
-    	for(FHDataType dt:FHDataType.values()) {
-    		ALL_DATA.put(dt,new ResourceMap<>());
-    	}
+        for (FHDataType dt : FHDataType.values()) {
+            ALL_DATA.put(dt, new ResourceMap<>());
+        }
     }
 
     public static final void reset() {
@@ -127,11 +129,13 @@ public class FHDataManager {
         ALL_DATA.get(dt).put(jdh.getId(), jdh);
         synched = false;
     }
+
     @SuppressWarnings("unchecked")
-	public static final <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt){
-		return ALL_DATA.get(dt);
-    	
+    public static final <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt) {
+        return ALL_DATA.get(dt);
+
     }
+
     @SuppressWarnings("unchecked")
     public static final void load(DataEntry[] entries) {
         reset();
@@ -143,7 +147,7 @@ public class FHDataManager {
     }
 
     @SuppressWarnings("rawtypes")
-	public static final DataEntry[] save() {
+    public static final DataEntry[] save() {
         int tsize = 0;
         for (ResourceMap map : ALL_DATA.values()) {
             tsize += map.size();
@@ -157,12 +161,13 @@ public class FHDataManager {
         }
         return entries;
     }
+
     public static ITempAdjustFood getFood(ItemStack is) {
-    	CupData data=FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
-    	ResourceMap<FoodTempData> foodData=FHDataManager.get(FHDataType.Food);
-    	if(data!=null) {
-    		return new CupTempAdjustProxy(data.getEfficiency(),foodData.get(is.getItem().getRegistryName()));
-    	}
+        CupData data = FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
+        ResourceMap<FoodTempData> foodData = FHDataManager.get(FHDataType.Food);
+        if (data != null) {
+            return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(is.getItem().getRegistryName()));
+        }
         return foodData.get(is.getItem().getRegistryName());
     }
 
@@ -182,15 +187,18 @@ public class FHDataManager {
             return data.getTemp();
         return 0F;
     }
+
     public static Float getWorldTemp(World w) {
         WorldTempData data = FHDataManager.<WorldTempData>get(FHDataType.World).get(w.getDimensionKey().getLocation());
         if (data != null)
             return data.getTemp();
         return null;
     }
+
     public static BlockTempData getBlockData(Block b) {
         return FHDataManager.<BlockTempData>get(FHDataType.Block).get(b.getRegistryName());
     }
+
     public static BlockTempData getBlockData(ItemStack b) {
         return FHDataManager.<BlockTempData>get(FHDataType.Block).get(b.getItem().getRegistryName());
     }

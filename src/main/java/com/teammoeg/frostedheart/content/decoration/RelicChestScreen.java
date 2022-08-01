@@ -10,6 +10,7 @@ import net.minecraft.util.text.ITextComponent;
 
 public class RelicChestScreen extends IEContainerScreen<RelicChestContainer> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("relic_chest");
+
     public RelicChestScreen(RelicChestContainer inventorySlotsIn, PlayerInventory inv, ITextComponent title) {
         super(inventorySlotsIn, inv, title);
     }

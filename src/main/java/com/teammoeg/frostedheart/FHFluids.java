@@ -29,7 +29,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHFluids {
     public static final ResourceLocation STILL_FLUID_TEXTURE = new ResourceLocation("block/water_still");
-    public static final ResourceLocation FLOWING_FLUID_TEXTURE =new ResourceLocation("block/water_flow");
+    public static final ResourceLocation FLOWING_FLUID_TEXTURE = new ResourceLocation("block/water_flow");
     public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(ForgeRegistries.FLUIDS, FHMain.MODID);
 
 
@@ -80,10 +80,10 @@ public class FHFluids {
             new ForgeFlowingFluid.Properties(WOLFBERRY_TEA, WOLFBERRY_TEA_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
                     .color(0xFF6ABDFF).temperature(333)).block(null)
                     .slopeFindDistance(3).explosionResistance(100F);
-    public static ForgeFlowingFluid.Properties FLUORINE_PROPERTIES=new ForgeFlowingFluid.Properties(FLUORINE, FLUORINE_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
-                    .color(0xFF00AA00).density(-1).gaseous().viscosity(-1)).block(null)
-                    .slopeFindDistance(3).explosionResistance(100F);
-    public static ForgeFlowingFluid.Properties CHLORINE_PROPERTIES=new ForgeFlowingFluid.Properties(CHLORINE, CHLORINE_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
+    public static ForgeFlowingFluid.Properties FLUORINE_PROPERTIES = new ForgeFlowingFluid.Properties(FLUORINE, FLUORINE_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
+            .color(0xFF00AA00).density(-1).gaseous().viscosity(-1)).block(null)
+            .slopeFindDistance(3).explosionResistance(100F);
+    public static ForgeFlowingFluid.Properties CHLORINE_PROPERTIES = new ForgeFlowingFluid.Properties(CHLORINE, CHLORINE_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
             .color(0xFFADFF2F).density(-1).gaseous().viscosity(-1)).block(null)
             .slopeFindDistance(3).explosionResistance(100F);
 }

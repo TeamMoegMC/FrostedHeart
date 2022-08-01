@@ -1,9 +1,5 @@
 package com.teammoeg.frostedheart.content.recipes;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Random;
-
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CampfireCookingRecipe;
@@ -12,48 +8,52 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
-public class CampfireDefrostRecipe extends CampfireCookingRecipe implements DefrostRecipe{
+import java.util.Collections;
+import java.util.Map;
+import java.util.Random;
 
-	public CampfireDefrostRecipe(ResourceLocation p_i50030_1_, String p_i50030_2_, Ingredient p_i50030_3_,
-			ItemStack[] results, float p_i50030_5_, int p_i50030_6_) {
-		super(p_i50030_1_, p_i50030_2_, p_i50030_3_,ItemStack.EMPTY, p_i50030_5_, p_i50030_6_);
-		iss=results;
-	}
+public class CampfireDefrostRecipe extends CampfireCookingRecipe implements DefrostRecipe {
 
-	ItemStack[] iss;
+    public CampfireDefrostRecipe(ResourceLocation p_i50030_1_, String p_i50030_2_, Ingredient p_i50030_3_,
+                                 ItemStack[] results, float p_i50030_5_, int p_i50030_6_) {
+        super(p_i50030_1_, p_i50030_2_, p_i50030_3_, ItemStack.EMPTY, p_i50030_5_, p_i50030_6_);
+        iss = results;
+    }
 
-	Random recipeRNG = new Random();
+    ItemStack[] iss;
 
-	public Ingredient getIngredient() {
-		return super.ingredient;
-	}
+    Random recipeRNG = new Random();
 
-	@Override
-	public boolean isDynamic() {
-		return true;
-	}
+    public Ingredient getIngredient() {
+        return super.ingredient;
+    }
 
-	@Override
-	public ItemStack getCraftingResult(IInventory inv) {
-		if (iss.length <= 0)
-			return ItemStack.EMPTY;
-		return iss[recipeRNG.nextInt(getIss().length)].copy();
-	}
+    @Override
+    public boolean isDynamic() {
+        return true;
+    }
 
-	@Override
-	public ItemStack getRecipeOutput() {
-		return getCraftingResult(null);
-	}
+    @Override
+    public ItemStack getCraftingResult(IInventory inv) {
+        if (iss.length <= 0)
+            return ItemStack.EMPTY;
+        return iss[recipeRNG.nextInt(getIss().length)].copy();
+    }
 
-	public ItemStack[] getIss() {
-		return iss;
-	}
+    @Override
+    public ItemStack getRecipeOutput() {
+        return getCraftingResult(null);
+    }
 
-	public static RegistryObject<IRecipeSerializer<CampfireDefrostRecipe>> SERIALIZER;
-	public static Map<ResourceLocation, CampfireDefrostRecipe> recipeList = Collections.emptyMap();
+    public ItemStack[] getIss() {
+        return iss;
+    }
 
-	@Override
-	public IRecipeSerializer<?> getSerializer() {
-		return SERIALIZER.get();
-	}
+    public static RegistryObject<IRecipeSerializer<CampfireDefrostRecipe>> SERIALIZER;
+    public static Map<ResourceLocation, CampfireDefrostRecipe> recipeList = Collections.emptyMap();
+
+    @Override
+    public IRecipeSerializer<?> getSerializer() {
+        return SERIALIZER.get();
+    }
 }

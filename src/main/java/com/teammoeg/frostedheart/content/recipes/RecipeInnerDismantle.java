@@ -34,121 +34,124 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class RecipeInnerDismantle extends SpecialRecipe {
-	public static RegistryObject<IERecipeSerializer<RecipeInnerDismantle>> SERIALIZER;
+    public static RegistryObject<IERecipeSerializer<RecipeInnerDismantle>> SERIALIZER;
 
-	protected RecipeInnerDismantle(ResourceLocation id) {
-		super(id);
-	}
+    protected RecipeInnerDismantle(ResourceLocation id) {
+        super(id);
+    }
 
-	/**
-	 * Used to check if a recipe matches current crafting inventory
-	 */
-	public boolean matches(CraftingInventory inv, World worldIn) {
-		boolean hasArmor = false;
-		for (int i = 0; i < inv.getSizeInventory(); ++i) {
-			ItemStack itemstack = inv.getStackInSlot(i);
-			if (itemstack == null || itemstack.isEmpty()) {
-				continue;
-			}
-			if (hasArmor)
-				return false;
-			EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
-			if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
-				if (itemstack.hasTag()) {
-					CompoundNBT cnbt = itemstack.getTag();
-					if (!cnbt.getBoolean("inner_bounded") && !cnbt.getString("inner_cover").isEmpty())
-						hasArmor = true;
-					else
-						return false;
-				}
-			} else
-				return false;
-		}
-		return hasArmor;
-	}
-	public static ItemStack tryDismantle(ItemStack item) {
-		EquipmentSlotType type = MobEntity.getSlotForItemStack(item);
-		if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
-			if(item.hasTag()&&!item.getTag().getString("inner_cover").isEmpty())
-				return RecipeInnerDismantle.getDismantledResult(item);
-		}
-		return ItemStack.EMPTY;
-	}
-	public static ItemStack getDismantledResult(ItemStack armoritem) {
-		if(armoritem.hasTag()) {
-			CompoundNBT tags = armoritem.getTag();
-			if(!tags.getBoolean("inner_bounded")) {
-				ResourceLocation item = new ResourceLocation(tags.getString("inner_cover"));
-				CompoundNBT tag = tags.getCompound("inner_cover_tag");
-				Item buff = ForgeRegistries.ITEMS.getValue(item);
-				if (buff == null)
-					return ItemStack.EMPTY;
-				ItemStack buffitem = new ItemStack(buff);
-				if(tag!=null)
-					buffitem.setTag(tag);
-				return buffitem;
-			}
-		}
-		return ItemStack.EMPTY;
-	}
-	/**
-	 * Returns an Item that is the result of this recipe
-	 */
-	public ItemStack getCraftingResult(CraftingInventory inv) {
-		ItemStack armoritem = ItemStack.EMPTY;
-		for (int i = 0; i < inv.getSizeInventory(); ++i) {
-			ItemStack itemstack = inv.getStackInSlot(i);
-			if (itemstack != null && !itemstack.isEmpty()) {
-				if (!armoritem.isEmpty())
-					return ItemStack.EMPTY;
-				EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
-				if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
-					if (itemstack.hasTag()) {
-						CompoundNBT cnbt = itemstack.getTag();
-						if (!cnbt.getBoolean("inner_bounded") && cnbt.getString("inner_cover") != null)
-							armoritem = itemstack;
-						else
-							return ItemStack.EMPTY;
-					} else
-						return ItemStack.EMPTY;
-			}
-		}
+    /**
+     * Used to check if a recipe matches current crafting inventory
+     */
+    public boolean matches(CraftingInventory inv, World worldIn) {
+        boolean hasArmor = false;
+        for (int i = 0; i < inv.getSizeInventory(); ++i) {
+            ItemStack itemstack = inv.getStackInSlot(i);
+            if (itemstack == null || itemstack.isEmpty()) {
+                continue;
+            }
+            if (hasArmor)
+                return false;
+            EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+            if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
+                if (itemstack.hasTag()) {
+                    CompoundNBT cnbt = itemstack.getTag();
+                    if (!cnbt.getBoolean("inner_bounded") && !cnbt.getString("inner_cover").isEmpty())
+                        hasArmor = true;
+                    else
+                        return false;
+                }
+            } else
+                return false;
+        }
+        return hasArmor;
+    }
 
-		if (!armoritem.isEmpty()) {
-			return getDismantledResult(armoritem);
-		}
-		return ItemStack.EMPTY;
-	}
+    public static ItemStack tryDismantle(ItemStack item) {
+        EquipmentSlotType type = MobEntity.getSlotForItemStack(item);
+        if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
+            if (item.hasTag() && !item.getTag().getString("inner_cover").isEmpty())
+                return RecipeInnerDismantle.getDismantledResult(item);
+        }
+        return ItemStack.EMPTY;
+    }
 
-	@Override
-	public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
-		NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
+    public static ItemStack getDismantledResult(ItemStack armoritem) {
+        if (armoritem.hasTag()) {
+            CompoundNBT tags = armoritem.getTag();
+            if (!tags.getBoolean("inner_bounded")) {
+                ResourceLocation item = new ResourceLocation(tags.getString("inner_cover"));
+                CompoundNBT tag = tags.getCompound("inner_cover_tag");
+                Item buff = ForgeRegistries.ITEMS.getValue(item);
+                if (buff == null)
+                    return ItemStack.EMPTY;
+                ItemStack buffitem = new ItemStack(buff);
+                if (tag != null)
+                    buffitem.setTag(tag);
+                return buffitem;
+            }
+        }
+        return ItemStack.EMPTY;
+    }
 
-		for (int i = 0; i < nonnulllist.size(); ++i) {
-			ItemStack item = inv.getStackInSlot(i);
-			if (!item.isEmpty()) {
-				ItemStack real = item.copy();
-				real.setCount(1);
-				real.removeChildTag("inner_cover_tag");
-				real.removeChildTag("inner_cover");
-				real.removeChildTag("inner_bounded");
-				nonnulllist.set(i, real);
-			}
-		}
+    /**
+     * Returns an Item that is the result of this recipe
+     */
+    public ItemStack getCraftingResult(CraftingInventory inv) {
+        ItemStack armoritem = ItemStack.EMPTY;
+        for (int i = 0; i < inv.getSizeInventory(); ++i) {
+            ItemStack itemstack = inv.getStackInSlot(i);
+            if (itemstack != null && !itemstack.isEmpty()) {
+                if (!armoritem.isEmpty())
+                    return ItemStack.EMPTY;
+                EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+                if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+                    if (itemstack.hasTag()) {
+                        CompoundNBT cnbt = itemstack.getTag();
+                        if (!cnbt.getBoolean("inner_bounded") && cnbt.getString("inner_cover") != null)
+                            armoritem = itemstack;
+                        else
+                            return ItemStack.EMPTY;
+                    } else
+                        return ItemStack.EMPTY;
+            }
+        }
 
-		return nonnulllist;
-	}
+        if (!armoritem.isEmpty()) {
+            return getDismantledResult(armoritem);
+        }
+        return ItemStack.EMPTY;
+    }
 
-	/**
-	 * Used to determine if this recipe can fit in a grid of the given width/height
-	 */
-	public boolean canFit(int width, int height) {
-		return width * height >= 1;
-	}
+    @Override
+    public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
+        NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
 
-	@Override
-	public IRecipeSerializer<?> getSerializer() {
-		return SERIALIZER.get();
-	}
+        for (int i = 0; i < nonnulllist.size(); ++i) {
+            ItemStack item = inv.getStackInSlot(i);
+            if (!item.isEmpty()) {
+                ItemStack real = item.copy();
+                real.setCount(1);
+                real.removeChildTag("inner_cover_tag");
+                real.removeChildTag("inner_cover");
+                real.removeChildTag("inner_bounded");
+                nonnulllist.set(i, real);
+            }
+        }
+
+        return nonnulllist;
+    }
+
+    /**
+     * Used to determine if this recipe can fit in a grid of the given width/height
+     */
+    public boolean canFit(int width, int height) {
+        return width * height >= 1;
+    }
+
+    @Override
+    public IRecipeSerializer<?> getSerializer() {
+        return SERIALIZER.get();
+    }
 
 }

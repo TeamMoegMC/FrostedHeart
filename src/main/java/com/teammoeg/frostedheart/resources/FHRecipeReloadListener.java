@@ -18,26 +18,13 @@
 
 package com.teammoeg.frostedheart.resources;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-
-import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
-import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
-import com.teammoeg.frostedheart.content.recipes.PaperRecipe;
-import com.teammoeg.frostedheart.content.recipes.RecipeInner;
-import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
-
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
+import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.recipes.*;
+import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
@@ -56,6 +43,12 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
+
+import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     private final DataPackRegistries dataPackRegistries;
@@ -101,23 +94,23 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         GeneratorRecipe.recipeList = filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         ChargerRecipe.recipeList = filterRecipes(recipes, ChargerRecipe.class, ChargerRecipe.TYPE);
         GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
-        RecipeInner.recipeList=recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass()==RecipeInner.class)
-                .map(e->(RecipeInner)e)
-                .collect(Collectors.<RecipeInner,ResourceLocation,RecipeInner>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
-        CampfireDefrostRecipe.recipeList=recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass()==CampfireDefrostRecipe.class)
-                .map(e->(CampfireDefrostRecipe)e)
+        RecipeInner.recipeList = recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass() == RecipeInner.class)
+                .map(e -> (RecipeInner) e)
+                .collect(Collectors.<RecipeInner, ResourceLocation, RecipeInner>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
+        CampfireDefrostRecipe.recipeList = recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass() == CampfireDefrostRecipe.class)
+                .map(e -> (CampfireDefrostRecipe) e)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
-        SmokingDefrostRecipe.recipeList=recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass()==SmokingDefrostRecipe.class)
-                .map(e->(DefrostRecipe)e)
+        SmokingDefrostRecipe.recipeList = recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass() == SmokingDefrostRecipe.class)
+                .map(e -> (DefrostRecipe) e)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
-        DietValueRecipe.recipeList=recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass()==DietValueRecipe.class)
-                .map(e->(DietValueRecipe)e)
+        DietValueRecipe.recipeList = recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass() == DietValueRecipe.class)
+                .map(e -> (DietValueRecipe) e)
                 .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
-        PaperRecipe.recipes=filterRecipes(recipes, PaperRecipe.class, PaperRecipe.TYPE).values().stream().collect(Collectors.toList());
+        PaperRecipe.recipes = filterRecipes(recipes, PaperRecipe.class, PaperRecipe.TYPE).values().stream().collect(Collectors.toList());
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {
@@ -126,9 +119,10 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .map(recipeClass::cast)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }
+
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass) {
         return recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass()==recipeClass)
+                .filter(iRecipe -> iRecipe.getClass() == recipeClass)
                 .map(recipeClass::cast)
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }

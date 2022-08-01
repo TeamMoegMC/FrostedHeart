@@ -18,32 +18,30 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
+import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import com.teammoeg.frostedheart.util.ContraptionCostUtils;
+import com.teammoeg.frostedheart.util.IStressContraption;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.teammoeg.frostedheart.util.ContraptionCostUtils;
-import com.teammoeg.frostedheart.util.IStressContraption;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.World;
-
 @Mixin(AbstractContraptionEntity.class)
-public abstract class MixinAbstractContraption extends Entity implements IStressContraption{
+public abstract class MixinAbstractContraption extends Entity implements IStressContraption {
     public MixinAbstractContraption(EntityType<?> p_i48580_1_, World p_i48580_2_) {
-		super(p_i48580_1_, p_i48580_2_);
-	}
+        super(p_i48580_1_, p_i48580_2_);
+    }
 
-	boolean shoulddisb = false;
-	float calculatedCost=-1;
-	float actorCost=-1;
-	float calculatedRotationCost=-1;
+    boolean shoulddisb = false;
+    float calculatedCost = -1;
+    float actorCost = -1;
+    float calculatedRotationCost = -1;
     @Shadow(remap = false)
     protected Contraption contraption;
 
@@ -53,34 +51,38 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "writeAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
     protected void writeAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
-    	if(!world.isRemote)
+        if (!world.isRemote)
             compound.putInt("spinst", 2);
     }
+
     @Override
-	public float getStressCost() {
-    	if(!this.isAlive())return 0;
-    	if(actorCost==-1)
-    		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
-    	if(calculatedCost==-1)
-    		calculatedCost=ContraptionCostUtils.calculateStressApply(contraption);
-    	return calculatedCost+actorCost;
+    public float getStressCost() {
+        if (!this.isAlive()) return 0;
+        if (actorCost == -1)
+            actorCost = ContraptionCostUtils.calculateActorStressApply(contraption);
+        if (calculatedCost == -1)
+            calculatedCost = ContraptionCostUtils.calculateStressApply(contraption);
+        return calculatedCost + actorCost;
     }
+
     @Override
-	public float getRotationStressCost() {
-    	if(!this.isAlive())return 0;
-    	if(actorCost==-1)
-    		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
-    	if(calculatedRotationCost==-1)
-    		calculatedRotationCost=ContraptionCostUtils.calculateRotationStressApply(contraption);
-    	return calculatedRotationCost+actorCost;
+    public float getRotationStressCost() {
+        if (!this.isAlive()) return 0;
+        if (actorCost == -1)
+            actorCost = ContraptionCostUtils.calculateActorStressApply(contraption);
+        if (calculatedRotationCost == -1)
+            calculatedRotationCost = ContraptionCostUtils.calculateRotationStressApply(contraption);
+        return calculatedRotationCost + actorCost;
     }
+
     @Override
-	public float getActorCost() {
-    	if(!this.isAlive())return 0;
-    	if(actorCost==-1)
-    		actorCost=ContraptionCostUtils.calculateActorStressApply(contraption);
-    	return actorCost;
+    public float getActorCost() {
+        if (!this.isAlive()) return 0;
+        if (actorCost == -1)
+            actorCost = ContraptionCostUtils.calculateActorStressApply(contraption);
+        return actorCost;
     }
+
     @Shadow(remap = false)
     public abstract void disassemble();
 
@@ -90,7 +92,7 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "readAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
     protected void readAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
-    	if(!world.isRemote)
+        if (!world.isRemote)
             if (compound.getInt("spinst") != 2) {
                 shoulddisb = true;
             }
@@ -102,8 +104,8 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
      */
     @Inject(at = @At("TAIL"), method = "tick", remap = true)
     protected void tick(CallbackInfo cbi) {
-    	if(!world.isRemote)
-    		if(this.shoulddisb)
-	         this.disassemble();
+        if (!world.isRemote)
+            if (this.shoulddisb)
+                this.disassemble();
     }
 }

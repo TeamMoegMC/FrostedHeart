@@ -20,24 +20,26 @@ package com.teammoeg.frostedheart.base.item;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class FHBaseItem extends Item {
-	Item repair;
+    Item repair;
+
     public FHBaseItem(String name, Properties properties) {
         super(properties);
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
     }
-	@Override
-	public boolean getIsRepairable(ItemStack toRepair, ItemStack repair) {
-		if(repair==null)return false;
-		return repair.getItem()==this.repair;
-	}
+
+    @Override
+    public boolean getIsRepairable(ItemStack toRepair, ItemStack repair) {
+        if (repair == null) return false;
+        return repair.getItem() == this.repair;
+    }
+
     public Item setRepairItem(Item it) {
-    	repair=it;
-    	return this;
+        repair = it;
+        return this;
     }
 }

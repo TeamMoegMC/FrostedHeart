@@ -18,18 +18,11 @@
 
 package com.teammoeg.frostedheart.research.machines;
 
-import java.util.List;
-import java.util.function.BiFunction;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
@@ -55,12 +48,18 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
-public class MechCalcBlock extends FHKineticBlock{
-	static final VoxelShaper shape=VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0,16, 9,16),Block.makeCuboidShape(0, 9, 0,16,16,13)),Direction.SOUTH);
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.function.BiFunction;
+
+public class MechCalcBlock extends FHKineticBlock {
+    static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 9, 16), Block.makeCuboidShape(0, 9, 0, 16, 16, 13)), Direction.SOUTH);
+
     public MechCalcBlock(String name, Properties blockProps,
-                        BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
+                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
-        this.setDefaultState(this.stateContainer.getBaseState().with(BlockStateProperties.HORIZONTAL_FACING,Direction.SOUTH));
+        this.setDefaultState(this.stateContainer.getBaseState().with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
     }
 
 
@@ -76,9 +75,9 @@ public class MechCalcBlock extends FHKineticBlock{
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
         if (superResult.isSuccessOrConsume() || player.isSneaking())
             return superResult;
-        TileEntity te=Utils.getExistingTileEntity(world, pos);
-        if(te instanceof MechCalcTileEntity)
-        	return ((MechCalcTileEntity) te).onClick(player);
+        TileEntity te = Utils.getExistingTileEntity(world, pos);
+        if (te instanceof MechCalcTileEntity)
+            return ((MechCalcTileEntity) te).onClick(player);
         return superResult;
     }
 
@@ -88,55 +87,55 @@ public class MechCalcBlock extends FHKineticBlock{
         return true;
     }
 
-	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		return shape.get(state.get(BlockStateProperties.HORIZONTAL_FACING));
-	}
+    @Override
+    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+        return shape.get(state.get(BlockStateProperties.HORIZONTAL_FACING));
+    }
 
 
-	@Override
-	public Axis getRotationAxis(BlockState state) {
-		return state.get(BlockStateProperties.HORIZONTAL_FACING).rotateY().getAxis();
-	}
+    @Override
+    public Axis getRotationAxis(BlockState state) {
+        return state.get(BlockStateProperties.HORIZONTAL_FACING).rotateY().getAxis();
+    }
 
 
-	@Override
-	public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
-		return state.get(BlockStateProperties.HORIZONTAL_FACING).rotateY().getAxis()==dir.getAxis();
-	}
+    @Override
+    public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
+        return state.get(BlockStateProperties.HORIZONTAL_FACING).rotateY().getAxis() == dir.getAxis();
+    }
 
 
-	@Override
-	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-		if(stack.hasTag()&&stack.getTag().getBoolean("prod")) {
-			TileEntity te=Utils.getExistingTileEntity(worldIn, pos);
-	        if(te instanceof MechCalcTileEntity) {
-	        	((MechCalcTileEntity) te).doProduct=false;
-	        }
-		}
-			
-		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-		
-	}
+    @Override
+    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
+            TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
+            if (te instanceof MechCalcTileEntity) {
+                ((MechCalcTileEntity) te).doProduct = false;
+            }
+        }
+
+        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+
+    }
 
 
-	@Override
-	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-		super.fillItemGroup(group, items);
-		ItemStack is=new ItemStack(this);
-		is.getOrCreateTag().putBoolean("prod",true);
-		items.add(is);
-	}
+    @Override
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+        super.fillItemGroup(group, items);
+        ItemStack is = new ItemStack(this);
+        is.getOrCreateTag().putBoolean("prod", true);
+        items.add(is);
+    }
 
 
-	@Override
-	public void addInformation(ItemStack stack, IBlockReader worldIn, List<ITextComponent> tooltip,
-			ITooltipFlag flagIn) {
-		super.addInformation(stack, worldIn, tooltip, flagIn);
-		if(stack.hasTag()&&stack.getTag().getBoolean("prod")) {
-			tooltip.add(GuiUtils.str("For Display Only"));
-		}
-	}
+    @Override
+    public void addInformation(ItemStack stack, IBlockReader worldIn, List<ITextComponent> tooltip,
+                               ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+        if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
+            tooltip.add(GuiUtils.str("For Display Only"));
+        }
+    }
 
 
 	/*@Override
@@ -145,6 +144,4 @@ public class MechCalcBlock extends FHKineticBlock{
 	}*/
 
 
-
-	
 }

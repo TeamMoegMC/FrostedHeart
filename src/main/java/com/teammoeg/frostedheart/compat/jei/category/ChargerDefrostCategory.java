@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.Arrays;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.simibubi.create.compat.jei.EmptyBackground;
@@ -29,7 +27,6 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -43,17 +40,20 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.Arrays;
+
 public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charger_defrost");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock charger = new StaticBlock(FHBlocks.charger.getDefaultState().with(BlockStateProperties.FACING,Direction.EAST));
+    private StaticBlock charger = new StaticBlock(FHBlocks.charger.getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
+
     /**
-	 * @param guiHelper  
-	 */
+     * @param guiHelper
+     */
     public ChargerDefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(()->new ItemStack(FHBlocks.charger),()->new ItemStack(FHItems.frozen_seeds));
-        this.BACKGROUND = new EmptyBackground(177,70);
+        this.ICON = new DoubleItemIcon(() -> new ItemStack(FHBlocks.charger), () -> new ItemStack(FHItems.frozen_seeds));
+        this.BACKGROUND = new EmptyBackground(177, 70);
     }
 
     @Override
@@ -70,19 +70,20 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
     public String getTitle() {
         return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger_defrost").getString());
     }
-	@Override
-	public void draw(CampfireDefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY)
-	{
-		AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
-		AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
-		
-		
-		AllGuiTextures.JEI_SHADOW.draw(transform, 72 - 17, 42 + 13);
-		
-		AllGuiTextures.JEI_DOWN_ARROW.draw(transform,112,30);
-		AllGuiTextures.JEI_SLOT.draw(transform, 117 , 47);
-		charger.draw(transform, 72, 42);
-	}
+
+    @Override
+    public void draw(CampfireDefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+        AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
+        AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
+
+
+        AllGuiTextures.JEI_SHADOW.draw(transform, 72 - 17, 42 + 13);
+
+        AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 112, 30);
+        AllGuiTextures.JEI_SLOT.draw(transform, 117, 47);
+        charger.draw(transform, 72, 42);
+    }
+
     @Override
     public IDrawable getBackground() {
         return BACKGROUND;
@@ -95,17 +96,17 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
 
     @Override
     public void setIngredients(CampfireDefrostRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM,Arrays.asList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks())));
-        ingredients.setOutputLists(VanillaTypes.ITEM,Arrays.asList(Arrays.asList(recipe.getIss())));
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIngredients().get(0).getMatchingStacks())));
+        ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.getIss())));
     }
 
 
     @Override
-    public void setRecipe(IRecipeLayout recipeLayout,CampfireDefrostRecipe recipe, IIngredients ingredients) {
-		IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-		itemStacks.init(0, true, 43, 4);
-		
-		itemStacks.init(1, false,117, 47);
-		itemStacks.set(ingredients);
+    public void setRecipe(IRecipeLayout recipeLayout, CampfireDefrostRecipe recipe, IIngredients ingredients) {
+        IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
+        itemStacks.init(0, true, 43, 4);
+
+        itemStacks.init(1, false, 117, 47);
+        itemStacks.set(ingredients);
     }
 }

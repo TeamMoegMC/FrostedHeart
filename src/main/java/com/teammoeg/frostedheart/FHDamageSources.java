@@ -27,24 +27,26 @@ public class FHDamageSources {
     public static final DamageSource RAD = (new DamageSource("radiation")).setDamageBypassesArmor().setDamageIsAbsolute();
     public static final DamageSource HYPOTHERMIA_INSTANT = (new DamageSource("hypothermia_instant")).setDamageBypassesArmor();
     public static final DamageSource HYPERTHERMIA_INSTANT = (new DamageSource("hyperthermia_instant")).setDamageBypassesArmor().setFireDamage();
+
     public static DamageSource hypothermiaFrom(Entity e) {
-    	return (new DamageSource("hypothermia") {
+        return (new DamageSource("hypothermia") {
 
-			@Override
-			public Entity getTrueSource() {
-				return e;
-			}
-    		
-    	}).setDamageBypassesArmor();
+            @Override
+            public Entity getTrueSource() {
+                return e;
+            }
+
+        }).setDamageBypassesArmor();
     }
-    public static DamageSource hyperthermiaFrom(Entity e) {
-    	return (new DamageSource("hyperthermia") {
 
-			@Override
-			public Entity getTrueSource() {
-				return e;
-			}
-    		
-    	}).setDamageBypassesArmor();
+    public static DamageSource hyperthermiaFrom(Entity e) {
+        return (new DamageSource("hyperthermia") {
+
+            @Override
+            public Entity getTrueSource() {
+                return e;
+            }
+
+        }).setDamageBypassesArmor();
     }
 }

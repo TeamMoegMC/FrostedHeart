@@ -18,17 +18,12 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -44,6 +39,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "generator_steam");
     private IDrawable BACKGROUND;
@@ -53,18 +52,17 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     private IDrawableStatic BAR;
 
 
+    private IDrawableAnimated FIRE;
 
-	private IDrawableAnimated FIRE;
-    
     public GeneratorSteamCategory(IGuiHelper guiHelper) {
-    	ResourceLocation guiMain=new ResourceLocation(FHMain.MODID, "textures/gui/generator_t2.png");
+        ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/generator_t2.png");
         this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHMultiblocks.generator_t2));
-        this.TANK=guiHelper.createDrawable(guiMain, 178, 87, 16, 47);
+        this.TANK = guiHelper.createDrawable(guiMain, 178, 87, 16, 47);
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 179, 0, 9, 13);
         this.FIRE = guiHelper.createAnimatedDrawable(tfire, 80, IDrawableAnimated.StartDirection.TOP, true);
-        this.SWITCH=guiHelper.createDrawable(guiMain, 232, 1, 19, 10);
-        this.BAR=guiHelper.createDrawable(guiMain, 181, 28, 2, 54);
+        this.SWITCH = guiHelper.createDrawable(guiMain, 232, 1, 19, 10);
+        this.BAR = guiHelper.createDrawable(guiMain, 181, 28, 2, 54);
     }
 
     @Override
@@ -81,41 +79,44 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     public String getTitle() {
         return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_steam").getString());
     }
-	@Override
-	public void draw(GeneratorSteamRecipe recipe, MatrixStack transform, double mouseX, double mouseY)
-	{
-		FIRE.draw(transform,80, 28);
-		SWITCH.draw(transform,52,31);
-        int offset1 = (int) ((4 - recipe.tempMod) * 14);
-        BAR.draw(transform,8,9,offset1,0,0,0);
-        
-        int offset2 = (int) ((4 - recipe.rangeMod) * 14);
-        BAR.draw(transform,157,9,offset2,0,0,0);
 
-	    int offset3 = (int) ((1-recipe.power/100) * 56);
-	    BAR.draw(transform,142,9,offset3,0,0,0);
-	}
+    @Override
+    public void draw(GeneratorSteamRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
+        FIRE.draw(transform, 80, 28);
+        SWITCH.draw(transform, 52, 31);
+        int offset1 = (int) ((4 - recipe.tempMod) * 14);
+        BAR.draw(transform, 8, 9, offset1, 0, 0, 0);
+
+        int offset2 = (int) ((4 - recipe.rangeMod) * 14);
+        BAR.draw(transform, 157, 9, offset2, 0, 0, 0);
+
+        int offset3 = (int) ((1 - recipe.power / 100) * 56);
+        BAR.draw(transform, 142, 9, offset3, 0, 0, 0);
+    }
+
     public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
-        return mouseX >= x && mouseY >=  y
+        return mouseX >= x && mouseY >= y
                 && mouseX < x + w && mouseY < y + h;
     }
+
     @Override
-	public List<ITextComponent> getTooltipStrings(GeneratorSteamRecipe recipe, double mouseX, double mouseY) {
+    public List<ITextComponent> getTooltipStrings(GeneratorSteamRecipe recipe, double mouseX, double mouseY) {
         List<ITextComponent> tooltip = new ArrayList<>();
-        
+
         if (isMouseIn(mouseX, mouseY, 8, 9, 2, 54)) {
-        	tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(String.valueOf(recipe.tempMod)));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(String.valueOf(recipe.tempMod)));
         }
 
         if (isMouseIn(mouseX, mouseY, 157, 9, 2, 54)) {
-        	tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(String.valueOf(recipe.rangeMod)));
+            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(String.valueOf(recipe.rangeMod)));
         }
 
         if (isMouseIn(mouseX, mouseY, 142, 9, 2, 54)) {
             tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(String.valueOf(recipe.power)));
         }
         return tooltip;
-	}
+    }
+
     @Override
     public IDrawable getBackground() {
         return BACKGROUND;
@@ -128,7 +129,7 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
 
     @Override
     public void setIngredients(GeneratorSteamRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID,Arrays.asList(recipe.input.getMatchingFluidStacks()));
+        ingredients.setInputLists(VanillaTypes.FLUID, Arrays.asList(recipe.input.getMatchingFluidStacks()));
     }
 
 
@@ -136,11 +137,11 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     public void setRecipe(IRecipeLayout recipeLayout, GeneratorSteamRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
         IGuiFluidStackGroup guiFluidStacks = recipeLayout.getFluidStacks();
-		guiFluidStacks.init(0,true,26, 12, 16, 47,recipe.input.getAmount()*5, false,TANK);
-		guiFluidStacks.set(ingredients);
-		guiItemStacks.init(0,true,75,7);
-		guiItemStacks.init(1,false,75,46);
-        guiItemStacks.set(0,GeneratorRecipe.listAll());
-        guiItemStacks.set(1,GeneratorRecipe.listOut());
+        guiFluidStacks.init(0, true, 26, 12, 16, 47, recipe.input.getAmount() * 5, false, TANK);
+        guiFluidStacks.set(ingredients);
+        guiItemStacks.init(0, true, 75, 7);
+        guiItemStacks.init(1, false, 75, 46);
+        guiItemStacks.set(0, GeneratorRecipe.listAll());
+        guiItemStacks.set(1, GeneratorRecipe.listOut());
     }
 }

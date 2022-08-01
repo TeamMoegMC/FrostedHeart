@@ -18,10 +18,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -56,10 +55,10 @@ public class HeatDebugItem extends Item {
 
     //Dont add to creative tag
     @Override
-	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-	}
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+    }
 
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
@@ -69,8 +68,8 @@ public class HeatDebugItem extends Item {
                 playerIn.sendMessage(new StringTextComponent("HeatProvider network=" + ((HeatProvider) te).getNetwork()), playerIn.getUniqueID());
             } else if (te instanceof EnergyNetworkProvider) {
                 playerIn.sendMessage(new StringTextComponent("EnergyNetworkProvider network=" + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
-            }else if(te instanceof INetworkConsumer) {
-            	playerIn.sendMessage(new StringTextComponent("EnergyNetworkConsumer data=" + ((INetworkConsumer) te).getHolder()), playerIn.getUniqueID());
+            } else if (te instanceof INetworkConsumer) {
+                playerIn.sendMessage(new StringTextComponent("EnergyNetworkConsumer data=" + ((INetworkConsumer) te).getHolder()), playerIn.getUniqueID());
             }
             return ActionResult.resultSuccess(itemstack);
         }

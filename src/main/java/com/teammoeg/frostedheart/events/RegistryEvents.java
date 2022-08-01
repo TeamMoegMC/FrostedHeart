@@ -18,28 +18,15 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static com.teammoeg.frostedheart.FHContent.registeredFHBlocks;
-import static com.teammoeg.frostedheart.FHContent.registeredFHFluids;
-import static com.teammoeg.frostedheart.FHContent.registeredFHItems;
-
-import javax.annotation.Nonnull;
-
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
-import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
-import com.teammoeg.frostedheart.loot.DechantLootModifier;
-import com.teammoeg.frostedheart.loot.RemoveLootModifier;
-import com.teammoeg.frostedheart.loot.ReplaceLootModifier;
-import com.teammoeg.frostedheart.loot.TagLootCondition;
-import com.teammoeg.frostedheart.loot.TemperatureLootCondition;
-import com.teammoeg.frostedheart.loot.TreasureLootCondition;
+import com.teammoeg.frostedheart.loot.*;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
-
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.block.Block;
@@ -57,6 +44,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
 
+import javax.annotation.Nonnull;
+
+import static com.teammoeg.frostedheart.FHContent.*;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RegistryEvents {
     @SubscribeEvent
@@ -72,17 +63,19 @@ public class RegistryEvents {
             }
         }
     }
+
     @SubscribeEvent
     public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
         IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();
-        registry.register(new RemoveLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"remove_loot")));
-        registry.register(new ReplaceLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"replace_loot")));
-        registry.register(new DechantLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"dechant")));
-        registry.register(new ApplyDamageLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID,"damage")));
-        TemperatureLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE,new ResourceLocation(FHMain.MODID,"temperature"),new LootConditionType(new TemperatureLootCondition.Serializer()));
-        TagLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE,new ResourceLocation(FHMain.MODID,"block_tag"),new LootConditionType(new TagLootCondition.Serializer()));
-        TreasureLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE,new ResourceLocation(FHMain.MODID,"treasure"),new LootConditionType(new TreasureLootCondition.Serializer()));
+        registry.register(new RemoveLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "remove_loot")));
+        registry.register(new ReplaceLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "replace_loot")));
+        registry.register(new DechantLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "dechant")));
+        registry.register(new ApplyDamageLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "damage")));
+        TemperatureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "temperature"), new LootConditionType(new TemperatureLootCondition.Serializer()));
+        TagLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "block_tag"), new LootConditionType(new TagLootCondition.Serializer()));
+        TreasureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "treasure"), new LootConditionType(new TreasureLootCondition.Serializer()));
     }
+
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         for (Item item : registeredFHItems) {
@@ -111,15 +104,17 @@ public class RegistryEvents {
     public static void registerEffects(final RegistryEvent.Register<Effect> event) {
         FHEffects.registerAll(event.getRegistry());
     }
+
     /**
-	 * @param event  
-	 */
+     * @param event
+     */
     @SuppressWarnings("rawtypes")
-	@SubscribeEvent
+    @SubscribeEvent
     public static void onDimensionRegistry(RegistryEvent.Register event) {
-    	//FHDimensions.register();
+        //FHDimensions.register();
 
     }
+
     @SubscribeEvent
     public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
         event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"),

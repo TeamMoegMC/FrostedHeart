@@ -18,15 +18,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.function.BiFunction;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
@@ -40,6 +34,10 @@ import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.function.BiFunction;
 
 public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
@@ -65,29 +63,28 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
     }
 
 
-
     @Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
         TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
         Vector3i vec = fromPos.subtract(pos);
         Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-        if(te instanceof INetworkConsumer) {
-        	
+        if (te instanceof INetworkConsumer) {
+
             if (((INetworkConsumer) te).canConnectAt(dir)) {
                 state.with(FACING_TO_PROPERTY_MAP.get(dir), true);
                 TileEntity ote = Utils.getExistingTileEntity(worldIn, fromPos);
-                if(ote instanceof HeatPipeTileEntity) {
-                	worldIn.getBlockState(fromPos).with(FACING_TO_PROPERTY_MAP.get(dir.getOpposite()),true);
+                if (ote instanceof HeatPipeTileEntity) {
+                    worldIn.getBlockState(fromPos).with(FACING_TO_PROPERTY_MAP.get(dir.getOpposite()), true);
                 }
             } else {
                 state.with(FACING_TO_PROPERTY_MAP.get(dir), false);
                 TileEntity ote = Utils.getExistingTileEntity(worldIn, fromPos);
-                if(ote instanceof HeatPipeTileEntity) {
-                	worldIn.getBlockState(fromPos).with(FACING_TO_PROPERTY_MAP.get(dir.getOpposite()),true);
+                if (ote instanceof HeatPipeTileEntity) {
+                    worldIn.getBlockState(fromPos).with(FACING_TO_PROPERTY_MAP.get(dir.getOpposite()), true);
                 }
             }
-        }else state.with(FACING_TO_PROPERTY_MAP.get(dir), false);
+        } else state.with(FACING_TO_PROPERTY_MAP.get(dir), false);
     }
 
 

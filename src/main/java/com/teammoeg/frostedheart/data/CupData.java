@@ -25,6 +25,7 @@ public class CupData extends JsonDataHolder {
     public CupData(JsonObject data) {
         super(data);
     }
+
     public Float getEfficiency() {
         return this.getFloat("efficiency");
     }

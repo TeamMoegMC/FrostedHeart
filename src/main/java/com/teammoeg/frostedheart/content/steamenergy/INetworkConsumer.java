@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import net.minecraft.util.Direction;
 
 public interface INetworkConsumer {
-    boolean connect(Direction d,int distance);
+    boolean connect(Direction d, int distance);
 
     boolean canConnectAt(Direction to);
-    
+
     NetworkHolder getHolder();
 }

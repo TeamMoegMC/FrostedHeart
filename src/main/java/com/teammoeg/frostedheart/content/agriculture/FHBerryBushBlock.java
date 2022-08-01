@@ -1,11 +1,8 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
-import java.util.Random;
-
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SweetBerryBushBlock;
 import net.minecraft.entity.Entity;
@@ -17,6 +14,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+
+import java.util.Random;
 
 public class FHBerryBushBlock extends SweetBerryBushBlock {
     public final String name;
@@ -31,6 +30,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         ResourceLocation registryName = createRegistryName();
         setRegistryName(registryName);
     }//if you don't want to set growSpeed
+
     public FHBerryBushBlock(String name, int growTemperature, Properties properties, int growSpeed) {
         super(properties);
         this.name = name;
@@ -40,9 +40,11 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         setRegistryName(registryName);
         this.growSpeed = growSpeed;
     }
+
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
+
     public int getGrowTemperature() {
         return growTemperature;
     }
@@ -56,7 +58,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
             //我也不知道这玩意干啥用的，我看FHCropBlock里有就加上了
-        }else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state,random.nextInt(5) == 0) && this.growSpeed > random.nextInt(100)) {
+        } else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(5) == 0) && this.growSpeed > random.nextInt(100)) {
             worldIn.setBlockState(pos, state.with(AGE, i + 1), 2);
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
         }
@@ -67,14 +69,15 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         float temp = ChunkData.getTemperature(worldIn, pos);
         return temp >= growTemperature;
     }
+
     @Override
     public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn) {
         if (entityIn instanceof LivingEntity && entityIn.getType() != EntityType.FOX && entityIn.getType() != EntityType.BEE) {
-            entityIn.setMotionMultiplier(state, new Vector3d((double)0.8F, 0.75D, (double)0.8F));
+            entityIn.setMotionMultiplier(state, new Vector3d((double) 0.8F, 0.75D, (double) 0.8F));
             if (!worldIn.isRemote && state.get(AGE) > 0 && (entityIn.lastTickPosX != entityIn.getPosX() || entityIn.lastTickPosZ != entityIn.getPosZ())) {
                 double d0 = Math.abs(entityIn.getPosX() - entityIn.lastTickPosX);
                 double d1 = Math.abs(entityIn.getPosZ() - entityIn.lastTickPosZ);
-                if (d0 >= (double)0.003F || d1 >= (double)0.003F) {
+                if (d0 >= (double) 0.003F || d1 >= (double) 0.003F) {
                     entityIn.attackEntityFrom(DamageSource.SWEET_BERRY_BUSH, 0.0F);//remove damage
                 }
             }

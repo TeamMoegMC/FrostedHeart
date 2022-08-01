@@ -2,19 +2,20 @@ package com.teammoeg.frostedheart.util;
 
 public class ChException {
 
-	public ChException() {
-	}
-	public static class 作弊者禁止进入 extends RuntimeException{
+    public ChException() {
+    }
 
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
+    public static class 作弊者禁止进入 extends RuntimeException {
 
-		public 作弊者禁止进入() {
-			super("No Cheats");
-			super.setStackTrace(new StackTraceElement[0]);
-		}
-		
-	}
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
+
+        public 作弊者禁止进入() {
+            super("No Cheats");
+            super.setStackTrace(new StackTraceElement[0]);
+        }
+
+    }
 }

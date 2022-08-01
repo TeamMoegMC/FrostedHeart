@@ -18,11 +18,6 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -31,6 +26,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class GeneratorRecipe extends IESerializableRecipe {
     public static IRecipeType<GeneratorRecipe> TYPE;
@@ -66,14 +66,20 @@ public class GeneratorRecipe extends IESerializableRecipe {
                 return recipe;
         return null;
     }
-    public static List<ItemStack> listAll(){
-    	ArrayList<ItemStack> all=new ArrayList<>();
-    	recipeList.values().stream().map(e->e.input.getMatchingStacks()).forEach(e->{for(ItemStack i:e)if(!all.contains(i))all.add(i);});
-    	return all;
+
+    public static List<ItemStack> listAll() {
+        ArrayList<ItemStack> all = new ArrayList<>();
+        recipeList.values().stream().map(e -> e.input.getMatchingStacks()).forEach(e -> {
+            for (ItemStack i : e) if (!all.contains(i)) all.add(i);
+        });
+        return all;
     }
-    public static List<ItemStack> listOut(){
-    	ArrayList<ItemStack> all=new ArrayList<>();
-    	recipeList.values().stream().map(e->e.output).forEach(i->{if(!all.contains(i))all.add(i);});
-    	return all;
+
+    public static List<ItemStack> listOut() {
+        ArrayList<ItemStack> all = new ArrayList<>();
+        recipeList.values().stream().map(e -> e.output).forEach(i -> {
+            if (!all.contains(i)) all.add(i);
+        });
+        return all;
     }
 }

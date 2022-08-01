@@ -19,13 +19,13 @@
 package com.teammoeg.frostedheart.util;
 
 import com.google.gson.JsonElement;
-
 import net.minecraft.network.PacketBuffer;
+
 /**
  * Not an typo, just to avoid name conflict
- * */
+ */
 public interface Writeable {
-	public JsonElement serialize();
+    public JsonElement serialize();
 
-	public void write(PacketBuffer buffer);
+    public void write(PacketBuffer buffer);
 }

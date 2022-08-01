@@ -18,16 +18,8 @@
 
 package com.teammoeg.frostedheart.climate.chunkdata;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -41,6 +33,12 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public static final ChunkData EMPTY = new Immutable();
@@ -60,6 +58,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public static float getTemperature(IWorldReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
     }
+
     /**
      * Called to get temperature adjusts at location when a world context is available.
      * on server, will either query capability falling back to cache, or query
@@ -67,8 +66,8 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * This method directly get temperature adjusts at any positions.
      */
     public static Collection<ITemperatureAdjust> getAdjust(IWorldReader world, BlockPos pos) {
-    	ArrayList<ITemperatureAdjust> al=new ArrayList<>(get(world, new ChunkPos(pos)).getAdjusters());
-        al.removeIf(adj->!adj.isEffective(pos));
+        ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).getAdjusters());
+        al.removeIf(adj -> !adj.isEffective(pos));
         return al;
     }
 
@@ -85,12 +84,12 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         // Query cache first, picking the correct cache for the current logical side
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
-            //System.out.println("no cache at"+pos);
-    	if(world instanceof IWorld)
-            return ((IWorld) world).getChunkProvider().isChunkLoaded(pos) ?getCapability(world.getChunk(pos.asBlockPos()))
-                    .orElse(ChunkData.EMPTY):ChunkData.EMPTY;
-        return world.chunkExists(pos.x,pos.z) ?getCapability(world.getChunk(pos.asBlockPos()))
-                .orElse(ChunkData.EMPTY):ChunkData.EMPTY;
+        //System.out.println("no cache at"+pos);
+        if (world instanceof IWorld)
+            return ((IWorld) world).getChunkProvider().isChunkLoaded(pos) ? getCapability(world.getChunk(pos.asBlockPos()))
+                    .orElse(ChunkData.EMPTY) : ChunkData.EMPTY;
+        return world.chunkExists(pos.x, pos.z) ? getCapability(world.getChunk(pos.asBlockPos()))
+                .orElse(ChunkData.EMPTY) : ChunkData.EMPTY;
         //}
         //return data;
     }
@@ -115,11 +114,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void addChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adjx) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
-            ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
-            if(data!=null) {
-	            data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
-	                    && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
-	            data.adjusters.add(adjx);
+            ChunkData data = ChunkData.getCapability(chunk).orElseGet(() -> null);
+            if (data != null) {
+                data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
+                        && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
+                data.adjusters.add(adjx);
             }
             //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
@@ -132,11 +131,11 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, BlockPos src) {
         if (world != null && !world.isRemote()) {
-            IChunk chunk =  world.getChunk(chunkPos.x, chunkPos.z);
-            ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
-            if(data!=null)
-            	data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
-                    && adj.getCenterZ() == src.getZ());
+            IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
+            ChunkData data = ChunkData.getCapability(chunk).orElseGet(() -> null);
+            if (data != null)
+                data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
+                        && adj.getCenterZ() == src.getZ());
         }
     }
 
@@ -148,9 +147,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adj) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
-            ChunkData data = ChunkData.getCapability(chunk).orElseGet(()->null);
-            if(data!=null)
-            	data.adjusters.remove(adj);
+            ChunkData data = ChunkData.getCapability(chunk).orElseGet(() -> null);
+            if (data != null)
+                data.adjusters.remove(adj);
         }
     }
 
@@ -367,7 +366,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * @param pos   position
      */
     float getTemperatureAtBlock(IWorldReader world, BlockPos pos) {
-    	if(adjusters.isEmpty())return WorldClimate.getWorldTemperature(world, pos);
+        if (adjusters.isEmpty()) return WorldClimate.getWorldTemperature(world, pos);
         float ret = 0, tmp;
         for (ITemperatureAdjust adj : adjusters) {
             if (adj.isEffective(pos)) {
@@ -380,7 +379,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
 
-
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         return ChunkDataCapabilityProvider.CAPABILITY.orEmpty(cap, capability);
@@ -390,7 +388,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
         ListNBT nl = new ListNBT();
-        ClimateCrash.Last=this.getPos();
+        ClimateCrash.Last = this.getPos();
         for (ITemperatureAdjust adj : adjusters)
             nl.add(adj.serializeNBT());
         nbt.put("temperature", nl);
@@ -401,7 +399,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     public void deserializeNBT(CompoundNBT nbt) {
         if (nbt != null) {
             // chunkMatrix.deserializeNBT(nbt.getCompound("temperature"));
-        	ClimateCrash.Last=this.getPos();
+            ClimateCrash.Last = this.getPos();
             ListNBT nl = nbt.getList("temperature", 10);
             for (INBT nc : nl) {
                 adjusters.add(ITemperatureAdjust.valueOf((CompoundNBT) nc));

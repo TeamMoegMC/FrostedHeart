@@ -10,22 +10,26 @@ import java.util.UUID;
 
 public class ResearchDataAPI {
 
-	private ResearchDataAPI() {
-	}
-	public static TeamResearchData getData(ServerPlayerEntity id) {
-		return ResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId());
+    private ResearchDataAPI() {
+    }
 
-	}
-	public static TeamResearchData getData(UUID id) {
-		return ResearchDataManager.INSTANCE.getData(id);
+    public static TeamResearchData getData(ServerPlayerEntity id) {
+        return ResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId());
 
-	}
-	public static CompoundNBT getVariants(ServerPlayerEntity id) {
-		return ResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId()).getVariants();
+    }
 
-	}
-	public static CompoundNBT getVariants(UUID id) {
-		return ResearchDataManager.INSTANCE.getData(id).getVariants();
+    public static TeamResearchData getData(UUID id) {
+        return ResearchDataManager.INSTANCE.getData(id);
 
-	}
+    }
+
+    public static CompoundNBT getVariants(ServerPlayerEntity id) {
+        return ResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId()).getVariants();
+
+    }
+
+    public static CompoundNBT getVariants(UUID id) {
+        return ResearchDataManager.INSTANCE.getData(id).getVariants();
+
+    }
 }

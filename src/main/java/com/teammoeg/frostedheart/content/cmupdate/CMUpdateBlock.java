@@ -18,11 +18,8 @@
 
 package com.teammoeg.frostedheart.content.cmupdate;
 
-import java.util.function.BiFunction;
-
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
@@ -32,18 +29,21 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.IBlockReader;
 
+import java.util.function.BiFunction;
+
 public class CMUpdateBlock extends FHBaseBlock {
 
 
     public CMUpdateBlock(String name, Properties blockProps,
-                        BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
+                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
     }
 
     @Override
-    public TileEntity createTileEntity(BlockState state,IBlockReader world) {
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
         return FHTileTypes.CMUPDATE.get().create();
     }
+
     @Override
     public boolean hasTileEntity(BlockState state) {
         return true;

@@ -25,7 +25,8 @@ public class FoodBlockItem extends FHBlockItem {
     public FoodBlockItem(Block block, Properties props, Food food) {
         super(block, props.food(food));
     }
-    public FoodBlockItem(Block block, Properties props, Food food, String name){
+
+    public FoodBlockItem(Block block, Properties props, Food food, String name) {
         super(block, props.food(food), name);
     }
 }

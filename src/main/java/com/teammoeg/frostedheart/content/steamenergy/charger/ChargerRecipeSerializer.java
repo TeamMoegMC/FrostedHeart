@@ -18,17 +18,16 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
-import javax.annotation.Nullable;
-
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHBlocks;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHBlocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
 
 public class ChargerRecipeSerializer extends IERecipeSerializer<ChargerRecipe> {
     @Override

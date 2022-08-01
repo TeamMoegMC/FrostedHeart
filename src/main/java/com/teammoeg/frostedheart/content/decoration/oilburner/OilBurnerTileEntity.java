@@ -18,12 +18,11 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
+import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
-
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -38,56 +37,55 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveState, ITickableTileEntity {
-	ResourceLocation burnable=new ResourceLocation("frostedheart","flammable_fluid");
-    FluidTank input = new FluidTank(10000,s->s.getFluid().getTags().contains(burnable));
-    private LazyOptional<IFluidHandler> holder=LazyOptional.empty();
+    ResourceLocation burnable = new ResourceLocation("frostedheart", "flammable_fluid");
+    FluidTank input = new FluidTank(10000, s -> s.getFluid().getTags().contains(burnable));
+    private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
     public OilBurnerTileEntity() {
-    	super(FHTileTypes.OIL_BURNER.get());
+        super(FHTileTypes.OIL_BURNER.get());
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt,boolean dp) {
+    public void readCustomNBT(CompoundNBT nbt, boolean dp) {
         input.readFromNBT(nbt.getCompound("in"));
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt,boolean dp) {
+    public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
         nbt.put("in", input.writeToNBT(new CompoundNBT()));
     }
-
 
 
     @Override
     public void tick() {
         if (this.world != null && !this.world.isRemote) {
-        	TileEntity down=Utils.getExistingTileEntity(world, pos.offset(Direction.DOWN));
-        	if(down!=null) {
-        		LazyOptional<IFluidHandler> cap=down.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,Direction.UP);
-        		if(cap.isPresent()) {
-        			IFluidHandler ifh=cap.resolve().orElse(null);
-        			if(ifh!=null) {
-        				if(!input.isEmpty()) {
-        					FluidStack fs=ifh.drain(FluidHelper.copyStackWithAmount(input.getFluid(),5),FluidAction.EXECUTE);
-        					if(!fs.isEmpty())
-        						input.fill(fs,FluidAction.EXECUTE);
-        				}else 
-        				for(int i=0;i<ifh.getTanks();i++) {
-        					if(input.isFluidValid(ifh.getFluidInTank(i))) {
-        						FluidStack fs=ifh.drain(FluidHelper.copyStackWithAmount(ifh.getFluidInTank(i),5),FluidAction.EXECUTE);
-            					if(!fs.isEmpty()) {
-            						input.fill(fs,FluidAction.EXECUTE);
-            						break;
-            					}
-        					}
-        				}
-        			}
-        		}
-        	}
-            if(input.drain(1000,FluidAction.EXECUTE).getAmount()>=5) {
-            	this.setActive(true);
-            }else
-            	this.setActive(false);
+            TileEntity down = Utils.getExistingTileEntity(world, pos.offset(Direction.DOWN));
+            if (down != null) {
+                LazyOptional<IFluidHandler> cap = down.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, Direction.UP);
+                if (cap.isPresent()) {
+                    IFluidHandler ifh = cap.resolve().orElse(null);
+                    if (ifh != null) {
+                        if (!input.isEmpty()) {
+                            FluidStack fs = ifh.drain(FluidHelper.copyStackWithAmount(input.getFluid(), 5), FluidAction.EXECUTE);
+                            if (!fs.isEmpty())
+                                input.fill(fs, FluidAction.EXECUTE);
+                        } else
+                            for (int i = 0; i < ifh.getTanks(); i++) {
+                                if (input.isFluidValid(ifh.getFluidInTank(i))) {
+                                    FluidStack fs = ifh.drain(FluidHelper.copyStackWithAmount(ifh.getFluidInTank(i), 5), FluidAction.EXECUTE);
+                                    if (!fs.isEmpty()) {
+                                        input.fill(fs, FluidAction.EXECUTE);
+                                        break;
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+            if (input.drain(1000, FluidAction.EXECUTE).getAmount() >= 5) {
+                this.setActive(true);
+            } else
+                this.setActive(false);
             this.markContainingBlockForUpdate(null);
         }
     }
@@ -103,43 +101,43 @@ public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveStat
     private void refreshCapability() {
         LazyOptional<IFluidHandler> oldCap = this.holder;
         this.holder = LazyOptional.of(() -> new IFluidHandler() {
-			@Override
-			public int fill(FluidStack resource, FluidAction action) {
-				return input.fill(resource, action);
-			}
+                    @Override
+                    public int fill(FluidStack resource, FluidAction action) {
+                        return input.fill(resource, action);
+                    }
 
-			@Override
-			public FluidStack drain(int maxDrain, FluidAction action) {
-				return FluidStack.EMPTY;
-			}
+                    @Override
+                    public FluidStack drain(int maxDrain, FluidAction action) {
+                        return FluidStack.EMPTY;
+                    }
 
-			@Override
-			public FluidStack drain(FluidStack resource, FluidAction action) {
-				return FluidStack.EMPTY;
-			}
+                    @Override
+                    public FluidStack drain(FluidStack resource, FluidAction action) {
+                        return FluidStack.EMPTY;
+                    }
 
-			@Override
-			public int getTanks() {
-				return input.getTanks();
-			}
+                    @Override
+                    public int getTanks() {
+                        return input.getTanks();
+                    }
 
-			@Override
-			public FluidStack getFluidInTank(int tank) {
-				return input.getFluidInTank(tank);
-			}
+                    @Override
+                    public FluidStack getFluidInTank(int tank) {
+                        return input.getFluidInTank(tank);
+                    }
 
-			@Override
-			public int getTankCapacity(int tank) {
-				return input.getCapacity();
-			}
+                    @Override
+                    public int getTankCapacity(int tank) {
+                        return input.getCapacity();
+                    }
 
-			@Override
-			public boolean isFluidValid(int tank, FluidStack stack) {
-				return input.isFluidValid(tank, stack);
-			}
-        	
-        }
-            
+                    @Override
+                    public boolean isFluidValid(int tank, FluidStack stack) {
+                        return input.isFluidValid(tank, stack);
+                    }
+
+                }
+
         );
         oldCap.invalidate();
     }

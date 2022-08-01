@@ -45,11 +45,11 @@ public class SphericTemperatureAdjust extends CubicTemperatureAdjust {
     }
 
     public SphericTemperatureAdjust(BlockPos heatPos, int range, int tempMod) {
-    	super(heatPos,range,tempMod);
-    	r2=r*r;
-	}
+        super(heatPos, range, tempMod);
+        r2 = r * r;
+    }
 
-	@Override
+    @Override
     public boolean isEffective(int x, int y, int z) {
         long l = (long) Math.pow(x - cx, 2);
         l += (long) Math.pow(y - cy, 2);

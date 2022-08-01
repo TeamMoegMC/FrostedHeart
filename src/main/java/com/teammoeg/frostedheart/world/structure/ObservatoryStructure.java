@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.world.structure;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.world.FHStructures;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SharedSeedRandom;
@@ -19,7 +18,6 @@ import net.minecraft.world.gen.feature.NoFeatureConfig;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.gen.feature.template.TemplateManager;
-import net.minecraft.world.gen.settings.StructureSeparationSettings;
 
 public class ObservatoryStructure extends Structure<NoFeatureConfig> {
     public ObservatoryStructure(Codec<NoFeatureConfig> codec) {
@@ -30,6 +28,7 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
     public Structure.IStartFactory<NoFeatureConfig> getStartFactory() {
         return ObservatoryStructure.Start::new;
     }
+
     @Override
     public GenerationStage.Decoration getDecorationStage() {
         return GenerationStage.Decoration.SURFACE_STRUCTURES;
@@ -41,19 +40,20 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
         BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
 
         int landHeight = generator.getNoiseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
-        if(landHeight<100||landHeight>200)return false;
+        if (landHeight < 100 || landHeight > 200) return false;
         IBlockReader columnOfBlocks = generator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
 
         BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
 
         return topBlock.getFluidState().isEmpty();
-        
+
     }
 
     public static class Start extends StructureStart<NoFeatureConfig> {
         public Start(Structure<NoFeatureConfig> p_i225819_1_, int p_i225819_2_, int p_i225819_3_, MutableBoundingBox boundingBox, int p_i225819_5_, long p_i225819_6_) {
             super(p_i225819_1_, p_i225819_2_, p_i225819_3_, boundingBox, p_i225819_5_, p_i225819_6_);
         }
+
         @Override
         public void func_230364_a_(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
 
@@ -65,7 +65,7 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
 
             Rotation rotation = Rotation.randomRotation(this.rand);
             this.components.add(new ObservatoryPiece(template, blockpos, rotation));
-            
+
             this.recalculateStructureSize();
 //            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }

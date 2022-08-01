@@ -20,7 +20,6 @@ package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import net.minecraft.util.ResourceLocation;
 
 public class JsonHelper {

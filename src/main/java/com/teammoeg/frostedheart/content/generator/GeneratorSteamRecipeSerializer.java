@@ -18,17 +18,16 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import javax.annotation.Nullable;
-
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHMultiblocks;
-
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMultiblocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
 
 public class GeneratorSteamRecipeSerializer extends IERecipeSerializer<GeneratorSteamRecipe> {
     @Override

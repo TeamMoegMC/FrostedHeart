@@ -15,7 +15,10 @@ import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.*;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
@@ -26,20 +29,24 @@ import net.minecraftforge.fml.network.NetworkHooks;
 import javax.annotation.Nullable;
 
 public class IncubatorBlock extends FHBaseBlock {
-	private static DirectionProperty HORIZONTAL_FACING=BlockStateProperties.HORIZONTAL_FACING;
-	private RegistryObject<TileEntityType<?>> type;
-    public IncubatorBlock(String name,Properties p,RegistryObject<TileEntityType<?>> type) {
-        super(name,p, FHBlockItem::new);
-        this.type=type;
+    private static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
+    private RegistryObject<TileEntityType<?>> type;
+
+    public IncubatorBlock(String name, Properties p, RegistryObject<TileEntityType<?>> type) {
+        super(name, p, FHBlockItem::new);
+        this.type = type;
     }
+
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         builder.add();
     }
+
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(HORIZONTAL_FACING,context.getPlacementHorizontalFacing().getOpposite());
+        return this.getDefaultState().with(HORIZONTAL_FACING, context.getPlacementHorizontalFacing().getOpposite());
     }
+
     @Nullable
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
@@ -53,7 +60,7 @@ public class IncubatorBlock extends FHBaseBlock {
 
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (!worldIn.isRemote) {
-            TileEntity tile =  worldIn.getTileEntity(pos);
+            TileEntity tile = worldIn.getTileEntity(pos);
             if (tile != null) {
                 NetworkHooks.openGui((ServerPlayerEntity) player, (INamedContainerProvider) tile, tile.getPos());
                 worldIn.playSound(null, pos, SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.3F, 1.5F);
@@ -61,12 +68,13 @@ public class IncubatorBlock extends FHBaseBlock {
         }
         return ActionResultType.SUCCESS;
     }
+
     @Override
     public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.matchesBlock(newState.getBlock())) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
             if (tileentity instanceof IInventory) {
-                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory)tileentity);
+                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory) tileentity);
             }
 
             super.onReplaced(state, worldIn, pos, newState, isMoving);

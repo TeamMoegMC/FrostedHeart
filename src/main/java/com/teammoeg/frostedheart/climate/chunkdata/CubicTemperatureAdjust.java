@@ -31,6 +31,7 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
     int cz;
     int r;
     int value;
+
     public CubicTemperatureAdjust(int cx, int cy, int cz, int r, int value) {
         this.cx = cx;
         this.cy = cy;
@@ -50,7 +51,6 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
     public CubicTemperatureAdjust(BlockPos heatPos, int range, int tempMod) {
         this(heatPos.getX(), heatPos.getY(), heatPos.getZ(), range, tempMod);
     }
-
 
 
     @Override

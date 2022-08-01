@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.util.noise;
 
 import com.teammoeg.frostedheart.util.FloatUnaryFunction;
-
 import net.minecraft.util.math.MathHelper;
 
 /**

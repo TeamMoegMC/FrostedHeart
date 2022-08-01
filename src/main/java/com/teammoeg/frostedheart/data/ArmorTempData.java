@@ -22,7 +22,6 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.util.FHUtils;
-
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 
@@ -49,7 +48,7 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
 //            else
 //                base += this.getFloatOrDefault("rain", 0F);
         }
-        
+
         float min = this.getFloatOrDefault("min", 0F);
         if (base < min) {
             base = min;

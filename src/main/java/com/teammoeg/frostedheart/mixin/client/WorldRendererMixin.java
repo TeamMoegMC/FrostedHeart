@@ -20,11 +20,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @OnlyIn(Dist.CLIENT)
 @Mixin(value = WorldRenderer.class, priority = 1)
-public abstract class WorldRendererMixin
-{
-    @Shadow @Final private Minecraft mc;
-    @Shadow private ClientWorld world;
-    @Shadow private int ticks;
+public abstract class WorldRendererMixin {
+    @Shadow
+    @Final
+    private Minecraft mc;
+    @Shadow
+    private ClientWorld world;
+    @Shadow
+    private int ticks;
 
     @SuppressWarnings({"deprecation"})
     @Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)

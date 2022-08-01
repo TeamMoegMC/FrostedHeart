@@ -17,11 +17,11 @@ import java.util.Random;
 
 /**
  * Render cool Blizzard!
- *
+ * <p>
  * To integrate it to the game,
  * let `render` be called in `com.teammoeg.frostedheart.mixin.client.WorldRendererMixin.inject$renderWeather`
  * with appropriate context after confirming that a blizzard is present in the world.
- *
+ * <p>
  * We want to thank BetterWeather's author CorgiTaco, who wrote the code we adapted from.
  * Original Code: https://github.com/CorgiTaco/Better-Weather
  * This file is licensed under the same license LGPL 3.0

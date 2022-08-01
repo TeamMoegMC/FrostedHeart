@@ -50,29 +50,30 @@ import net.minecraftforge.fml.network.NetworkHooks;
 import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
-public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider{
+public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider {
 
     public static final BooleanProperty IS_NOT_MAIN = BooleanProperty.create("not_multi_main");
     public static final DirectionProperty FACING = DirectionProperty.create("facing", Direction.Plane.HORIZONTAL);
     public static final BooleanProperty BOOK = BooleanProperty.create("has_book");
 
-	static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 15, 16);
-	static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 12, 16);
+    static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 15, 16);
+    static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 12, 16);
 
-	@Override
-	public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
-			ISelectionContext context) {
-		if(state.get(IS_NOT_MAIN))
-			return shape2;
-		return shape;
-	}
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, IBlockReader worldIn, BlockPos pos,
+                                        ISelectionContext context) {
+        if (state.get(IS_NOT_MAIN))
+            return shape2;
+        return shape;
+    }
 
-	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-		if(state.get(IS_NOT_MAIN))
-			return shape2;
-		return shape;
-	}
+    @Override
+    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+        if (state.get(IS_NOT_MAIN))
+            return shape2;
+        return shape;
+    }
+
     public DrawingDeskBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
         this.setDefaultState(this.stateContainer.getBaseState().with(IS_NOT_MAIN, false).with(BOOK, false));
@@ -132,7 +133,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         if (facing == getNeighbourDirection(stateIn.get(IS_NOT_MAIN), stateIn.get(FACING)) && facingState.getBlock() != this) {
             return Blocks.AIR.getDefaultState();
         }
-		return super.updatePostPlacement(stateIn, facing, facingState, worldIn, currentPos, facingPos);
+        return super.updatePostPlacement(stateIn, facing, facingState, worldIn, currentPos, facingPos);
     }
 
     @Override
@@ -165,20 +166,20 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
 
     @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND&&!player.isSneaking()) {
+        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
             if (state.get(IS_NOT_MAIN)) {
                 pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
             }
-            TileEntity ii=Utils.getExistingTileEntity(worldIn, pos);
-            if(ii instanceof DrawingDeskTileEntity) {
-            	((DrawingDeskTileEntity) ii).markContainingBlockForUpdate(null);
+            TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
+            if (ii instanceof DrawingDeskTileEntity) {
+                ((DrawingDeskTileEntity) ii).markContainingBlockForUpdate(null);
             }
-            NetworkHooks.openGui((ServerPlayerEntity)player,(IInteractionObjectIE)ii,ii.getPos());
+            NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
         }
         //todo: actually add some server-side functions in TE to provide the level and in progress research
         //ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t2"));
         //new DrawDeskScreen().openGui();
-        
+
         return ActionResultType.SUCCESS;
     }
 
@@ -189,12 +190,12 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         return tileentity != null && tileentity.receiveClientEvent(id, param);
     }
 
-	@Override
-	public BlockPos getModelOffset(BlockState arg0, Vector3i arg1) {
-		if(arg0.get(IS_NOT_MAIN))
-			return new BlockPos(1,0,0);
-		return new BlockPos(0,0,0);
-		//return null;
-	}
+    @Override
+    public BlockPos getModelOffset(BlockState arg0, Vector3i arg1) {
+        if (arg0.get(IS_NOT_MAIN))
+            return new BlockPos(1, 0, 0);
+        return new BlockPos(0, 0, 0);
+        //return null;
+    }
 }
 

@@ -18,17 +18,16 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.data.JsonHelper;
-
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
 
 public class RecipeInnerSerializer extends IERecipeSerializer<RecipeInner> {
     @Override
@@ -39,16 +38,16 @@ public class RecipeInnerSerializer extends IERecipeSerializer<RecipeInner> {
     @Override
     public RecipeInner readFromJson(ResourceLocation recipeId, JsonObject json) {
         Ingredient input = Ingredient.deserialize(json.get("input"));
-        int dura=JsonHelper.getIntOrDefault(json,"durable",100);
-        return new RecipeInner(recipeId, input,dura);
+        int dura = JsonHelper.getIntOrDefault(json, "durable", 100);
+        return new RecipeInner(recipeId, input, dura);
     }
 
     @Nullable
     @Override
     public RecipeInner read(ResourceLocation recipeId, PacketBuffer buffer) {
         Ingredient input = Ingredient.read(buffer);
-        int dura=buffer.readVarInt();
-        return new RecipeInner(recipeId, input,dura);
+        int dura = buffer.readVarInt();
+        return new RecipeInner(recipeId, input, dura);
     }
 
     @Override

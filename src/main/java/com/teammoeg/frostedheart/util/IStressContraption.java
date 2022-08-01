@@ -2,10 +2,10 @@ package com.teammoeg.frostedheart.util;
 
 public interface IStressContraption {
 
-	float getStressCost();
+    float getStressCost();
 
-	float getRotationStressCost();
+    float getRotationStressCost();
 
-	float getActorCost();
+    float getActorCost();
 
 }

@@ -1,14 +1,13 @@
 package com.teammoeg.frostedheart;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.teammoeg.frostedheart.content.generator.HeatedGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.NormalGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.UnlitHeatedGeneratorMultiBlock;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorMultiblock;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorMultiblock;
-
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.block.Block;
 
 public class FHMultiblocks {

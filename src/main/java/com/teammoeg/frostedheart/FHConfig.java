@@ -18,12 +18,12 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FHConfig {
 
@@ -41,13 +41,13 @@ public class FHConfig {
         public final ForgeConfigSpec.EnumValue<TempOrbPos> tempOrbPosition;
 
         Client(ForgeConfigSpec.Builder builder) {
-        	enableUI = builder
+            enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
                     .define("enableHUD", true);
             enablesTemperatureOrb = builder
                     .comment("Enables the temperature orb overlay. ")
                     .define("enableTemperatureOrb", true);
-            
+
 
             tempOrbPosition = builder
                     .comment("Position of the temperature orb in game screen. ")
@@ -76,12 +76,13 @@ public class FHConfig {
         public final ForgeConfigSpec.EnumValue<FHDifficulty> tdiffculty;
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
+
         Server(ForgeConfigSpec.Builder builder) {
             alwaysKeepInventory = builder
                     .comment("Always keep inventory on death on every dimension and world")
                     .define("alwaysKeepInventory", false);
-            keepEquipments=builder.comment("Instead of keeping all inventory, only keep equipments, curios and quickbar tools on death")
-            		.define("keepEquipments",true);
+            keepEquipments = builder.comment("Instead of keeping all inventory, only keep equipments, curios and quickbar tools on death")
+                    .define("keepEquipments", true);
             fixEssJeiIssue = builder
                     .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
                     .define("fixEssJeiIssue", true);
@@ -89,12 +90,12 @@ public class FHConfig {
             developers = builder
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
-            tdiffculty=builder.comment("Temperature System difficulty","Easy=Strong body","Normal=Average","Hard=Reality","Hardcore=Sick body")
-            		.defineEnum("temperatureDifficulty",FHDifficulty.Normal);
-            tempSpeed=builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
-            		.defineInRange("temperatureChangeRate",0.5,0,20);
-            
-            
+            tdiffculty = builder.comment("Temperature System difficulty", "Easy=Strong body", "Normal=Average", "Hard=Reality", "Hardcore=Sick body")
+                    .defineEnum("temperatureDifficulty", FHDifficulty.Normal);
+            tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
+                    .defineInRange("temperatureChangeRate", 0.5, 0, 20);
+
+
         }
     }
 

@@ -18,10 +18,7 @@
 
 package com.teammoeg.frostedheart.content.cmupdate;
 
-import java.util.List;
-
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -37,6 +34,8 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.List;
+
 public class CMUpdateItem extends FHBaseItem {
     public CMUpdateItem(String name, Properties properties) {
         super(name, properties);
@@ -49,21 +48,21 @@ public class CMUpdateItem extends FHBaseItem {
     }
 
     @Override
-	public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-	}
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+    }
 
     @Override
-	public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-		return new ItemStack(ForgeRegistries.ITEMS.getValue(CMUpdateTileEntity.getReplacement(stack.getTag().getString("machine"))),stack.getCount());
-	}
+    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+        return new ItemStack(ForgeRegistries.ITEMS.getValue(CMUpdateTileEntity.getReplacement(stack.getTag().getString("machine"))), stack.getCount());
+    }
 
-	@Override
-	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-		tooltip.add(new StringTextComponent("use this item to get new version"));
-    	super.addInformation(stack, worldIn, tooltip, flagIn);
-	}
+    @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        tooltip.add(new StringTextComponent("use this item to get new version"));
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+    }
 
-	@Override
+    @Override
     public int getUseDuration(ItemStack stack) {
         return 1;
     }

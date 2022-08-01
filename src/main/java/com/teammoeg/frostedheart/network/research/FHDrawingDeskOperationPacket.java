@@ -18,97 +18,107 @@
 
 package com.teammoeg.frostedheart.network.research;
 
-import java.util.Objects;
-import java.util.function.Supplier;
-
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.TeamResearchData;
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.Objects;
+import java.util.function.Supplier;
+
 // send when data update
 public class FHDrawingDeskOperationPacket {
     private final BlockPos pos;
     private final byte op;
     private final CardPos pos1;
     private final CardPos pos2;
-    
+
     protected FHDrawingDeskOperationPacket(BlockPos pos, int op, CardPos pos1, CardPos pos2) {
-		super();
-		this.pos = pos;
-		this.op = (byte) op;
-		this.pos1 = pos1;
-		this.pos2 = pos2;
-	}
-	public FHDrawingDeskOperationPacket(BlockPos pos,CardPos p1,CardPos p2) {
-		this(pos,2,p1,p2);
+        super();
+        this.pos = pos;
+        this.op = (byte) op;
+        this.pos1 = pos1;
+        this.pos2 = pos2;
     }
-    public FHDrawingDeskOperationPacket(BlockPos pos,CardPos p1) {
-    	this(pos,1,p1,null);
+
+    public FHDrawingDeskOperationPacket(BlockPos pos, CardPos p1, CardPos p2) {
+        this(pos, 2, p1, p2);
     }
+
+    public FHDrawingDeskOperationPacket(BlockPos pos, CardPos p1) {
+        this(pos, 1, p1, null);
+    }
+
     public FHDrawingDeskOperationPacket(BlockPos pos) {
-        this(pos,0,null,null);
-        
+        this(pos, 0, null, null);
+
     }
-    public FHDrawingDeskOperationPacket(BlockPos pos,int op) {
-        this(pos,op,null,null);
-        
+
+    public FHDrawingDeskOperationPacket(BlockPos pos, int op) {
+        this(pos, op, null, null);
+
     }
+
     public FHDrawingDeskOperationPacket(PacketBuffer buffer) {
-        pos=buffer.readBlockPos();
-        op=buffer.readByte();
-        if(op<3) {
-	        if(op>0)
-	        	pos1=CardPos.valueOf(buffer);
-	        else
-	        	pos1=null;
-	        if(op>1)
-	        	pos2=CardPos.valueOf(buffer);
-	        else
-	        	pos2=null;
-        }else pos1=pos2=null;
+        pos = buffer.readBlockPos();
+        op = buffer.readByte();
+        if (op < 3) {
+            if (op > 0)
+                pos1 = CardPos.valueOf(buffer);
+            else
+                pos1 = null;
+            if (op > 1)
+                pos2 = CardPos.valueOf(buffer);
+            else
+                pos2 = null;
+        } else pos1 = pos2 = null;
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeBlockPos(pos);
         buffer.writeByte(op);
-        if(op<3) {
-	        if(op>0)
-	        	pos1.write(buffer);
-	        if(op>1)
-	        	pos2.write(buffer);
+        if (op < 3) {
+            if (op > 0)
+                pos1.write(buffer);
+            if (op > 1)
+                pos2.write(buffer);
         }
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	ServerWorld world = Objects.requireNonNull(context.get().getSender()).getServerWorld();
-        	TileEntity tile = Utils.getExistingTileEntity(world, pos);
-        	if(tile instanceof DrawingDeskTileEntity) {
-        		ResearchGame rg=((DrawingDeskTileEntity) tile).getGame();
-        		boolean flag=true;
-        		switch(op) {
-        		case 0:((DrawingDeskTileEntity) tile).initGame(context.get().getSender());break;
-        		case 1:flag=((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(),pos1, null);break;
-        		case 2:flag=((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(),pos1, pos2);break;
-        		case 3:((DrawingDeskTileEntity) tile).submitItem(context.get().getSender());break;
-        		}
-        		if(flag) {
-        			((DrawingDeskTileEntity) tile).updateGame(context.get().getSender());
-        			((DrawingDeskTileEntity) tile).markDirty();
-        			((DrawingDeskTileEntity) tile).markContainingBlockForUpdate(null);
-        		}
-        	}
-        	
-        	//ClientUtils.refreshResearchGui();
+            ServerWorld world = Objects.requireNonNull(context.get().getSender()).getServerWorld();
+            TileEntity tile = Utils.getExistingTileEntity(world, pos);
+            if (tile instanceof DrawingDeskTileEntity) {
+                ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
+                boolean flag = true;
+                switch (op) {
+                    case 0:
+                        ((DrawingDeskTileEntity) tile).initGame(context.get().getSender());
+                        break;
+                    case 1:
+                        flag = ((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(), pos1, null);
+                        break;
+                    case 2:
+                        flag = ((DrawingDeskTileEntity) tile).tryCombine(context.get().getSender(), pos1, pos2);
+                        break;
+                    case 3:
+                        ((DrawingDeskTileEntity) tile).submitItem(context.get().getSender());
+                        break;
+                }
+                if (flag) {
+                    ((DrawingDeskTileEntity) tile).updateGame(context.get().getSender());
+                    ((DrawingDeskTileEntity) tile).markDirty();
+                    ((DrawingDeskTileEntity) tile).markContainingBlockForUpdate(null);
+                }
+            }
+
+            //ClientUtils.refreshResearchGui();
         });
         context.get().setPacketHandled(true);
     }

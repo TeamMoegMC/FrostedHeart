@@ -31,19 +31,23 @@ import net.minecraftforge.fml.RegistryObject;
 public class RecipeFueling extends SpecialRecipe {
     public static RegistryObject<IERecipeSerializer<RecipeFueling>> SERIALIZER;
 
-    protected RecipeFueling(ResourceLocation id, Ingredient t,int d) {
+    protected RecipeFueling(ResourceLocation id, Ingredient t, int d) {
         super(id);
         type = t;
-        fuel=d;
+        fuel = d;
     }
-	Ingredient type;
+
+    Ingredient type;
     int fuel;
+
     public Ingredient getIngredient() {
-    	return type;
+        return type;
     }
+
     public int getFuel() {
-    	return fuel;
+        return fuel;
     }
+
     /**
      * Used to check if a recipe matches current crafting inventory
      */
@@ -89,13 +93,14 @@ public class RecipeFueling extends SpecialRecipe {
             }
         }
 
-        if (!armoritem.isEmpty() && !buffstack.isEmpty()&&CoalHandStove.getAshAmount(armoritem)<800&&CoalHandStove.getFuelAmount(armoritem)+fuel<=CoalHandStove.max_fuel) {
+        if (!armoritem.isEmpty() && !buffstack.isEmpty() && CoalHandStove.getAshAmount(armoritem) < 800 && CoalHandStove.getFuelAmount(armoritem) + fuel <= CoalHandStove.max_fuel) {
             ItemStack ret = armoritem.copy();
-            CoalHandStove.setFuelAmount(ret,CoalHandStove.getFuelAmount(ret)+fuel);
+            CoalHandStove.setFuelAmount(ret, CoalHandStove.getFuelAmount(ret) + fuel);
             return ret;
         }
         return ItemStack.EMPTY;
     }
+
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */

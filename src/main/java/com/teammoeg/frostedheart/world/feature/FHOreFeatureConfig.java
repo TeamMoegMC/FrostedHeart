@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.world.feature;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -65,6 +64,6 @@ public class FHOreFeatureConfig implements IFeatureConfig {
         public static final FHRuleTest magnesite = new FHRuleTest(new Block[]{RankineBlocks.CHALK.get(), RankineBlocks.SHALE.get(), RankineBlocks.DOLOSTONE.get(), RankineBlocks.LIMESTONE.get(), RankineBlocks.WHITE_MARBLE.get()});
         public static final FHRuleTest gold = new FHRuleTest(new Block[]{Blocks.DIORITE, RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), Blocks.GRANITE, RankineBlocks.PEGMATITE.get()});
         public static final FHRuleTest anthracite = new FHRuleTest(new Block[]{RankineBlocks.WHITE_MARBLE.get(), RankineBlocks.SLATE.get()});
-        public static final FHRuleTest graphite = new FHRuleTest(new Block[]{RankineBlocks.BLACK_MARBLE.get(), RankineBlocks.MICA_SCHIST.get(), RankineBlocks.SLATE.get(), RankineBlocks.SKARN.get(), RankineBlocks.PEGMATITE.get(),RankineBlocks.GNEISS.get()});
+        public static final FHRuleTest graphite = new FHRuleTest(new Block[]{RankineBlocks.BLACK_MARBLE.get(), RankineBlocks.MICA_SCHIST.get(), RankineBlocks.SLATE.get(), RankineBlocks.SKARN.get(), RankineBlocks.PEGMATITE.get(), RankineBlocks.GNEISS.get()});
     }
 }

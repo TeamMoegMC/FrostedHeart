@@ -18,17 +18,16 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.FHTileTypes;
-
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.FHTileTypes;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider, INetworkConsumer,ITickableTileEntity {
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider, INetworkConsumer, ITickableTileEntity {
     public DebugHeaterTileEntity() {
         super(FHTileTypes.DEBUGHEATER.get());
     }
@@ -68,26 +67,29 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
         return true;
     }
 
-	@Override
-	public boolean connect(Direction to, int distance) {
-		return false;
-	}
-	int propcd=0;
-	@Override
-	public void tick() {
-		if(propcd==0) {
-			for(Direction d:Direction.values()) {
-				TileEntity te=Utils.getExistingTileEntity(this.getWorld(),pos.offset(d));
-				if(te instanceof INetworkConsumer)
-					if(((INetworkConsumer) te).canConnectAt(d.getOpposite()))
-						((INetworkConsumer) te).connect(d.getOpposite(),0);
-			}
-			propcd=5;
-		}else
-			propcd--;
-	}
-	@Override
-	public NetworkHolder getHolder() {
-		return null;
-	}
+    @Override
+    public boolean connect(Direction to, int distance) {
+        return false;
+    }
+
+    int propcd = 0;
+
+    @Override
+    public void tick() {
+        if (propcd == 0) {
+            for (Direction d : Direction.values()) {
+                TileEntity te = Utils.getExistingTileEntity(this.getWorld(), pos.offset(d));
+                if (te instanceof INetworkConsumer)
+                    if (((INetworkConsumer) te).canConnectAt(d.getOpposite()))
+                        ((INetworkConsumer) te).connect(d.getOpposite(), 0);
+            }
+            propcd = 5;
+        } else
+            propcd--;
+    }
+
+    @Override
+    public NetworkHolder getHolder() {
+        return null;
+    }
 }

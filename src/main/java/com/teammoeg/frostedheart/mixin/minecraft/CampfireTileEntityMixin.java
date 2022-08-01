@@ -18,14 +18,7 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.teammoeg.frostedheart.util.ICampfireExtra;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;
 import net.minecraft.nbt.CompoundNBT;
@@ -34,6 +27,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(CampfireTileEntity.class)
 public abstract class CampfireTileEntityMixin extends TileEntity implements ICampfireExtra {
@@ -62,11 +60,12 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
         this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));
     }
+
     @Inject(at = @At("RETURN"), method = "<init>()V")
-    private void init(CallbackInfo ci)
-    {
+    private void init(CallbackInfo ci) {
         lifeTime = 0;
     }
+
     @Inject(at = @At("RETURN"), method = "tick")
     public void tick(CallbackInfo ci) {
         if (!this.world.isRemote) {

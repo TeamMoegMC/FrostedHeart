@@ -19,8 +19,6 @@
 package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
-
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
@@ -37,9 +35,10 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
+import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.util.FHLogger;
+import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
@@ -70,15 +69,15 @@ import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
     /**
-	 * @param event  
-	 */
+     * @param event
+     */
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent event) {
         // Register screens
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
-        ClientRegistryEvents.<DrawDeskContainer,MenuScreenWrapper<DrawDeskContainer>>registerIEScreen(new ResourceLocation(FHMain.MODID,"draw_desk"),(c,i,t)->new MenuScreenWrapper<DrawDeskContainer>(new DrawDeskScreen(c),c,i,t).disableSlotDrawing());
+        ClientRegistryEvents.<DrawDeskContainer, MenuScreenWrapper<DrawDeskContainer>>registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), (c, i, t) -> new MenuScreenWrapper<DrawDeskContainer>(new DrawDeskScreen(c), c, i, t).disableSlotDrawing());
         // Register translucent render type
 
         RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutout());
@@ -108,15 +107,15 @@ public class ClientRegistryEvents {
     public static <C extends Container, S extends Screen & IHasContainer<C>> void
     registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
         @SuppressWarnings("unchecked")
-		ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
+        ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
         ScreenManager.registerFactory(type, factory);
     }
 
     /**
-	 * @param event  
-	 */
+     * @param event
+     */
     @SuppressWarnings("resource")
-	@SubscribeEvent
+    @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
     }

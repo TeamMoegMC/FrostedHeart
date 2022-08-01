@@ -2,8 +2,8 @@ package com.teammoeg.frostedheart.util;
 
 public interface IMilkable {
 
-	byte getMilk();
+    byte getMilk();
 
-	void setMilk(byte milk);
+    void setMilk(byte milk);
 
 }

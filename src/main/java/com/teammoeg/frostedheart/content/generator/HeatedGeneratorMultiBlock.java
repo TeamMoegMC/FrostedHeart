@@ -18,11 +18,10 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
-
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
@@ -51,7 +50,7 @@ public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
         if (te instanceof INetworkConsumer) {
             Vector3i vec = pos.subtract(fromPos);
             Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((INetworkConsumer) te).connect(dir,0);
+            ((INetworkConsumer) te).connect(dir, 0);
         }
     }
 

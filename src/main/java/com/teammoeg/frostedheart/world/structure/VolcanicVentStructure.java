@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.world.structure;
 
 import com.mojang.serialization.Codec;
-import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -16,9 +15,8 @@ import net.minecraft.world.gen.feature.NoFeatureConfig;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.gen.feature.template.TemplateManager;
-import org.apache.logging.log4j.Level;
 
-public class VolcanicVentStructure extends Structure<NoFeatureConfig>  {
+public class VolcanicVentStructure extends Structure<NoFeatureConfig> {
     public VolcanicVentStructure(Codec<NoFeatureConfig> codec) {
         super(codec);
     }
@@ -27,6 +25,7 @@ public class VolcanicVentStructure extends Structure<NoFeatureConfig>  {
     public Structure.IStartFactory<NoFeatureConfig> getStartFactory() {
         return Start::new;
     }
+
     @Override
     public GenerationStage.Decoration getDecorationStage() {
         return GenerationStage.Decoration.SURFACE_STRUCTURES;
@@ -42,6 +41,7 @@ public class VolcanicVentStructure extends Structure<NoFeatureConfig>  {
         public Start(Structure<NoFeatureConfig> p_i225819_1_, int p_i225819_2_, int p_i225819_3_, MutableBoundingBox boundingBox, int p_i225819_5_, long p_i225819_6_) {
             super(p_i225819_1_, p_i225819_2_, p_i225819_3_, boundingBox, p_i225819_5_, p_i225819_6_);
         }
+
         @Override
         public void func_230364_a_(DynamicRegistries dynamic, ChunkGenerator generator, TemplateManager template, int chunkX, int chunkZ, Biome biome, NoFeatureConfig config) {
 

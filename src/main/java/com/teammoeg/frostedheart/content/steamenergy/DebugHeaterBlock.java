@@ -18,15 +18,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.function.BiFunction;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -46,6 +40,10 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.function.BiFunction;
+
 public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public DebugHeaterBlock(String name, Properties blockProps,
                             BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
@@ -58,6 +56,7 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
         return FHTileTypes.DEBUGHEATER.get().create();
     }
+
     @Override
     public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
                                 boolean isMoving) {
@@ -65,7 +64,7 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
         if (te instanceof INetworkConsumer) {
             Vector3i vec = pos.subtract(fromPos);
             Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((INetworkConsumer) te).connect(dir,0);
+            ((INetworkConsumer) te).connect(dir, 0);
         }
     }
 
@@ -76,23 +75,23 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     }
 
     @Override
-	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
-			Hand hand, BlockRayTraceResult hit) {
+    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
+                                             Hand hand, BlockRayTraceResult hit) {
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
         if (superResult.isSuccessOrConsume() || player.isSneaking())
             return superResult;
         ItemStack item = player.getHeldItem(hand);
         if (item.getItem().equals(Item.getItemFromBlock(this))) {
-        	state=state.cycleValue(BlockStateProperties.LEVEL_1_8);
-        	world.setBlockState(pos, state);
-        	player.sendStatusMessage(new StringTextComponent(String.valueOf(state.get(BlockStateProperties.LEVEL_1_8))),true);
+            state = state.cycleValue(BlockStateProperties.LEVEL_1_8);
+            world.setBlockState(pos, state);
+            player.sendStatusMessage(new StringTextComponent(String.valueOf(state.get(BlockStateProperties.LEVEL_1_8))), true);
             return ActionResultType.SUCCESS;
         }
         return superResult;
-	}
+    }
 
 
-	@Override
+    @Override
     public boolean hasTileEntity(BlockState state) {
         return true;
     }

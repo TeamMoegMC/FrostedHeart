@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.network.research;
 
-import java.util.function.Supplier;
-
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
@@ -27,51 +25,56 @@ import com.teammoeg.frostedheart.research.ResearchData;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.util.SerializeUtil;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.function.Supplier;
+
 // send when data update
 public class FHResearchDataUpdatePacket {
     private final CompoundNBT data;
     private final int id;
+
     public FHResearchDataUpdatePacket(ResearchData rd) {
         this.data = rd.serialize();
-        this.id=rd.getResearch().getRId();
+        this.id = rd.getResearch().getRId();
     }
+
     public FHResearchDataUpdatePacket(int rid) {
-    	this.data=null;
-    	this.id=rid;
+        this.data = null;
+        this.id = rid;
     }
+
     public FHResearchDataUpdatePacket(PacketBuffer buffer) {
         data = SerializeUtil.readOptional(buffer, PacketBuffer::readCompoundTag).orElse(null);
-        id=buffer.readVarInt();
+        id = buffer.readVarInt();
     }
 
     public void encode(PacketBuffer buffer) {
-        SerializeUtil.writeOptional2(buffer, data,PacketBuffer::writeCompoundTag);
+        SerializeUtil.writeOptional2(buffer, data, PacketBuffer::writeCompoundTag);
         buffer.writeVarInt(id);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	Research rs=FHResearch.researches.getById(id);
-        	if(data==null) {
-        		rs.resetData();
-        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,false));
-        		return;
-        	}
-        	ResearchData datax=rs.getData();
-        	boolean status=datax.isCompleted();
-        	datax.deserialize(data);
-        	ClientUtils.refreshResearchGui();
-        	if(status!=datax.isCompleted()) {
-        		if(datax.isCompleted()) {
-        			ClientUtils.mc().getToastGui().add(new ResearchToast(rs));
-        		}
-        		MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted()));
-        	}
+            Research rs = FHResearch.researches.getById(id);
+            if (data == null) {
+                rs.resetData();
+                MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, false));
+                return;
+            }
+            ResearchData datax = rs.getData();
+            boolean status = datax.isCompleted();
+            datax.deserialize(data);
+            ClientUtils.refreshResearchGui();
+            if (status != datax.isCompleted()) {
+                if (datax.isCompleted()) {
+                    ClientUtils.mc().getToastGui().add(new ResearchToast(rs));
+                }
+                MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, datax.isCompleted()));
+            }
         });
         context.get().setPacketHandled(true);
     }

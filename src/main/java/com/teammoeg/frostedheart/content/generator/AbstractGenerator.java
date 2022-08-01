@@ -18,19 +18,18 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import java.util.UUID;
-import java.util.function.Consumer;
-
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.IOwnerTile;
-
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
+
+import java.util.UUID;
+import java.util.function.Consumer;
 
 public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState {
 
@@ -43,8 +42,9 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     boolean isOverdrive;
     boolean isActualOverdrive;
     boolean isDirty;//mark if temperature change required
-    boolean isLocked=false;
-    private int checkInterval=0;
+    boolean isLocked = false;
+    private int checkInterval = 0;
+
     public AbstractGenerator(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
     }
@@ -60,63 +60,68 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        isWorking=nbt.getBoolean("isWorking");
-        isOverdrive=nbt.getBoolean("isOverdrive");
-        isActualOverdrive=nbt.getBoolean("Overdriven");
+        isWorking = nbt.getBoolean("isWorking");
+        isOverdrive = nbt.getBoolean("isOverdrive");
+        isActualOverdrive = nbt.getBoolean("Overdriven");
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.putBoolean("isWorking",isWorking);
-        nbt.putBoolean("isOverdrive",isOverdrive);
-        nbt.putBoolean("Overdriven",isActualOverdrive);
+        nbt.putBoolean("isWorking", isWorking);
+        nbt.putBoolean("isOverdrive", isOverdrive);
+        nbt.putBoolean("Overdriven", isActualOverdrive);
     }
 
     @Override
     public void disassemble() {
         ChunkData.removeTempAdjust(world, getPos());
-        if(shouldUnique()&&master()!=null)
-        	master().unregist();
+        if (shouldUnique() && master() != null)
+            master().unregist();
         super.disassemble();
     }
+
     public void unregist() {
-    	UUID owner=getOwner();
-    	if(owner==null)return;
-    	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
-    	if(!vars.contains("generator_loc"))return;
-        long pos=vars.getLong("generator_loc");
-        BlockPos bp=BlockPos.fromLong(pos);
-        if(bp.equals(this.pos))
-        	vars.remove("generator_loc");
+        UUID owner = getOwner();
+        if (owner == null) return;
+        CompoundNBT vars = ResearchDataAPI.getVariants(owner);
+        if (!vars.contains("generator_loc")) return;
+        long pos = vars.getLong("generator_loc");
+        BlockPos bp = BlockPos.fromLong(pos);
+        if (bp.equals(this.pos))
+            vars.remove("generator_loc");
     }
+
     public void regist() {
-    	CompoundNBT vars=ResearchDataAPI.getVariants(getOwner());
-        vars.putLong("generator_loc",master().pos.toLong());
+        CompoundNBT vars = ResearchDataAPI.getVariants(getOwner());
+        vars.putLong("generator_loc", master().pos.toLong());
     }
-    public void setOwner(UUID owner){
-    	forEachBlock(s->IOwnerTile.setOwner(s,owner));
+
+    public void setOwner(UUID owner) {
+        forEachBlock(s -> IOwnerTile.setOwner(s, owner));
     }
+
     public boolean shouldWork() {
-    	UUID owner=getOwner();
-    	if(owner==null)return false;
-    	CompoundNBT vars=ResearchDataAPI.getVariants(owner);
-    	if(!vars.contains("generator_loc")) {
-    		vars.putLong("generator_loc",master().pos.toLong());
-    		return true;
-    	}
-    	long pos=vars.getLong("generator_loc");
-    	BlockPos bp=BlockPos.fromLong(pos);
-        if(bp.equals(this.pos))
-        	return true;
+        UUID owner = getOwner();
+        if (owner == null) return false;
+        CompoundNBT vars = ResearchDataAPI.getVariants(owner);
+        if (!vars.contains("generator_loc")) {
+            vars.putLong("generator_loc", master().pos.toLong());
+            return true;
+        }
+        long pos = vars.getLong("generator_loc");
+        BlockPos bp = BlockPos.fromLong(pos);
+        if (bp.equals(this.pos))
+            return true;
         return false;
     }
+
     protected abstract void onShutDown();
 
     protected abstract void tickFuel();
 
     protected abstract void tickEffects(boolean isActive);
-    
+
     public abstract boolean shouldUnique();
 
     @Override
@@ -134,24 +139,24 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
                 ChunkData.removeTempAdjust(world, getPos());
             }
         if (!world.isRemote && formed && !isDummy() && isWorking()) {
-        	if(shouldUnique()) {
-        		if(checkInterval<=0) {
-        			if(getOwner()!=null)
-        				checkInterval=10;
-        			isLocked=!shouldWork();
-        		}else checkInterval--;
-        	}
+            if (shouldUnique()) {
+                if (checkInterval <= 0) {
+                    if (getOwner() != null)
+                        checkInterval = 10;
+                    isLocked = !shouldWork();
+                } else checkInterval--;
+            }
             final boolean activeBeforeTick = getIsActive();
-            if(!isLocked)
-            	tickFuel();	
+            if (!isLocked)
+                tickFuel();
             else
-            	this.setActive(false);
+                this.setActive(false);
             // set activity status
             final boolean activeAfterTick = getIsActive();
             if (activeBeforeTick != activeAfterTick) {
                 this.markDirty();
                 if (activeAfterTick) {
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(),getActualTemp());
+                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
                 } else {
                     ChunkData.removeTempAdjust(world, getPos());
                 }
@@ -160,7 +165,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
                 if (isChanged() || !initialized) {
                     initialized = true;
                     markChanged(false);
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(),getActualTemp());
+                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
                 }
             }
         }
@@ -239,12 +244,14 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         if (master() != null)
             master().isUserOperated = isUserOperated;
     }
+
     protected void setAllActive(boolean state) {
-        forEachBlock(s->s.setActive(state));
+        forEachBlock(s -> s.setActive(state));
     }
+
     public abstract void forEachBlock(Consumer<T> consumer);
 
-	UUID getOwner() {
-		return IOwnerTile.getOwner(this);
-	}
+    UUID getOwner() {
+        return IOwnerTile.getOwner(this);
+    }
 }

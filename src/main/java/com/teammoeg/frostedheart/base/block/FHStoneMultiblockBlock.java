@@ -18,11 +18,10 @@
 
 package com.teammoeg.frostedheart.base.block;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.FHUtils;
-
 import blusunrize.immersiveengineering.common.blocks.IEMultiblockBlock;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
@@ -37,13 +36,13 @@ public class FHStoneMultiblockBlock<T extends MultiblockPartTileEntity<? super T
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public FHStoneMultiblockBlock(String name, RegistryObject<TileEntityType<T>> type) {
-        super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)),type);
+        super(name, Properties.create(Material.ROCK).hardnessAndResistance(2.0F, 20.0F).notSolid().setLightLevel(FHUtils.getLightValueLit(15)), type);
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
     public FHStoneMultiblockBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
-        super(name, props,type);
+        super(name, props, type);
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }

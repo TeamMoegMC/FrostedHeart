@@ -12,6 +12,7 @@ public class ServerWorldInfoMixin {
 
     /**
      * Reference: https://github.com/CorgiTaco/ShutupExperimentalSettings/blob/master/src/main/java/corgitaco/shutupexperimentalsettings/mixin/client/MixinServerWorldInfo.java
+     *
      * @reason Shut up experimental settings
      */
     @Inject(method = "getLifecycle", at = @At("HEAD"), cancellable = true)

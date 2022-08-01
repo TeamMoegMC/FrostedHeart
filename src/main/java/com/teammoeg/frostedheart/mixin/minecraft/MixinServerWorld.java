@@ -20,7 +20,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import static com.teammoeg.frostedheart.climate.WorldClimate.*;
+import static com.teammoeg.frostedheart.climate.WorldClimate.BLIZZARD_TEMPERATURE;
+import static com.teammoeg.frostedheart.climate.WorldClimate.SNOW_TEMPERATURE;
 
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World {

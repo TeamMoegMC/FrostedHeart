@@ -47,7 +47,8 @@ public interface IHeatingEquipment {
      * @return returns max temperature delta
      */
     float getMax(ItemStack stack);
+
     default boolean canHandHeld() {
-    	return false;
+        return false;
     }
 }
