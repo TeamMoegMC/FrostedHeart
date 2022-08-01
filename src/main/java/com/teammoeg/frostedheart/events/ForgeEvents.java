@@ -314,7 +314,7 @@ public class ForgeEvents {
 	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
-		// only attach to overworld
+		// only attach to dimension with skylight (i.e. overworld)
 		if (event.getObject().getDimensionType().hasSkyLight()) {
 			event.addCapability(ClimateData.ID, new ClimateData());
 		}
