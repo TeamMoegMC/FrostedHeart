@@ -30,6 +30,7 @@ import java.util.Random;
  * Central class for all FH climate requirements.
  * This is only valid in the overworld!
  */
+@Deprecated
 public final class Climate {
     /**
      * Constants for temperature calculation. Do not reference these directly, they do not have much meaning outside the context they are used in
