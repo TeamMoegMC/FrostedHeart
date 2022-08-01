@@ -4,6 +4,8 @@ import net.minecraft.nbt.CompoundNBT;
 
 import java.util.Random;
 
+import static com.teammoeg.frostedheart.climate.WorldClimate.*;
+
 public class TempEvent {
     public long startTime;
     public long peakTime;
@@ -65,25 +67,35 @@ public class TempEvent {
 
         long calmLength = secondsPerDay*5 + random.nextInt((int) (secondsPerDay*3));
         long nextCalmEnd = nextEnd + calmLength;
-        //System.out.println(nextStart);
-        //System.out.println(nextCalmEnd-nextStart);
-        float peakTemp = 4 + (float) (random.nextGaussian());
-        float bottomTemp = - 20 + (float) (random.nextGaussian());
+
+        float peakTemp = COLD_PERIOD_PEAK + (float) (random.nextGaussian());
+
+        // 10% Extreme cold, 20% Intense cold, 70% Cold
+        int typeBottom = random.nextInt(10);
+        float bottomTemp = (float) (random.nextGaussian());
+        if (typeBottom == 0) {
+            bottomTemp += COLD_PERIOD_BOTTOM_EXTREME;
+        } else if (typeBottom <= 2) {
+            bottomTemp += COLD_PERIOD_BOTTOM_INTENSE;
+        } else {
+            bottomTemp += COLD_PERIOD_BOTTOM;
+        }
 
         return new TempEvent(nextStart, nextPeak, peakTemp, nextBottom, bottomTemp, nextEnd, nextCalmEnd, true);
     }
 
     public float getHourTemp(long t) {
+        Random random = new Random();
         if (t >= startTime && t < peakTime) {
             return getPiecewiseTemp(t, startTime, peakTime, 0, peakTemp, 0, 0);
         } else if (t >= peakTime && t < bottomTime) {
             return getPiecewiseTemp(t, peakTime, bottomTime, peakTemp, bottomTemp, 0, 0);
         } else if (t >= bottomTime && t < endTime) {
             return getPiecewiseTemp(t, bottomTime, endTime, bottomTemp, 0, 0, 0);
-        } else if (t >= endTime && t < calmEndTime) {
-            return 0F;
+        } else if (t >= endTime && t <= calmEndTime) {
+            return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
         } else {
-            return 0F;
+            return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
         }
     }
 

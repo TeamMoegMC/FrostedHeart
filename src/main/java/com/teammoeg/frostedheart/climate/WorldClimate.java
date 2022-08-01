@@ -24,7 +24,6 @@ import java.util.Map;
 import com.teammoeg.frostedheart.data.FHDataManager;
 
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -32,17 +31,44 @@ import net.minecraft.world.biome.Biome;
 public class WorldClimate {
 
     /**
-     * Constant WORLD_TEMPERATURE.<br>
+     * Baseline temperature for temperate period.
      */
-    public static final float WORLD_TEMPERATURE = 0;
+    public static final float CALM_PERIOD_BASELINE = 0;
 
     /**
-     * Constant VANILLA_PLANT_GROW_TEMPERATURE.<br>
+     * The temporary uprising peak temperature of a cold period.
+     */
+    public static final float COLD_PERIOD_PEAK = 4;
+
+    /**
+     * The bottom temperature of a cold period.
+     */
+    public static final float COLD_PERIOD_BOTTOM = -20;
+    public static final float COLD_PERIOD_BOTTOM_INTENSE = -30;
+    public static final float COLD_PERIOD_BOTTOM_EXTREME = -40;
+
+    /**
+     * The peak temperature of a warm period.
+     */
+    public static final float WARM_PERIOD_PEAK = 10;
+
+    /**
+     * The temperature when snow can reach the ground.
+     */
+    public static final float SNOW_TEMPERATURE = -5;
+
+    /**
+     * The temperature when snow becomes blizzard.
+     */
+    public static final float BLIZZARD_TEMPERATURE = -15;
+
+    /**
+     * The temperature when vanilla plants can grow.
      */
     public static final float VANILLA_PLANT_GROW_TEMPERATURE = 20;
 
     /**
-     * Constant HEMP_GROW_TEMPERATURE.<br>
+     * The temperature when hemp can grow.
      */
     public static final float HEMP_GROW_TEMPERATURE = 0;
 
@@ -59,11 +85,11 @@ public class WorldClimate {
      */
     public static float getWorldTemperature(IWorldReader w, BlockPos pos) {
         Float temp = biomebuffer.computeIfAbsent(w.getBiome(pos), FHDataManager::getBiomeTemp);
-        float wt =  WORLD_TEMPERATURE;
+        float wt = CALM_PERIOD_BASELINE;
         if (w instanceof World) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
                 Float fw = FHDataManager.getWorldTemp((World) w);
-                if (fw == null) return WORLD_TEMPERATURE;
+                if (fw == null) return CALM_PERIOD_BASELINE;
                 return fw;
             });
 

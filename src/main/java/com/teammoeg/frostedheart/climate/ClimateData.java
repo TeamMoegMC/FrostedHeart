@@ -145,7 +145,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         dtd.dayNoise = (float) MathHelper.clamp(rnd.nextGaussian() * 5 + lastnoise, -5d, 5d);
         dtd.dayHumidity = (float) MathHelper.clamp(rnd.nextGaussian() * 5 + lasthumid, 0d, 50d);
         for (int i = 0; i < 24; i++) {
-            dtd.setHourTemp(i, this.computeTemp(startTime + i * 50)); // remove dayNoise for now
+            dtd.setHourTemp(i, this.computeTemp(startTime + i * 50)); // Removed daynoise
         }
         return dtd;
     }
