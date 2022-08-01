@@ -15,11 +15,18 @@ import net.minecraft.world.gen.Heightmap;
 
 import java.util.Random;
 
-// Arcane, dirty and evilly-written code mainly borrowed from the mod BetterWeather.
-// BUT IT WORKS.
-// To integrate it to the game,
-// let `render` be called in `com.teammoeg.frostedheart.mixin.client.WorldRendererMixin.inject$renderWeather`
-// with appropriate context after confirming that a blizzard is present in the world.
+/**
+ * Render cool Blizzard!
+ *
+ * To integrate it to the game,
+ * let `render` be called in `com.teammoeg.frostedheart.mixin.client.WorldRendererMixin.inject$renderWeather`
+ * with appropriate context after confirming that a blizzard is present in the world.
+ *
+ * We want to thank BetterWeather's author CorgiTaco, who wrote the code we adapted from.
+ * Original Code: https://github.com/CorgiTaco/Better-Weather
+ * This file is licensed under the same license LGPL 3.0
+ * Original License: https://github.com/CorgiTaco/Better-Weather/blob/Forge-1.16.X/LICENSE.txt
+ */
 public class BlizzardRenderer {
     private final static float[] rainSizeXMemento = new float[1024];
     private final static float[] rainSizeZMemento = new float[1024];
