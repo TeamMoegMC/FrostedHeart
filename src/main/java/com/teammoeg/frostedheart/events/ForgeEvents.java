@@ -125,16 +125,11 @@ public class ForgeEvents {
 				ServerWorld serverWorld = (ServerWorld) world;
 				if(serverWorld.getDimensionType().doesFixedTimeExist())return;//don't update for fixed time world
 				// Update clock source every second, and check hour data if it needs an update
-			
 				if (serverWorld.getGameTime() % 20 == 0) {
 					ClimateData data=ClimateData.get(serverWorld);
 					data.updateClock(serverWorld);
-					data.updateCache();
+					data.updateCache(serverWorld);
 					data.trimTempEventStream();
-					// Distribute data to client
-					PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(data));
-					// Debug
-					// System.out.println("Hour Temp: " + ClimateData.getTemp(serverWorld));
 				}
 			}
 		}
@@ -319,7 +314,10 @@ public class ForgeEvents {
 	@SuppressWarnings("resource")
 	@SubscribeEvent
 	public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
-		event.addCapability(ClimateData.ID, new ClimateData());
+		// only attach to overworld
+		if (event.getObject().getDimensionType().hasSkyLight()) {
+			event.addCapability(ClimateData.ID, new ClimateData());
+		}
 	}
 
 	@SubscribeEvent
