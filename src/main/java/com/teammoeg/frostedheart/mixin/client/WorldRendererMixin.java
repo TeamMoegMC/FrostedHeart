@@ -42,31 +42,26 @@ public abstract class WorldRendererMixin
     @Inject(method = "renderRainSnow", at = @At("HEAD"), cancellable = true)
     public void inject$renderWeather(LightTexture manager, float partialTicks, double x, double y, double z, CallbackInfo ci) {
         if (this.mc != null && this.mc.gameRenderer != null) {
-            System.out.println("Has Client World");
-            ClimateData data = ClimateData.get(world);
-            if (data != null) {
-                System.out.println("Has Climate Cap");
-                if (data.isBlizzard()) {
-                    System.out.println("Has Blizzard");
-                    BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
-                }
+            // ClimateData data = ClimateData.get(world);
+            // blizzard when vanilla 'thundering' is true, to save us from doing sync
+            if (world.isThundering()) {
+                System.out.println("Has Blizzard");
+                BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
+                // Road-block injection to remove any Vanilla / Primal Winter weather rendering code
+                ci.cancel();
             }
+            /*
+             * if not blizzard, use primal winter's rendering
+             * @see primalwinter's WorldRendererMixin
+             */
         }
-
-        // Uncomment the following line to get an always-blowing blizzard for testing purpose
-//        BlizzardRenderer.render(mc, this.world, manager, ticks, partialTicks, x, y, z);
-
-        // Road-block injection to remove any Vanilla weather rendering code
-        ci.cancel();
     }
 
-    // Render the particle when precipitation hit the ground
-    // (e.g. the splash of rain drops).
-    // Not required for blizzard.
-    @Inject(method = "addRainParticles", at = @At("RETURN"))
-    public void inject$tickRain(ActiveRenderInfo renderInfo, CallbackInfo ci) {
-        world.getCapability(ClimateData.CAPABILITY).ifPresent((cap)->{
-            // todo: render when blizzard
-        });
-    }
+//    // Render the particle when precipitation hit the ground
+//    // (e.g. the splash of rain drops).
+//    // Not required for blizzard.
+//    @Inject(method = "addRainParticles", at = @At("RETURN"))
+//    public void inject$tickRain(ActiveRenderInfo renderInfo, CallbackInfo ci) {
+//
+//    }
 }
