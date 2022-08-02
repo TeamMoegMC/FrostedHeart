@@ -518,8 +518,6 @@ public class ForgeEvents {
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
-
-
             serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                         new FHClimatePacket(cap));
@@ -635,9 +633,5 @@ public class ForgeEvents {
         AddTempCommand.register(dispatcher);
         ResearchCommand.register(dispatcher);
 //		GenSC.register(dispatcher);
-    }
-
-    public static void attachWorldCapabilities(AttachCapabilitiesEvent<World> event) {
-        event.addCapability(ClimateData.ID, new ClimateData());
     }
 }
