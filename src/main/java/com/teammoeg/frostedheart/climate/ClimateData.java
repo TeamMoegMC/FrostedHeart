@@ -20,6 +20,7 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.LinkedList;
@@ -206,7 +207,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             }
             updateHourCache(hours);
             // Send to client if hour increases
-            // PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
+            PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
         }
     }
 
