@@ -52,8 +52,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * on server, will either query capability falling back to cache, or query
      * provider to generate the data.
      * This method directly get temperature at any positions.
-     *
-     * @see ChunkDataCache#get(ChunkPos) to directly access the cache
      */
     public static float getTemperature(IWorldReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
@@ -77,8 +75,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * packets if necessary
      * If on server, will either query capability falling back to cache, or query
      * provider to generate the data.
-     *
-     * @see ChunkDataCache#get(ChunkPos) to directly access the cache
      */
     public static ChunkData get(IWorldReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
@@ -107,9 +103,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     /**
      * Used on a ServerWorld context to add temperature in certain 3D region in a
      * ChunkData instance
-     * Updates server side cache first. Then send a sync packet to every client.
-     *
-     * @see TemperatureChangePacket
+     * Updates server side cache first.
      */
     private static void addChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adjx) {
         if (world != null && !world.isRemote()) {
@@ -120,7 +114,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                         && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
                 data.adjusters.add(adjx);
             }
-            //PacketHandler.send(PacketDistributor.ALL.noArg(), data.getTempChangePacket());
         }
     }
 
