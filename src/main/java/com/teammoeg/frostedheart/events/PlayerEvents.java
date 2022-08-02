@@ -20,6 +20,7 @@ import net.minecraft.potion.Effects;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.TickEvent;
@@ -77,12 +78,14 @@ public class PlayerEvents {
                 float nextHour = ClimateData.getFutureTemp(serverPlayer.world, 1);
                 if (thisHour >= WorldClimate.BLIZZARD_TEMPERATURE) { // not in blizzard yet
                     if (nextHour < WorldClimate.BLIZZARD_TEMPERATURE) {
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_warning"), true);
+                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_warning")
+                                .mergeStyle(TextFormatting.DARK_RED).mergeStyle(TextFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE, GuiUtils.translateMessage("forecast.blizzard_warning")));
                     }
                 } else { // in blizzard now
                     if (nextHour >= WorldClimate.BLIZZARD_TEMPERATURE) {
-                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_retreating"), true);
+                        serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_retreating")
+                                .mergeStyle(TextFormatting.GREEN).mergeStyle(TextFormatting.BOLD), true);
                         // serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE, GuiUtils.translateMessage("forecast.blizzard_retreating")));
                     }
                 }

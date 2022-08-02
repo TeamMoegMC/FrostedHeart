@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.events.CommonEvents;
+import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -18,6 +20,7 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.LinkedList;
@@ -204,7 +207,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             }
             updateHourCache(hours);
             // Send to client if hour increases
-            // PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
+            PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
         }
     }
 
@@ -410,6 +413,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     public void deserializeNBT(CompoundNBT nbt) {
         clockSource.deserialize(nbt);
         ListNBT list1 = nbt.getList("tempEventStream", Constants.NBT.TAG_COMPOUND);
+        tempEventStream.clear();
         for (int i = 0; i < list1.size(); i++) {
             TempEvent event = new TempEvent();
             event.deserialize(list1.getCompound(i));
@@ -417,6 +421,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
 
         ListNBT list2 = nbt.getList("hourlyTempStream", Constants.NBT.TAG_COMPOUND);
+        dailyTempData.clear();
         for (int i = 0; i < list2.size(); i++) {
             dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
         }
