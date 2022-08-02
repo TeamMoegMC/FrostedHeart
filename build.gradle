@@ -199,7 +199,7 @@ dependencies {
     runtimeOnly fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
     compileOnly fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
 
-    runtimeOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
+    // runtimeOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
     compileOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
 
     // FG5 requires 0.8.3
