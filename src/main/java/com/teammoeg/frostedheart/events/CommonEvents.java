@@ -128,7 +128,6 @@ public class CommonEvents {
                     data.updateClock(serverWorld);
                     data.updateCache(serverWorld);
                     data.trimTempEventStream();
-                    // PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(data));
                 }
             }
         }
