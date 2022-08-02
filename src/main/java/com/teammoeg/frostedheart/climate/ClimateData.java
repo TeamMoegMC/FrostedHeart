@@ -1,8 +1,7 @@
 package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
+import com.teammoeg.frostedheart.events.CommonEvents;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -19,7 +18,6 @@ import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.LinkedList;
@@ -52,11 +50,11 @@ import java.util.Random;
  * <p>
  * To ensure time synchronization, we also implemented {@link WorldClockSource} as a universal timestamp generator.
  * Hence, the clock source is updated each second on server side:
- * {@link com.teammoeg.frostedheart.events.ForgeEvents#onServerTick(TickEvent.WorldTickEvent)}
+ * {@link CommonEvents#onServerTick(TickEvent.WorldTickEvent)}
  * <p>
  * To provide performance, we introduced a cache system for temperature data for {@link #DAY_CACHE_LENGTH} days.
  * Hence, the cache is updated each second on server side:
- * {@link com.teammoeg.frostedheart.events.ForgeEvents#onServerTick(TickEvent.WorldTickEvent)}
+ * {@link CommonEvents#onServerTick(TickEvent.WorldTickEvent)}
  * <p>
  * @author yuesha-yc
  * @author khjxiaogu
@@ -150,13 +148,12 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 
     /**
      * Retrieves hourly updated temperature from cache
-     * If exceeds cache size, return NaN
      * Useful in long range weather forecast
      *
      * @param data an instance of ClimateData
      * @param deltaDays delta days from now to forecast
      * @param deltaHours in that day to forecast
-     * @return temperature at hour at index
+     * @return temperature at hour at index. If exceeds cache size, return NaN.
      */
     private static float getFutureTemp(ClimateData data, int deltaDays, int deltaHours) {
         if (deltaDays < 0 || deltaDays > DAY_CACHE_LENGTH) {
@@ -164,7 +161,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
         if (deltaHours < 0 || deltaHours >= 24)
             throw new IllegalArgumentException("Hours must be in range [0,24)");
-        if (data.dailyTempData.size() < DAY_CACHE_LENGTH) { //this rarely happens, but for safety
+        if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
             data.populateDays();
         }
         return data.dailyTempData.get(deltaDays).getTemp(deltaHours);
@@ -207,7 +204,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             }
             updateHourCache(hours);
             // Send to client if hour increases
-            PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
+            // PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
         }
     }
 
@@ -266,7 +263,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         if (dailyTempData.isEmpty()) {
             dailyTempData.offer(generateDay(clockSource.getDate(), 0, 0));
         }
-        while (dailyTempData.size() < DAY_CACHE_LENGTH) {
+        while (dailyTempData.size() <= DAY_CACHE_LENGTH) {
             DayTemperatureData last = dailyTempData.peekLast();
             dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity));
         }

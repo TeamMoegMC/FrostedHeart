@@ -64,8 +64,12 @@ public class FHConfig {
     }
 
     public static class Common {
-        Common(ForgeConfigSpec.Builder builder) {
+        public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
 
+        Common(ForgeConfigSpec.Builder builder) {
+            enablesTemperatureForecast = builder
+                    .comment("Enables the weather forecast system. ")
+                    .define("enablesTemperatureForecast", true);
         }
     }
 
