@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
-import com.teammoeg.frostedheart.events.PEEvents;
+import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.Researches;
@@ -155,12 +155,12 @@ public class FHMain {
         MinecraftForge.EVENT_BUS.addGenericListener(Item.class, this::missingMappingR);
         MinecraftForge.EVENT_BUS.addGenericListener(Block.class, this::missingMappingB);
         if (ModList.get().isLoaded("projecte")) {
-            MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
+            MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
             System.out.println("pe loaded");
         } else
             try {
                 Class.forName("moze_intel.projecte.PECore");
-                MinecraftForge.EVENT_BUS.addListener(PEEvents::onRC);
+                MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
             } catch (Throwable ignored) {
             }
         ChunkDataCapabilityProvider.setup();

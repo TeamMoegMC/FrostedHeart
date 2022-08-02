@@ -22,15 +22,13 @@ import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.IHeatingEquipment;
-import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
-import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.climate.*;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
@@ -79,6 +77,7 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import org.lwjgl.system.CallbackI;
 
 import java.util.List;
 
@@ -417,6 +416,49 @@ public class ClientEvents {
         if (event.isCanceled()) {
             if (event.getType() != RenderGameOverlayEvent.ElementType.FOOD)
                 MinecraftForge.EVENT_BUS.post(new RenderGameOverlayEvent.Post(event.getMatrixStack(), event, event.getType()));//compatibility
+        }
+    }
+
+    @SubscribeEvent
+    public static void addWeatherItemTooltips(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        if (stack.getItem() == FHItems.temperatureProbe) {
+            event.getToolTip().add(GuiUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
+        }
+        if (stack.getItem() == FHItems.weatherRadar) {
+            event.getToolTip().add(GuiUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
+        }
+        if (stack.getItem() == FHItems.weatherHelmet) {
+            event.getToolTip().add(GuiUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
+        }
+    }
+
+    @SubscribeEvent
+    public static void addFutureTempToDebug(RenderGameOverlayEvent.Text event) {
+        Minecraft mc = Minecraft.getInstance();
+        List<String> list = event.getRight();
+        if (mc.gameSettings.showDebugInfo && mc.world != null && mc.player != null) {
+            float currentHourTemp = ClimateData.getTemp(mc.world);
+            float hour1Temp = ClimateData.getFutureTemp(mc.world, 1);
+            float hour2Temp = ClimateData.getFutureTemp(mc.world, 2);
+            float hour3Temp = ClimateData.getFutureTemp(mc.world, 3);
+            float hour4Temp = ClimateData.getFutureTemp(mc.world, 4);
+            float hour5Temp = ClimateData.getFutureTemp(mc.world, 5);
+            float hour6Temp = ClimateData.getFutureTemp(mc.world, 6);
+            float hour7Temp = ClimateData.getFutureTemp(mc.world, 7);
+            float day1Temp = ClimateData.getFutureTemp(mc.world, 1, 0);
+            float day2Temp = ClimateData.getFutureTemp(mc.world, 2, 0);
+            float day3Temp = ClimateData.getFutureTemp(mc.world, 3, 0);
+            float day4Temp = ClimateData.getFutureTemp(mc.world, 4, 0);
+            float day5Temp = ClimateData.getFutureTemp(mc.world, 5, 0);
+            float day6Temp = ClimateData.getFutureTemp(mc.world, 6, 0);
+            float day7Temp = ClimateData.getFutureTemp(mc.world, 7, 0);
+            list.add("TWR Climate Temperature:");
+            list.add(String.format("This Hour: %.1f", currentHourTemp));
+            list.add(String.format("Next 7 Hours: %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f",
+                    hour1Temp, hour2Temp, hour3Temp, hour4Temp, hour5Temp, hour6Temp, hour7Temp));
+            list.add(String.format("Next 7 Days: %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f",
+                    day1Temp, day2Temp, day3Temp, day4Temp, day5Temp, day6Temp, day7Temp));
         }
     }
 }

@@ -15,9 +15,11 @@ import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.research.machines.FHBasePen;
 import com.teammoeg.frostedheart.research.machines.FHReusablePen;
 import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.Properties;
 import net.minecraft.item.Items;
+import net.minecraftforge.fml.RegistryObject;
 
 public class FHItems {
     public static void init() {
@@ -83,4 +85,7 @@ public class FHItems {
     public static Item ceramic_bucket = new CeramicBucket("ceramic_bucket", createProps().maxStackSize(1));
     public static Item charcoal = new FHBasePen("charcoal", createProps().maxDamage(50).setNoRepair());
     public static Item quill_and_ink = new FHReusablePen("quill_and_ink", createProps().maxDamage(101).setNoRepair(), 1);
+    public static Item weatherHelmet = new FHBaseArmorItem("weather_helmet", FHArmorMaterial.WEATHER, EquipmentSlotType.HEAD, createProps());
+    public static Item weatherRadar = new FHBaseItem("weather_radar", createProps().maxStackSize(1));
+    public static Item temperatureProbe = new FHBaseItem("temperature_probe", createProps().maxStackSize(1));
 }
