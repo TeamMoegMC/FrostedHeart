@@ -182,6 +182,7 @@ public class FHDataManager {
     }
 
     public static Float getBiomeTemp(Biome b) {
+    	if(b==null)return 0f;
         BiomeTempData data = FHDataManager.<BiomeTempData>get(FHDataType.Biome).get(b.getRegistryName());
         if (data != null)
             return data.getTemp();

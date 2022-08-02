@@ -83,7 +83,10 @@ public class WorldClimate {
      * @return world temperature<br>
      */
     public static float getWorldTemperature(IWorldReader w, BlockPos pos) {
-        Float temp = biomebuffer.computeIfAbsent(w.getBiome(pos), FHDataManager::getBiomeTemp);
+    	Biome b=w.getBiome(pos);
+        Float temp =null;
+        if(b!=null)
+        	temp=biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
         float wt = CALM_PERIOD_BASELINE;
         if (w instanceof World) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
