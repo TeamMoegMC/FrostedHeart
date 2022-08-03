@@ -198,6 +198,6 @@ public class FHVersion {
 
     @Override
     public String toString() {
-        return "FHVersion [ver " + String.valueOf(majors) + Arrays.toString(minors) + "]";
+        return "ver " + String.valueOf(majors) + Arrays.toString(minors) ;
     }
 }

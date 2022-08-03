@@ -24,12 +24,14 @@ import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.network.research.*;
+import com.teammoeg.frostedheart.util.FHVersion;
+
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 public class PacketHandler {
-    private static final String VERSION = Integer.toString(1);
+    private static final String VERSION = FHMain.local.fetchVersion().orElse(FHVersion.empty).getOriginal();
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
             VERSION::equals, VERSION::equals);
 
