@@ -15,11 +15,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "weatherforecast:weather_radar"
+          "name": "frostedheart:weather_radar"
         },
         {
           "type": "minecraft:item",
-          "name": "weatherforecast:weather_helmet"
+          "name": "frostedheart:weather_helmet"
         }
       ]
     },

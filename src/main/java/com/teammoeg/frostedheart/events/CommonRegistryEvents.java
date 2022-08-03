@@ -49,7 +49,7 @@ import javax.annotation.Nonnull;
 import static com.teammoeg.frostedheart.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class RegistryEvents {
+public class CommonRegistryEvents {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);

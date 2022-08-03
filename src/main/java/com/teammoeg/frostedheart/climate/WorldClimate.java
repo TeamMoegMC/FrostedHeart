@@ -32,12 +32,12 @@ public class WorldClimate {
     /**
      * Baseline temperature for temperate period.
      */
-    public static final float CALM_PERIOD_BASELINE = 0;
+    public static final float CALM_PERIOD_BASELINE = -5;
 
     /**
      * The temporary uprising peak temperature of a cold period.
      */
-    public static final float COLD_PERIOD_PEAK = 4;
+    public static final float COLD_PERIOD_PEAK = -2;
 
     /**
      * The bottom temperature of a cold period.
@@ -54,12 +54,12 @@ public class WorldClimate {
     /**
      * The temperature when snow can reach the ground.
      */
-    public static final float SNOW_TEMPERATURE = -5;
+    public static final float SNOW_TEMPERATURE = -10;
 
     /**
      * The temperature when snow becomes blizzard.
      */
-    public static final float BLIZZARD_TEMPERATURE = -15;
+    public static final float BLIZZARD_TEMPERATURE = -17;
 
     /**
      * The temperature when vanilla plants can grow.

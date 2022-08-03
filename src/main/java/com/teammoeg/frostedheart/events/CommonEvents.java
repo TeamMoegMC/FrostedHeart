@@ -21,10 +21,7 @@ package com.teammoeg.frostedheart.events;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHDamageSources;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
@@ -69,6 +66,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.play.server.STitlePacket;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
@@ -115,7 +113,7 @@ import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 import javax.annotation.Nonnull;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class ForgeEvents {
+public class CommonEvents {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.WorldTickEvent event) {
@@ -317,28 +315,6 @@ public class ForgeEvents {
         event.addListener(new FHRecipeCachingReloadListener(dataPackRegistries));
     }
 
-    @SuppressWarnings("resource")
-    @SubscribeEvent
-    public static void onAttachCapabilitiesWorld(AttachCapabilitiesEvent<World> event) {
-        // only attach to dimension with skylight (i.e. overworld)
-        if (event.getObject().getDimensionType().hasSkyLight()) {
-            event.addCapability(ClimateData.ID, new ClimateData());
-        }
-    }
-
-    @SubscribeEvent
-    public static void onAttachCapabilitiesChunk(AttachCapabilitiesEvent<Chunk> event) {
-        if (!event.getObject().isEmpty()) {
-            World world = event.getObject().getWorld();
-            ChunkPos chunkPos = event.getObject().getPos();
-            if (!world.isRemote) {
-                if (!event.getCapabilities().containsKey(ChunkDataCapabilityProvider.KEY))
-                    event.addCapability(ChunkDataCapabilityProvider.KEY, new ChunkData(chunkPos));
-            }
-
-        }
-    }
-
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void addOreGenFeatures(BiomeLoadingEvent event) {
         if (event.getName() != null) {
@@ -518,8 +494,6 @@ public class ForgeEvents {
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
-
-
             serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                         new FHClimatePacket(cap));
@@ -635,9 +609,5 @@ public class ForgeEvents {
         AddTempCommand.register(dispatcher);
         ResearchCommand.register(dispatcher);
 //		GenSC.register(dispatcher);
-    }
-
-    public static void attachWorldCapabilities(AttachCapabilitiesEvent<World> event) {
-        event.addCapability(ClimateData.ID, new ClimateData());
     }
 }

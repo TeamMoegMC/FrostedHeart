@@ -44,6 +44,9 @@ public enum FHArmorMaterial implements IArmorMaterial {
     }),
     WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
         return Ingredient.fromItems(Items.WHITE_WOOL);
+    }),
+    WEATHER("weather", 15, new int[]{2, 5, 6, 2}, 9, SoundEvents.ITEM_ARMOR_EQUIP_IRON, 0.0F, 0.0F, () -> {
+        return Ingredient.fromItems(Items.IRON_INGOT);
     });
 
     private static final int[] MAX_DAMAGE_ARRAY = new int[]{13, 15, 16, 11};
