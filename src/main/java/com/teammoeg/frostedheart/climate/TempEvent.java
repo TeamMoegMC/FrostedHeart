@@ -40,8 +40,8 @@ public class TempEvent {
         cnbt.putLong("startTime", startTime);
         cnbt.putLong("peakTime", peakTime);
         cnbt.putFloat("peakTemp", peakTemp);
-        cnbt.putLong("bottomTime", bottomTime);
-        cnbt.putFloat("bottomTemp", bottomTemp);
+        cnbt.putLong("bottomTime", bottomTime); // not used when not is cold
+        cnbt.putFloat("bottomTemp", bottomTemp); // not used when not is cold
         cnbt.putLong("endTime", endTime);
         cnbt.putBoolean("isCold", isCold);
         cnbt.putLong("calmEndTime", calmEndTime);
@@ -60,56 +60,81 @@ public class TempEvent {
     }
 
     /**
-     * Creates a new TempEvent consisting of a cold period followed by a calm period.
+     * Creates a new TempEvent consisting of a cold or warm period followed by a calm period.
      * This essentially generates a set of parameters that can be used in later computation.
      *
-     * Cold period lasts 5-8 days.
+     * Cold period lasts 2-7 days.
      * At beginning, temperature quickly rises to a peak within 8-24 hours.
      * Then, temperature quickly drops to a bottom at around 20% time into the cold period.
      * Bottom temperature has three levels: normal, intense, extreme.
      * The chances for these three levels happening are, respectively: 70%, 20%, 10%.
      *
-     * Calm periods lasts 5-8 days.
+     * Calm periods lasts 2-7 days.
      * The temperature will be gaussian-style fluctuating around a fixed value.
      *
-     * TODO: implement warm period
-     * Warm periods lasts 5-8 days.
+     * Warm periods lasts 2-7 days.
      * Temperature will slowly rise to a peak around 50% into the cold period.
-     *
      *
      * For more details regarding the numerical values mentioned above, see {@link WorldClimate}.
      *
-     * @param nextStart the start timestamp of next cold-calm period, in seconds.
+     * @param startTime the start timestamp of next cold/warm-calm period, in seconds.
      * @return a new TempEvent.
      */
-    public static TempEvent getTempEvent(long nextStart) {
+    public static TempEvent getTempEvent(long startTime) {
+        Random random = new Random();
+        if (random.nextInt(2) == 0)
+            return getTempEvent(startTime, true);
+        else
+            return getTempEvent(startTime, false);
+    }
+
+    public static TempEvent getTempEvent(long startTime, boolean isCold) {
         Random random = new Random();
         long secondsPerDay = 24 * 50;
+        long peakTime = 0, bottomTime = 0, endTime = 0; float peakTemp = 0, bottomTemp = 0;
 
         // Cold Period
-        long length = secondsPerDay * 5 + random.nextInt((int) (secondsPerDay * 3)); // 5 - 8 days length
-        long nextPeak = nextStart + 8 * 50 + random.nextInt(16 * 50); // reach peak within 8-24h
-        long nextBottom = nextPeak + (length / 5) + random.nextInt(24 * 50); // reach bottom around 20% length
-        long nextEnd = nextStart + length;
-
-        // Calm Period
-        long calmLength = secondsPerDay * 5 + random.nextInt((int) (secondsPerDay * 3)); // 5 - 8 days length
-        long nextCalmEnd = nextEnd + calmLength;
-
-        float peakTemp = COLD_PERIOD_PEAK + (float) (random.nextGaussian());
-
-        // 10% Extreme cold, 20% Intense cold, 70% Cold
-        int typeBottom = random.nextInt(10);
-        float bottomTemp = (float) (random.nextGaussian());
-        if (typeBottom == 0) {
-            bottomTemp += COLD_PERIOD_BOTTOM_EXTREME;
-        } else if (typeBottom <= 2) {
-            bottomTemp += COLD_PERIOD_BOTTOM_INTENSE;
-        } else {
-            bottomTemp += COLD_PERIOD_BOTTOM;
+        if (isCold) {
+            long length = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+            endTime = startTime + length;
+            long padding = 8 * 50 + random.nextInt(16 * 50);
+            peakTime = startTime + padding; // reach peak within 8-24h
+            bottomTime = startTime + padding + (length - padding) / 4;
+            peakTemp = COLD_PERIOD_PEAK + (float) (random.nextGaussian());
+            bottomTemp = (float) (random.nextGaussian());
+            switch (random.nextInt(10)) {
+                case 0:
+                    bottomTemp += COLD_PERIOD_BOTTOM_T4;
+                    break;
+                case 1:
+                case 2:
+                    bottomTemp += COLD_PERIOD_BOTTOM_T3;
+                    break;
+                case 3:
+                case 4:
+                case 5:
+                    bottomTemp += COLD_PERIOD_BOTTOM_T2;
+                    break;
+                default:
+                    bottomTemp += COLD_PERIOD_BOTTOM_T1;
+                    break;
+            }
         }
 
-        return new TempEvent(nextStart, nextPeak, peakTemp, nextBottom, bottomTemp, nextEnd, nextCalmEnd, true);
+        // Warm Period
+        else {
+            long length = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+            endTime = startTime + length;
+            long padding = 8 * 50 + random.nextInt(16 * 50); // 8-24h
+            peakTime = startTime + padding + (length - padding) / 2;
+            peakTemp = WARM_PERIOD_PEAK + (float) (random.nextGaussian());
+        }
+
+        // Calm Period
+        long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
+        long calmEndTime = endTime + calmLength;
+
+        return new TempEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, isCold);
     }
 
     /**
@@ -122,17 +147,31 @@ public class TempEvent {
      */
     public float getHourTemp(long t) {
         Random random = new Random();
-        if (t >= startTime && t < peakTime) {
-            return getPiecewiseTemp(t, startTime, peakTime, 0, peakTemp, 0, 0);
-        } else if (t >= peakTime && t < bottomTime) {
-            return getPiecewiseTemp(t, peakTime, bottomTime, peakTemp, bottomTemp, 0, 0);
-        } else if (t >= bottomTime && t < endTime) {
-            return getPiecewiseTemp(t, bottomTime, endTime, bottomTemp, 0, 0, 0);
-        } else if (t >= endTime && t <= calmEndTime) {
-            return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+
+        if (isCold) {
+            if (t >= startTime && t < peakTime) {
+                return getPiecewiseTemp(t, startTime, peakTime, CALM_PERIOD_BASELINE, peakTemp, 0, 0);
+            } else if (t >= peakTime && t < bottomTime) {
+                return getPiecewiseTemp(t, peakTime, bottomTime, peakTemp, bottomTemp, 0, 0);
+            } else if (t >= bottomTime && t < endTime) {
+                return getPiecewiseTemp(t, bottomTime, endTime, bottomTemp, CALM_PERIOD_BASELINE, 0, 0);
+            } else if (t >= endTime && t <= calmEndTime) {
+                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+            } else {
+                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+            }
         } else {
-            return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+            if (t >= startTime && t < peakTime) {
+                return getPiecewiseTemp(t, startTime, peakTime, CALM_PERIOD_BASELINE, peakTemp, 0, 0);
+            } else if (t >= peakTime && t < endTime) {
+                return getPiecewiseTemp(t, peakTime, endTime, peakTemp, CALM_PERIOD_BASELINE, 0, 0);
+            } else if (t >= endTime && t <= calmEndTime) {
+                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+            } else {
+                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+            }
         }
+
     }
 
     /**

@@ -502,6 +502,17 @@ public class CommonEvents {
     }
 
     @SubscribeEvent
+    public static void syncDataWhenDimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayerEntity) {
+            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
+            serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
+                PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+                        new FHClimatePacket(cap));
+            });
+        }
+    }
+
+    @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
         if (FHConfig.SERVER.alwaysKeepInventory.get()) {
             for (ServerWorld world : event.getServer().getWorlds()) {

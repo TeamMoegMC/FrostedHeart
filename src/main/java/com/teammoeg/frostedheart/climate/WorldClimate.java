@@ -32,24 +32,37 @@ public class WorldClimate {
     /**
      * Baseline temperature for temperate period.
      */
-    public static final float CALM_PERIOD_BASELINE = -5;
+    public static final float CALM_PERIOD_BASELINE = -7;
 
     /**
      * The temporary uprising peak temperature of a cold period.
      */
-    public static final float COLD_PERIOD_PEAK = -2;
-
-    /**
-     * The bottom temperature of a cold period.
-     */
-    public static final float COLD_PERIOD_BOTTOM = -20;
-    public static final float COLD_PERIOD_BOTTOM_INTENSE = -30;
-    public static final float COLD_PERIOD_BOTTOM_EXTREME = -40;
+    public static final float COLD_PERIOD_PEAK = -4;
 
     /**
      * The peak temperature of a warm period.
      */
-    public static final float WARM_PERIOD_PEAK = 10;
+    public static final float WARM_PERIOD_PEAK = 5;
+
+    /**
+     * The bottom temperature of a cold period.
+     */
+    public static final float COLD_PERIOD_BOTTOM_T1 = -15;
+    public static final float COLD_PERIOD_BOTTOM_T2 = -20;
+    public static final float COLD_PERIOD_BOTTOM_T3 = -30;
+    public static final float COLD_PERIOD_BOTTOM_T4 = -40;
+    public static final float COLD_PERIOD_BOTTOM_T5 = -50;
+    public static final float COLD_PERIOD_BOTTOM_T6 = -60;
+    public static final float COLD_PERIOD_BOTTOM_T7 = -70;
+    public static final float COLD_PERIOD_BOTTOM_T8 = -80;
+    public static final float COLD_PERIOD_BOTTOM_T9 = -90;
+    public static final float COLD_PERIOD_BOTTOM_T10 = -100;
+
+    public static final float CO2_FREEZE_TEMP = -78;
+    public static final float O2_FREEZE_TEMP = -218;
+    public static final float O2_LIQUID_TEMP = -182;
+    public static final float N2_FREEZE_TEMP = -209;
+    public static final float N2_LIQUID_TEMP = -195;
 
     /**
      * The temperature when snow can reach the ground.
