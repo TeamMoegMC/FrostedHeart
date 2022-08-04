@@ -27,6 +27,8 @@ import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Random;
 
+import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
+
 /**
  * Climate Data Capability attached to a world.
  * Currently, only attached to the Overworld dimension.
@@ -185,6 +187,62 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         long ddate = thours / 24 - data.clockSource.getDate();
         long dhours = thours % 24;
         return getFutureTemp(data, (int) ddate, (int) dhours);
+    }
+
+    /**
+     * Get the number of hours after temperature first reach below lowTemp.
+     *
+     * @param world instance
+     * @param withinHours within how many hours to check
+     * @param lowTemp the temperature to check
+     * @return number of hours after temperature first reach below lowTemp.
+     * Return -1 if such hour not found within limit.
+     */
+    public static int getFirstHourLowerThan(IWorld world, int withinHours, float lowTemp) {
+        if (withinHours > DAY_CACHE_LENGTH * 24)
+            throw new IllegalArgumentException("Hours exceed DAY_CACHE_LENGTH: " + DAY_CACHE_LENGTH);
+        int firstHour = -1;
+        for (int i = 1; i < withinHours; i++) {
+            if (ClimateData.getFutureTemp(world, i) < lowTemp) {
+                firstHour = i;
+                break;
+            }
+        }
+        return firstHour;
+    }
+
+    public static int getFirstHourGreaterThan(IWorld world, int withinHours, float highTemp) {
+        if (withinHours > DAY_CACHE_LENGTH * 24)
+            throw new IllegalArgumentException("Hours exceed DAY_CACHE_LENGTH: " + DAY_CACHE_LENGTH);
+        int firstHour = -1;
+        for (int i = 1; i < withinHours; i++) {
+            if (ClimateData.getFutureTemp(world, i) > highTemp) {
+                firstHour = i;
+                break;
+            }
+        }
+        return firstHour;
+    }
+
+    public static float getMonth(IWorld world) {
+        return get(world).clockSource.getDate();
+    }
+
+
+    public static float getDay(IWorld world) {
+        return get(world).clockSource.getDate();
+    }
+
+    public static float getHour(IWorld world) {
+        return get(world).clockSource.getHours();
+    }
+
+    public static float getSec(IWorld world) {
+        return get(world).clockSource.getTimeSecs();
+    }
+
+    public static float getHourInDay(IWorld world) {
+        return get(world).clockSource.getHourInDay();
     }
 
     @Override
