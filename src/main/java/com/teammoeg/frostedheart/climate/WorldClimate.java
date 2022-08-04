@@ -32,17 +32,17 @@ public class WorldClimate {
     /**
      * Baseline temperature for temperate period.
      */
-    public static final float CALM_PERIOD_BASELINE = -7;
+    public static final float CALM_PERIOD_BASELINE = -10;
 
     /**
      * The temporary uprising peak temperature of a cold period.
      */
-    public static final float COLD_PERIOD_PEAK = -4;
+    public static final float COLD_PERIOD_PEAK = -5;
 
     /**
      * The peak temperature of a warm period.
      */
-    public static final float WARM_PERIOD_PEAK = 5;
+    public static final float WARM_PERIOD_PEAK = -1;
 
     /**
      * The bottom temperature of a cold period.
@@ -67,12 +67,12 @@ public class WorldClimate {
     /**
      * The temperature when snow can reach the ground.
      */
-    public static final float SNOW_TEMPERATURE = -10;
+    public static final float SNOW_TEMPERATURE = -13;
 
     /**
      * The temperature when snow becomes blizzard.
      */
-    public static final float BLIZZARD_TEMPERATURE = -17;
+    public static final float BLIZZARD_TEMPERATURE = -18;
 
     /**
      * The temperature when vanilla plants can grow.
@@ -100,11 +100,11 @@ public class WorldClimate {
         Float temp =null;
         if(b!=null)
         	temp=biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
-        float wt = CALM_PERIOD_BASELINE;
+        float wt = 0;
         if (w instanceof World) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
                 Float fw = FHDataManager.getWorldTemp((World) w);
-                if (fw == null) return CALM_PERIOD_BASELINE;
+                if (fw == null) return 0F;
                 return fw;
             });
 

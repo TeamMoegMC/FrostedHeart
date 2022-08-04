@@ -100,7 +100,7 @@ public class TempEvent {
             long padding = 8 * 50 + random.nextInt(16 * 50);
             peakTime = startTime + padding; // reach peak within 8-24h
             bottomTime = startTime + padding + (length - padding) / 4;
-            peakTemp = COLD_PERIOD_PEAK + (float) (random.nextGaussian());
+            peakTemp = COLD_PERIOD_PEAK - (float) Math.abs(random.nextGaussian());
             bottomTemp = (float) (random.nextGaussian());
             switch (random.nextInt(10)) {
                 case 0:
@@ -127,7 +127,7 @@ public class TempEvent {
             endTime = startTime + length;
             long padding = 8 * 50 + random.nextInt(16 * 50); // 8-24h
             peakTime = startTime + padding + (length - padding) / 2;
-            peakTemp = WARM_PERIOD_PEAK + (float) (random.nextGaussian());
+            peakTemp = WARM_PERIOD_PEAK - (float) Math.abs(random.nextGaussian());
         }
 
         // Calm Period
