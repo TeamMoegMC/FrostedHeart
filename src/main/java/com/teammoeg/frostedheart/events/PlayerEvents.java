@@ -71,7 +71,8 @@ public class PlayerEvents {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) event.player;
             boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
             boolean hasRadar = serverPlayer.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
-            boolean hasHelmet = serverPlayer.inventory.armorItemInSlot(3).isItemEqualIgnoreDurability(new ItemStack(FHItems.weatherHelmet));
+            boolean hasHelmet = serverPlayer.inventory.armorInventory.get(3)
+                    .isItemEqualIgnoreDurability(new ItemStack(FHItems.weatherHelmet));
             if (configAllows && (hasRadar || hasHelmet)) {
                 // Blizzard warning
                 float thisHour = ClimateData.getTemp(serverPlayer.world);
