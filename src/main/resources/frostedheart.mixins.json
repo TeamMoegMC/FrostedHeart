@@ -76,7 +76,6 @@
     "rankine.MixinLargeTree",
     "rankine.MixinMediumTree",
     "rankine.MixinPostWorldReplacer",
-    "rankine.ConfigHelperMixin",
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin"
