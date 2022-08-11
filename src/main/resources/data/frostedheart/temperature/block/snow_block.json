@@ -1,6 +1,6 @@
 {
   "id": "minecraft:snow_block",
-  "temperature": -0.1,
+  "temperature": -2,
   "range": 5,
   "level_divide": false,
   "must_lit": false

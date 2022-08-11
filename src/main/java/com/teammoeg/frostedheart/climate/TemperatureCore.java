@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.math.BlockPos;
@@ -37,8 +38,9 @@ import net.minecraft.world.World;
  */
 public class TemperatureCore {
 
-    public static float getBlockTemp(World world, BlockPos pos) {
-        float blockTemp = 0;
+    public static float getBlockTemp(ServerPlayerEntity spe) {
+    	return new TemperatureSimulator(spe).getBlockTemperature(spe.getPosX(),spe.getPosYEye(),spe.getPosZ());
+       /* float blockTemp = 0;
         int rangeInBlocks = 2;
         for (int x = -rangeInBlocks; x <= rangeInBlocks; x++) {
             for (int y = -rangeInBlocks; y <= rangeInBlocks; y++) {
@@ -77,7 +79,7 @@ public class TemperatureCore {
                 }
             }
         }
-        return blockTemp;
+        return blockTemp;*/
     }
 
     public static final String DATA_ID = FHMain.MODID + ":data";

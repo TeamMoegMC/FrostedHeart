@@ -1,6 +1,6 @@
 {
   "id": "frostedheart:oil_burner",
-  "temperature": 46,
+  "temperature": 200,
   "range": 5,
   "level_divide": false,
   "must_lit": true

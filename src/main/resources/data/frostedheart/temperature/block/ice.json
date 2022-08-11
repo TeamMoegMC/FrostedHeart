@@ -1,6 +1,6 @@
 {
   "id": "minecraft:ice",
-  "temperature": -0.1,
+  "temperature": -4,
   "range": 5,
   "level_divide": false,
   "must_lit": false

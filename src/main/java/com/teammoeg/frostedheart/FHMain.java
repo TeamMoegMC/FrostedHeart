@@ -26,6 +26,7 @@ import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.client.DynamicModelSetup;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.TemperatureSimulator;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -170,7 +171,7 @@ public class FHMain {
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();
-
+        TemperatureSimulator.init();
         //modify default value
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
     }
