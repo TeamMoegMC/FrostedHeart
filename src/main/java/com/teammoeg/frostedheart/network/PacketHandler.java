@@ -48,6 +48,7 @@ public class PacketHandler {
     }
 
     public static void register() {
+        System.out.println("FH Network Version: " + VERSION);
         int id = 0;
 
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,

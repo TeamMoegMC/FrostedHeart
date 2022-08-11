@@ -395,8 +395,8 @@ public class ClientEvents {
             if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
                 if (FrostedHud.renderFood) FrostedHud.renderFood(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderThirst) FrostedHud.renderThirst(stack, anchorX, anchorY, mc, renderViewPlayer);
-                if (FrostedHud.renderHealth)
-                    FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
+                if (FrostedHud.renderHealth) FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
+                if (FrostedHud.renderForecast) FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
                 event.setCanceled(true);
             }
             if (event.getType() == RenderGameOverlayEvent.ElementType.ARMOR && FrostedHud.renderArmor) {
