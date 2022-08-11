@@ -47,6 +47,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.FakePlayer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -73,7 +74,7 @@ public class MechCalcBlock extends FHKineticBlock {
     @Override
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume() || player.isSneaking())
+        if (superResult.isSuccessOrConsume() || player.isSneaking()||player instanceof FakePlayer)
             return superResult;
         TileEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof MechCalcTileEntity)

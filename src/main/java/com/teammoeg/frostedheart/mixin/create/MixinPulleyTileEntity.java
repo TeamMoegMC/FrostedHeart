@@ -24,11 +24,12 @@ public abstract class MixinPulleyTileEntity extends KineticTileEntity {
 
     @Shadow(remap = false)
     public abstract Vector3d getMotionVector();
-
+    private int fh$cooldown;
     @Override
     public float calculateStressApplied() {
 
-        if (movedContraption != null) {
+        if (movedContraption != null&&movedContraption.isAlive()) {
+        	fh$cooldown=100;
             ContraptionCostUtils.setSpeedAndCollect(movedContraption, (int) speed);
             if (getMotionVector().getY() < 0) {
                 this.lastStressApplied = ContraptionCostUtils.getActorCost(movedContraption) + 0.5F;
@@ -36,8 +37,11 @@ public abstract class MixinPulleyTileEntity extends KineticTileEntity {
             }
             this.lastStressApplied = ContraptionCostUtils.getCost(movedContraption) + 1;
             return lastStressApplied;
-        }
-        return 1;
+        }else if(fh$cooldown<=0) {
+        	this.lastStressApplied = 1;
+        	return lastStressApplied;
+        }else fh$cooldown--;
+        return lastStressApplied;
     }
 
     @Inject(at = @At("TAIL"), method = "tick")

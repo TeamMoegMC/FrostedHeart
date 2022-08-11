@@ -2,6 +2,9 @@ package com.teammoeg.frostedheart.compat;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
+import com.simibubi.create.foundation.block.BlockStressValues;
+import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.block.Blocks;
 
 public class CreateCompat {
@@ -11,6 +14,7 @@ public class CreateCompat {
         BlockStressDefaults.setDefaultImpact(AllBlocks.ANDESITE_FUNNEL.getId(), 4.0);
         BlockStressDefaults.setDefaultImpact(AllBlocks.BRASS_FUNNEL.getId(), 4.0);
         BlockStressDefaults.setDefaultImpact(Blocks.DISPENSER.getRegistryName(), 4.0);
-
+        BlockStressValues.registerProvider(FHMain.MODID,new FHStress());
+       
     }
 }

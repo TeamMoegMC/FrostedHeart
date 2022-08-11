@@ -79,6 +79,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
@@ -128,6 +129,7 @@ public class CommonEvents {
                     data.updateClock(serverWorld);
                     data.updateCache(serverWorld);
                     data.trimTempEventStream();
+             
                 }
             }
         }

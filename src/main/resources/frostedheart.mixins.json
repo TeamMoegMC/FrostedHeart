@@ -68,6 +68,7 @@
     "minecraft.TemplateManagerMixin",
     "minecraft.VillagerMixin",
     "minecraft.TileEntityMixin",
+    "minecraft.ServerPlayerEntityMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

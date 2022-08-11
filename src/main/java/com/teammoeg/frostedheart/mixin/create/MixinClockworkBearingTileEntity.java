@@ -22,20 +22,26 @@ public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity 
     protected ControlledContraptionEntity hourHand;
     @Shadow(remap = false)
     protected ControlledContraptionEntity minuteHand;
-
+    private int fh$cooldown;
     @Override
     public float calculateStressApplied() {
         float stress = 1;
-        if (hourHand != null) {
+        if (hourHand != null&&hourHand.isAlive()) {
             ContraptionCostUtils.setSpeedAndCollect(hourHand, speed / 4F);
             stress += ContraptionCostUtils.getRotationCost(hourHand);
         }
-        if (minuteHand != null) {
+        if (minuteHand != null&&minuteHand.isAlive()) {
             ContraptionCostUtils.setSpeedAndCollect(minuteHand, speed / 4F);
             stress += ContraptionCostUtils.getRotationCost(minuteHand);
         }
-
-        this.lastStressApplied = stress;
+        if(stress==1&&lastStressApplied>1) {
+        	if(fh$cooldown<=0) {
+        		this.lastStressApplied=stress;
+        	}else fh$cooldown--;
+        }else {
+        	fh$cooldown=100;
+        	this.lastStressApplied = stress;
+        }
         return lastStressApplied;
     }
 

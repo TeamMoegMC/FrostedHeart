@@ -39,7 +39,7 @@ public class EffectShowCategory extends Effect {
 
     public EffectShowCategory(PacketBuffer pb) {
         super(pb);
-        pb.writeResourceLocation(cate);
+        cate=pb.readResourceLocation();
 
     }
 

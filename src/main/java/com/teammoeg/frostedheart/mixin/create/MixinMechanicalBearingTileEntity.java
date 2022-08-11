@@ -18,17 +18,19 @@ public abstract class MixinMechanicalBearingTileEntity extends GeneratingKinetic
     public MixinMechanicalBearingTileEntity(TileEntityType<?> typeIn) {
         super(typeIn);
     }
-
+    
     @Shadow(remap = false)
     protected ControlledContraptionEntity movedContraption;
-
+    private int fh$cooldown;
     @Override
     public float calculateStressApplied() {
-        if (movedContraption != null) {
+        if (movedContraption != null&&movedContraption.isAlive()) {
+        	fh$cooldown=100;
             ContraptionCostUtils.setSpeedAndCollect(movedContraption, (int) speed);
             this.lastStressApplied = ContraptionCostUtils.getRotationCost(movedContraption) + 1;
-        } else
+        } else if(fh$cooldown<=0) {
             this.lastStressApplied = 0.5F;
+        }else fh$cooldown--;
         return lastStressApplied;
     }
 

@@ -23,24 +23,33 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
     public MixinGantryShaftTileEntity(TileEntityType<?> typeIn) {
         super(typeIn);
     }
-
+    private int fh$cooldown;
     public AbstractContraptionEntity currentComp;
-
     @Override
     public float calculateStressApplied() {
-        if (currentComp != null && currentComp.isAlive()) {
-            //float impact = currentComp.getContraption().getBlocks().size()*4;
-            Direction facing = ((GantryContraption) currentComp.getContraption()).getFacing();
-            Vector3d currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
-            BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
-            if (gantryShaftPos.equals(this.pos)) {
-                ContraptionCostUtils.setSpeedAndCollect(currentComp, (int) speed);
-                this.lastStressApplied = ContraptionCostUtils.getCost(currentComp) + 0.5F;
-                return lastStressApplied;
-            }
+        if (currentComp != null) {
+        	if(currentComp.isAlive()) {
+        		fh$cooldown=100;
+	            //float impact = currentComp.getContraption().getBlocks().size()*4;
+	            Direction facing = ((GantryContraption) currentComp.getContraption()).getFacing();
+	            Vector3d currentPosition = currentComp.getAnchorVec().add(.5, .5, .5);
+	            BlockPos gantryShaftPos = new BlockPos(currentPosition).offset(facing.getOpposite());
+	            if (gantryShaftPos.equals(this.pos)) {
+	                ContraptionCostUtils.setSpeedAndCollect(currentComp, (int) speed);
+	                this.lastStressApplied = ContraptionCostUtils.getCost(currentComp) + 0.5F;
+	                return lastStressApplied;
+	            }else {
+	            	this.lastStressApplied =0;
+	        		return lastStressApplied;
+	            }
+        	}else if(fh$cooldown<=0) {
+        		currentComp = null;
+        		this.lastStressApplied =0;
+        		return lastStressApplied;
+        	}else fh$cooldown--;
         }
-        currentComp = null;
-        return 0;
+        
+        return lastStressApplied;
     }
 
     @Override
