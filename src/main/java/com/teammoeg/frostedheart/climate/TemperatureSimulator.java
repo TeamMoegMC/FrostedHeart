@@ -259,7 +259,7 @@ public class TemperatureSimulator {
 				qy[i] = qy[i] + vy[vid[i]]; // move y
 				qz[i] = qz[i] + vz[vid[i]]; // move z
 				heat += getHeat(qx[i], qy[i], qz[i])
-						* MathHelper.lerp(MathHelper.clamp(vz[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
+						* MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
 			}
 		}
 		return heat / n;
