@@ -25,7 +25,7 @@ public class TemperatureMapper {
         }
     }
 
-    void logTemperature(float temperature, float posX, float posY, float posZ) {
+    static void logTemperature(float temperature, float posX, float posY, float posZ) {
         if (w == null) init();
         try {
             w.write(
