@@ -15,7 +15,7 @@ public class TemperatureMapper {
     // while don't want to bother with any stuff related to the game's lifecycle.
     private static BufferedWriter w;
 
-    private void init() {
+    static private void init() {
         try {
             Path tempFile = Files.createTempFile("FHTemperature", "log");
             w = new BufferedWriter(new FileWriter(tempFile.toFile()));
