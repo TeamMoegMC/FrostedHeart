@@ -14,47 +14,58 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.server.ServerWorld;
+
 /**
  * A simulator built on Alphagem618s' heat conducting model
  * This simulates heat conduction in a small area around player
  * And would take the area out of minecraft logic to optimize calculations.
+ * 
  * @author khjxiaogu
  * @author Alphagem618
- * */
+ */
 public class TemperatureSimulator {
 	public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
-	public static final int range = 7;//through max range is 8, to avoid some rare issues, set it to 7 to keep count of sections is 8
+	public static final int range = 7;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
+										// of sections is 8
 	BlockPos origin;
 	ServerWorld world;
 	Random rnd;
-	private static final int n=4168;
-	private static final float v0=.4f;
-	private double[] qx=new double[n], qy=new double[n], qz=new double[n];//Qpos, position of particle.
-	private static float[] vx=new float[n], vy=new float[n], vz=new float[n];//Vp, speed vector list, this list is considered a distributed ball mesh.
-	private int[] vid=new int[n];//IDv, particle speed index in speed vector list, this lower random cost.
-	private static final int num_rounds=20;
-	static{//generate speed vector list
-		int o=0;
-		for(int i=-10;i<=10;++i)
-			for(int j=-10;j<=10;++j)
-				for(int k=-10;k<=10;++k)
-				{
-					if(i==0&&j==0&&k==0)continue; //ignore zero vector
-					float x=i/10f,y=j/10f, z=k/10f;
-					float r=MathHelper.sqrt(x*x+y*y+z*z);
-					if(r>1)continue; //ignore vectors out of the unit ball
-					vx[o]=x/r*v0; //normalized x
-					vy[o]=y/r*v0; //normalized y
-					vz[o]=z/r*v0; //normalized z
+	private static final int n = 4168;
+	private static final int rdiff = 10;
+	private static final float v0 = .4f;
+	private double[] qx = new double[n], qy = new double[n], qz = new double[n];// Qpos, position of particle.
+	private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list
+																					// is considered a distributed ball
+																					// mesh.
+	private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
+	private static final int num_rounds = 20;
+	static {// generate speed vector list
+		int o = 0;
+		for (int i = -rdiff; i <= rdiff; ++i)
+			for (int j = -rdiff; j <= rdiff; ++j)
+				for (int k = -rdiff; k <= rdiff; ++k) {
+					if (i == 0 && j == 0 && k == 0)
+						continue; // ignore zero vector
+					float x = i * 1f / rdiff, y = j * 1f / rdiff, z = k * 1f / rdiff;
+					float r = MathHelper.sqrt(x * x + y * y + z * z);
+					if (r > 1)
+						continue; // ignore vectors out of the unit ball
+					vx[o] = x / r * v0; // normalized x
+					vy[o] = y / r * v0; // normalized y
+					vz[o] = z / r * v0; // normalized z
 					o++;
 				}
 	}
-	public static void init() {}
+
+	public static void init() {
+	}
+
 	/**
 	 * Extract block data into shape and temperature, other data are disposed.
-	 * */
+	 */
 	private static class CachedBlockInfo {
 		VoxelShape shape;
 		float temperature;
@@ -71,8 +82,8 @@ public class TemperatureSimulator {
 		}
 	}
 
-	public Map<BlockState, CachedBlockInfo> info = new HashMap<>();//state to info cache
-	public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();//position to info cache
+	public Map<BlockState, CachedBlockInfo> info = new HashMap<>();// state to info cache
+	public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();// position to info cache
 
 	public TemperatureSimulator(ServerPlayerEntity player) {
 		int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosY(), sourceZ = (int) player.getPosZ();
@@ -84,25 +95,25 @@ public class TemperatureSimulator {
 		int offsetE = sourceX + range + 1;
 		int offsetU = sourceY + range + 1;
 		int offsetD = sourceY - range;
-		
-		
+
 		// these are chunk position offset
-		int chunkOffsetW = offsetW < 0 ? (offsetW>>4) - 1 : (offsetW>>4);
-		int chunkOffsetE = offsetE < 0 ? (offsetE>>4) - 1 : (offsetE>>4);
-		int chunkOffsetN = offsetN < 0 ? (offsetN>>4) - 1 : (offsetN>>4);
-		int chunkOffsetS = offsetS < 0 ? (offsetS>>4) - 1 : (offsetS>>4);
-		int chunkOffsetD = offsetD>>4;
-		int chunkOffsetU = offsetU>>4;
+		int chunkOffsetW = offsetW < 0 ? (offsetW >> 4) - 1 : (offsetW >> 4);
+		int chunkOffsetE = offsetE < 0 ? (offsetE >> 4) - 1 : (offsetE >> 4);
+		int chunkOffsetN = offsetN < 0 ? (offsetN >> 4) - 1 : (offsetN >> 4);
+		int chunkOffsetS = offsetS < 0 ? (offsetS >> 4) - 1 : (offsetS >> 4);
+		int chunkOffsetD = offsetD >> 4;
+		int chunkOffsetU = offsetU >> 4;
 		// get origin point(center of 8 sections)
-		origin=new BlockPos(chunkOffsetE<<4,chunkOffsetU<<4,chunkOffsetS<<4);
-		//fetch all sections to lower calculation cost
+		origin = new BlockPos(chunkOffsetE << 4, chunkOffsetU << 4, chunkOffsetS << 4);
+		// fetch all sections to lower calculation cost
 		int i = 0;
 		world = player.getServerWorld();
 		for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
 			for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
 				ChunkSection[] css = world.getChunk(x, z).getSections();
-				for (ChunkSection cs : css) { 
-					if(cs==null)continue;
+				for (ChunkSection cs : css) {
+					if (cs == null)
+						continue;
 					int ynum = cs.getYLocation() >> 4;
 					if (ynum == chunkOffsetD) {
 						sections[i] = cs;
@@ -113,13 +124,14 @@ public class TemperatureSimulator {
 				}
 				i += 2;
 			}
-		rnd=new Random(player.getPosition().toLong());
+		rnd = new Random(player.getPosition().toLong());
 	}
+
 	/**
 	 * This fetch block in a delta location to origin,
 	 * x,y,z must be in range [-16,16)
 	 * 
-	 * */
+	 */
 	public BlockState getBlock(int x, int y, int z) {
 		int i = 0;
 
@@ -138,7 +150,7 @@ public class TemperatureSimulator {
 		} else {
 			y += 16;
 		}
-		if(x>16||y>16||z>16||x<0||y<0||z<0) {//out of bounds
+		if (x >= 16 || y >= 16 || z >= 16 || x < 0 || y < 0 || z < 0) {// out of bounds
 			return Blocks.AIR.getDefaultState();
 		}
 		ChunkSection current = sections[i];
@@ -146,34 +158,39 @@ public class TemperatureSimulator {
 			return Blocks.AIR.getDefaultState();
 		try {
 			return current.getBlockState(x, y, z);
-		}catch(Exception ex) {
-			throw new RuntimeException("Failed to get block at"+x+","+y+","+z);
+		} catch (Exception ex) {
+			throw new RuntimeException("Failed to get block at" + x + "," + y + "," + z);
 		}
 	}
+
 	/***
-	 * Since a position is highly possible to be fetched for multiple times, add cache in normal fetch
+	 * Since a position is highly possible to be fetched for multiple times, add
+	 * cache in normal fetch
 	 */
 	private CachedBlockInfo getInfoCached(BlockPos pos) {
-		return posinfo.computeIfAbsent(pos,p->getInfo(p));
+		return posinfo.computeIfAbsent(pos, p -> getInfo(p));
 	}
+
 	/***
-	 * fetch without position cache, but with blockstate cache, blocks with the same state should have same collider and heat.
+	 * fetch without position cache, but with blockstate cache, blocks with the same
+	 * state should have same collider and heat.
 	 * 
 	 */
 	private CachedBlockInfo getInfo(BlockPos pos) {
-		BlockPos ofregion=pos.subtract(origin);
-		BlockState bs=getBlock(ofregion.getX(),ofregion.getY(),ofregion.getZ());
-		return info.computeIfAbsent(bs,s->getInfo(pos,s));
+		BlockPos ofregion = pos.subtract(origin);
+		BlockState bs = getBlock(ofregion.getX(), ofregion.getY(), ofregion.getZ());
+		return info.computeIfAbsent(bs, s -> getInfo(pos, s));
 	}
+
 	/**
 	 * Just fetch block temperature and collision without cache.
 	 * Position is only for getCollisionShape method, to avoid some TE based shape.
-	 * */
-	private CachedBlockInfo getInfo(BlockPos pos,BlockState bs) {
+	 */
+	private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
+
 		BlockTempData b = FHDataManager.getBlockData(bs.getBlock());
-		if (b == null) 
-			return new CachedBlockInfo(bs.getCollisionShape(world,pos));
-		
+		if (b == null)
+			return new CachedBlockInfo(bs.getCollisionShape(world, pos));
 
 		float cblocktemp = 0;
 		if (b.isLit()) {
@@ -196,47 +213,53 @@ public class TemperatureSimulator {
 			}
 		}
 		return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp);
-
 	}
+
 	/**
 	 * Check if this location collides with block.
-	 * */
-	private boolean isBlockade(double x,double y,double z)
-	{
-		return getInfoCached(new BlockPos(x,y,z)).shape.contains(MathHelper.frac(x),MathHelper.frac(y),MathHelper.frac(z));
+	 */
+	private boolean isBlockade(double x, double y, double z) {
+		CachedBlockInfo info = getInfoCached(new BlockPos(x, y, z));
+		if (info.shape == VoxelShapes.fullCube())
+			return true;
+		if (info.shape == VoxelShapes.empty() || info.shape.isEmpty())
+			return false;
+		return info.shape.contains(MathHelper.frac(x), MathHelper.frac(y), MathHelper.frac(z));
+
 	}
+
 	/**
 	 * Get location temperature
-	 * */
-	private float getHeat(double x,double y, double z)
-	{
-		
-		return getInfoCached(new BlockPos(x,y,z)).temperature;
+	 */
+	private float getHeat(double x, double y, double z) {
+
+		return getInfoCached(new BlockPos(x, y, z)).temperature;
 	}
-	public float getBlockTemperature(double qx0, double qy0, double qz0)
-	{
-		for(int i=0;i<n;++i) // initialize position as the player's position and the speed (index)
+
+	public float getBlockTemperature(double qx0, double qy0, double qz0) {
+		for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
 		{
-			qx[i]=qx0;
-			qy[i]=qy0;
-			qz[i]=qz0;
-			vid[i]=i;
+			qx[i] = qx0;
+			qy[i] = qy0;
+			qz[i] = qz0;
+			vid[i] = i;
 		}
 		float heat = 0;
-		for(int round=0;round<num_rounds;++round) // time-to-live for each particle is `num_rounds`
+		for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
 		{
-			for(int i=0;i<n;++i) // for all particles:
+			for (int i = 0; i < n; ++i) // for all particles:
 			{
-				if(isBlockade(qx[i]+vx[vid[i]], qy[i]+vy[vid[i]], qz[i]+vz[vid[i]])) // if running into a block
+				if (isBlockade(qx[i] + vx[vid[i]], qy[i] + vy[vid[i]], qz[i] + vz[vid[i]])) // if running into a block
 				{
 					vid[i] = rnd.nextInt(n); // re-choose a speed direction randomly (from the pre-generated pool)
 				}
-				qx[i] = qx[i]+vx[vid[i]]; // move x
-				qy[i] = qy[i]+vy[vid[i]]; // move y
-				qz[i] = qz[i]+vz[vid[i]]; // move z
-				heat += getHeat(qx[i], qy[i], qz[i])*MathHelper.lerp(MathHelper.clamp(vz[vid[i]],0,0.4)*2.5,1,0.5); // add heat
+				qx[i] = qx[i] + vx[vid[i]]; // move x
+				qy[i] = qy[i] + vy[vid[i]]; // move y
+				qz[i] = qz[i] + vz[vid[i]]; // move z
+				heat += getHeat(qx[i], qy[i], qz[i])
+						* MathHelper.lerp(MathHelper.clamp(vz[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
 			}
 		}
-		return heat/n;
+		return heat / n;
 	}
 }

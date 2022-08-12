@@ -109,7 +109,6 @@ public class TemperatureUpdate {
             gameTime = (float) Math.sin(Math.toRadians(gameTime));
             float bt=TemperatureCore.getBlockTemp(player);
             envtemp += bt;
-            System.out.println(bt);
             envtemp += skyLight > 5.0F ? (FHUtils.isRainingAt(pos, world) ? -8F : (gameTime * 5.0F)) : (-5.0F);
             // burning heat
             if (player.isBurning())
@@ -186,8 +185,8 @@ public class TemperatureUpdate {
                 current = -10;
             else if (current > 10)
                 current = 10;
-
-            TemperatureCore.setTemperature(player, current, envtemp + 37);
+            float lenvtemp=TemperatureCore.getEnvTemperature(player);
+            TemperatureCore.setTemperature(player, current, (envtemp + 37)*.2f+lenvtemp*.8f);
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }
     }

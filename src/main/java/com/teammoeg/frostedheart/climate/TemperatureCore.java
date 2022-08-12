@@ -19,16 +19,10 @@
 package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.data.BlockTempData;
-import com.teammoeg.frostedheart.data.FHDataManager;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+import net.minecraft.profiler.Profiler;
 
 /**
  * The core of our dynamic body & environment temperature system
@@ -38,100 +32,69 @@ import net.minecraft.world.World;
  */
 public class TemperatureCore {
 
-    public static float getBlockTemp(ServerPlayerEntity spe) {
-    	return new TemperatureSimulator(spe).getBlockTemperature(spe.getPosX(),spe.getPosYEye(),spe.getPosZ());
-       /* float blockTemp = 0;
-        int rangeInBlocks = 2;
-        for (int x = -rangeInBlocks; x <= rangeInBlocks; x++) {
-            for (int y = -rangeInBlocks; y <= rangeInBlocks; y++) {
-                for (int z = -rangeInBlocks; z <= rangeInBlocks; z++) {
-                    BlockPos heatSource = pos.add(x, y, z);
-                    float blockLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.BLOCK).getLightFor(heatSource);
-                    BlockState heatState = world.getBlockState(heatSource);
-                    BlockTempData b = FHDataManager.getBlockData(heatState.getBlock());
-                    if (b == null) {
-                        blockTemp += blockLight / 500.0F;
-                        continue;
-                    }
+	public static float getBlockTemp(ServerPlayerEntity spe) {
+		long time = System.nanoTime();
+		try {
 
-                    if (pos.withinDistance(heatSource, b.getRange())) {
-                        float cblocktemp = blockLight / 500.0F;
-                        if (b.isLit()) {
-                            boolean litOrActive = false;
-                            if (heatState.hasProperty(BlockStateProperties.LIT) && heatState.get(BlockStateProperties.LIT))
-                                litOrActive = true;
-                            if (litOrActive) cblocktemp += b.getTemp();
-                        } else
-                            cblocktemp += b.getTemp();
-                        if (b.isLevel()) {
-                            if (heatState.hasProperty(BlockStateProperties.LEVEL_0_15)) {
-                                cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_0_15) + 1) / 16;
-                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_8)) {
-                                cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_0_8) + 1) / 9;
-                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_1_8)) {
-                                cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_1_8)) / 8;
-                            } else if (heatState.hasProperty(BlockStateProperties.LEVEL_0_3)) {
-                                cblocktemp *= (heatState.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
-                            }
-                        }
-                        blockTemp += cblocktemp;
-                    }
-                }
-            }
-        }
-        return blockTemp;*/
-    }
+			return new TemperatureSimulator(spe).getBlockTemperature(spe.getPosX(), spe.getPosYEye(), spe.getPosZ());
 
-    public static final String DATA_ID = FHMain.MODID + ":data";
+		} finally {
+			long delta = System.nanoTime() - time;
+			System.out.println(String.format("total cost %.3f ms", (delta / 1000000f)));
+		}
 
-    public static float getBodyTemperature(PlayerEntity spe) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return 0;
-        return nc.getFloat("bodytemperature");
-    }
+	}
 
-    public static float getLastTemperature(PlayerEntity spe) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return 0;
-        return nc.getFloat("lasttemperature");
-    }
+	public static final String DATA_ID = FHMain.MODID + ":data";
 
-    public static float getEnvTemperature(PlayerEntity spe) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return 0;
-        return nc.getFloat("envtemperature");
-    }
+	public static float getBodyTemperature(PlayerEntity spe) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			return 0;
+		return nc.getFloat("bodytemperature");
+	}
 
-    public static CompoundNBT getFHData(PlayerEntity spe) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return new CompoundNBT();
-        return nc;
-    }
+	public static float getLastTemperature(PlayerEntity spe) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			return 0;
+		return nc.getFloat("lasttemperature");
+	}
 
-    public static void setFHData(PlayerEntity spe, CompoundNBT nc) {
-        spe.getPersistentData().put(DATA_ID, nc);
-    }
+	public static float getEnvTemperature(PlayerEntity spe) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			return 0;
+		return nc.getFloat("envtemperature");
+	}
 
-    public static void setBodyTemperature(PlayerEntity spe, float val) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            nc = new CompoundNBT();
-        nc.putFloat("bodytemperature", val);
-        spe.getPersistentData().put(DATA_ID, nc);
-    }
+	public static CompoundNBT getFHData(PlayerEntity spe) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			return new CompoundNBT();
+		return nc;
+	}
 
-    public static void setTemperature(PlayerEntity spe, float body, float env) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            nc = new CompoundNBT();
-        nc.putFloat("bodytemperature", body);
-        nc.putFloat("envtemperature", env);
-        nc.putFloat("deltatemperature", nc.getFloat("lasttemperature") - body);
-        nc.putFloat("lasttemperature", body);
-        spe.getPersistentData().put(DATA_ID, nc);
-    }
+	public static void setFHData(PlayerEntity spe, CompoundNBT nc) {
+		spe.getPersistentData().put(DATA_ID, nc);
+	}
+
+	public static void setBodyTemperature(PlayerEntity spe, float val) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			nc = new CompoundNBT();
+		nc.putFloat("bodytemperature", val);
+		spe.getPersistentData().put(DATA_ID, nc);
+	}
+
+	public static void setTemperature(PlayerEntity spe, float body, float env) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			nc = new CompoundNBT();
+		nc.putFloat("bodytemperature", body);
+		nc.putFloat("envtemperature", env);
+		nc.putFloat("deltatemperature", nc.getFloat("lasttemperature") - body);
+		nc.putFloat("lasttemperature", body);
+		spe.getPersistentData().put(DATA_ID, nc);
+	}
 }
