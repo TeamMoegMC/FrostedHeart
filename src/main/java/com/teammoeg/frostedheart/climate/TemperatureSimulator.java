@@ -36,6 +36,8 @@ public class TemperatureSimulator {
 	private static final int n = 4168;
 	private static final int rdiff = 10;
 	private static final float v0 = .4f;
+	private static final VoxelShape EMPTY=VoxelShapes.empty();
+	private static final VoxelShape FULL=VoxelShapes.fullCube();
 	private double[] qx = new double[n], qy = new double[n], qz = new double[n];// Qpos, position of particle.
 	private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list
 																					// is considered a distributed ball
@@ -220,9 +222,9 @@ public class TemperatureSimulator {
 	 */
 	private boolean isBlockade(double x, double y, double z) {
 		CachedBlockInfo info = getInfoCached(new BlockPos(x, y, z));
-		if (info.shape == VoxelShapes.fullCube())
+		if (info.shape == FULL)
 			return true;
-		if (info.shape == VoxelShapes.empty() || info.shape.isEmpty())
+		if (info.shape == EMPTY)
 			return false;
 		return info.shape.contains(MathHelper.frac(x), MathHelper.frac(y), MathHelper.frac(z));
 
