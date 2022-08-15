@@ -433,7 +433,7 @@ public class ClientEvents {
         }
     }
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public static void addFutureTempToDebug(RenderGameOverlayEvent.Text event) {
         Minecraft mc = Minecraft.getInstance();
         List<String> list = event.getRight();
@@ -460,5 +460,5 @@ public class ClientEvents {
             list.add(String.format("Next 7 Days: %.1f, %.1f, %.1f, %.1f, %.1f, %.1f, %.1f",
                     day1Temp, day2Temp, day3Temp, day4Temp, day5Temp, day6Temp, day7Temp));
         }
-    }
+    }*/
 }

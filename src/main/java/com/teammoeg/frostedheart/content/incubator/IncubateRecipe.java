@@ -19,6 +19,7 @@ public class IncubateRecipe extends IESerializableRecipe {
 
     public final IngredientWithSize input;
     public final ItemStack output;
+    
     public final FluidStack output_fluid;
     public final IngredientWithSize seed;
     public final float seed_conserve;

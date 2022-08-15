@@ -294,7 +294,7 @@ curseforge {
                 requiredDependency 'create'
                 requiredDependency 'flywheel'
                 requiredDependency 'immersive-engineering'
-//                requiredDependency 'project-rankine'
+                requiredDependency 'thermopolium'
 //                requiredDependency 'snow-real-magic'
 //                requiredDependency 'kiwi'
 //                requiredDependency 'primal-winter'

@@ -185,7 +185,7 @@ public class TemperatureUpdate {
                 current = -10;
             else if (current > 10)
                 current = 10;
-            float lenvtemp=TemperatureCore.getEnvTemperature(player);
+            float lenvtemp=TemperatureCore.getEnvTemperature(player);//get a smooth change in display
             TemperatureCore.setTemperature(player, current, (envtemp + 37)*.2f+lenvtemp*.8f);
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }

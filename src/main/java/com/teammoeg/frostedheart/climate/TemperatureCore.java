@@ -33,15 +33,15 @@ import net.minecraft.profiler.Profiler;
 public class TemperatureCore {
 
 	public static float getBlockTemp(ServerPlayerEntity spe) {
-		long time = System.nanoTime();
-		try {
+		/*long time = System.nanoTime();
+		try {*/
 
-			return new TemperatureSimulator(spe).getBlockTemperature(spe.getPosX(), spe.getPosYEye(), spe.getPosZ());
+		return new TemperatureSimulator(spe).getBlockTemperature(spe.getPosX(), spe.getPosYEye(), spe.getPosZ());
 
-		} finally {
+		/*} finally {
 			long delta = System.nanoTime() - time;
 			System.out.println(String.format("total cost %.3f ms", (delta / 1000000f)));
-		}
+		}*/
 
 	}
 
