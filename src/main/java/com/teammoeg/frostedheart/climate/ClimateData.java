@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.climate;
 
+import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.events.CommonEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
@@ -23,7 +24,11 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -140,7 +145,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 
     /**
      * Retrieves hourly updated temperature from cache.
-     * Useful in long range weather forecast.
+     * Useful in weather forecast.
      *
      * @param world world instance
      * @param deltaDays delta days from now to forecast
@@ -153,7 +158,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 
     /**
      * Retrieves hourly updated temperature from cache
-     * Useful in long range weather forecast
+     * Useful in weather forecast
      *
      * @param data an instance of ClimateData
      * @param deltaDays delta days from now to forecast
@@ -188,7 +193,51 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         long dhours = thours % 24;
         return getFutureTemp(data, (int) ddate, (int) dhours);
     }
+    /**
+     * Retrieves a iterator for future temperature until end of cache
+     * Useful in long range weather forecast
+     * Suitable for iteration
+     *
+     * @param data climate data instance
+     * @param deltaHours delta hours from now to forecast;
+     * @return Iterable of temperature
+     */
+    public static Iterable<Float> getFutureTempIterator(ClimateData data, int deltaHours) {
+        long thours = data.clockSource.getHours() + deltaHours;
+        long ddate = thours / 24 - data.clockSource.getDate();
+        long dhours = thours % 24;
+        if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
+            data.populateDays();
+        }
+        if(ddate<0||dhours<0||ddate>=DAY_CACHE_LENGTH)return ImmutableList.of();
+        return new Iterable<Float>(){
+			@Override
+			public Iterator<Float> iterator() {
+				return new Iterator<Float>() {
+					int curddate=(int) ddate;
+					int curdhours=(int) (dhours-1);
+					@Override
+					public boolean hasNext() {
+						return curddate<DAY_CACHE_LENGTH;
+					}
 
+					@Override
+					public Float next() {
+						if(!hasNext())return null;
+						curdhours++;
+						if(curdhours>=24) {
+							curdhours=0;
+							curddate++;
+						}
+						
+				        return data.dailyTempData.get(curddate).getTemp(curdhours);
+					}
+					
+				};
+			}
+        	
+        };
+    }
     /**
      * Get the number of hours after temperature first reach below lowTemp.
      *
@@ -199,31 +248,100 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * Return -1 if such hour not found within limit.
      */
     public static int getFirstHourLowerThan(IWorld world, int withinHours, float lowTemp) {
-        if (withinHours > DAY_CACHE_LENGTH * 24)
-            throw new IllegalArgumentException("Hours exceed DAY_CACHE_LENGTH: " + DAY_CACHE_LENGTH);
-        int firstHour = -1;
-        for (int i = 1; i < withinHours; i++) {
-            if (ClimateData.getFutureTemp(world, i) < lowTemp) {
-                firstHour = i;
-                break;
-            }
+        int firstHour = 0;
+        for (float f:getFutureTempIterator(get(world),0)) {
+            if (f < lowTemp)
+                return firstHour;
+            firstHour++;
+            if(firstHour>withinHours)break;
         }
-        return firstHour;
+        return -1;
     }
 
     public static int getFirstHourGreaterThan(IWorld world, int withinHours, float highTemp) {
-        if (withinHours > DAY_CACHE_LENGTH * 24)
-            throw new IllegalArgumentException("Hours exceed DAY_CACHE_LENGTH: " + DAY_CACHE_LENGTH);
-        int firstHour = -1;
-        for (int i = 1; i < withinHours; i++) {
-            if (ClimateData.getFutureTemp(world, i) > highTemp) {
-                firstHour = i;
-                break;
-            }
+        int firstHour = 0;
+        for (float f:getFutureTempIterator(get(world),0)) {
+            if (f > highTemp)
+                return firstHour;
+            firstHour++;
+            if(firstHour>withinHours)break;
         }
-        return firstHour;
+        return -1;
     }
-
+    public static class TemperatureFrame{
+    	public final boolean isDecreasing;
+    	public final boolean isIncreasing;
+    	public final int dhours;
+    	public final byte toState;
+		public TemperatureFrame(boolean isDecreasing, boolean isIncresing, int dhours, byte toState) {
+			super();
+			this.isDecreasing = isDecreasing;
+			this.isIncreasing = isIncresing;
+			this.dhours = dhours;
+			this.toState = toState;
+		}
+		private static TemperatureFrame increase(int hour,int to) {
+			return new TemperatureFrame(false,true,hour,(byte)to);
+		}
+		private static TemperatureFrame decrease(int hour,int to) {
+			return new TemperatureFrame(true,false,hour,(byte)to);
+		}
+		private static TemperatureFrame calm(int hour,int to) {
+			return new TemperatureFrame(false,false,hour,(byte)to);
+		}
+    }
+    public static List<TemperatureFrame> getFrames(IWorld world,int max) {
+    	List<TemperatureFrame> frames=new ArrayList<>();
+    	float lastTemp=WorldClimate.CALM_PERIOD_BASELINE;
+    	int i=0;
+    	int lastlevel=0;
+        for (float f:getFutureTempIterator(get(world),0)) {
+        	if(i>=max)break;
+            if(lastTemp>f) {//when temperature decreasing
+            	if(f<WorldClimate.CALM_PERIOD_BASELINE-1) {//if lower than base line
+	            	for(int j=Math.max(0,-lastlevel);j<WorldClimate.BOTTOMS.length-1;j++) {//check out its level
+	            		float b=WorldClimate.BOTTOMS[j];
+	            		if(b<f)break;
+	            		if(f<=b&&f>WorldClimate.BOTTOMS[j+1]) {//just acrosss a level
+	            			lastlevel=-j-1;
+	            			frames.add(TemperatureFrame.decrease(i,lastlevel));//mark as decreased
+	            			break;
+	            		}
+	            	}
+            	}else if(f<=WorldClimate.WARM_PERIOD_PEAK-2&&lastlevel>1) {//check out if its just go down from level 2
+            		lastlevel=1;
+            		frames.add(TemperatureFrame.calm(i,1));
+            	}else if(f<=WorldClimate.CALM_PERIOD_BASELINE+5&&lastlevel>0) {//check out if its just go back to calm
+            		lastlevel=0;
+            		frames.add(TemperatureFrame.calm(i,0));
+            	}
+            }else if(f>lastTemp) {//when temperature increasing
+            	if(f<WorldClimate.CALM_PERIOD_BASELINE-1&&lastlevel<0) {//if lower than base line
+            		for(int j=Math.max(0,-lastlevel-1);j>0;j--) {//check out its level
+	            		float b=WorldClimate.BOTTOMS[j];
+	            		if(b>f)break;
+	            		if(f>=b&&f<WorldClimate.BOTTOMS[j-1]) {//just across level
+	            			lastlevel=-j-1;
+	            			frames.add(TemperatureFrame.calm(i,lastlevel));//going back to calm
+	            			break;
+	            		}
+	            	}
+            		
+            	}else if(f<=WorldClimate.CALM_PERIOD_BASELINE+5&&lastlevel<0) {
+            		lastlevel=0;
+            		frames.add(TemperatureFrame.calm(i,0));
+            	}else if(f>WorldClimate.WARM_PERIOD_PEAK-2&&lastlevel<2) {
+            		lastlevel=2;
+            		frames.add(TemperatureFrame.increase(i,2));
+            	}else if(f>WorldClimate.CALM_PERIOD_BASELINE+5&&lastlevel<1) {
+            		lastlevel=1;
+            		frames.add(TemperatureFrame.increase(i,1));
+            	}
+            }
+            i++;
+        }
+        return frames;
+    }
     public static float getMonth(IWorld world) {
         return get(world).clockSource.getDate();
     }

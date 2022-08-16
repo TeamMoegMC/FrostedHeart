@@ -57,7 +57,18 @@ public class WorldClimate {
     public static final float COLD_PERIOD_BOTTOM_T8 = -80;
     public static final float COLD_PERIOD_BOTTOM_T9 = -90;
     public static final float COLD_PERIOD_BOTTOM_T10 = -100;
-
+    public static final float[] BOTTOMS=new float[] {
+    		COLD_PERIOD_BOTTOM_T1,
+    		COLD_PERIOD_BOTTOM_T2,
+    		COLD_PERIOD_BOTTOM_T3,
+    		COLD_PERIOD_BOTTOM_T4,
+    		COLD_PERIOD_BOTTOM_T5,
+    		COLD_PERIOD_BOTTOM_T6,
+    		COLD_PERIOD_BOTTOM_T7,
+    		COLD_PERIOD_BOTTOM_T8,
+    		COLD_PERIOD_BOTTOM_T9,
+    		COLD_PERIOD_BOTTOM_T10
+    };
     public static final float CO2_FREEZE_TEMP = -78;
     public static final float O2_FREEZE_TEMP = -218;
     public static final float O2_LIQUID_TEMP = -182;

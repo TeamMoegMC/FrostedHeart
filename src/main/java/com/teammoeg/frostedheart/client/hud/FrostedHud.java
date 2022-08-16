@@ -28,8 +28,12 @@ import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
+
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -55,6 +59,8 @@ import org.lwjgl.opengl.GL11;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.teammoeg.frostedheart.climate.WorldClimate.*;
 
@@ -101,7 +107,7 @@ public class FrostedHud {
         boolean hasRadar = player.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
         boolean hasHelmet = player.inventory.armorInventory.get(3)
                 .isItemEqualIgnoreDurability(new ItemStack(FHItems.weatherHelmet));
-        renderForecast = renderHealth && configAllows && (hasRadar || hasHelmet);
+        renderForecast = configAllows && (hasRadar || hasHelmet);
     }
 
     public static PlayerEntity getRenderViewPlayer() {
@@ -406,7 +412,23 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
-
+    private static final Map<Integer,Color4I> clrs=new HashMap<>();
+    static {
+    	clrs.put(2,Color4I.rgba(0xFF980099));
+    	clrs.put(1,Color4I.rgba(0xFF980044));
+    	clrs.put(0,Color4I.rgba(0x0));
+    	clrs.put(-1,Color4I.rgba(0x57BDE830));
+    	clrs.put(-2,Color4I.rgba(0x57BDE840));
+    	clrs.put(-3,Color4I.rgba(0x57BDE850));
+    	clrs.put(-4,Color4I.rgba(0x57BDE860));
+    	clrs.put(-5,Color4I.rgba(0x57BDE870));
+    	clrs.put(-6,Color4I.rgba(0x57BDE880));
+    	clrs.put(-7,Color4I.rgba(0x57BDE890));
+    	clrs.put(-8,Color4I.rgba(0x57BDE899));
+    	clrs.put(-9,Color4I.rgba(0x57BDE8aa));
+    	clrs.put(-10,Color4I.rgba(0x57BDE8bb));
+    	clrs.put(-11,Color4I.rgba(0x57BDE8cc));
+    }
     public static void renderForecast(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_forecast");
         mc.getTextureManager().bindTexture(FrostedHud.FORECAST_ELEMENTS);
@@ -421,11 +443,51 @@ public class FrostedHud {
         int windowX = x - 158 + windowOffset;
         int markerU = HUDElements.forecast_marker.getX();
         int markerV = HUDElements.forecast_marker.getY();
-        int markerW = HUDElements.forecast_marker.getW();
         int markerH = HUDElements.forecast_marker.getH();
         int firstDayU = HUDElements.forecast_marker.getX() + markerMovingOffset;
         int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset;
         int lastDayW = markerMovingOffset;
+
+        // window
+        HUDElements.forecast_window.blit(mc.ingameGUI, stack, x, 0, BasePos.forecast_window, 512, 256);
+        // forecast arrows
+        // find the first hour lower than cold period bottom
+        TemperatureFrame[] toRender=new TemperatureFrame[40];
+        
+        for(TemperatureFrame te:ClimateData.getFrames(mc.world,120)) {
+        	int renderIndex=te.dhours/3;
+        	TemperatureFrame prev=toRender[renderIndex];
+        	if(
+        		prev==null||
+        		(te.toState<0&&prev.toState<0&&te.toState<prev.toState)||
+        		(te.toState>0&&prev.toState<=0)||
+        		te.toState==0
+        			) {
+        		toRender[renderIndex]=te;
+        	}
+        }
+        
+        int lastStart=0;
+        int lastLevel=0;
+        FHGuiHelper.drawRect(stack,Color4I.LIGHT_RED,0,0,500,500);
+        int i=-1;
+        System.out.println("wx "+windowX);
+        for(TemperatureFrame fr:toRender) {
+        	i++;
+        	if(fr!=null) {
+	        	if(lastLevel!=fr.toState) {
+	        		if(lastStart!=i&&lastLevel!=0) {
+	        			FHGuiHelper.drawRect(stack,clrs.get(lastLevel), windowX +  lastStart * segmentLength/2,1,(i-lastStart)* segmentLength/2,14);
+	        			
+	        		}
+	        		lastStart=i;
+	        		lastLevel=fr.toState;
+	        	}
+        	}
+        }
+        if(lastStart!=i&&lastLevel!=0) {
+        	FHGuiHelper.drawRect(stack,clrs.get(lastLevel),windowX +  lastStart * segmentLength/2,1,(i-lastStart)* segmentLength/2,14);
+        }
         // markers (moving across window by hour)
         IngameGui.blit(stack, windowX, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
         HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 1, 0, 512, 256);
@@ -433,35 +495,17 @@ public class FrostedHud {
         HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 3, 0, 512, 256);
         HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 4, 0, 512, 256);
         IngameGui.blit(stack, x - 158 + windowOffset - markerMovingOffset + markerLength * 5, 0, markerU, markerV, lastDayW, markerH, 512, 256);
-        // window
-        HUDElements.forecast_window.blit(mc.ingameGUI, stack, x, 0, BasePos.forecast_window, 512, 256);
-        // forecast arrows
-        // find the first hour lower than cold period bottom
-        int L1 = ClimateData.getFirstHourLowerThan(mc.world, 120, COLD_PERIOD_BOTTOM_T1);
-        if (L1 != -1) {
-            HUDElements.forecast_decrease.blit(mc.ingameGUI, stack, windowX + L1 / 6 * segmentLength, 3, 512, 256);
+        
+        
+  
+        i=-1;
+        for(TemperatureFrame fr:toRender) {
+        	i++;
+        	if(fr==null)continue;
+	        if(fr.isIncreasing)HUDElements.forecast_increase.blit(mc.ingameGUI, stack, windowX +  i * segmentLength/2, 3, 512, 256);
+	    	if(fr.isDecreasing)HUDElements.forecast_decrease.blit(mc.ingameGUI, stack, windowX +  i * segmentLength/2, 3, 512, 256);
         }
-        int L2 = ClimateData.getFirstHourLowerThan(mc.world, 120, COLD_PERIOD_BOTTOM_T2);
-        if (L2 != -1) {
-            HUDElements.forecast_decrease.blit(mc.ingameGUI, stack, windowX + L2 / 6 * segmentLength, 3, 512, 256);
-        }
-        int L3 = ClimateData.getFirstHourLowerThan(mc.world, 120, COLD_PERIOD_BOTTOM_T3);
-        if (L3 != -1) {
-            HUDElements.forecast_decrease.blit(mc.ingameGUI, stack, windowX + L3 / 6 * segmentLength, 3, 512, 256);
-        }
-        int L4 = ClimateData.getFirstHourLowerThan(mc.world, 120, COLD_PERIOD_BOTTOM_T4);
-        if (L4 != -1) {
-            HUDElements.forecast_decrease.blit(mc.ingameGUI, stack, windowX + L4 / 6 * segmentLength, 3, 512, 256);
-        }
-        // find the first hour higher than calm period baseline and warm period peak
-        int H1 = ClimateData.getFirstHourGreaterThan(mc.world, 120, CALM_PERIOD_BASELINE);
-        if (H1 != -1) {
-            HUDElements.forecast_increase.blit(mc.ingameGUI, stack, windowX + H1 / 6 * segmentLength, 3, 512, 256);
-        }
-        int H2 = ClimateData.getFirstHourGreaterThan(mc.world, 120, WARM_PERIOD_PEAK - 2);
-        if (H2 != -1) {
-            HUDElements.forecast_increase.blit(mc.ingameGUI, stack, windowX + H2 / 6 * segmentLength, 3, 512, 256);
-        }
+
 
         // day render
         mc.fontRenderer.drawString(stack, "Day "+date, x + BasePos.forecast_date.getX() + 8, 5, 0xe6e6f2);
@@ -470,7 +514,7 @@ public class FrostedHud {
         mc.getProfiler().endSection();
     }
 
-        public static void renderArmor(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
+    public static void renderArmor(MatrixStack stack, int x, int y, Minecraft mc, ClientPlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_armor");
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();

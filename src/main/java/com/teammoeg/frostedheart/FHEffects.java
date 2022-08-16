@@ -29,8 +29,8 @@ import java.util.List;
 public class FHEffects {
     public static List<Effect> EFFECTS = new ArrayList<Effect>();
 
-    public static final Effect HYPOTHERMIA = register("hypothermia", new HypothermiaEffect(EffectType.HARMFUL, 5750248));
-    public static final Effect HYPERTHERMIA = register("hyperthermia", new HyperthermiaEffect(EffectType.HARMFUL, 16750592));
+    public static final Effect HYPOTHERMIA = register("hypothermia", new HypothermiaEffect(EffectType.HARMFUL,0x57BDE8));
+    public static final Effect HYPERTHERMIA = register("hyperthermia", new HyperthermiaEffect(EffectType.HARMFUL,0xFF9800));
     public static final Effect NYCTALOPIA = register("nyctalopia", new BaseEffect(EffectType.HARMFUL, 0x787dab) {
     });
     public static final Effect SCURVY = register("scurvy", new BaseEffect(EffectType.HARMFUL, 0xc47b34) {
