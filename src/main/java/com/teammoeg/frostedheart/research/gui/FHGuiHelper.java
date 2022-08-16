@@ -16,8 +16,8 @@ import java.util.OptionalDouble;
 public class FHGuiHelper {
     public static final RenderType BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold", DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128,
     		RenderStateAccess.getLineState(4));
-    public static final RenderType FORE_LINE_TYPE= RenderType.makeType("fh_rect_forecast", DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128,
-    		RenderStateAccess.getLineState(14));
+    public static final RenderType FORE_LINE_TYPE= RenderType.makeType("fh_rect_forecast", DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 128,
+    		RenderStateAccess.getRectState());
     // hack to access render state protected members
     public static class RenderStateAccess extends RenderState {
         public static RenderType.State getLineState(double width) {
@@ -59,14 +59,13 @@ public class FHGuiHelper {
     }
     private static void drawRect(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int x, int y,
             int w, int h) {
-    	
-		renderBuffer.pos(mat,x,y, 255F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.pos(mat,x,y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 		.endVertex();
-		renderBuffer.pos(mat,x+w,y, 255F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.pos(mat,x+w,y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 		.endVertex();
-		renderBuffer.pos(mat,x,y+h, 255F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.pos(mat,x,y+h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 		.endVertex();
-		renderBuffer.pos(mat,x+w,y+h, 255F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+		renderBuffer.pos(mat,x+w,y+h,0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
 		.endVertex();
 	}
 }

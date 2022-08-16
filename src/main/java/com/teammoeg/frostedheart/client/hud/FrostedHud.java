@@ -38,6 +38,7 @@ import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
@@ -412,22 +413,22 @@ public class FrostedHud {
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();
     }
-    private static final Map<Integer,Color4I> clrs=new HashMap<>();
+    private static final Map<Integer,Integer> clrs=new HashMap<>();
     static {
-    	clrs.put(2,Color4I.rgba(0xFF980099));
-    	clrs.put(1,Color4I.rgba(0xFF980044));
-    	clrs.put(0,Color4I.rgba(0x0));
-    	clrs.put(-1,Color4I.rgba(0x57BDE830));
-    	clrs.put(-2,Color4I.rgba(0x57BDE840));
-    	clrs.put(-3,Color4I.rgba(0x57BDE850));
-    	clrs.put(-4,Color4I.rgba(0x57BDE860));
-    	clrs.put(-5,Color4I.rgba(0x57BDE870));
-    	clrs.put(-6,Color4I.rgba(0x57BDE880));
-    	clrs.put(-7,Color4I.rgba(0x57BDE890));
-    	clrs.put(-8,Color4I.rgba(0x57BDE899));
-    	clrs.put(-9,Color4I.rgba(0x57BDE8aa));
-    	clrs.put(-10,Color4I.rgba(0x57BDE8bb));
-    	clrs.put(-11,Color4I.rgba(0x57BDE8cc));
+    	clrs.put(2,0x99FF9800);
+    	clrs.put(1,0x44FF9800);
+    	clrs.put(0,0x0);
+    	clrs.put(-1,0x3057BDE8);
+    	clrs.put(-2,0x4057BDE8);
+    	clrs.put(-3,0x5057BDE8);
+    	clrs.put(-4,0x6057BDE8);
+    	clrs.put(-5,0x7057BDE8);
+    	clrs.put(-6,0x8057BDE8);
+    	clrs.put(-7,0x9057BDE8);
+    	clrs.put(-8,0xa057BDE8);
+    	clrs.put(-9,0xb057BDE8);
+    	clrs.put(-10,0xc057BDE8);
+    	clrs.put(-11,0xd057BDE8);
     }
     public static void renderForecast(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_forecast");
@@ -448,8 +449,7 @@ public class FrostedHud {
         int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset;
         int lastDayW = markerMovingOffset;
 
-        // window
-        HUDElements.forecast_window.blit(mc.ingameGUI, stack, x, 0, BasePos.forecast_window, 512, 256);
+        
         // forecast arrows
         // find the first hour lower than cold period bottom
         TemperatureFrame[] toRender=new TemperatureFrame[40];
@@ -466,18 +466,16 @@ public class FrostedHud {
         		toRender[renderIndex]=te;
         	}
         }
-        
+       // RenderSystem.enableAlphaTest();
         int lastStart=0;
         int lastLevel=0;
-        FHGuiHelper.drawRect(stack,Color4I.LIGHT_RED,0,0,500,500);
         int i=-1;
-        System.out.println("wx "+windowX);
         for(TemperatureFrame fr:toRender) {
         	i++;
         	if(fr!=null) {
 	        	if(lastLevel!=fr.toState) {
 	        		if(lastStart!=i&&lastLevel!=0) {
-	        			FHGuiHelper.drawRect(stack,clrs.get(lastLevel), windowX +  lastStart * segmentLength/2,1,(i-lastStart)* segmentLength/2,14);
+	        			AbstractGui.fill(stack, windowX +  lastStart * segmentLength/2+3,1,windowX + i* segmentLength/2+3,15,clrs.get(lastLevel));
 	        			
 	        		}
 	        		lastStart=i;
@@ -485,9 +483,12 @@ public class FrostedHud {
 	        	}
         	}
         }
-        if(lastStart!=i&&lastLevel!=0) {
-        	FHGuiHelper.drawRect(stack,clrs.get(lastLevel),windowX +  lastStart * segmentLength/2,1,(i-lastStart)* segmentLength/2,14);
+        if(lastLevel!=0) {
+        	AbstractGui.fill(stack, windowX +  lastStart * segmentLength/2+3,1,windowX + 257,15,clrs.get(lastLevel));
         }
+        RenderSystem.enableBlend();
+        // window
+        HUDElements.forecast_window.blit(mc.ingameGUI, stack, x, 0, BasePos.forecast_window, 512, 256);
         // markers (moving across window by hour)
         IngameGui.blit(stack, windowX, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
         HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 1, 0, 512, 256);
