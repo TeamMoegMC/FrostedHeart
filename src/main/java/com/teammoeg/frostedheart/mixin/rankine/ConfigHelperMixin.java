@@ -18,6 +18,7 @@ public class ConfigHelperMixin {
     public ConfigHelperMixin() {
     }
 
+    /*
     @Overwrite(remap = false)
     public static int getOreHarvestLevel(List<String> path) {
         if (path.size() == 0) return -1;
@@ -33,6 +34,8 @@ public class ConfigHelperMixin {
             return -1;
         }
     }
+
+     */
 
     private static boolean equalsLastPart(List<String> list1, String l2) {
         if (list1.size() == 0)
