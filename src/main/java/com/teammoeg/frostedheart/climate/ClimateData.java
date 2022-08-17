@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
 
@@ -520,7 +521,21 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             tempEventStream.add(head = TempEvent.getTempEvent(head.calmEndTime));
         }
     }
-
+    public void addInitTempEvent(ServerWorld w) {
+    	this.tempEventStream.clear();
+    	this.dailyTempData.clear();
+    	long s=clockSource.secs;
+    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-30,s+100*50,s+136*50,true));
+        lasthour = -1;
+        lastday = -1;
+    	this.updateCache(w);
+    }
+    public void resetTempEvent(ServerWorld w) {
+    	this.tempEventStream.clear();
+    	this.dailyTempData.clear();
+    	this.populateDays();
+    	this.updateCache(w);
+    }
     /**
      * Grows tempEventStream to contain temp events that cover the given point of time.
      * TODO: need clarification from @JackyWang
@@ -603,4 +618,10 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
         readCache();
     }
+
+	@Override
+	public String toString() {
+		return "ClimateData [tempEventStream=\n" + String.join("\n",tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource + ",\n hourcache="
+				+ hourcache + ",\n daycache=" + daycache + "]";
+	}
 }

@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
+import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -229,21 +230,21 @@ public class CommonEvents {
         }
     }
 
-    @SubscribeEvent(receiveCanceled = true, priority = EventPriority.LOWEST)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onArmorDamage(LivingHurtEvent event) {
         if (event.getEntityLiving() instanceof PlayerEntity && (event.getSource().isFireDamage() || !event.getSource().isUnblockable())) {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
-            float p_234563_2_ = event.getAmount();
+            float damage = event.getAmount();
             DamageSource p_234563_1_ = event.getSource();
-            if (p_234563_2_ > 0) {
-                p_234563_2_ = p_234563_2_ / 4.0F;
+            if (damage > 0) {
+                damage = damage / 8.0F;
                 if (p_234563_1_.isFireDamage())// fire damage more
-                    p_234563_2_ *= 2;
+                    damage *= 2;
                 else if (p_234563_1_.isExplosion())// explode add a lot
-                    p_234563_2_ *= 4;
-                int amount = (int) p_234563_2_;
-                if (amount != p_234563_2_)
-                    amount += player.getRNG().nextDouble() < (p_234563_2_ - amount) ? 1 : 0;
+                    damage *= 4;
+                int amount = (int) damage;
+                if (amount != damage)
+                    amount += player.getRNG().nextDouble() < (damage - amount) ? 1 : 0;
                 if (amount <= 0)
                     return;
                 for (ItemStack itemstack : player.getArmorInventoryList()) {
@@ -592,7 +593,7 @@ public class CommonEvents {
 
     @SuppressWarnings("resource")
     @SubscribeEvent
-    public static void CreateSpawnPosition(WorldEvent.CreateSpawnPosition event) {
+    public static void removeSpawnVillage(WorldEvent.CreateSpawnPosition event) {
         if (event.getWorld() instanceof ServerWorld) {
             ServerWorld serverWorld = (ServerWorld) event.getWorld();
             try {
@@ -621,6 +622,7 @@ public class CommonEvents {
         CommandDispatcher<CommandSource> dispatcher = event.getDispatcher();
         AddTempCommand.register(dispatcher);
         ResearchCommand.register(dispatcher);
+        ClimateCommand.register(dispatcher);
 //		GenSC.register(dispatcher);
     }
 }

@@ -16,7 +16,7 @@ import java.util.Collection;
 
 public class AddTempCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
-        LiteralArgumentBuilder<CommandSource> add = Commands.literal("settemp")
+        LiteralArgumentBuilder<CommandSource> add = Commands.literal("set")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
                     ChunkData.removeTempAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
                     return Command.SINGLE_SUCCESS;
@@ -28,7 +28,7 @@ public class AddTempCommand {
                                     IntegerArgumentType.getInteger(ct, "temperature"));
                             return Command.SINGLE_SUCCESS;
                         }))));
-        LiteralArgumentBuilder<CommandSource> get = Commands.literal("gettemp")
+        LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
                     Collection<ITemperatureAdjust> adjs = ChunkData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
                     if (adjs.size() == 0) {
@@ -54,6 +54,6 @@ public class AddTempCommand {
                             }
                             return Command.SINGLE_SUCCESS;
                         }));
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(add).then(get));
+        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(Commands.literal("temperature").then(add).then(get)));
     }
 }

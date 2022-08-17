@@ -66,4 +66,9 @@ public class WorldClockSource {
         secs = cnbt.getLong("secs");
         lastdaytime = cnbt.getLong("last");
     }
+
+	@Override
+	public String toString() {
+		return "WorldClockSource [secs=" + secs + "]";
+	}
 }

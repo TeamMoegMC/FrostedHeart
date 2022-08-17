@@ -115,8 +115,7 @@ public class FrostedHud {
 		renderFrozen = renderHealth && bt <= -1.0;
 		boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
 		boolean hasRadar = player.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
-		boolean hasHelmet = player.inventory.armorInventory.get(3)
-				.isItemEqualIgnoreDurability(new ItemStack(FHItems.weatherHelmet));
+		boolean hasHelmet = player.inventory.armorInventory.get(3).getItem()==FHItems.weatherHelmet;
 		renderForecast = configAllows && (hasRadar || hasHelmet);
 	}
 
@@ -491,6 +490,8 @@ public class FrostedHud {
 							int clr = clrs.get(lastLevel);
 							FHGuiHelper.fillGradient(stack, end, 1, end + 6, 15, clr, clrs.get((int) fr.toState));
 							int start = windowX + lastStart * segmentLength / 2 + 4;
+							if(lastStart==0)
+								start-=3;
 							AbstractGui.fill(stack, start, 1, end, 15, clr);
 						} else if (lastLevel == 0) {
 							int end = windowX + i * segmentLength / 2 - 2;

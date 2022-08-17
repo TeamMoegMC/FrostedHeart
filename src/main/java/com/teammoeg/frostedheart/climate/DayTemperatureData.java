@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.climate;
 
+import java.util.Arrays;
+
 import net.minecraft.nbt.CompoundNBT;
 
 public class DayTemperatureData {
@@ -46,4 +48,10 @@ public class DayTemperatureData {
         dtd.deserialize(data);
         return dtd;
     }
+
+	@Override
+	public String toString() {
+		return "DayTemperatureData [hourData=" + Arrays.toString(hourData) + ", dayHumidity=" + dayHumidity
+				+ ", dayNoise=" + dayNoise + ", day=" + day + "]";
+	}
 }

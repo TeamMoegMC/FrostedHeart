@@ -20,6 +20,8 @@ package com.teammoeg.frostedheart.mixin.primalwinter;
 
 import com.alcatrazescapee.primalwinter.Config;
 import com.alcatrazescapee.primalwinter.util.WeatherData;
+import com.teammoeg.frostedheart.climate.ClimateData;
+
 import net.minecraft.world.GameRules;
 import net.minecraft.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,7 +42,8 @@ public class WeatherDataMixin {
             dataAccess.setAlreadySetWorldToWinter(true);
             if (Config.COMMON.isWinterDimension(world.getDimensionKey().getLocation())) {
                 world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(true, world.getServer());
-                world.setWeather(0, 64000, true, true);
+                //world.setWeather(0, 64000, true, true);
+                ClimateData.get(world).addInitTempEvent(world);
             }
         }
     }

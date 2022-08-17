@@ -87,10 +87,10 @@ public class TempEvent {
         else
             return getTempEvent(startTime, false);
     }
-
+    private static final long secondsPerDay = 24 * 50;
     public static TempEvent getTempEvent(long startTime, boolean isCold) {
         Random random = new Random();
-        long secondsPerDay = 24 * 50;
+        
         long peakTime = 0, bottomTime = 0, endTime = 0; float peakTemp = 0, bottomTemp = 0;
 
         // Cold Period
@@ -160,17 +160,16 @@ public class TempEvent {
             } else {
                 return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
             }
-        } else {
-            if (t >= startTime && t < peakTime) {
-                return getPiecewiseTemp(t, startTime, peakTime, CALM_PERIOD_BASELINE, peakTemp, 0, 0);
-            } else if (t >= peakTime && t < endTime) {
-                return getPiecewiseTemp(t, peakTime, endTime, peakTemp, CALM_PERIOD_BASELINE, 0, 0);
-            } else if (t >= endTime && t <= calmEndTime) {
-                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
-            } else {
-                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
-            }
         }
+		if (t >= startTime && t < peakTime) {
+		    return getPiecewiseTemp(t, startTime, peakTime, CALM_PERIOD_BASELINE, peakTemp, 0, 0);
+		} else if (t >= peakTime && t < endTime) {
+		    return getPiecewiseTemp(t, peakTime, endTime, peakTemp, CALM_PERIOD_BASELINE, 0, 0);
+		} else if (t >= endTime && t <= calmEndTime) {
+		    return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+		} else {
+		    return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+		}
 
     }
 
@@ -195,5 +194,12 @@ public class TempEvent {
                 dT0 * D1 * P1 +
                 dT1 * D3 * P2;
     }
+
+	@Override
+	public String toString() {
+		return "TempEvent [startTime=" + startTime + ", peakTime=" + peakTime + ", peakTemp=" + peakTemp
+				+ ", bottomTime=" + bottomTime + ", bottomTemp=" + bottomTemp + ", endTime=" + endTime + ", isCold="
+				+ isCold + ", calmEndTime=" + calmEndTime + "]";
+	}
 
 }
