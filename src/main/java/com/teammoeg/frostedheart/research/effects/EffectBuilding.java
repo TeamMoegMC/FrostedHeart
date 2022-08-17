@@ -17,6 +17,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,7 +108,11 @@ public class EffectBuilding extends Effect {
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         ArrayList<ITextComponent> ar = new ArrayList<>();
-        ar.add(new StringTextComponent(multiblock.getUniqueName().toString()));
+        String raw = multiblock.getUniqueName().toString();
+        String namespace = raw.substring(0, raw.indexOf(':'));
+        String multiblock = raw.substring(raw.indexOf('/')+1);
+        String key = "block." + namespace + "." + multiblock;
+        ar.add(new TranslationTextComponent(key));
         return ar;
     }
 
