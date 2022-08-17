@@ -68,6 +68,10 @@ public class UV extends Rect {
     public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int w) {
         gui.blit(s, lx, ly, x, y, w, h);
     }
+    //blit with width transition and  custom texture size
+    public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int w, int textureW, int textureH) {
+        gui.blit(s, lx, ly, x, y, w, h, textureW, textureH);
+    }
 
     //blit add point
     public void blit(MatrixStack s, int lx, int ly, Point loc, int p3, int p4) {
