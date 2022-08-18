@@ -82,11 +82,13 @@ public class TempEvent {
      */
     public static TempEvent getTempEvent(long startTime) {
         Random random = new Random();
-        if (random.nextInt(2) == 0)
-            return getTempEvent(startTime, true);
-        else
+        if (random.nextInt(3) == 0) // 33% warm event
             return getTempEvent(startTime, false);
+        else
+            return getTempEvent(startTime, true);
     }
+
+
     private static final long secondsPerDay = 24 * 50;
     public static TempEvent getTempEvent(long startTime, boolean isCold) {
         Random random = new Random();

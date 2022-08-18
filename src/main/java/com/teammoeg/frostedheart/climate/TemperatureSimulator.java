@@ -89,7 +89,7 @@ public class TemperatureSimulator {
 
 	public TemperatureSimulator(ServerPlayerEntity player) {
 		int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosY(), sourceZ = (int) player.getPosZ();
-		System.out.println(sourceX+","+sourceY+","+sourceZ);
+		// System.out.println(sourceX+","+sourceY+","+sourceZ);
 		// these are block position offset
 		int offsetN = sourceZ - range;
 		int offsetW = sourceX - range;

@@ -261,6 +261,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         long dhours = thours % 24;
         return getFutureTemp(data, (int) ddate, (int) dhours);
     }
+
     /**
      * Retrieves a iterator for future temperature until end of cache
      * Useful in long range weather forecast
@@ -306,6 +307,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         	
         };
     }
+
     /**
      * Get the number of hours after temperature first reach below lowTemp.
      *
@@ -336,6 +338,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
         return -1;
     }
+
     /**
      * A class to represent temperature change, basically like a key frame.
      * A frame class means, the temperature increase in warm or decrease in cold. If it just goes back to calm, the increase or decrease would both be false.
@@ -677,7 +680,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     	this.tempEventStream.clear();
     	this.dailyTempData.clear();
     	long s=clockSource.secs;
-    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-30,s+100*50,s+136*50,true));
+    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-23,s+100*50,s+136*50,true));
         lasthour = -1;
         lastday = -1;
     	this.updateCache(w);
