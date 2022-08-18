@@ -22,8 +22,9 @@ public class MinecraftServerMixin {
     		for(int z=info.getSpawnZ()-1;z<info.getSpawnZ()+1;z++)
     			y=Math.min(serverWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES,x,z),y);
     	info.setSpawnY(y-1);
-    	serverWorld.setSpawnLocation(new BlockPos(info.getSpawnX(),info.getSpawnY(),info.getSpawnZ()),info.getSpawnAngle());
     	FHFeatures.spacecraft_feature.generate(serverWorld, serverWorld.getChunkProvider().getChunkGenerator(), serverWorld.rand,
                 new BlockPos(info.getSpawnX(), info.getSpawnY(), info.getSpawnZ()));
+    	serverWorld.setSpawnLocation(new BlockPos(info.getSpawnX(),y-1,info.getSpawnZ()),info.getSpawnAngle());
+    	
     }
 }

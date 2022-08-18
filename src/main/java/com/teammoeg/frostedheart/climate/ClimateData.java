@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.climate;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
 import com.teammoeg.frostedheart.events.CommonEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
@@ -26,12 +27,14 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import javax.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
 
@@ -73,21 +76,85 @@ import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_
  * @author Lyuuke
  */
 public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
+	private static class NopClimateData extends ClimateData{
 
+		@Override
+		public void updateFrames() {
+		}
+
+		@Override
+		public boolean updateNewFrames() {
+			return false;
+		}
+
+		@Override
+		public List<TemperatureFrame> getFrames(int min, int max) {
+			return ImmutableList.of();
+		}
+
+		@Override
+		public void updateCache(ServerWorld serverWorld) {
+		}
+
+		@Override
+		public void trimTempEventStream() {
+		}
+
+		@Override
+		protected float computeTemp(long time) {
+			return 0;
+		}
+
+		@Override
+		protected void tempEventStreamGrow(long time) {
+		}
+
+		@Override
+		public void addInitTempEvent(ServerWorld w) {
+		}
+
+		@Override
+		public void resetTempEvent(ServerWorld w) {
+		}
+
+		@Override
+		protected void rebuildTempEventStream(long time) {
+		}
+
+		@Override
+		protected void tempEventStreamTrim(long time) {
+		}
+
+
+		@Override
+		protected void readCache() {
+		}
+
+		@Override
+		protected void populateDays() {
+			while (dailyTempData.size() <= DAY_CACHE_LENGTH) {
+	            dailyTempData.offer(new DayTemperatureData(0));
+	        }
+		}
+		
+	}
     @CapabilityInject(ClimateData.class)
     public static Capability<ClimateData> CAPABILITY;
+    private static final NopClimateData NOP=new NopClimateData();
     private final LazyOptional<ClimateData> capability;
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
     public static final int DAY_CACHE_LENGTH = 7;
 
-    private LinkedList<TempEvent> tempEventStream;
-    private WorldClockSource clockSource;
-    private LinkedList<DayTemperatureData> dailyTempData;
+    protected LinkedList<TempEvent> tempEventStream;
+    protected WorldClockSource clockSource;
+    protected LinkedList<DayTemperatureData> dailyTempData;
+    protected int[] frames=new int[40];
+    protected long lastforecast;
 
-    private float hourcache = 0;
-    private long lasthour = -1;
-    private DayTemperatureData daycache;
-    private long lastday = -1;
+    protected float hourcache = 0;
+    protected long lasthour = -1;
+    protected DayTemperatureData daycache;
+    protected long lastday = -1;
 
     public ClimateData() {
         capability = LazyOptional.of(() -> this);
@@ -131,7 +198,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * @return An instance of ClimateData exists on the world, otherwise return a new ClimateData instance.
      */
     public static ClimateData get(IWorld world) {
-        return getCapability(world).resolve().orElse(new ClimateData());
+        return getCapability(world).resolve().orElse(NOP);
     }
 
     /**
@@ -269,17 +336,33 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
         return -1;
     }
+    /**
+     * A class to represent temperature change, basically like a key frame.
+     * A frame class means, the temperature increase in warm or decrease in cold. If it just goes back to calm, the increase or decrease would both be false.
+     * It stores hours from now and temperature level it transform to.
+     */
     public static class TemperatureFrame{
     	public final boolean isDecreasing;
     	public final boolean isIncreasing;
-    	public final int dhours;
+    	public final short dhours;
     	public final byte toState;
-		public TemperatureFrame(boolean isDecreasing, boolean isIncresing, int dhours, byte toState) {
+		public TemperatureFrame(boolean isDecreasing, boolean isIncreasing, int dhours, byte toState) {
 			super();
 			this.isDecreasing = isDecreasing;
-			this.isIncreasing = isIncresing;
-			this.dhours = dhours;
+			this.isIncreasing = isIncreasing;
+			this.dhours = (short) dhours;
 			this.toState = toState;
+		}
+		public static TemperatureFrame unpack(int val) {
+			if(val==0)return null;
+			return new TemperatureFrame(val);
+		}
+		private TemperatureFrame(int packed) {
+			super();
+			this.isDecreasing = (packed&2)==2;
+			this.isIncreasing = (packed&1)==1;
+			this.dhours = (short) ((packed>>16)&0xFFFF);
+			this.toState = (byte) ((packed>>8)&0xFF);
 		}
 		private static TemperatureFrame increase(int hour,int to) {
 			return new TemperatureFrame(false,true,hour,(byte)to);
@@ -290,13 +373,80 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 		private static TemperatureFrame calm(int hour,int to) {
 			return new TemperatureFrame(false,false,hour,(byte)to);
 		}
+		public int pack() {
+			int ret=0;
+			ret|=isIncreasing?1:0;
+			ret|=isDecreasing?2:0;
+			ret|=4;//exist flag
+			ret|=toState<<8;
+			ret|=dhours<<16;
+			return ret;
+		}
+		/**
+		 * Serialize but without hour to reduce network cost
+		 * */
+		public int packNoHour() {
+			int ret=0;
+			ret|=isIncreasing?1:0;
+			ret|=isDecreasing?2:0;
+			ret|=4;//exist flag
+			ret|=toState<<8;
+			return ret;
+		}
+		@Override
+		public String toString() {
+			return "TemperatureFrame [isDecreasing=" + isDecreasing + ", isIncreasing=" + isIncreasing + ", dhours="
+					+ dhours + ", toState=" + toState + "]";
+		}
     }
-    public static List<TemperatureFrame> getFrames(IWorld world,int max) {
+    /**
+     * Present a total update for forecast data
+     */
+    public void updateFrames() {
+    	int crt=clockSource.getHourInDay();
+    	int delta=crt%3;
+    	TemperatureFrame[] toRender = new TemperatureFrame[40];
+    	for (TemperatureFrame te : getFrames(0,120-delta)) {
+			int renderIndex = (te.dhours+delta)/ 3;
+			if(renderIndex>=40)break;
+			TemperatureFrame prev = toRender[renderIndex];
+			if (prev == null || (te.toState < 0 && prev.toState < 0 && te.toState < prev.toState)
+					|| (te.toState > 0 && prev.toState <= 0) || te.toState == 0) {
+				toRender[renderIndex] = te;
+			}
+		}
+    	lastforecast=clockSource.getHours()+120-delta;
+    	int i=0;
+    	for(TemperatureFrame tf:toRender) {
+    		if(tf!=null)
+    			frames[i++]=tf.packNoHour();
+    		else
+    			frames[i++]=0;
+    	}
+    }
+    /**
+     * Present a minor update for forecast data
+     */
+    public boolean updateNewFrames() {
+    	long cur=clockSource.getHours();
+    	if(cur>=lastforecast) {//times goes too fast.
+    		updateFrames();
+    		return true;
+    	}
+    	int crt=clockSource.getHourInDay();
+    	int delta=crt%3;
+    	int from=(int) (lastforecast-cur);
+    	int to=120-delta;
+    	if(to-from<3)return false;
+    	updateFrames();
+    	return true;
+    }
+    public List<TemperatureFrame> getFrames(int min,int max) {
     	List<TemperatureFrame> frames=new ArrayList<>();
     	float lastTemp=WorldClimate.CALM_PERIOD_BASELINE;
     	int i=0;
     	int lastlevel=0;
-        for (float f:getFutureTempIterator(get(world),0)) {
+        for (float f:getFutureTempIterator(this,min)) {
         	if(i>=max)break;
             if(lastTemp>f) {//when temperature decreasing
             	if(f<WorldClimate.CALM_PERIOD_BASELINE-1) {//if lower than base line
@@ -383,6 +533,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
                 updateDayCache(date);
             }
             updateHourCache(hours);
+            this.updateNewFrames();
             // Send to client if hour increases
             PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
         }
@@ -408,11 +559,12 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     /**
      * Read cache during serialization.
      */
-    private void readCache() {
+    protected void readCache() {
         long hours = clockSource.getHours();
         long date = clockSource.getDate();
         updateDayCache(date);
         updateHourCache(hours);
+        this.updateFrames();
     }
 
     /**
@@ -439,7 +591,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     /**
      * Populate daily cache to DAY_CACHE_LENGTH.
      */
-    private void populateDays() {
+    protected void populateDays() {
         if (dailyTempData.isEmpty()) {
             dailyTempData.offer(generateDay(clockSource.getDate(), 0, 0));
         }
@@ -488,7 +640,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * @param time given in absolute seconds relative to clock source.
      * @return temperature at given time
      */
-    private float computeTemp(long time) {
+    protected float computeTemp(long time) {
         if (time < clockSource.getTimeSecs()) return 0;
         tempEventStreamGrow(time);
         while (true) {
@@ -507,7 +659,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * Grows tempEventStream to contain temp events that cover the given point of time.
      * @param time given in absolute seconds relative to clock source.
      */
-    private void tempEventStreamGrow(long time) {
+    protected void tempEventStreamGrow(long time) {
         // If tempEventStream becomes empty for some reason,
         // start generating TempEvent from current time.
 
@@ -529,19 +681,21 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         lasthour = -1;
         lastday = -1;
     	this.updateCache(w);
+    	this.updateFrames();
     }
     public void resetTempEvent(ServerWorld w) {
     	this.tempEventStream.clear();
     	this.dailyTempData.clear();
     	this.populateDays();
     	this.updateCache(w);
+    	this.updateFrames();
     }
     /**
      * Grows tempEventStream to contain temp events that cover the given point of time.
      * TODO: need clarification from @JackyWang
      * @param time given in absolute seconds relative to clock source.
      */
-    private void rebuildTempEventStream(long time) {
+    protected void rebuildTempEventStream(long time) {
         // If tempEventStream becomes empty for some reason,
         // start generating TempEvent from current time.
         FHMain.LOGGER.error("Temperature Data corrupted, rebuilding temperature data");
@@ -563,7 +717,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
      * Trims all TempEvents that end before given time.
      * @param time given in absolute seconds relative to clock source.
      */
-    private void tempEventStreamTrim(long time) {
+    protected void tempEventStreamTrim(long time) {
         TempEvent head = tempEventStream.peek();
         if (head != null) {
             while (head.calmEndTime < time) {
@@ -617,11 +771,16 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
             dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
         }
         readCache();
+        
     }
 
 	@Override
 	public String toString() {
 		return "ClimateData [tempEventStream=\n" + String.join("\n",tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource + ",\n hourcache="
-				+ hourcache + ",\n daycache=" + daycache + "]";
+				+ hourcache + ",\n daycache=" + daycache + ",\n frames="+String.join("\n",Arrays.stream(frames).mapToObj(TemperatureFrame::unpack).map(Object::toString).collect(Collectors.toList())) + "]";
+	}
+
+	public int[] getFrames() {
+		return frames;
 	}
 }

@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.ClientForecastData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
@@ -467,16 +468,7 @@ public class FrostedHud {
 
 		// forecast arrows
 		// find the first hour lower than cold period bottom
-		TemperatureFrame[] toRender = new TemperatureFrame[40];
-
-		for (TemperatureFrame te : ClimateData.getFrames(mc.world, 120)) {
-			int renderIndex = te.dhours / 3;
-			TemperatureFrame prev = toRender[renderIndex];
-			if (prev == null || (te.toState < 0 && prev.toState < 0 && te.toState < prev.toState)
-					|| (te.toState > 0 && prev.toState <= 0) || te.toState == 0) {
-				toRender[renderIndex] = te;
-			}
-		}
+		TemperatureFrame[] toRender = ClientForecastData.tfs;
 		int lastStart = 0;
 		int lastLevel = 0;
 		int i = -1;

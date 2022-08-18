@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
+import com.teammoeg.frostedheart.command.GenSC;
 import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -86,6 +87,7 @@ import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.*;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
@@ -123,13 +125,13 @@ public class CommonEvents {
             World world = event.world;
             if (!world.isRemote && world instanceof ServerWorld) {
                 ServerWorld serverWorld = (ServerWorld) world;
-                if (serverWorld.getDimensionType().doesFixedTimeExist()) return;//don't update for fixed time world
                 // Update clock source every second, and check hour data if it needs an update
                 if (serverWorld.getGameTime() % 20 == 0) {
                     ClimateData data = ClimateData.get(serverWorld);
                     data.updateClock(serverWorld);
                     data.updateCache(serverWorld);
                     data.trimTempEventStream();
+                    
              
                 }
             }
@@ -508,13 +510,20 @@ public class CommonEvents {
     public static void syncDataWhenDimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
-            serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
+            
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                        new FHClimatePacket(cap));
-            });
+                        new FHClimatePacket(ClimateData.get(serverWorld)));
         }
     }
-
+    @SubscribeEvent
+    public static void syncDataWhenDeath(PlayerEvent.Clone event) {
+        if (event.getPlayer() instanceof ServerPlayerEntity) {
+            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
+            
+                PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+                        new FHClimatePacket(ClimateData.get(serverWorld)));
+        }
+    }
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
         if (FHConfig.SERVER.alwaysKeepInventory.get()) {
@@ -623,6 +632,6 @@ public class CommonEvents {
         AddTempCommand.register(dispatcher);
         ResearchCommand.register(dispatcher);
         ClimateCommand.register(dispatcher);
-//		GenSC.register(dispatcher);
+		GenSC.register(dispatcher);
     }
 }

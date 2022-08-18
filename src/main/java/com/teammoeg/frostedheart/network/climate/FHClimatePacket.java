@@ -18,8 +18,11 @@
 
 package com.teammoeg.frostedheart.network.climate;
 
+import com.teammoeg.frostedheart.client.ClientForecastData;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
@@ -30,28 +33,33 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class FHClimatePacket {
-    private final CompoundNBT data;
+    private final int[] data;
 
     public FHClimatePacket(ClimateData climateData) {
-        data = climateData.serializeNBT();
+        data = climateData.getFrames();
+    }
+    public FHClimatePacket() {
+        data = new int[0];
     }
 
     public FHClimatePacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
+        data=buffer.readVarIntArray();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
+        buffer.writeVarIntArray(data);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
-            if (world != null) {
-                world.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
-                    cap.deserializeNBT(data);
-                });
+        	if(data.length==0) {
+        		ClientForecastData.clear();
+        		return;
+        	}
+        	int max=Math.min(ClientForecastData.tfs.length, data.length);
+            for(int i=0;i<max;i++) {
+            	ClientForecastData.tfs[i]=TemperatureFrame.unpack(data[i]);
             }
         });
         context.get().setPacketHandled(true);

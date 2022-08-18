@@ -40,7 +40,7 @@ public class ModUtilMixin {
             return false;
         if (world.getLightFor(LightType.BLOCK, pos) > 11)
             return true;
-        if (ChunkData.getTemperature(world, pos) > 0)
+        if (ChunkData.getTemperature(world, pos) > 0.5)
             return true;
         Biome biome = world.getBiome(pos);
         return ModUtil.snowMeltsInWarmBiomes(biome) && !ModUtil.isColdAt(world, biome, pos) && world.canSeeSky(pos);

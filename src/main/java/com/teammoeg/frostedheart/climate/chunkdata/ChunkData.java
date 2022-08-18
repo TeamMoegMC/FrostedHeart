@@ -179,10 +179,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + range + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
-        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
-        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
-        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+        int chunkOffsetW = offsetW <<4;
+        int chunkOffsetE = offsetE <<4;
+        int chunkOffsetN = offsetN <<4;
+        int chunkOffsetS = offsetS <<4;
         // add adjust to effected chunks
         ITemperatureAdjust adj = new CubicTemperatureAdjust(heatPos, range, tempMod);
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
@@ -209,10 +209,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + adj.getRadius() + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
-        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
-        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
-        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+        int chunkOffsetW = offsetW <<4;
+        int chunkOffsetE = offsetE <<4;
+        int chunkOffsetN = offsetN <<4;
+        int chunkOffsetS = offsetS <<4;
         // add adjust to effected chunks
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
@@ -240,10 +240,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + range + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
-        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
-        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
-        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+        int chunkOffsetW = offsetW <<4;
+        int chunkOffsetE = offsetE <<4;
+        int chunkOffsetN = offsetN <<4;
+        int chunkOffsetS = offsetS <<4;
         // add adjust to effected chunks
         ITemperatureAdjust adj = new SphericTemperatureAdjust(heatPos, range, tempMod);
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
@@ -285,10 +285,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + range + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
-        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
-        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
-        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+        int chunkOffsetW = offsetW <<4;
+        int chunkOffsetE = offsetE <<4;
+        int chunkOffsetN = offsetN <<4;
+        int chunkOffsetS = offsetS <<4;
 
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++)
@@ -311,10 +311,10 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + adj.getRadius() + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW < 0 ? offsetW / 16 - 1 : offsetW / 16;
-        int chunkOffsetE = offsetE < 0 ? offsetE / 16 - 1 : offsetE / 16;
-        int chunkOffsetN = offsetN < 0 ? offsetN / 16 - 1 : offsetN / 16;
-        int chunkOffsetS = offsetS < 0 ? offsetS / 16 - 1 : offsetS / 16;
+        int chunkOffsetW = offsetW <<4;
+        int chunkOffsetE = offsetE <<4;
+        int chunkOffsetN = offsetN <<4;
+        int chunkOffsetS = offsetS <<4;
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++)
                 removeChunkAdjust(world, new ChunkPos(x, z), adj);

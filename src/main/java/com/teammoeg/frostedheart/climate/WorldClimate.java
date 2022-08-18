@@ -42,7 +42,7 @@ public class WorldClimate {
     /**
      * The peak temperature of a warm period.
      */
-    public static final float WARM_PERIOD_PEAK = -1;
+    public static final float WARM_PERIOD_PEAK = -2;
 
     /**
      * The bottom temperature of a cold period.

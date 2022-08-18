@@ -28,7 +28,7 @@ import net.minecraft.world.server.ServerWorld;
  */
 public class TemperatureSimulator {
 	public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
-	public static final int range = 7;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
+	public static final int range = 8;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
 										// of sections is 8
 	BlockPos origin;
 	ServerWorld world;
@@ -89,29 +89,23 @@ public class TemperatureSimulator {
 
 	public TemperatureSimulator(ServerPlayerEntity player) {
 		int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosY(), sourceZ = (int) player.getPosZ();
-
+		System.out.println(sourceX+","+sourceY+","+sourceZ);
 		// these are block position offset
 		int offsetN = sourceZ - range;
-		int offsetS = sourceZ + range + 1;
 		int offsetW = sourceX - range;
-		int offsetE = sourceX + range + 1;
-		int offsetU = sourceY + range + 1;
 		int offsetD = sourceY - range;
 
 		// these are chunk position offset
-		int chunkOffsetW = offsetW < 0 ? (offsetW >> 4) - 1 : (offsetW >> 4);
-		int chunkOffsetE = offsetE < 0 ? (offsetE >> 4) - 1 : (offsetE >> 4);
-		int chunkOffsetN = offsetN < 0 ? (offsetN >> 4) - 1 : (offsetN >> 4);
-		int chunkOffsetS = offsetS < 0 ? (offsetS >> 4) - 1 : (offsetS >> 4);
+		int chunkOffsetW = offsetW >> 4;
+		int chunkOffsetN = offsetN >> 4;
 		int chunkOffsetD = offsetD >> 4;
-		int chunkOffsetU = offsetU >> 4;
 		// get origin point(center of 8 sections)
-		origin = new BlockPos(chunkOffsetE << 4, chunkOffsetU << 4, chunkOffsetS << 4);
+		origin = new BlockPos((chunkOffsetW+1) << 4, (chunkOffsetD+1) << 4, (chunkOffsetN+1) << 4);
 		// fetch all sections to lower calculation cost
 		int i = 0;
 		world = player.getServerWorld();
-		for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
-			for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
+		for (int x = chunkOffsetW; x <= chunkOffsetW+1; x++)
+			for (int z = chunkOffsetN; z <= chunkOffsetN+1; z++) {
 				ChunkSection[] css = world.getChunk(x, z).getSections();
 				for (ChunkSection cs : css) {
 					if (cs == null)
@@ -120,7 +114,7 @@ public class TemperatureSimulator {
 					if (ynum == chunkOffsetD) {
 						sections[i] = cs;
 					}
-					if (ynum == chunkOffsetU) {
+					if (ynum == chunkOffsetD+1) {
 						sections[i + 1] = cs;
 					}
 				}
