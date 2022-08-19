@@ -681,7 +681,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     	this.dailyTempData.clear();
     	long s=clockSource.secs;
 //    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-23,s+100*50,s+136*50,true));
-		this.tempEventStream.add(new TempEvent(s,s+15*50,-5,s+92*50,-23,s+160*50,s+216*50,true));
+		this.tempEventStream.add(new TempEvent(s-15*50,s,-5,s+75*50,-23,s+145*50,s+200*50,true));
 		lasthour = -1;
         lastday = -1;
     	this.updateCache(w);
