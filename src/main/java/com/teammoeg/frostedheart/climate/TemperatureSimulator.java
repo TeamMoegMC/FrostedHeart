@@ -132,12 +132,12 @@ public class TemperatureSimulator {
 		int i = 0;
 
 		if (x >= 0) {
-			i += 2;
+			i += 4;
 		} else {
 			x += 16;
 		}
 		if (z >= 0) {
-			i += 4;
+			i += 2;
 		} else {
 			z += 16;
 		}
