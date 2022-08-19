@@ -54,6 +54,7 @@ import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
@@ -361,23 +362,34 @@ public class CommonEvents {
         Block growBlock = event.getState().getBlock();
         float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
         if (growBlock instanceof FHCropBlock) {
-            event.setResult(Event.Result.DEFAULT);
+            return;
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
             if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
-                if (event.getWorld().getRandom().nextInt(3) == 0) {
+                if (temp<-6&&event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
+            }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+            	if(event.getWorld().getRandom().nextInt(3) == 0) {
+                	event.getWorld().setBlockState(event.getPos(),Blocks.AIR.getDefaultState(), 2);
+                }
+            	event.setResult(Event.Result.DENY);
             }
         } else {
             if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
-                if (event.getWorld().getBlockState(event.getPos()) != growBlock.getDefaultState()
+                if (temp<0&&event.getWorld().getBlockState(event.getPos()) != growBlock.getDefaultState()
                         && event.getWorld().getRandom().nextInt(3) == 0) {
-                    event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                	event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
+            }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+            	if(event.getWorld().getRandom().nextInt(3) == 0) {
+                	event.getWorld().setBlockState(event.getPos(),Blocks.AIR.getDefaultState(), 2);
+                }
+            	event.setResult(Event.Result.DENY);
             }
+            	
         }
     }
 
@@ -388,26 +400,26 @@ public class CommonEvents {
             Block growBlock = event.getBlock().getBlock();
             float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
-                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
+                int growTemp = ((FHCropBlock) growBlock).getGrowTemperature()+WorldClimate.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
                     player.sendStatusMessage(
                             new TranslationTextComponent("message.frostedheart.crop_no_bonemeal", growTemp), false);
                 }
             } else if (growBlock instanceof FHBerryBushBlock) {
-                int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
+                int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature()+WorldClimate.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
                     player.sendStatusMessage(
                             new TranslationTextComponent("message.frostedheart.crop_no_bonemeal", growTemp), false);
                 }
             } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
-                if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+                if (temp < WorldClimate.HEMP_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
                             WorldClimate.HEMP_GROW_TEMPERATURE), false);
                 }
-            } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
+            } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                 event.setCanceled(true);
                 player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
                         WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), false);

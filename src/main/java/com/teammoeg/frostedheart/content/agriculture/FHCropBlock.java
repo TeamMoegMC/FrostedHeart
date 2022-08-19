@@ -20,6 +20,7 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -78,10 +79,14 @@ public class FHCropBlock extends CropsBlock {
             int i = this.getAge(state);
             float temp = ChunkData.getTemperature(worldIn, pos);
             if (temp < growTemperature) {
-                if (worldIn.getRandom().nextInt(3) == 0) {
+                if (temp < growTemperature-10&&worldIn.getRandom().nextInt(3) == 0) {
                     worldIn.setBlockState(pos, this.getDefaultState(), 2);
                 }
-            } else if (i < this.getMaxAge()) {
+            }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+            	if (worldIn.getRandom().nextInt(3) == 0) {
+                    worldIn.setBlockState(pos, this.getDefaultState(), 2);
+                }
+            }else  if (i < this.getMaxAge()) {
                 float f = getGrowthChance(this, worldIn, pos);
                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt((int) (25.0F / f) + 1) == 0)) {
                     worldIn.setBlockState(pos, this.withAge(i + 1), 2);
