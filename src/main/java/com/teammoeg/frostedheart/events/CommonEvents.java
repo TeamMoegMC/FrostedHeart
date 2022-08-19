@@ -491,10 +491,6 @@ public class CommonEvents {
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_leg"))));
             event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_foot"))));
-
-            ItemStack breads = new ItemStack(Items.BREAD);
-            breads.setCount(16);
-            event.getPlayer().inventory.addItemStackToInventory(breads);
         }
     }
 
