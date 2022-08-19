@@ -183,7 +183,6 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetE = offsetE >>4;
         int chunkOffsetN = offsetN >>4;
         int chunkOffsetS = offsetS >>4;
-        System.out.println(chunkOffsetW+","+chunkOffsetE+","+chunkOffsetN+","+chunkOffsetS);
         // add adjust to effected chunks
         ITemperatureAdjust adj = new CubicTemperatureAdjust(heatPos, range, tempMod);
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
