@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.world;
 
+import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
@@ -33,6 +34,82 @@ import net.minecraft.world.gen.feature.*;
 import java.util.ArrayList;
 
 public class FHFeatures {
+
+    // FH
+    public static final BlockState COPPER_GRAVEL = FHBlocks.copper_gravel.getDefaultState();
+
+    // vanilla
+    protected static final BlockState DIRT = Blocks.DIRT.getDefaultState();
+    protected static final BlockState COARSE_DIRT = Blocks.COARSE_DIRT.getDefaultState();
+    protected static final BlockState GRAVEL = Blocks.GRAVEL.getDefaultState();
+    protected static final BlockState SAND = Blocks.SAND.getDefaultState();
+    protected static final BlockState CLAY = Blocks.CLAY.getDefaultState();
+    protected static final BlockState GRASS_BLOCK = Blocks.GRASS_BLOCK.getDefaultState();
+
+    // primal winter
+    protected static final BlockState SNOWY_DIRT = ModBlocks.SNOWY_DIRT.get().getDefaultState();
+    protected static final BlockState SNOWY_COARSE_DIRT = ModBlocks.SNOWY_COARSE_DIRT.get().getDefaultState();
+    protected static final BlockState SNOWY_SAND = ModBlocks.SNOWY_SAND.get().getDefaultState();
+
+    // rankine has 9 types of soil, coarse soil, mud, grass block
+    // all soil
+    public static final BlockState LOAM = RankineBlocks.LOAM.get().getDefaultState();
+    public static final BlockState SILTY_LOAM = RankineBlocks.SILTY_LOAM.get().getDefaultState();
+    public static final BlockState LOAMY_SAND = RankineBlocks.LOAMY_SAND.get().getDefaultState();
+    public static final BlockState SANDY_LOAM = RankineBlocks.SANDY_LOAM.get().getDefaultState();
+    public static final BlockState CLAY_LOAM = RankineBlocks.CLAY_LOAM.get().getDefaultState();
+    public static final BlockState SANDY_CLAY_LOAM = RankineBlocks.SANDY_CLAY_LOAM.get().getDefaultState();
+    public static final BlockState SILTY_CLAY_LOAM = RankineBlocks.SILTY_CLAY_LOAM.get().getDefaultState();
+    public static final BlockState SANDY_CLAY = RankineBlocks.SANDY_CLAY.get().getDefaultState();
+    public static final BlockState SILTY_CLAY = RankineBlocks.SILTY_CLAY.get().getDefaultState();
+
+    // all mud
+    public static final BlockState LOAM_MUD = RankineBlocks.LOAM_MUD.get().getDefaultState();
+    public static final BlockState SILTY_LOAM_MUD = RankineBlocks.SILTY_LOAM_MUD.get().getDefaultState();
+    public static final BlockState LOAMY_SAND_MUD = RankineBlocks.LOAMY_SAND_MUD.get().getDefaultState();
+    public static final BlockState SANDY_LOAM_MUD = RankineBlocks.SANDY_LOAM_MUD.get().getDefaultState();
+    public static final BlockState CLAY_LOAM_MUD = RankineBlocks.CLAY_LOAM_MUD.get().getDefaultState();
+    public static final BlockState SANDY_CLAY_LOAM_MUD = RankineBlocks.SANDY_CLAY_LOAM_MUD.get().getDefaultState();
+    public static final BlockState SILTY_CLAY_LOAM_MUD = RankineBlocks.SILTY_CLAY_LOAM_MUD.get().getDefaultState();
+    public static final BlockState SANDY_CLAY_MUD = RankineBlocks.SANDY_CLAY_MUD.get().getDefaultState();
+    public static final BlockState SILTY_CLAY_MUD = RankineBlocks.SILTY_CLAY_MUD.get().getDefaultState();
+
+    // all
+    public static final BlockState LOAM_GRASS_BLOCK = RankineBlocks.LOAM_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState SILTY_LOAM_GRASS_BLOCK = RankineBlocks.SILTY_LOAM_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState LOAMY_SAND_GRASS_BLOCK = RankineBlocks.LOAMY_SAND_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState SANDY_LOAM_GRASS_BLOCK = RankineBlocks.SANDY_LOAM_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState CLAY_LOAM_GRASS_BLOCK = RankineBlocks.CLAY_LOAM_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState SANDY_CLAY_LOAM_GRASS_BLOCK = RankineBlocks.SANDY_CLAY_LOAM_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState SILTY_CLAY_LOAM_GRASS_BLOCK = RankineBlocks.SILTY_CLAY_LOAM_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState SANDY_CLAY_GRASS_BLOCK = RankineBlocks.SANDY_CLAY_GRASS_BLOCK.get().getDefaultState();
+    public static final BlockState SILTY_CLAY_GRASS_BLOCK = RankineBlocks.SILTY_CLAY_GRASS_BLOCK.get().getDefaultState();
+
+
+    protected static final ImmutableList<BlockState> clay_target = ImmutableList.of(
+            // vanilla
+            DIRT, COARSE_DIRT, GRASS_BLOCK, SAND,
+            // all clay soil
+            SILTY_CLAY, SANDY_CLAY, CLAY_LOAM, SANDY_CLAY_LOAM, SILTY_CLAY_LOAM,
+            // all clay mud
+            SILTY_CLAY_MUD, SANDY_CLAY_MUD, CLAY_LOAM_MUD, SANDY_CLAY_LOAM_MUD, SILTY_CLAY_LOAM_MUD,
+            // all clay grass blocks
+            SILTY_CLAY_GRASS_BLOCK, SANDY_CLAY_GRASS_BLOCK, CLAY_LOAM_GRASS_BLOCK, SANDY_CLAY_LOAM_GRASS_BLOCK, SILTY_CLAY_LOAM_GRASS_BLOCK
+    );
+    protected static final ImmutableList<BlockState> disk_target = ImmutableList.of(
+            // vanilla
+            DIRT, COARSE_DIRT, GRASS_BLOCK, SAND,
+            // primal winter
+            SNOWY_DIRT, SNOWY_SAND, SNOWY_COARSE_DIRT,
+            // all sandy soil (beach)
+            SANDY_CLAY, SANDY_LOAM, LOAMY_SAND, SANDY_CLAY_LOAM,
+            // all sandy grass block (beach)
+            SANDY_CLAY_GRASS_BLOCK, SANDY_LOAM_GRASS_BLOCK, LOAMY_SAND_GRASS_BLOCK, SANDY_CLAY_LOAM_GRASS_BLOCK,
+            // all mud (underneath water/beach)
+            LOAM_MUD, SILTY_LOAM_MUD, LOAMY_SAND_MUD, SANDY_CLAY_MUD, SILTY_CLAY_MUD,
+            SANDY_LOAM_MUD, CLAY_LOAM_MUD, SANDY_CLAY_LOAM_MUD, SILTY_CLAY_LOAM_MUD
+    );
+
     public static final Feature<FHOreFeatureConfig> FHORE = new FHOreFeature(FHOreFeatureConfig.CODEC);
     public static final SpacecraftFeature SPACECRAFT = new SpacecraftFeature(NoFeatureConfig.CODEC);
     public static final ConfiguredFeature<?, ?> spacecraft_feature = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "spacecraft", SPACECRAFT.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
@@ -61,13 +138,11 @@ public class FHFeatures {
         registerFHOre("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getDefaultState(), 40)).range(65).square().chance(4));
         registerFHOre("ore_anthracite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.anthracite, RankineBlocks.ANTHRACITE_ORE.get().getDefaultState(), 50)).range(48).chance(15));
         registerFHOre("ore_graphite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.graphite, RankineBlocks.PLUMBAGO_ORE.get().getDefaultState(), 35)).range(50).chance(12));
-        ImmutableList<BlockState> clay_target = ImmutableList.of(RankineBlocks.SILTY_CLAY.get().getDefaultState(), RankineBlocks.SILTY_CLAY_MUD.get().getDefaultState(), RankineBlocks.SANDY_CLAY.get().getDefaultState(), Blocks.DIRT.getDefaultState(), RankineBlocks.SANDY_CLAY_MUD.get().getDefaultState(), RankineBlocks.CLAY_LOAM_MUD.get().getDefaultState());
-        ImmutableList<BlockState> disk_target = ImmutableList.of(RankineBlocks.SANDY_CLAY_LOAM.get().getDefaultState(), RankineBlocks.SILTY_CLAY_LOAM.get().getDefaultState(), Blocks.GRAVEL.getDefaultState(), Blocks.SAND.getDefaultState(), Blocks.DIRT.getDefaultState(), RankineBlocks.CLAY_LOAM.get().getDefaultState(), RankineBlocks.SILTY_CLAY.get().getDefaultState(), RankineBlocks.SILTY_CLAY_MUD.get().getDefaultState(), RankineBlocks.SANDY_CLAY.get().getDefaultState(), RankineBlocks.SANDY_CLAY_MUD.get().getDefaultState());
 
-        registerFHDisk("copper_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(FHBlocks.copper_gravel.getDefaultState(), FeatureSpread.create(1, 2), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
-        registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.CLAY.getDefaultState(), FeatureSpread.create(2, 3), 1, clay_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
-        registerFHDisk("fh_disk_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.GRAVEL.getDefaultState(), FeatureSpread.create(2, 3), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
-        registerFHDisk("fh_disk_sand", Feature.DISK.withConfiguration(new SphereReplaceConfig(Blocks.SAND.getDefaultState(), FeatureSpread.create(2, 4), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).count(3));
+        registerFHDisk("copper_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(COPPER_GRAVEL, FeatureSpread.create(1, 2), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
+        registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(CLAY, FeatureSpread.create(2, 3), 1, clay_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
+        registerFHDisk("fh_disk_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(GRAVEL, FeatureSpread.create(2, 3), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));
+        registerFHDisk("fh_disk_sand", Feature.DISK.withConfiguration(new SphereReplaceConfig(SAND, FeatureSpread.create(2, 4), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).count(3));
     }
 
     private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> registerFHOre(String key, ConfiguredFeature<FC, ?> configuredFeature) {
