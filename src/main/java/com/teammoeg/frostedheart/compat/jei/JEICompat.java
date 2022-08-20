@@ -22,6 +22,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.jei.category.*;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
@@ -40,14 +41,17 @@ import com.teammoeg.frostedheart.util.FHNBT;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
+import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.*;
 import mezz.jei.api.runtime.IJeiRuntime;
+import mezz.jei.plugins.jei.info.IngredientInfoRecipe;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.ICraftingRecipe;
@@ -95,6 +99,7 @@ public class JEICompat implements IModPlugin {
                 new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.red_mushroombed), 0), new ItemStack(Items.RED_MUSHROOM, 10)),
                 new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.brown_mushroombed), 0), new ItemStack(Items.BROWN_MUSHROOM, 10))
         ), CuttingCategory.UID);
+        
     }
 
     public static IRecipeManager man;
@@ -102,10 +107,12 @@ public class JEICompat implements IModPlugin {
     @Override
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
         man = jeiRuntime.getRecipeManager();
+        
         syncJEI();
         man.hideRecipeCategory(VanillaRecipeCategoryUid.BLASTING);
         man.hideRecipeCategory(VanillaRecipeCategoryUid.SMOKING);
         man.hideRecipeCategory(VanillaRecipeCategoryUid.FURNACE);
+        
     }
 
     static Map<IRecipeType<?>, Set<ResourceLocation>> types = new HashMap<>();
@@ -113,10 +120,26 @@ public class JEICompat implements IModPlugin {
     static {
         types.computeIfAbsent(IRecipeType.CRAFTING, i -> new HashSet<>()).add(VanillaRecipeCategoryUid.CRAFTING);
     }
-
+    private static boolean cachedInfoAdd=false;
+    public static void addInfo() {
+    	if (man == null) {cachedInfoAdd=true;return;}
+    	cachedInfoAdd=false;
+    	Set<Item> items=new HashSet<>();
+    	for (IRecipe<?> i : ResearchListeners.recipe) {
+    		ItemStack out=i.getRecipeOutput();
+    		if(out!=null&&!out.isEmpty()) {
+    			items.add(out.getItem());
+    		}
+    	}
+    	System.out.println("added info "+items.size());
+    	IngredientInfoRecipe.create(items.stream().map(ItemStack::new).collect(Collectors.toList()),VanillaTypes.ITEM,GuiUtils.translate("gui.jei.info.require_research")).forEach(
+    	r->man.addRecipe(r,VanillaRecipeCategoryUid.INFORMATION));
+    }
     public static void syncJEI() {
         //System.out.println("syncJEI");
         if (man == null) return;
+        if(cachedInfoAdd)
+        	addInfo();
         Map<Class<?>, Set<ResourceLocation>> cates = new HashMap<>();
         for (IRecipeCategory<?> rg : man.getRecipeCategories()) {
             if (rg.getRecipeClass() == ICraftingRecipe.class)
@@ -128,14 +151,14 @@ public class JEICompat implements IModPlugin {
         //ClientWorld world = Minecraft.getInstance().world;
         //checkNotNull(world, "minecraft world");
         //RecipeManager recipeManager = world.getRecipeManager();
-
+        //man.addRecipe(IngredientInfoRecipe.create(null, null,""), null);
         for (IRecipe<?> i : ResearchListeners.recipe) {
             Set<ResourceLocation> hs = cates.remove(i.getClass());
             Set<ResourceLocation> all = types.computeIfAbsent(i.getType(), d -> new HashSet<>());
             if (hs != null) {
                 all.addAll(hs);
             }
-
+            
 
             if (!TeamResearchData.getClientInstance().crafting.has(i)) {
                 //System.out.println(i.getId());
