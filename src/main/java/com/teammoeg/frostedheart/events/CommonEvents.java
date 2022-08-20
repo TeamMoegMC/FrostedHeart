@@ -100,6 +100,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.PotionEvent.PotionRemoveEvent;
 import net.minecraftforge.event.entity.player.BonemealEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
@@ -529,13 +530,11 @@ public class CommonEvents {
                         new FHClimatePacket(ClimateData.get(serverWorld)));
         }
     }
+
     @SubscribeEvent
-    public static void syncDataWhenDeath(PlayerEvent.Clone event) {
-        if (event.getPlayer() instanceof ServerPlayerEntity) {
-            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
-            
-                PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                        new FHClimatePacket(ClimateData.get(serverWorld)));
+    public static void death(PlayerEvent.Clone ev) {
+        if (ev.isWasDeath() && FHConfig.SERVER.keepEquipments.get()) {
+            ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
         }
     }
     @SubscribeEvent
@@ -558,12 +557,18 @@ public class CommonEvents {
         }
     }
 
+ 
     @SubscribeEvent
-    public static void death(PlayerEvent.Clone ev) {
-        if (ev.isWasDeath() && FHConfig.SERVER.keepEquipments.get()) {
-        	
-        	
-            ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
+    public static void respawn(PlayerRespawnEvent event) {
+        if (event.getPlayer() instanceof ServerPlayerEntity) {
+            ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
+            
+            PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+                    new FHClimatePacket(ClimateData.get(serverWorld)));
+            CompoundNBT cnbt = new CompoundNBT();
+            cnbt.putLong("penergy", TemperatureCore.getFHData(event.getPlayer()).getLong("penergy"));
+            
+            TemperatureCore.setFHData(event.getPlayer(), cnbt);
         }
     }
 
