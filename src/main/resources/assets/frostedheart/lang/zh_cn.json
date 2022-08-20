@@ -187,6 +187,7 @@
   "message.frostedheart.village.unknown": "哼哼，哼哼哼？*窝猫似烃薄懂尼硕脎*",
   "message.frostedheart.crank.feel_hunger": "已经饿到摇不动了。",
   "message.frostedheart.research_no_use": "我还不知道这玩意怎么用。",
+  "message.frostedheart.research.multiblock.cannot_build": "我完全不知道怎么建造这个结构。我需要更多的研究。",
   "message.frostedheart.forecast.morning": "清晨天气预报:\n 今早: %s °C\n 中午: %s °C\n 今晚: %s °C\n 午夜: %s °C\n 明早: %s °C",
   "message.frostedheart.forecast.night": "傍晚天气预报:\n 今晚: %s °C\n 午夜: %s °C\n 明早: %s °C\n 中午: %s °C\n 傍晚: %s °C",
   "message.frostedheart.forecast.blizzard_today": " 今日暴风雪 :[",

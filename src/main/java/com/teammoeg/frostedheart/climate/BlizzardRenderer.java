@@ -48,15 +48,15 @@ public class BlizzardRenderer {
                               LightTexture lightTexture,
                               int ticks,
                               float partialTicks,
-                              double x,
-                              double y,
-                              double z) {
+                              double cameraX,
+                              double cameraY,
+                              double cameraZ) {
         float rainStrength = world.getThunderStrength(partialTicks);
         lightTexture.enableLightmap();
 
-        int floorX = MathHelper.floor(x);
-        int floorY = MathHelper.floor(y);
-        int floorZ = MathHelper.floor(z);
+        int cameraBlockPosX = MathHelper.floor(cameraX);
+        int cameraBlockPosY = MathHelper.floor(cameraY);
+        int cameraBlockPosZ = MathHelper.floor(cameraZ);
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
@@ -68,7 +68,11 @@ public class BlizzardRenderer {
         RenderSystem.defaultAlphaFunc();
         RenderSystem.enableDepthTest();
 
-        int graphicsQuality = Minecraft.isFancyGraphicsEnabled() ? 5 : 10;
+        // The blizzard will be rendered in the block range
+        // cameraX - renderRadius <= x <= cameraX + renderRadius
+        // cameraZ - renderRadius <= z <= cameraZ + renderRadius
+        // For y, it is the same rule, while in addition y should > *altitude of first solid block*
+        int renderRadius = Minecraft.isFancyGraphicsEnabled() ? 5 : 10;
         RenderSystem.depthMask(Minecraft.isFabulousGraphicsEnabled());
 
         int i1 = -1;
@@ -76,37 +80,34 @@ public class BlizzardRenderer {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         BlockPos.Mutable blockPos = new BlockPos.Mutable();
 
-        for (int graphicQualityZ = floorZ - graphicsQuality;
-             graphicQualityZ <= floorZ + graphicsQuality;
-             ++graphicQualityZ) {
-            for (int graphicQualityX = floorX - graphicsQuality;
-                 graphicQualityX <= floorX + graphicsQuality;
-                 ++graphicQualityX) {
-                int rainSizeIdx = (graphicQualityZ - floorZ + 16) * 32 + graphicQualityX - floorX + 16;
+        for (int currentlyRenderingZ = cameraBlockPosZ - renderRadius;
+             currentlyRenderingZ <= cameraBlockPosZ + renderRadius;
+             ++currentlyRenderingZ) {
+            for (int currentlyRenderingX = cameraBlockPosX - renderRadius;
+                 currentlyRenderingX <= cameraBlockPosX + renderRadius;
+                 ++currentlyRenderingX) {
+                int rainSizeIdx = (currentlyRenderingZ - cameraBlockPosZ + 16) * 32 + currentlyRenderingX - cameraBlockPosX + 16;
 
                 // Size of snowflake
                 double rainSizeX = (double) rainSizeXMemento[rainSizeIdx] * 0.5D;
                 double rainSizeZ = (double) rainSizeZMemento[rainSizeIdx] * 0.5D;
-                blockPos.setPos(graphicQualityX, 0, graphicQualityZ);
-                int topPosY = mc.world.getHeight(Heightmap.Type.MOTION_BLOCKING, blockPos.getX(), blockPos.getZ());
-                int floorYMinusGraphicsQuality = floorY - graphicsQuality;
-                int floorYPlusGraphicsQuality = floorY + graphicsQuality;
-                if (floorYMinusGraphicsQuality < topPosY) {
-                    floorYMinusGraphicsQuality = topPosY;
-                }
-                if (floorYPlusGraphicsQuality < topPosY) {
-                    floorYPlusGraphicsQuality = topPosY;
-                }
+                blockPos.setPos(currentlyRenderingX, 0, currentlyRenderingZ);
 
-                int posY2 = Math.max(topPosY, floorY);
+                int altitudeOfHighestSolidBlock = mc.world.getHeight(Heightmap.Type.MOTION_BLOCKING, blockPos.getX(), blockPos.getZ());
+                int renderingYLowerBound = Math.max(cameraBlockPosY - renderRadius, altitudeOfHighestSolidBlock);
+                int renderingYUpperBound = Math.max(cameraBlockPosY + renderRadius, altitudeOfHighestSolidBlock);
 
-                if (floorYMinusGraphicsQuality != floorYPlusGraphicsQuality) {
+                int posY2 = Math.max(altitudeOfHighestSolidBlock, cameraBlockPosY);
+
+                // If the ``non-blocked'' block is out of render radius,
+                // nothing will be rendered.
+                if (renderingYLowerBound != renderingYUpperBound) {
                     Random random = new Random(
-                            graphicQualityX * graphicQualityX * 3121
-                                    + graphicQualityX * 45238971 ^ graphicQualityZ * graphicQualityZ * 418711
-                                    + graphicQualityZ * 13761
+                            currentlyRenderingX * currentlyRenderingX * 3121
+                                    + currentlyRenderingX * 45238971 ^ currentlyRenderingZ * currentlyRenderingZ * 418711
+                                    + currentlyRenderingZ * 13761
                     );
-                    blockPos.setPos(graphicQualityX, floorYMinusGraphicsQuality, graphicQualityZ);
+                    blockPos.setPos(currentlyRenderingX, renderingYLowerBound, currentlyRenderingZ);
 
                     if (i1 != 1) {
                         if (i1 >= 0) {
@@ -123,11 +124,11 @@ public class BlizzardRenderer {
                             + (double) (ticksAndPartialTicks * (float) random.nextGaussian()) * 0.03D);
                     float fallSpeed = (float) (random.nextDouble()
                             + (double) (ticksAndPartialTicks * (float) random.nextGaussian()) * 0.3D);
-                    double d3 = (double) ((float) graphicQualityX + 0.5F) - x;
-                    double d5 = (double) ((float) graphicQualityZ + 0.5F) - z;
-                    float f9 = MathHelper.sqrt(d3 * d3 + d5 * d5) / (float) graphicsQuality;
+                    double d3 = (double) ((float) currentlyRenderingX + 0.5F) - cameraX;
+                    double d5 = (double) ((float) currentlyRenderingZ + 0.5F) - cameraZ;
+                    float f9 = MathHelper.sqrt(d3 * d3 + d5 * d5) / (float) renderRadius;
                     float ticksAndPartialTicks0 = ((1.0F - f9 * f9) * 0.3F + 0.5F) * rainStrength;
-                    blockPos.setPos(graphicQualityX, posY2, graphicQualityZ);
+                    blockPos.setPos(currentlyRenderingX, posY2, currentlyRenderingZ);
                     int k3 = WorldRenderer.getCombinedLight(world, blockPos);
                     int l3 = k3 >> 16 & '\uffff';
                     int i4 = (k3 & '\uffff') * 3;
@@ -135,34 +136,34 @@ public class BlizzardRenderer {
                     int k4 = (i4 * 3 + 240) / 4;
 
                     bufferBuilder.pos(
-                                    (double) graphicQualityX - x - rainSizeX + 0.5D + random.nextGaussian() * 2,
-                                    (double) floorYPlusGraphicsQuality - y,
-                                    (double) graphicQualityZ - z - rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(0.0F + f7, (float) floorYMinusGraphicsQuality * 0.25F - Math.abs(fallSpeed))
+                                    (double) currentlyRenderingX - cameraX - rainSizeX + 0.5D + random.nextGaussian() * 2,
+                                    (double) renderingYUpperBound - cameraY,
+                                    (double) currentlyRenderingZ - cameraZ - rainSizeZ + 0.5D + random.nextGaussian())
+                            .tex(0.0F + f7, (float) renderingYLowerBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
                             .lightmap(k4, j4)
                             .endVertex();
                     bufferBuilder.pos(
-                                    (double) graphicQualityX - x + rainSizeX + 0.5D + random.nextGaussian() * 2,
-                                    (double) floorYPlusGraphicsQuality - y,
-                                    (double) graphicQualityZ - z + rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(1.0F + f7, (float) floorYMinusGraphicsQuality * 0.25F - Math.abs(fallSpeed))
+                                    (double) currentlyRenderingX - cameraX + rainSizeX + 0.5D + random.nextGaussian() * 2,
+                                    (double) renderingYUpperBound - cameraY,
+                                    (double) currentlyRenderingZ - cameraZ + rainSizeZ + 0.5D + random.nextGaussian())
+                            .tex(1.0F + f7, (float) renderingYLowerBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
                             .lightmap(k4, j4)
                             .endVertex();
                     bufferBuilder.pos(
-                                    (double) graphicQualityX - x + rainSizeX + 0.5D + random.nextGaussian() * 2,
-                                    (double) floorYMinusGraphicsQuality - y,
-                                    (double) graphicQualityZ - z + rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(1.0F + f7, (float) floorYPlusGraphicsQuality * 0.25F - Math.abs(fallSpeed))
+                                    (double) currentlyRenderingX - cameraX + rainSizeX + 0.5D + random.nextGaussian() * 2,
+                                    (double) renderingYLowerBound - cameraY,
+                                    (double) currentlyRenderingZ - cameraZ + rainSizeZ + 0.5D + random.nextGaussian())
+                            .tex(1.0F + f7, (float) renderingYUpperBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
                             .lightmap(k4, j4)
                             .endVertex();
                     bufferBuilder.pos(
-                                    (double) graphicQualityX - x - rainSizeX + 0.5D + random.nextGaussian() * 2,
-                                    (double) floorYMinusGraphicsQuality - y,
-                                    (double) graphicQualityZ - z - rainSizeZ + 0.5D + random.nextGaussian())
-                            .tex(0.0F + f7, (float) floorYPlusGraphicsQuality * 0.25F - Math.abs(fallSpeed))
+                                    (double) currentlyRenderingX - cameraX - rainSizeX + 0.5D + random.nextGaussian() * 2,
+                                    (double) renderingYLowerBound - cameraY,
+                                    (double) currentlyRenderingZ - cameraZ - rainSizeZ + 0.5D + random.nextGaussian())
+                            .tex(0.0F + f7, (float) renderingYUpperBound * 0.25F - Math.abs(fallSpeed))
                             .color(1.0F, 1.0F, 1.0F, ticksAndPartialTicks0)
                             .lightmap(k4, j4)
                             .endVertex();
