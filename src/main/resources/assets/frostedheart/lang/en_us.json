@@ -186,6 +186,7 @@
   "message.frostedheart.village.unknown": "hmmm...hmm e dnot udnrsootd wah u mean",
   "message.frostedheart.crank.feel_hunger": "I'm too hungry to use this crank.",
   "message.frostedheart.research_no_use": "I don't yet know how to use this.",
+  "message.frostedheart.research.multiblock.cannot_build": "I have no idea how to build it. I need more research. ",
   "message.frostedheart.forecast.morning": "Morning Weather Forecast:\n Morning: %s °C\n Noon: %s °C\n Night: %s °C\n Midnight: %s °C\n Tomorrow Morning: %s °C",
   "message.frostedheart.forecast.night": "Evening Weather Forecast:\n Tonight: %s °C\n Midnight: %s °C\n Tomorrow Morning: %s °C\n Tomorrow Noon: %s °C\n Tomorrow Night: %s °C",
   "message.frostedheart.forecast.blizzard_today": " Blizzard Expected Today :[",

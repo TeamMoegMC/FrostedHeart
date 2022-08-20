@@ -57,6 +57,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -182,11 +183,16 @@ public class CommonEvents {
         }
         if (ResearchListeners.multiblock.has(event.getMultiblock()))
             if (event.getPlayer().getEntityWorld().isRemote) {
-                if (!ClientResearchDataAPI.getData().building.has(event.getMultiblock()))
+                if (!ClientResearchDataAPI.getData().building.has(event.getMultiblock())) {
+                    event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
+                }
             } else {
-                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock()))
+                if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock())) {
+                    event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
+                }
+
             }
     }
 
