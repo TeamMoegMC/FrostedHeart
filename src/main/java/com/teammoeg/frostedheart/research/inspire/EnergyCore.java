@@ -205,14 +205,13 @@ public class EnergyCore {
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        if (ev.isWasDeath()) {
+        
             CompoundNBT cnbt = new CompoundNBT();
             cnbt.putLong("penergy", TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
+            
             TemperatureCore.setFHData(ev.getPlayer(), cnbt);
-        }/*else {
-			CompoundNBT cnbt=TemperatureCore.getFHData(ev.getOriginal());
-			TemperatureCore.setFHData(ev.getPlayer(),cnbt);
-		}*/
+            //TemperatureCore.setTemperature(ev.getPlayer(), 0, 0);
+        
     }
 
     @SubscribeEvent

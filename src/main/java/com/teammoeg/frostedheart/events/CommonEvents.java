@@ -561,7 +561,8 @@ public class CommonEvents {
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
         if (ev.isWasDeath() && FHConfig.SERVER.keepEquipments.get()) {
-
+        	
+        	
             ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
         }
     }
