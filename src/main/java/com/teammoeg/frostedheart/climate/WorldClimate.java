@@ -88,7 +88,8 @@ public class WorldClimate {
     /**
      * The temperature when vanilla plants can grow.
      */
-    public static final float VANILLA_PLANT_GROW_TEMPERATURE = 20;
+    public static final float VANILLA_PLANT_GROW_TEMPERATURE = 15;
+    public static final int BONEMEAL_TEMPERATURE = 5;
 
     /**
      * The temperature when hemp can grow.

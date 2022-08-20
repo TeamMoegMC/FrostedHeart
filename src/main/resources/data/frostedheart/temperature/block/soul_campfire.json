@@ -1,6 +1,6 @@
 {
   "id": "minecraft:soul_campfire",
-  "temperature": 1,
+  "temperature": 400,
   "range": 3,
   "level_divide": false,
   "must_lit": true

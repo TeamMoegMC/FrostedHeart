@@ -113,12 +113,22 @@ public class FHUtils {
     }
 
     public static boolean canSmallTreeGenerate(World w, BlockPos p, Random r) {
-        return r.nextInt(4) == 0;
+        return r.nextInt(1) == 0;
 
     }
+    public static boolean canTreeGrow(World w, BlockPos p, Random r) {
+        float temp=ChunkData.getTemperature(w, p);
+        if(temp<=-6)
+        	return false;
+        if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+        	return false;
+        if(temp>0)
+        	return true;
+    	return r.nextInt(Math.max(1,MathHelper.ceil(-temp/2))) == 0;
 
+    }
     public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
-        int i = 35;
+        int i = 15;
         i -= ChunkData.getTemperature(w, p) / 2;
         return i <= 0 || r.nextInt(i) == 0;
 

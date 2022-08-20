@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SweetBerryBushBlock;
@@ -54,10 +55,14 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         int i = state.get(AGE);
         float temp = ChunkData.getTemperature(worldIn, pos);
         if (temp < this.growTemperature) {
-            if (worldIn.getRandom().nextInt(3) == 0) {
+            if (temp < this.growTemperature-5&&worldIn.getRandom().nextInt(3) == 0) {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
             //我也不知道这玩意干啥用的，我看FHCropBlock里有就加上了
+        }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+        	if (worldIn.getRandom().nextInt(3) == 0) {
+                worldIn.setBlockState(pos, this.getDefaultState(), 2);
+            }
         } else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(5) == 0) && this.growSpeed > random.nextInt(100)) {
             worldIn.setBlockState(pos, state.with(AGE, i + 1), 2);
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
