@@ -70,9 +70,7 @@ public class FHResearchDataUpdatePacket {
             datax.deserialize(data);
             ClientUtils.refreshResearchGui();
             if (status != datax.isCompleted()) {
-                if (datax.isCompleted()) {
-                    ClientUtils.mc().getToastGui().add(new ResearchToast(rs));
-                }
+  
                 MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, datax.isCompleted()));
             }
         });
