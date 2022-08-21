@@ -454,8 +454,8 @@ public class FrostedHud {
 		mc.getTextureManager().bindTexture(FrostedHud.FORECAST_ELEMENTS);
 		RenderSystem.enableBlend();
 
-		int date = (int) ClimateData.getDay(mc.world);
-		int hourInDay = (int) ClimateData.getHourInDay(mc.world);
+		long date = ClientForecastData.getDate();
+		int hourInDay = ClientForecastData.getHourInDay();
 		int segmentLength = 13; // we have 4 segments in each day, total 5 day in window, 20 segments.
 		int markerLength = 50;
 		int markerMovingOffset = hourInDay / 6 * segmentLength; // divide by 6 to get segment index

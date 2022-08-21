@@ -66,7 +66,7 @@ import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_
  * Hence, the clock source is updated each second on server side:
  * {@link CommonEvents#onServerTick(TickEvent.WorldTickEvent)}
  * <p>
- * To provide performance, we introduced a cache system for temperature data for {@link #DAY_CACHE_LENGTH} days.
+ * To improve performance, we introduced a cache system for temperature data for {@link #DAY_CACHE_LENGTH} days.
  * Hence, the cache is updated each second on server side:
  * {@link CommonEvents#onServerTick(TickEvent.WorldTickEvent)}
  * <p>
@@ -496,24 +496,28 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
         return frames;
     }
-    public static float getMonth(IWorld world) {
+    public static long getMonth(IWorld world) {
         return get(world).clockSource.getDate();
     }
 
 
-    public static float getDay(IWorld world) {
+    public static long getDay(IWorld world) {
         return get(world).clockSource.getDate();
     }
-
-    public static float getHour(IWorld world) {
+    public long getDay() {
+        return clockSource.getDate();
+    }
+    public static long getHour(IWorld world) {
         return get(world).clockSource.getHours();
     }
 
-    public static float getSec(IWorld world) {
+    public static long getSec(IWorld world) {
         return get(world).clockSource.getTimeSecs();
     }
-
-    public static float getHourInDay(IWorld world) {
+    public long getSec() {
+        return clockSource.getTimeSecs();
+    }
+    public static int getHourInDay(IWorld world) {
         return get(world).clockSource.getHourInDay();
     }
 

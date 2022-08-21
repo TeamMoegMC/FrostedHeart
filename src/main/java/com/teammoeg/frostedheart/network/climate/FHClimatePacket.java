@@ -34,20 +34,24 @@ import java.util.function.Supplier;
 
 public class FHClimatePacket {
     private final int[] data;
-
+    private final long sec;
     public FHClimatePacket(ClimateData climateData) {
         data = climateData.getFrames();
+        sec= climateData.getSec();
     }
     public FHClimatePacket() {
         data = new int[0];
+        sec=0;
     }
 
     public FHClimatePacket(PacketBuffer buffer) {
         data=buffer.readVarIntArray();
+        sec=buffer.readVarLong();
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeVarIntArray(data);
+        buffer.writeVarLong(sec);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
@@ -61,6 +65,7 @@ public class FHClimatePacket {
             for(int i=0;i<max;i++) {
             	ClientForecastData.tfs[i]=TemperatureFrame.unpack(data[i]);
             }
+            ClientForecastData.secs=sec;
         });
         context.get().setPacketHandled(true);
     }
