@@ -536,6 +536,9 @@ public class CommonEvents {
         if (ev.isWasDeath() && FHConfig.SERVER.keepEquipments.get()) {
             ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
         }
+        CompoundNBT cnbt = new CompoundNBT();
+        cnbt.putLong("penergy", TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
+        TemperatureCore.setFHData(ev.getPlayer(), cnbt);
     }
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
