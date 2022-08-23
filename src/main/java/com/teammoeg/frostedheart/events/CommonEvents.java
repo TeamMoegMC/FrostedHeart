@@ -185,12 +185,11 @@ public class CommonEvents {
         if (ResearchListeners.multiblock.has(event.getMultiblock()))
             if (event.getPlayer().getEntityWorld().isRemote) {
                 if (!ClientResearchDataAPI.getData().building.has(event.getMultiblock())) {
-                    event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
             } else {
                 if (!ResearchDataAPI.getData((ServerPlayerEntity) event.getPlayer()).building.has(event.getMultiblock())) {
-                    event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
+                    //event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.multiblock.cannot_build"), true);
                     event.setCanceled(true);
                 }
 

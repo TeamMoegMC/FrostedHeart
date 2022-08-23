@@ -39,6 +39,7 @@
     "immersiveengineering.CrafterPatternInventoryMixin",
     "immersiveengineering.TemplateMultiblockMixin",
     "jei.MixinCommandUtilServer",
+    "stone_age.FlintWorkbenchTileEntityMixin",
     "minecraft.AnimalEntityMixin",
     "minecraft.BeeHiveMixin",
     "minecraft.BigTreeMixin",

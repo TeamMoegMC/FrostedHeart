@@ -107,6 +107,12 @@ mixin {
 
 repositories {
     mavenLocal()
+    maven {
+        url "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
     // IE & CT Files
     maven {
         name = "BlameJared"
@@ -122,10 +128,7 @@ repositories {
         name = "latvian maven"
         url = "https://maven.latmod.com/"
     }
-    maven {
-        name = "teammoeg maven"
-        url = "http://server.teammoeg.com:8888/releases"
-    }
+
     maven {
         // Location of the maven for Flywheel
         name = "tterrag maven"
@@ -137,9 +140,6 @@ repositories {
         url = "https://maven.theillusivec4.top/"
     }
     maven {
-        url "https://www.cursemaven.com"
-    }
-    maven {
         url "https://maven.architectury.dev/"
     }
     maven {
@@ -148,6 +148,10 @@ repositories {
             includeGroup "dev.ftb.mods"
             includeGroup "dev.latvian.mods"
         }
+    }
+    maven {
+        name = "teammoeg maven"
+        url = "http://server.teammoeg.com:8888/releases"
     }
 }
 
@@ -192,6 +196,10 @@ dependencies {
 
     //compile fg.deobf("curse.maven:better-weather-400714:3420517")
     //implementation fg.deobf("curse.maven:better-weather-400714:3420517")
+    
+    
+    implementation fg.deobf("curse.maven:age-api-353992:3176394")
+    implementation fg.deobf("curse.maven:neolithic-world-534605:3937806")
 
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")

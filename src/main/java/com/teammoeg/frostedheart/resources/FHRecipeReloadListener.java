@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.resources;
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
+
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.recipes.*;
@@ -37,10 +39,12 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.event.TagsUpdatedEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
@@ -85,6 +89,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         clientRecipeManager = event.getRecipeManager();
         if (!Minecraft.getInstance().isSingleplayer())
             buildRecipeLists(clientRecipeManager);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
     }
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
