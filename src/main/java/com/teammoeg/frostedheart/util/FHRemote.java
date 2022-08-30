@@ -82,7 +82,7 @@ public class FHRemote {
     }
 
     protected void doFetch() {
-        try {
+       /* try {
             JsonParser parser = new JsonParser();
             JsonObject json = parser.parse(fetchString("https://addons-ecs.forgesvc.net/api/v2/addon/535790")).getAsJsonObject();
             String fileName = json.get("latestFiles").getAsJsonArray().get(0).getAsJsonObject().get("fileName").getAsString();
@@ -90,7 +90,7 @@ public class FHRemote {
         } catch (Throwable e) {
             stableVersion = "";
             e.printStackTrace();
-        }
+        }*/
         if (stableVersion == null || stableVersion.isEmpty()) {
             stableVersion = fetchString("http://server.teammoeg.com:15010/data/twrver");
         }
