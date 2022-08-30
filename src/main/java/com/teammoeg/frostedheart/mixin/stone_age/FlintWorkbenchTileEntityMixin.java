@@ -38,7 +38,10 @@ public class FlintWorkbenchTileEntityMixin extends TileEntity {
 	}
 
 	PlayerEntity pe;
-
+	/**
+	 * @author khjxiaogu
+	 * @reason Make research can limit flint workbench
+	 * */
 	@Overwrite(remap = false)
 	private List<FlintWorkbenchRecipe> findMatchingRecipes(@Nonnull ItemStack heldItemMainhand) {
 		assert this.world != null;
@@ -46,7 +49,10 @@ public class FlintWorkbenchTileEntityMixin extends TileEntity {
 		return findMatchingRecipes().stream()
 				.filter(flintWorkbenchRecipe -> flintWorkbenchRecipe.testTool(heldItemMainhand)).findFirst().map(ImmutableList::of).orElseGet(ImmutableList::of);
 	}
-
+	/**
+	 * @author khjxiaogu
+	 * @reason Make research can limit flint workbench
+	 * */
 	@Overwrite(remap = false)
 	private List<FlintWorkbenchRecipe> findMatchingRecipes() {
 		assert this.world != null;
