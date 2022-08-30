@@ -70,6 +70,7 @@
     "minecraft.TemplateManagerMixin",
     "minecraft.VillagerMixin",
     "minecraft.TileEntityMixin",
+    "minecraft.SpawnLocationHelperMixin",
     "minecraft.ServerPlayerEntityMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
