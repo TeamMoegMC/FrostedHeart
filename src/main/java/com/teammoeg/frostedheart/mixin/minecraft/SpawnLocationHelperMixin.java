@@ -22,7 +22,7 @@ public class SpawnLocationHelperMixin {
 	 * */
 	@Overwrite
 	@Nullable
-	protected static BlockPos func_241092_a_(ServerWorld p_241092_0_, int p_241092_1_, int p_241092_2_,
+	public static BlockPos func_241092_a_(ServerWorld p_241092_0_, int p_241092_1_, int p_241092_2_,
 			boolean p_241092_3_) {
 		BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable(p_241092_1_, 0, p_241092_2_);
 		Biome biome = p_241092_0_.getBiome(blockpos$mutable);
