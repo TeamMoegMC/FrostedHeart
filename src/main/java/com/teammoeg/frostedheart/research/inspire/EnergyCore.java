@@ -73,7 +73,7 @@ public class EnergyCore {
                 m = 0.5 * M;
             }
             double n = trd.getTeam().get().getOnlineMembers().size();
-            n = 1 + 0.75 * (n - 1);
+            n = 1 + 0.9 * (n - 1);
             //System.out.println(n);
             //System.out.println(m);
             double dtenergy = ((0.3934f * (1 - tenergy / m) * tenergy + 1.3493f * (dietValue - 0.4) * tenergy) / (1200 * (n)));
@@ -186,7 +186,10 @@ public class EnergyCore {
         CompoundNBT data = TemperatureCore.getFHData(player);
         return data.getLong("energy") > val + 10000 || data.getLong("penergy") > val;
     }
-
+    public static long getEnergy(PlayerEntity player) {
+        CompoundNBT data = TemperatureCore.getFHData(player);
+        return data.getLong("energy")-10000;
+    }
     public static void reportEnergy(PlayerEntity player) {
         CompoundNBT data = TemperatureCore.getFHData(player);
         player.sendMessage(new StringTextComponent("Energy:" + data.getLong("energy") + ",Persist Energy: " + data.getLong("penergy")), player.getUniqueID());

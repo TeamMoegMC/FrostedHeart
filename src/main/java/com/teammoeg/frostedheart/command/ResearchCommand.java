@@ -62,7 +62,7 @@ public class ResearchCommand {
                 .then(Commands.literal("reset").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
                     for (Research r : FHResearch.getAllResearch())
                         if (r.getId().startsWith(s.getRemaining()))
-                            s.suggest(r.getId());
+                            s.suggest(r.getId(),r.getName());
                     if("all".startsWith(s.getRemaining()))
                     	s.suggest("all");
                     return s.buildFuture();

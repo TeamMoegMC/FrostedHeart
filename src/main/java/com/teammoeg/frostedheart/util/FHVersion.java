@@ -3,13 +3,6 @@ package com.teammoeg.frostedheart.util;
 import java.util.Arrays;
 
 public class FHVersion {
-    private enum SubType {
-        pre,
-        rc,
-        stable,
-        hf
-    }
-
     private enum EqualState {
         lt(true, false),
         eq(true, true),
@@ -31,6 +24,28 @@ public class FHVersion {
         }
 
     }
+    private enum SubType {//stable>empty>hf>rc>pre
+        pre,
+        rc,
+        hf,
+        stable;
+        public static EqualState compare(SubType v1,SubType v2){
+        	if(v1==null)
+        		return v2==stable?EqualState.lt:(v2==null?EqualState.eq:EqualState.gt);
+        	if(v2==null)
+        		return v1==stable?EqualState.gt:EqualState.lt;
+        	return EqualState.of(v1.ordinal() - v2.ordinal());
+        }
+        public static EqualState compareNoEq(SubType v1,SubType v2){
+        	if(v1==null)
+        		return v2==stable?EqualState.lt:EqualState.gt;
+        	if(v2==null)
+        		return v1==stable?EqualState.gt:EqualState.lt;
+        	return EqualState.of(v1.ordinal() - v2.ordinal());
+        }
+    }
+
+
 
     private static class SubVersion {
         String subtype;
@@ -55,7 +70,7 @@ public class FHVersion {
             if (ttype == otype) {
                 return subversion.laterThan(other.subversion);
             }
-            return ttype == null ? EqualState.gt : (otype == null ? EqualState.lt : EqualState.of(ttype.ordinal() - otype.ordinal()));
+            return SubType.compareNoEq(ttype, otype);
         }
 
         public static SubVersion parse(String v) {

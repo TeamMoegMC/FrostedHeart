@@ -29,7 +29,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     public static final int INK_SLOT = 2;
     public static final int PAPER_SLOT = 1;
     public static final int EXAMINE_SLOT = 0;
-    public static int ENERGY_PER_COMBINE = 300;
+    public static int ENERGY_PER_COMBINE = 100;
     public static int ENERGY_PER_PAPER = 3000;
 
     public DrawingDeskTileEntity() {

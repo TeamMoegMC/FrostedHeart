@@ -46,6 +46,7 @@ import com.teammoeg.frostedheart.network.research.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.resources.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.FHNBT;
@@ -134,10 +135,23 @@ public class CommonEvents {
                     data.updateClock(serverWorld);
                     data.updateCache(serverWorld);
                     data.trimTempEventStream();
-                    
-             
                 }
+                if (world.getDayTime() % 24000 == 40) {
+                	for(PlayerEntity spe:world.getPlayers()) {
+                		if(spe instanceof ServerPlayerEntity&&!(spe instanceof FakePlayer)) {
+	                		ServerPlayerEntity serverPlayer=(ServerPlayerEntity) spe;
+		    				long energy = EnergyCore.getEnergy(spe);
+		    				if (energy > 10000)
+		    					serverPlayer.sendMessage(GuiUtils.translateMessage("energy.full"), serverPlayer.getUniqueID());
+		    				else if (energy >= 5000)
+		    					serverPlayer.sendMessage(GuiUtils.translateMessage("energy.suit"), serverPlayer.getUniqueID());
+		    				else
+		    					serverPlayer.sendMessage(GuiUtils.translateMessage("energy.lack"), serverPlayer.getUniqueID());
+                		}
+                	}
+    			}
             }
+            
         }
     }
 
