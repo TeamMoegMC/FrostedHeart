@@ -63,9 +63,19 @@ public class ResearchCommand {
                     for (Research r : FHResearch.getAllResearch())
                         if (r.getId().startsWith(s.getRemaining()))
                             s.suggest(r.getId());
+                    if("all".startsWith(s.getRemaining()))
+                    	s.suggest("all");
                     return s.buildFuture();
                 }).executes(ct -> {
-                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(ct.getArgument("name", String.class).toString()).get());
+                	String rsn = ct.getArgument("name", String.class).toString();
+                	if (rsn.equals("all")) {
+                        TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
+                        for (Research r : FHResearch.getAllResearch()) {
+                            trd.resetData(r);
+                        }
+                    } else {
+                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get());
+                    }
                     return Command.SINGLE_SUCCESS;
                 })));
         dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(add));
