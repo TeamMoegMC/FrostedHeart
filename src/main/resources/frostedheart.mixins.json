@@ -80,6 +80,7 @@
     "rankine.MixinLargeTree",
     "rankine.MixinMediumTree",
     "rankine.MixinPostWorldReplacer",
+    "rankine.MixinRankineLeavesBlock",
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin"
