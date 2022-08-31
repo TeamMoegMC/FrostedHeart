@@ -12,10 +12,10 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.research.clues.CustomClue;
 import com.teammoeg.frostedheart.research.effects.*;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.loading.FMLPaths;
+import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
 
-import java.io.File;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
 import java.util.List;
 
 /**
@@ -26,12 +26,13 @@ public class Researches {
 
     public static void init() {
         FHResearch.prepareReload();
-        File folder = FMLPaths.CONFIGDIR.get().toFile();
-        File rf = new File(folder, "fhresearches");
         ResearchCategories.init();
-
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
         FHResearch.loadAll();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
         FHResearch.finishReload();
+        
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
         //FHResearch.saveAll();
     }
 

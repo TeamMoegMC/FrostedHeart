@@ -52,7 +52,8 @@ public class Research extends FHRegisteredItem implements Writeable {
     List<String> fdesc;
     boolean showfdesc;
     boolean hideEffects;
-
+    boolean inCompletable=false;
+    boolean isHidden=false;
     long points = 1000;// research point
 
     @SafeVarargs
@@ -105,6 +106,10 @@ public class Research extends FHRegisteredItem implements Writeable {
             showfdesc = jo.get("showAltDesc").getAsBoolean();
         if (jo.has("hideEffects"))
             hideEffects = jo.get("hideEffects").getAsBoolean();
+        if(jo.has("hidden"))
+        	isHidden=jo.get("hidden").getAsBoolean();
+        if(jo.has("locked"))
+        	inCompletable=jo.get("locked").getAsBoolean();
 
     }
 
@@ -127,9 +132,12 @@ public class Research extends FHRegisteredItem implements Writeable {
         jo.addProperty("points", points);
         if (showfdesc)
             jo.addProperty("showAltDesc", true);
-        if (isHideEffects())
+        if (hideEffects)
             jo.addProperty("hideEffects", true);
-
+        if(isHidden)
+        	jo.addProperty("hidden", true);
+        if(inCompletable)
+        	jo.addProperty("locked", true);
         return jo;
     }
 
@@ -148,8 +156,11 @@ public class Research extends FHRegisteredItem implements Writeable {
         requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
         effects = SerializeUtil.readList(data, Effects::deserialize);
         points = data.readVarLong();
-        showfdesc = data.readBoolean();
-        hideEffects = data.readBoolean();
+        boolean[] bools=SerializeUtil.readBooleans(data);
+        showfdesc = bools[0];
+        hideEffects = bools[1];
+        isHidden=bools[2];
+        inCompletable=bools[3];
     }
 
 
@@ -166,8 +177,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
         SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
         buffer.writeVarLong(points);
-        buffer.writeBoolean(showfdesc);
-        buffer.writeBoolean(isHideEffects());
+        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,inCompletable);
     }
 
     public List<Clue> getClues() {

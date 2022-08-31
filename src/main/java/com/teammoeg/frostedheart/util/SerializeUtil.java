@@ -100,7 +100,33 @@ public class SerializeUtil {
         }
         buffer.writeBoolean(false);
     }
-
+    public static boolean[] readBooleans(PacketBuffer buffer) {
+        boolean[] ret=new boolean[8];
+        byte in=buffer.readByte();
+        for(int i=ret.length-1;i>=0;i--) {
+        	ret[i]=(in&1)!=0;
+        	in>>=1;
+        }
+        return ret;
+    }
+    /**
+     * Write boolean as a byte into buffer
+     * @param elms elements to write, 8 elements max
+     * */
+    public static void writeBooleans(PacketBuffer buffer,boolean...elms) {
+        if (elms.length>8) {
+        	throw new IllegalArgumentException("count of boolean must not excess 8");
+        }
+        byte b=0;
+        for(int i=0;i<8;i++) {
+        	boolean bl=elms.length>i?elms[i]:false;
+        	b<<=1;
+        	b|=bl?1:0;
+        	
+        }
+        buffer.writeByte(b);
+    }
+    
     public static <T> List<T> readList(PacketBuffer buffer, Function<PacketBuffer, T> func) {
         if (!buffer.readBoolean())
             return null;

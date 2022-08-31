@@ -7,11 +7,13 @@ import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.File;
@@ -96,6 +98,7 @@ public class FHResearch {
         ArrayList<Research> available = new ArrayList<>();
         ArrayList<Research> unlocked = new ArrayList<>();
         for (Research r : all) {
+        	if(r.isHidden) {locked.add(r);continue;}
             if (r.getCategory() != cate) continue;
             if (r.isCompleted()) unlocked.add(r);
             else if (r.isUnlocked()) available.add(r);
@@ -160,7 +163,7 @@ public class FHResearch {
         File rf = new File(folder, "fhresearches");
         rf.mkdirs();
         JsonParser jp = new JsonParser();
-
+        
         for (File f : rf.listFiles((dir, name) -> name.endsWith(".json"))) {
             try {
                 JsonElement je = jp.parse(FileUtil.readString(f));

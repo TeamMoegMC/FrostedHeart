@@ -38,10 +38,9 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
 	                ContraptionCostUtils.setSpeedAndCollect(currentComp, (int) speed);
 	                this.lastStressApplied = ContraptionCostUtils.getCost(currentComp) + 0.5F;
 	                return lastStressApplied;
-	            }else {
-	            	this.lastStressApplied =0;
-	        		return lastStressApplied;
 	            }
+				this.lastStressApplied =0;
+				return lastStressApplied;
         	}else if(fh$cooldown<=0) {
         		currentComp = null;
         		this.lastStressApplied =0;

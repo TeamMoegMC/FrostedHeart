@@ -55,6 +55,7 @@ import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SaplingBlock;
@@ -398,9 +399,10 @@ public class CommonEvents {
         } else {
             if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
-                if (temp<0&&event.getWorld().getBlockState(event.getPos()) != growBlock.getDefaultState()
-                        && event.getWorld().getRandom().nextInt(3) == 0) {
-                	event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+                if (temp<0&& event.getWorld().getRandom().nextInt(3) == 0) {
+                	BlockState cbs=event.getWorld().getBlockState(event.getPos());
+                	if(cbs.matchesBlock(growBlock)&&cbs!= growBlock.getDefaultState())
+                		event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
             }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {

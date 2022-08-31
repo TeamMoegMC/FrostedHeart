@@ -6,6 +6,8 @@ import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.SerializeUtil;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -105,14 +107,14 @@ public class ResearchData {
 
     public void write(PacketBuffer pb) {
         pb.writeVarLong(committed);
-        pb.writeBoolean(active);
-        pb.writeBoolean(finished);
+        SerializeUtil.writeBooleans(pb, active,finished);
     }
 
     public void read(PacketBuffer pb) {
         committed = pb.readVarLong();
-        active = pb.readBoolean();
-        finished = pb.readBoolean();
+        boolean[] bs=SerializeUtil.readBooleans(pb);
+        active = bs[0];
+        finished = bs[1];
     }
 
     public CompoundNBT serialize() {
@@ -167,6 +169,7 @@ public class ResearchData {
 
     public boolean commitItem(ServerPlayerEntity player) {
         Research research = getResearch();
+        if(research.inCompletable)return false;
         for (Research par : research.getParents()) {
             if (!parent.getData(par).isCompleted()) {
                 return false;
