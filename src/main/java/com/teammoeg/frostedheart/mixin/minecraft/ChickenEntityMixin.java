@@ -86,7 +86,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity {
                 digestTimer = 6000;
             }
             float temp = ChunkData.getTemperature(this.getEntityWorld(), this.getPosition());
-            if (temp < WorldClimate.HEMP_GROW_TEMPERATURE || temp > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+            if (temp < WorldClimate.ANIMAL_ALIVE_TEMPERATURE || temp > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
                 if (hxteTimer < 100) {
                     hxteTimer++;
                 } else {

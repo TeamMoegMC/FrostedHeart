@@ -95,6 +95,8 @@ public class WorldClimate {
      * The temperature when hemp can grow.
      */
     public static final float HEMP_GROW_TEMPERATURE = 0;
+    
+    public static final float ANIMAL_ALIVE_TEMPERATURE = -1.5f;
 
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
 
