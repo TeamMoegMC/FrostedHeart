@@ -201,6 +201,8 @@
   "message.frostedheart.energy.full": "I feel energetic, writing some paper is a piece of cake.",
   "message.frostedheart.energy.suit": "Today is fine, making progress is just well.",
   "message.frostedheart.energy.lack": "I feel very tired, maybe I should take a rest.",
+  "message.frostedheart.structure_formed": "Structure is formed.",
+  "message.frostedheart.structure_not_formed": "Structure not formed.",
   "research.category.desc.frostedheart.ars": "Techniques and artistry",
   "research.category.desc.frostedheart.exploration": "Explore the world and find clues to unveil the mystery.",
   "research.category.desc.frostedheart.living": "Survive before thrive.",

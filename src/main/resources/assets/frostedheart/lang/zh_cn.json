@@ -201,6 +201,8 @@
   "message.frostedheart.energy.full": "好，很有精神！今天可以一下子完成好几篇论文。",
   "message.frostedheart.energy.suit": "今天精力尚可，可以浅尝则止。",
   "message.frostedheart.energy.lack": "今天很疲惫，也许应该出去走走。",
+  "message.frostedheart.structure_formed": "结构已形成。",
+  "message.frostedheart.structure_not_formed": "结构未形成。",
   "research.category.desc.frostedheart.ars": "装备和工具",
   "research.category.desc.frostedheart.exploration": "解锁这个世界的奥秘",
   "research.category.desc.frostedheart.living": "生存是第一要务",
