@@ -7,6 +7,9 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.Clues;
+import com.teammoeg.frostedheart.research.data.ResearchData;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
@@ -52,7 +55,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     List<String> fdesc;
     boolean showfdesc;
     boolean hideEffects;
-    boolean inCompletable=false;
+    private boolean inCompletable=false;
     boolean isHidden=false;
     long points = 1000;// research point
 
@@ -109,7 +112,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         if(jo.has("hidden"))
         	isHidden=jo.get("hidden").getAsBoolean();
         if(jo.has("locked"))
-        	inCompletable=jo.get("locked").getAsBoolean();
+        	setInCompletable(jo.get("locked").getAsBoolean());
 
     }
 
@@ -136,7 +139,7 @@ public class Research extends FHRegisteredItem implements Writeable {
             jo.addProperty("hideEffects", true);
         if(isHidden)
         	jo.addProperty("hidden", true);
-        if(inCompletable)
+        if(isInCompletable())
         	jo.addProperty("locked", true);
         return jo;
     }
@@ -160,7 +163,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         showfdesc = bools[0];
         hideEffects = bools[1];
         isHidden=bools[2];
-        inCompletable=bools[3];
+        setInCompletable(bools[3]);
     }
 
 
@@ -177,7 +180,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
         SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
         buffer.writeVarLong(points);
-        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,inCompletable);
+        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,isInCompletable());
     }
 
     public List<Clue> getClues() {
@@ -197,7 +200,12 @@ public class Research extends FHRegisteredItem implements Writeable {
             effects.add(effect);
         }
     }
-
+    
+    public void grantEffects(TeamResearchData team,ServerPlayerEntity spe) {
+    	for (Effect e : getEffects())
+            team.grantEffect(e, spe);
+    }
+    
     public List<IngredientWithSize> getRequiredItems() {
         return Collections.unmodifiableList(requiredItems);
     }
@@ -323,7 +331,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     }
 
     public ResearchData getData(Team team) {
-        return ResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
+        return FHResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -396,7 +404,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        ResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
+        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
 
         FHResearch.delete(this);
     }
@@ -416,7 +424,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            ResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
+            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);
@@ -429,5 +437,13 @@ public class Research extends FHRegisteredItem implements Writeable {
     public boolean isHideEffects() {
         return hideEffects;
     }
+
+	public boolean isInCompletable() {
+		return inCompletable;
+	}
+
+	public void setInCompletable(boolean inCompletable) {
+		this.inCompletable = inCompletable;
+	}
 
 }

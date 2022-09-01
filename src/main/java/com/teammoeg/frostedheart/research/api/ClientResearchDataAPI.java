@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.research.api;
 
-import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;

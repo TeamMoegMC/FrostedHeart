@@ -5,6 +5,8 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultib
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.*;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -43,7 +45,7 @@ public class ResearchListeners {
 
         @Override
         public IRecipe<?> getObject(String s) {
-            return ResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
+            return FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
         }
 
     }

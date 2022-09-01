@@ -46,7 +46,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         hide = LabeledSelection.createBool(this, "Hide effects before complete", r.hideEffects);
         alt = LabeledSelection.createBool(this, "Show alt description before complete", r.showfdesc);
         hidden = LabeledSelection.createBool(this, "Hide this research in list", r.isHidden);
-        locked = LabeledSelection.createBool(this, "Lock this research", r.inCompletable);
+        locked = LabeledSelection.createBool(this, "Lock this research", r.isInCompletable());
     }
 
 
@@ -63,7 +63,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.hideEffects = hide.getSelection();
             r.showfdesc = alt.getSelection();
             r.isHidden=hidden.getSelection();
-            r.inCompletable=locked.getSelection();
+            r.setInCompletable(locked.getSelection());
             if (r.getRId() == 0) {//creating new research
                 if (!id.getText().isEmpty()) {
                     r.setId(id.getText());

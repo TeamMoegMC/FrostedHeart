@@ -19,9 +19,10 @@
 package com.teammoeg.frostedheart.network.research;
 
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.ResearchDataManager;
-import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -34,7 +35,7 @@ public class FHClueProgressSyncPacket {
     private final int id;
 
     public FHClueProgressSyncPacket(UUID team, Clue rs) {
-        TeamResearchData rd = ResearchDataManager.INSTANCE.getData(team);
+        TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isClueTriggered(rs);
         this.id = rs.getRId();
     }

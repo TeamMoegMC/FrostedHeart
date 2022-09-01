@@ -19,8 +19,9 @@
 package com.teammoeg.frostedheart.network.research;
 
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.research.ResearchDataManager;
-import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -35,7 +36,7 @@ public class FHResearchDataSyncPacket {
     private final CompoundNBT data;
 
     public FHResearchDataSyncPacket(UUID team) {
-        this.data = ResearchDataManager.INSTANCE.getData(team).serialize(true);
+        this.data = FHResearchDataManager.INSTANCE.getData(team).serialize(true);
     }
 
     public FHResearchDataSyncPacket(PacketBuffer buffer) {

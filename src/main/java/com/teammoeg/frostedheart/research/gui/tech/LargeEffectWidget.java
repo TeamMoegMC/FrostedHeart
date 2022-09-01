@@ -7,9 +7,9 @@ import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 
-public class LEffectWidget extends EffectWidget {
+public class LargeEffectWidget extends EffectWidget {
 
-    public LEffectWidget(Panel panel, Effect e) {
+    public LargeEffectWidget(Panel panel, Effect e) {
         super(panel, e);
         super.setSize(36, 36);
     }

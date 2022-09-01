@@ -6,6 +6,8 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.*;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
@@ -19,6 +21,8 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.ArrayList;
@@ -26,33 +30,75 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
+
+// TODO: Auto-generated Javadoc
 /**
- * "Effect" of an research: how would it becomes when a research is completed ?
+ * "Effect" of an research: how would it becomes when a research is completed ?.
+ *
+ * @author khjxiaogu
+ * file: Effect.java
+ * @date 2022年9月2日
  */
 public abstract class Effect extends AutoIDItem implements Writeable {
+    
+    /** The name.<br> */
     String name = "";
+    
+    /** The nonce.<br> */
     String nonce;
+    
+    /** The tooltip.<br> */
     List<String> tooltip;
+    
+    /** The parent.<br> */
     public Supplier<Research> parent;
+    
+    /** The icon.<br> */
     FHIcon icon;
+    
+    /** The hidden.<br> */
     boolean hidden;
 
-    // Init globally
+    /**
+     * Inits this effect globally.
+     * Runs when research is loaded.
+     */
     public abstract void init();
 
-    public abstract boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload);
+    /**
+     * Grant effect to a team.<br>
+     * This would be call multiple times, especially when team data loaded from disk if this effect is marked granted.
+     * @param team the team<br>
+     * @param triggerPlayer the player trigger the grant, null if this is not triggered by player, typically press "claim" button.<br>
+     * @param isload true if this is run when loaded from disk<br>
+     * @return true, if
+     */
+    public abstract boolean grant(TeamResearchData team,@Nullable PlayerEntity triggerPlayer, boolean isload);
 
     /**
-     * This is not necessary to implement as this is just for debugging propose
+     * This is not necessary to implement as this is just for debugging propose.
+     * Called only by research command or admin tools.
+     * @param team the team<br>
      */
     public abstract void revoke(TeamResearchData team);
 
+    /**
+     * Send effect progress packet for current effect to players in team.
+     * Useful for data sync. This would called automatically, Their's no need to call this in effect.
+     * @param team the team<br>
+     */
     public void sendProgressPacket(Team team) {
         FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team.getId(), this);
         for (ServerPlayerEntity spe : team.getOnlineMembers())
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
+    /**
+     * Instantiates a new Effect with a JsonObject object.<br>
+     *
+     * @param jo the jo<br>
+     */
     public Effect(JsonObject jo) {
         if (jo.has("name"))
             name = jo.get("name").getAsString();
@@ -67,6 +113,11 @@ public abstract class Effect extends AutoIDItem implements Writeable {
             hidden = jo.get("hidden").getAsBoolean();
     }
 
+    /**
+     * Instantiates a new Effect with a PacketBuffer object.<br>
+     *
+     * @param pb the pb<br>
+     */
     Effect(PacketBuffer pb) {
         name = pb.readString();
         tooltip = SerializeUtil.readList(pb, PacketBuffer::readString);
@@ -75,6 +126,13 @@ public abstract class Effect extends AutoIDItem implements Writeable {
         hidden = pb.readBoolean();
     }
 
+    /**
+     * Instantiates a new Effect.<br>
+     *
+     * @param name the name<br>
+     * @param tooltip the tooltip<br>
+     * @param icon the icon<br>
+     */
     public Effect(String name, List<String> tooltip, FHIcon icon) {
         super();
         this.name = name;
@@ -83,14 +141,34 @@ public abstract class Effect extends AutoIDItem implements Writeable {
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
 
+    /**
+     * Instantiates a new Effect.<br>
+     *
+     * @param name the name<br>
+     * @param tooltip the tooltip<br>
+     * @param icon the icon<br>
+     */
     public Effect(String name, List<String> tooltip, ItemStack icon) {
         this(name, tooltip, FHIcons.getIcon(icon));
     }
 
+    /**
+     * Instantiates a new Effect.<br>
+     *
+     * @param name the name<br>
+     * @param tooltip the tooltip<br>
+     * @param icon the icon<br>
+     */
     public Effect(String name, List<String> tooltip, IItemProvider icon) {
         this(name, tooltip, FHIcons.getIcon(icon));
     }
 
+    /**
+     * Instantiates a new Effect.<br>
+     *
+     * @param name the name<br>
+     * @param tooltip the tooltip<br>
+     */
     public Effect(String name, List<String> tooltip) {
         super();
         this.name = name;
@@ -98,38 +176,86 @@ public abstract class Effect extends AutoIDItem implements Writeable {
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
 
+    /**
+     * Instantiates a new Effect.<br>
+     */
     public Effect() {
         this("", new ArrayList<>());
     }
 
+    /**
+     * Get icon.
+     *
+     * @return icon<br>
+     */
     public final FHIcon getIcon() {
         if (icon == null)
             return getDefaultIcon();
         return icon;
     }
 
+    /**
+     * Get name.
+     *
+     * @return name<br>
+     */
     public final IFormattableTextComponent getName() {
         if (name.isEmpty())
             return getDefaultName();
         return (IFormattableTextComponent) FHTextUtil.get(name, "effect", this::getLId);
     }
 
+    /**
+     * Get tooltip.
+     *
+     * @return tooltip<br>
+     */
     public final List<ITextComponent> getTooltip() {
         if (tooltip.isEmpty())
             return getDefaultTooltip();
         return FHTextUtil.get(tooltip, "effect", this::getLId);
     }
 
+    /**
+     * Get default icon.
+     * use this when no icon is set.
+     * @return default icon<br>
+     */
     public abstract FHIcon getDefaultIcon();
 
+    /**
+     * Get default name.
+     * use this when no name is set.
+     * @return default name<br>
+     */
     public abstract IFormattableTextComponent getDefaultName();
 
+    /**
+     * Get default tooltip.
+     * use this when no tooltip is set.
+     * @return default tooltip<br>
+     */
     public abstract List<ITextComponent> getDefaultTooltip();
 
+    /**
+     * Get id.
+     *
+     * @return id<br>
+     */
     public abstract String getId();
 
+    /**
+     * Get int ID Type for this type of effect.
+     * Must be unique and constant, this is use for network sync. Must match the register order in {@link Effects#register(String, java.util.function.Function, java.util.function.Function)}
+     * @return int ID<br>
+     */
     public abstract int getIntID();
 
+    /**
+     * Serialize.<br>
+     *
+     * @return returns serialize
+     */
     @Override
     public JsonObject serialize() {
         JsonObject jo = new JsonObject();
@@ -146,6 +272,11 @@ public abstract class Effect extends AutoIDItem implements Writeable {
         return jo;
     }
 
+    /**
+     * Write.
+     *
+     * @param buffer the buffer<br>
+     */
     @Override
     public void write(PacketBuffer buffer) {
         buffer.writeVarInt(getIntID());
@@ -156,27 +287,41 @@ public abstract class Effect extends AutoIDItem implements Writeable {
         buffer.writeBoolean(isHidden());
     }
 
+    /**
+     * Get type of this effect.
+     *
+     * @return type<br>
+     */
     @Override
     public final String getType() {
         return "effects";
     }
 
     private void deleteInTree() {
-        ResearchDataManager.INSTANCE.getAllData().forEach(t -> {
+        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
             revoke(t);
             t.setGrant(this, false);
         });
     }
 
+    /**
+     * Called when effect is edited.
+     */
     public void edit() {
         deleteInTree();
     }
 
+    /**
+     * Delete from the registry.
+     */
     public void deleteSelf() {
         deleteInTree();
         FHResearch.effects.remove(this);
     }
 
+    /**
+     * Delete from the registry and research
+     */
     public void delete() {
         deleteSelf();
         if (parent != null) {
@@ -187,6 +332,11 @@ public abstract class Effect extends AutoIDItem implements Writeable {
         }
     }
 
+    /**
+     * set new id, would change registry data.
+     *
+     * @param id value to set new id to.
+     */
     void setNewId(String id) {
         if (!id.equals(this.nonce)) {
             delete();
@@ -202,21 +352,48 @@ public abstract class Effect extends AutoIDItem implements Writeable {
         }
     }
 
+    /**
+     * Checks if is granted for client.<br>
+     *
+     * @return if is granted,true.
+     */
+    @OnlyIn(Dist.CLIENT)
     public boolean isGranted() {
         return ClientResearchDataAPI.getData().isEffectGranted(this);
     }
 
+    /**
+     * set granted.
+     *
+     * @param b value to set granted to.
+     */
+    @OnlyIn(Dist.CLIENT)
     public void setGranted(boolean b) {
         ClientResearchDataAPI.getData().setGrant(this, b);
     }
 
+    /**
+     * Get brief string describe this effect for show in editor.
+     *
+     * @return brief<br>
+     */
     public abstract String getBrief();
 
+    /**
+     * Get nonce.
+     *
+     * @return nonce<br>
+     */
     @Override
     public String getNonce() {
         return nonce;
     }
 
+    /**
+     * Checks if is hidden.<br>
+     *
+     * @return if is hidden,true.
+     */
     public boolean isHidden() {
         return hidden;
     }

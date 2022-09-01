@@ -4,7 +4,8 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;

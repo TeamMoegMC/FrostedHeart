@@ -18,9 +18,11 @@ public class MinecraftServerMixin {
     @Inject(at = @At("TAIL"),method = "func_240786_a_")
     private static void spacecraftGenerate(ServerWorld serverWorld, IServerWorldInfo info, boolean hasBonusChest, boolean p_240786_3_, boolean p_240786_4_, CallbackInfo ci) {
     	int y=256;
-    	for(int x=info.getSpawnX()-1;x<info.getSpawnX()+1;x++)
-    		for(int z=info.getSpawnZ()-1;z<info.getSpawnZ()+1;z++)
-    			y=Math.min(serverWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES,x,z),y);
+    	for(int x=info.getSpawnX()-1;x<=info.getSpawnX()+1;x++)
+    		for(int z=info.getSpawnZ()-1;z<=info.getSpawnZ()+1;z++)
+    			y=Math.min(serverWorld.getHeight(Type.WORLD_SURFACE,x,z),y);
+    	if(y<5)
+    		y=5;
     	info.setSpawnY(y-1);
     	FHFeatures.spacecraft_feature.generate(serverWorld, serverWorld.getChunkProvider().getChunkGenerator(), serverWorld.rand,
                 new BlockPos(info.getSpawnX(), info.getSpawnY(), info.getSpawnZ()));

@@ -19,8 +19,8 @@
 package com.teammoeg.frostedheart.network.research;
 
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.ResearchDataManager;
-import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -34,7 +34,7 @@ public class FHEffectProgressSyncPacket {
     private final int id;
 
     public FHEffectProgressSyncPacket(UUID team, Effect rs) {
-        TeamResearchData rd = ResearchDataManager.INSTANCE.getData(team);
+        TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isEffectGranted(rs);
         this.id = rs.getRId();
     }

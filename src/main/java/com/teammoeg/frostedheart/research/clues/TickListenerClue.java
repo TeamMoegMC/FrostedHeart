@@ -2,7 +2,8 @@ package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.research.TeamResearchData;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;

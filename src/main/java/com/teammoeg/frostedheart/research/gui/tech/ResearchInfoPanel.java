@@ -8,9 +8,9 @@ import com.teammoeg.frostedheart.network.research.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchControlPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchControlPacket.Operator;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.ResearchData;
-import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.data.ResearchData;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectBuilding;
 import com.teammoeg.frostedheart.research.gui.FramedPanel;
@@ -98,7 +98,7 @@ public class ResearchInfoPanel extends Panel {
             };
             panels.add(commitItems);
             add(commitItems);
-        } else if (!researchData.isCompleted()) {
+        } else if (!researchData.isCompleted()&&!detailPanel.research.isInCompletable()) {
             // commit items button
             Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.start"), Icon.EMPTY) {
                 @Override
@@ -121,7 +121,7 @@ public class ResearchInfoPanel extends Panel {
                         if (!(effect instanceof EffectBuilding))
                             continue;
                         if (effect.isHidden()) continue;
-                        LEffectWidget button = new LEffectWidget(fp, effect);
+                        LargeEffectWidget button = new LargeEffectWidget(fp, effect);
                         button.setPos(xoffset, offset);
                         fp.add(button);
                         xoffset += 32;

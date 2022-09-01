@@ -1,12 +1,13 @@
 package com.teammoeg.frostedheart.research.api;
 
-import com.teammoeg.frostedheart.research.ResearchDataManager;
-import com.teammoeg.frostedheart.research.TeamResearchData;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
 public class ResearchDataAPI {
 
@@ -14,22 +15,22 @@ public class ResearchDataAPI {
     }
 
     public static TeamResearchData getData(ServerPlayerEntity id) {
-        return ResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId());
+        return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId());
 
     }
 
     public static TeamResearchData getData(UUID id) {
-        return ResearchDataManager.INSTANCE.getData(id);
+        return FHResearchDataManager.INSTANCE.getData(id);
 
     }
 
     public static CompoundNBT getVariants(ServerPlayerEntity id) {
-        return ResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId()).getVariants();
+        return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId()).getVariants();
 
     }
 
     public static CompoundNBT getVariants(UUID id) {
-        return ResearchDataManager.INSTANCE.getData(id).getVariants();
+        return FHResearchDataManager.INSTANCE.getData(id).getVariants();
 
     }
 }

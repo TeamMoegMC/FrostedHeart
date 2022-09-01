@@ -1,6 +1,8 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.data;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
+
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.nbt.CompoundNBT;
@@ -17,15 +19,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-public class ResearchDataManager {
+public class FHResearchDataManager {
     public static MinecraftServer server;
     Path local;
     File regfile;
     static final FolderName dataFolder = new FolderName("fhresearch");
-    public static ResearchDataManager INSTANCE;
+    public static FHResearchDataManager INSTANCE;
     private Map<UUID, TeamResearchData> data = new HashMap<>();
 
-    public ResearchDataManager(MinecraftServer s) {
+    public FHResearchDataManager(MinecraftServer s) {
         server = s;
         INSTANCE = this;
     }

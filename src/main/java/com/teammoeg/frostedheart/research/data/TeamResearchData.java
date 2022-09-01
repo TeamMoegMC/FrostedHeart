@@ -1,8 +1,11 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.data;
 
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
@@ -17,67 +20,148 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import javax.annotation.Nullable;
+
+// TODO: Auto-generated Javadoc
+/**
+ * Class TeamResearchData.
+ *
+ * @author khjxiaogu
+ * file: TeamResearchData.java
+ * @date 2022年9月2日
+ */
 public class TeamResearchData {
     private static TeamResearchData INSTANCE = new TeamResearchData(null);
-    ArrayList<Boolean> clueComplete = new ArrayList<>();
-    ArrayList<Boolean> grantedEffects = new ArrayList<>();
+    
+    /** The clue complete.<br> */
+    BitSet clueComplete = new BitSet();
+    
+    /** The granted effects.<br> */
+    BitSet grantedEffects = new BitSet();
+    
+    /** The rdata.<br> */
     ArrayList<ResearchData> rdata = new ArrayList<>();
+    
+    /** The active research id.<br> */
     int activeResearchId = 0;
+    
+    /** The variants.<br> */
     CompoundNBT variants = new CompoundNBT();
     private Supplier<Team> team;
+    
+    /** The crafting.<br> */
     public RecipeUnlockList crafting = new RecipeUnlockList();
+    
+    /** The building.<br> */
     public MultiblockUnlockList building = new MultiblockUnlockList();
+    
+    /** The block.<br> */
     public BlockUnlockList block = new BlockUnlockList();
+    
+    /** The categories.<br> */
     public CategoryUnlockList categories = new CategoryUnlockList();
 
+    /**
+     * Instantiates a new TeamResearchData with a Supplier object.<br>
+     *
+     * @param team the team<br>
+     */
     public TeamResearchData(Supplier<Team> team) {
         this.team = team;
     }
 
+    /**
+     * Get owner of this storage.
+     *
+     * @return team<br>
+     */
     public Optional<Team> getTeam() {
         if (team == null)
             return Optional.empty();
         return Optional.ofNullable(team.get());
     }
 
+    /**
+     * Trigger clue, this would send packets and check current research's completion status if completed.
+     *
+     * @param id the number id<br>
+     */
     public void triggerClue(int id) {
         setClueTriggered(id, true);
     }
 
+    /**
+     * Trigger clue, similar to {@link #triggerClue(int)} but accept Clue.
+     *
+     * @param clue the clue<br>
+     */
     public void triggerClue(Clue clue) {
         triggerClue(clue.getRId());
     }
 
+    /**
+     * Trigger clue, similar to {@link #triggerClue(int)} but accept its string name.
+     *
+     * @param lid the lid<br>
+     */
     public void triggerClue(String lid) {
         triggerClue(FHResearch.clues.getByName(lid));
     }
 
+    /**
+     * Set clue is triggered, this would send packets and check current research's completion status if completed.
+     * 
+     * @param id the number id<br>
+     * @param trig new trigger status<br>
+     */
     public void setClueTriggered(int id, boolean trig) {
         ensureClue(id);
         clueComplete.set(id - 1, trig);
         getCurrentResearch().ifPresent(r -> this.getData(r).checkComplete());
     }
 
+    /**
+     * Sets the clue triggered.
+     *
+     * @param clue the clue<br>
+     * @param trig the trig<br>
+     */
     public void setClueTriggered(Clue clue, boolean trig) {
         setClueTriggered(clue.getRId(), trig);
     }
 
+    /**
+     * Sets the clue triggered.
+     *
+     * @param lid the lid<br>
+     * @param trig the trig<br>
+     */
     public void setClueTriggered(String lid, boolean trig) {
         setClueTriggered(FHResearch.clues.getByName(lid), trig);
     }
 
-    public void ensureClue(int len) {
-        clueComplete.ensureCapacity(len);
-        while (clueComplete.size() < len)
-            clueComplete.add(false);
+    /**
+     * Ensure clue data length.
+     * 
+     * @param len the len<br>
+     */
+    private void ensureClue(int len) {
     }
 
+    /**
+     * Checks if clue is triggered.<br>
+     *
+     * @param id the id<br>
+     * @return if is clue triggered,true.
+     */
     public boolean isClueTriggered(int id) {
         if (clueComplete.size() >= id) {
             Boolean b = clueComplete.get(id - 1);
@@ -87,20 +171,43 @@ public class TeamResearchData {
         return false;
     }
 
+    /**
+     * Checks if is clue triggered.<br>
+     *
+     * @param clue the clue<br>
+     * @return if is clue triggered,true.
+     */
     public boolean isClueTriggered(Clue clue) {
         return isClueTriggered(clue.getRId());
     }
 
+    /**
+     * Checks if is clue triggered.<br>
+     *
+     * @param lid the lid<br>
+     * @return if is clue triggered,true.
+     */
     public boolean isClueTriggered(String lid) {
         return isClueTriggered(FHResearch.clues.getByName(lid));
     }
 
+    /**
+     * Ensure research data length.
+     *
+     * @param len the len<br>
+     */
     public void ensureResearch(int len) {
         rdata.ensureCapacity(len);
         while (rdata.size() < len)
             rdata.add(null);
     }
 
+    /**
+     * Get research data.
+     *
+     * @param id the id<br>
+     * @return data<br>
+     */
     public ResearchData getData(int id) {
         if (id == 0) return null;
         ensureResearch(id);
@@ -112,20 +219,42 @@ public class TeamResearchData {
         return rnd;
     }
 
+    /**
+     * Get research data.
+     *
+     * @param rs the rs<br>
+     * @return data<br>
+     */
     public ResearchData getData(Research rs) {
         return getData(rs.getRId());
     }
 
+    /**
+     * Get research data.
+     *
+     * @param lid the lid<br>
+     * @return data<br>
+     */
     public ResearchData getData(String lid) {
         return getData(FHResearch.researches.getByName(lid));
     }
 
+    /**
+     * Get current research.
+     *
+     * @return current research<br>
+     */
     public LazyOptional<Research> getCurrentResearch() {
         if (activeResearchId == 0)
             return LazyOptional.empty();
         return LazyOptional.of(() -> FHResearch.getResearch(activeResearchId).get());
     }
 
+    /**
+     * set current research.
+     *
+     * @param r value to set current research to.
+     */
     public void setCurrentResearch(Research r) {
         ResearchData rd = this.getData(r);
         if (rd.active && !rd.finished) {
@@ -141,6 +270,9 @@ public class TeamResearchData {
         }
     }
 
+    /**
+     * Clear current research.
+     */
     public void clearCurrentResearch() {
         activeResearchId = 0;
         FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket();
@@ -150,11 +282,20 @@ public class TeamResearchData {
         });
     }
 
+    /**
+     * Clear current research.
+     *
+     * @param r the r<br>
+     */
     public void clearCurrentResearch(Research r) {
         if (activeResearchId == r.getRId())
             clearCurrentResearch();
     }
 
+    /**
+     * Check can research now.<br>
+     * @return true, if a research is selected and it is ready for research
+     */
     public boolean canResearch() {
         LazyOptional<Research> rs = getCurrentResearch();
         if (rs.isPresent()) {
@@ -164,21 +305,22 @@ public class TeamResearchData {
         return false;
     }
 
+    /**
+     * Ensure effect data length.
+     *
+     * @param len the len<br>
+     */
     public void ensureEffect(int len) {
-        grantedEffects.ensureCapacity(len);
-        while (grantedEffects.size() < len)
-            grantedEffects.add(false);
     }
 
-    public void grantEffect(Effect e) {
-        int id = e.getRId();
-        ensureEffect(id);
-        if (!grantedEffects.get(id - 1)) {
-            grantedEffects.set(id - 1, e.grant(this, null, false));
-            getTeam().ifPresent(t -> e.sendProgressPacket(t));
-        }
-    }
 
+    /**
+     * Set effect granted state.
+     * This would not send packet, mostly for client use.
+     * See {@link #grantEffect(Effect, ServerPlayerEntity) for effect granting.}
+     * @param e the e<br>
+     * @param flag operation flag
+     */
     public void setGrant(Effect e, boolean flag) {
         int id = e.getRId();
         ensureEffect(id);
@@ -186,6 +328,12 @@ public class TeamResearchData {
 
     }
 
+    /**
+     * Checks if effect is granted.<br>
+     *
+     * @param id the id<br>
+     * @return if is effect granted,true.
+     */
     public boolean isEffectGranted(int id) {
         if (grantedEffects.size() >= id) {
             return grantedEffects.get(id - 1);
@@ -193,11 +341,23 @@ public class TeamResearchData {
         return false;
     }
 
+    /**
+     * Checks if is effect granted.<br>
+     *
+     * @param e the e<br>
+     * @return if is effect granted,true.
+     */
     public boolean isEffectGranted(Effect e) {
         return isEffectGranted(e.getRId());
     }
 
-    public void grantEffect(Effect e, ServerPlayerEntity player) {
+    /**
+     * Grant effect to the team, optionally to a player. Sending packets and run {@link Effect#grant(TeamResearchData, net.minecraft.entity.player.PlayerEntity, boolean)}
+     *
+     * @param e the e<br>
+     * @param player the player, only useful when player manually click "claim awards" or do similar things.<br>
+     */
+    public void grantEffect(Effect e,@Nullable ServerPlayerEntity player) {
         int id = e.getRId();
         ensureEffect(id);
         if (!grantedEffects.get(id - 1)) {
@@ -206,6 +366,12 @@ public class TeamResearchData {
         }
     }
 
+    /**
+     * Commit research points to current research.<br>
+     * 
+     * @param points the points<br>
+     * @return unused points after commit to current research.
+     */
     public long doResearch(long points) {
         LazyOptional<Research> rs = getCurrentResearch();
         if (rs.isPresent()) {
@@ -218,20 +384,16 @@ public class TeamResearchData {
         return points;
     }
 
+    /**
+     * Serialize.<br>
+     *
+     * @param updatePacket the update packet<br>
+     * @return returns serialize
+     */
     public CompoundNBT serialize(boolean updatePacket) {
         CompoundNBT nbt = new CompoundNBT();
-        byte[] cl = new byte[clueComplete.size()];
-        int i = -1;
-        for (Boolean b : clueComplete) {
-            cl[++i] = (byte) (b == null ? 0 : (b ? 1 : 0));
-        }
-        nbt.putByteArray("clues", cl);
-        byte[] cl2 = new byte[grantedEffects.size()];
-        i = -1;
-        for (Boolean b : grantedEffects) {
-            cl2[++i] = (byte) (b == null ? 0 : (b ? 1 : 0));
-        }
-        nbt.putByteArray("effects", cl2);
+        nbt.putLongArray("clues", clueComplete.toLongArray());
+        nbt.putLongArray("effects",grantedEffects.toLongArray());
         nbt.put("vars", variants);
         ListNBT rs = new ListNBT();
         rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(e -> rs.add(e));
@@ -251,25 +413,42 @@ public class TeamResearchData {
      * Current:
      * maxEnergy| max Energy increasement
      * pmaxEnergy| max Energy multiplier
-     * generator_loc| generator location, to keep generators unique
+     * generator_loc| generator location, to keep generators unique.
+     *
+     * @return variants<br>
      */
     public CompoundNBT getVariants() {
         return variants;
     }
 
+    /**
+     * Deserialize.
+     *
+     * @param data the data<br>
+     * @param updatePacket the update packet<br>
+     */
     public void deserialize(CompoundNBT data, boolean updatePacket) {
         clueComplete.clear();
         rdata.clear();
-        byte[] ba = data.getByteArray("clues");
-        ensureClue(ba.length);
-        for (int i = 0; i < ba.length; i++)
-            clueComplete.set(i, ba[i] != 0);
-        byte[] bd = data.getByteArray("effects");
-        ensureEffect(bd.length);
-        for (int i = 0; i < bd.length; i++) {
-            boolean state = bd[i] != 0;
-            grantedEffects.set(i, state);
-            if (state)
+        if(data.contains("clues",NBT.TAG_BYTE_ARRAY)) {
+	        byte[] ba = data.getByteArray("clues");
+	        ensureClue(ba.length);
+	        for (int i = 0; i < ba.length; i++)
+	            clueComplete.set(i, ba[i] != 0);
+        }else
+        	clueComplete=BitSet.valueOf(data.getLongArray("clues"));
+        if(data.contains("effects",NBT.TAG_BYTE_ARRAY)) {
+	        byte[] bd = data.getByteArray("effects");
+	        ensureEffect(bd.length);
+	        for (int i = 0; i < bd.length; i++) {
+	            boolean state = bd[i] != 0;
+	            grantedEffects.set(i, state);
+	        }
+        }else
+        	grantedEffects=BitSet.valueOf(data.getLongArray("effects"));
+        
+        for(int i=0;i<grantedEffects.length();i++) {
+            if (grantedEffects.get(i))
                 FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
         }
         variants = data.getCompound("vars");
@@ -287,21 +466,39 @@ public class TeamResearchData {
         //}
     }
 
+    /**
+     * Get client instance.
+     *
+     * @return client instance<br>
+     */
     @OnlyIn(Dist.CLIENT)
     public static TeamResearchData getClientInstance() {
         return INSTANCE;
     }
 
+    /**
+     * Reset client instance.
+     */
     public static void resetClientInstance() {
         INSTANCE = new TeamResearchData(null);
     }
 
+    /**
+     * set active research.
+     *
+     * @param id value to set active research to.
+     */
     @OnlyIn(Dist.CLIENT)
     public static void setActiveResearch(int id) {
         INSTANCE.activeResearchId = id;
 
     }
 
+    /**
+     * Reset data.
+     *
+     * @param r the r<br>
+     */
     public void resetData(Research r) {
         if (r.getRId() <= this.rdata.size()) {
             this.rdata.set(r.getRId() - 1, null);

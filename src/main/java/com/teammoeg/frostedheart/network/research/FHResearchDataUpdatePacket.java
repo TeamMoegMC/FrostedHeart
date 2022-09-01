@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.network.research;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.util.SerializeUtil;

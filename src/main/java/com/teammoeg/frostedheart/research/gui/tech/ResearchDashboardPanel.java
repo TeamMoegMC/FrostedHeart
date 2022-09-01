@@ -3,7 +3,7 @@ package com.teammoeg.frostedheart.research.gui.tech;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.ResearchData;
+import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.gui.RTextField;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechTextButton;

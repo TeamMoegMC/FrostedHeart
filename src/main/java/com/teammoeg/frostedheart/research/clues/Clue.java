@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.research.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.*;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -75,7 +77,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     }
 
     public void setCompleted(Team team, boolean trig) {
-        ResearchDataManager.INSTANCE.getData(team.getId()).setClueTriggered(this, trig);
+        FHResearchDataManager.INSTANCE.getData(team.getId()).setClueTriggered(this, trig);
         if (trig)
             end(team);
         else
@@ -94,7 +96,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     }
 
     public boolean isCompleted(Team team) {
-        return ResearchDataManager.INSTANCE.getData(team.getId()).isClueTriggered(this);
+        return FHResearchDataManager.INSTANCE.getData(team.getId()).isClueTriggered(this);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -179,7 +181,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     }
 
     private void deleteInTree() {
-        ResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getTeam().ifPresent(this::end));
+        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getTeam().ifPresent(this::end));
     }
 
     public void edit() {

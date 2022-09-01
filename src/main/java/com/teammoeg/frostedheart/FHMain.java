@@ -34,8 +34,8 @@ import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.research.ResearchDataManager;
 import com.teammoeg.frostedheart.research.Researches;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.*;
 import com.teammoeg.frostedheart.world.FHBiomes;
@@ -181,21 +181,21 @@ public class FHMain {
     }
 
     private void serverStart(final FMLServerAboutToStartEvent event) {
-        new ResearchDataManager(event.getServer());
+        new FHResearchDataManager(event.getServer());
         Researches.init();
 
-        ResearchDataManager.INSTANCE.load();
+        FHResearchDataManager.INSTANCE.load();
 
     }
 
     private void serverStop(final FMLServerStoppedEvent event) {
-        ResearchDataManager.server = null;
+        FHResearchDataManager.server = null;
 
     }
 
     private void serverSave(final WorldEvent.Save event) {
-        if (ResearchDataManager.INSTANCE != null)
-            ResearchDataManager.INSTANCE.save();
+        if (FHResearchDataManager.INSTANCE != null)
+            FHResearchDataManager.INSTANCE.save();
     }
 
     private void processIMC(final InterModProcessEvent event) {

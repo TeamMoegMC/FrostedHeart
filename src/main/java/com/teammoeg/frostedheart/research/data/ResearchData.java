@@ -1,6 +1,8 @@
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.data;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
@@ -80,8 +82,7 @@ public class ResearchData {
         if (finished) {
             Research r = rs.get();
             parent.clearCurrentResearch(r);
-            for (Effect e : r.getEffects())
-                parent.grantEffect(e);
+            r.grantEffects(parent, null);
             parent.getTeam().ifPresent(t -> {
                 for (Clue c : r.getClues())
                     c.end(t);
@@ -169,7 +170,7 @@ public class ResearchData {
 
     public boolean commitItem(ServerPlayerEntity player) {
         Research research = getResearch();
-        if(research.inCompletable)return false;
+        if(research.isInCompletable())return false;
         for (Research par : research.getParents()) {
             if (!parent.getData(par).isCompleted()) {
                 return false;

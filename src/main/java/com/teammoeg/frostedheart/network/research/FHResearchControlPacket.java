@@ -2,9 +2,10 @@ package com.teammoeg.frostedheart.network.research;
 
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchData;
-import com.teammoeg.frostedheart.research.TeamResearchData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.ResearchData;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
