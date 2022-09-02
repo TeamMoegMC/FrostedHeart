@@ -17,6 +17,7 @@ public class GenSC {
                             ct.getSource().asPlayer().getPosition());
                     return Command.SINGLE_SUCCESS;
                 }));
+        
         dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(add));
     }
 }

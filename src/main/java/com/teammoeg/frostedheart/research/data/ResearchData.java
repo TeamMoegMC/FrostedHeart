@@ -24,6 +24,7 @@ public class ResearchData {
     boolean active;// is all items fulfilled?
     boolean finished;
     private Supplier<Research> rs;
+    int level;
     private long committed;// points committed
     final TeamResearchData parent;
 
@@ -123,6 +124,8 @@ public class ResearchData {
         cnbt.putLong("committed", committed);
         cnbt.putBoolean("active", active);
         cnbt.putBoolean("finished", finished);
+        if(level>0)
+        	cnbt.putInt("level", level);
         // cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 
@@ -132,6 +135,8 @@ public class ResearchData {
         committed = cn.getLong("committed");
         active = cn.getBoolean("active");
         finished = cn.getBoolean("finished");
+        if(cn.contains("level"))
+        	level=cn.getInt("level");
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
 
@@ -235,4 +240,12 @@ public class ResearchData {
     public float getProgress() {
         return getTotalCommitted() * 1f / getResearch().getRequiredPoints();
     }
+
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = level;
+	}
 }

@@ -523,4 +523,20 @@ public class TeamResearchData {
             }
         }
     }
+    public void clearData(Research r) {
+        if (r.getRId() <= this.rdata.size()) {
+            this.rdata.set(r.getRId() - 1, null);
+            Team t = this.getTeam().orElse(null);
+            for (Clue c : r.getClues()) {
+                this.setClueTriggered(c, false);
+                if (t != null)
+                    c.sendProgressPacket(t);
+            }
+            for (Effect e : r.getEffects()) {
+                this.setGrant(e, false);
+                if (t != null) 
+                    e.sendProgressPacket(t);
+            }
+        }
+    }
 }
