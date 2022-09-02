@@ -46,7 +46,7 @@ public class HandCrankBlockMixin {
             ci.setReturnValue(ActionResultType.FAIL);
         } else if (player.getFoodStats().getFoodLevel() < 4) {
             if (player.getEntityWorld().isRemote)
-                player.sendMessage(GuiUtils.translateMessage("crank.feel_hunger"), player.getUniqueID());
+                player.sendStatusMessage(GuiUtils.translateMessage("crank.feel_hunger"), true);
             ci.setReturnValue(ActionResultType.FAIL);
         }
     }

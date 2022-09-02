@@ -143,11 +143,11 @@ public class CommonEvents {
 	                		ServerPlayerEntity serverPlayer=(ServerPlayerEntity) spe;
 		    				long energy = EnergyCore.getEnergy(spe);
 		    				if (energy > 10000)
-		    					serverPlayer.sendMessage(GuiUtils.translateMessage("energy.full"), serverPlayer.getUniqueID());
+		    					serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.full"), false);
 		    				else if (energy >= 5000)
-		    					serverPlayer.sendMessage(GuiUtils.translateMessage("energy.suit"), serverPlayer.getUniqueID());
+		    					serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.suit"), false);
 		    				else
-		    					serverPlayer.sendMessage(GuiUtils.translateMessage("energy.lack"), serverPlayer.getUniqueID());
+		    					serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.lack"), false);
                 		}
                 	}
     			}
@@ -374,7 +374,7 @@ public class CommonEvents {
         if (!ResearchListeners.canUseBlock(event.getPlayer(), event.getWorld().getBlockState(event.getHitVec().getPos()).getBlock())) {
             event.setCanceled(true);
             event.setCancellationResult(ActionResultType.FAIL);
-            event.getPlayer().sendMessage(GuiUtils.translateMessage("research_no_use"), event.getPlayer().getUniqueID());
+            event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.cannot_use_block"), true);
         }
     }
 
@@ -439,12 +439,12 @@ public class CommonEvents {
                 if (temp < WorldClimate.HEMP_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
-                            WorldClimate.HEMP_GROW_TEMPERATURE), false);
+                            WorldClimate.HEMP_GROW_TEMPERATURE), true);
                 }
             } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                 event.setCanceled(true);
                 player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
-                        WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), false);
+                        WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), true);
             }
         }
     }
@@ -466,7 +466,7 @@ public class CommonEvents {
                         event.setCanceled(true);
                         player.sendStatusMessage(
                                 new TranslationTextComponent("message.frostedheart.crop_not_growable", growTemp),
-                                false);
+                                true);
                     }
                 } else if (growBlock instanceof FHBerryBushBlock) {
                     int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
@@ -474,18 +474,18 @@ public class CommonEvents {
                         event.setCanceled(true);
                         player.sendStatusMessage(
                                 new TranslationTextComponent("message.frostedheart.crop_not_growable", growTemp),
-                                false);
+                                true);
                     }
                 } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                     if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
                         event.setCanceled(true);
                         player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
-                                WorldClimate.HEMP_GROW_TEMPERATURE), false);
+                                WorldClimate.HEMP_GROW_TEMPERATURE), true);
                     }
                 } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
-                            WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), false);
+                            WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), true);
                 }
             }
         }

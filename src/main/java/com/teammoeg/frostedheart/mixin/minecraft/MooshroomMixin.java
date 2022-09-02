@@ -32,9 +32,9 @@ public abstract class MooshroomMixin extends AnimalEntity {
             if (ot.milk <= 0) {
                 if (!world.isRemote) {
                     if (ot.feeded <= 0)
-                        playerIn.sendMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), playerIn.getUniqueID());
+                        playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), true);
                     else
-                        playerIn.sendMessage(GuiUtils.translateMessage("cow.nomilk.digest"), playerIn.getUniqueID());
+                        playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.digest"), true);
                 }
                 cbi.setReturnValue(ActionResultType.PASS);
             }
