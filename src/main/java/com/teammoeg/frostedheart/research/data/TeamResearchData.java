@@ -1,8 +1,6 @@
 package com.teammoeg.frostedheart.research.data;
 
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.research.FHChangeActiveResearchPacket;
-import com.teammoeg.frostedheart.network.research.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchListeners;
@@ -12,6 +10,8 @@ import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;

@@ -16,48 +16,44 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network.research;
+package com.teammoeg.frostedheart.research.network;
 
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
-// send when player join
-public class FHEffectProgressSyncPacket {
-    private final boolean data;
-    private final int id;
+public class FHEffectTriggerPacket {
+    private final int researchID;
 
-    public FHEffectProgressSyncPacket(UUID team, Effect rs) {
-        TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
-        this.data = rd.isEffectGranted(rs);
-        this.id = rs.getRId();
+    public FHEffectTriggerPacket(Research r) {
+        this.researchID = r.getRId();
     }
 
-    public FHEffectProgressSyncPacket(PacketBuffer buffer) {
-        data = buffer.readBoolean();
-        id = buffer.readVarInt();
-    }
+    public FHEffectTriggerPacket(PacketBuffer buffer) {
+        researchID = buffer.readVarInt();
 
+    }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeBoolean(data);
-        buffer.writeVarInt(id);
+        buffer.writeVarInt(researchID);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
+
         context.get().enqueueWork(() -> {
-            Effect e = FHResearch.effects.getById(id);
-            if (data)
-                e.grant(TeamResearchData.getClientInstance(), null, false);
-            else
-                e.revoke(TeamResearchData.getClientInstance());
-            e.setGranted(data);
+            Research r = FHResearch.researches.getById(researchID);
+            TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender());
+            ServerPlayerEntity spe = context.get().getSender();
+            if (trd.getData(r).isCompleted()) {
+                r.grantEffects(trd,spe);
+            }
         });
         context.get().setPacketHandled(true);
     }

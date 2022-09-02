@@ -16,45 +16,42 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network.research;
+package com.teammoeg.frostedheart.research.network;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
+import java.util.UUID;
 import java.util.function.Supplier;
 
-// send when data update
-public class FHChangeActiveResearchPacket {
-    private final int id;
+// send when player join
+public class FHResearchDataSyncPacket {
+    private final CompoundNBT data;
 
-    public FHChangeActiveResearchPacket(Research rs) {
-        this.id = rs.getRId();
+    public FHResearchDataSyncPacket(UUID team) {
+        this.data = FHResearchDataManager.INSTANCE.getData(team).serialize(true);
     }
 
-    public FHChangeActiveResearchPacket(int rid) {
-        this.id = rid;
-    }
-
-    public FHChangeActiveResearchPacket() {
-        this.id = 0;
-    }
-
-    public FHChangeActiveResearchPacket(PacketBuffer buffer) {
-        id = buffer.readVarInt();
+    public FHResearchDataSyncPacket(PacketBuffer buffer) {
+        data = buffer.readCompoundTag();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeVarInt(id);
+        buffer.writeCompoundTag(data);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            TeamResearchData.setActiveResearch(id);
-            ClientUtils.refreshResearchGui();
+            TeamResearchData.resetClientInstance();
+            TeamResearchData.getClientInstance().deserialize(data, true);
+            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
         });
         context.get().setPacketHandled(true);
     }

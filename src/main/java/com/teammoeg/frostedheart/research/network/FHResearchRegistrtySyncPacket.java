@@ -16,42 +16,47 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network.research;
+package com.teammoeg.frostedheart.research.network;
 
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
-
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.Researches;
+import com.teammoeg.frostedheart.util.SerializeUtil;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-import java.util.UUID;
+import java.util.List;
 import java.util.function.Supplier;
 
 // send when player join
-public class FHResearchDataSyncPacket {
+public class FHResearchRegistrtySyncPacket {
     private final CompoundNBT data;
+    List<Research> rss;
 
-    public FHResearchDataSyncPacket(UUID team) {
-        this.data = FHResearchDataManager.INSTANCE.getData(team).serialize(true);
+    public FHResearchRegistrtySyncPacket() {
+        this.data = FHResearch.save(new CompoundNBT());
+
     }
 
-    public FHResearchDataSyncPacket(PacketBuffer buffer) {
+    public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
+        rss = SerializeUtil.readList(buffer, Research::new);
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
+        FHResearch.saveAll(buffer);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            TeamResearchData.resetClientInstance();
-            TeamResearchData.getClientInstance().deserialize(data, true);
-            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
+            FHResearch.load(data);
+            Researches.initFromPacket(rss);
+            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
         });
         context.get().setPacketHandled(true);
     }

@@ -16,44 +16,45 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network.research;
+package com.teammoeg.frostedheart.research.network;
 
-import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.research.effects.Effect;
-import net.minecraft.entity.player.ServerPlayerEntity;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class FHEffectTriggerPacket {
-    private final int researchID;
+// send when data update
+public class FHChangeActiveResearchPacket {
+    private final int id;
 
-    public FHEffectTriggerPacket(Research r) {
-        this.researchID = r.getRId();
+    public FHChangeActiveResearchPacket(Research rs) {
+        this.id = rs.getRId();
     }
 
-    public FHEffectTriggerPacket(PacketBuffer buffer) {
-        researchID = buffer.readVarInt();
+    public FHChangeActiveResearchPacket(int rid) {
+        this.id = rid;
+    }
 
+    public FHChangeActiveResearchPacket() {
+        this.id = 0;
+    }
+
+    public FHChangeActiveResearchPacket(PacketBuffer buffer) {
+        id = buffer.readVarInt();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeVarInt(researchID);
+        buffer.writeVarInt(id);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
-
         context.get().enqueueWork(() -> {
-            Research r = FHResearch.researches.getById(researchID);
-            TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender());
-            ServerPlayerEntity spe = context.get().getSender();
-            if (trd.getData(r).isCompleted()) {
-                r.grantEffects(trd,spe);
-            }
+            TeamResearchData.setActiveResearch(id);
+            ClientUtils.refreshResearchGui();
         });
         context.get().setPacketHandled(true);
     }

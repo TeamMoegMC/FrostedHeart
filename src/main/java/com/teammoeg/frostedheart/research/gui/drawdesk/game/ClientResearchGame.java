@@ -2,7 +2,8 @@ package com.teammoeg.frostedheart.research.gui.drawdesk.game;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.research.FHDrawingDeskOperationPacket;
+import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
+
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Comparator;

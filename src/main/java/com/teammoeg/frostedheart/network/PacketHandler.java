@@ -24,6 +24,16 @@ import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.network.research.*;
+import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
+import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
+import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
+import com.teammoeg.frostedheart.research.network.FHEffectTriggerPacket;
+import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.util.FHVersion;
 
 import net.minecraftforge.fml.network.NetworkRegistry;

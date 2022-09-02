@@ -16,47 +16,48 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network.research;
+package com.teammoeg.frostedheart.research.network;
 
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.Researches;
-import com.teammoeg.frostedheart.util.SerializeUtil;
-import net.minecraft.nbt.CompoundNBT;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.research.effects.Effect;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 // send when player join
-public class FHResearchRegistrtySyncPacket {
-    private final CompoundNBT data;
-    List<Research> rss;
+public class FHEffectProgressSyncPacket {
+    private final boolean data;
+    private final int id;
 
-    public FHResearchRegistrtySyncPacket() {
-        this.data = FHResearch.save(new CompoundNBT());
-
+    public FHEffectProgressSyncPacket(UUID team, Effect rs) {
+        TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
+        this.data = rd.isEffectGranted(rs);
+        this.id = rs.getRId();
     }
 
-    public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
-        rss = SerializeUtil.readList(buffer, Research::new);
+    public FHEffectProgressSyncPacket(PacketBuffer buffer) {
+        data = buffer.readBoolean();
+        id = buffer.readVarInt();
     }
+
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
-        FHResearch.saveAll(buffer);
+        buffer.writeBoolean(data);
+        buffer.writeVarInt(id);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            FHResearch.load(data);
-            Researches.initFromPacket(rss);
-            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
+            Effect e = FHResearch.effects.getById(id);
+            if (data)
+                e.grant(TeamResearchData.getClientInstance(), null, false);
+            else
+                e.revoke(TeamResearchData.getClientInstance());
+            e.setGranted(data);
         });
         context.get().setPacketHandled(true);
     }
