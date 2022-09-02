@@ -22,6 +22,8 @@ import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -44,7 +46,11 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraft.world.lighting.BlockLightEngine;
+import net.minecraft.world.lighting.LightEngine;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 import javax.annotation.Nullable;
@@ -167,19 +173,23 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
-            if (state.get(IS_NOT_MAIN)) {
-                pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
+            if (!player.isCreative() && worldIn.getLight(pos) < 8) {
+                player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
             }
-            TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
-            if (ii instanceof DrawingDeskTileEntity) {
-                ((DrawingDeskTileEntity) ii).markContainingBlockForUpdate(null);
+            else if (!player.isCreative() && TemperatureCore.getBodyTemperature(player) < -0.2) {
+                player.sendStatusMessage(GuiUtils.translateMessage("research.too_cold"), true);
             }
-            NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
+            else {
+                if (state.get(IS_NOT_MAIN)) {
+                    pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
+                }
+                TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
+                if (ii instanceof DrawingDeskTileEntity) {
+                    ((DrawingDeskTileEntity) ii).markContainingBlockForUpdate(null);
+                }
+                NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
+            }
         }
-        //todo: actually add some server-side functions in TE to provide the level and in progress research
-        //ResearchScreen screen = new ResearchScreen(player, ResearchLevel.DRAWING_DESK, FHResearch.researches.getByName("generator_t2"));
-        //new DrawDeskScreen().openGui();
-
         return ActionResultType.SUCCESS;
     }
 

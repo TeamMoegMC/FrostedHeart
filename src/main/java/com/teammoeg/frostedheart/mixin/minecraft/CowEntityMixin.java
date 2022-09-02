@@ -147,9 +147,9 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
             }
             if (!world.isRemote) {
                 if (feeded <= 0)
-                    playerIn.sendMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), playerIn.getUniqueID());
+                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), true);
                 else
-                    playerIn.sendMessage(GuiUtils.translateMessage("cow.nomilk.digest"), playerIn.getUniqueID());
+                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.digest"), true);
             }
         }
         return super.getEntityInteractionResult(playerIn, hand);

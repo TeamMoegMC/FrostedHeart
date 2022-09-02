@@ -117,9 +117,9 @@ public class CommonRegistryEvents {
 
     @SubscribeEvent
     public static void onFeatureRegistry(RegistryEvent.Register<Feature<?>> event) {
-        event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"),
-                FHFeatures.SPACECRAFT.setRegistryName(FHMain.MODID, "spacecraft"));
-
+        event.getRegistry().registerAll(FHFeatures.FHORE.setRegistryName(FHMain.MODID, "fhore"));
+        event.getRegistry().register(FHFeatures.SPACECRAFT.setRegistryName(FHMain.MODID, "spacecraft"));
+        event.getRegistry().register(FHFeatures.FLOWER_COVERED_DEPOSIT_FEATURE.setRegistryName("flower_covered_deposit"));
     }
 
     @SubscribeEvent

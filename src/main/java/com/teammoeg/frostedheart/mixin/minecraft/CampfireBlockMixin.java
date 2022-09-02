@@ -103,50 +103,52 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
      */
     @Overwrite
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        TileEntity tileentity = worldIn.getTileEntity(pos);
-        if (tileentity instanceof CampfireTileEntity) {
-            CampfireTileEntity campfiretileentity = (CampfireTileEntity) tileentity;
-            ItemStack itemstack = player.getHeldItem(handIn);
-            if (!player.getHeldItemMainhand().isEmpty()) {
-                if (CampfireBlock.canBeLit(state)) {
-                    if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
-                        Random rand = worldIn.rand;
-                        player.swingArm(Hand.MAIN_HAND);
-                        if (rand.nextFloat() < 0.33 && !worldIn.isRemote) {
-                            worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
-                        }
-
-                        worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
-
-                        if (worldIn.isRemote) {
-                            for (int i = 0; i < 5; i++) {
-                                worldIn.addParticle(ParticleTypes.SMOKE, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+        if (handIn == Hand.MAIN_HAND && !player.isSneaking()) {
+            TileEntity tileentity = worldIn.getTileEntity(pos);
+            if (tileentity instanceof CampfireTileEntity) {
+                CampfireTileEntity campfiretileentity = (CampfireTileEntity) tileentity;
+                ItemStack itemstack = player.getHeldItem(handIn);
+                if (!player.getHeldItemMainhand().isEmpty()) {
+                    if (CampfireBlock.canBeLit(state)) {
+                        if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
+                            Random rand = worldIn.rand;
+                            player.swingArm(Hand.MAIN_HAND);
+                            if (rand.nextFloat() < 0.33 && !worldIn.isRemote) {
+                                worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
                             }
-                            worldIn.addParticle(ParticleTypes.FLAME, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
 
+                            worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
+
+                            if (worldIn.isRemote) {
+                                for (int i = 0; i < 5; i++) {
+                                    worldIn.addParticle(ParticleTypes.SMOKE, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                                }
+                                worldIn.addParticle(ParticleTypes.FLAME, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+
+                            }
+                            return ActionResultType.SUCCESS;
                         }
-                        return ActionResultType.SUCCESS;
                     }
-                }
-                Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
-                if (optional.isPresent()) {
-                    if (!worldIn.isRemote && ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
-                        player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
-                        return ActionResultType.CONSUME;
+                    Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
+                    if (optional.isPresent()) {
+                        if (!worldIn.isRemote && ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
+                            player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
+                            return ActionResultType.CONSUME;
+                        }
                     }
-                }
 
-            } else {
-                ICampfireExtra info = (ICampfireExtra) campfiretileentity;
-                if (!worldIn.isRemote)
-                    if (state.get(CampfireBlock.LIT)) {
-                        player.sendMessage(GuiUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), player.getUniqueID());
-                    } else if (info.getLifeTime() > 0) {
-                        player.sendMessage(GuiUtils.translateMessage("campfire.ignition"), player.getUniqueID());
-                    } else {
-                        player.sendMessage(GuiUtils.translateMessage("campfire.fuel"), player.getUniqueID());
-                    }
-                return ActionResultType.SUCCESS;
+                } else {
+                    ICampfireExtra info = (ICampfireExtra) campfiretileentity;
+                    if (!worldIn.isRemote)
+                        if (state.get(CampfireBlock.LIT)) {
+                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
+                        } else if (info.getLifeTime() > 0) {
+                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.ignition"), true);
+                        } else {
+                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.fuel"), true);
+                        }
+                    return ActionResultType.SUCCESS;
+                }
             }
         }
         return ActionResultType.PASS;
