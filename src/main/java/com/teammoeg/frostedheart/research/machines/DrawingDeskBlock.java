@@ -46,7 +46,11 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraft.world.lighting.BlockLightEngine;
+import net.minecraft.world.lighting.LightEngine;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 import javax.annotation.Nullable;
@@ -169,12 +173,10 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
     @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
-            // TODO: fix light value
-//            if (!player.isCreative() && worldIn.getLightValue(pos.offset(Direction.UP, 2)) < 8) {
-//                player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
-//            }
-            // else if
-            if (!player.isCreative() && TemperatureCore.getBodyTemperature(player) < -0.2) {
+            if (!player.isCreative() && worldIn.getLight(pos) < 8) {
+                player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
+            }
+            else if (!player.isCreative() && TemperatureCore.getBodyTemperature(player) < -0.2) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_cold"), true);
             }
             else {
