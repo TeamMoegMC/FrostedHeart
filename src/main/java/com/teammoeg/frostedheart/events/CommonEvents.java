@@ -21,14 +21,16 @@ package com.teammoeg.frostedheart.events;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.GenSC;
@@ -54,12 +56,7 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.IGrowable;
-import net.minecraft.block.SaplingBlock;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.block.*;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -72,27 +69,25 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.play.server.STitlePacket;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.*;
+import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.AnvilUpdateEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -120,6 +115,8 @@ import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 import javax.annotation.Nonnull;
+
+import static net.minecraft.world.biome.Biome.Category.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {
@@ -346,23 +343,23 @@ public class CommonEvents {
     public static void addOreGenFeatures(BiomeLoadingEvent event) {
         if (event.getName() != null) {
             Biome.Category category = event.getCategory();
-            if (category != Biome.Category.NETHER && category != Biome.Category.THEEND) {
-                if (category == Biome.Category.RIVER || category == Biome.Category.BEACH) {
+            if (category != NETHER && category != THEEND) {
+                // Generate gravel and clay disks
+                if (category == RIVER || category == BEACH) {
                     for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_DISK)
                         event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
                 }
-
-				/*if (category == Biome.Category.PLAINS) {
-					event.getGeneration().getFeatures(GenerationStage.Decoration.VEGETAL_DECORATION)
-							.removeIf(featureSupplier -> featureSupplier.get().getConfig() == Features.PATCH_TALL_GRASS_2.getConfig());
-				}*/
-
+                // Generate rankine ores
                 for (ConfiguredFeature<?, ?> feature : FHFeatures.FH_ORES)
                     event.getGeneration().withFeature(GenerationStage.Decoration.UNDERGROUND_ORES, feature);
-
+                // Generate clay and gravel deposit
+                if (category != TAIGA && category != EXTREME_HILLS && category != OCEAN && category != DESERT && category != RIVER) {
+                    event.getGeneration().withFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.clay_deposit);
+                    event.getGeneration().withFeature(GenerationStage.Decoration.LOCAL_MODIFICATIONS, FHFeatures.gravel_deposit);
+                }
             }
             //Structures
-            if (category == Biome.Category.EXTREME_HILLS || category == Biome.Category.TAIGA) {
+            if (category == EXTREME_HILLS || category == TAIGA) {
                 event.getGeneration().withStructure(FHStructureFeatures.OBSERVATORY_FEATURE);
             }
         }

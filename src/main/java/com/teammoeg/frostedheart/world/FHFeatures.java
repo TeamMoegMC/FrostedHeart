@@ -22,6 +22,7 @@ import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.world.feature.FlowerCoveredDepositFeature;
 import com.teammoeg.frostedheart.world.feature.FHOreFeature;
 import com.teammoeg.frostedheart.world.feature.FHOreFeatureConfig;
 import com.teammoeg.frostedheart.world.feature.SpacecraftFeature;
@@ -110,9 +111,15 @@ public class FHFeatures {
             SANDY_LOAM_MUD, CLAY_LOAM_MUD, SANDY_CLAY_LOAM_MUD, SILTY_CLAY_LOAM_MUD
     );
 
+    // Features, registered at CommonRegistryEvents#onFeatureRegistry
     public static final Feature<FHOreFeatureConfig> FHORE = new FHOreFeature(FHOreFeatureConfig.CODEC);
     public static final SpacecraftFeature SPACECRAFT = new SpacecraftFeature(NoFeatureConfig.CODEC);
+    public static final Feature<BlockStateFeatureConfig> FLOWER_COVERED_DEPOSIT_FEATURE = new FlowerCoveredDepositFeature(BlockStateFeatureConfig.CODEC);
+
+    // Configured features, generate at CommonEvents#addOreGenFeatures
     public static final ConfiguredFeature<?, ?> spacecraft_feature = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "spacecraft", SPACECRAFT.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
+    public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.CLAY)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(8));
+    public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.GRAVEL)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(8));
     public static ArrayList<ConfiguredFeature<?, ?>> FH_ORES = new ArrayList<>();
     public static ArrayList<ConfiguredFeature<?, ?>> FH_DISK = new ArrayList<>();
 
