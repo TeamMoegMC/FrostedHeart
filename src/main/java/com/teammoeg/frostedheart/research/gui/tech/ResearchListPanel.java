@@ -73,7 +73,7 @@ public class ResearchListPanel extends Panel {
 
         @Override
         public void onClicked(MouseButton mouseButton) {
-
+        	
             listPanel.researchScreen.selectResearch(research);
         }
 

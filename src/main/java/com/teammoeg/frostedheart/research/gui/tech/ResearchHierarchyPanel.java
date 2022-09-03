@@ -188,7 +188,7 @@ public class ResearchHierarchyPanel extends Panel {
             ThickLine l = new ResearchHierarchyLine(parent);
             lines.add(l);
 
-            l.setPosAndDelta(x + 12, 34, 0, 8);
+            l.setPosAndDelta(x + 12, 30, 0, 12);
             k++;
         }
 
@@ -215,14 +215,15 @@ public class ResearchHierarchyPanel extends Panel {
         if (k > 0) {
             ThickLine lux = new ResearchCombinatorLine(researchPanel.selectedResearch);
             lines.add(lux);
-            lux.setPosAndDelta(ButtonPos[0] + 12, 42, 0, 6);
+            lux.setPosAndDelta(ButtonPos[0] + 12, 42, 0, 24);
         }
         k = 0;
 
-        if (FHResearch.editor || researchPanel.selectedResearch.isUnlocked()) {
-
+        //if (FHResearch.editor || researchPanel.selectedResearch.isUnlocked()) {
+        	boolean crunlocked=researchPanel.selectedResearch.isUnlocked();
             Set<Research> children = researchPanel.selectedResearch.getChildren();
             for (Research child : children) {
+            	if(!crunlocked&&!child.isShowable())continue;
                 int x;
                 if (k >= 4) {
                     x = ButtonPos[4] + (k - 4) * 32;
@@ -234,7 +235,7 @@ public class ResearchHierarchyPanel extends Panel {
                 childButton.setPos(x, 92);
                 ThickLine l = new ResearchHierarchyLine(researchPanel.selectedResearch);
                 lines.add(l);
-                l.setPosAndDelta(x + 12, 90, 0, 24);
+                l.setPosAndDelta(x + 12, 90, 0, 16);
                 k++;
             }
             if (k > 1) {
@@ -260,7 +261,7 @@ public class ResearchHierarchyPanel extends Panel {
                 lines.add(lux2);
                 lux2.setPosAndDelta(ButtonPos[0] + 12, 66, 0, 24);
             }
-        }
+        //}
         researchPanel.hierarchyBar.setMaxValue(trmost + 24);
 
     }
@@ -271,8 +272,9 @@ public class ResearchHierarchyPanel extends Panel {
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    public void drawOffsetBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         // theme.drawPanelBackground(matrixStack, x, y, w, h);
+    	GuiHelper.setupDrawing();
         for (ThickLine l : lines)
             l.draw(matrixStack, x, y);
     }
@@ -298,13 +300,22 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void onClicked(MouseButton mouseButton) {
-            this.researchScreen.detailframe.open(research);
+        	if(research.isUnlocked()||FHResearch.isEditor())
+        		this.researchScreen.detailframe.open(research);
             // this.researchScreen.refreshWidgets();
         }
 
         @Override
         public void addMouseOverText(TooltipList list) {
             list.add(research.getName().mergeStyle(TextFormatting.BOLD));
+            if(!research.isUnlocked()) {
+                list.add(GuiUtils.translateTooltip("research_is_locked").mergeStyle(TextFormatting.RED));
+                for (Research parent : research.getParents()) {
+                    if (!parent.isCompleted()) {
+                        list.add(parent.getName().mergeStyle(TextFormatting.GRAY));
+                    }
+                }
+            }
         }
 
         @Override

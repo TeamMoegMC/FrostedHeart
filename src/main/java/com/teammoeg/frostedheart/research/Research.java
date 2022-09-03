@@ -57,6 +57,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     boolean hideEffects;
     private boolean inCompletable=false;
     boolean isHidden=false;
+    boolean alwaysShow=false;
     long points = 1000;// research point
 
     @SafeVarargs
@@ -112,7 +113,9 @@ public class Research extends FHRegisteredItem implements Writeable {
         if(jo.has("hidden"))
         	isHidden=jo.get("hidden").getAsBoolean();
         if(jo.has("locked"))
-        	setInCompletable(jo.get("locked").getAsBoolean());
+        	inCompletable=jo.get("locked").getAsBoolean();
+        if(jo.has("keepShow"))
+        	alwaysShow=jo.get("keepShow").getAsBoolean();
 
     }
 
@@ -139,8 +142,11 @@ public class Research extends FHRegisteredItem implements Writeable {
             jo.addProperty("hideEffects", true);
         if(isHidden)
         	jo.addProperty("hidden", true);
-        if(isInCompletable())
+        if(inCompletable)
         	jo.addProperty("locked", true);
+        if(alwaysShow) {
+        	jo.addProperty("keepShow",true);
+        }
         return jo;
     }
 
@@ -163,7 +169,8 @@ public class Research extends FHRegisteredItem implements Writeable {
         showfdesc = bools[0];
         hideEffects = bools[1];
         isHidden=bools[2];
-        setInCompletable(bools[3]);
+        inCompletable=bools[3];
+        alwaysShow=bools[4];
     }
 
 
@@ -180,7 +187,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
         SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
         buffer.writeVarLong(points);
-        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,isInCompletable());
+        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,inCompletable,alwaysShow);
     }
 
     public List<Clue> getClues() {
@@ -390,7 +397,17 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
         return true;
     }
-
+    @OnlyIn(Dist.CLIENT)
+    public boolean isShowable() {
+    	if(alwaysShow)return true;
+        for (Research parent : this.getParents()) {
+            if (parent.getData().isUnlocked()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public void setCategory(ResearchCategory category) {
         this.category = category;
     }

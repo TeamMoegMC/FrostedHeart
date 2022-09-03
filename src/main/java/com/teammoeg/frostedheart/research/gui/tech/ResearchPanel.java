@@ -78,7 +78,7 @@ public abstract class ResearchPanel extends Panel {
             if (selectedResearch != null)
                 selectCategory(selectedResearch.getCategory());
             researchHierarchyPanel.refreshWidgets();
-        } else {
+        } else if(FHResearch.isEditor()||research.isUnlocked()){
             detailframe.open(research);
         }
     }
