@@ -1,46 +1,60 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
+import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.TempEvent;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.ItemStackHelper;
+import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
 public class SaunaTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
+        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
 
     private static final float POWER_CAP = 400;
-    public static final float REFILL_THRESHOLD = 200;
+    private static final float REFILL_THRESHOLD = 200;
     private static final int RANGE = 3;
-    public static final int WALL_HEIGHT = 3;
-    public static final Direction[] HORIZONTALS =
+    private static final int WALL_HEIGHT = 3;
+    private static final Direction[] HORIZONTALS =
             new Direction[] { Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH };
 
     private float power = 0;
@@ -50,8 +64,21 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     Set<BlockPos> edges = new HashSet<>();
     NetworkHolder network = new NetworkHolder();
 
+    protected NonNullList<ItemStack> inventory;
+    private LazyOptional<IItemHandler> insertionCap;
+
     public SaunaTileEntity() {
         super(FHTileTypes.SAUNA.get());
+        this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
+        this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(15, this));
+    }
+
+    public float getPowerFraction() {
+        return power / POWER_CAP;
+    }
+
+    public boolean isWorking() {
+        return formed && power > 0;
     }
 
     @Override
@@ -65,6 +92,8 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             BlockPos pos = NBTUtil.readBlockPos(floorNBT.getCompound(i));
             floor.add(pos);
         }
+        this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
+        ItemStackHelper.loadAllItems(nbt, this.inventory);
     }
 
     @Override
@@ -77,6 +106,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             CompoundNBT posNBT = NBTUtil.writeBlockPos(pos);
             floorNBT.add(posNBT);
         }
+        ItemStackHelper.saveAllItems(nbt, this.inventory);
         nbt.put("floor", floorNBT);
     }
 
@@ -123,24 +153,20 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                         refilling = false;
                         this.setActive(false);
                     }
-                    markDirty();
-                    this.markContainingBlockForUpdate(null);
                 }
                 // if not refilling, consume power
                 else {
                     power--;
                 }
+                markDirty();
+                this.markContainingBlockForUpdate(null);
             } else this.setActive(false);
 
             // grant player effect if structure is valid
             if (formed && power > 0) {
                 for (PlayerEntity p : this.getWorld().getPlayers()) {
                     if (floor.contains(p.getPosition().offset(Direction.DOWN))) {
-                        p.giveExperiencePoints(10);
-                        float currentBodyTemp = TemperatureCore.getBodyTemperature(p);
-                        float targetBodyTemp = currentBodyTemp >= 0 ? currentBodyTemp : currentBodyTemp + 0.5F;
-                        float targetEnvTemp = 30;
-                        TemperatureCore.setTemperature(p, targetBodyTemp, targetEnvTemp);
+                        grantEffects(p);
                     }
                 }
             }
@@ -154,12 +180,23 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     public ActionResultType onClick(PlayerEntity player) {
         if (!player.world.isRemote) {
             if (formed) {
-                player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
+                // player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
+                NetworkHooks.openGui((ServerPlayerEntity) player, this, this.getPos());
             } else {
                 player.sendStatusMessage(GuiUtils.translateMessage("structure_not_formed"), true);
             }
         }
         return ActionResultType.SUCCESS;
+    }
+
+    private void grantEffects(PlayerEntity p) {
+        float currentBodyTemp = TemperatureCore.getBodyTemperature(p);
+        float targetBodyTemp = currentBodyTemp >= 0 ? currentBodyTemp : currentBodyTemp + 0.5F;
+        float targetEnvTemp = 30;
+        TemperatureCore.setTemperature(p, targetBodyTemp, targetEnvTemp);
+        if (this.inventory.get(0).getItem() == Items.SUGAR_CANE) {
+            p.addPotionEffect(new EffectInstance(Effects.SPEED, 2000, 0, true, false));
+        }
     }
 
     private boolean dist(BlockPos crn, BlockPos orig) {
@@ -208,5 +245,47 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             }
         }
         return true;
+    }
+
+    @Nullable
+    @Override
+    public NonNullList<ItemStack> getInventory() {
+        return inventory;
+    }
+
+    @Override
+    public boolean isStackValid(int i, ItemStack itemStack) {
+        return true;
+    }
+
+    @Override
+    public int getSlotLimit(int i) {
+        return 4;
+    }
+
+    @Override
+    public void doGraphicalUpdates() {
+
+    }
+
+    @Nonnull
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
+    }
+
+    @Nullable
+    @Override
+    public IInteractionObjectIE getGuiMaster() {
+        return this;
+    }
+
+    @Override
+    public boolean canUseGui(PlayerEntity playerEntity) {
+        return true;
+    }
+
+    @Override
+    public void receiveMessageFromServer(CompoundNBT message) {
+        super.receiveMessageFromServer(message);
     }
 }

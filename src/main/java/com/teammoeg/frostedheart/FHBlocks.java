@@ -95,7 +95,7 @@ public class FHBlocks {
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)
             .notSolid(), FHBlockItem::new);
-    public static Block sauna = new SaunaBlock("sauna", Block.Properties
+    public static Block sauna = new SaunaBlock("sauna_vent", Block.Properties
             .create(Material.ROCK)
             .sound(SoundType.METAL)
             .setRequiresTool()
