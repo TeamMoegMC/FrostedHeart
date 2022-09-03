@@ -259,27 +259,43 @@ public class TeamResearchData {
         ResearchData rd = this.getData(r);
         if (rd.active && !rd.finished) {
             if (this.activeResearchId != r.getRId()) {
+            	if(this.activeResearchId!=0)
+            		clearCurrentResearch(false);
                 this.activeResearchId = r.getRId();
                 FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
                 getTeam().ifPresent(t -> {
                     for (ServerPlayerEntity spe : t.getOnlineMembers())
                         PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
                 });
+                getTeam().ifPresent(t -> {
+                    for (Clue c : r.getClues())
+                        c.start(t);
+                });
                 this.getData(r).checkComplete();
             }
         }
     }
-
     /**
      * Clear current research.
+     * @param sync send update packet
      */
-    public void clearCurrentResearch() {
+    public void clearCurrentResearch(boolean sync) {
+        if(activeResearchId==0)return;
+        Research r=FHResearch.researches.getById(activeResearchId);
+        if(r!=null) {
+	        getTeam().ifPresent(t -> {
+	            for (Clue c : r.getClues())
+	                c.end(t);
+	        });
+        }
         activeResearchId = 0;
-        FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket();
-        getTeam().ifPresent(t -> {
-            for (ServerPlayerEntity spe : t.getOnlineMembers())
-                PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
-        });
+        if(sync) {
+	        FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket();
+	        getTeam().ifPresent(t -> {
+	            for (ServerPlayerEntity spe : t.getOnlineMembers())
+	                PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+	        });
+        }
     }
 
     /**
@@ -289,7 +305,7 @@ public class TeamResearchData {
      */
     public void clearCurrentResearch(Research r) {
         if (activeResearchId == r.getRId())
-            clearCurrentResearch();
+            clearCurrentResearch(true);
     }
 
     /**
@@ -459,11 +475,13 @@ public class TeamResearchData {
             rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
         }
 
-        //if (!updatePacket) {
-        //crafting.load(data.getList("crafting", 8));
-        //building.load(data.getList("building", 8));
-        //block.load(data.getList("block", 8));
-        //}
+        if (!updatePacket) {
+        	Research r=FHResearch.researches.getById(activeResearchId);
+        	getTeam().ifPresent(t -> {
+                for (Clue c : r.getClues())
+                    c.start(t);
+            });
+        }
     }
 
     /**

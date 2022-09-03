@@ -25,7 +25,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
     NumberBox pts;
-    LabeledSelection<Boolean> hide,alt,hidden,locked;
+    LabeledSelection<Boolean> hide,alt,hidden,locked,showed;
     boolean removed;
     public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> {
         new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
@@ -38,11 +38,13 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.setCategory(def == null ? ResearchCategory.RESCUE : def);
         }
         this.r = r;
+        this.setY(-panel.getGui().getY()+10);
         id = new LabeledTextBoxAndBtn(this, "id", r.getId(), "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
 
         cat = new LabeledSelection<ResearchCategory>(this, "category", r.getCategory(), ResearchCategory.values(), ResearchCategory::name);
         name = new LabeledTextBox(this, "name", r.name);
         pts = new NumberBox(this, "points", r.points);
+        //showed = LabeledSelection.createBool(this, "Keep this research show in list", r.isInCompletable());
         hide = LabeledSelection.createBool(this, "Hide effects before complete", r.hideEffects);
         alt = LabeledSelection.createBool(this, "Show alt description before complete", r.showfdesc);
         hidden = LabeledSelection.createBool(this, "Hide this research in list", r.isHidden);

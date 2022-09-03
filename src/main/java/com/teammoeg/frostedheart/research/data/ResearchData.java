@@ -84,10 +84,7 @@ public class ResearchData {
             Research r = rs.get();
             parent.clearCurrentResearch(r);
             r.grantEffects(parent, null);
-            parent.getTeam().ifPresent(t -> {
-                for (Clue c : r.getClues())
-                    c.end(t);
-            });
+            
         }
     }
 
@@ -225,10 +222,6 @@ public class ResearchData {
         if (active)
             return;
         active = true;
-        parent.getTeam().ifPresent(t -> {
-            for (Clue c : getResearch().getClues())
-                c.start(t);
-        });
         sendProgressPacket();
     }
 
