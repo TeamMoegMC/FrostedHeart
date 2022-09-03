@@ -197,6 +197,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         if (this.inventory.get(0).getItem() == Items.SUGAR_CANE) {
             p.addPotionEffect(new EffectInstance(Effects.SPEED, 2000, 0, true, false));
         }
+        // TODO: add player inspiration recovery speed
     }
 
     private boolean dist(BlockPos crn, BlockPos orig) {
