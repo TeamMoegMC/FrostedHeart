@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:sauna",
+  "input": {
+    "item": "minecraft:wheat"
+  },
+  "time": 400,
+  "effect": {
+    "id": "minecraft:haste",
+    "duration": 200,
+    "amplifier": 0
+  }
+}

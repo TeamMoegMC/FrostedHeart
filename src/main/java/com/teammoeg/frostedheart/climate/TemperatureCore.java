@@ -95,6 +95,14 @@ public class TemperatureCore {
 		spe.getPersistentData().put(DATA_ID, nc);
 	}
 
+	public static void setEnvTemperature(PlayerEntity spe, float val) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			nc = new CompoundNBT();
+		nc.putFloat("envtemperature", val);
+		spe.getPersistentData().put(DATA_ID, nc);
+	}
+
 	public static void setTemperature(PlayerEntity spe, float body, float env) {
 		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
 		if (nc == null)

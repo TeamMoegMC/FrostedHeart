@@ -8,8 +8,8 @@ import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
@@ -60,25 +60,32 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
 
         // draw flame if the sauna is on
         if (tile.isWorking()) {
-            flame1.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, flamePos);
-            Item medicine = container.getSlot(0).getStack().getItem();
-            if (container.getSlot(0).getHasStack()) {
-                // TODO: add more medicine and change to recipe system
-                if (medicine == Items.WHEAT) {
-                    flame2.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, flamePos);
+            // use effect to determine which flame to draw
+            EffectInstance effect = tile.getEffectInstance();
+            if (effect != null) {
+                float effectFrac = tile.getEffectTimeFraction();
+                int height = (int) (flame2.getH() * effectFrac);
+                int offset = flame2.getH() - height;
+                if (effect.getPotion() == Effects.HASTE) {
+                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                            flame2.getX(), flame2.getY() + offset, flame2.getW(), height);
                 }
-                else if (medicine == Items.LAPIS_LAZULI) {
-                    flame3.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, flamePos);
+                else if (effect.getPotion() == Effects.ABSORPTION) {
+                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                            flame3.getX(), flame3.getY() + offset, flame3.getW(), height);
                 }
-                else if (medicine == Items.SUGAR_CANE) {
-                    flame4.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, flamePos);
+                else if (effect.getPotion() == Effects.SPEED) {
+                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                            flame4.getX(), flame4.getY() + offset, flame4.getW(), height);
                 }
-                else if (medicine == Items.CHARCOAL) {
-                    flame5.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, flamePos);
+                else if (effect.getPotion() == Effects.JUMP_BOOST) {
+                    mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
+                            flame5.getX(), flame5.getY() + offset, flame5.getW(), height);
                 }
+            } else {
+                flame1.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, flamePos);
             }
         }
-
     }
 
     @Override

@@ -6,6 +6,7 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -14,18 +15,17 @@ import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -58,6 +58,11 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             new Direction[] { Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH };
 
     private float power = 0;
+    private int remainTime = 0;
+    private int maxTime = 0;
+    private Effect effect = null;
+    private int effectDuration = 0;
+    private int effectAmplifier = 0;
     private boolean refilling = false;
     private boolean formed = false;
     Set<BlockPos> floor = new HashSet<>();
@@ -81,9 +86,36 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         return formed && power > 0;
     }
 
+    public boolean hasMedicine() {
+        return remainTime > 0 && effect != null;
+    }
+
+    public EffectInstance getEffectInstance() {
+        if (effect != null) {
+            return new EffectInstance(effect, effectDuration, effectAmplifier, true, true);
+        } else {
+            return null;
+        }
+    }
+
+    public float getEffectTimeFraction() {
+        return (float) remainTime / (float) maxTime;
+    }
+
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         power = nbt.getFloat("power");
+        remainTime = nbt.getInt("time");
+        maxTime = nbt.getInt("maxTime");
+        if (nbt.contains("effect")) {
+            effect = Effect.get(nbt.getInt("effect"));
+            effectDuration = nbt.getInt("duration");
+            effectAmplifier = nbt.getInt("amplifier");
+        } else {
+            effect = null;
+            effectDuration = 0;
+            effectAmplifier = 0;
+        }
         refilling = nbt.getBoolean("refilling");
         formed = nbt.getBoolean("formed");
         ListNBT floorNBT = nbt.getList("floor", Constants.NBT.TAG_COMPOUND);
@@ -99,6 +131,17 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         nbt.putFloat("power", power);
+        nbt.putInt("time", remainTime);
+        nbt.putInt("maxTime", maxTime);
+        if (effect != null) {
+            nbt.putInt("effect", Effect.getId(effect));
+            nbt.putInt("effectDuration", effectDuration);
+            nbt.putInt("effectAmplifier", effectAmplifier);
+        } else {
+            nbt.remove("effect");
+            nbt.remove("effectDuration");
+            nbt.remove("effectAmplifier");
+        }
         nbt.putBoolean("refilling", refilling);
         nbt.putBoolean("formed", formed);
         ListNBT floorNBT = new ListNBT();
@@ -164,9 +207,33 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
             // grant player effect if structure is valid
             if (formed && power > 0) {
+                // consume medcine time
+                remainTime = Math.max(0, remainTime - 1);
+                // refill time if medicine exists
+                ItemStack medicine = this.inventory.get(0);
+                if (remainTime == 0) {
+                    effect = null;
+                    effectDuration = 0;
+                    effectAmplifier = 0;
+                    if (!medicine.isEmpty()) {
+                        SaunaRecipe recipe = SaunaRecipe.findRecipe(medicine);
+                        if (recipe != null) {
+                            maxTime = recipe.time;
+                            remainTime += recipe.time;
+                            medicine.shrink(1);
+                            effect = recipe.effect;
+                            effectDuration = recipe.duration;
+                            effectAmplifier = recipe.amplifier;
+                        }
+                    }
+                }
+
+                markDirty();
+                this.markContainingBlockForUpdate(null);
+
                 for (PlayerEntity p : this.getWorld().getPlayers()) {
                     if (floor.contains(p.getPosition().offset(Direction.DOWN))) {
-                        grantEffects(p);
+                        grantEffects((ServerPlayerEntity) p);
                     }
                 }
             }
@@ -189,15 +256,25 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         return ActionResultType.SUCCESS;
     }
 
-    private void grantEffects(PlayerEntity p) {
-        float currentBodyTemp = TemperatureCore.getBodyTemperature(p);
-        float targetBodyTemp = currentBodyTemp >= 0 ? currentBodyTemp : currentBodyTemp + 0.5F;
-        float targetEnvTemp = 30;
-        TemperatureCore.setTemperature(p, targetBodyTemp, targetEnvTemp);
-        if (this.inventory.get(0).getItem() == Items.SUGAR_CANE) {
-            p.addPotionEffect(new EffectInstance(Effects.SPEED, 2000, 0, true, false));
+    private void grantEffects(ServerPlayerEntity p) {
+        // add effect only if armor is not equipped
+        if (p.getArmorCoverPercentage() > 0.0F) {
+            return;
         }
-        // TODO: add player inspiration recovery speed
+        // add wet effect
+        if (world.getGameTime() % 80L == 0L) {
+            p.addPotionEffect(new EffectInstance(FHEffects.WET, effectDuration, 0, true, false));
+        }
+        // add temperature
+        // TODO: find a way to update body temperature without explicitly setting
+        float lenvtemp = TemperatureCore.getEnvTemperature(p);//get a smooth change in display
+        TemperatureCore.setTemperature(p, 37, 65 *.2f+lenvtemp*.8f);
+        if (hasMedicine() && remainTime == 1) {
+            p.addPotionEffect(getEffectInstance());
+        }
+        // add player inspiration recovery speed
+        // TODO: add limit
+        EnergyCore.addEnergy(p, 1);
     }
 
     private boolean dist(BlockPos crn, BlockPos orig) {
@@ -255,13 +332,13 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public boolean isStackValid(int i, ItemStack itemStack) {
+    public boolean isStackValid(int slot, ItemStack itemStack) {
         return true;
     }
 
     @Override
     public int getSlotLimit(int i) {
-        return 4;
+        return 64;
     }
 
     @Override

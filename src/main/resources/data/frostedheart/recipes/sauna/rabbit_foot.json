@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:sauna",
+  "input": {
+    "item": "minecraft:rabbit_foot"
+  },
+  "time": 400,
+  "effect": {
+    "id": "minecraft:jump_boost",
+    "duration": 200,
+    "amplifier": 0
+  }
+}

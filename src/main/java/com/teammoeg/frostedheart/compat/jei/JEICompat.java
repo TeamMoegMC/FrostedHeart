@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.TeamResearchData;
@@ -84,6 +85,7 @@ public class JEICompat implements IModPlugin {
 				ChargerDefrostCategory.UID);
 		registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE), CampfireDefrostCategory.UID);
 		registration.addRecipeCatalyst(new ItemStack(Blocks.SMOKER), SmokingDefrostCategory.UID);
+		registration.addRecipeCatalyst(new ItemStack(FHBlocks.sauna), SaunaCategory.UID);
 	}
 
 	@Override
@@ -108,7 +110,7 @@ public class JEICompat implements IModPlugin {
 				new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.brown_mushroombed), 0),
 						new ItemStack(Items.BROWN_MUSHROOM, 10))),
 				CuttingCategory.UID);
-
+		registration.addRecipes(new ArrayList<>(SaunaRecipe.recipeList.values()), SaunaCategory.UID);
 	}
 
 	public static IRecipeManager man;
@@ -210,7 +212,7 @@ public class JEICompat implements IModPlugin {
 		registration.addRecipeCategories(new GeneratorFuelCategory(guiHelper), new GeneratorSteamCategory(guiHelper),
 				new ChargerCategory(guiHelper), new ChargerCookingCategory(guiHelper), new CuttingCategory(guiHelper),
 				new CampfireDefrostCategory(guiHelper), new SmokingDefrostCategory(guiHelper),
-				new ChargerDefrostCategory(guiHelper));
+				new ChargerDefrostCategory(guiHelper), new SaunaCategory(guiHelper));
 	}
 
 	@Override

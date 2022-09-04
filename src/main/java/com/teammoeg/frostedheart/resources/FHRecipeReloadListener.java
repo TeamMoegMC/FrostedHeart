@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.recipes.*;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
@@ -116,6 +117,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .map(e -> (DietValueRecipe) e)
                 .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
         PaperRecipe.recipes = filterRecipes(recipes, PaperRecipe.class, PaperRecipe.TYPE).values().stream().collect(Collectors.toList());
+        SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {
