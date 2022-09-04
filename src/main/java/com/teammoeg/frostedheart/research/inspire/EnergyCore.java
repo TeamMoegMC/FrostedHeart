@@ -21,6 +21,7 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -46,7 +47,7 @@ public class EnergyCore {
         CompoundNBT data = TemperatureCore.getFHData(player);
         long tenergy = data.getLong("energy");
         if (tenergy < 10000) tenergy = 10000;
-        double utbody = data.getDouble("Tbody");
+        double utbody = data.getDouble("utbody");
         long tsls = data.getLong("lastsleep");
         tsls++;
         data.putLong("lastsleep", tsls);
@@ -54,7 +55,7 @@ public class EnergyCore {
         if (!isBodyNotWell) {
             double m;
             TeamResearchData trd = ResearchDataAPI.getData(player);
-            long M = (long) trd.getVariants().getDouble("maxEnergy") + 25000;
+            long M = (long) trd.getVariants().getDouble("maxEnergy") + 30000;
             M *= (1 + trd.getVariants().getDouble("pmaxEnergy"));
             double dietValue = 0;
             IDietTracker idt = DietCapability.get(player).orElse(null);
@@ -69,18 +70,22 @@ public class EnergyCore {
                 dietValue /= tdv;
             if (utbody != 0) {
                 double t = MathHelper.clamp(tsls, 1, Integer.MAX_VALUE) / 1200d;
+                //System.out.println(t);
                 m = (utbody / (t * t * t * t * t * t + utbody * 2) + 0.5) * M;
             } else {
                 m = 0.5 * M;
             }
             double n = trd.getTeam().get().getOnlineMembers().size();
             n = 1 + 0.8 * (n - 1);
-            //System.out.println(n);
             //System.out.println(m);
+            //System.out.println(dietValue);
             double nenergy=(0.3934f * (1 - tenergy / m) * tenergy + 1.3493f * (dietValue - 0.4) * tenergy) / 1200;
-            //Add new modifiers here
+            //System.out.println(nenergy);
+            if(tenergy*2<M&&nenergy<=5) {
+            	player.addPotionEffect(new EffectInstance(FHEffects.SAD,200));
+            }
             double dtenergy = nenergy/n;
-            //System.out.println(dtenergy);
+            
             if (dtenergy > 0 || tenergy > 15000) {
                 tenergy += dtenergy;
                 double frac = MathHelper.frac(dtenergy);
@@ -98,7 +103,9 @@ public class EnergyCore {
         CompoundNBT data = TemperatureCore.getFHData(player);
         long lsd = data.getLong("lastsleepdate");
         long csd = (player.world.getDayTime() + 12000L) / 24000L;
+        //System.out.println("slept");
         if (csd == lsd) return;
+        //System.out.println("sleptx");
         for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
             if (is == null)
                 continue;
@@ -133,8 +140,9 @@ public class EnergyCore {
             nkeep = 1;
         float nta = (1 - nkeep) + 0.5f;
         float tbody = 30 / nta + tenv;
-
-        data.putDouble("utbody", Math.pow(10, 4 - Math.abs(tbody - 40) / 10));
+        double out=Math.pow(10, 4 - Math.abs(tbody - 40) / 10);
+        //System.out.println(out);
+        data.putDouble("utbody", out);
         data.putLong("lastsleep", 0);
         data.putLong("lastsleepdate", csd);
         TemperatureCore.setFHData(player, data);

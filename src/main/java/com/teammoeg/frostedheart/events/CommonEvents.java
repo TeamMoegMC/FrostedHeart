@@ -582,7 +582,9 @@ public class CommonEvents {
                     new FHClimatePacket(ClimateData.get(serverWorld)));
             CompoundNBT cnbt = new CompoundNBT();
             cnbt.putLong("penergy", TemperatureCore.getFHData(event.getPlayer()).getLong("penergy"));
-            
+            cnbt.putDouble("utbody", 1);
+            cnbt.putLong("lastsleep", 0);
+            cnbt.putLong("lastsleepdate", 0);
             TemperatureCore.setFHData(event.getPlayer(), cnbt);
         }
     }
