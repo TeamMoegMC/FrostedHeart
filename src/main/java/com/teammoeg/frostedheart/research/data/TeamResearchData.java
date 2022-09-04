@@ -476,11 +476,13 @@ public class TeamResearchData {
         }
 
         if (!updatePacket) {
+        	if(activeResearchId!=0) {
         	Research r=FHResearch.researches.getById(activeResearchId);
         	getTeam().ifPresent(t -> {
                 for (Clue c : r.getClues())
                     c.start(t);
             });
+        	}
         }
     }
 
