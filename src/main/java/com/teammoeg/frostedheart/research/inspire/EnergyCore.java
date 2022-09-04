@@ -77,7 +77,8 @@ public class EnergyCore {
             n = 1 + 0.9 * (n - 1);
             //System.out.println(n);
             //System.out.println(m);
-            double dtenergy = ((0.3934f * (1 - tenergy / m) * tenergy + 1.3493f * (dietValue - 0.4) * tenergy) / (1200 * (n)));
+            double nenergy=(0.3934f * (1 - tenergy / m) * tenergy + 1.3493f * (dietValue - 0.4) * tenergy) / 1200;
+            double dtenergy = nenergy/n;
             //System.out.println(dtenergy);
             if (dtenergy > 0 || tenergy > 15000) {
                 tenergy += dtenergy;
