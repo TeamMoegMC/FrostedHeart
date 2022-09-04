@@ -74,10 +74,11 @@ public class EnergyCore {
                 m = 0.5 * M;
             }
             double n = trd.getTeam().get().getOnlineMembers().size();
-            n = 1 + 0.9 * (n - 1);
+            n = 1 + 0.8 * (n - 1);
             //System.out.println(n);
             //System.out.println(m);
             double nenergy=(0.3934f * (1 - tenergy / m) * tenergy + 1.3493f * (dietValue - 0.4) * tenergy) / 1200;
+            //Add new modifiers here
             double dtenergy = nenergy/n;
             //System.out.println(dtenergy);
             if (dtenergy > 0 || tenergy > 15000) {

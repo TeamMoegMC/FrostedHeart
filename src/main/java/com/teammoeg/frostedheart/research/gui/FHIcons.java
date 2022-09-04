@@ -215,6 +215,7 @@ public class FHIcons {
         }
 
         public FHAnimatedIcon(FHIcon[] icons2) {
+        	this();
             for (FHIcon i : icons2)
                 icons.add(i);
         }
