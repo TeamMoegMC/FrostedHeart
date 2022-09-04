@@ -323,14 +323,17 @@ public class ResearchHierarchyPanel extends Panel {
             // this.drawBackground(matrixStack, theme, x, y, w, h);
             GuiHelper.setupDrawing();
             TechIcons.LSLOT.draw(matrixStack, x, y, w, h);
-            this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
-            if (research.isCompleted()) {
-                matrixStack.push();
-                matrixStack.translate(0, 0, 300);
-                GuiHelper.setupDrawing();
-                TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
-                matrixStack.pop();
-            }
+            if (FHResearch.editor ||research.isShowable()) {
+            	this.drawIcon(matrixStack, theme, x + 2, y + 2, 32, 32);
+                if (research.isCompleted()) {
+                    matrixStack.push();
+                    matrixStack.translate(0, 0, 300);
+                    GuiHelper.setupDrawing();
+                    TechIcons.FIN.draw(matrixStack, x + 2, y + 2, 32, 32);
+                    matrixStack.pop();
+                }
+            } else
+                TechIcons.Question.draw(matrixStack, x + 2, y + 2, 32, 32);
         }
     }
 
@@ -373,8 +376,7 @@ public class ResearchHierarchyPanel extends Panel {
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             TechIcons.SLOT.draw(matrixStack, x, y, w, h);
-            if (FHResearch.editor || (parent == null && research.isUnlocked())
-                    || (parent != null && parent.isUnlocked())) {
+            if (FHResearch.editor || research.isShowable()) {
                 this.drawIcon(matrixStack, theme, x + 4, y + 4, 16, 16);
                 if (research.isCompleted()) {
                     matrixStack.push();

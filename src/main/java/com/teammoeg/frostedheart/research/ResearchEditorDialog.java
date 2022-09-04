@@ -44,7 +44,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         cat = new LabeledSelection<ResearchCategory>(this, "category", r.getCategory(), ResearchCategory.values(), ResearchCategory::name);
         name = new LabeledTextBox(this, "name", r.name);
         pts = new NumberBox(this, "points", r.points);
-        //showed = LabeledSelection.createBool(this, "Keep this research show in list", r.isInCompletable());
+        showed = LabeledSelection.createBool(this, "Keep this research show in list", r.alwaysShow);
         hide = LabeledSelection.createBool(this, "Hide effects before complete", r.hideEffects);
         alt = LabeledSelection.createBool(this, "Show alt description before complete", r.showfdesc);
         hidden = LabeledSelection.createBool(this, "Hide this research in list", r.isHidden);
@@ -62,6 +62,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.name = name.getText();
             r.setCategory(cat.getSelection());
             r.points = pts.getNum();
+            r.alwaysShow=showed.getSelection();
             r.hideEffects = hide.getSelection();
             r.showfdesc = alt.getSelection();
             r.isHidden=hidden.getSelection();
@@ -131,6 +132,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             }
 
         });
+        add(showed);
         add(hide);
         add(alt);
         add(hidden);

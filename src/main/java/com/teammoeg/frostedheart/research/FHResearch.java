@@ -97,15 +97,18 @@ public class FHResearch {
         ArrayList<Research> locked = new ArrayList<>();
         ArrayList<Research> available = new ArrayList<>();
         ArrayList<Research> unlocked = new ArrayList<>();
+        ArrayList<Research> showed = new ArrayList<>();
         for (Research r : all) {
         	if(r.isHidden) {locked.add(r);continue;}
             if (r.getCategory() != cate) continue;
             if (r.isCompleted()) unlocked.add(r);
             else if (r.isUnlocked()) available.add(r);
+            else if(r.alwaysShow)showed.add(r);
             else locked.add(r);
         }
-        available.ensureCapacity(available.size() + unlocked.size() + locked.size());
+        available.ensureCapacity(available.size() + unlocked.size() +showed.size());
         available.addAll(unlocked);
+        available.addAll(showed);
         if (showLocked) available.addAll(locked);
         return available;
     }

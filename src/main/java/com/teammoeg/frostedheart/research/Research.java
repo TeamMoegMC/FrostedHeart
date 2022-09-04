@@ -400,7 +400,9 @@ public class Research extends FHRegisteredItem implements Writeable {
     @OnlyIn(Dist.CLIENT)
     public boolean isShowable() {
     	if(alwaysShow)return true;
-        for (Research parent : this.getParents()) {
+    	Set<Research> rs=this.getParents();
+    	if(rs.isEmpty())return true;
+        for (Research parent : rs) {
             if (parent.getData().isUnlocked()) {
                 return true;
             }
