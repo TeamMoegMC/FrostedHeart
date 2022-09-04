@@ -216,7 +216,7 @@ public class EnergyCore {
                 EnergyCore.dT(player);
         }
     }
-
+/*
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
         
@@ -226,7 +226,7 @@ public class EnergyCore {
             TemperatureCore.setFHData(ev.getPlayer(), cnbt);
             //TemperatureCore.setTemperature(ev.getPlayer(), 0, 0);
         
-    }
+    }*/
 
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
