@@ -31,6 +31,7 @@ public class ResearchCommand {
                     if (rsn.equals("all")) {
                         TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
                         for (Research r : FHResearch.getAllResearch()) {
+                        	if(r.isInCompletable())continue;
                             ResearchData rd = trd.getData(r);
                             rd.setFinished(true);
                             rd.announceCompletion();
