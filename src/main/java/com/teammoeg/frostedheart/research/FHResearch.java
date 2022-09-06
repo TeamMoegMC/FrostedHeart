@@ -99,8 +99,9 @@ public class FHResearch {
         ArrayList<Research> unlocked = new ArrayList<>();
         ArrayList<Research> showed = new ArrayList<>();
         for (Research r : all) {
+        	if (r.getCategory() != cate) continue;
         	if(r.isHidden) {locked.add(r);continue;}
-            if (r.getCategory() != cate) continue;
+            
             if (r.isCompleted()) unlocked.add(r);
             else if (r.isUnlocked()) available.add(r);
             else if(r.alwaysShow)showed.add(r);
