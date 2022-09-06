@@ -350,7 +350,15 @@ public class Research extends FHRegisteredItem implements Writeable {
     public void resetData() {
         TeamResearchData.getClientInstance().resetData(this);
     }
-
+    @OnlyIn(Dist.CLIENT)
+    public boolean hasUnclaimedReward() {
+    	if(!this.isCompleted())return false;
+    	for(Effect e:this.getEffects())
+    		if(!e.isGranted())return true;
+    	return false;
+    }
+    
+    
     public void sendProgressPacket(Team team) {
         sendProgressPacket(team, getData(team));
     }

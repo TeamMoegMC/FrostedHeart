@@ -69,6 +69,7 @@ public class ResearchListPanel extends Panel {
             this.listPanel = panel;
             setSize(101, RESEARCH_HEIGHT);
             tf = new RTextField(panel).setMaxLine(1).setMaxWidth(84).setText(research.getName());
+            
         }
 
         @Override
@@ -81,7 +82,9 @@ public class ResearchListPanel extends Panel {
         public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
             //GuiHelper.setupDrawing();
             this.drawIcon(matrixStack, theme, x + 1, y + 1, 16, 16);
-            if (research.isCompleted()) {
+            if(research.hasUnclaimedReward())
+            	tf.setColor(Color4I.rgb(0x5555ff));
+            else if (research.isCompleted()) {
                 tf.setColor(Color4I.rgb(0x229000));
             } else if (!research.isUnlocked()) {
                 tf.setColor(TechIcons.text_red);

@@ -107,9 +107,19 @@ public class FHResearch {
             else if(r.alwaysShow)showed.add(r);
             else locked.add(r);
         }
+        
         available.ensureCapacity(available.size() + unlocked.size() +showed.size());
-        available.addAll(unlocked);
         available.addAll(showed);
+        
+        unlocked.removeIf(e->{
+        	if(e.hasUnclaimedReward()) {
+        		available.add(0, e);
+        		return true;
+        	}
+        	return false;
+        });
+        available.addAll(unlocked);
+        
         if (showLocked) available.addAll(locked);
         return available;
     }
