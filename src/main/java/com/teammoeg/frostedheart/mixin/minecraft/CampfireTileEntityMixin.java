@@ -66,7 +66,7 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         lifeTime = 0;
     }
 
-    @Inject(at = @At("RETURN"), method = "tick")
+    @Inject(at = @At("RETURN"), method = "tick()V")
     public void tick(CallbackInfo ci) {
         if (!this.world.isRemote) {
             if (CampfireBlock.isLit(world.getBlockState(getPos())))
@@ -86,7 +86,7 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "write")
+    @Inject(at = @At("HEAD"), method = "write", cancellable = true)
     public void writeAdditional(CompoundNBT compound, CallbackInfoReturnable<CompoundNBT> cir) {
         compound.putInt("LifeTime", lifeTime);
     }

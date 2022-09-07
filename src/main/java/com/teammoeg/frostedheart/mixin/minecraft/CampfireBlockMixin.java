@@ -103,6 +103,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
      */
     @Overwrite
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isRemote){
         if (handIn == Hand.MAIN_HAND && !player.isSneaking()) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
             if (tileentity instanceof CampfireTileEntity) {
@@ -150,6 +151,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                     return ActionResultType.SUCCESS;
                 }
             }
+        }
         }
         return ActionResultType.PASS;
     }
