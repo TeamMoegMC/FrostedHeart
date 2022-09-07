@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
@@ -13,6 +14,7 @@ import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
+import net.minecraft.command.arguments.ArgumentTypes;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 
@@ -62,6 +64,10 @@ public class ResearchCommand {
                     EnergyCore.reportEnergy(ct.getSource().asPlayer());
                     return Command.SINGLE_SUCCESS;
                 }))
+                .then(Commands.literal("addenergy").then(Commands.argument("amount",IntegerArgumentType.integer(0)).executes(ct -> {
+                    EnergyCore.addPersistentEnergy(ct.getSource().asPlayer(),ct.getArgument("amount",Integer.class));
+                    return Command.SINGLE_SUCCESS;
+                })))
                 .then(Commands.literal("reset").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
                     for (Research r : FHResearch.getAllResearch())
                         if (r.getId().startsWith(s.getRemaining()))

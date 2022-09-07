@@ -195,7 +195,7 @@ public class EnergyCore {
     public static boolean hasEnoughEnergy(PlayerEntity player, int val) {
         if (player.abilities.isCreativeMode) return true;
         CompoundNBT data = TemperatureCore.getFHData(player);
-        return data.getLong("energy") > val + 10000 || data.getLong("penergy") > val;
+        return data.getLong("energy") > val + 10000 || data.getLong("penergy") >= val;
     }
     public static long getEnergy(PlayerEntity player) {
         CompoundNBT data = TemperatureCore.getFHData(player);

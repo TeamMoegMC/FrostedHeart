@@ -33,6 +33,7 @@ public class FHRecipes {
         DietValueRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("diet_override", DietValueSerializer::new);
         IncubateRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("incubate", IncubateRecipeSerializer::new);
         PaperRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("paper", PaperSerializer::new);
+        RecipeModifyDamage.SERIALIZER=RECIPE_SERIALIZERS.register("modify_damage", DamageModifySerializer::new);
     }
 
     public static void registerRecipeTypes() {
