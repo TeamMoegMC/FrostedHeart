@@ -6,6 +6,25 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "minecraft:scaffolding",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 3,
+                "max": 4
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls":1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "watersource:coconut_milk_bottle"
         }
       ]
@@ -29,7 +48,7 @@
           "functions": [
             {
               "function": "minecraft:set_nbt",
-              "tag": "{Damage:100}"
+              "tag": "{Damage:120}"
             }
           ]
         },
