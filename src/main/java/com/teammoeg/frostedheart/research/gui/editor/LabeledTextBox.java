@@ -15,6 +15,7 @@ public class LabeledTextBox extends LabeledPane<TextBox> {
         obj.setText(txt);
         obj.setSize(200, 16);
         orig = txt;
+        
 
     }
 

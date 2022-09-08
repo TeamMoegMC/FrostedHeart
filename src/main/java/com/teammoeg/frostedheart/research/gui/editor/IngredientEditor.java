@@ -45,7 +45,7 @@ public class IngredientEditor extends BaseEditDialog {
             } catch (Exception ex) {
             }
         }
-        EditPrompt.TEXT_EDITOR.open(p, l, vx, s -> c.accept(new TagList(TagCollectionManager.getManager().getItemTags().getTagByID(new ResourceLocation(s)))));
+        EditBtnDialog.EDITOR_ITEM_TAGS.open(p, l, vx, s -> c.accept(new TagList(TagCollectionManager.getManager().getItemTags().getTagByID(new ResourceLocation(s)))));
     };
     public static final Editor<IItemList> EDITOR_LIST = (p, l, v, c) -> {
         if (v == null)

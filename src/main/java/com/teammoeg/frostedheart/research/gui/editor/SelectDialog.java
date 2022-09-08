@@ -13,6 +13,7 @@ import dev.ftb.mods.ftblibrary.ui.*;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientAdvancementManager;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.ResourceLocation;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class SelectDialog<T> extends EditDialog {
     public static <R> Function<R, ITextComponent> wrap(Function<R, Object> str) {
@@ -51,8 +53,13 @@ public class SelectDialog<T> extends EditDialog {
         ).open();
     };
     public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName
+        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName,e->new String[] {e.getName().getString(),e.getRegistryName().toString()}
         ).open();
+    };
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
+    
+    	
+        new SelectDialog<>(p, l, v, c,()->Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     };
     String lbl;
     T val;
