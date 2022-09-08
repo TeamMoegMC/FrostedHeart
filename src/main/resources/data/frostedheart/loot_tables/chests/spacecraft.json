@@ -34,41 +34,6 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "rankine:invar_sword",
-          "functions": [
-            {
-              "function": "minecraft:set_nbt",
-              "tag": "{Damage:100}"
-            }
-          ]
-        },
-        {
-          "type": "minecraft:item",
-          "name": "rankine:invar_spear",
-          "functions": [
-            {
-              "function": "minecraft:set_nbt",
-              "tag": "{Damage:120}"
-            }
-          ]
-        },
-        {
-          "type": "minecraft:item",
-          "name": "rankine:invar_knife",
-          "functions": [
-            {
-              "function": "minecraft:set_nbt",
-              "tag": "{Damage:80}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "rolls":1,
-      "entries": [
-        {
-          "type": "minecraft:item",
           "name": "frostedheart:weather_radar"
         },
         {
