@@ -87,6 +87,10 @@ public class Research extends FHRegisteredItem implements Writeable {
 
     public Research(String id, JsonObject jo) {
         this.id = id;
+        load(jo);
+
+    }
+    public void load(JsonObject jo) {
         if (jo.has("name"))
             name = jo.get("name").getAsString();
         if (jo.has("desc"))
@@ -99,26 +103,37 @@ public class Research extends FHRegisteredItem implements Writeable {
             fdesc = new ArrayList<>();
         icon = FHIcons.getIcon(jo.get("icon"));
         setCategory(ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString())));
+        
         if (jo.has("parents"))
             parents.addAll(
                     SerializeUtil.parseJsonElmList(jo.get("parents"), p -> FHResearch.researches.get(p.getAsString())));
-        clues.addAll(SerializeUtil.parseJsonList(jo.get("clues"), Clues::read));
+        else
+        	parents.clear();
+        clues=SerializeUtil.parseJsonList(jo.get("clues"), Clues::read);
         requiredItems = SerializeUtil.parseJsonElmList(jo.get("ingredients"), IngredientWithSize::deserialize);
         effects = SerializeUtil.parseJsonList(jo.get("effects"), Effects::deserialize);
         points = jo.get("points").getAsInt();
         if (jo.has("showAltDesc"))
             showfdesc = jo.get("showAltDesc").getAsBoolean();
+        else
+        	showfdesc=false;
         if (jo.has("hideEffects"))
             hideEffects = jo.get("hideEffects").getAsBoolean();
+        else
+        	hideEffects=false;
         if(jo.has("hidden"))
         	isHidden=jo.get("hidden").getAsBoolean();
+        else
+        	isHidden=false;
         if(jo.has("locked"))
         	inCompletable=jo.get("locked").getAsBoolean();
+        else
+        	inCompletable=false;
         if(jo.has("keepShow"))
         	alwaysShow=jo.get("keepShow").getAsBoolean();
-
+        else
+        	alwaysShow=false;
     }
-
     @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();

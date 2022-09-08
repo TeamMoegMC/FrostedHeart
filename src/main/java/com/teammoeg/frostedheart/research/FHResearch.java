@@ -149,7 +149,21 @@ public class FHResearch {
 
         }
     }
-
+    public static Research load(Research r) {
+        File folder = FMLPaths.CONFIGDIR.get().toFile();
+        File rf = new File(folder, "fhresearches");
+        rf.mkdirs();
+        File f = new File(rf, r.getId() + ".json");
+        int iid=r.getRId();
+        try {
+        	JsonElement je = new JsonParser().parse(FileUtil.readString(f));
+            if (je.isJsonObject()) {
+                r.load(je.getAsJsonObject());
+            }
+        } catch (IOException e) {
+        }
+        return researches.getById(iid);
+    }
     public static void save(Research r) {
         File folder = FMLPaths.CONFIGDIR.get().toFile();
         File rf = new File(folder, "fhresearches");
