@@ -82,15 +82,19 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
             if (rawBurnTime > 0) {
                 if (((ItemEntity) entityIn).getThrowerId() != null && ((ICampfireExtra) worldIn.getTileEntity(pos)).getLifeTime() != -1337) {
                     if (!worldIn.isRemote) {
-                        int burnTime = rawBurnTime * 3 * ((ItemEntity) entityIn).getItem().getCount();
-                        CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
-                        ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
-                        if (lifeTime.getLifeTime() < 19200 && lifeTime.getLifeTime() >= 0) {
-                            lifeTime.addLifeTime(burnTime);
-                            if (((ItemEntity) entityIn).getItem().getItem() == Items.LAVA_BUCKET)
-                                InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.BUCKET));
-                            entityIn.remove();
-                        }
+                    	ItemStack is=((ItemEntity) entityIn).getItem();
+                    	CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
+                    	ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
+                    	int maxcs=(19200-lifeTime.getLifeTime())/rawBurnTime/3;
+                    	int rcs=Math.min(maxcs,is.getCount());
+                        int burnTime = rawBurnTime * 3 * rcs;
+                        is.shrink(rcs);
+                        lifeTime.addLifeTime(burnTime);
+                        if (((ItemEntity) entityIn).getItem().getItem() == Items.LAVA_BUCKET)
+                            InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.BUCKET));
+                        if(is.getCount()<=0)
+                        	entityIn.remove();
+                        
                     }
                 }
             }
