@@ -190,6 +190,7 @@
   "message.frostedheart.research.cannot_use_block": "我还不知道这玩意怎么用。",
   "message.frostedheart.research.too_dark": "这里太黑了，我没办法写字...",
   "message.frostedheart.research.too_cold": "这里太冷了，我写字时手指在发抖...",
+  "message.frostedheart.research.not_owned": "这不是我的论文，我没法读懂上面的文字.",
   "message.frostedheart.research.multiblock.cannot_build": "我完全不知道怎么建造这个结构。我需要更多的研究。",
   "message.frostedheart.forecast.morning": "清晨天气预报:\n 今早: %s °C\n 中午: %s °C\n 今晚: %s °C\n 午夜: %s °C\n 明早: %s °C",
   "message.frostedheart.forecast.night": "傍晚天气预报:\n 今晚: %s °C\n 午夜: %s °C\n 明早: %s °C\n 中午: %s °C\n 傍晚: %s °C",

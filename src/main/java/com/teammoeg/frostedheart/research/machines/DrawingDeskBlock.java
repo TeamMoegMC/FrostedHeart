@@ -21,9 +21,13 @@ package com.teammoeg.frostedheart.research.machines;
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.Utils;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.util.IOwnerTile;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -54,6 +58,8 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkHooks;
 
 import javax.annotation.Nullable;
+
+import java.util.UUID;
 import java.util.function.BiFunction;
 
 public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvider {
@@ -184,10 +190,12 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                     pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
                 }
                 TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
-                if (ii instanceof DrawingDeskTileEntity) {
-                    ((DrawingDeskTileEntity) ii).markContainingBlockForUpdate(null);
-                }
-                NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
+                UUID crid=FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player).getId();
+                IOwnerTile.trySetOwner(ii,crid);
+                if(crid!=null&&crid.equals(IOwnerTile.getOwner(ii)))
+                	NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
+                else 
+                	player.sendStatusMessage(GuiUtils.translateMessage("research.not_owned"), true);
             }
         }
         return ActionResultType.SUCCESS;
