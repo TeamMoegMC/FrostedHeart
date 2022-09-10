@@ -78,10 +78,9 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
             int rawBurnTime = ForgeHooks.getBurnTime(((ItemEntity) entityIn).getItem());
             if (worldIn.isRemote && isLit(state) && rawBurnTime > 0)
                 worldIn.addParticle(ParticleTypes.SMOKE, entityIn.getPosX(), entityIn.getPosY() + 0.25D, entityIn.getPosZ(), 0, 0.05D, 0);
-
-            if (rawBurnTime > 0) {
-                if (((ItemEntity) entityIn).getThrowerId() != null && ((ICampfireExtra) worldIn.getTileEntity(pos)).getLifeTime() != -1337) {
-                    if (!worldIn.isRemote) {
+            if (!worldIn.isRemote) {
+                if (rawBurnTime > 0) {
+                    if (((ItemEntity) entityIn).getThrowerId() != null && ((ICampfireExtra) worldIn.getTileEntity(pos)).getLifeTime() != -1337) {
                     	ItemStack is=((ItemEntity) entityIn).getItem();
                     	CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
                     	ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
@@ -94,7 +93,6 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                             InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.BUCKET));
                         if(is.getCount()<=0)
                         	entityIn.remove();
-                        
                     }
                 }
             }
