@@ -95,7 +95,7 @@
   "gui.jei.category.frostedheart.generator_fuel": "Generator Fuel",
   "gui.jei.category.frostedheart.generator_steam": "Generator Heat Medium",
   "gui.jei.category.frostedheart.knife_cutting": "Cutting With Knife",
-  "gui.jei.info.require_research": "Some recipes may require more research to display.",
+  "gui.jei.info.require_research": "Some recipes may require more research to display. If you finished corresponding research, please turn to other page to check out recipes.",
   "gui.frostedheart.minigame.tired_to_research":"I can't think of anything. Maybe I should take a rest.",
   "gui.frostedheart.minigame.no_ink": "No suitable ink for this research.",
   "gui.frostedheart.minigame.no_paper":"No suitable paper for this research.",

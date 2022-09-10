@@ -95,7 +95,7 @@
   "gui.jei.category.frostedheart.generator_fuel": "能量塔燃料",
   "gui.jei.category.frostedheart.generator_steam": "能量塔热介质",
   "gui.jei.category.frostedheart.knife_cutting": "用刀切割",
-  "gui.jei.info.require_research": "一些配方需要进行研究才能解锁。",
+  "gui.jei.info.require_research": "一些配方需要进行研究才能解锁。如果您已经完成了对应研究，请翻页查找对应配方.",
   "gui.frostedheart.minigame.tired_to_research": "脑子里一片空白，得好好休息一会了",
   "gui.frostedheart.minigame.no_ink": "没有适合使用的墨水",
   "gui.frostedheart.minigame.no_paper": "没有适合使用的纸张",
