@@ -78,10 +78,6 @@ public class EffectShowCategory extends Effect {
         buffer.writeResourceLocation(cate);
     }
 
-    @Override
-    public int getIntID() {
-        return 6;
-    }
 
     @Override
     public FHIcon getDefaultIcon() {

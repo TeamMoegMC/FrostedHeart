@@ -105,11 +105,6 @@ public class EffectStats extends Effect {
     }
 
     @Override
-    public int getIntID() {
-        return 4;
-    }
-
-    @Override
     public FHIcon getDefaultIcon() {
         return addIcon;
     }

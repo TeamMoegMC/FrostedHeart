@@ -53,21 +53,18 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     public MechCalcTileEntity() {
         super(FHTileTypes.MECH_CALC.get());
     }
-
-    NetworkHolder network = new NetworkHolder();
     Direction last;
 
     public ActionResultType onClick(PlayerEntity pe) {
         if (!pe.world.isRemote) {
             currentPoints = (int) ResearchDataAPI.getData((ServerPlayerEntity) pe).doResearch(currentPoints);
             this.notifyUpdate();
+            requireNetworkUpdate();
         }
         return ActionResultType.func_233537_a_(pe.world.isRemote);
     }
 
-    public void drawEffect() {
-        world.getBlockState(pos);
-    }
+
 
     public Direction getDirection() {
         return this.getBlockState().get(BlockStateProperties.HORIZONTAL_FACING);
@@ -87,7 +84,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
         super.tick();
         if (!world.isRemote) {
             float spd = MathHelper.abs(super.getSpeed());
-            if (spd > 0 && spd <= 64 && currentPoints < maxPoints) {
+            if (spd > 0 && spd <= 64 && currentPoints <= maxPoints-20) {
                 process += spd;
                 int curact = process / 1067;
                 if (lastact != curact) {
@@ -99,7 +96,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
                     lastact = 0;
                     if (doProduct)
                         currentPoints += 20;
-                    this.needsSpeedUpdate();
+                    requireNetworkUpdate();
                 }
 
 
@@ -112,7 +109,9 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
             }
         }
     }
-
+    public void requireNetworkUpdate() {
+    	this.getOrCreateNetwork().updateStressFor(this,calculateStressApplied());
+    }
     @Override
     public float calculateStressApplied() {
         if (currentPoints < maxPoints && MathHelper.abs(super.getSpeed()) <= 64) {

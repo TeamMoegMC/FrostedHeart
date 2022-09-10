@@ -86,11 +86,6 @@ public class EffectUse extends Effect {
     }
 
     @Override
-    public int getIntID() {
-        return 5;
-    }
-
-    @Override
     public FHIcon getDefaultIcon() {
         return FHIcons.getIcon(FHIcons.getIcon(blocks.toArray(new Block[0])), FHIcons.getIcon(TechIcons.HAND));
     }

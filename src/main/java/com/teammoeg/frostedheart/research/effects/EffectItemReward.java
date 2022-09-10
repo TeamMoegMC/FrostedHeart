@@ -87,11 +87,6 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public int getIntID() {
-        return 3;
-    }
-
-    @Override
     public FHIcon getDefaultIcon() {
         if (rewards.size() != 0) {
             return FHIcons.getStackIcons(rewards);

@@ -158,11 +158,6 @@ public class EffectCrafting extends Effect {
     }
 
     @Override
-    public int getIntID() {
-        return 2;
-    }
-
-    @Override
     public FHIcon getDefaultIcon() {
         if (item != null)
             return FHIcons.getIcon(FHIcons.getIcon(item), FHIcons.getIcon(Items.CRAFTING_TABLE));

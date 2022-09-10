@@ -90,10 +90,7 @@ public class EffectBuilding extends Effect {
         buffer.writeResourceLocation(multiblock.getUniqueName());
     }
 
-    @Override
-    public int getIntID() {
-        return 1;
-    }
+
 
     @Override
     public FHIcon getDefaultIcon() {

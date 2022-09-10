@@ -244,12 +244,6 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      */
     public abstract String getId();
 
-    /**
-     * Get int ID Type for this type of effect.
-     * Must be unique and constant, this is use for network sync. Must match the register order in {@link Effects#register(String, java.util.function.Function, java.util.function.Function)}
-     * @return int ID<br>
-     */
-    public abstract int getIntID();
 
     /**
      * Serialize.<br>
@@ -279,7 +273,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      */
     @Override
     public void write(PacketBuffer buffer) {
-        buffer.writeVarInt(getIntID());
+        Effects.writeId(this, buffer);
         buffer.writeString(name);
         SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
         SerializeUtil.writeOptional(buffer, icon, FHIcon::write);
