@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
+import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.Researches;
@@ -41,6 +42,8 @@ import com.teammoeg.frostedheart.util.*;
 import com.teammoeg.frostedheart.world.FHBiomes;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
+
+import dev.ftb.mods.ftbteams.event.TeamEvent;
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -128,6 +131,7 @@ public class FHMain {
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
+        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
 //        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);

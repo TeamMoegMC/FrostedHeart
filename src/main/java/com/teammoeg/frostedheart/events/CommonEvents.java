@@ -56,6 +56,7 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
 import net.minecraft.block.*;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
