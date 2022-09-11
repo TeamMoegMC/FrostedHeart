@@ -137,7 +137,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();
-        if (name.length() > 0 && !name.equals("@"))
+        if (name.length() > 0)
             jo.addProperty("name", name);
         if (!desc.isEmpty())
             jo.add("desc", SerializeUtil.toJsonStringList(desc, e -> e));
