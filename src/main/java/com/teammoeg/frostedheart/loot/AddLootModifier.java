@@ -27,7 +27,6 @@ public class AddLootModifier extends LootModifier {
     	LootTable loot=context.getLootTable(lt);
     	if(context.addLootTable(loot)) {
     		generatedLoot.addAll(loot.generate(context));
-    		context.removeLootTable(loot);
     	}
         return generatedLoot;
     }
