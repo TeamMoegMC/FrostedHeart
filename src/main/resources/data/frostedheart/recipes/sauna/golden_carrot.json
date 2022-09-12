@@ -3,10 +3,10 @@
   "input": {
     "item": "minecraft:golden_carrot"
   },
-  "time": 400,
+  "time": 2000,
   "effect": {
-    "id": "minecraft:absorption",
-    "duration": 200,
+    "id": "minecraft:night_vision",
+    "duration": 4000,
     "amplifier": 0
   }
 }

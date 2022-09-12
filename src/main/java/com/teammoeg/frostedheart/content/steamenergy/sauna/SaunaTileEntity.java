@@ -52,7 +52,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     private static final float POWER_CAP = 400;
     private static final float REFILL_THRESHOLD = 200;
-    private static final int RANGE = 3;
+    private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
     private static final Direction[] HORIZONTALS =
             new Direction[] { Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH };
@@ -262,19 +262,24 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             return;
         }
         // add wet effect
-        if (world.getGameTime() % 80L == 0L) {
-            p.addPotionEffect(new EffectInstance(FHEffects.WET, effectDuration, 0, true, false));
+        if (world.getGameTime() % 200L == 0L) {
+            p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));
+        }
+        // add sauna effect
+        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA)) {
+            // initial reward
+            EnergyCore.addEnergy(p, 1000);
+            // whole day reward
+            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA, 23000, 0, true, false));
         }
         // add temperature
-        // TODO: find a way to update body temperature without explicitly setting
         float lenvtemp = TemperatureCore.getEnvTemperature(p);//get a smooth change in display
-        TemperatureCore.setTemperature(p, 37, 65 *.2f+lenvtemp*.8f);
+        float lbodytemp = TemperatureCore.getBodyTemperature(p);
+        TemperatureCore.setTemperature(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
+        // add medical effect
         if (hasMedicine() && remainTime == 1) {
             p.addPotionEffect(getEffectInstance());
         }
-        // add player inspiration recovery speed
-        // TODO: add limit
-        EnergyCore.addEnergy(p, 1);
     }
 
     private boolean dist(BlockPos crn, BlockPos orig) {

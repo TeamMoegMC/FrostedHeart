@@ -23,6 +23,7 @@ import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import mezz.jei.api.constants.VanillaTypes;
@@ -33,12 +34,16 @@ import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Effect;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "sauna");
@@ -70,12 +75,11 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     public void draw(SaunaRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
         AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
-
-
         AllGuiTextures.JEI_SHADOW.draw(transform, 72 - 17, 42 + 13);
 
-        AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 112, 30);
-        AllGuiTextures.JEI_SLOT.draw(transform, 117, 47);
+//        AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 112, 30);
+//        AllGuiTextures.JEI_SLOT.draw(transform, 117, 47);
+
         sauna.draw(transform, 72, 42);
     }
 
@@ -101,5 +105,19 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
         itemStacks.init(0, true, 43, 4);
 //        itemStacks.init(1, false, 117, 47);
         itemStacks.set(ingredients);
+    }
+
+    @Override
+    public List<ITextComponent> getTooltipStrings(SaunaRecipe recipe, double mouseX, double mouseY) {
+        List<ITextComponent> tooltip = new ArrayList<>();
+        if (isMouseIn(mouseX, mouseY, 43+18, 4+18, 36, 36)) {
+            tooltip.add(recipe.effect.getDisplayName());
+        }
+        return tooltip;
+    }
+
+    public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
+        return mouseX >= x && mouseY >= y
+                && mouseX < x + w && mouseY < y + h;
     }
 }

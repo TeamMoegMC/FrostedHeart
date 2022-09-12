@@ -3,10 +3,10 @@
   "input": {
     "item": "minecraft:rabbit_foot"
   },
-  "time": 400,
+  "time": 2000,
   "effect": {
     "id": "minecraft:jump_boost",
-    "duration": 200,
+    "duration": 4000,
     "amplifier": 0
   }
 }
