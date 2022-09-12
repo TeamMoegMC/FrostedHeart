@@ -2,11 +2,14 @@ package com.teammoeg.frostedheart.research;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+
+import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.*;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -215,6 +218,16 @@ public class ResearchListeners {
             for (Clue c : cur.orElse(null).getClues())
                 if (c instanceof ItemClue)
                     i.shrink(((ItemClue) c).test(trd, i));
+        if(!i.isEmpty()&&i.getCount()>0) {
+        	for(InspireRecipe ir:InspireRecipe.recipes) {
+        		if(ir.item.test(i)) {
+        			i.shrink(1);
+        			EnergyCore.addPersistentEnergy(s, ir.inspire);
+        			return;
+        		}
+        	}
+        		
+        }
     }
 
     public static int fetchGameLevel(ServerPlayerEntity s) {

@@ -12,9 +12,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
 
 public class RecipeModifyDamage extends ShapelessRecipe {
-	Ingredient tool;
-	Ingredient repair;
-	int modify;
+	public final Ingredient tool;
+	public final Ingredient repair;
+	public final int modify;
 	public static RegistryObject<IERecipeSerializer<RecipeModifyDamage>> SERIALIZER;
 	public RecipeModifyDamage(ResourceLocation idIn, Ingredient torepair, Ingredient material,int mod) {
 		super(idIn, "", torepair.getMatchingStacks()[0], NonNullList.from(Ingredient.EMPTY, torepair, material));

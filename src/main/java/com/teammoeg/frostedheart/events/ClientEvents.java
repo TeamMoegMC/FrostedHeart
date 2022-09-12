@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.*;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
@@ -276,6 +277,12 @@ public class ClientEvents {
 		Item i = stack.getItem();
 		ITempAdjustFood itf = null;
 		IWarmKeepingEquipment iwe = null;
+		for(InspireRecipe ir:InspireRecipe.recipes) {
+			if(ir.item.test(stack)) {
+				event.getToolTip().add(GuiUtils.translateTooltip("inspire_item"));
+				break;
+			}
+		}
 		float tspeed = (float) (double) FHConfig.SERVER.tempSpeed.get();
 		if (i instanceof ITempAdjustFood) {
 			itf = (ITempAdjustFood) i;

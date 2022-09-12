@@ -115,6 +115,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .filter(iRecipe -> iRecipe.getClass() == DietValueRecipe.class)
                 .map(e -> (DietValueRecipe) e)
                 .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
+        InspireRecipe.recipes=filterRecipes(recipes, InspireRecipe.class, InspireRecipe.TYPE).values().stream().collect(Collectors.toList());
         PaperRecipe.recipes = filterRecipes(recipes, PaperRecipe.class, PaperRecipe.TYPE).values().stream().collect(Collectors.toList());
     }
 

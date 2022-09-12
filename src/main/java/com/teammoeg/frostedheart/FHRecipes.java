@@ -34,6 +34,7 @@ public class FHRecipes {
         IncubateRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("incubate", IncubateRecipeSerializer::new);
         PaperRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("paper", PaperSerializer::new);
         RecipeModifyDamage.SERIALIZER=RECIPE_SERIALIZERS.register("modify_damage", DamageModifySerializer::new);
+        InspireRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("inspire",InspireSerializer::new);
     }
 
     public static void registerRecipeTypes() {
@@ -43,5 +44,6 @@ public class FHRecipes {
         DietValueRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":diet_override");
         IncubateRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":incubate");
         PaperRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":paper");
+        InspireRecipe.TYPE=IRecipeType.register(FHMain.MODID + ":inspire");
     }
 }
