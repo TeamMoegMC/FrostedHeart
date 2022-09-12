@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.loot;
 import com.google.gson.JsonObject;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootTable;
 import net.minecraft.loot.conditions.ILootCondition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
@@ -14,7 +15,7 @@ public class AddLootModifier extends LootModifier {
 
 
     ResourceLocation lt;
-
+    
     private AddLootModifier(ILootCondition[] conditionsIn,ResourceLocation lt) {
         super(conditionsIn);
         this.lt=lt;
@@ -23,7 +24,10 @@ public class AddLootModifier extends LootModifier {
     @Nonnull
     @Override
     protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
-    	generatedLoot.addAll(context.getLootTable(lt).generate(context));
+    	LootTable loot=context.getLootTable(lt);
+    	if(context.addLootTable(loot))
+    		generatedLoot.addAll(loot.generate(context));
+    	
         return generatedLoot;
     }
 
