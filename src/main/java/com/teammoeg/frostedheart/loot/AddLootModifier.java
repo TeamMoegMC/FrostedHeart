@@ -15,7 +15,7 @@ public class AddLootModifier extends LootModifier {
 
 
     ResourceLocation lt;
-    
+    boolean isAdding;
     private AddLootModifier(ILootCondition[] conditionsIn,ResourceLocation lt) {
         super(conditionsIn);
         this.lt=lt;
@@ -25,9 +25,17 @@ public class AddLootModifier extends LootModifier {
     @Override
     protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
     	LootTable loot=context.getLootTable(lt);
-    	if(context.addLootTable(loot)) {
-    		generatedLoot.addAll(loot.generate(context));
+    	//if(context.addLootTable(loot)) {
+    	if(!isAdding) {
+	    	try {
+	    		isAdding=true;
+	    		List<ItemStack> nl=loot.generate(context);
+	    		generatedLoot.addAll(nl);
+	    	}finally {
+	    		isAdding=false;
+	    	}
     	}
+    	//}
         return generatedLoot;
     }
 
