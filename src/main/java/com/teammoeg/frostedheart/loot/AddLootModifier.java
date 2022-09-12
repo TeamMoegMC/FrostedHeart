@@ -25,9 +25,10 @@ public class AddLootModifier extends LootModifier {
     @Override
     protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
     	LootTable loot=context.getLootTable(lt);
-    	if(context.addLootTable(loot))
+    	if(context.addLootTable(loot)) {
     		generatedLoot.addAll(loot.generate(context));
-    	
+    		context.removeLootTable(loot);
+    	}
         return generatedLoot;
     }
 
