@@ -80,13 +80,14 @@ public class EnergyCore {
             n = 1 + 0.8 * (n - 1);
             //System.out.println(m);
             //System.out.println(dietValue);
-            double nenergy=(0.3934f * (1 - tenergy / m) * tenergy + 1.3493f * (dietValue - 0.4) * tenergy) / 1200;
+            double nenergy=(0.3934f * (1 - tenergy / m) + 1.3493f * (dietValue - 0.4))*tenergy / 1200;
             //System.out.println(nenergy);
             if(tenergy*2<M&&nenergy<=5) {
             	player.addPotionEffect(new EffectInstance(FHEffects.SAD,200));
             }
             double dtenergy = nenergy/n;
-            
+            if(tenergy<13500)
+            	dtenergy=Math.max(dtenergy,1);
             if (dtenergy > 0 || tenergy > 15000) {
             	adenergy += dtenergy;
                 double frac = MathHelper.frac(dtenergy);
