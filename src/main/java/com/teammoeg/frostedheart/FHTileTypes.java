@@ -10,6 +10,7 @@ import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
 import net.minecraft.block.Block;
@@ -64,7 +65,10 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<MechCalcTileEntity>> MECH_CALC = REGISTER.register(
             "mechanical_calculator", makeType(MechCalcTileEntity::new, () -> FHBlocks.mech_calc)
     );
-    ;
+
+    public static final RegistryObject<TileEntityType<SaunaTileEntity>> SAUNA = REGISTER.register(
+            "sauna", makeType(SaunaTileEntity::new, () -> FHBlocks.sauna)
+    );
 
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));

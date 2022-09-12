@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:sauna",
+  "input": {
+    "item": "minecraft:sugar_cane"
+  },
+  "time": 2000,
+  "effect": {
+    "id": "minecraft:speed",
+    "duration": 4000,
+    "amplifier": 0
+  }
+}
