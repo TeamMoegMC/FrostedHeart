@@ -279,7 +279,7 @@ public class ClientEvents {
 		IWarmKeepingEquipment iwe = null;
 		for(InspireRecipe ir:InspireRecipe.recipes) {
 			if(ir.item.test(stack)) {
-				event.getToolTip().add(GuiUtils.translateTooltip("inspire_item"));
+				event.getToolTip().add(GuiUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
 				break;
 			}
 		}
