@@ -47,6 +47,10 @@ public class TemperatureCore {
 
 	public static final String DATA_ID = FHMain.MODID + ":data";
 
+	/**
+	 * On the basis of 37 celsius degree.
+	 * Example: return -1 when body temp is 36C.
+	 */
 	public static float getBodyTemperature(PlayerEntity spe) {
 		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
 		if (nc == null)
@@ -61,6 +65,10 @@ public class TemperatureCore {
 		return nc.getFloat("lasttemperature");
 	}
 
+	/**
+	 * On the basis of 0 celsius degree.
+	 * Example: return -20 when env temp is -20C.
+	 */
 	public static float getEnvTemperature(PlayerEntity spe) {
 		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
 		if (nc == null)
@@ -84,6 +92,14 @@ public class TemperatureCore {
 		if (nc == null)
 			nc = new CompoundNBT();
 		nc.putFloat("bodytemperature", val);
+		spe.getPersistentData().put(DATA_ID, nc);
+	}
+
+	public static void setEnvTemperature(PlayerEntity spe, float val) {
+		CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+		if (nc == null)
+			nc = new CompoundNBT();
+		nc.putFloat("envtemperature", val);
 		spe.getPersistentData().put(DATA_ID, nc);
 	}
 

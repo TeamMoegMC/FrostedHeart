@@ -1,0 +1,12 @@
+{
+  "type": "frostedheart:sauna",
+  "input": {
+    "item": "minecraft:golden_carrot"
+  },
+  "time": 2000,
+  "effect": {
+    "id": "minecraft:night_vision",
+    "duration": 4000,
+    "amplifier": 0
+  }
+}

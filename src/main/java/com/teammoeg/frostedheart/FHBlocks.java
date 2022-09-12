@@ -13,6 +13,7 @@ import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
+import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
 import net.minecraft.block.Block;
@@ -89,6 +90,13 @@ public class FHBlocks {
             ,FHBlockItem::new);*/
     public static Block mech_calc = new MechCalcBlock("mechanical_calculator", Block.Properties
             .create(Material.IRON)
+            .sound(SoundType.METAL)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(2, 10)
+            .notSolid(), FHBlockItem::new);
+    public static Block sauna = new SaunaBlock("sauna_vent", Block.Properties
+            .create(Material.ROCK)
             .sound(SoundType.METAL)
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)

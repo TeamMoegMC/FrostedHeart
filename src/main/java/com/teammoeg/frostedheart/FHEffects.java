@@ -43,6 +43,9 @@ public class FHEffects {
     });
     public static final Effect SAD = register("lethargic", new BaseEffect(EffectType.NEUTRAL, 816760296) {
     });
+    public static final Effect SAUNA = register("sauna", new SaunaEffect(EffectType.BENEFICIAL, 816760296) {
+    });
+
     public static void registerAll(IForgeRegistry<Effect> registry) {
         for (Effect effect : EFFECTS) {
             registry.register(effect);
