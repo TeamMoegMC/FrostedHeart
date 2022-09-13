@@ -531,6 +531,8 @@ public class CommonEvents {
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                         new FHClimatePacket(cap));
             });
+            //System.out.println("=x-x=");
+            //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
         }
     }
 

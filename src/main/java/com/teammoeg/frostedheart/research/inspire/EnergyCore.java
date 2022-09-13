@@ -45,12 +45,13 @@ public class EnergyCore {
     public static void dT(ServerPlayerEntity player) {
         //System.out.println("dt");
         CompoundNBT data = TemperatureCore.getFHData(player);
-        long tenergy = data.getLong("energy");
-        if (tenergy < 10000) tenergy = 10000;
+        long oenergy=data.getLong("energy");
+        final long tenergy = oenergy+10000;
         double utbody = data.getDouble("utbody");
         long tsls = data.getLong("lastsleep");
         tsls++;
         data.putLong("lastsleep", tsls);
+        int adenergy=0;
         boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA) != null;
         if (!isBodyNotWell) {
             double m;
@@ -79,22 +80,23 @@ public class EnergyCore {
             n = 1 + 0.8 * (n - 1);
             //System.out.println(m);
             //System.out.println(dietValue);
-            double nenergy=(0.3934f * (1 - tenergy / m) * tenergy + 1.3493f * (dietValue - 0.4) * tenergy) / 1200;
+            double nenergy=(0.3934f * (1 - tenergy / m) + 1.3493f * (dietValue - 0.4))*tenergy / 1200;
             //System.out.println(nenergy);
             if(tenergy*2<M&&nenergy<=5) {
             	player.addPotionEffect(new EffectInstance(FHEffects.SAD,200));
             }
             double dtenergy = nenergy/n;
-            
+            if(tenergy<13500)
+            	dtenergy=Math.max(dtenergy,1);
             if (dtenergy > 0 || tenergy > 15000) {
-                tenergy += dtenergy;
+            	adenergy += dtenergy;
                 double frac = MathHelper.frac(dtenergy);
                 if (frac > 0 && Math.random() < frac)
-                    tenergy++;
+                	adenergy++;
 
             }
         }
-        data.putLong("energy", tenergy);
+        data.putLong("energy",oenergy+adenergy);
         TemperatureCore.setFHData(player, data);
     }
 
@@ -158,17 +160,20 @@ public class EnergyCore {
         if (player.abilities.isCreativeMode) return true;
         CompoundNBT data = TemperatureCore.getFHData(player);
         long energy = data.getLong("energy");
-        if (energy - 10000 > val) {
+        if (energy  >= val) {
             energy -= val;
             data.putLong("energy", energy);
             TemperatureCore.setFHData(player, data);
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
         }
+        
         long penergy = data.getLong("penergy");
-        if (penergy >= val) {
+        if (penergy +energy>= val) {
+        	val-=energy;
             penergy -= val;
             data.putLong("penergy", penergy);
+            data.putLong("energy", 0);
             TemperatureCore.setFHData(player, data);
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
@@ -195,11 +200,12 @@ public class EnergyCore {
     public static boolean hasEnoughEnergy(PlayerEntity player, int val) {
         if (player.abilities.isCreativeMode) return true;
         CompoundNBT data = TemperatureCore.getFHData(player);
-        return data.getLong("energy") > val + 10000 || data.getLong("penergy") >= val;
+        long touse=data.getLong("energy")+data.getLong("penergy");
+        return touse >= val;
     }
     public static long getEnergy(PlayerEntity player) {
         CompoundNBT data = TemperatureCore.getFHData(player);
-        return data.getLong("energy")-10000;
+        return data.getLong("energy");
     }
     public static void reportEnergy(PlayerEntity player) {
         CompoundNBT data = TemperatureCore.getFHData(player);

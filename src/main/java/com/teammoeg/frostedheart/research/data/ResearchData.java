@@ -47,6 +47,8 @@ public class ResearchData {
         for (Clue ac : r.getClues())
             if (ac.isCompleted(parent))
                 contribution += ac.getResearchContribution();
+        if(contribution>=0.98)
+        	return r.getRequiredPoints();
         currentProgress += contribution * r.getRequiredPoints();
         return currentProgress;
     }
