@@ -129,6 +129,7 @@ public class FHResearch {
         Research unl = null;
         for (Research r : all) {
             if (r.getCategory() != cate) continue;
+            if(r.isHidden)continue;
             if (r.isCompleted() && unl == null) unl = r;
             else if (r.isUnlocked()) return r;
         }

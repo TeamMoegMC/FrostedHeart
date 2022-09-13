@@ -70,7 +70,7 @@ public class EnergyCore {
             if (tdv != 0)
                 dietValue /= tdv;
             if (utbody != 0) {
-                double t = MathHelper.clamp(tsls, 1, Integer.MAX_VALUE) / 1200d;
+                double t = MathHelper.clamp(((int)tsls), 1, Integer.MAX_VALUE) / 1200d;
                 //System.out.println(t);
                 m = (utbody / (t * t * t * t * t * t + utbody * 2) + 0.5) * M;
             } else {

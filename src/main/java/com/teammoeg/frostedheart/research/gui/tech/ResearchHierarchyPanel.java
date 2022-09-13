@@ -300,7 +300,7 @@ public class ResearchHierarchyPanel extends Panel {
 
         @Override
         public void onClicked(MouseButton mouseButton) {
-        	if(research.isUnlocked()||FHResearch.isEditor())
+        	if((research.isUnlocked()&&!research.isHidden())||FHResearch.isEditor())
         		this.researchScreen.detailframe.open(research);
             // this.researchScreen.refreshWidgets();
         }

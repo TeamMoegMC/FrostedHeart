@@ -432,7 +432,9 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
         return false;
     }
-    
+    public boolean isHidden() {
+    	return isHidden;
+    }
     public void setCategory(ResearchCategory category) {
         this.category = category;
     }
