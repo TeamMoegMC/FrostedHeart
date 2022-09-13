@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
-import com.teammoeg.frostedheart.command.GenSC;
+import com.teammoeg.frostedheart.command.DebugCommand;
 import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -672,6 +672,6 @@ public class CommonEvents {
         AddTempCommand.register(dispatcher);
         ResearchCommand.register(dispatcher);
         ClimateCommand.register(dispatcher);
-		GenSC.register(dispatcher);
+		DebugCommand.register(dispatcher);
     }
 }
