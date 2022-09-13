@@ -62,18 +62,19 @@ public class DebugCommand {
                 		JsonObject jo=new JsonObject();
                 		jo.addProperty("title", e.getTitle().getString());
                 		jo.addProperty("subtitle", e.getSubtitle().getString());
+                		jo.addProperty("chapter", e.getQuestChapter().getTitle().getString());
                 		JsonArray dec=new JsonArray();
                 		for(ITextComponent it:e.getDescription()) {
                 			dec.add(it.getString());
                 		}
                 		jo.add("description", dec);
                 		JsonArray fow=new JsonArray();
-                		for(QuestObject qo:e.getDependants()) {
+                		for(QuestObject qo:e.dependencies) {
                 			fow.add(qo.getTitle().getString());
                 		}
                 		jo.add("parents", fow);
                 		JsonArray chi=new JsonArray();
-                		for(QuestObject qo:e.getChildren()) {
+                		for(QuestObject qo:e.getDependants()) {
                 			chi.add(qo.getTitle().getString());
                 		}
                 		jo.add("children",chi);
