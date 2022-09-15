@@ -88,9 +88,5 @@ public class KillClue extends ListenerClue {
     }
 
 
-    @Override
-    public int getIntType() {
-        return 3;
-    }
 
 }

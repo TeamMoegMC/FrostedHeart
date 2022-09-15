@@ -238,14 +238,6 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     public abstract List<ITextComponent> getDefaultTooltip();
 
     /**
-     * Get id.
-     *
-     * @return id<br>
-     */
-    public abstract String getId();
-
-
-    /**
      * Serialize.<br>
      *
      * @return returns serialize
@@ -253,7 +245,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     @Override
     public JsonObject serialize() {
         JsonObject jo = new JsonObject();
-        jo.addProperty("type", getId());
+        Effects.writeType(this, jo);
         if (!name.isEmpty())
             jo.addProperty("name", name);
         if (!tooltip.isEmpty())

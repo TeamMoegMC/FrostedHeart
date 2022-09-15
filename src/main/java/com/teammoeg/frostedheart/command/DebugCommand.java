@@ -37,6 +37,7 @@ import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.QuestObject;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
+import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.RenderHelper;
@@ -81,19 +82,17 @@ public class DebugCommand {
                 		JsonArray tsk=new JsonArray();
                 		
                 		for(Task t:e.tasks) {
-                			JsonObject task=new JsonObject();
-                			task.addProperty("title", t.getTitle().getString());
-                
-                			task.addProperty("type",t.getObjectType().ordinal());
-                			tsk.add(task);
+                			String out="";
+                			if(t instanceof CheckmarkTask) {
+                				out="√ "+t.getTitle().getString();
+                			}else
+                				out=t.getTitle().getString();
+                			tsk.add(out);
                 		}
                 		jo.add("tasks", tsk);
                 		JsonArray rwd=new JsonArray();
-                		for(Reward t:e.rewards) {
-                			JsonObject task=new JsonObject();
-                			task.addProperty("title", t.getTitle().getString());
-                			task.addProperty("type",t.getObjectType().ordinal());
-                			rwd.add(task);
+                		for(Reward r:e.rewards) {
+                			rwd.add(r.getTitle().getString());
                 		}
                 		jo.add("rewards", rwd);
                 		

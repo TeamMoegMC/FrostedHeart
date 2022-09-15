@@ -87,11 +87,6 @@ public class ItemClue extends Clue {
     public void end(Team team) {
     }
 
-    @Override
-    public int getIntType() {
-        return 2;
-
-    }
 
     @Override
     public ITextComponent getDescription() {

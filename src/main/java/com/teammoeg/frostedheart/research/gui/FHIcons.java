@@ -7,6 +7,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.SerializerRegistry;
 import com.teammoeg.frostedheart.research.gui.editor.*;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
@@ -30,40 +31,42 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FHIcons {
+	
     public static abstract class FHIcon extends Icon implements Writeable, Cloneable {
         public FHIcon() {
             super();
         }
+        @Override
+        public void write(PacketBuffer buffer) {
+            serializers.writeId(buffer, this);
+        }
+        public JsonElement serialize() {
+        	JsonObject jo=new JsonObject();
+        	serializers.writeType(jo, this);
+        	return jo;
+        }
     }
-
+    private static SerializerRegistry<FHIcon> serializers=new SerializerRegistry<>();
     private static class FHNopIcon extends FHIcon {
         public static final FHNopIcon INSTANCE = new FHNopIcon();
-
         /**
          * @param e
          */
         public static FHNopIcon get(JsonElement e) {
             return INSTANCE;
         }
-
         /**
          * @param e
          */
         public static FHNopIcon get(PacketBuffer e) {
             return INSTANCE;
         }
-
         private FHNopIcon() {
         }
 
         @Override
         public JsonElement serialize() {
             return JsonNull.INSTANCE;
-        }
-
-        @Override
-        public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(0);
         }
 
         @Override
@@ -126,15 +129,14 @@ public class FHIcons {
         public JsonElement serialize() {
             JsonElement je = SerializeUtil.toJson(stack);
             if (je.isJsonPrimitive()) return je;
-            JsonObject jo = new JsonObject();
-            jo.addProperty("type", "item");
+            JsonObject jo = super.serialize().getAsJsonObject();
             jo.add("item", je);
             return jo;
         }
 
         @Override
         public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(1);
+            super.write(buffer);
             SerializeUtil.writeOptional2(buffer, stack, PacketBuffer::writeItemStack);
         }
 
@@ -179,8 +181,7 @@ public class FHIcons {
 
         @Override
         public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            jo.addProperty("type", "combined");
+            JsonObject jo = super.serialize().getAsJsonObject();
             jo.add("base", large.serialize());
             jo.add("small", small.serialize());
             return jo;
@@ -188,7 +189,7 @@ public class FHIcons {
 
         @Override
         public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(2);
+        	super.write(buffer);
             large.write(buffer);
             small.write(buffer);
         }
@@ -236,7 +237,7 @@ public class FHIcons {
 
         @Override
         public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(3);
+        	super.write(buffer);
             SerializeUtil.writeList(buffer, icons, FHIcon::write);
         }
     }
@@ -261,15 +262,14 @@ public class FHIcons {
 
         @Override
         public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            jo.addProperty("type", "ingredient");
+            JsonObject jo = super.serialize().getAsJsonObject();
             jo.add("ingredient", igd.serialize());
             return jo;
         }
 
         @Override
         public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(4);
+        	super.write(buffer);
             igd.write(buffer);
         }
     }
@@ -299,15 +299,14 @@ public class FHIcons {
 
         @Override
         public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            jo.addProperty("type", "texture");
+            JsonObject jo = super.serialize().getAsJsonObject();
             jo.addProperty("location", rl.toString());
             return jo;
         }
 
         @Override
         public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(5);
+        	super.write(buffer);
             buffer.writeResourceLocation(rl);
         }
     }
@@ -358,8 +357,7 @@ public class FHIcons {
 
         @Override
         public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            jo.addProperty("type", "texture_uv");
+            JsonObject jo = super.serialize().getAsJsonObject();
             jo.addProperty("location", rl.toString());
             jo.addProperty("x", x);
             jo.addProperty("y", y);
@@ -372,7 +370,7 @@ public class FHIcons {
 
         @Override
         public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(6);
+        	super.write(buffer);
             buffer.writeResourceLocation(rl);
             buffer.writeVarInt(x);
             buffer.writeVarInt(y);
@@ -443,15 +441,14 @@ public class FHIcons {
 
         @Override
         public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            jo.addProperty("type", "text");
+            JsonObject jo = super.serialize().getAsJsonObject();
             jo.addProperty("text", text);
             return jo;
         }
 
         @Override
         public void write(PacketBuffer buffer) {
-            buffer.writeVarInt(7);
+        	super.write(buffer);
             buffer.writeString(text);
         }
     }
@@ -638,26 +635,16 @@ public class FHIcons {
 
     }
 
-    public static final Map<String, Function<JsonElement, FHIcon>> JsonIcon = new HashMap<>();
-    public static final List<Function<PacketBuffer, FHIcon>> BufferIcon = new ArrayList<>();
 
     static {
-        JsonIcon.put("nop", FHNopIcon::get);
-        JsonIcon.put("item", FHItemIcon::new);
-        JsonIcon.put("combined", FHCombinedIcon::new);
-        JsonIcon.put("animated", FHAnimatedIcon::new);
-        JsonIcon.put("ingredient", FHIngredientIcon::new);
-        JsonIcon.put("texture", FHTextureIcon::new);
-        JsonIcon.put("texture_uv", FHTextureUVIcon::new);
-        JsonIcon.put("text", FHTextIcon::new);
-        BufferIcon.add(FHNopIcon::get);
-        BufferIcon.add(FHItemIcon::new);
-        BufferIcon.add(FHCombinedIcon::new);
-        BufferIcon.add(FHAnimatedIcon::new);
-        BufferIcon.add(FHIngredientIcon::new);
-        BufferIcon.add(FHTextureIcon::new);
-        BufferIcon.add(FHTextureUVIcon::new);
-        BufferIcon.add(FHTextIcon::new);
+    	serializers.register(FHNopIcon.class,"nop", FHNopIcon::get,FHNopIcon::get);
+    	serializers.register(FHItemIcon.class,"item", FHItemIcon::new,FHItemIcon::new);
+    	serializers.register(FHCombinedIcon.class,"combined", FHCombinedIcon::new,FHCombinedIcon::new);
+    	serializers.register(FHAnimatedIcon.class,"animated", FHAnimatedIcon::new,FHAnimatedIcon::new);
+        serializers.register(FHIngredientIcon.class,"ingredient", FHIngredientIcon::new,FHIngredientIcon::new);
+        serializers.register(FHTextureIcon.class,"texture", FHTextureIcon::new,FHTextureIcon::new);
+        serializers.register(FHTextureUVIcon.class,"texture_uv", FHTextureUVIcon::new,FHTextureUVIcon::new);
+        serializers.register(FHTextIcon.class,"text", FHTextIcon::new,FHTextIcon::new);
     }
 
     public static FHIcon getIcon(ItemStack item) {
@@ -727,23 +714,15 @@ public class FHIcons {
         } else if (elm.isJsonObject()) {
             JsonObject jo = elm.getAsJsonObject();
             if (jo.has("type")) {
-                Function<JsonElement, FHIcon> func = JsonIcon.get(jo.get("type").getAsString());
-                if (func != null)
-                    return func.apply(elm);
-            } else {
-                return new FHItemIcon(jo);
+            	return serializers.deserializeOrDefault(jo,FHNopIcon.INSTANCE);
             }
+			return new FHItemIcon(jo);
         }
         return FHNopIcon.INSTANCE;
     }
 
     public static FHIcon readIcon(PacketBuffer elm) {
-        int type = elm.readVarInt();
-        Function<PacketBuffer, FHIcon> func = BufferIcon.get(type);
-        if (func != null)
-            return func.apply(elm);
-
-        return FHNopIcon.INSTANCE;
+        return serializers.readOrDefault(elm,FHNopIcon.INSTANCE);
     }
 
     public static FHIcon nop() {

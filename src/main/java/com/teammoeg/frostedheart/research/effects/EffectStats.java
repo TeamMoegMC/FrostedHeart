@@ -81,10 +81,6 @@ public class EffectStats extends Effect {
         team.getVariants().putDouble(vars, var);
     }
 
-    @Override
-    public String getId() {
-        return "stats";
-    }
 
     @Override
     public JsonObject serialize() {

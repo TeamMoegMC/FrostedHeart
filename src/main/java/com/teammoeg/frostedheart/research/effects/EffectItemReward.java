@@ -68,10 +68,7 @@ public class EffectItemReward extends Effect {
 
     }
 
-    @Override
-    public String getId() {
-        return "item";
-    }
+
 
     @Override
     public JsonObject serialize() {

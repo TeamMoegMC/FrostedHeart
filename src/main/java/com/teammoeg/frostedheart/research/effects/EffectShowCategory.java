@@ -60,10 +60,7 @@ public class EffectShowCategory extends Effect {
     }
 
 
-    @Override
-    public String getId() {
-        return "category";
-    }
+
 
     @Override
     public JsonObject serialize() {

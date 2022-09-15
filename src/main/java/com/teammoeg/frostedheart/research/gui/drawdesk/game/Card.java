@@ -79,5 +79,14 @@ public class Card {
     public boolean isUnplacable() {
         return unplacable;
     }
+    public String toString() {
+    	switch(ct) {
+    	case NONE: return "";
+    	case SIMPLE: return card==0?"*":String.valueOf(card-1);
+    	case PAIR: return card==0?"u":"v";
+    	case ADDING: return card==0?"+":String.valueOf('a'+card-1);
+    	}
+    	return "";
+    }
 
 }

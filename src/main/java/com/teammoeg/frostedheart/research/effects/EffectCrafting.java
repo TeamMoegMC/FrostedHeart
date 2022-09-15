@@ -127,10 +127,6 @@ public class EffectCrafting extends Effect {
         team.crafting.removeAll(unlocks);
     }
 
-    @Override
-    public String getId() {
-        return "recipe";
-    }
 
     @Override
     public JsonObject serialize() {

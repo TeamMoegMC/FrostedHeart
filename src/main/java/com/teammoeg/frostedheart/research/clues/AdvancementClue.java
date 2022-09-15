@@ -101,10 +101,6 @@ public class AdvancementClue extends TickListenerClue {
         buffer.writeString(criterion);
     }
 
-    @Override
-    public int getIntType() {
-        return 1;
-    }
 
 
 }

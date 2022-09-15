@@ -73,11 +73,6 @@ public class EffectBuilding extends Effect {
     }
 
     @Override
-    public String getId() {
-        return "multiblock";
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
         jo.addProperty("multiblock", multiblock.getUniqueName().toString());

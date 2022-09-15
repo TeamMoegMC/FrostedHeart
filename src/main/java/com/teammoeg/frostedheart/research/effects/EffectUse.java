@@ -68,11 +68,6 @@ public class EffectUse extends Effect {
 
 
     @Override
-    public String getId() {
-        return "use";
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
         jo.add("blocks", SerializeUtil.toJsonStringList(blocks, Block::getRegistryName));

@@ -39,10 +39,6 @@ public class MinigameClue extends CustomClue {
         return "game";
     }
 
-    @Override
-    public int getIntType() {
-        return 4;
-    }
 
     @Override
     public JsonObject serialize() {

@@ -160,7 +160,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 
     @Override
     public void write(PacketBuffer buffer) {
-        buffer.writeVarInt(getIntType());
+        Clues.writeId(this, buffer);
         buffer.writeString(name);
         buffer.writeString(desc);
         buffer.writeString(hint);
@@ -168,7 +168,6 @@ public abstract class Clue extends AutoIDItem implements Writeable {
         buffer.writeString(nonce);
     }
 
-    public abstract int getIntType();
 
     @Override
     public final String getType() {

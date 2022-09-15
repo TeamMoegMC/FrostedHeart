@@ -1,44 +1,35 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.research.SerializerRegistry;
 import net.minecraft.network.PacketBuffer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 public class Clues {
-
+	private static SerializerRegistry<Clue> registry=new SerializerRegistry<>();
     private Clues() {
     }
 
-    private static Map<String, Function<JsonObject, Clue>> fromJson = new HashMap<>();
-    private static List<Function<PacketBuffer, Clue>> fromPacket = new ArrayList<>();
 
-    public static void register(String id, Function<JsonObject, Clue> j, Function<PacketBuffer, Clue> p) {
-        fromJson.put(id, j);
-        fromPacket.add(p);
+    public static void register(Class<? extends Clue> cls,String id, Function<JsonObject, Clue> j, Function<PacketBuffer, Clue> p) {
+    	registry.register(cls,id,j,p);
     }
 
     static {
-        register("custom", CustomClue::new, CustomClue::new);
-        register("advancement", AdvancementClue::new, AdvancementClue::new);
-        register("item", ItemClue::new, ItemClue::new);
-        register("kill", KillClue::new, KillClue::new);
-        register("game", MinigameClue::new, MinigameClue::new);
+        register(CustomClue.class,"custom", CustomClue::new, CustomClue::new);
+        register(AdvancementClue.class,"advancement", AdvancementClue::new, AdvancementClue::new);
+        register(ItemClue.class,"item", ItemClue::new, ItemClue::new);
+        register(KillClue.class,"kill", KillClue::new, KillClue::new);
+        register(MinigameClue.class,"game", MinigameClue::new, MinigameClue::new);
     }
-
+    public static void writeId(Clue e,PacketBuffer pb) {
+    	registry.writeId(pb, e);
+    }
     public static Clue read(PacketBuffer pb) {
-        return fromPacket.get(pb.readVarInt()).apply(pb);
+    	return registry.read(pb);
     }
-
-    ;
-
     public static Clue read(JsonObject jo) {
-        return fromJson.get(jo.get("type").getAsString()).apply(jo);
+        return registry.deserialize(jo);
     }
-
-    ;
 }
