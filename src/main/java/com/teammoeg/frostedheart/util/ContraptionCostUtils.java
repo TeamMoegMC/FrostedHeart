@@ -35,8 +35,9 @@ public class ContraptionCostUtils {
         float movecost = 0;
         for (BlockInfo bi : cont.getBlocks().values()) {
             double dX = bi.pos.getX();
-            double dY = bi.pos.getY();
-            double distance = Math.sqrt((dX * dX) + (dY * dY));
+            double dZ = bi.pos.getZ();
+            double dY=bi.pos.getY();
+            double distance = Math.sqrt((dX * dX) + (dZ * dZ)+(dY * dY));
             try {
                 if (bi.state.getCollisionShape(cont.getContraptionWorld(), bi.pos) != VoxelShapes.empty()) {
                     movecost += 0.125F * 2.56F * distance;
