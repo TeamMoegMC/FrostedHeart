@@ -40,6 +40,7 @@ import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.util.*;
 import com.teammoeg.frostedheart.world.FHBiomes;
+import com.teammoeg.frostedheart.world.FHDimensions;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
 
@@ -173,6 +174,7 @@ public class FHMain {
 
         ClimateData.setup();
         FHBiomes.Biomes();
+        FHDimensions.register();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();
         TemperatureSimulator.init();
