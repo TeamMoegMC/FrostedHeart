@@ -1,6 +1,5 @@
 package com.teammoeg.frostedheart.util;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraftforge.fml.ModList;
@@ -14,7 +13,10 @@ import java.util.Scanner;
 
 public class FHRemote {
     public static class FHLocal extends FHRemote {
-        private void fromTLV() {
+        protected void fetch() {
+             doFetch();
+        }
+		private void fromTLV() {
             File vers = new File(FMLPaths.CONFIGDIR.get().toFile(), ".twrlastversion");//from twrlastvers
             if (vers.exists()) {
                 try {
@@ -75,7 +77,7 @@ public class FHRemote {
         fetch();
     }
 
-    private final void fetch() {
+    protected void fetch() {
         new Thread(() -> {
             doFetch();
         }).start();

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.ClueEditor;
+import com.teammoeg.frostedheart.research.clues.MinigameClue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectEditor;
 import com.teammoeg.frostedheart.research.gui.FHIcons.IconEditor;
@@ -49,6 +50,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         alt = LabeledSelection.createBool(this, "Show alt description before complete", r.showfdesc);
         hidden = LabeledSelection.createBool(this, "Hide this research in list", r.isHidden);
         locked = LabeledSelection.createBool(this, "Lock this research", r.isInCompletable());
+        
     }
 
 
@@ -92,6 +94,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         });
         add(name);
         add(pts);
+        add(new OpenEditorButton<>(this, "Edit minigame", ClueEditor.RESEARCH_GAME,r, s ->{}));
         add(new OpenEditorButton<>(this, "Set Icon", IconEditor.EDITOR, r.icon, r.icon, s -> r.icon = s));
         add(cat);
 

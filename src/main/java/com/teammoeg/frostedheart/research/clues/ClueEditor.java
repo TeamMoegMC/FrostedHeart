@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.research.clues;
 
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.editor.*;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -7,6 +8,7 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -25,6 +27,21 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     };
     public static final Editor<MinigameClue> GAME = (p, l, v, c) -> {
         new Minigame(p, l, v, c).open();
+    };
+    public static final Editor<Research> RESEARCH_GAME = (p, l, v, c) -> {
+    	MinigameClue ex=null;
+    	List<Clue> clues=v.getClues();
+    	for(Clue cl:clues) {
+    		if(cl instanceof MinigameClue) {
+    			ex=(MinigameClue) cl;
+    			break;
+    		}
+    	}
+    	final MinigameClue fex=ex;
+        new Minigame(p, l, ex,e->{
+        	if(fex==null)
+        		clues.add(e);
+        }).open();
     };
     public static final Editor<Clue> EDITOR = (p, l, v, c) -> {
         if (v == null) {
@@ -58,7 +75,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     protected LabeledTextBox desc;
     protected LabeledTextBox hint;
     protected RealBox cont;
-
+    protected  LabeledSelection<Boolean> req;
     public ClueEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
         super(panel);
 
@@ -74,6 +91,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         desc = new LabeledTextBox(this, "Description", e.desc);
         hint = new LabeledTextBox(this, "Hint", e.hint);
         cont = new RealBox(this, "Contribution(%)", e.contribution * 100);
+        req = LabeledSelection.createBool(this, "Required", e.required);
         this.cb = cb;
     }
 
@@ -90,6 +108,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         } else {
             e.nonce = nonce.getText();
         }
+        e.required=req.getSelection();
         cb.accept(e);
 
     }
@@ -102,6 +121,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         add(desc);
         add(hint);
         add(cont);
+        add(req);
     }
 
     private static class Item extends ClueEditor<ItemClue> {

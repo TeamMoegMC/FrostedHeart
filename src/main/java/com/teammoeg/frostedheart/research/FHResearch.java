@@ -104,7 +104,7 @@ public class FHResearch {
             
             if (r.isCompleted()) unlocked.add(r);
             else if (r.isUnlocked()) available.add(r);
-            else if(r.alwaysShow)showed.add(r);
+            else if(r.isShowable())showed.add(r);
             else locked.add(r);
         }
         

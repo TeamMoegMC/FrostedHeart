@@ -105,6 +105,7 @@ import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -368,10 +369,9 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getPlayer().isSneaking()) return;
         if (!ResearchListeners.canUseBlock(event.getPlayer(), event.getWorld().getBlockState(event.getHitVec().getPos()).getBlock())) {
-            event.setCanceled(true);
-            event.setCancellationResult(ActionResultType.FAIL);
+            event.setUseBlock(Result.DENY);
+            
             event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.cannot_use_block"), true);
         }
     }

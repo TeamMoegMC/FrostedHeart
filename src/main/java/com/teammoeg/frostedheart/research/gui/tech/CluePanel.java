@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
@@ -24,7 +25,7 @@ public class CluePanel extends Panel {
     TextField clueName;
     TextField desc;
     TextField contribute;
-
+    TextField rq;
     public CluePanel(Panel panel, Clue c, Research r) {
         super(panel);
         this.c = c;
@@ -43,6 +44,14 @@ public class CluePanel extends Panel {
             desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
             offset += desc.height + 2;
         }
+        if(c.isRequired()) {
+        	rq=new TextField(this)
+        			.setMaxWidth(width)
+                    .setText(GuiUtils.translateGui("research.required"))
+                    .setColor(TechIcons.text_red);
+        	rq.setPos(0, offset);
+        	offset+=rq.height+2;
+        }
         contribute = new TextField(this)
                 .setMaxWidth(width)
                 .setText(new StringTextComponent("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
@@ -59,6 +68,8 @@ public class CluePanel extends Panel {
         add(clueName);
         if (desc != null)
             add(desc);
+        if(rq!=null)
+        	add(rq);
         add(contribute);
     }
 

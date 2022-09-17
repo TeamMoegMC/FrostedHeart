@@ -9,7 +9,6 @@ public class LabeledTextBox extends LabeledPane<TextBox> {
     public LabeledTextBox(Panel panel, String lab, String txt) {
         super(panel, lab);
         obj = new TextBox(this);
-
         obj.allowInput();
         if (txt == null) txt = "";
         obj.setText(txt);

@@ -78,17 +78,19 @@ public class ResearchInfoPanel extends Panel {
             add(prl);
         }
         if (!researchData.canResearch()) {
-            // commit items button
-            Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.commit_material_and_start"),
-                    Icon.EMPTY) {
-                @Override
-                public void onClicked(MouseButton mouseButton) {
-                    PacketHandler.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
-                }
-            };
-            panels.add(commitItems);
-
-            add(commitItems);
+        	if(researchData.isUnlocked()) {
+	            // commit items button
+	            Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.commit_material_and_start"),
+	                    Icon.EMPTY) {
+	                @Override
+	                public void onClicked(MouseButton mouseButton) {
+	                    PacketHandler.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
+	                }
+	            };
+	            panels.add(commitItems);
+	
+	            add(commitItems);
+        	}
         } else if (researchData.isInProgress()) {
             // commit items button
             Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.stop"), Icon.EMPTY) {
@@ -188,8 +190,14 @@ public class ResearchInfoPanel extends Panel {
         if (!detailPanel.research.getClues().isEmpty()) {
             FramedPanel pcl = new FramedPanel(this, fp -> {
                 int offset = 1;
-
-                for (Clue clue : detailPanel.research.getClues()) {
+                List<Clue> clues=new ArrayList<>();
+                int i=0;
+                for(Clue cl:detailPanel.research.getClues()) {
+                	if(cl.isRequired()&&!cl.isCompleted()) 
+                		clues.add(i++, cl);
+                	else clues.add(cl);
+                }
+                for (Clue clue : clues) {
                     CluePanel cl = new CluePanel(fp, clue, detailPanel.research);
                     cl.setY(offset);
                     cl.setWidth(width - 5);

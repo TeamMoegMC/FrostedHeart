@@ -61,12 +61,26 @@ public class ResearchData {
         checkComplete();
         return pts - tocommit;
     }
-
+    public boolean canComplete() {
+    	for(Clue cl:getResearch().getClues()) {
+        	if(cl.isRequired()&&!cl.isCompleted(parent)) {
+        		return false;
+        	}
+        }
+    	return true;
+    }
     public void checkComplete() {
         if (finished)
             return;
         Research r = getResearch();
-        if (getTotalCommitted() >= r.getRequiredPoints()) {
+        boolean flag=true;
+        for(Clue cl:r.getClues()) {
+        	if(cl.isRequired()&&!cl.isCompleted(parent)) {
+        		flag=false;
+        		break;
+        	}
+        }
+        if (getTotalCommitted() >= r.getRequiredPoints()&&flag) {
             setFinished(true);
             this.announceCompletion();
 
