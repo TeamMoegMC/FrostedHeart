@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.mixin.rankine;
 
 import com.cannolicatfish.rankine.world.trees.EasternHemlockTree;
 import com.cannolicatfish.rankine.world.trees.PinyonPineTree;
+import com.cannolicatfish.rankine.world.trees.WesternHemlockTree;
 import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.trees.Tree;
@@ -12,7 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.Random;
 
-@Mixin({PinyonPineTree.class, EasternHemlockTree.class})
+@Mixin({PinyonPineTree.class, EasternHemlockTree.class,WesternHemlockTree.class})
 public abstract class MixinLargeTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
