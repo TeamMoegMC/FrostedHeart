@@ -57,6 +57,7 @@ public class FHResearchRegistrtySyncPacket {
             FHResearch.load(data);
             Researches.initFromPacket(rss);
             DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
+            FHResearch.editor=false;
         });
         context.get().setPacketHandled(true);
     }
