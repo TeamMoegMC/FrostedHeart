@@ -177,9 +177,12 @@ public class JEICompat implements IModPlugin {
 		for (IRecipe<?> i : ResearchListeners.recipe) {
 			Set<ResourceLocation> hs = cates.remove(i.getClass());
 			Set<ResourceLocation> all = types.computeIfAbsent(i.getType(), d -> new HashSet<>());
+			if(i instanceof ICraftingRecipe&&i.getType()!=IRecipeType.CRAFTING)
+				all.addAll(types.computeIfAbsent(IRecipeType.CRAFTING, d->new HashSet<>()));
 			if (hs != null) {
 				all.addAll(hs);
 			}
+			//System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
 			ItemStack irs=i.getRecipeOutput();
 			if (!TeamResearchData.getClientInstance().crafting.has(i)) {
 				for (ResourceLocation rl : all) 
