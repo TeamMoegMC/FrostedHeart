@@ -285,8 +285,11 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 
     private void deleteInTree() {
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
-            revoke(t);
-            t.setGrant(this, false);
+            if(this.getRId()!=0) {
+	        	revoke(t);
+	            
+	            t.setGrant(this, false);
+            }
         });
     }
 
