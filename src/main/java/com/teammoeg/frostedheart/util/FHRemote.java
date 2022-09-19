@@ -50,8 +50,8 @@ public class FHRemote {
         public void doFetch() {
             fromTLV();
             if (this.stableVersion != null) return;
-            fromCFM();
-            if (this.stableVersion != null) return;
+//            fromCFM();
+//            if (this.stableVersion != null) return;
             fromModVersion();
             if (this.stableVersion == null) this.stableVersion = "";
         }
