@@ -28,7 +28,8 @@ public class FHRemote {
 
         private void fromModVersion() {
             try {
-                this.stableVersion = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
             } catch (Throwable e) {
             }
         }
