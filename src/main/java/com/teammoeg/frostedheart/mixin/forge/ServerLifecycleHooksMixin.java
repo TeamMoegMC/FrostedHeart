@@ -44,7 +44,7 @@ public class ServerLifecycleHooksMixin {
             try {
                 String lw = FileUtil.readString(saveVersion);
                 FHVersion save = FHVersion.parse(lw);
-                if (!lw.isEmpty() && (lw.equals(localVersion) || save.laterThan(local)))
+                if (!lw.isEmpty() && (lw.equals(localVersion)))
                     return;
             } catch (IOException e) {
                 e.printStackTrace();
