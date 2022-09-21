@@ -28,7 +28,8 @@ public class FHRemote {
 
         private void fromModVersion() {
             try {
-                this.stableVersion = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
             } catch (Throwable e) {
             }
         }
@@ -49,11 +50,19 @@ public class FHRemote {
         @Override
         public void doFetch() {
             fromTLV();
-            if (this.stableVersion != null) return;
-            fromCFM();
-            if (this.stableVersion != null) return;
+            if (this.stableVersion != null) {
+                System.out.println("[TWR Version Check] Fetched FH local version from .twrlastversion: " + this.stableVersion);
+                return;
+            }
+            // fromCFM();
+            // if (this.stableVersion != null) return;
             fromModVersion();
-            if (this.stableVersion == null) this.stableVersion = "";
+            if (this.stableVersion != null) {
+                System.out.println("[TWR Version Check] Fetched FH local version from mod version: " + this.stableVersion);
+            } else {
+                System.out.println("[TWR Version Check] Failed to fetch FH local version, check your installation.");
+                this.stableVersion = "";
+            }
         }
 
 
