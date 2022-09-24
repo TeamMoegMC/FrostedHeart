@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "proteins": 0.003115274
   },
   "item": "rankine:black_walnut_leaves"
 }

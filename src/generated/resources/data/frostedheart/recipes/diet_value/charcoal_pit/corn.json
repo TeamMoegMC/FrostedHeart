@@ -1,9 +1,11 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 6.13855E-4,
-    "plant_oil": 6.60146E-4,
-    "grains": 6.60146E-4
+    "sugars": 0.005115457,
+    "proteins": 0.001317805,
+    "vegetables": 0.001317805,
+    "vitamin": 0.005115457,
+    "grains": 0.001317805
   },
   "item": "charcoal_pit:corn"
 }

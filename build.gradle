@@ -163,36 +163,20 @@ dependencies {
 
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}")
-    implementation fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
+    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
 
     compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.6-141")
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.6-141:datagen")
 
     implementation fg.deobf("curse.maven:create-328085:3499718")
     implementation fg.deobf("curse.maven:flywheel-486392:3459739")
-
-    compile fg.deobf('curse.maven:Project-Rankine-400704:3685160')
     implementation fg.deobf('curse.maven:Project-Rankine-400704:3685160')
-
-    compile fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
     implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
-
-	compile fg.deobf("dev.latvian.mods:item-filters-forge:1605.2.5-build.9")
 	implementation fg.deobf("dev.latvian.mods:item-filters-forge:1605.2.5-build.9")
-	
-    compile fg.deobf("curse.maven:kiwi-303657:3377053")
     implementation fg.deobf("curse.maven:kiwi-303657:3377053")
-
-    compile fg.deobf("curse.maven:snowrealmagic-308663:3295579")
     implementation fg.deobf("curse.maven:snowrealmagic-308663:3295579")
-    
-    compile fg.deobf("curse.maven:engineersdecor-313866:3590976")
     implementation fg.deobf("curse.maven:engineers-decor-313866:3566177")
-
-    compile fg.deobf("curse.maven:diet-443570:3756693")
 	implementation fg.deobf("curse.maven:diet-443570:3756693")
-
-    compile fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 
     //compile fg.deobf("curse.maven:better-weather-400714:3420517")
@@ -205,8 +189,7 @@ dependencies {
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
 
-    runtimeOnly fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
-    compileOnly fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
+    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
 
     // runtimeOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
     compileOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")

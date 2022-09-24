@@ -1,8 +1,10 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002371472,
-    "vitamin": 0.001636946
+    "sugars": 0.006138548,
+    "proteins": 0.001778604,
+    "vitamin": 0.006138548,
+    "grains": 0.001778604
   },
   "item": "charcoal_pit:cooked_egg"
 }

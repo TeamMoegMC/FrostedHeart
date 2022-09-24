@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "proteins": 0.002886464,
+    "vitamin": 0.019966738
   },
   "item": "rankine:cedar_leaves"
 }

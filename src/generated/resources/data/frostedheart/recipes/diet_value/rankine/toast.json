@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.00122771,
-    "grains": 0.003557208
+    "proteins": 8.80195E-4,
+    "vitamin": 0.004519712
   },
   "item": "rankine:toast"
 }

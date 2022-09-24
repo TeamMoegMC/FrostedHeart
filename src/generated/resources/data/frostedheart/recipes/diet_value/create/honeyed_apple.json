@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.002892616,
-    "vegetables": 0.006389357
+    "grains": 5.92868E-4
   },
   "item": "create:honeyed_apple"
 }

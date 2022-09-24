@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 2.04618E-4,
-    "grains": 4.40097E-4
+    "proteins": 0.001185736,
+    "vitamin": 0.004092365
   },
   "item": "rankine:rice"
 }

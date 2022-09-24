@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "proteins": 0.004742944,
+    "vitamin": 0.01636946
   },
   "item": "minecraft:warped_fungus"
 }

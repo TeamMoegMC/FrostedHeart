@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 9.7211E-4,
-    "vegetables": 0.004742944
+    "vegetables": 5.92868E-4
   },
   "item": "minecraft:pumpkin_pie"
 }

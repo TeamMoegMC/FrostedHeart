@@ -1,7 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 0.004792017
+    "sugars": 0.008184731,
+    "vegetables": 0.00148217,
+    "plant_oil": 0.00148217
   },
   "item": "crockpot:veg_stinger"
 }

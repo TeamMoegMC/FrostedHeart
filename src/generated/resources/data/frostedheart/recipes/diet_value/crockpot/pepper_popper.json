@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002371472,
-    "vegetables": 0.002371472,
-    "vitamin": 0.001309557
+    "vegetables": 0.002492219
   },
   "item": "crockpot:pepper_popper"
 }

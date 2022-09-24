@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 3.61577E-4,
-    "vegetables": 4.40097E-4
+    "proteins": 8.80195E-4,
+    "vitamin": 0.004519712
   },
   "item": "rankine:strawberries"
 }

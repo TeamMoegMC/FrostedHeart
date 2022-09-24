@@ -1,8 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 5.92868E-4,
-    "vitamin": 4.09237E-4
+    "proteins": 0.001082424,
+    "vegetables": 0.001082424,
+    "vitamin": 0.014975054
   },
   "item": "frozenup:mug_of_chocolate_milk"
 }

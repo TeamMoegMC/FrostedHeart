@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "proteins": 0.00176039,
+    "vitamin": 0.009039424
   },
   "item": "rankine:juniper_leaves"
 }

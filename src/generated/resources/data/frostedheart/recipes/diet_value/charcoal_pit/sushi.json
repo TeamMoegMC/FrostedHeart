@@ -2,10 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "sugars": 0.001023091,
-    "proteins": 9.78232E-4,
-    "vegetables": 9.78232E-4,
-    "vitamin": 0.001023091,
-    "grains": 9.78232E-4
+    "grains": 5.92868E-4
   },
   "item": "charcoal_pit:sushi"
 }

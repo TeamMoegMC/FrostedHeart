@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 9.7211E-4,
-    "vegetables": 0.002371472
+    "proteins": 0.001320292,
+    "vitamin": 0.006779568
   },
   "item": "rankine:pina_colada"
 }

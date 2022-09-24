@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 4.51971E-4,
-    "plant_oil": 4.40097E-4
+    "vegetables": 0.001185736
   },
   "item": "minecraft:cocoa_beans"
 }

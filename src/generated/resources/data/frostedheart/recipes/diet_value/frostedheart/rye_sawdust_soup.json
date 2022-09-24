@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.00122771,
-    "grains": 0.002164848
+    "vegetables": 0.001185736
   },
   "item": "frostedheart:rye_sawdust_soup"
 }

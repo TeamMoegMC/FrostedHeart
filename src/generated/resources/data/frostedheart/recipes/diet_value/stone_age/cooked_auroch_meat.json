@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.00296434,
+    "proteins": 5.92868E-4,
     "vitamin": 0.002046183
   },
   "item": "stone_age:cooked_auroch_meat"

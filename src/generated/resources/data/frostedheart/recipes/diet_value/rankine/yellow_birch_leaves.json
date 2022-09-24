@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "plant_oil": 4.40097E-4
+    "proteins": 5.92868E-4,
+    "vitamin": 0.002259856
   },
   "item": "rankine:yellow_birch_leaves"
 }

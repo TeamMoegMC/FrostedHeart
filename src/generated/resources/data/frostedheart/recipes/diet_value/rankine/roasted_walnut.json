@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "plant_oil": 0.002371472
+    "proteins": 0.00296434,
+    "vitamin": 0.010230913
   },
   "item": "rankine:roasted_walnut"
 }

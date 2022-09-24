@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 5.92868E-4,
-    "vitamin": 4.51971E-4
+    "proteins": 0.003557208,
+    "vitamin": 0.012277096
   },
   "item": "rankine:aged_cheese"
 }

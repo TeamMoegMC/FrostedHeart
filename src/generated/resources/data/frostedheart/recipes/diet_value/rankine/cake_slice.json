@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 4.09237E-4,
-    "grains": 0.001185736
+    "proteins": 0.00296434,
+    "vitamin": 0.008184731
   },
   "item": "rankine:cake_slice"
 }

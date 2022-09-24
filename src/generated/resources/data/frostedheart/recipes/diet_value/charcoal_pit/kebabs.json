@@ -1,9 +1,11 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.00148217,
-    "vegetables": 0.00148217,
-    "vitamin": 0.002259856
+    "sugars": 0.005115457,
+    "proteins": 9.78232E-4,
+    "vegetables": 9.78232E-4,
+    "vitamin": 0.005115457,
+    "grains": 9.78232E-4
   },
   "item": "charcoal_pit:kebabs"
 }

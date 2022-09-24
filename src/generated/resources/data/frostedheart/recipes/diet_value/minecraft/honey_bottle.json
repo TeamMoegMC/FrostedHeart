@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.002711827,
-    "vegetables": 0.002640585
+    "vegetables": 5.92868E-4
   },
   "item": "minecraft:honey_bottle"
 }

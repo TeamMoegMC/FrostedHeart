@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.001636946,
+    "proteins": 0.002371472,
     "vegetables": 0.002371472,
-    "plant_oil": 0.001944219
+    "vitamin": 0.01636946
   },
   "item": "crockpot:potato_tornado"
 }

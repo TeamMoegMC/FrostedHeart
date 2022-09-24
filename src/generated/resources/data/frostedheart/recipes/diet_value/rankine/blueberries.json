@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 3.61577E-4,
-    "vegetables": 4.40097E-4
+    "proteins": 0.00296434,
+    "vitamin": 0.010230913
   },
   "item": "rankine:blueberries"
 }

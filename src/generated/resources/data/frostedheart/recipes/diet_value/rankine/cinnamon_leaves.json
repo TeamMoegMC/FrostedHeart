@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "proteins": 0.002492219,
+    "vitamin": 0.01636946
   },
   "item": "rankine:cinnamon_leaves"
 }

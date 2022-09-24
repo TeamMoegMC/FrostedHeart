@@ -1,6 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
+    "sugars": 9.03942E-4,
     "vegetables": 4.40097E-4
   },
   "item": "minecraft:pumpkin_seeds"

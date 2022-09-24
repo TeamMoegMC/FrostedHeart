@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002795343,
-    "vegetables": 0.002795343,
-    "vitamin": 0.002864656
+    "vegetables": 0.004150076
   },
   "item": "crockpot:ceviche"
 }

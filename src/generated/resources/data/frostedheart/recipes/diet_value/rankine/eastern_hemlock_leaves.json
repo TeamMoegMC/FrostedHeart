@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "proteins": 0.002200487,
+    "vitamin": 0.01129928
   },
   "item": "rankine:eastern_hemlock_leaves"
 }

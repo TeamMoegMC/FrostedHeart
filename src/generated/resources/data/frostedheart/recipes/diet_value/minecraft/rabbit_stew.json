@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.00296434,
-    "vegetables": 0.00296434,
-    "vitamin": 0.004092365
+    "vegetables": 5.92868E-4
   },
   "item": "minecraft:rabbit_stew"
 }

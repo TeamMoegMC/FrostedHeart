@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 4.40097E-4,
-    "vitamin": 1.80788E-4
+    "sugars": 0.005115457,
+    "grains": 0.00296434
   },
   "item": "charcoal_pit:chestnut"
 }

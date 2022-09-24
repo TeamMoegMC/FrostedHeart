@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 6.13855E-4,
-    "grains": 0.001778604
+    "proteins": 0.001320292,
+    "vitamin": 0.006779568
   },
   "item": "rankine:pancake"
 }

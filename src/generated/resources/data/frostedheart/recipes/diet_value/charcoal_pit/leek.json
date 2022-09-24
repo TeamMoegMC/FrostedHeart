@@ -1,7 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "sugars": 0.003069274,
+    "plant_oil": 7.29082E-4,
+    "grains": 8.89302E-4
   },
   "item": "charcoal_pit:leek"
 }

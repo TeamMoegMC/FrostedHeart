@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 7.23154E-4,
-    "vegetables": 8.80195E-4
+    "proteins": 0.001320292,
+    "vitamin": 0.006779568
   },
   "item": "rankine:pineapple"
 }

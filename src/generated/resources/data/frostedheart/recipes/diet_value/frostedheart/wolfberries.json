@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 1.21514E-4,
-    "vegetables": 5.92868E-4
+    "vegetables": 0.001320292
   },
   "item": "frostedheart:wolfberries"
 }

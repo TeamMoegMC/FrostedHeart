@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "proteins": 0.002371472,
+    "vitamin": 0.008184731
   },
   "item": "rankine:coconut_palm_leaves"
 }

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.004092365,
+    "plant_oil": 0.001246109
+  },
+  "item": "rankine:cocked_tofu"
+}

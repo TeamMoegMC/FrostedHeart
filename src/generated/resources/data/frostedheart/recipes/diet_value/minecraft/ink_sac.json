@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 4.40097E-4,
-    "vitamin": 4.51971E-4
+    "vegetables": 5.92868E-4
   },
   "item": "minecraft:ink_sac"
 }

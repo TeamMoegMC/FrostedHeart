@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 2.04618E-4,
-    "plant_oil": 2.20049E-4,
-    "grains": 2.20049E-4
+    "proteins": 0.002371472,
+    "vitamin": 0.008184731
   },
   "item": "rankine:corn_ear"
 }

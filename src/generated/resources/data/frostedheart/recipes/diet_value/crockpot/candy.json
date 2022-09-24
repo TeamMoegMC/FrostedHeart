@@ -1,8 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 9.11353E-4,
-    "plant_oil": 0.001778604
+    "proteins": 0.004361383,
+    "vegetables": 0.004361383,
+    "vitamin": 0.031637985
   },
   "item": "crockpot:candy"
 }

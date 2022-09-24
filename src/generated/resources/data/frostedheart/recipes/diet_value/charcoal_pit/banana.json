@@ -1,8 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.001807885,
-    "vegetables": 0.002200487
+    "sugars": 0.012277096,
+    "vegetables": 0.004792017,
+    "grains": 0.004792017
   },
   "item": "charcoal_pit:banana"
 }

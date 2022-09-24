@@ -1,8 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002525656,
-    "vitamin": 0.003163798
+    "proteins": 0.002803746,
+    "vegetables": 0.002803746,
+    "vitamin": 0.007366258
   },
   "item": "crockpot:monster_lasagna"
 }
