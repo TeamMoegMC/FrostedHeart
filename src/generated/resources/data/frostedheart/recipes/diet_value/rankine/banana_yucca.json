@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.003557208
+    "sugars": 0.02711827,
+    "vegetables": 0.01778604
   },
   "item": "rankine:banana_yucca"
 }

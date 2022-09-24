@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002371472,
-    "vegetables": 0.002371472,
-    "vitamin": 0.006547785
+    "sugars": 0.02046183,
+    "vegetables": 0.06022804,
+    "plant_oil": 0.00486055
   },
   "item": "crockpot:pow_cake"
 }

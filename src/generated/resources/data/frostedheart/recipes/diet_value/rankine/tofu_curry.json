@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "plant_oil": 0.004150076
+    "proteins": 0.03115274
   },
   "item": "rankine:tofu_curry"
 }

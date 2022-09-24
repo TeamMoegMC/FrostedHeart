@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.005115457,
-    "proteins": 0.00148217,
-    "vegetables": 0.00148217
+    "proteins": 0.03557208,
+    "vegetables": 0.03557208,
+    "vitamin": 0.24554192
   },
   "item": "crockpot:turkey_dinner"
 }

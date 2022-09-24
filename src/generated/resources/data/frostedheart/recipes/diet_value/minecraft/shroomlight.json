@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.01185736,
-    "vitamin": 0.04092365
+    "vegetables": 0.01778604
   },
   "item": "minecraft:shroomlight"
 }

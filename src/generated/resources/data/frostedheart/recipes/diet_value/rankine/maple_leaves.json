@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.001443232,
-    "vitamin": 0.00998337
+    "vegetables": 0.0059286803
   },
   "item": "rankine:maple_leaves"
 }

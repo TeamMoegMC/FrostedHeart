@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.006138548,
-    "grains": 0.003557208
+    "proteins": 0.00880195,
+    "vitamin": 0.04519712
   },
   "item": "charcoal_pit:calamari"
 }

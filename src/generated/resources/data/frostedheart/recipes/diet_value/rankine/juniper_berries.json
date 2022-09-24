@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.001778604,
-    "vitamin": 0.006138548
+    "sugars": 0.02711827,
+    "vegetables": 0.013202921
   },
   "item": "rankine:juniper_berries"
 }

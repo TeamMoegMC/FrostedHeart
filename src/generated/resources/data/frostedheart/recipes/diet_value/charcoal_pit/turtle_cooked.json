@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.004092365,
-    "plant_oil": 4.86055E-4,
-    "grains": 5.92868E-4
+    "proteins": 0.023714721,
+    "vitamin": 0.08184731
   },
   "item": "charcoal_pit:turtle_cooked"
 }

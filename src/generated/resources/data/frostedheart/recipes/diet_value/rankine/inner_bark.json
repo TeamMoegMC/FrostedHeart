@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "plant_oil": 5.92868E-4
+    "grains": 0.0059286803
   },
   "item": "rankine:inner_bark"
 }

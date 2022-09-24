@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002371472,
-    "vitamin": 0.008184731
+    "vegetables": 0.02075038,
+    "grains": 0.02075038
   },
   "item": "rankine:cinnamon_toast"
 }

@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002371472,
-    "vegetables": 0.002371472,
-    "vitamin": 0.01636946
+    "sugars": 0.03069274,
+    "plant_oil": 0.0072908197,
+    "grains": 0.00889302
   },
   "item": "crockpot:popcorn"
 }

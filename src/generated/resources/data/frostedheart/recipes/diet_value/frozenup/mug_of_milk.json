@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.005990022,
-    "vegetables": 0.001082424,
-    "plant_oil": 0.001082424
+    "proteins": 0.0059286803,
+    "vitamin": 0.01636946
   },
   "item": "frozenup:mug_of_milk"
 }

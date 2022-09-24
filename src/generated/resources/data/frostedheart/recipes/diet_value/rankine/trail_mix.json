@@ -1,8 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 8.80195E-4,
-    "vitamin": 0.004519712
+    "sugars": 0.08184731,
+    "vegetables": 0.0148217,
+    "plant_oil": 0.0148217
   },
   "item": "rankine:trail_mix"
 }

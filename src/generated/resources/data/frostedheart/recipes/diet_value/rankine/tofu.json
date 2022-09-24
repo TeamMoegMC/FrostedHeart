@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.006138548,
-    "plant_oil": 0.001778604
+    "proteins": 0.023714721
   },
   "item": "rankine:tofu"
 }

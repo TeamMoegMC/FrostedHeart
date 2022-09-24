@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.008184731,
-    "vegetables": 0.002492219,
-    "plant_oil": 0.002492219
+    "proteins": 0.023714721,
+    "vegetables": 0.023714721,
+    "vitamin": 0.1636946
   },
   "item": "crockpot:perogies"
 }

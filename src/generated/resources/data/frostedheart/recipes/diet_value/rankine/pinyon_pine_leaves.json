@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.001320292
+    "vegetables": 0.0059286803
   },
   "item": "rankine:pinyon_pine_leaves"
 }

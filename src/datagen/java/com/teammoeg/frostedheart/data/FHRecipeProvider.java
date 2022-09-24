@@ -55,7 +55,7 @@ public class FHRecipeProvider extends RecipeProvider {
 						ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
 						DietValueBuilder dvb=new DietValueBuilder(id,new ResourceLocation(parts[0]));
 						for(int i=0;i<6;i++) {
-							float f=Float.parseFloat(parts[i+2]);
+							float f=Float.parseFloat(parts[i+2])*10f;
 							if(f!=0)
 								dvb.addGroup(i,f);
 						}

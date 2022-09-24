@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 8.80195E-4,
-    "vitamin": 0.004519712
+    "vegetables": 0.011857361
   },
   "item": "rankine:roasted_asparagus"
 }

@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.004150076,
-    "vitamin": 0.014323279
+    "vegetables": 0.0059286803
   },
   "item": "minecraft:wheat_seeds"
 }

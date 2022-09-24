@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 0.001320292
+    "proteins": 0.047429442,
+    "vitamin": 0.1636946
   },
   "item": "crockpot:coocked_hoglin_nose"
 }

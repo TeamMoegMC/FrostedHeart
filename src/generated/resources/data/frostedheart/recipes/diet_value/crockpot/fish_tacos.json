@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.003557208,
-    "vegetables": 0.003557208,
-    "vitamin": 0.024554191
+    "proteins": 0.023714721,
+    "vegetables": 0.023714721,
+    "vitamin": 0.1636946
   },
   "item": "crockpot:fish_tacos"
 }

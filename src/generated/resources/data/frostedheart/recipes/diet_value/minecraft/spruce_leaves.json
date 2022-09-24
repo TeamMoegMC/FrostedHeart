@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.024554191,
-    "proteins": 0.007114416,
-    "vitamin": 0.024554191
+    "plant_oil": 0.0059286803
   },
   "item": "minecraft:spruce_leaves"
 }

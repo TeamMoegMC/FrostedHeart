@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 5.92868E-4
+    "proteins": 0.047429442,
+    "vitamin": 0.1636946
   },
   "item": "minecraft:cooked_porkchop"
 }

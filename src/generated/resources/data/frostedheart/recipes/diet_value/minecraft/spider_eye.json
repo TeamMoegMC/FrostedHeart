@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.007114416,
-    "vitamin": 0.024554191
+    "proteins": 0.0036080799,
+    "vitamin": 0.02495842
   },
   "item": "minecraft:spider_eye"
 }

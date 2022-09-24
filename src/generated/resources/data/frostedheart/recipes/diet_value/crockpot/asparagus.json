@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "plant_oil": 7.29082E-4,
-    "vitamin": 0.006138548,
-    "grains": 8.89302E-4
+    "vegetables": 0.013202921
   },
   "item": "crockpot:asparagus"
 }

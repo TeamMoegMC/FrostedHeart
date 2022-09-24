@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.00148217,
-    "vegetables": 0.00148217,
-    "vitamin": 0.01129928
+    "proteins": 0.02180692,
+    "vitamin": 0.1432328
   },
   "item": "crockpot:tropical_bouillabaisse"
 }

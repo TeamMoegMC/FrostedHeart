@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "plant_oil": 5.92868E-4
+    "proteins": 0.013202921,
+    "vitamin": 0.06779568
   },
   "item": "rankine:tuna"
 }

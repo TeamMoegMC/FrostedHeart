@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.013559136,
-    "plant_oil": 0.004792017
+    "proteins": 0.023714721,
+    "vegetables": 0.023714721
   },
   "item": "watersource:coconut_chicken"
 }

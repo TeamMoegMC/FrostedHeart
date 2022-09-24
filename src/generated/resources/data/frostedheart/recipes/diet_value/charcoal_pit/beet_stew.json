@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.005115457,
-    "grains": 0.003993348
+    "vegetables": 0.03557208
   },
   "item": "charcoal_pit:beet_stew"
 }

@@ -1,8 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.003069274,
-    "grains": 0.001778604
+    "sugars": 0.15818992,
+    "vegetables": 0.027953431,
+    "plant_oil": 0.027953431
   },
   "item": "create:chocolate_glazed_berries"
 }

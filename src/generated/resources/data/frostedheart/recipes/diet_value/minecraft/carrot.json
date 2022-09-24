@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 0.001185736
+    "vegetables": 0.013202921
   },
   "item": "minecraft:carrot"
 }

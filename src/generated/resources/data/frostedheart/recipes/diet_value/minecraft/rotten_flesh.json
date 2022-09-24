@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.002711827,
-    "vegetables": 0.001320292
+    "proteins": 0.014432319,
+    "vitamin": 0.0998337
   },
   "item": "minecraft:rotten_flesh"
 }

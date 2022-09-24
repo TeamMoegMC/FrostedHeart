@@ -1,7 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 5.92868E-4
+    "proteins": 0.00880195,
+    "vitamin": 0.04519712
   },
   "item": "minecraft:salmon"
 }

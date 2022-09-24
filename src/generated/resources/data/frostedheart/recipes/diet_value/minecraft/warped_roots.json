@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.013095569,
-    "proteins": 0.004742944,
-    "vitamin": 0.013095569
+    "vegetables": 0.0059286803
   },
   "item": "minecraft:warped_roots"
 }

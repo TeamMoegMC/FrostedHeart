@@ -1,9 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.003069274,
-    "plant_oil": 8.89302E-4,
-    "grains": 8.89302E-4
+    "vegetables": 0.03557208
   },
   "item": "charcoal_pit:mooshroom_stew"
 }

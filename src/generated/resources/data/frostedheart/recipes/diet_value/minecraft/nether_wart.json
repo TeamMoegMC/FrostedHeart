@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 5.92868E-4
+    "vegetables": 0.011857361
   },
   "item": "minecraft:nether_wart"
 }

@@ -1,10 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.003273892,
-    "proteins": 5.92868E-4,
-    "vitamin": 0.003273892,
-    "grains": 5.92868E-4
+    "proteins": 0.023714721,
+    "vegetables": 0.023714721,
+    "vitamin": 0.1636946
   },
   "item": "charcoal_pit:rabbit_stew"
 }

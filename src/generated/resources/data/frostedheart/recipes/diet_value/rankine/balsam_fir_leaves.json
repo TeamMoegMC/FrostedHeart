@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.003557208,
-    "vitamin": 0.012277096
+    "vegetables": 0.0059286803
   },
   "item": "rankine:balsam_fir_leaves"
 }

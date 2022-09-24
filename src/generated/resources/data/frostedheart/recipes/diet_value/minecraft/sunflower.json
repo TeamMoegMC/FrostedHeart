@@ -1,8 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.00592868,
-    "vitamin": 0.020461828
+    "vegetables": 0.011857361
   },
   "item": "minecraft:sunflower"
 }

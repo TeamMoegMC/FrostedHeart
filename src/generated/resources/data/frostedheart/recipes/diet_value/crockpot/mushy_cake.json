@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.010847309,
-    "vegetables": 0.002640585
+    "sugars": 0.06138548,
+    "vegetables": 0.03738328
   },
   "item": "crockpot:mushy_cake"
 }
