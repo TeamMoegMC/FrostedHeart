@@ -29,6 +29,7 @@
     "create.MixinToolboxInventory",
     "create.RecipeGridHandlerMixin",
     "diet.DietApiImplMixin",
+    "ftb.QuestScreenMixin",
     "engdecor.EdMilkerMixin",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
