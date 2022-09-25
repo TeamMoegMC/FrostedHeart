@@ -19,18 +19,23 @@
 package com.teammoeg.frostedheart.data;
 
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.thermopolium.THPFluids;
 
 import blusunrize.immersiveengineering.api.IETags;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
+import net.minecraft.item.Item;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -44,6 +49,19 @@ public class FHRecipeProvider extends RecipeProvider {
 
 	@Override
 	protected void registerRecipes(@Nonnull Consumer<IFinishedRecipe> out) {
+		String[] ovride=new String[] {
+				"dilute_soup",
+				"nail_soup"
+		};
+		THPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(o.getRegistryName().getPath()::equals)).forEach(f-> {
+			for(Item i:new Item[] {FHItems.advanced_thermos,FHItems.thermos})
+				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_"+i.getRegistryName().getPath()),Ingredient.fromItems(i),f,2,2));
+		});
+		THPFluids.getAll().filter(o->o.getRegistryName().getPath().equals("dilute_soup")).forEach(f-> {
+			for(Item i:new Item[] {FHItems.advanced_thermos,FHItems.thermos})
+				
+				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_"+i.getRegistryName().getPath()),Ingredient.fromItems(i),f,3,2));
+		});
 		try (Scanner sc = new Scanner(FMLPaths.GAMEDIR.get()
 				.resolve("../src/datagen/resources/data/frostedheart/data/food_values.csv").toFile(), "UTF-8")) {
 			if(sc.hasNextLine()) {

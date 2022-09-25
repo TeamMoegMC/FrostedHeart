@@ -20,12 +20,13 @@ public class DietGroupCodec {
     public static void genCodec() {
         codecs.clear();
         Set<IDietGroup> idgs = DietGroups.get();
-        for (int i = 0; i < groups.length; i++) {
+        outer:for (int i = 0; i < groups.length; i++) {
             for (IDietGroup idg : idgs)
                 if (idg.getName().equalsIgnoreCase(groups[i])) {
                     codecs.add(idg);
-                    break;
+                    continue outer;
                 }
+            throw new IllegalArgumentException("Failed to load diet groups, delete your serverconfig. If the persists, reinstall this modpack!");
         }
     }
 

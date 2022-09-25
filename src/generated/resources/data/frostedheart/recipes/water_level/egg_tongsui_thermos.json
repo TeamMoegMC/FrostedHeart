@@ -1,0 +1,9 @@
+{
+  "type": "watersource:water_level_item",
+  "ingredient": {
+    "item": "frostedheart:thermos"
+  },
+  "waterLevel": 2,
+  "waterSaturationLevel": 2,
+  "fluid": "thermopolium:egg_tongsui"
+}
