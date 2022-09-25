@@ -617,7 +617,7 @@ public class CommonEvents {
                 float current = TemperatureCore.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem());
+                float heat = adj.getHeat(event.getItem(),TemperatureCore.getEnvTemperature((ServerPlayerEntity) event.getEntityLiving()));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)

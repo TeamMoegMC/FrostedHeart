@@ -252,7 +252,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
 
     @Override
-    public float getHeat(ItemStack is) {
+    public float getHeat(ItemStack is,float env) {
         LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
         if (ih.isPresent()) {
             IFluidHandlerItem f = ih.resolve().get();

@@ -339,7 +339,7 @@ public class ClientEvents {
 							.add(GuiUtils.translateTooltip("block_temp", temps).mergeStyle(TextFormatting.AQUA));
 		}
 		if (itf != null) {
-			float temp = itf.getHeat(stack) * tspeed;
+			float temp = itf.getHeat(stack,event.getPlayer()==null?37:TemperatureCore.getEnvTemperature(event.getPlayer())) * tspeed;
 			temp = (Math.round(temp * 1000)) / 1000.0F;// round
 			String temps = Float.toString(temp);
 			if (temp != 0)

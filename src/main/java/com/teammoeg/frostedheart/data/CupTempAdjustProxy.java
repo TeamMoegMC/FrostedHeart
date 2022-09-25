@@ -31,17 +31,23 @@ public class CupTempAdjustProxy implements ITempAdjustFood {
     }
 
     @Override
-    public float getHeat(ItemStack is) {
+    public float getHeat(ItemStack is,float env) {
         LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
         if (ih.isPresent()) {
             IFluidHandlerItem f = ih.resolve().get();
             FluidStack fs = f.getFluidInTank(0);
             if (!fs.isEmpty()) {
-                return FHDataManager.getDrinkHeat(fs) * efficiency;
+            	float dh=FHDataManager.getDrinkHeat(fs);
+            	if((env>37&&dh<0)||(env<37&&dh>0))
+            		return dh * efficiency;
+            	if(env==37)
+            		return dh;
+            	
+            	return dh * (2-efficiency);
             }
         }
         if (defData != null)
-            return defData.getHeat(is);
+            return defData.getHeat(is,env);
         return 0;
     }
 

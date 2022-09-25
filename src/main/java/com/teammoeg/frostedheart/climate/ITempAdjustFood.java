@@ -60,5 +60,5 @@ public interface ITempAdjustFood {
      * @param is the is<br>
      * @return heat<br>
      */
-    float getHeat(ItemStack is);
+    float getHeat(ItemStack is,float env);
 }
