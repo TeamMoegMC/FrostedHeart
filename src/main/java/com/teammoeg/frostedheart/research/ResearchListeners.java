@@ -23,6 +23,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -323,6 +324,7 @@ public class ResearchListeners {
 
     public static boolean canUseBlock(PlayerEntity player, Block b) {
         if (block.has(b)) {
+        	if(player instanceof FakePlayer)return false;
             if (player.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().block.has(b);
             return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
