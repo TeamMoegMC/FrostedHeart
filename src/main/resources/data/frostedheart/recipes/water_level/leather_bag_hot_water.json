@@ -3,7 +3,7 @@
     "ingredient": {
         "item": "watersource:leather_water_bag"
     },
-	"fluid": "frostedheart:hot_water",
+	"fluid": "thermopolium:nail_soup",
 	"waterLevel": 4,
 	"waterSaturationLevel": 2
 }
