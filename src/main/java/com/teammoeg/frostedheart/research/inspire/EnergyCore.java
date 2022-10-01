@@ -85,9 +85,10 @@ public class EnergyCore {
             if(tenergy*2<M&&nenergy<=5) {
             	player.addPotionEffect(new EffectInstance(FHEffects.SAD,200));
             }
-            double dtenergy = nenergy/n;
             if(tenergy<13500)
-            	dtenergy=Math.max(dtenergy,1);
+            	nenergy=Math.max(nenergy,1);
+            double dtenergy = nenergy/n;
+            
             if (dtenergy > 0 || tenergy > 15000) {
             	adenergy += dtenergy;
                 double frac = MathHelper.frac(dtenergy);
