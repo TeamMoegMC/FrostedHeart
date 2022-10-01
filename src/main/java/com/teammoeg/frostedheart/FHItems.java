@@ -15,11 +15,9 @@ import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.research.machines.FHBasePen;
 import com.teammoeg.frostedheart.research.machines.FHReusablePen;
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.Properties;
 import net.minecraft.item.Items;
-import net.minecraftforge.fml.RegistryObject;
 
 public class FHItems {
     public static void init() {
@@ -69,9 +67,9 @@ public class FHItems {
     public static Item heater_vest = new HeaterVestItem("heater_vest", createProps().maxStackSize(1).setNoRepair());
     public static Item thermos = new ThermosItem("thermos", 1500, 250);
     public static Item advanced_thermos = new ThermosItem("advanced_thermos", 3000, 250);
-    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", 8, 4, createProps().defaultMaxDamage(128));
-    public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 8, 4, createProps().defaultMaxDamage(192));
-    public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 9, 5, createProps().defaultMaxDamage(256));
+    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", 9, 4, createProps().defaultMaxDamage(128));
+    public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 10, 4, createProps().defaultMaxDamage(192));
+    public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 11, 5, createProps().defaultMaxDamage(256));
     public static Item copper_core_spade = new CoreSpade("copper_core_spade", 1, 32, createProps().defaultMaxDamage(96));
     public static Item iron_core_spade = new CoreSpade("iron_core_spade", 2, 64, createProps().defaultMaxDamage(128));
     public static Item steel_core_spade = new CoreSpade("steel_core_spade", 4, 72, createProps().defaultMaxDamage(160));
