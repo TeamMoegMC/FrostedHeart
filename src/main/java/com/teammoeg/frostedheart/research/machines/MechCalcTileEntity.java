@@ -47,7 +47,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     public int process = 0;
     int currentPoints = 0;
     int lastact;
-    int maxPoints = 80;
+    int maxPoints = 100;
     boolean doProduct = true;
 
     public MechCalcTileEntity() {
@@ -90,7 +90,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
                 int curact = process / 1067;
                 if (lastact != curact) {
                     lastact = curact;
-                    world.playSound(null, pos, FHSounds.MC_BELL.get(), SoundCategory.BLOCKS, 0.3f, 1f);
+                    world.playSound(null, pos, FHSounds.MC_BELL.get(), SoundCategory.BLOCKS, 0.1f, 1f);
                 }
                 if (process >= processMax) {
                     process = 0;
