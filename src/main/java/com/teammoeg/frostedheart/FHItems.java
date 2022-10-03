@@ -73,9 +73,9 @@ public class FHItems {
     public static Item copper_core_spade = new CoreSpade("copper_core_spade", 1, 32, createProps().defaultMaxDamage(96));
     public static Item iron_core_spade = new CoreSpade("iron_core_spade", 2, 64, createProps().defaultMaxDamage(128));
     public static Item steel_core_spade = new CoreSpade("steel_core_spade", 4, 72, createProps().defaultMaxDamage(160));
-    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer", 4, 4, createProps().defaultMaxDamage(96));
-    public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer", 5, 5, createProps().defaultMaxDamage(128));
-    public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer", 6, 6, createProps().defaultMaxDamage(160));
+    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer", 5, 4, createProps().defaultMaxDamage(96));
+    public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer", 6, 5, createProps().defaultMaxDamage(128));
+    public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer", 7, 6, createProps().defaultMaxDamage(160));
     public static Item soil_thermometer = new SoilThermometer("soil_thermometer", createProps());
     public static Item heat_debuger = new HeatDebugItem("heat_debugger");
     public static Item red_mushroombed = new MushroomBed("straw_briquette_red_mushroom", Items.RED_MUSHROOM, createProps().defaultMaxDamage(4800));
