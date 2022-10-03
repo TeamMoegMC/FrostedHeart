@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "vegetables": 0.00880195,
-    "vitamin": 0.01807885
+    "vitamin": 0.00361577
   },
   "item": "minecraft:poisonous_potato"
 }

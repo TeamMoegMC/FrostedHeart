@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.01023091,
+    "sugars": 0.00204618,
     "grains": 0.0059286803
   },
   "item": "charcoal_pit:popcorn"

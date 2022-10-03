@@ -1,7 +1,5 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "plant_oil": 0.04150076
-  },
+  "groups": {},
   "item": "crockpot:salsa"
 }

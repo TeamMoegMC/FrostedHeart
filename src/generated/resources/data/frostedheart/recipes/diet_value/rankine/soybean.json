@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.00613855,
+    "grains": 0.01778604
+  },
+  "item": "rankine:soybean"
+}

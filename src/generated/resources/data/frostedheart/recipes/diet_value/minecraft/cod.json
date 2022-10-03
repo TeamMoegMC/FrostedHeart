@@ -1,8 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.00880195,
-    "vitamin": 0.04519712
+    "proteins": 0.00704156,
+    "plant_oil": 0.00176039,
+    "vitamin": 0.00903942
   },
   "item": "minecraft:cod"
 }

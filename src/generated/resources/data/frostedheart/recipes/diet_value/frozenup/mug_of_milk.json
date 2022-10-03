@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.0059286803,
-    "vitamin": 0.01636946
+    "vitamin": 0.00327389
   },
   "item": "frozenup:mug_of_milk"
 }
