@@ -43,7 +43,7 @@ public class CannedFoodItem extends FHBaseItem {
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
         entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e->e.reduceLevel(5));
-        return entityLiving instanceof PlayerEntity && ((PlayerEntity) entityLiving).abilities.isCreativeMode ? itemstack : new ItemStack(Items.BOWL);
+        return itemstack;
     }
 
 	@Override
