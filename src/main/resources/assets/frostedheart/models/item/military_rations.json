@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "frostedheart:item/pack_of_freeze_dried_canned_food"
+  }
+}

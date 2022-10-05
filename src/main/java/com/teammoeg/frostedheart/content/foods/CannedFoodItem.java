@@ -16,49 +16,39 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.content.temperature;
+package com.teammoeg.frostedheart.content.foods;
+
+import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+
+import gloridifice.watersource.common.capability.WaterLevelCapability;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
-import top.theillusivec4.diet.api.DietCapability;
-import top.theillusivec4.diet.api.IDietTracker;
 
-public class FHSoupItem extends FHBaseItem {
+public class CannedFoodItem extends FHBaseItem {
 
-    private final boolean isPoor;
 
-    public FHSoupItem(String name, Properties properties, boolean isPoorlyMade) {
+    public CannedFoodItem(String name, Properties properties) {
         super(name, properties);
-        isPoor = isPoorlyMade;
     }
 
     @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
-
-        // Punish the player since soup item is not properly made
-        if (this.isPoor && entityLiving instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) entityLiving;
-            if (worldIn.getRandom().nextInt(3) == 0) {
-                player.addPotionEffect(new EffectInstance(Effects.HUNGER, 100, 1));
-                player.addPotionEffect(new EffectInstance(Effects.NAUSEA, 40, 1));
-                IDietTracker idt = DietCapability.get(player).orElse(null);
-                float nv = idt.getValue("protein") - 0.01f;
-                idt.setValue("protein", nv > 0 ? nv : 0);
-            }
-        }
-
+        entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e->e.reduceLevel(5));
         return entityLiving instanceof PlayerEntity && ((PlayerEntity) entityLiving).abilities.isCreativeMode ? itemstack : new ItemStack(Items.BOWL);
     }
 
-    public boolean isPoor() {
-        return isPoor;
-    }
+	@Override
+	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+		tooltip.add(GuiUtils.translateTooltip("canned_food"));
+	}
+
 }

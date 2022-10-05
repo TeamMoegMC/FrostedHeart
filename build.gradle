@@ -172,6 +172,7 @@ dependencies {
     implementation fg.deobf("curse.maven:flywheel-486392:3459739")
     implementation fg.deobf('curse.maven:Project-Rankine-400704:3685160')
     implementation fg.deobf("curse.maven:chisel-235279:3376782")
+    implementation fg.deobf("curse.maven:ctm-267602:3137659")
     implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
 	implementation fg.deobf("dev.latvian.mods:item-filters-forge:1605.2.5-build.9")
     implementation fg.deobf("curse.maven:kiwi-303657:3377053")

@@ -60,15 +60,17 @@ public class EnergyCore {
             M *= (1 + trd.getVariants().getDouble("pmaxEnergy"));
             double dietValue = 0;
             IDietTracker idt = DietCapability.get(player).orElse(null);
-            int tdv = 0;
-            for (Entry<String, Float> vs : idt.getValues().entrySet())
-                if (DietGroupCodec.getGroup(vs.getKey()).isBeneficial()) {
-                    dietValue += vs.getValue();
-                    tdv++;
-                }
-
-            if (tdv != 0)
-                dietValue /= tdv;
+            if(idt!=null) {
+	            int tdv = 0;
+	            for (Entry<String, Float> vs : idt.getValues().entrySet())
+	                if (DietGroupCodec.getGroup(vs.getKey()).isBeneficial()) {
+	                    dietValue += vs.getValue();
+	                    tdv++;
+	                }
+	
+	            if (tdv != 0)
+	                dietValue /= tdv;
+            }
             if (utbody != 0) {
                 double t = MathHelper.clamp(((int)tsls), 1, Integer.MAX_VALUE) / 1200d;
                 //System.out.println(t);

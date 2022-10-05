@@ -1,0 +1,11 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.0122771,
+    "proteins": 0.026405849,
+    "vegetables": 0.026405849,
+    "plant_oil": 0.0071144197,
+    "grains": 0.03557208
+  },
+  "item": "frostedheart:military_rations"
+}
