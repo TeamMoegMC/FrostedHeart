@@ -58,13 +58,15 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     public ActionResultType onClick(PlayerEntity pe) {
         if (!pe.world.isRemote) {
             currentPoints = (int) ResearchDataAPI.getData((ServerPlayerEntity) pe).doResearch(currentPoints);
-            process = 0;
-            this.notifyUpdate();
-            requireNetworkUpdate();
+            updatePoints();
         }
         return ActionResultType.func_233537_a_(pe.world.isRemote);
     }
-
+    public void updatePoints() {
+    	process = 0;
+        this.notifyUpdate();
+        requireNetworkUpdate();
+    }
 
 
     public Direction getDirection() {
