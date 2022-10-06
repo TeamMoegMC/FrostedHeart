@@ -77,13 +77,14 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
     @Inject(at = @At("HEAD"), method = "onEntityCollision")
     public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn, CallbackInfo callbackInfo) {
         if (entityIn instanceof ItemEntity) {
-            int rawBurnTime = ForgeHooks.getBurnTime(((ItemEntity) entityIn).getItem());
+        	ItemEntity item=(ItemEntity) entityIn;
+            int rawBurnTime = ForgeHooks.getBurnTime(item.getItem());
             if (worldIn.isRemote && isLit(state) && rawBurnTime > 0)
                 worldIn.addParticle(ParticleTypes.SMOKE, entityIn.getPosX(), entityIn.getPosY() + 0.25D, entityIn.getPosZ(), 0, 0.05D, 0);
             if (!worldIn.isRemote) {
                 if (rawBurnTime > 0) {
-                    if (((ItemEntity) entityIn).getThrowerId() != null && ((ICampfireExtra) worldIn.getTileEntity(pos)).getLifeTime() != -1337) {
-                    	ItemStack is=((ItemEntity) entityIn).getItem();
+                    if (item.getThrowerId() != null && ((ICampfireExtra) worldIn.getTileEntity(pos)).getLifeTime() != -1337) {
+                    	ItemStack is=item.getItem();
                     	CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
                     	ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
                     	int maxcs=(19200-lifeTime.getLifeTime())/rawBurnTime/3;
@@ -91,7 +92,7 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                         int burnTime = rawBurnTime * 3 * rcs;
                         is.shrink(rcs);
                         lifeTime.addLifeTime(burnTime);
-                        ItemStack container=((ItemEntity) entityIn).getItem().getContainerItem();
+                        ItemStack container=item.getItem().getContainerItem();
                         if (rcs>0&&!container.isEmpty())
                             InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), ItemHandlerHelper.copyStackWithSize(container, rcs));
                         if(is.getCount()<=0)
