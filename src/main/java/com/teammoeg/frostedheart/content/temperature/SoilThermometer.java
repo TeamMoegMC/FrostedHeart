@@ -59,7 +59,7 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public int getUseDuration(ItemStack stack) {
-        return 100;
+        return 50;
     }
 
     /**
