@@ -90,9 +90,10 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                     	int maxcs=(19200-lifeTime.getLifeTime())/rawBurnTime/3;
                     	int rcs=Math.min(maxcs,is.getCount());
                         int burnTime = rawBurnTime * 3 * rcs;
+                        ItemStack container=is.getContainerItem();
                         is.shrink(rcs);
                         lifeTime.addLifeTime(burnTime);
-                        ItemStack container=item.getItem().getContainerItem();
+                        
                         if (rcs>0&&!container.isEmpty())
                             InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), ItemHandlerHelper.copyStackWithSize(container, rcs));
                         if(is.getCount()<=0)

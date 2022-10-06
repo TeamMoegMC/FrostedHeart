@@ -18,9 +18,13 @@
 
 package com.teammoeg.frostedheart.content.temperature;
 
+import java.util.List;
+
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -32,6 +36,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext.FluidMode;
 import net.minecraft.util.math.RayTraceResult.Type;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class SoilThermometer extends FHBaseItem {
@@ -41,6 +47,7 @@ public class SoilThermometer extends FHBaseItem {
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    	playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"),true);
         playerIn.setActiveHand(handIn);
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
     }
@@ -52,14 +59,17 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayerEntity) {
             BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            entityplayer.sendMessage(GuiUtils.translateMessage("info.soil_thermometerbody", ChunkData.getTemperature(entityplayer.world, brtr.getPos())), entityplayer.getUniqueID());
+            entityplayer.sendMessage(GuiUtils.translateMessage("info.soil_thermometerbody", ((int)(ChunkData.getTemperature(entityplayer.world, brtr.getPos())*10))/10f), entityplayer.getUniqueID());
         }
         return stack;
     }
-
+    @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    	tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
+    }
     @Override
     public int getUseDuration(ItemStack stack) {
-        return 50;
+        return 100;
     }
 
     /**
