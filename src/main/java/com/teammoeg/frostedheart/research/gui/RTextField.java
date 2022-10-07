@@ -102,6 +102,7 @@ public class RTextField extends Widget {
 
     @Override
     public void addMouseOverText(TooltipList list) {
+    	if(parent.isEnabled())
         list.add(component);
     }
 

@@ -8,8 +8,10 @@ import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.*;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.research.machines.RubbingTool;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -220,6 +222,23 @@ public class ResearchListeners {
                 if (c instanceof ItemClue)
                     i.shrink(((ItemClue) c).test(trd, i));
         if(!i.isEmpty()&&i.getCount()>0) {
+        	if(i.getItem() instanceof RubbingTool) {
+        		if(RubbingTool.hasResearch(i)) {
+        			int pts=RubbingTool.getPoint(i);
+        			if(pts>0) {
+	        			Research rs=FHResearch.getResearch(RubbingTool.getResearch(i)).get();
+	        			RubbingTool.setResearch(i, null);
+	        			RubbingTool.setPoint(i, 0);
+	        			if(rs!=null&&pts>0) {
+	        				ResearchData rd=trd.getData(rs);
+	        				rd.commitPoints(pts);
+	        				rd.sendProgressPacket();
+	        			}
+        			}else RubbingTool.setResearch(i, null);
+        		}else {
+        			trd.getCurrentResearch().ifPresent(r->RubbingTool.setResearch(i,r.getLId()));
+        		}
+        	}
         	for(InspireRecipe ir:InspireRecipe.recipes) {
         		if(ir.item.test(i)) {
         			i.shrink(1);
@@ -227,7 +246,7 @@ public class ResearchListeners {
         			return;
         		}
         	}
-        		
+        	
         }
     }
 

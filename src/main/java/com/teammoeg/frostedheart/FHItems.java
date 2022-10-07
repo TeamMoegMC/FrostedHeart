@@ -16,6 +16,8 @@ import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.research.machines.FHBasePen;
 import com.teammoeg.frostedheart.research.machines.FHReusablePen;
+import com.teammoeg.frostedheart.research.machines.RubbingTool;
+
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
@@ -52,6 +54,7 @@ public class FHItems {
     public static Item military_rations = new CannedFoodItem("military_rations", createProps().food(new Food.Builder().hunger(6).saturation(0.6f).build()));
     public static Item steam_bottle = new SteamBottleItem("steam_bottle", createProps().maxStackSize(1));
     public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
+    public static Item rubbing_tool=new RubbingTool("rubbing_tool",createProps().maxDamage(11).setNoRepair());
     public static Item buff_coat = new FHBaseItem("buff_coat", createProps().defaultMaxDamage(384)).setRepairItem(raw_hide);
     public static Item gambeson = new FHBaseItem("gambeson", createProps().defaultMaxDamage(384)).setRepairItem(Items.WHITE_WOOL);
     public static Item kelp_lining = new FHBaseItem("kelp_lining", createProps().defaultMaxDamage(256)).setRepairItem(Items.KELP);

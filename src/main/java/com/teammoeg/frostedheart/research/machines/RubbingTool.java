@@ -1,7 +1,14 @@
 package com.teammoeg.frostedheart.research.machines;
 
+import java.util.List;
+
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
+
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -14,6 +21,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext.FluidMode;
 import net.minecraft.util.math.RayTraceResult.Type;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class RubbingTool extends FHBaseItem{
@@ -31,12 +40,13 @@ public class RubbingTool extends FHBaseItem{
     @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         if (worldIn.isRemote) return stack;
-        if(stack.getDamage()>=stack.getMaxDamage())return  stack;
-        
+        if(stack.getDamage()>=stack.getMaxDamage()-1)return  stack;
+        if(!hasResearch(stack))return stack;
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
             BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.NONE);
             if (brtr.getType() == Type.MISS) return stack;
+            
             TileEntity te=Utils.getExistingTileEntity(worldIn,brtr.getPos());
             if(te instanceof MechCalcTileEntity) {
             	MechCalcTileEntity mcte=(MechCalcTileEntity) te;
@@ -52,16 +62,25 @@ public class RubbingTool extends FHBaseItem{
         }
         return stack;
     }
-    public int getPoint(ItemStack stack) {
+    public static int getPoint(ItemStack stack) {
     	return stack.getOrCreateTag().getInt("points");
     }
-    public void setPoint(ItemStack stack,int val) {
-    	stack.getOrCreateTag().putInt("points",val);
+    public static void setPoint(ItemStack stack,int val) {
+    	if(val<=0)
+    		stack.getOrCreateTag().remove("points");
+    	else
+    		stack.getOrCreateTag().putInt("points",val);
     }
-    public void setResearch(ItemStack stack,String rs) {
-    	stack.getOrCreateTag().putString("research",rs);
+    public static void setResearch(ItemStack stack,String rs) {
+    	if(rs==null)
+    		stack.getOrCreateTag().remove("research");
+    	else
+    		stack.getOrCreateTag().putString("research",rs);
     }
-    public String getResearch(ItemStack stack) {
+    public static boolean hasResearch(ItemStack stack) {
+    	return stack.getOrCreateTag().contains("research");
+    }
+    public static String getResearch(ItemStack stack) {
     	return stack.getOrCreateTag().getString("research");
     }
     @Override
@@ -76,5 +95,24 @@ public class RubbingTool extends FHBaseItem{
     public UseAction getUseAction(ItemStack stack) {
         return UseAction.BLOCK;
     }
+
+	@Override
+	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+		if(hasResearch(stack)) {
+			Research rs=FHResearch.getResearch(getResearch(stack)).get();
+			if(rs!=null)
+				tooltip.add(GuiUtils.translateTooltip("rubbing.current",rs.getName()).mergeStyle(TextFormatting.GOLD));
+			else
+				tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+		}else
+			tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+		int points=getPoint(stack);
+		if(points>0) {
+			tooltip.add(GuiUtils.translateTooltip("rubbing.points",points));
+			tooltip.add(GuiUtils.translateTooltip("rubbing.points.hint").mergeStyle(TextFormatting.YELLOW));
+		}
+		super.addInformation(stack, worldIn, tooltip, flagIn);
+		
+	}
 
 }

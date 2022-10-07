@@ -54,7 +54,7 @@ public class ResearchData {
     }
 
     public long commitPoints(long pts) {
-        if (!active)
+        if (!active||finished)
             return pts;
         long tocommit = Math.min(pts, getResearch().getRequiredPoints() - committed);
         committed += tocommit;
