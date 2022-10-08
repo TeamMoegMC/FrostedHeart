@@ -2,8 +2,5 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "frostedheart:item/rubbing_paper"
-  },
-  "overrides":[
-  	{"predicate":{"damaged":1,"damage":0.9},"model":"frostedheart:item/rubbing_empty"}
-  ]
+  }
 }

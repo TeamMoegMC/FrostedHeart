@@ -40,7 +40,7 @@ public class RubbingTool extends FHBaseItem{
     @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         if (worldIn.isRemote) return stack;
-        if(stack.getDamage()>=stack.getMaxDamage()-1)return  stack;
+        if(stack.getDamage()>=stack.getMaxDamage())return  stack;
         if(!hasResearch(stack))return stack;
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
@@ -54,7 +54,7 @@ public class RubbingTool extends FHBaseItem{
             	mcte.currentPoints=0;
             	mcte.updatePoints();
             	if(crp>0) {
-            		stack.damageItem(1,entityplayer, ex -> {});
+            		stack.setDamage(stack.getDamage()+1);
             		crp+=getPoint(stack);
             		setPoint(stack,crp);
             	}

@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.research;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
@@ -214,7 +215,7 @@ public class ResearchListeners {
         return tickClues;
     }
 
-    public static void submitItem(ServerPlayerEntity s, ItemStack i) {
+    public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         LazyOptional<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent())
@@ -227,27 +228,26 @@ public class ResearchListeners {
         			int pts=RubbingTool.getPoint(i);
         			if(pts>0) {
 	        			Research rs=FHResearch.getResearch(RubbingTool.getResearch(i)).get();
-	        			RubbingTool.setResearch(i, null);
-	        			RubbingTool.setPoint(i, 0);
 	        			if(rs!=null&&pts>0) {
 	        				ResearchData rd=trd.getData(rs);
 	        				rd.commitPoints(pts);
 	        				rd.sendProgressPacket();
 	        			}
-        			}else RubbingTool.setResearch(i, null);
-        		}else {
-        			trd.getCurrentResearch().ifPresent(r->RubbingTool.setResearch(i,r.getLId()));
+        			}
+        			return new ItemStack(FHItems.rubbing_pad);
         		}
+				trd.getCurrentResearch().ifPresent(r->RubbingTool.setResearch(i,r.getLId()));
         	}
         	for(InspireRecipe ir:InspireRecipe.recipes) {
         		if(ir.item.test(i)) {
         			i.shrink(1);
         			EnergyCore.addPersistentEnergy(s, ir.inspire);
-        			return;
+        			return i;
         		}
         	}
         	
         }
+        return i;
     }
 
     public static int fetchGameLevel(ServerPlayerEntity s) {

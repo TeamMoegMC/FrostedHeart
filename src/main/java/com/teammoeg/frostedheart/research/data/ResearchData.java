@@ -50,16 +50,19 @@ public class ResearchData {
         if(contribution>=0.98)
         	return r.getRequiredPoints();
         currentProgress += contribution * r.getRequiredPoints();
-        return currentProgress;
+        return Math.min(currentProgress,r.getRequiredPoints());
     }
 
     public long commitPoints(long pts) {
         if (!active||finished)
             return pts;
         long tocommit = Math.min(pts, getResearch().getRequiredPoints() - committed);
-        committed += tocommit;
-        checkComplete();
-        return pts - tocommit;
+        if(tocommit>0) {
+	        committed += tocommit;
+	        checkComplete();
+	        return pts - tocommit;
+        }
+		return pts;
     }
     public boolean canComplete() {
     	for(Clue cl:getResearch().getClues()) {
