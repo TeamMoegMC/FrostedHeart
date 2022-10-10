@@ -29,26 +29,33 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 
 public class CannedFoodItem extends FHBaseItem {
 
-
+	boolean showtt=true;
     public CannedFoodItem(String name, Properties properties) {
         super(name, properties);
     }
 
-    @Override
+    public CannedFoodItem(String name, Properties properties, boolean showtt) {
+		super(name, properties);
+		this.showtt = showtt;
+	}
+
+	@Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
-        entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e->e.reduceLevel(5));
+        entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e->e.reduceLevel(this.getFood().getHealing()));
         return itemstack;
     }
 
 	@Override
 	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-		tooltip.add(GuiUtils.translateTooltip("canned_food"));
+		if(showtt)
+			tooltip.add(GuiUtils.translateTooltip("canned_food"));
 	}
 
 }
