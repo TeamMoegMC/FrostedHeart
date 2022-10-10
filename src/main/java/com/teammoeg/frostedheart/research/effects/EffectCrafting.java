@@ -47,6 +47,7 @@ public class EffectCrafting extends Effect {
         for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
             if (r.getRecipeOutput().getItem().equals(this.item)) {
                 unlocks.add(r);
+                System.out.println(r.getId().toString());
             }
         }
     }

@@ -29,6 +29,7 @@
     "create.MixinSmartTileEntity",
     "create.MixinToolboxInventory",
     "create.RecipeGridHandlerMixin",
+    "create.MixinMechanicalCraftingRecipe",
     "diet.DietApiImplMixin",
     "engdecor.EdMilkerMixin",
     "forge.FluidHandlerItemStackMixin",

@@ -200,6 +200,7 @@ public class ResearchListeners {
     public static CategoryUnlockList categories = new CategoryUnlockList();
     private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
     private static ListenerList<KillClue> killClues = new ListenerList<>();
+	public static UUID te;
 
     private ResearchListeners() {
 

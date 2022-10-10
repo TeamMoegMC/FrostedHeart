@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.research.effects;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.*;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -359,6 +360,9 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     @OnlyIn(Dist.CLIENT)
     public void setGranted(boolean b) {
         ClientResearchDataAPI.getData().setGrant(this, b);
+        if(this instanceof EffectCrafting) {
+        	JEICompat.syncJEI();
+        }
     }
 
     /**

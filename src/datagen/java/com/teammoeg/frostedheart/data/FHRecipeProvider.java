@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.data;
 
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -34,11 +35,14 @@ import blusunrize.immersiveengineering.api.IETags;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
+import net.minecraft.item.Food;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHRecipeProvider extends RecipeProvider {
 	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();
@@ -62,7 +66,10 @@ public class FHRecipeProvider extends RecipeProvider {
 				
 				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_"+i.getRegistryName().getPath()),Ingredient.fromItems(i),f,3,2));
 		});
-		try (Scanner sc = new Scanner(FMLPaths.GAMEDIR.get()
+
+		
+		try (PrintStream ps=new PrintStream(FMLPaths.GAMEDIR.get()
+				.resolve("../src/datagen/resources/data/frostedheart/data/food_healing.csv").toFile());Scanner sc = new Scanner(FMLPaths.GAMEDIR.get()
 				.resolve("../src/datagen/resources/data/frostedheart/data/food_values.csv").toFile(), "UTF-8")) {
 			if(sc.hasNextLine()) {
 				sc.nextLine();
@@ -71,7 +78,19 @@ public class FHRecipeProvider extends RecipeProvider {
 					if(!line.isEmpty()) {
 						String[] parts=line.split(",");
 						ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
-						DietValueBuilder dvb=new DietValueBuilder(id,new ResourceLocation(parts[0]));
+						ResourceLocation item=new ResourceLocation(parts[0]);
+						Item it=ForgeRegistries.ITEMS.getValue(item);
+						if(it==null||it==Items.AIR) {
+							System.out.println(item.toString()+" not exist");
+							ps.println(item+","+parts[1]);
+						}else {
+							Food f=it.getFood();
+							if(f==null)
+								ps.println(item+","+parts[1]);
+							else
+								ps.println(item+","+f.getHealing());
+						}
+						DietValueBuilder dvb=new DietValueBuilder(id,item);
 						for(int i=0;i<6;i++) {
 							float f=Float.parseFloat(parts[i+2])*10f;
 							if(f!=0)
@@ -82,6 +101,7 @@ public class FHRecipeProvider extends RecipeProvider {
 				}
 			}
 		}
+		
 		// recipesGenerator(out);
 		catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
