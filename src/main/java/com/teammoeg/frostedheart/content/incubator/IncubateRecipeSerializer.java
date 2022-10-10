@@ -65,17 +65,16 @@ public class IncubateRecipeSerializer extends IERecipeSerializer<IncubateRecipe>
     @Nullable
     @Override
     public IncubateRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-        return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), buffer.readItemStack(), buffer.readFluidStack(), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readFloat(), buffer.readVarInt(), buffer.readVarInt());
+        //return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), buffer.readItemStack(), buffer.readFluidStack(), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readFloat(), buffer.readVarInt(), buffer.readVarInt());
+    	return null;
     }
 
     @Override
     public void write(PacketBuffer buffer, IncubateRecipe recipe) {
-        recipe.input.write(buffer);
+        /*recipe.input.write(buffer);
         buffer.writeItemStack(recipe.output);
         buffer.writeFluidStack(recipe.output_fluid);
-        SerializeUtil.writeOptional(buffer, recipe.seed, IngredientWithSize::write);
-        buffer.writeFloat(recipe.seed_conserve);
         buffer.writeVarInt(recipe.water);
-        buffer.writeVarInt(recipe.time);
+        buffer.writeVarInt(recipe.time);*/
     }
 }

@@ -20,6 +20,7 @@ import com.teammoeg.frostedheart.research.machines.RubbingTool;
 
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Food;
+import net.minecraft.item.Foods;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.Properties;
 import net.minecraft.item.Items;
@@ -52,6 +53,7 @@ public class FHItems {
     public static Item rye_porridge = new FHSoupItem("rye_porridge", createProps().maxStackSize(1).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
     public static Item vegetable_soup = new FHSoupItem("vegetable_soup", createProps().maxStackSize(1).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
     public static Item military_rations = new CannedFoodItem("military_rations", createProps().food(new Food.Builder().hunger(6).saturation(0.6f).build()));
+    public static Item compressed_biscuits = new CannedFoodItem("compressed_biscuits", createProps().food(Foods.BREAD));
     public static Item steam_bottle = new SteamBottleItem("steam_bottle", createProps().maxStackSize(1));
     public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
     public static Item rubbing_tool=new RubbingTool("rubbing_tool",createProps().maxDamage(5).setNoRepair());
