@@ -17,14 +17,13 @@ public class IncubateRecipe extends IESerializableRecipe {
     public static IRecipeType<GeneratorRecipe> TYPE;
     public static RegistryObject<IncubateRecipeSerializer> SERIALIZER;
 
-    public final IngredientWithSize input;
-    public final ItemStack output;
-    
-    public final FluidStack output_fluid;
-    public final IngredientWithSize seed;
-    public final float seed_conserve;
-    public final int water;
-    public final int time;
+    public IngredientWithSize input;
+    public IngredientWithSize catalyst;
+    public ItemStack output;
+    public FluidStack output_fluid;
+    public boolean consume_catalyst;
+    public int water;
+    public int time;
 
     public IncubateRecipe(ResourceLocation id, IngredientWithSize input,
                           ItemStack output, FluidStack output_fluid, IngredientWithSize seed, float seed_conserve, int water,
@@ -33,8 +32,6 @@ public class IncubateRecipe extends IESerializableRecipe {
         this.input = input;
         this.output = output;
         this.output_fluid = output_fluid;
-        this.seed = seed;
-        this.seed_conserve = seed_conserve;
         this.water = water;
         this.time = time;
     }

@@ -24,23 +24,23 @@ public class FHVersion {
         }
 
     }
-    private enum SubType {//stable>empty>hf>rc>pre
+    private enum SubType {//stable>hf>empty>rc>pre
         pre,
         rc,
         hf,
         stable;
         public static EqualState compare(SubType v1,SubType v2){
         	if(v1==null)
-        		return v2==stable?EqualState.lt:(v2==null?EqualState.eq:EqualState.gt);
+        		return v2==stable||v2==hf?EqualState.lt:(v2==null?EqualState.eq:EqualState.gt);
         	if(v2==null)
-        		return v1==stable?EqualState.gt:EqualState.lt;
+        		return v1==stable||v1==hf?EqualState.gt:EqualState.lt;
         	return EqualState.of(v1.ordinal() - v2.ordinal());
         }
         public static EqualState compareNoEq(SubType v1,SubType v2){
         	if(v1==null)
-        		return v2==stable?EqualState.lt:EqualState.gt;
+        		return v2==stable||v2==hf?EqualState.lt:EqualState.gt;
         	if(v2==null)
-        		return v1==stable?EqualState.gt:EqualState.lt;
+        		return v1==stable||v1==hf?EqualState.gt:EqualState.lt;
         	return EqualState.of(v1.ordinal() - v2.ordinal());
         }
     }

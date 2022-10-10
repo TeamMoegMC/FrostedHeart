@@ -29,6 +29,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHFluids {
     public static final ResourceLocation STILL_FLUID_TEXTURE = new ResourceLocation("block/water_still");
+    public static final ResourceLocation PROTEIN_FLUID_TEXTURE = new ResourceLocation(FHMain.MODID,"block/protein_fluid");
     public static final ResourceLocation FLOWING_FLUID_TEXTURE = new ResourceLocation("block/water_flow");
     public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(ForgeRegistries.FLUIDS, FHMain.MODID);
 
@@ -86,4 +87,5 @@ public class FHFluids {
     public static ForgeFlowingFluid.Properties CHLORINE_PROPERTIES = new ForgeFlowingFluid.Properties(CHLORINE, CHLORINE_FLOWING, FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE)
             .color(0xFFADFF2F).density(-1).gaseous().viscosity(-1)).block(null)
             .slopeFindDistance(3).explosionResistance(100F);
+
 }
