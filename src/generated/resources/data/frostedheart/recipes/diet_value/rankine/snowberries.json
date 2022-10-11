@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.00361577,
+    "sugars": 0.005423655,
     "vegetables": 0.00440097
   },
   "item": "rankine:snowberries"

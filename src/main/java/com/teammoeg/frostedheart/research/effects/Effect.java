@@ -360,9 +360,6 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     @OnlyIn(Dist.CLIENT)
     public void setGranted(boolean b) {
         ClientResearchDataAPI.getData().setGrant(this, b);
-        if(this instanceof EffectCrafting) {
-        	JEICompat.syncJEI();
-        }
     }
 
     /**

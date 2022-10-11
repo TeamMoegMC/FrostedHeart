@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.0122771,
+    "sugars": 0.01841565,
     "proteins": 0.01778604,
-    "vitamin": 0.0122771,
+    "vitamin": 0.01841565,
     "grains": 0.01778604
   },
   "item": "create:sweet_roll"

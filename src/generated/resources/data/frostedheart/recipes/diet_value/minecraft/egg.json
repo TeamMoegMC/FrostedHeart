@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.01778604,
-    "vitamin": 0.01355914
+    "vitamin": 0.02033871
   },
   "item": "minecraft:egg"
 }

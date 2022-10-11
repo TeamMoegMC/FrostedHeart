@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.03557208,
-    "vitamin": 0.01785759
+    "vitamin": 0.026786387
   },
   "item": "minecraft:cooked_mutton"
 }

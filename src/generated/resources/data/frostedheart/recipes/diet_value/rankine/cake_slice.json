@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.00409237,
+    "sugars": 0.0061385552,
     "grains": 0.011857361
   },
   "item": "rankine:cake_slice"

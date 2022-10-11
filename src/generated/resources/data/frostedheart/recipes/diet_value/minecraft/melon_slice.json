@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.00723154,
+    "sugars": 0.01084731,
     "vegetables": 0.011857361
   },
   "item": "minecraft:melon_slice"

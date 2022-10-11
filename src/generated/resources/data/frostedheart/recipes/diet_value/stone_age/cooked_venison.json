@@ -2,7 +2,7 @@
   "type": "frostedheart:diet_override",
   "groups": {
     "proteins": 0.01778604,
-    "vitamin": 0.0122771
+    "vitamin": 0.01841565
   },
   "item": "stone_age:cooked_venison"
 }

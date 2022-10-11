@@ -41,7 +41,7 @@ public class WaterLevelFluidRecipe implements IFinishedRecipe {
 
 	@Override
 	public IRecipeSerializer<?> getSerializer() {
-		return RecipeSerializersRegistry.WATER_LEVEL_ITEM_RECIPE_SERIALIZER.get();
+		return RecipeSerializersRegistry.WATER_LEVEL_FLUID_RECIPE_SERIALIZER.get();
 	}
 
 	@Override

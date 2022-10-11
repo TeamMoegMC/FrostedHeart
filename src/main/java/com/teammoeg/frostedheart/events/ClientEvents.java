@@ -253,8 +253,11 @@ public class ClientEvents {
 
 	@SubscribeEvent
 	public static void onResearchStatus(ClientResearchStatusEvent event) {
-		if(event.isCompletion())
-			ClientUtils.mc().getToastGui().add(new ResearchToast(event.getResearch()));
+		if (event.isStatusChanged()) {
+			if (event.isCompletion())
+				ClientUtils.mc().getToastGui().add(new ResearchToast(event.getResearch()));
+		} else if (!event.isCompletion())
+			return;
 		for (Effect e : event.getResearch().getEffects())
 			if (e instanceof EffectCrafting || e instanceof EffectShowCategory) {
 				JEICompat.syncJEI();
@@ -277,8 +280,8 @@ public class ClientEvents {
 		Item i = stack.getItem();
 		ITempAdjustFood itf = null;
 		IWarmKeepingEquipment iwe = null;
-		for(InspireRecipe ir:InspireRecipe.recipes) {
-			if(ir.item.test(stack)) {
+		for (InspireRecipe ir : InspireRecipe.recipes) {
+			if (ir.item.test(stack)) {
 				event.getToolTip().add(GuiUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
 				break;
 			}
@@ -339,7 +342,8 @@ public class ClientEvents {
 							.add(GuiUtils.translateTooltip("block_temp", temps).mergeStyle(TextFormatting.AQUA));
 		}
 		if (itf != null) {
-			float temp = itf.getHeat(stack,event.getPlayer()==null?37:TemperatureCore.getEnvTemperature(event.getPlayer())) * tspeed;
+			float temp = itf.getHeat(stack,
+					event.getPlayer() == null ? 37 : TemperatureCore.getEnvTemperature(event.getPlayer())) * tspeed;
 			temp = (Math.round(temp * 1000)) / 1000.0F;// round
 			String temps = Float.toString(temp);
 			if (temp != 0)
@@ -384,7 +388,7 @@ public class ClientEvents {
 		int anchorX = event.getWindow().getScaledWidth() / 2;
 		int anchorY = event.getWindow().getScaledHeight();
 		if (event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && player != null) {
-			
+
 			if (!player.isCreative() && !player.isSpectator()) {
 				if (TemperatureCore.getBodyTemperature(player) <= -0.5) {
 					FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
