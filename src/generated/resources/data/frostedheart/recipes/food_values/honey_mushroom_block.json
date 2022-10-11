@@ -1,0 +1,13 @@
+{
+  "type": "thermopolium:food",
+  "heal": 3,
+  "sat": 0.5,
+  "items": [
+    {
+      "item": "rankine:honey_mushroom_block"
+    }
+  ],
+  "item": {
+    "item": "rankine:honey_mushroom_block"
+  }
+}

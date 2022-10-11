@@ -27,16 +27,20 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import com.cannolicatfish.rankine.init.RankineLists;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.thermopolium.THPFluids;
+import com.teammoeg.thermopolium.data.recipes.FoodValueRecipe;
 
 import blusunrize.immersiveengineering.api.IETags;
+import net.minecraft.block.Block;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
@@ -66,7 +70,10 @@ public class FHRecipeProvider extends RecipeProvider {
 				
 				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_"+i.getRegistryName().getPath()),Ingredient.fromItems(i),f,3,2));
 		});
-
+		for(Block i:RankineLists.MUSHROOM_BLOCKS) {
+			Item mi=i.asItem();
+			out.accept(new FoodValueRecipe(new ResourceLocation(FHMain.MODID,"food_values/"+mi.getRegistryName().getPath()),3,.5f,new ItemStack(mi),mi));
+		}
 		
 		try (PrintStream ps=new PrintStream(FMLPaths.GAMEDIR.get()
 				.resolve("../src/datagen/resources/data/frostedheart/data/food_healing.csv").toFile());Scanner sc = new Scanner(FMLPaths.GAMEDIR.get()
