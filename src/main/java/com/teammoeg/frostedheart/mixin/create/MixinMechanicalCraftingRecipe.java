@@ -24,7 +24,7 @@ public class MixinMechanicalCraftingRecipe extends ShapedRecipe{
 		super(idIn, groupIn, recipeWidthIn, recipeHeightIn, recipeItemsIn, recipeOutputIn);
 	}
 
-	@Inject(at=@At("HEAD"),method="matches",remap=true,cancellable=true)
+	@Inject(at=@At("HEAD"),method="matches",remap=false,cancellable=true)
 	public void fh$matches(CraftingInventory inv, World worldIn,CallbackInfoReturnable<Boolean> cbi) {
 		if (!ResearchListeners.canUseRecipe(ResearchListeners.te, this))cbi.setReturnValue(false);
 	}
