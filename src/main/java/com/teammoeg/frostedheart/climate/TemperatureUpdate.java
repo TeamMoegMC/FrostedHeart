@@ -36,6 +36,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -106,7 +107,7 @@ public class TemperatureUpdate {
             float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
             float gameTime = world.getDayTime() % 24000L;
             gameTime = gameTime / (200 / 3);
-            gameTime = (float) Math.sin(Math.toRadians(gameTime));
+            gameTime = MathHelper.sin((float) Math.toRadians(gameTime));
             float bt=TemperatureCore.getBlockTemp(player);
             envtemp += bt;
             envtemp += skyLight > 5.0F ? (FHUtils.isRainingAt(pos, world) ? -8F : (gameTime * 5.0F)) : (-5.0F);
