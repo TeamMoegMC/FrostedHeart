@@ -1,0 +1,13 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "frostedheart:block/protein_crate_back",
+    "down": "frostedheart:block/stone_block_bottom",
+    "up": "frostedheart:block/protein_crate_top",
+    "west": "frostedheart:block/protein_crate_left",
+    "east": "frostedheart:block/protein_crate_right",
+    "north": "frostedheart:block/protein_crate_back",
+    "south": "frostedheart:block/protein_crate_front"
+    
+  }
+}
