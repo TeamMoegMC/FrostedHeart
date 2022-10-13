@@ -265,5 +265,6 @@
   "tooltip.frostedheart.temperature_probe": "Carry it with you to display ambient temperature",
   "tooltip.frostedheart.weather_radar": "Carry it with you to receive weather forecast at morning and evening",
   "tooltip.frostedheart.weather_helmet": "Gear it up to receive weather forecast at morning and evening",
-  "tooltip.frostedheart.inspire_item":"Inspect this in drawing desk yields inspiration."
+  "tooltip.frostedheart.inspire_item":"Inspect this in drawing desk yields inspiration.",
+  "manual.frostedheart.main": "Generators"
 }

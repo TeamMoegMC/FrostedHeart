@@ -18,7 +18,12 @@
 
 package com.teammoeg.frostedheart.events;
 
+import blusunrize.immersiveengineering.api.ManualHelper;
+import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import blusunrize.lib.manual.ManualEntry;
+import blusunrize.lib.manual.ManualInstance;
+import blusunrize.lib.manual.Tree;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
@@ -69,6 +74,7 @@ import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
+    private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
     /**
      * @param event
      */
@@ -105,6 +111,7 @@ public class ClientRegistryEvents {
         render.addLayer(new HeaterVestRenderer<>(render));
         render = skinMap.get("slim");
         render.addLayer(new HeaterVestRenderer<>(render));
+        addManual();
     }
 
     public static <C extends Container, S extends Screen & IHasContainer<C>> void
@@ -165,6 +172,21 @@ public class ClientRegistryEvents {
             event.addSprite(LiningFinalizedModel.strawLiningTorsoTexture);
         }
     }
-
+    public static void addManual() {
+        ManualInstance man = ManualHelper.getManual();
+        CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 100);
+        {
+            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
+            builder.addSpecialElement("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
+            man.addEntry(CATEGORY, builder.create(), 0);
+        }
+        {
+            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
+            builder.addSpecialElement("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_2"));
+            man.addEntry(CATEGORY, builder.create(), 1);
+        }
+    }
 
 }
