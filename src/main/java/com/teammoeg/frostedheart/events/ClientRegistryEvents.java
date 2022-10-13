@@ -178,7 +178,7 @@ public class ClientRegistryEvents {
     }
     public static void addManual() {
         ManualInstance man = ManualHelper.getManual();
-        CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 100);
+        CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
             builder.addSpecialElement("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR));
@@ -188,7 +188,7 @@ public class ClientRegistryEvents {
         {
             ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
             builder.addSpecialElement("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2));
-            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_2"));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
             man.addEntry(CATEGORY, builder.create(), 1);
         }
     }
