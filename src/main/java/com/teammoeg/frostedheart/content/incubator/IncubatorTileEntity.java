@@ -38,7 +38,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class IncubatorTileEntity extends IEBaseTileEntity implements INetworkConsumer, ITickableTileEntity,
+public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTileEntity,
 		FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE, IEBlockInterfaces.IProcessTile {
 	protected NonNullList<ItemStack> inventory;
 	protected FluidTank[] fluid = new FluidTank[] { new FluidTank(6000, w -> w.getFluid() == Fluids.WATER),
@@ -48,19 +48,22 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements INetworkCon
 	int water;
 
 	float efficiency = 1;
-	NetworkHolder network = new NetworkHolder();
+	
 	ItemStack out = ItemStack.EMPTY;
 	FluidStack outfluid = FluidStack.EMPTY;
 
 	public IncubatorTileEntity() {
-		super(getTileType());
+		super(FHTileTypes.INCUBATOR.get());
+		this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
+		LazyOptional.of(() -> new IEInventoryHandler(15, this));
+	}
+	public IncubatorTileEntity(TileEntityType<?> type) {
+		super(type);
 		this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
 		LazyOptional.of(() -> new IEInventoryHandler(15, this));
 	}
 
-	protected static TileEntityType<IncubatorTileEntity> getTileType() {
-		return FHTileTypes.INCUBATOR.get();
-	}
+
 
 	@Nullable
 	@Override
@@ -99,19 +102,22 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements INetworkCon
 	public IInteractionObjectIE getGuiMaster() {
 		return this;
 	}
-
+	protected boolean fetchFuel() {
+		ItemStack is = inventory.get(0);
+		if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
+			is.shrink(1);
+			fuel = fuelMax = 16000;
+			return true;
+		}
+		return false;
+	}
 	@Override
 	public void tick() {
 		if (!this.world.isRemote) {
 			if (process > 0) {
 				boolean changed = false;
 				if (fuel <= 0) {
-					ItemStack is = inventory.get(0);
-					if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
-						is.shrink(1);
-						fuel = fuelMax = 16000;
-						changed = true;
-					}
+					changed=fetchFuel();
 				}
 				if (fuel > 0) {
 					if(process%20==0) {
@@ -163,25 +169,6 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements INetworkCon
 		}
 	}
 
-	@Override
-	public boolean connect(Direction to, int dist) {
-		TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-		if (te instanceof EnergyNetworkProvider) {
-			network.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean canConnectAt(Direction to) {
-		return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
-	}
-
-	@Override
-	public NetworkHolder getHolder() {
-		return network;
-	}
 
 	@Override
 	public void readCustomNBT(CompoundNBT compound, boolean client) {

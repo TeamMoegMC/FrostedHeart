@@ -23,7 +23,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.RegistryObject;
 import javax.annotation.Nullable;
 
-public class IncubatorBlock extends FHGuiBlock implements ISteamEnergyBlock ,ILiquidContainer {
+public class IncubatorBlock extends FHGuiBlock implements ILiquidContainer {
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     static BooleanProperty LIT = BlockStateProperties.LIT;
     private RegistryObject<TileEntityType<IncubatorTileEntity>> type;
