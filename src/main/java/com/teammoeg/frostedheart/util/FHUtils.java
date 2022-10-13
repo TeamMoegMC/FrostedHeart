@@ -113,7 +113,7 @@ public class FHUtils {
     }
 
     public static boolean canSmallTreeGenerate(World w, BlockPos p, Random r) {
-        return r.nextInt(1) == 0;
+        return r.nextInt(2) == 0;
 
     }
     public static boolean canTreeGrow(World w, BlockPos p, Random r) {
@@ -128,7 +128,7 @@ public class FHUtils {
     }
     public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
 
-        return r.nextInt(8) == 0;
+        return r.nextInt(6) == 0;
 
     }
 

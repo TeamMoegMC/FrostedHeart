@@ -1,0 +1,7 @@
+{
+  "parent": "rankine:block/template_rankine_ore",
+  "textures": {
+    "background": "minecraft:block/end_stone",
+    "overlay": "frostedheart:block/halite_ore"
+  }
+}

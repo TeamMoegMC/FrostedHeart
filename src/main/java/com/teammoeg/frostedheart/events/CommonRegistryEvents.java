@@ -53,7 +53,7 @@ public class CommonRegistryEvents {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
-
+        FHBlocks.halite_ore = new FHOreBlock("halite_ore", RankineBlocks.DEF_ORE.harvestLevel(2), FHBlockItem::new);
         for (Block block : registeredFHBlocks) {
             try {
                 event.getRegistry().register(block);

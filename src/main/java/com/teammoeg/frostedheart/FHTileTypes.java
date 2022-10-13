@@ -6,6 +6,7 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
@@ -69,7 +70,9 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<SaunaTileEntity>> SAUNA = REGISTER.register(
             "sauna", makeType(SaunaTileEntity::new, () -> FHBlocks.sauna)
     );
-
+    public static final RegistryObject<TileEntityType<IncubatorTileEntity>> INCUBATOR = REGISTER.register(
+            "incubator", makeType(IncubatorTileEntity::new, () -> FHBlocks.incubator1)
+    );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

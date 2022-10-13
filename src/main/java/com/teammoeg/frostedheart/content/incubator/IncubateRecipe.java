@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.incubator;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
@@ -14,7 +13,7 @@ import java.util.Collections;
 import java.util.Map;
 
 public class IncubateRecipe extends IESerializableRecipe {
-    public static IRecipeType<GeneratorRecipe> TYPE;
+    public static IRecipeType<IncubateRecipe> TYPE;
     public static RegistryObject<IncubateRecipeSerializer> SERIALIZER;
 
     public IngredientWithSize input;
@@ -25,19 +24,23 @@ public class IncubateRecipe extends IESerializableRecipe {
     public int water;
     public int time;
 
-    public IncubateRecipe(ResourceLocation id, IngredientWithSize input,
-                          ItemStack output, FluidStack output_fluid, IngredientWithSize seed, float seed_conserve, int water,
-                          int time) {
-        super(ItemStack.EMPTY, TYPE, id);
-        this.input = input;
-        this.output = output;
-        this.output_fluid = output_fluid;
-        this.water = water;
-        this.time = time;
-    }
 
-    @Override
-    protected IERecipeSerializer getIESerializer() {
+
+    public IncubateRecipe(ResourceLocation id, IngredientWithSize input,
+			IngredientWithSize catalyst, ItemStack output, FluidStack output_fluid, boolean consume_catalyst, int water,
+			int time) {
+		super(output,TYPE, id);
+		this.input = input;
+		this.catalyst = catalyst;
+		this.output = output;
+		this.output_fluid = output_fluid;
+		this.consume_catalyst = consume_catalyst;
+		this.water = water;
+		this.time = time;
+	}
+
+	@Override
+    protected IERecipeSerializer<IncubateRecipe> getIESerializer() {
         return SERIALIZER.get();
     }
 
@@ -47,5 +50,7 @@ public class IncubateRecipe extends IESerializableRecipe {
     }
 
     public static Map<ResourceLocation, IncubateRecipe> recipeList = Collections.emptyMap();
-
+    public static IncubateRecipe findRecipe(ItemStack in,ItemStack catalyst) {
+    	return recipeList.values().stream().filter(t->t.input.test(in)).filter(t->t.catalyst==null||t.catalyst.test(catalyst)).findAny().orElse(null);
+    }
 }

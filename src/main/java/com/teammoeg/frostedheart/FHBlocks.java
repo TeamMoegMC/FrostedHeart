@@ -10,6 +10,7 @@ import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
+import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
@@ -38,9 +39,12 @@ public class FHBlocks {
     public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
     public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel, FHBlockItem::new);
     public static Block relic_chest = new RelicChestBlock("relic_chest");
+    public static Block incubator1 = new IncubatorBlock("incubator", stoneDecoProps,FHTileTypes.INCUBATOR);
+    public static Block incubator2 = new IncubatorBlock("heat_incubator",metalDecoProps,FHTileTypes.INCUBATOR);
     //        public static Block access_control = new AccessControlBlock("access_control", FHBlockItem::new);
 //        public static Block gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK), FHBlockItem::new);
     public static Block fluorite_ore;
+    public static Block halite_ore;
 
     public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
             .create(Material.ROCK).sound(SoundType.WOOD)

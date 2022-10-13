@@ -1,0 +1,15 @@
+{
+  "type": "frostedheart:incubate",
+  "input": {
+    "item": "minecraft:dirt"
+  },
+  "catalyst": {
+    "item": "minecraft:red_mushroom"
+  },
+  "output": {
+    "item": "minecraft:red_mushroom",
+    "count":5
+  },
+  "time": 2000,
+  "water":1
+}
