@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.content.incubator;
 
 import com.teammoeg.frostedheart.base.block.FHGuiBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
-import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ILiquidContainer;

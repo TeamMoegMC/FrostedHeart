@@ -21,7 +21,14 @@ public class NetworkHolder {
             this.dist = Integer.MAX_VALUE;
         }
     }
-
+    public boolean tryDrainHeat(float val) {
+    	if (!isValid())return false;
+    	if(sen.hasEnoughHeat(val)) {
+    		sen.drainHeat(val);
+    		return true;
+    	}
+    	return false;
+    }
     public float drainHeat(float val) {
         if (!isValid()) return 0;
         return sen.drainHeat(val);

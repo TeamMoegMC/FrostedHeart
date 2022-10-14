@@ -43,4 +43,14 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 		network.tick();
 	}
 
+	@Override
+	protected boolean fetchFuel() {
+		
+		if(network.tryDrainHeat(4)) {
+			fuel=fuelMax=160;
+			return true;
+		}
+		return false;
+	}
+
 }

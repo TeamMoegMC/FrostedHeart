@@ -27,7 +27,10 @@ public class SteamEnergyNetwork {
     public SteamEnergyNetwork(HeatProvider provider) {
         this.provider = provider;
     }
-
+    
+    public boolean hasEnoughHeat(float val) {
+    	return provider.getMaxHeat()>=val;
+    }
     public float drainHeat(float val) {
         return provider.drainHeat(val);
     }

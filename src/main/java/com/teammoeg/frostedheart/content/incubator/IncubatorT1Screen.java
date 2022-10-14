@@ -67,6 +67,14 @@ public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
         	int h = (int) (14 * (tile.fuel / (float) tile.fuelMax));
         	this.blit(transform, guiLeft + 35, guiTop + 35+(14-h), 198, 64+(14-h), 14,h);
         }
+        if(tile.efficiency>0) {
+        	int h = (int) (35 * (tile.efficiency));
+        	if(tile.isFoodRecipe)
+        		this.blit(transform, guiLeft + 19, guiTop + 35+(35-h), 198, 29+(35-h), 9,h);
+        	else
+        		this.blit(transform, guiLeft + 19, guiTop + 35+(35-h), 207, 29+(35-h), 9,h);
+        }else
+        	this.blit(transform, guiLeft + 19, guiTop + 35, 216, 29, 9,35);
     }
 
     @Override

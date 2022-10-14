@@ -24,6 +24,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -46,9 +47,9 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	int process, processMax;
 	int fuel, fuelMax;
 	int water;
-
-	float efficiency = 1;
-	
+	boolean isFoodRecipe;
+	float efficiency = 0;
+	ResourceLocation last;
 	ItemStack out = ItemStack.EMPTY;
 	FluidStack outfluid = FluidStack.EMPTY;
 
@@ -57,13 +58,12 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
 		LazyOptional.of(() -> new IEInventoryHandler(15, this));
 	}
+
 	public IncubatorTileEntity(TileEntityType<?> type) {
 		super(type);
 		this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
 		LazyOptional.of(() -> new IEInventoryHandler(15, this));
 	}
-
-
 
 	@Nullable
 	@Override
@@ -91,8 +91,6 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 	}
 
-
-
 	@Override
 	public boolean canUseGui(PlayerEntity arg0) {
 		return true;
@@ -102,6 +100,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	public IInteractionObjectIE getGuiMaster() {
 		return this;
 	}
+
 	protected boolean fetchFuel() {
 		ItemStack is = inventory.get(0);
 		if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
@@ -111,64 +110,78 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		}
 		return false;
 	}
+
 	@Override
 	public void tick() {
 		if (!this.world.isRemote) {
 			if (process > 0) {
-				boolean changed = false;
+				if(efficiency<=0.05&&!isFoodRecipe)
+					efficiency=0.05f;
 				if (fuel <= 0) {
-					changed=fetchFuel();
+					fetchFuel();
 				}
 				if (fuel > 0) {
-					if(process%20==0) {
-						if(fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water)
+					boolean d=Math.random()<efficiency;
+					if (process % 20 == 0&&d) {
+						if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
+							efficiency+=0.005;
 							fluid[0].drain(water, FluidAction.EXECUTE);
-						else
-							 return;
+						}else {
+							efficiency-=0.01;
+							return;
+						}
 					}
-					
+					if(d)
+						process--;
 					fuel--;
-					process--;
-					changed = true;
-				}
-				if (changed)
-					this.markContainingBlockForUpdate(null);
+				}else efficiency-=0.0005;
+				this.markContainingBlockForUpdate(null);
 				return;
 			} else if (!out.isEmpty() || !outfluid.isEmpty()) {
 				if (ItemHandlerHelper.canItemStacksStack(out, inventory.get(3))) {
-					ItemStack is=inventory.get(3);
-					int gr=Math.min(out.getCount(),is.getMaxStackSize()-is.getCount());
+					ItemStack is = inventory.get(3);
+					int gr = Math.min(out.getCount(), is.getMaxStackSize() - is.getCount());
 					out.shrink(gr);
 					is.grow(gr);
-					
-				}else if(inventory.get(3).isEmpty()) {
-					inventory.set(3,out);
+
+				} else if (inventory.get(3).isEmpty()) {
+					inventory.set(3, out);
 					out = ItemStack.EMPTY;
 				}
 				if (!outfluid.isEmpty())
 					outfluid.shrink(fluid[1].fill(outfluid, FluidAction.EXECUTE));
 			} else {
 				IncubateRecipe ir = IncubateRecipe.findRecipe(inventory.get(2), inventory.get(1));
-				if (ir == null)
-					return;
-				if (!ir.output.isEmpty()&&!inventory.get(3).isEmpty() && !ItemHandlerHelper.canItemStacksStack(ir.output, out))
-					return;
-				if (!ir.output_fluid.isEmpty()
-						&& fluid[1].fill(ir.output_fluid, FluidAction.SIMULATE) != ir.output_fluid.getAmount())
-					return;
-				if (ir.input != null)
-					inventory.get(2).shrink(ir.input.getCount());
-				if (ir.consume_catalyst && ir.catalyst != null)
-					inventory.get(1).shrink(ir.catalyst.getCount());
-				process = processMax = ir.time*20;
-				water = ir.water;
-				out = ir.output.copy();
-				outfluid = ir.output_fluid.copy();
-				this.markContainingBlockForUpdate(null);
+				if (ir != null) {
+					ItemStack outslot = inventory.get(3);
+					if (ir.output.isEmpty() || outslot.isEmpty()
+							|| (ir.output.getCount() + outslot.getCount() < outslot.getMaxStackSize()
+									&& ItemHandlerHelper.canItemStacksStack(ir.output, outslot))) {
+						if (ir.output_fluid.isEmpty() || fluid[1].fill(ir.output_fluid,
+								FluidAction.SIMULATE) == ir.output_fluid.getAmount()) {
+							if (ir.input != null)
+								inventory.get(2).shrink(ir.input.getCount());
+							if (ir.consume_catalyst && ir.catalyst != null)
+								inventory.get(1).shrink(ir.catalyst.getCount());
+							if(!ir.getId().equals(last)) {
+								last=ir.getId();
+								efficiency = 0.2f;
+							}
+							process = processMax = ir.time * 20;
+							water = ir.water;
+							out = ir.output.copy();
+							outfluid = ir.output_fluid.copy();
+							isFoodRecipe = false;
+							
+							this.markContainingBlockForUpdate(null);
+							return;
+						}
+					}
+				}
+				last=null;
 			}
 		}
 	}
-
 
 	@Override
 	public void readCustomNBT(CompoundNBT compound, boolean client) {
@@ -181,7 +194,8 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		fluid[0].readFromNBT(compound.getCompound("fluid1"));
 		fluid[1].readFromNBT(compound.getCompound("fluid2"));
 		if (!client) {
-			
+			if(compound.contains("last"))
+			last=new ResourceLocation(compound.getString("last"));
 			water = compound.getInt("water");
 			ItemStackHelper.loadAllItems(compound, this.inventory);
 			out = ItemStack.read(compound.getCompound("out"));
@@ -199,7 +213,8 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		compound.put("fluid1", fluid[0].writeToNBT(new CompoundNBT()));
 		compound.put("fluid2", fluid[1].writeToNBT(new CompoundNBT()));
 		if (!client) {
-			
+			if(last!=null)
+			compound.putString("last", last.toString());
 			compound.putInt("water", water);
 			ItemStackHelper.saveAllItems(compound, this.inventory);
 			compound.put("out", out.serializeNBT());
@@ -216,6 +231,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	public int[] getCurrentProcessesStep() {
 		return new int[] { process, fuel };
 	}
+
 	public LazyOptional<IFluidHandler> fluidHandler = registerConstantCap(new IFluidHandler() {
 
 		@Override
@@ -252,7 +268,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		public FluidStack drain(int maxDrain, FluidAction action) {
 			return fluid[1].drain(maxDrain, action);
 		}
-		
+
 	});
 	LazyOptional<IItemHandler> invHandlerUp = registerConstantCap(new IEInventoryHandler(2, this, 1, true, false));
 	LazyOptional<IItemHandler> invHandlerSide = registerConstantCap(new IEInventoryHandler(1, this, 0, true, false));
