@@ -119,7 +119,6 @@ public class FHMain {
         mod.addListener(this::enqueueIMC);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
         FHConfig.register();
-        PacketHandler.register();
 
         FHProps.init();
         FHItems.init();
@@ -171,7 +170,7 @@ public class FHMain {
             }
         ChunkDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
-
+        PacketHandler.register();
         ClimateData.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
