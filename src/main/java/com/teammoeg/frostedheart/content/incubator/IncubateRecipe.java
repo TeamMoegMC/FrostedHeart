@@ -53,4 +53,10 @@ public class IncubateRecipe extends IESerializableRecipe {
     public static IncubateRecipe findRecipe(ItemStack in,ItemStack catalyst) {
     	return recipeList.values().stream().filter(t->t.input.test(in)).filter(t->t.catalyst==null||t.catalyst.test(catalyst)).findAny().orElse(null);
     }
+    public static boolean canBeCatalyst(ItemStack catalyst) {
+    	return recipeList.values().stream().filter(r->r.catalyst!=null).anyMatch(r->r.catalyst.testIgnoringSize(catalyst));
+    }
+    public static boolean canBeInput(ItemStack input) {
+    	return recipeList.values().stream().anyMatch(r->r.input.testIgnoringSize(input));
+    }
 }

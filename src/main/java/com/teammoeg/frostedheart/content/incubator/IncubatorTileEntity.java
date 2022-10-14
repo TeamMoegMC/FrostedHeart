@@ -8,6 +8,7 @@ import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 
 import com.cannolicatfish.rankine.init.RankineItems;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
@@ -18,6 +19,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -76,6 +78,10 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 		if (i == 0)
 			return itemStack.getItem() == RankineItems.QUICKLIME.get();
+		if(i==1)
+			return IncubateRecipe.canBeCatalyst(itemStack)||itemStack.getItem()==Items.ROTTEN_FLESH;
+		if(i==2)
+			return IncubateRecipe.canBeInput(itemStack)||itemStack.isFood();
 		if (i == 3)
 			return false;
 		return true;
@@ -110,7 +116,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		}
 		return false;
 	}
-
+	protected static ResourceLocation food=new ResourceLocation(FHMain.MODID,"food");
 	@Override
 	public void tick() {
 		if (!this.world.isRemote) {
@@ -125,6 +131,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 					if (process % 20 == 0&&d) {
 						if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
 							efficiency+=0.005;
+							efficiency=Math.min(efficiency, 1);
 							fluid[0].drain(water, FluidAction.EXECUTE);
 						}else {
 							efficiency-=0.01;
@@ -163,7 +170,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 								inventory.get(2).shrink(ir.input.getCount());
 							if (ir.consume_catalyst && ir.catalyst != null)
 								inventory.get(1).shrink(ir.catalyst.getCount());
-							if(!ir.getId().equals(last)) {
+							if(isFoodRecipe||!ir.getId().equals(last)) {
 								last=ir.getId();
 								efficiency = 0.2f;
 							}
@@ -177,8 +184,27 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 							return;
 						}
 					}
+				}else {
+					ItemStack catalyst=inventory.get(1);
+					if(!catalyst.isEmpty()&&catalyst.getItem()==Items.ROTTEN_FLESH&&(efficiency<=0.05||!isFoodRecipe)) {
+						isFoodRecipe=true;
+						last=food;
+						catalyst.shrink(1);
+						efficiency = 0.2f;
+						this.markContainingBlockForUpdate(null);
+						return;
+					}
+					ItemStack in=inventory.get(2);
+					if(!in.isEmpty()&&in.isFood()) {
+						int value=in.getItem().getFood().getHealing();
+					}
 				}
-				last=null;
+				if(efficiency>0)
+					efficiency-=0.0005;
+				if(efficiency<0.005) {
+					last=null;
+					efficiency=0;
+				}
 			}
 		}
 	}

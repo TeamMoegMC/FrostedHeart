@@ -136,7 +136,25 @@ public class SerializeUtil {
             nums.add(func.apply(buffer));
         return nums;
     }
-
+    public static short[] readShortArray(PacketBuffer buffer) {
+        if (!buffer.readBoolean())
+            return null;
+        int cnt = buffer.readVarInt();
+        short[] nums = new short[cnt];
+        for (int i = 0; i < cnt; i++)
+            nums[i]=buffer.readShort();
+        return nums;
+    }
+    public static void writeShortArray(PacketBuffer buffer,short[] arr) {
+    	if (arr == null) {
+            buffer.writeBoolean(false);
+            return;
+        }
+        buffer.writeBoolean(true);
+        buffer.writeVarInt(arr.length);
+        for(short s:arr)
+        	buffer.writeShort(s);
+    }
     public static <T> void writeList(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
         if (elms == null) {
             buffer.writeBoolean(false);

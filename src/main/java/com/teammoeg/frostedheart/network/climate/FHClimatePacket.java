@@ -22,6 +22,7 @@ import com.teammoeg.frostedheart.client.ClientForecastData;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
+import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -33,24 +34,24 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class FHClimatePacket {
-    private final int[] data;
+    private final short[] data;
     private final long sec;
     public FHClimatePacket(ClimateData climateData) {
         data = climateData.getFrames();
         sec= climateData.getSec();
     }
     public FHClimatePacket() {
-        data = new int[0];
+        data = new short[0];
         sec=0;
     }
 
     public FHClimatePacket(PacketBuffer buffer) {
-        data=buffer.readVarIntArray();
+        data=SerializeUtil.readShortArray(buffer);
         sec=buffer.readVarLong();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeVarIntArray(data);
+        SerializeUtil.writeShortArray(buffer, data);
         buffer.writeVarLong(sec);
     }
 
