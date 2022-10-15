@@ -25,9 +25,9 @@ import javax.annotation.Nullable;
 public class IncubatorBlock extends FHGuiBlock implements ILiquidContainer {
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     static BooleanProperty LIT = BlockStateProperties.LIT;
-    private RegistryObject<TileEntityType<IncubatorTileEntity>> type;
+    private RegistryObject<TileEntityType<?>> type;
 
-    public IncubatorBlock(String name, Properties p, RegistryObject<TileEntityType<IncubatorTileEntity>> type) {
+    public IncubatorBlock(String name, Properties p, RegistryObject<TileEntityType<?>> type) {
         super(name, p, FHBlockItem::new);
         this.type = type;
     }
@@ -39,7 +39,7 @@ public class IncubatorBlock extends FHGuiBlock implements ILiquidContainer {
 
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(HORIZONTAL_FACING, context.getPlacementHorizontalFacing().getOpposite()).with(LIT,false);
+        return this.getDefaultState().with(HORIZONTAL_FACING, context.getPlacementHorizontalFacing()).with(LIT,false);
     }
 
     @Nullable

@@ -14,6 +14,8 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.thermopolium.api.ThermopoliumApi;
+import com.teammoeg.thermopolium.items.StewItem;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluids;
@@ -27,6 +29,7 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
@@ -116,14 +119,20 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		}
 		return false;
 	}
+	protected float getMaxEfficiency() {
+		return 1f;
+	}
+	protected int fuelMin() {
+		return 0;
+	}
 	protected static ResourceLocation food=new ResourceLocation(FHMain.MODID,"food");
 	@Override
 	public void tick() {
 		if (!this.world.isRemote) {
 			if (process > 0) {
-				if(efficiency<=0.05&&!isFoodRecipe)
-					efficiency=0.05f;
-				if (fuel <= 0) {
+				if(efficiency<=0.2&&!isFoodRecipe)
+					efficiency=0.2f;
+				if (fuel <= fuelMin()) {
 					fetchFuel();
 				}
 				if (fuel > 0) {
@@ -131,7 +140,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 					if (process % 20 == 0&&d) {
 						if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
 							efficiency+=0.005;
-							efficiency=Math.min(efficiency, 1);
+							efficiency=Math.min(efficiency, getMaxEfficiency());
 							fluid[0].drain(water, FluidAction.EXECUTE);
 						}else {
 							efficiency-=0.01;
@@ -197,6 +206,15 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 					ItemStack in=inventory.get(2);
 					if(!in.isEmpty()&&in.isFood()) {
 						int value=in.getItem().getFood().getHealing();
+						if(in.getItem() instanceof StewItem) {
+							value=ThermopoliumApi.getInfo(in).healing;
+						}
+						out=in.getContainerItem();
+						in.shrink(1);
+						int nvalue=value*25;
+						outfluid=new FluidStack(Fluids.WATER,nvalue);
+						process = processMax = 20 * 20*value;
+						water=1;
 					}
 				}
 				if(efficiency>0)

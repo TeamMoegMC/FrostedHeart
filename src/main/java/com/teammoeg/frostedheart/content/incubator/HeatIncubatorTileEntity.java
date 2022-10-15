@@ -1,22 +1,22 @@
 package com.teammoeg.frostedheart.content.incubator;
 
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 
 public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INetworkConsumer {
 	NetworkHolder network = new NetworkHolder();
 	public HeatIncubatorTileEntity() {
+		super(FHTileTypes.INCUBATOR2.get());
 	}
 
-	public HeatIncubatorTileEntity(TileEntityType<?> type) {
-		super(type);
-	}
+
 	@Override
 	public boolean connect(Direction to, int dist) {
 		TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
@@ -29,7 +29,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
 	@Override
 	public boolean canConnectAt(Direction to) {
-		return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
+		return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING).getOpposite();
 	}
 
 	@Override
@@ -45,12 +45,32 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
 	@Override
 	protected boolean fetchFuel() {
-		
-		if(network.tryDrainHeat(4)) {
-			fuel=fuelMax=160;
-			return true;
+		fuelMax=1600;
+		if(fuel<=1200) {
+			if(network.tryDrainHeat(10)) {
+				fuel+=400;
+				return true;
+			}
 		}
 		return false;
+	}
+
+	@Override
+	protected float getMaxEfficiency() {
+		return 2f;
+	}
+
+
+	@Override
+	public boolean isStackValid(int i, ItemStack itemStack) {
+		if(i==0)return false;
+		return super.isStackValid(i, itemStack);
+	}
+
+
+	@Override
+	protected int fuelMin() {
+		return 1200;
 	}
 
 }
