@@ -18,6 +18,7 @@ import com.teammoeg.thermopolium.api.ThermopoliumApi;
 import com.teammoeg.thermopolium.items.StewItem;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -40,6 +41,7 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -49,7 +51,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	protected NonNullList<ItemStack> inventory;
 	protected FluidTank[] fluid = new FluidTank[] { new FluidTank(6000, w -> w.getFluid() == Fluids.WATER),
 			new FluidTank(6000) };
-	int process, processMax;
+	int process, processMax,lprocess;
 	int fuel, fuelMax;
 	int water;
 	boolean isFoodRecipe;
@@ -57,7 +59,12 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	ResourceLocation last;
 	ItemStack out = ItemStack.EMPTY;
 	FluidStack outfluid = FluidStack.EMPTY;
-
+	public static final ResourceLocation food=new ResourceLocation(FHMain.MODID,"food");
+	public static final ResourceLocation pr=new ResourceLocation("kubejs","protein");
+	public static Fluid getProtein() {
+		Fluid f=ForgeRegistries.FLUIDS.getValue(pr);
+		return f==Fluids.EMPTY?Fluids.WATER:f;
+	}
 	public IncubatorTileEntity() {
 		super(FHTileTypes.INCUBATOR.get());
 		this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
@@ -125,32 +132,54 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	protected int fuelMin() {
 		return 0;
 	}
-	protected static ResourceLocation food=new ResourceLocation(FHMain.MODID,"food");
+	
 	@Override
 	public void tick() {
 		if (!this.world.isRemote) {
 			if (process > 0) {
 				if(efficiency<=0.2&&!isFoodRecipe)
 					efficiency=0.2f;
+				if(efficiency<=0) {
+					out=ItemStack.EMPTY;
+					outfluid=FluidStack.EMPTY;
+					process=processMax=0;
+					efficiency=0;
+					lprocess=0;
+					this.markDirty();
+					this.markContainingBlockForUpdate(null);
+					return;
+				}
 				if (fuel <= fuelMin()) {
 					fetchFuel();
 				}
 				if (fuel > 0) {
-					boolean d=Math.random()<efficiency;
-					if (process % 20 == 0&&d) {
+					boolean d=false;
+					boolean e=false;
+					if(efficiency<=1)
+						d=Math.random()<efficiency;
+					else {
+						d=Math.random()<efficiency-1;
+						e=true;
+					}
+					if ((process/20 != lprocess)&&(d||e)) {
 						if (fluid[0].drain(water, FluidAction.SIMULATE).getAmount() == water) {
 							efficiency+=0.005;
 							efficiency=Math.min(efficiency, getMaxEfficiency());
 							fluid[0].drain(water, FluidAction.EXECUTE);
+							lprocess=process/20;
 						}else {
-							efficiency-=0.01;
+							efficiency-=0.005;
+							this.markDirty();
+							this.markContainingBlockForUpdate(null);
 							return;
 						}
 					}
-					if(d)
+					if(e)process--;
+					if(d) 
 						process--;
 					fuel--;
 				}else efficiency-=0.0005;
+				this.markDirty();
 				this.markContainingBlockForUpdate(null);
 				return;
 			} else if (!out.isEmpty() || !outfluid.isEmpty()) {
@@ -188,23 +217,26 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 							out = ir.output.copy();
 							outfluid = ir.output_fluid.copy();
 							isFoodRecipe = false;
-							
+							lprocess=0;
+							this.markDirty();
 							this.markContainingBlockForUpdate(null);
 							return;
 						}
 					}
 				}else {
 					ItemStack catalyst=inventory.get(1);
-					if(!catalyst.isEmpty()&&catalyst.getItem()==Items.ROTTEN_FLESH&&(efficiency<=0.05||!isFoodRecipe)) {
-						isFoodRecipe=true;
-						last=food;
-						catalyst.shrink(1);
-						efficiency = 0.2f;
-						this.markContainingBlockForUpdate(null);
-						return;
-					}
+					
 					ItemStack in=inventory.get(2);
 					if(!in.isEmpty()&&in.isFood()) {
+						if(!catalyst.isEmpty()&&catalyst.getItem()==Items.ROTTEN_FLESH&&(efficiency<=0.01||!isFoodRecipe)) {
+							isFoodRecipe=true;
+							last=food;
+							catalyst.shrink(1);
+							efficiency = 0.2f;
+							this.markDirty();
+							this.markContainingBlockForUpdate(null);
+							return;
+						}
 						int value=in.getItem().getFood().getHealing();
 						if(in.getItem() instanceof StewItem) {
 							value=ThermopoliumApi.getInfo(in).healing;
@@ -212,17 +244,27 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 						out=in.getContainerItem();
 						in.shrink(1);
 						int nvalue=value*25;
-						outfluid=new FluidStack(Fluids.WATER,nvalue);
+						outfluid=new FluidStack(getProtein(),nvalue);
+						lprocess=0;
 						process = processMax = 20 * 20*value;
 						water=1;
 					}
 				}
-				if(efficiency>0)
+				boolean changed=false;
+				if(efficiency>0) {
 					efficiency-=0.0005;
+					changed=true;
+				}
 				if(efficiency<0.005) {
 					last=null;
 					efficiency=0;
+					changed=true;
 				}
+				if(changed) {
+					this.markDirty();
+					this.markContainingBlockForUpdate(null);
+				}
+				
 			}
 		}
 	}
@@ -230,6 +272,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	@Override
 	public void readCustomNBT(CompoundNBT compound, boolean client) {
 		process = compound.getInt("process");
+		lprocess = compound.getInt("lprocess");
 		processMax = compound.getInt("processMax");
 		fuel = compound.getInt("fuel");
 		fuelMax = compound.getInt("fuelMax");
@@ -250,6 +293,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	@Override
 	public void writeCustomNBT(CompoundNBT compound, boolean client) {
 		compound.putInt("process", process);
+		compound.putInt("lprocess", lprocess);
 		compound.putInt("processMax", processMax);
 		compound.putInt("fuel", fuel);
 		compound.putInt("fuelMax", fuelMax);
@@ -300,17 +344,32 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 		@Override
 		public int fill(FluidStack resource, FluidAction action) {
-			return fluid[0].fill(resource, action);
+			int f=fluid[0].fill(resource, action);
+			if(f>0&&action==FluidAction.EXECUTE) {
+				markDirty();
+				markContainingBlockForUpdate(null);
+			}
+			return f;
 		}
 
 		@Override
 		public FluidStack drain(FluidStack resource, FluidAction action) {
-			return fluid[1].drain(resource, action);
+			FluidStack fs= fluid[1].drain(resource, action);
+			if(!fs.isEmpty()&&action==FluidAction.EXECUTE) {
+				markDirty();
+				markContainingBlockForUpdate(null);
+			}
+			return fs;
 		}
 
 		@Override
 		public FluidStack drain(int maxDrain, FluidAction action) {
-			return fluid[1].drain(maxDrain, action);
+			FluidStack fs= fluid[1].drain(maxDrain, action);
+			if(!fs.isEmpty()&&action==FluidAction.EXECUTE) {
+				markDirty();
+				markContainingBlockForUpdate(null);
+			}
+			return fs;
 		}
 
 	});

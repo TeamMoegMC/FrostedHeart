@@ -32,6 +32,10 @@ import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
+import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
+import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
+import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
+import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
 import com.teammoeg.frostedheart.content.recipes.RecipeModifyDamage;
@@ -42,6 +46,8 @@ import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHNBT;
+
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
@@ -64,6 +70,7 @@ import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
@@ -88,6 +95,8 @@ public class JEICompat implements IModPlugin {
 		registration.addRecipeCatalyst(new ItemStack(Blocks.CAMPFIRE), CampfireDefrostCategory.UID);
 		registration.addRecipeCatalyst(new ItemStack(Blocks.SMOKER), SmokingDefrostCategory.UID);
 		registration.addRecipeCatalyst(new ItemStack(FHBlocks.sauna), SaunaCategory.UID);
+		registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator1), IncubatorCategory.UID);
+		registration.addRecipeCatalyst(new ItemStack(FHBlocks.incubator2), IncubatorCategory.UID);
 	}
 
 	@Override
@@ -113,8 +122,34 @@ public class JEICompat implements IModPlugin {
 						new ItemStack(Items.BROWN_MUSHROOM, 10))),
 				CuttingCategory.UID);
 		registration.addRecipes(new ArrayList<>(SaunaRecipe.recipeList.values()), SaunaCategory.UID);
+		List<IncubateRecipe> rcps=new ArrayList<>(IncubateRecipe.recipeList.values());
+		rcps.add(new IncubateRecipe());
+		registration.addRecipes(rcps,IncubatorCategory.UID);
+	}
+	@Override
+	public void registerCategories(IRecipeCategoryRegistration registration) {
+		IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
+		registration.addRecipeCategories(new GeneratorFuelCategory(guiHelper), new GeneratorSteamCategory(guiHelper),
+				new ChargerCategory(guiHelper), new ChargerCookingCategory(guiHelper), new CuttingCategory(guiHelper),
+				new CampfireDefrostCategory(guiHelper), new SmokingDefrostCategory(guiHelper),
+				new ChargerDefrostCategory(guiHelper), new SaunaCategory(guiHelper),new IncubatorCategory(guiHelper));
 	}
 
+	@Override
+	public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
+		registration.getCraftingCategory().addCategoryExtension(RecipeFueling.class, FuelingExtension::new);
+		registration.getCraftingCategory().addCategoryExtension(RecipeInner.class, InnerExtension::new);
+		registration.getCraftingCategory().addCategoryExtension(RecipeModifyDamage.class, DamageModifierExtension::new);
+	}
+
+	@Override
+	public void registerGuiHandlers(IGuiHandlerRegistration registry) {
+		registry.addRecipeClickArea(T1GeneratorScreen.class, 84, 35, 9, 12, GeneratorFuelCategory.UID);
+		registry.addRecipeClickArea(T2GeneratorScreen.class, 84, 35, 9, 12, GeneratorFuelCategory.UID,
+				GeneratorSteamCategory.UID);
+		registry.addRecipeClickArea(IncubatorT1Screen.class, 80, 28, 32, 29,IncubatorCategory.UID);
+		registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29,IncubatorCategory.UID);
+	}
 	public static IRecipeManager man;
 
 	@Override
@@ -211,28 +246,7 @@ public class JEICompat implements IModPlugin {
 		}
 	}
 
-	@Override
-	public void registerCategories(IRecipeCategoryRegistration registration) {
-		IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
-		registration.addRecipeCategories(new GeneratorFuelCategory(guiHelper), new GeneratorSteamCategory(guiHelper),
-				new ChargerCategory(guiHelper), new ChargerCookingCategory(guiHelper), new CuttingCategory(guiHelper),
-				new CampfireDefrostCategory(guiHelper), new SmokingDefrostCategory(guiHelper),
-				new ChargerDefrostCategory(guiHelper), new SaunaCategory(guiHelper));
-	}
 
-	@Override
-	public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
-		registration.getCraftingCategory().addCategoryExtension(RecipeFueling.class, FuelingExtension::new);
-		registration.getCraftingCategory().addCategoryExtension(RecipeInner.class, InnerExtension::new);
-		registration.getCraftingCategory().addCategoryExtension(RecipeModifyDamage.class, DamageModifierExtension::new);
-	}
-
-	@Override
-	public void registerGuiHandlers(IGuiHandlerRegistration registry) {
-		registry.addRecipeClickArea(T1GeneratorScreen.class, 84, 35, 9, 12, GeneratorFuelCategory.UID);
-		registry.addRecipeClickArea(T2GeneratorScreen.class, 84, 35, 9, 12, GeneratorFuelCategory.UID,
-				GeneratorSteamCategory.UID);
-	}
 
 	public static <T> void checkNotNull(@Nullable T object, String name) {
 		if (object == null) {

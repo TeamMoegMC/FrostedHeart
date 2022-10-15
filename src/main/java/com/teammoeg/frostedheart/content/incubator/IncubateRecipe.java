@@ -3,13 +3,20 @@ package com.teammoeg.frostedheart.content.incubator;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.util.IItemProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class IncubateRecipe extends IESerializableRecipe {
@@ -21,6 +28,7 @@ public class IncubateRecipe extends IESerializableRecipe {
     public ItemStack output;
     public FluidStack output_fluid;
     public boolean consume_catalyst;
+    public final boolean isFood;
     public int water;
     public int time;
 
@@ -37,8 +45,25 @@ public class IncubateRecipe extends IESerializableRecipe {
 		this.consume_catalyst = consume_catalyst;
 		this.water = water;
 		this.time = time;
+		isFood=false;
 	}
-
+    public IncubateRecipe() {
+		super(ItemStack.EMPTY,TYPE,IncubatorTileEntity.food);
+		isFood=true;
+		List<IItemProvider> items=new ArrayList<>();
+		for(Item i:ForgeRegistries.ITEMS.getValues()) {
+			if(i.isFood())
+				items.add(i);
+		}
+		
+		this.input = new IngredientWithSize(Ingredient.fromItems(items.toArray(new IItemProvider[0])),1);
+		this.catalyst = IngredientWithSize.of(new ItemStack(Items.ROTTEN_FLESH));
+		this.output = ItemStack.EMPTY;
+		this.output_fluid = new FluidStack(IncubatorTileEntity.getProtein(),25);
+		this.consume_catalyst = true;
+		this.water = 20;
+		this.time = 20;
+	}
 	@Override
     protected IERecipeSerializer<IncubateRecipe> getIESerializer() {
         return SERIALIZER.get();
