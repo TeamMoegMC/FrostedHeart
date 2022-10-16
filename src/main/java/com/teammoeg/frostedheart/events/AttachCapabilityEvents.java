@@ -23,6 +23,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
+import com.teammoeg.frostedheart.relic.RelicData;
+import com.teammoeg.frostedheart.world.FHDimensions;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -39,6 +41,9 @@ public class AttachCapabilityEvents {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
             event.addCapability(ClimateData.ID, new ClimateData());
+        }
+        if (event.getObject().getDimensionKey() == FHDimensions.RELIC_DIM) {
+            event.addCapability(RelicData.ID, new RelicData());
         }
     }
 

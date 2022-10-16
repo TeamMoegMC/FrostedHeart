@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2022 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart;
@@ -35,6 +36,7 @@ import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.relic.RelicData;
 import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
@@ -173,6 +175,7 @@ public class FHMain {
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
         PacketHandler.register();
         ClimateData.setup();
+        RelicData.setup();
         FHBiomes.Biomes();
         FHDimensions.register();
         FHStructures.registerStructureGenerate();

@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.command;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
@@ -32,6 +33,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.relic.RelicData;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.world.FHDimensions;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -42,9 +44,11 @@ import dev.ftb.mods.ftbquests.quest.QuestObject;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
 import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -53,11 +57,9 @@ import net.minecraftforge.fml.loading.FMLPaths;
 
 public class DebugCommand {
 
-	// TODO:
-	// use player team to allocate new region (32x32) for this relic
-	// maintain a data structure to track the allocated region in world capability
-	public static BlockPos getRelicGridPos(PlayerEntity player) {
-		return new BlockPos(256, 64, 256);
+	public static BlockPos getRelicGridPos(ServerPlayerEntity player) {
+		UUID teamID = FTBTeamsAPI.getPlayerTeam(player).getId();
+		return RelicData.get(player.world).getRelicPos(teamID);
 	}
 
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
