@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "plant_oil": 4.40097E-4
+    "plant_oil": 0.00444651
   },
   "item": "rankine:black_walnut"
 }

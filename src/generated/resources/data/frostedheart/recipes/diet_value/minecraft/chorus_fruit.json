@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 7.23154E-4,
-    "vegetables": 0.00176039
+    "sugars": 0.01084731,
+    "vegetables": 0.023714721
   },
   "item": "minecraft:chorus_fruit"
 }

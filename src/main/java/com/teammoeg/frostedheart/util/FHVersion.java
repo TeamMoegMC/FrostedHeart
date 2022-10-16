@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.util;
 
 import java.util.Arrays;
@@ -24,23 +43,23 @@ public class FHVersion {
         }
 
     }
-    private enum SubType {//stable>empty>hf>rc>pre
+    private enum SubType {//stable>hf>empty>rc>pre
         pre,
         rc,
         hf,
         stable;
         public static EqualState compare(SubType v1,SubType v2){
         	if(v1==null)
-        		return v2==stable?EqualState.lt:(v2==null?EqualState.eq:EqualState.gt);
+        		return v2==stable||v2==hf?EqualState.lt:(v2==null?EqualState.eq:EqualState.gt);
         	if(v2==null)
-        		return v1==stable?EqualState.gt:EqualState.lt;
+        		return v1==stable||v1==hf?EqualState.gt:EqualState.lt;
         	return EqualState.of(v1.ordinal() - v2.ordinal());
         }
         public static EqualState compareNoEq(SubType v1,SubType v2){
         	if(v1==null)
-        		return v2==stable?EqualState.lt:EqualState.gt;
+        		return v2==stable||v2==hf?EqualState.lt:EqualState.gt;
         	if(v2==null)
-        		return v1==stable?EqualState.gt:EqualState.lt;
+        		return v1==stable||v1==hf?EqualState.gt:EqualState.lt;
         	return EqualState.of(v1.ordinal() - v2.ordinal());
         }
     }

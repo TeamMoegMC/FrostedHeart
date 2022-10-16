@@ -1,9 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 4.09237E-4,
-    "vegetables": 0.006022804,
-    "plant_oil": 4.86055E-4
+    "sugars": 0.0061385552,
+    "vegetables": 0.06022804
   },
   "item": "crockpot:pow_cake"
 }

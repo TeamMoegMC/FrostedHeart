@@ -53,7 +53,7 @@ public class CommonRegistryEvents {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
-
+        FHBlocks.halite_ore = new FHOreBlock("halite_ore", RankineBlocks.DEF_ORE.harvestLevel(2), FHBlockItem::new);
         for (Block block : registeredFHBlocks) {
             try {
                 event.getRegistry().register(block);
@@ -75,6 +75,7 @@ public class CommonRegistryEvents {
         TemperatureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "temperature"), new LootConditionType(new TemperatureLootCondition.Serializer()));
         TagLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "block_tag"), new LootConditionType(new TagLootCondition.Serializer()));
         TreasureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "treasure"), new LootConditionType(new TreasureLootCondition.Serializer()));
+        ModLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootConditionType(new ModLootCondition.Serializer()));
     }
 
     @SubscribeEvent

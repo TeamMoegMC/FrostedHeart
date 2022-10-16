@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
@@ -32,7 +51,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     String nonce;
     boolean showContribute;
     public Supplier<Research> parent;
-
+    boolean required=false;
     public float getResearchContribution() {
         return contribution;
     }
@@ -60,7 +79,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             this.hint = jo.get("hint").getAsString();
         this.contribution = jo.get("value").getAsFloat();
         this.nonce = jo.get("id").getAsString();
-
+        if(jo.has("required"))
+        	this.required=jo.get("required").getAsBoolean();
     }
 
     public Clue(PacketBuffer pb) {
@@ -70,6 +90,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
         this.hint = pb.readString();
         this.contribution = pb.readFloat();
         this.nonce = pb.readString();
+        this.required=pb.readBoolean();
     }
 
     public Clue() {
@@ -153,6 +174,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             jo.addProperty("hint", hint);
         jo.addProperty("value", contribution);
         jo.addProperty("id", nonce);
+        if(required)
+        	jo.addProperty("required", required);
         return jo;
     }
 
@@ -166,6 +189,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
         buffer.writeString(hint);
         buffer.writeFloat(contribution);
         buffer.writeString(nonce);
+        buffer.writeBoolean(required);
     }
 
 
@@ -227,4 +251,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             this.sendProgressPacket(team);
         });
     }
+
+	public boolean isRequired() {
+		return required;
+	}
 }

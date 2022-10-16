@@ -9,6 +9,7 @@
     "擅自修改和分发我们的整合包违反了《冬季救援使用协议》，我们有权拒绝为您提供帮助！"
   ],
   "mixins": [
+    "chisel.MixinChiselWorldGen",
     "create.CreateJEIMixin",
     "create.FluidReactionsMixin",
     "create.HandCrankBlockMixin",
@@ -28,11 +29,13 @@
     "create.MixinSmartTileEntity",
     "create.MixinToolboxInventory",
     "create.RecipeGridHandlerMixin",
+    "create.MixinMechanicalCraftingRecipe",
     "diet.DietApiImplMixin",
     "engdecor.EdMilkerMixin",
     "forge.FluidHandlerItemStackMixin",
     "forge.FluidHandlerItemStackSimpleMixin",
     "forge.ServerLifecycleHooksMixin",
+    "ftb.QuestScreenMixin",
     "immersiveengineering.CrafterPatternInventoryMixin",
     "immersiveengineering.HempBlockMixin",
     "immersiveengineering.MultiblockProcessMixerMixin",

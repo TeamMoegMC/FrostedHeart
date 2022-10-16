@@ -1,7 +1,7 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "vegetables": 4.40097E-4
+    "vegetables": 0.0059286803
   },
   "item": "minecraft:potato"
 }

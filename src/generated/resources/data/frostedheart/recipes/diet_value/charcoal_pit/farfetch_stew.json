@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.003194678,
-    "vegetables": 0.003194678,
-    "vitamin": 0.003273892
+    "proteins": 0.031946782,
+    "vegetables": 0.031946782,
+    "vitamin": 0.035715193
   },
   "item": "charcoal_pit:farfetch_stew"
 }

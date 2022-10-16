@@ -40,9 +40,8 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 public class PacketHandler {
-    private static final String VERSION = FHMain.local.fetchVersion().orElse(FHVersion.empty).getOriginal();
-    private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
-            VERSION::equals, VERSION::equals);
+ 
+    private static SimpleChannel CHANNEL;
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {
         CHANNEL.send(target, message);
@@ -57,7 +56,10 @@ public class PacketHandler {
     }
 
     public static void register() {
-        System.out.println("FH Network Version: " + VERSION);
+    	String VERSION=FHMain.local.fetchVersion().orElse(FHVersion.empty).getOriginal();
+        System.out.println("[TWR Version Check] FH Network Version: " + VERSION);
+        CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
+                VERSION::equals, VERSION::equals);
         int id = 0;
 
         // CHANNEL.registerMessage(id++, ChunkWatchPacket.class,

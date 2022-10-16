@@ -1,7 +1,5 @@
 {
   "type": "frostedheart:diet_override",
-  "groups": {
-    "plant_oil": 4.40097E-4
-  },
+  "groups": {},
   "item": "minecraft:spruce_leaves"
 }

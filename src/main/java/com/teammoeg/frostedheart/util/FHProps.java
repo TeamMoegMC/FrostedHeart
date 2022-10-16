@@ -35,6 +35,12 @@ public class FHProps {
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10);
+    public static final AbstractBlock.Properties metalDecoProps = AbstractBlock.Properties
+            .create(Material.IRON)
+            .sound(SoundType.METAL)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(2, 10);
     public static final AbstractBlock.Properties cropProps = AbstractBlock.Properties
             .create(Material.PLANTS)
             .doesNotBlockMovement()

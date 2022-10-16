@@ -1,0 +1,13 @@
+{
+  "type": "thermopolium:food",
+  "heal": 3,
+  "sat": 0.5,
+  "items": [
+    {
+      "item": "rankine:turkey_tail_mushroom_block"
+    }
+  ],
+  "item": {
+    "item": "rankine:turkey_tail_mushroom_block"
+  }
+}

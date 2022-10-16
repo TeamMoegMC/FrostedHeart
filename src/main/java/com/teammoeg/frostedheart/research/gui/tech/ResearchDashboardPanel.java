@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -96,7 +115,11 @@ public class ResearchDashboardPanel extends Panel {
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         ResearchData rd = detailPanel.research.getData();
+        
+    	techpoint.setColor(TechIcons.text);
         if (rd.canResearch()) {
+        	if(!rd.canComplete()) 
+        		techpoint.setColor(TechIcons.text_red);
             techpoint.setText(toReadable(rd.getTotalCommitted()) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         }
         techpoint.setX(140 - techpoint.width);
@@ -107,7 +130,9 @@ public class ResearchDashboardPanel extends Panel {
         // icon
         TechIcons.SHADOW.draw(matrixStack, x + 1, y + 36, 36, 9);
         detailPanel.icon.draw(matrixStack, x + 3, y + 10, 32, 32);
-        theme.drawString(matrixStack, GuiUtils.translateGui("reasearch.points"), x + 40, y + 19, TechIcons.text, 0);
+        theme.drawString(matrixStack, GuiUtils.translateGui("research.points"), x + 40, y + 19, TechIcons.text, 0);
+        if(rd.canResearch()&&!rd.canComplete())
+        	theme.drawString(matrixStack,GuiUtils.translateGui("research.required_clue"), x + 40, y + 38, TechIcons.text_red, 0);
         GuiHelper.setupDrawing();
         TechIcons.HLINE_L.draw(matrixStack, x, y + 49, 140, 3);
 

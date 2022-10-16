@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -78,17 +97,19 @@ public class ResearchInfoPanel extends Panel {
             add(prl);
         }
         if (!researchData.canResearch()) {
-            // commit items button
-            Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.commit_material_and_start"),
-                    Icon.EMPTY) {
-                @Override
-                public void onClicked(MouseButton mouseButton) {
-                    PacketHandler.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
-                }
-            };
-            panels.add(commitItems);
-
-            add(commitItems);
+        	if(researchData.isUnlocked()) {
+	            // commit items button
+	            Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.commit_material_and_start"),
+	                    Icon.EMPTY) {
+	                @Override
+	                public void onClicked(MouseButton mouseButton) {
+	                    PacketHandler.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
+	                }
+	            };
+	            panels.add(commitItems);
+	
+	            add(commitItems);
+        	}
         } else if (researchData.isInProgress()) {
             // commit items button
             Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.stop"), Icon.EMPTY) {
@@ -188,8 +209,14 @@ public class ResearchInfoPanel extends Panel {
         if (!detailPanel.research.getClues().isEmpty()) {
             FramedPanel pcl = new FramedPanel(this, fp -> {
                 int offset = 1;
-
-                for (Clue clue : detailPanel.research.getClues()) {
+                List<Clue> clues=new ArrayList<>();
+                int i=0;
+                for(Clue cl:detailPanel.research.getClues()) {
+                	if(cl.isRequired()&&!cl.isCompleted()) 
+                		clues.add(i++, cl);
+                	else clues.add(cl);
+                }
+                for (Clue clue : clues) {
                     CluePanel cl = new CluePanel(fp, clue, detailPanel.research);
                     cl.setY(offset);
                     cl.setWidth(width - 5);

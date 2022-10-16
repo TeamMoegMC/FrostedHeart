@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
@@ -10,6 +29,8 @@ import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
+import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
+import com.teammoeg.frostedheart.content.incubator.IncubatorBlock;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
@@ -38,9 +59,12 @@ public class FHBlocks {
     public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
     public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel, FHBlockItem::new);
     public static Block relic_chest = new RelicChestBlock("relic_chest");
+    public static Block incubator1 = new IncubatorBlock("incubator", stoneDecoProps,FHTileTypes.INCUBATOR);
+    public static Block incubator2 = new HeatIncubatorBlock("heat_incubator",metalDecoProps,FHTileTypes.INCUBATOR2);
     //        public static Block access_control = new AccessControlBlock("access_control", FHBlockItem::new);
 //        public static Block gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK), FHBlockItem::new);
     public static Block fluorite_ore;
+    public static Block halite_ore;
 
     public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
             .create(Material.ROCK).sound(SoundType.WOOD)

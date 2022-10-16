@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart;
 
 import com.google.common.collect.ImmutableSet;
@@ -6,6 +25,8 @@ import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.content.incubator.HeatIncubatorTileEntity;
+import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
@@ -69,7 +90,12 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<SaunaTileEntity>> SAUNA = REGISTER.register(
             "sauna", makeType(SaunaTileEntity::new, () -> FHBlocks.sauna)
     );
-
+    public static final RegistryObject<TileEntityType<?>> INCUBATOR = REGISTER.register(
+            "incubator", makeType(IncubatorTileEntity::new, () -> FHBlocks.incubator1)
+    );
+    public static final RegistryObject<TileEntityType<?>> INCUBATOR2 = REGISTER.register(
+            "heat_incubator", makeType(HeatIncubatorTileEntity::new, () -> FHBlocks.incubator2)
+    );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

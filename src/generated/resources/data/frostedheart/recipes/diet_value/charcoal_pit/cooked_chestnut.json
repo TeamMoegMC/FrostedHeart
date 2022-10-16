@@ -1,9 +1,9 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.001185736,
-    "plant_oil": 0.001185736,
-    "vitamin": 0.001636946
+    "proteins": 0.011857361,
+    "plant_oil": 0.011857361,
+    "vitamin": 0.00982167
   },
   "item": "charcoal_pit:cooked_chestnut"
 }

@@ -70,7 +70,7 @@ public class CoreSpade extends FHBaseItem {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
             World world = context.getWorld();
             BlockPos blockpos = context.getPos();
-            if (world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
+            if (!world.isRemote&&world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
                 player.sendStatusMessage(
                         new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey())
                                 .mergeStyle(TextFormatting.GOLD),

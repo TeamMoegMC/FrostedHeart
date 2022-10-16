@@ -1,6 +1,24 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.util;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraftforge.fml.ModList;
@@ -14,7 +32,10 @@ import java.util.Scanner;
 
 public class FHRemote {
     public static class FHLocal extends FHRemote {
-        private void fromTLV() {
+        protected void fetch() {
+             doFetch();
+        }
+		private void fromTLV() {
             File vers = new File(FMLPaths.CONFIGDIR.get().toFile(), ".twrlastversion");//from twrlastvers
             if (vers.exists()) {
                 try {
@@ -26,7 +47,8 @@ public class FHRemote {
 
         private void fromModVersion() {
             try {
-                this.stableVersion = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
             } catch (Throwable e) {
             }
         }
@@ -47,11 +69,19 @@ public class FHRemote {
         @Override
         public void doFetch() {
             fromTLV();
-            if (this.stableVersion != null) return;
-            fromCFM();
-            if (this.stableVersion != null) return;
+            if (this.stableVersion != null) {
+                System.out.println("[TWR Version Check] Fetched FH local version from .twrlastversion: " + this.stableVersion);
+                return;
+            }
+            // fromCFM();
+            // if (this.stableVersion != null) return;
             fromModVersion();
-            if (this.stableVersion == null) this.stableVersion = "";
+            if (this.stableVersion != null) {
+                System.out.println("[TWR Version Check] Fetched FH local version from mod version: " + this.stableVersion);
+            } else {
+                System.out.println("[TWR Version Check] Failed to fetch FH local version, check your installation.");
+                this.stableVersion = "";
+            }
         }
 
 
@@ -75,7 +105,7 @@ public class FHRemote {
         fetch();
     }
 
-    private final void fetch() {
+    protected void fetch() {
         new Thread(() -> {
             doFetch();
         }).start();

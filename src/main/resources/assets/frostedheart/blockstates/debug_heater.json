@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "frostedheart:block/generator_core_t1"
+      "model": "frostedheart:block/heat_debugger"
     }
   }
 }

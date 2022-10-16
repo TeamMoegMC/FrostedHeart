@@ -74,7 +74,7 @@ public class MechCalcBlock extends FHKineticBlock {
     @Override
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume() || player.isSneaking()||player instanceof FakePlayer)
+        if (superResult.isSuccessOrConsume() ||player instanceof FakePlayer)
             return superResult;
         TileEntity te = Utils.getExistingTileEntity(world, pos);
         if (te instanceof MechCalcTileEntity)

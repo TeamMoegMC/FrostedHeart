@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002371472,
-    "vitamin": 0.001636946
+    "proteins": 0.023714721,
+    "vitamin": 0.01785759
   },
   "item": "charcoal_pit:cooked_calamari"
 }

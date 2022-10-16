@@ -52,7 +52,7 @@ public class ThermometerItem extends FHBaseItem {
         if (worldIn.isRemote) return stack;
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
         if (entityplayer instanceof ServerPlayerEntity) {
-            entityplayer.sendMessage(GuiUtils.translateMessage("info.thermometerbody", getTemperature((ServerPlayerEntity) entityLiving) / 10.0 + 37.0), entityplayer.getUniqueID());
+            entityplayer.sendMessage(GuiUtils.translateMessage("info.thermometerbody", getTemperature((ServerPlayerEntity) entityLiving) / 10f + 37.0), entityplayer.getUniqueID());
         }
 
         return stack;
@@ -60,6 +60,7 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    	tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
         tooltip.add(GuiUtils.translateTooltip("meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
     }
 
@@ -69,6 +70,7 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+    	playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"),true);
         playerIn.setActiveHand(handIn);
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
     }

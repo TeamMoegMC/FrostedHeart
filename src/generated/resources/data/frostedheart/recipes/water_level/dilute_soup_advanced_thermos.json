@@ -1,0 +1,9 @@
+{
+  "type": "watersource:water_level_fluid",
+  "ingredient": {
+    "item": "frostedheart:advanced_thermos"
+  },
+  "waterLevel": 3,
+  "waterSaturationLevel": 2,
+  "fluid": "thermopolium:dilute_soup"
+}

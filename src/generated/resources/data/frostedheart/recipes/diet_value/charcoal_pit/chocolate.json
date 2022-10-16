@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.001807885,
-    "plant_oil": 0.003194678
+    "proteins": 0.031946782,
+    "vitamin": 0.014030969
   },
   "item": "charcoal_pit:chocolate"
 }

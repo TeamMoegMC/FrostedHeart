@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.001446308,
-    "plant_oil": 0.00176039
+    "sugars": 0.02169462,
+    "plant_oil": 0.0176039
   },
   "item": "charcoal_pit:coconut"
 }

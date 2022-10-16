@@ -47,7 +47,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "frostedheart:rye_bread",
+          "name": "frostedheart:military_rations",
           "functions": [
             {
               "function": "minecraft:set_count",

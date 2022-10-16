@@ -1,7 +1,27 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research.effects;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.*;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -285,8 +305,11 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 
     private void deleteInTree() {
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
-            revoke(t);
-            t.setGrant(this, false);
+            if(this.getRId()!=0) {
+	        	revoke(t);
+	            
+	            t.setGrant(this, false);
+            }
         });
     }
 

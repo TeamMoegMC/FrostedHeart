@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "proteins": 0.002886464,
-    "vitamin": 0.00361577
+    "proteins": 0.028864639,
+    "vitamin": 0.05990022
   },
   "item": "crockpot:monster_tartare"
 }

@@ -1,7 +1,27 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
@@ -24,7 +44,7 @@ public class CluePanel extends Panel {
     TextField clueName;
     TextField desc;
     TextField contribute;
-
+    TextField rq;
     public CluePanel(Panel panel, Clue c, Research r) {
         super(panel);
         this.c = c;
@@ -43,6 +63,14 @@ public class CluePanel extends Panel {
             desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
             offset += desc.height + 2;
         }
+        if(c.isRequired()) {
+        	rq=new TextField(this)
+        			.setMaxWidth(width)
+                    .setText(GuiUtils.translateGui("research.required"))
+                    .setColor(TechIcons.text_red);
+        	rq.setPos(0, offset);
+        	offset+=rq.height+2;
+        }
         contribute = new TextField(this)
                 .setMaxWidth(width)
                 .setText(new StringTextComponent("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
@@ -59,6 +87,8 @@ public class CluePanel extends Panel {
         add(clueName);
         if (desc != null)
             add(desc);
+        if(rq!=null)
+        	add(rq);
         add(contribute);
     }
 

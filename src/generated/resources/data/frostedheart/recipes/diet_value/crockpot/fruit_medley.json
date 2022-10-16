@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 0.001944219,
-    "vegetables": 0.004742944
+    "sugars": 0.03928671,
+    "vegetables": 0.047429442
   },
   "item": "crockpot:fruit_medley"
 }

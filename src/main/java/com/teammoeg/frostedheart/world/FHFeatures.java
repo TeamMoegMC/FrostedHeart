@@ -120,6 +120,7 @@ public class FHFeatures {
     public static final ConfiguredFeature<?, ?> spacecraft_feature = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "spacecraft", SPACECRAFT.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
     public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.CLAY)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(8));
     public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.GRAVEL)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(8));
+
     public static ArrayList<ConfiguredFeature<?, ?>> FH_ORES = new ArrayList<>();
     public static ArrayList<ConfiguredFeature<?, ?>> FH_DISK = new ArrayList<>();
 
@@ -145,7 +146,8 @@ public class FHFeatures {
         registerFHOre("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getDefaultState(), 40)).range(65).square().chance(4));
         registerFHOre("ore_anthracite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.anthracite, RankineBlocks.ANTHRACITE_ORE.get().getDefaultState(), 50)).range(48).chance(15));
         registerFHOre("ore_graphite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.graphite, RankineBlocks.PLUMBAGO_ORE.get().getDefaultState(), 35)).range(50).chance(12));
-
+        registerFHOre("ore_halite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bauxite, FHBlocks.halite_ore.getDefaultState(), 40)).range(65).square().chance(7));
+        
         registerFHDisk("copper_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(COPPER_GRAVEL, FeatureSpread.create(1, 2), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
         registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(CLAY, FeatureSpread.create(2, 3), 1, clay_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
         registerFHDisk("fh_disk_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(GRAVEL, FeatureSpread.create(2, 3), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));

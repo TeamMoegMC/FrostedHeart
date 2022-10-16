@@ -18,7 +18,12 @@
 
 package com.teammoeg.frostedheart.events;
 
+import blusunrize.immersiveengineering.api.ManualHelper;
+import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import blusunrize.lib.manual.ManualEntry;
+import blusunrize.lib.manual.ManualInstance;
+import blusunrize.lib.manual.Tree;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
@@ -34,6 +39,8 @@ import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
+import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
+import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
@@ -69,6 +76,7 @@ import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
+    private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
     /**
      * @param event
      */
@@ -78,9 +86,11 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
-        ClientRegistryEvents.<DrawDeskContainer, MenuScreenWrapper<DrawDeskContainer>>registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), (c, i, t) -> new MenuScreenWrapper<DrawDeskContainer>(new DrawDeskScreen(c), c, i, t).disableSlotDrawing());
+        ClientRegistryEvents.<DrawDeskContainer, MenuScreenWrapper<DrawDeskContainer>>
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), (c, i, t) -> new MenuScreenWrapper<DrawDeskContainer>(new DrawDeskScreen(c), c, i, t).disableSlotDrawing());
         registerIEScreen(new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaScreen::new);
-
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Screen::new);
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Screen::new);
         // Register translucent render type
 
         RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutout());
@@ -95,6 +105,7 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore, RenderType.getCutout());
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);
@@ -105,6 +116,7 @@ public class ClientRegistryEvents {
         render.addLayer(new HeaterVestRenderer<>(render));
         render = skinMap.get("slim");
         render.addLayer(new HeaterVestRenderer<>(render));
+        addManual();
     }
 
     public static <C extends Container, S extends Screen & IHasContainer<C>> void
@@ -165,6 +177,21 @@ public class ClientRegistryEvents {
             event.addSprite(LiningFinalizedModel.strawLiningTorsoTexture);
         }
     }
-
+    public static void addManual() {
+        ManualInstance man = ManualHelper.getManual();
+        CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);
+        {
+            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
+            builder.addSpecialElement("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
+            man.addEntry(CATEGORY, builder.create(), 0);
+        }
+        {
+            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
+            builder.addSpecialElement("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
+            man.addEntry(CATEGORY, builder.create(), 1);
+        }
+    }
 
 }

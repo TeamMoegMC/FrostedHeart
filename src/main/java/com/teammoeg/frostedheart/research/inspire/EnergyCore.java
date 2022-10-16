@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research.inspire;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
@@ -60,15 +79,17 @@ public class EnergyCore {
             M *= (1 + trd.getVariants().getDouble("pmaxEnergy"));
             double dietValue = 0;
             IDietTracker idt = DietCapability.get(player).orElse(null);
-            int tdv = 0;
-            for (Entry<String, Float> vs : idt.getValues().entrySet())
-                if (DietGroupCodec.getGroup(vs.getKey()).isBeneficial()) {
-                    dietValue += vs.getValue();
-                    tdv++;
-                }
-
-            if (tdv != 0)
-                dietValue /= tdv;
+            if(idt!=null) {
+	            int tdv = 0;
+	            for (Entry<String, Float> vs : idt.getValues().entrySet())
+	                if (DietGroupCodec.getGroup(vs.getKey()).isBeneficial()) {
+	                    dietValue += vs.getValue();
+	                    tdv++;
+	                }
+	
+	            if (tdv != 0)
+	                dietValue /= tdv;
+            }
             if (utbody != 0) {
                 double t = MathHelper.clamp(((int)tsls), 1, Integer.MAX_VALUE) / 1200d;
                 //System.out.println(t);
@@ -85,9 +106,10 @@ public class EnergyCore {
             if(tenergy*2<M&&nenergy<=5) {
             	player.addPotionEffect(new EffectInstance(FHEffects.SAD,200));
             }
-            double dtenergy = nenergy/n;
             if(tenergy<13500)
-            	dtenergy=Math.max(dtenergy,1);
+            	nenergy=Math.max(nenergy,1);
+            double dtenergy = nenergy/n;
+            
             if (dtenergy > 0 || tenergy > 15000) {
             	adenergy += dtenergy;
                 double frac = MathHelper.frac(dtenergy);

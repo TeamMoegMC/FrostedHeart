@@ -1,9 +1,30 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart;
 
 import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
 import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
+import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
+import com.teammoeg.frostedheart.content.foods.FHSoupItem;
 import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
 import com.teammoeg.frostedheart.content.temperature.*;
 import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
@@ -14,12 +35,14 @@ import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.research.machines.FHBasePen;
 import com.teammoeg.frostedheart.research.machines.FHReusablePen;
+import com.teammoeg.frostedheart.research.machines.RubbingTool;
+
 import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.ArmorItem;
+import net.minecraft.item.Food;
+import net.minecraft.item.Foods;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.Properties;
 import net.minecraft.item.Items;
-import net.minecraftforge.fml.RegistryObject;
 
 public class FHItems {
     public static void init() {
@@ -48,8 +71,15 @@ public class FHItems {
     public static Item rye_sawdust_porridge = new FHSoupItem("rye_sawdust_porridge", createProps().maxStackSize(1).food(FHFoods.RYE_SAWDUST_PORRIDGE), true);
     public static Item rye_porridge = new FHSoupItem("rye_porridge", createProps().maxStackSize(1).food(FHFoods.RYE_SAWDUST_PORRIDGE), false);
     public static Item vegetable_soup = new FHSoupItem("vegetable_soup", createProps().maxStackSize(1).food(FHFoods.VEGETABLE_SAWDUST_SOUP), false);
+    public static Item military_rations = new CannedFoodItem("military_rations", createProps().food(new Food.Builder().hunger(6).saturation(0.6f).build()));
+    public static Item compressed_biscuits_pack = new CannedFoodItem("compressed_biscuits_pack", createProps().food(Foods.BREAD));
+    public static Item compressed_biscuits = new CannedFoodItem("compressed_biscuits", createProps().food(Foods.BREAD));
+    public static Item packed_nuts=new CannedFoodItem("packed_nuts",createProps().food((new Food.Builder()).hunger(2).saturation(0.8F).build()),false);
+    public static Item dried_vegetables=new CannedFoodItem("dried_vegetables",createProps().food((new Food.Builder()).hunger(4).saturation(0.6F).build()));
     public static Item steam_bottle = new SteamBottleItem("steam_bottle", createProps().maxStackSize(1));
     public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
+    public static Item rubbing_tool=new RubbingTool("rubbing_tool",createProps().maxDamage(5).setNoRepair());
+    public static Item rubbing_pad=new FHBaseItem("rubbing_pad",createProps().maxStackSize(1));
     public static Item buff_coat = new FHBaseItem("buff_coat", createProps().defaultMaxDamage(384)).setRepairItem(raw_hide);
     public static Item gambeson = new FHBaseItem("gambeson", createProps().defaultMaxDamage(384)).setRepairItem(Items.WHITE_WOOL);
     public static Item kelp_lining = new FHBaseItem("kelp_lining", createProps().defaultMaxDamage(256)).setRepairItem(Items.KELP);
@@ -69,15 +99,15 @@ public class FHItems {
     public static Item heater_vest = new HeaterVestItem("heater_vest", createProps().maxStackSize(1).setNoRepair());
     public static Item thermos = new ThermosItem("thermos", 1500, 250);
     public static Item advanced_thermos = new ThermosItem("advanced_thermos", 3000, 250);
-    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", 8, 4, createProps().defaultMaxDamage(128));
-    public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 8, 4, createProps().defaultMaxDamage(192));
-    public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 9, 5, createProps().defaultMaxDamage(256));
+    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", 9, 4, createProps().defaultMaxDamage(128));
+    public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 10, 4, createProps().defaultMaxDamage(192));
+    public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 11, 5, createProps().defaultMaxDamage(256));
     public static Item copper_core_spade = new CoreSpade("copper_core_spade", 1, 32, createProps().defaultMaxDamage(96));
     public static Item iron_core_spade = new CoreSpade("iron_core_spade", 2, 64, createProps().defaultMaxDamage(128));
     public static Item steel_core_spade = new CoreSpade("steel_core_spade", 4, 72, createProps().defaultMaxDamage(160));
-    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer", 4, 4, createProps().defaultMaxDamage(96));
-    public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer", 5, 5, createProps().defaultMaxDamage(128));
-    public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer", 6, 6, createProps().defaultMaxDamage(160));
+    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer", 5, 4, createProps().defaultMaxDamage(96));
+    public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer", 6, 5, createProps().defaultMaxDamage(128));
+    public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer", 7, 6, createProps().defaultMaxDamage(160));
     public static Item soil_thermometer = new SoilThermometer("soil_thermometer", createProps());
     public static Item heat_debuger = new HeatDebugItem("heat_debugger");
     public static Item red_mushroombed = new MushroomBed("straw_briquette_red_mushroom", Items.RED_MUSHROOM, createProps().defaultMaxDamage(4800));

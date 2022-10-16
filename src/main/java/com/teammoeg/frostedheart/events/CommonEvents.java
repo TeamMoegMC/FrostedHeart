@@ -56,7 +56,6 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
 import net.minecraft.block.*;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
@@ -73,7 +72,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
-import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -105,6 +103,7 @@ import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -368,10 +367,10 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getPlayer().isSneaking()) return;
+
         if (!ResearchListeners.canUseBlock(event.getPlayer(), event.getWorld().getBlockState(event.getHitVec().getPos()).getBlock())) {
-            event.setCanceled(true);
-            event.setCancellationResult(ActionResultType.FAIL);
+            event.setUseBlock(Result.DENY);
+            
             event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.cannot_use_block"), true);
         }
     }
@@ -523,7 +522,7 @@ public class CommonEvents {
 
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHDatapackSyncPacket());
-
+            
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
@@ -617,7 +616,7 @@ public class CommonEvents {
                 float current = TemperatureCore.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem());
+                float heat = adj.getHeat(event.getItem(),TemperatureCore.getEnvTemperature((ServerPlayerEntity) event.getEntityLiving()));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)

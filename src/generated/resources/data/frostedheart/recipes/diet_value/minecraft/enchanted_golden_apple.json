@@ -1,8 +1,8 @@
 {
   "type": "frostedheart:diet_override",
   "groups": {
-    "sugars": 4.86055E-4,
-    "vegetables": 0.001185736
+    "sugars": 0.019643355,
+    "vegetables": 0.023714721
   },
   "item": "minecraft:enchanted_golden_apple"
 }

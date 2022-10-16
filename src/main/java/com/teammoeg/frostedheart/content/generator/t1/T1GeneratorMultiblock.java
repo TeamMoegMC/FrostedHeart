@@ -18,11 +18,15 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
+import blusunrize.immersiveengineering.client.ClientUtils;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,12 +42,23 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
     @Override
     @OnlyIn(Dist.CLIENT)
     public boolean canRenderFormedStructure() {
-        return false;
+        return true;
     }
 
+    @OnlyIn(Dist.CLIENT)
+    private static ItemStack renderStack;
     @Override
     @OnlyIn(Dist.CLIENT)
     public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
+        if (renderStack == null)
+            renderStack = new ItemStack(FHMultiblocks.generator);
+        transform.translate(1.5D, 1.5D, 1.5D);
+        ClientUtils.mc().getItemRenderer().renderItem(
+                renderStack,
+                ItemCameraTransforms.TransformType.NONE,
+                0xf000f0,
+                OverlayTexture.NO_OVERLAY,
+                transform, buffer);
     }
 
     @Override

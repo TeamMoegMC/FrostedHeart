@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.climate;
 
 import com.google.common.collect.ImmutableList;
@@ -34,6 +53,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
@@ -148,7 +168,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
     protected LinkedList<TempEvent> tempEventStream;
     protected WorldClockSource clockSource;
     protected LinkedList<DayTemperatureData> dailyTempData;
-    protected int[] frames=new int[40];
+    protected short[] frames=new short[40];
     protected long lastforecast;
 
     protected float hourcache = 0;
@@ -388,8 +408,8 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 		/**
 		 * Serialize but without hour to reduce network cost
 		 * */
-		public int packNoHour() {
-			int ret=0;
+		public short packNoHour() {
+			short ret=0;
 			ret|=isIncreasing?1:0;
 			ret|=isDecreasing?2:0;
 			ret|=4;//exist flag
@@ -785,10 +805,10 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 	@Override
 	public String toString() {
 		return "ClimateData [tempEventStream=\n" + String.join("\n",tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource + ",\n hourcache="
-				+ hourcache + ",\n daycache=" + daycache + ",\n frames="+String.join("\n",Arrays.stream(frames).mapToObj(TemperatureFrame::unpack).map(Object::toString).collect(Collectors.toList())) + "]";
+				+ hourcache + ",\n daycache=" + daycache + ",\n frames="+String.join("\n",IntStream.range(0, frames.length).mapToObj(i->frames[i]).map(TemperatureFrame::unpack).map(Object::toString).collect(Collectors.toList())) + "]";
 	}
 
-	public int[] getFrames() {
+	public short[] getFrames() {
 		return frames;
 	}
 }

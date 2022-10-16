@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.data;
 
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
@@ -31,17 +50,23 @@ public class CupTempAdjustProxy implements ITempAdjustFood {
     }
 
     @Override
-    public float getHeat(ItemStack is) {
+    public float getHeat(ItemStack is,float env) {
         LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
         if (ih.isPresent()) {
             IFluidHandlerItem f = ih.resolve().get();
             FluidStack fs = f.getFluidInTank(0);
             if (!fs.isEmpty()) {
-                return FHDataManager.getDrinkHeat(fs) * efficiency;
+            	float dh=FHDataManager.getDrinkHeat(fs);
+            	if((env>37&&dh<0)||(env<37&&dh>0))
+            		return dh * efficiency;
+            	if(env==37)
+            		return dh;
+            	
+            	return dh * (2-efficiency);
             }
         }
         if (defData != null)
-            return defData.getHeat(is);
+            return defData.getHeat(is,env);
         return 0;
     }
 

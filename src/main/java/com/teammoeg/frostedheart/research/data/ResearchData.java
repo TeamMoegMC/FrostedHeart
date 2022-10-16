@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research.data;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -50,23 +69,40 @@ public class ResearchData {
         if(contribution>=0.98)
         	return r.getRequiredPoints();
         currentProgress += contribution * r.getRequiredPoints();
-        return currentProgress;
+        return Math.min(currentProgress,r.getRequiredPoints());
     }
 
     public long commitPoints(long pts) {
-        if (!active)
+        if (!active||finished)
             return pts;
         long tocommit = Math.min(pts, getResearch().getRequiredPoints() - committed);
-        committed += tocommit;
-        checkComplete();
-        return pts - tocommit;
+        if(tocommit>0) {
+	        committed += tocommit;
+	        checkComplete();
+	        return pts - tocommit;
+        }
+		return pts;
     }
-
+    public boolean canComplete() {
+    	for(Clue cl:getResearch().getClues()) {
+        	if(cl.isRequired()&&!cl.isCompleted(parent)) {
+        		return false;
+        	}
+        }
+    	return true;
+    }
     public void checkComplete() {
         if (finished)
             return;
         Research r = getResearch();
-        if (getTotalCommitted() >= r.getRequiredPoints()) {
+        boolean flag=true;
+        for(Clue cl:r.getClues()) {
+        	if(cl.isRequired()&&!cl.isCompleted(parent)) {
+        		flag=false;
+        		break;
+        	}
+        }
+        if (getTotalCommitted() >= r.getRequiredPoints()&&flag) {
             setFinished(true);
             this.announceCompletion();
 

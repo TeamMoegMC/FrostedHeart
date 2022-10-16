@@ -97,7 +97,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     }
 
     public float getMaxPower() {
-        return 5000;
+        return 1280;
     }
 
     @Override

@@ -1,15 +1,37 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.research;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 
+import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.*;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.research.machines.RubbingTool;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -23,6 +45,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -196,6 +219,7 @@ public class ResearchListeners {
     public static CategoryUnlockList categories = new CategoryUnlockList();
     private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
     private static ListenerList<KillClue> killClues = new ListenerList<>();
+	public static UUID te;
 
     private ResearchListeners() {
 
@@ -211,7 +235,7 @@ public class ResearchListeners {
         return tickClues;
     }
 
-    public static void submitItem(ServerPlayerEntity s, ItemStack i) {
+    public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         LazyOptional<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent())
@@ -219,15 +243,31 @@ public class ResearchListeners {
                 if (c instanceof ItemClue)
                     i.shrink(((ItemClue) c).test(trd, i));
         if(!i.isEmpty()&&i.getCount()>0) {
+        	if(i.getItem() instanceof RubbingTool) {
+        		if(RubbingTool.hasResearch(i)) {
+        			int pts=RubbingTool.getPoint(i);
+        			if(pts>0) {
+	        			Research rs=FHResearch.getResearch(RubbingTool.getResearch(i)).get();
+	        			if(rs!=null&&pts>0) {
+	        				ResearchData rd=trd.getData(rs);
+	        				rd.commitPoints(pts);
+	        				rd.sendProgressPacket();
+	        			}
+        			}
+        			return new ItemStack(FHItems.rubbing_pad);
+        		}
+				trd.getCurrentResearch().ifPresent(r->RubbingTool.setResearch(i,r.getLId()));
+        	}
         	for(InspireRecipe ir:InspireRecipe.recipes) {
         		if(ir.item.test(i)) {
         			i.shrink(1);
         			EnergyCore.addPersistentEnergy(s, ir.inspire);
-        			return;
+        			return i;
         		}
         	}
-        		
+        	
         }
+        return i;
     }
 
     public static int fetchGameLevel(ServerPlayerEntity s) {
@@ -323,6 +363,7 @@ public class ResearchListeners {
 
     public static boolean canUseBlock(PlayerEntity player, Block b) {
         if (block.has(b)) {
+        	if(player instanceof FakePlayer)return false;
             if (player.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().block.has(b);
             return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);

@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.0061385552,
+    "plant_oil": 0.015973391
+  },
+  "item": "frostedheart:packed_nuts"
+}
