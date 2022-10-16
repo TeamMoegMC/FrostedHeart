@@ -78,7 +78,7 @@ public class IncubateRecipeSerializer extends IERecipeSerializer<IncubateRecipe>
         buffer.writeItemStack(recipe.output);
         buffer.writeFluidStack(recipe.output_fluid);
         buffer.writeBoolean(recipe.consume_catalyst);
-        buffer.writeInt(recipe.water);
-        buffer.writeInt(recipe.time);
+        buffer.writeVarInt(recipe.water);
+        buffer.writeVarInt(recipe.time);
     }
 }

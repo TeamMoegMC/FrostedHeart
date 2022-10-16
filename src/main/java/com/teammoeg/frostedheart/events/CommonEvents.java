@@ -164,6 +164,14 @@ public class CommonEvents {
 
         ResearchListeners.kill(p, event.getEntityLiving());
     }
+    static ResourceLocation ft=new ResourceLocation("storagedrawers:drawers");
+    @SubscribeEvent
+    public static void onBlockBreak(BlockEvent.BreakEvent event) {
+        if(event.getPlayer() instanceof FakePlayer) {
+        	if(event.getState().getBlock().getTags().contains(ft))
+        		event.setCanceled(true);
+        }
+    }
 
     @SubscribeEvent
     public static void tickResearch(PlayerTickEvent event) {
