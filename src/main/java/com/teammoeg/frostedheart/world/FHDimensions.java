@@ -25,12 +25,12 @@ import com.teammoeg.frostedheart.world.dimension.RelicDimChunkGenerator;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.Dimension;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.World;
 
 public class FHDimensions {
-    public static final RegistryKey<DimensionType> RELIC_DIM_TYPE = RegistryKey.getOrCreateKey(Registry.DIMENSION_TYPE_KEY, new ResourceLocation(FHMain.MODID, "relic_dim_type"));
-    public static final RegistryKey<Dimension> RELIC_DIM = RegistryKey.getOrCreateKey(Registry.DIMENSION_KEY, new ResourceLocation(FHMain.MODID, "relic_dimension"));
+    public static final RegistryKey<DimensionType> RELIC_DIM_TYPE = RegistryKey.getOrCreateKey(Registry.DIMENSION_TYPE_KEY, new ResourceLocation(FHMain.MODID, "relic_dim"));
+    public static final RegistryKey<World> RELIC_DIM = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(FHMain.MODID, "relic_dim"));
 
     public static void register() {
        Registry.register(Registry.CHUNK_GENERATOR_CODEC, new ResourceLocation(FHMain.MODID, "relic_chunkgen"),

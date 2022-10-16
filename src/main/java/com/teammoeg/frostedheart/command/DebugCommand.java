@@ -33,6 +33,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.FileUtil;
+import com.teammoeg.frostedheart.world.FHDimensions;
 import com.teammoeg.frostedheart.world.FHFeatures;
 
 import dev.ftb.mods.ftbquests.FTBQuests;
@@ -43,13 +44,35 @@ import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 public class DebugCommand {
+
+	// TODO:
+	// use player team to allocate new region (32x32) for this relic
+	// maintain a data structure to track the allocated region in world capability
+	public static BlockPos getRelicGridPos(PlayerEntity player) {
+		return new BlockPos(256, 64, 256);
+	}
+
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         LiteralArgumentBuilder<CommandSource> add = Commands.literal("debug")
+				.then(Commands.literal("generate_relic").executes(ct -> {
+					ServerWorld relicWorld = ct.getSource().getServer().getWorld(FHDimensions.RELIC_DIM);
+					if (relicWorld == null) {
+						ct.getSource().asPlayer().sendStatusMessage(new StringTextComponent("Relic World not loaded."), false);
+					} else {
+						BlockPos pos = getRelicGridPos(ct.getSource().asPlayer());
+						FHFeatures.spacecraft_feature.generate(relicWorld, relicWorld.getChunkProvider().getChunkGenerator(), relicWorld.rand, pos);
+						ct.getSource().asPlayer().sendStatusMessage(new StringTextComponent("Generated relic structure at " + pos), false);
+					}
+					return Command.SINGLE_SUCCESS;
+				}))
                 .then(Commands.literal("generate_airship").executes(ct -> {
                     FHFeatures.spacecraft_feature.generate(((ServerWorld) ct.getSource().asPlayer().world), ((ServerWorld) ct.getSource().asPlayer().world).getChunkProvider().getChunkGenerator(), ct.getSource().asPlayer().world.rand,
                             ct.getSource().asPlayer().getPosition());
