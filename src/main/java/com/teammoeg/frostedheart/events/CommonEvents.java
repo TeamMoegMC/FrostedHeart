@@ -444,12 +444,12 @@ public class CommonEvents {
                 if (temp < WorldClimate.HEMP_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
-                            WorldClimate.HEMP_GROW_TEMPERATURE), true);
+                            WorldClimate.HEMP_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE), true);
                 }
             } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                 event.setCanceled(true);
                 player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
-                        WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), true);
+                        WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE), true);
             }
         }
     }
