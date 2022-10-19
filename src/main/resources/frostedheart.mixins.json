@@ -87,7 +87,8 @@
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin",
-    "stone_age.FlintWorkbenchTileEntityMixin"
+    "stone_age.FlintWorkbenchTileEntityMixin",
+    "watersource.MixinWaterLevelFluidRecipe"
   ],
   "client": [
     "client.ForgeIngameGuiMixin",
