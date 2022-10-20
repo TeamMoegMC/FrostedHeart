@@ -154,7 +154,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         // power
         int offset = (int) ((1 - powerRatio) * 56);
         int bar = (int) (powerRatio * 56);
-        this.blit(transform, guiLeft + 146, guiTop + offset + 12, 181, 30, 2, bar);
+        this.blit(transform, guiLeft + 146, guiTop + offset + 13, 181, 30, 2, bar);
     }
 
     @Override

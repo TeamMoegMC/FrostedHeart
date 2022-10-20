@@ -31,7 +31,7 @@ public interface ISteamEnergyBlock {
         if (world instanceof World) {
             TileEntity te = Utils.getExistingTileEntity((World) world, pos);
             if (te instanceof INetworkConsumer) {
-                return ((INetworkConsumer) te).canConnectAt(dir);
+                return ((INetworkConsumer) te).canConnectAt(dir.getOpposite());
             }
         }
         return false;

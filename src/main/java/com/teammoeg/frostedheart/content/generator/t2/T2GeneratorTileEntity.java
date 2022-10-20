@@ -25,8 +25,9 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatProviderManager;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
@@ -51,7 +52,11 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     }
 
     public T2GeneratorTileEntity.GeneratorData guiData = new T2GeneratorTileEntity.GeneratorData();
-
+    HeatProviderManager manager=new HeatProviderManager(this,c->{
+    	for (BlockPos nwt : networkTile) {
+            c.accept(getBlockPosForPos(nwt).down(),Direction.UP);
+        }
+    });
     public T2GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false, 1, 2, 1);
     }
@@ -63,7 +68,6 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     float stempMod = 1;
     int liquidtick = 0;
     int noliquidtick = 0;
-    private int refreshTimer;
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -165,17 +169,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     protected void tickFuel() {
         super.tickFuel();
         this.tickLiquid();
-        refreshTimer--;
-        if (refreshTimer <= 0) {
-            refreshTimer = 5;
-            for (BlockPos nwt : networkTile) {
-                BlockPos actualPos = getBlockPosForPos(nwt);
-                TileEntity te = Utils.getExistingTileEntity(world, actualPos.down());
-                if (te instanceof INetworkConsumer) {
-                    ((INetworkConsumer) te).connect(Direction.UP, 0);
-                }
-            }
-        }
+        manager.tick();
     }
 
     @Override
@@ -290,7 +284,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     }
 
     @Override
-    public NetworkHolder getHolder() {
+    public SteamNetworkHolder getHolder() {
         return null;
     }
 

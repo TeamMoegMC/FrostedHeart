@@ -128,7 +128,7 @@ public class FHUtils {
     }
     public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
 
-        return r.nextInt(22) == 0;
+        return canTreeGenerate(w,p,r,20);
 
     }
 

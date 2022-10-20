@@ -55,7 +55,14 @@ public class ClimateCommand {
             ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
         });
-
+        LiteralArgumentBuilder<CommandSource> reset = Commands.literal("resetVanilla")
+                .executes((ct) -> {
+                	ct.getSource().getWorld().serverWorldInfo.setThunderTime(0);
+                	ct.getSource().getWorld().serverWorldInfo.setRainTime(0);
+                	ct.getSource().getWorld().serverWorldInfo.setClearWeatherTime(0);
+                    return Command.SINGLE_SUCCESS;
+                });
+        
         dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild)));
     }
 }

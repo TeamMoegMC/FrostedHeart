@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.thermopolium.api.ThermopoliumApi;
 import com.teammoeg.thermopolium.items.StewItem;
 
@@ -148,9 +148,6 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	protected float getMaxEfficiency() {
 		return 1f;
 	}
-	protected int fuelMin() {
-		return 0;
-	}
 	
 	@Override
 	public void tick() {
@@ -168,7 +165,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 					this.markContainingBlockForUpdate(null);
 					return;
 				}
-				if (fuel <= fuelMin()) {
+				if (fuel <= 0) {
 					fetchFuel();
 				}
 				if (fuel > 0) {

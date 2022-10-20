@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
+import com.teammoeg.frostedheart.data.DeathInventoryData;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
@@ -172,6 +173,7 @@ public class FHMain {
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
         PacketHandler.register();
         ClimateData.setup();
+        DeathInventoryData.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();

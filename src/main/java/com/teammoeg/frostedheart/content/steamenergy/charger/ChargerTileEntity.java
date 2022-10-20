@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -58,7 +58,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         super(FHTileTypes.CHARGER.get());
     }
 
-    NetworkHolder network = new NetworkHolder();
+    SteamNetworkHolder network = new SteamNetworkHolder();
 
 
     public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
@@ -158,17 +158,8 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean connect(Direction to, int dist) {
-        Direction bd = this.getWorld().getBlockState(this.getPos()).get(BlockStateProperties.FACING);
-        if (to != bd &&
-                !((bd != Direction.DOWN && to == Direction.DOWN)
-                        || (bd == Direction.UP && to == Direction.NORTH)
-                        || (bd == Direction.DOWN && to == Direction.SOUTH))) return false;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof EnergyNetworkProvider) {
-            network.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
-            return true;
-        }
-        return false;
+
+        return network.reciveConnection(world, pos, to, dist);
     }
 
 
@@ -202,11 +193,11 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     @Override
     public boolean canConnectAt(Direction dir) {
         Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
-        return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
+        return dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH);
     }
 
     @Override
-    public NetworkHolder getHolder() {
+    public SteamNetworkHolder getHolder() {
         return network;
     }
 }

@@ -22,7 +22,8 @@ package com.teammoeg.frostedheart.content.incubator;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.item.ItemStack;
@@ -30,7 +31,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
 public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INetworkConsumer {
-	NetworkHolder network = new NetworkHolder();
+	SteamNetworkConsumer network = new SteamNetworkConsumer(80,5);
 	public HeatIncubatorTileEntity() {
 		super(FHTileTypes.INCUBATOR2.get());
 	}
@@ -38,12 +39,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
 	@Override
 	public boolean connect(Direction to, int dist) {
-		TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-		if (te instanceof EnergyNetworkProvider) {
-			network.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
-			return true;
-		}
-		return false;
+		return network.reciveConnection(world, pos, to,dist);
 	}
 
 	@Override
@@ -52,7 +48,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 	}
 
 	@Override
-	public NetworkHolder getHolder() {
+	public SteamNetworkHolder getHolder() {
 		return network;
 	}
 
@@ -64,13 +60,13 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
 	@Override
 	protected boolean fetchFuel() {
-		fuelMax=1600;
-		if(fuel<=1200) {
-			if(network.tryDrainHeat(10)) {
-				fuel+=400;
-				return true;
-			}
+		
+		
+		if(network.tryDrainHeat(10)) {
+			fuel=fuelMax=400;
+			return true;
 		}
+		
 		return false;
 	}
 
@@ -87,9 +83,5 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 	}
 
 
-	@Override
-	protected int fuelMin() {
-		return 1200;
-	}
 
 }

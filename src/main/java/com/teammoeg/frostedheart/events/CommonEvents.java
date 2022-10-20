@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.data.DeathInventoryData;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.network.PacketHandler;
@@ -555,12 +556,16 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        if (ev.isWasDeath() && FHConfig.SERVER.keepEquipments.get()) {
-            ev.getPlayer().inventory.copyInventory(ev.getOriginal().inventory);
-        }
         CompoundNBT cnbt = new CompoundNBT();
         cnbt.putLong("penergy", TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
         TemperatureCore.setFHData(ev.getPlayer(), cnbt);
+        if(!ev.getPlayer().world.isRemote) {
+	        DeathInventoryData orig=DeathInventoryData.get(ev.getOriginal());
+	        DeathInventoryData nw=DeathInventoryData.get(ev.getPlayer());
+	       
+	        if(nw!=null&&orig!=null)
+	        nw.copy(orig);
+        }
     }
     @SubscribeEvent
     public static void setKeepInventory(FMLServerStartedEvent event) {
@@ -586,8 +591,13 @@ public class CommonEvents {
     @SubscribeEvent
     public static void respawn(PlayerRespawnEvent event) {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
+        	
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
-            
+            if(FHConfig.SERVER.keepEquipments.get()&&!event.getPlayer().world.isRemote) {
+            	DeathInventoryData dit=DeathInventoryData.get(event.getPlayer());
+        		if(dit!=null)
+        		dit.alive(event.getPlayer().inventory);
+        	}
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(ClimateData.get(serverWorld)));
             CompoundNBT cnbt = new CompoundNBT();

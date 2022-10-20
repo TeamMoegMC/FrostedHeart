@@ -26,6 +26,7 @@ import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.ListNBT;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -70,6 +72,23 @@ public class SerializeUtil {
         public JsonElement serialize(U obj) {
             return obj.serialize();
         }
+    }
+    public static class CompoundBuilder{
+    	CompoundNBT nbt=new CompoundNBT();
+    	public static CompoundBuilder create() {
+    		return new CompoundBuilder();
+    	}
+    	public CompoundBuilder put(String key,INBT val) {
+    		nbt.put(key, val);
+    		return this;
+    	}
+    	public CompoundBuilder put(String key,UUID val) {
+    		nbt.putUniqueId(key, val);
+    		return this;
+    	}
+    	public CompoundNBT build() {
+    		return nbt;
+    	}
     }
 
 
@@ -192,6 +211,7 @@ public class SerializeUtil {
                     .collect(Collectors.toList());
         return Lists.newArrayList(mapper.apply(elm));
     }
+
 
     public static <T> JsonArray toJsonList(Collection<T> li, Function<T, JsonElement> mapper) {
         JsonArray ja = new JsonArray();

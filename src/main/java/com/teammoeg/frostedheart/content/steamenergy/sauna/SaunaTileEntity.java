@@ -33,7 +33,7 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -86,7 +86,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     private boolean formed = false;
     Set<BlockPos> floor = new HashSet<>();
     Set<BlockPos> edges = new HashSet<>();
-    NetworkHolder network = new NetworkHolder();
+    SteamNetworkHolder network = new SteamNetworkHolder();
 
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
@@ -174,12 +174,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean connect(Direction to, int dist) {
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof EnergyNetworkProvider) {
-            network.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
-            return true;
-        }
-        return false;
+        return network.reciveConnection(world, pos, to, dist);
     }
 
     @Override
@@ -188,7 +183,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public NetworkHolder getHolder() {
+    public SteamNetworkHolder getHolder() {
         return network;
     }
 
