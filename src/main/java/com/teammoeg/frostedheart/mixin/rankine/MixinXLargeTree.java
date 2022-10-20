@@ -23,23 +23,22 @@ import java.util.Random;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.cannolicatfish.rankine.world.trees.HoneyLocustTree;
-import com.cannolicatfish.rankine.world.trees.WeepingWillowTree;
+import com.cannolicatfish.rankine.world.trees.EasternHemlockTree;
+import com.cannolicatfish.rankine.world.trees.WesternHemlockTree;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.trees.DarkOakTree;
 import net.minecraft.block.trees.Tree;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 
-@Mixin({HoneyLocustTree.class,DarkOakTree.class,WeepingWillowTree.class})
-public abstract class MixinLargeTree extends Tree {
+@Mixin({EasternHemlockTree.class,WesternHemlockTree.class})
+public abstract class MixinXLargeTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
-        if (FHUtils.canTreeGenerate(world, pos, rand,13))
+        if (FHUtils.canTreeGenerate(world, pos, rand,42))
             return super.attemptGrowTree(world, chunkGenerator, pos, state, rand);
         return false;
     }
