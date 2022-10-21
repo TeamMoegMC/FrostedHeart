@@ -280,7 +280,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
     @Override
     public boolean canConnectAt(Direction to) {
-        return to == Direction.UP && (this.offsetToMaster.getX() == 0 || this.offsetToMaster.getZ() == 0);
+        return to == Direction.DOWN && (this.offsetToMaster.getX() == 0 || this.offsetToMaster.getZ() == 0);
     }
 
     @Override

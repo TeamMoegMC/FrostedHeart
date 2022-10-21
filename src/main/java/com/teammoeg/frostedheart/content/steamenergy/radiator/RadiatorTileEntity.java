@@ -53,7 +53,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
     }
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(1280,24);
+    SteamNetworkConsumer network = new SteamNetworkConsumer(3000,24);
 
 
     @Override

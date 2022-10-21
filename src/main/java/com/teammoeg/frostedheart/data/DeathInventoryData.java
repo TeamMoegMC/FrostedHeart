@@ -55,7 +55,7 @@ public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> 
     private static class CopyInventory{
     	NonNullList<ItemStack> inv=NonNullList.withSize(9, ItemStack.EMPTY);
     	NonNullList<ItemStack> armor=NonNullList.withSize(4, ItemStack.EMPTY);
-    	ItemStack offhand;
+    	ItemStack offhand=ItemStack.EMPTY;
 		public CopyInventory(PlayerInventory othis) {
             for (int i = 0; i < 9; i++) {
                 ItemStack itemstack = othis.mainInventory.get(i);
@@ -96,7 +96,7 @@ public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> 
 				if(!ret.isEmpty())
 					othis.armorInventory.set(i, ret);
 			}
-			if(!offhand.isEmpty()) {
+			if(offhand!=null&&!offhand.isEmpty()) {
 				othis.offHandInventory.set(0, offhand);
 			}
 		}
