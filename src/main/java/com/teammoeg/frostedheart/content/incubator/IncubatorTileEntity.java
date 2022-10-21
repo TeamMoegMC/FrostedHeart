@@ -292,7 +292,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		processMax = compound.getInt("processMax");
 		fuel = compound.getInt("fuel");
 		fuelMax = compound.getInt("fuelMax");
-
+		
 		efficiency = compound.getFloat("efficiency");
 		fluid[0].readFromNBT(compound.getCompound("fluid1"));
 		fluid[1].readFromNBT(compound.getCompound("fluid2"));

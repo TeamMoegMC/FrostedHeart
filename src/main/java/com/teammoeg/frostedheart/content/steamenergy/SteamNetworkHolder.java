@@ -82,8 +82,8 @@ public class SteamNetworkHolder {
     /**
      * Tick.
      */
-    public void tick() {
-    	if(!isValid())return;
+    public boolean tick() {
+    	if(!isValid())return false;
     	if(counter>0)
     		counter--;
     	else{
@@ -91,6 +91,7 @@ public class SteamNetworkHolder {
             this.sen = null;
             this.dist = Integer.MAX_VALUE;
         }
+    	return false;
     }
     
     /**

@@ -48,17 +48,19 @@ public class SteamNetworkConsumer extends SteamNetworkHolder{
 	
 	/**
 	 * Tick and absorb power.
+	 * @return 
 	 */
 	@Override
-	public void tick() {
+	public boolean tick() {
 		if (isValid()) {
             super.tick();
             float actual = super.drainHeat(Math.min(24, maxPower - power));
             if (actual > 0) {
                 power += actual;
-                //world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
+                return true;
             }
         }
+		return false;
 	}
 	
 	@Override
@@ -101,5 +103,11 @@ public class SteamNetworkConsumer extends SteamNetworkHolder{
 	 */
 	public float getMaxPower() {
 		return maxPower;
+	}
+
+	@Override
+	public String toString() {
+		return "SteamNetworkConsumer [maxPower=" + maxPower + ", maxIntake=" + maxIntake + ", power=" + power + ", sen="
+				+ sen + ", dist=" + dist + ", counter=" + counter + "]";
 	}
 }

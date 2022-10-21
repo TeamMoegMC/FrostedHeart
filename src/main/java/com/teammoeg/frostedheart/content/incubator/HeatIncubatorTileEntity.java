@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
@@ -44,7 +45,7 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
 	@Override
 	public boolean canConnectAt(Direction to) {
-		return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING).getOpposite();
+		return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
 	}
 
 	@Override
@@ -54,8 +55,13 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
 	@Override
 	public void tick() {
+		
+		if(network.tick()) {
+			this.markDirty();
+			this.markContainingBlockForUpdate(null);
+		}
 		super.tick();
-		network.tick();
+		
 	}
 
 	@Override
@@ -80,6 +86,20 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 	public boolean isStackValid(int i, ItemStack itemStack) {
 		if(i==0)return false;
 		return super.isStackValid(i, itemStack);
+	}
+
+
+	@Override
+	public void readCustomNBT(CompoundNBT compound, boolean client) {
+		super.readCustomNBT(compound, client);
+		network.load(compound);
+	}
+
+
+	@Override
+	public void writeCustomNBT(CompoundNBT compound, boolean client) {
+		super.writeCustomNBT(compound, client);
+		network.save(compound);
 	}
 
 
