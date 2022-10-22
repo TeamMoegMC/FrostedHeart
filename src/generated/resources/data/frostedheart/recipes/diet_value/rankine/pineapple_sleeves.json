@@ -1,0 +1,8 @@
+{
+  "type": "frostedheart:diet_override",
+  "groups": {
+    "sugars": 0.054236554,
+    "vegetables": 0.044009753
+  },
+  "item": "rankine:pineapple_sleeves"
+}

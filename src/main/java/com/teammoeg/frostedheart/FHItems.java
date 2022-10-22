@@ -76,6 +76,8 @@ public class FHItems {
     public static Item compressed_biscuits = new CannedFoodItem("compressed_biscuits", createProps().food(Foods.BREAD));
     public static Item packed_nuts=new CannedFoodItem("packed_nuts",createProps().food((new Food.Builder()).hunger(2).saturation(0.8F).build()),false);
     public static Item dried_vegetables=new CannedFoodItem("dried_vegetables",createProps().food((new Food.Builder()).hunger(4).saturation(0.6F).build()));
+    public static Item chocolate=new FHBaseItem("chocolate",createProps().food((new Food.Builder()).hunger(4).saturation(0.8F).meat().fastToEat().build()));
+    
     public static Item steam_bottle = new SteamBottleItem("steam_bottle", createProps().maxStackSize(1));
     public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
     public static Item rubbing_tool=new RubbingTool("rubbing_tool",createProps().maxDamage(5).setNoRepair());

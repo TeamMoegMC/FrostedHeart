@@ -211,7 +211,7 @@ public class FHMain {
     private void missingMappingR(MissingMappings<Item> miss) {
         ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
         for (Mapping<Item> i : miss.getAllMappings()) {
-            ResourceLocation rl = RankineRemap.rankineremap.get(i.key);
+            ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
                 i.remap(ForgeRegistries.ITEMS.getValue(rl));
         }
@@ -220,7 +220,7 @@ public class FHMain {
     private void missingMappingB(MissingMappings<Block> miss) {
         ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
         for (Mapping<Block> i : miss.getAllMappings()) {
-            ResourceLocation rl = RankineRemap.rankineremap.get(i.key);
+            ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
                 i.remap(ForgeRegistries.BLOCKS.getValue(rl));
         }
