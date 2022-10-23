@@ -38,7 +38,7 @@ public abstract class MixinXLargeTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
-        if (FHUtils.canTreeGenerate(world, pos, rand,40))
+        if (FHUtils.canTreeGenerate(world, pos, rand,42))
             return super.attemptGrowTree(world, chunkGenerator, pos, state, rand);
         return false;
     }

@@ -127,6 +127,9 @@ repositories {
     maven {
         name = "latvian maven"
         url = "https://maven.latmod.com/"
+        content {
+            includeGroup "mezz.jei"
+        }
     }
 
     maven {

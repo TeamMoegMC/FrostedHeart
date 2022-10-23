@@ -386,8 +386,10 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
-        Block growBlock = event.getState().getBlock();
+        Block growBlock =event.getState().getBlock();
+   
         float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
+        
         if (growBlock instanceof FHCropBlock) {
             return;
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
@@ -398,7 +400,9 @@ public class CommonEvents {
                 event.setResult(Event.Result.DENY);
             }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
             	if(event.getWorld().getRandom().nextInt(3) == 0) {
-                	event.getWorld().setBlockState(event.getPos(),Blocks.AIR.getDefaultState(), 2);
+            		BlockState cbs=event.getWorld().getBlockState(event.getPos());
+                	if(cbs.matchesBlock(growBlock))
+                		event.getWorld().setBlockState(event.getPos(),Blocks.AIR.getDefaultState(), 2);
                 }
             	event.setResult(Event.Result.DENY);
             }
@@ -413,7 +417,9 @@ public class CommonEvents {
                 event.setResult(Event.Result.DENY);
             }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
             	if(event.getWorld().getRandom().nextInt(3) == 0) {
-                	event.getWorld().setBlockState(event.getPos(),Blocks.AIR.getDefaultState(), 2);
+            		BlockState cbs=event.getWorld().getBlockState(event.getPos());
+                	if(cbs.matchesBlock(growBlock))
+                		event.getWorld().setBlockState(event.getPos(),Blocks.AIR.getDefaultState(), 2);
                 }
             	event.setResult(Event.Result.DENY);
             }

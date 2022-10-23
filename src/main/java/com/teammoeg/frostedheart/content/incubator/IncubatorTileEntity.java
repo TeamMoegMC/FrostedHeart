@@ -253,17 +253,19 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 							this.markContainingBlockForUpdate(null);
 							return;
 						}
-						int value=in.getItem().getFood().getHealing();
-						if(in.getItem() instanceof StewItem) {
-							value=ThermopoliumApi.getInfo(in).healing;
+						if(efficiency>0.01) {
+							int value=in.getItem().getFood().getHealing();
+							if(in.getItem() instanceof StewItem) {
+								value=ThermopoliumApi.getInfo(in).healing;
+							}
+							out=in.getContainerItem();
+							in.shrink(1);
+							int nvalue=value*25;
+							outfluid=new FluidStack(getProtein(),nvalue);
+							lprocess=0;
+							process = processMax = 20 * 20*value;
+							water=1;
 						}
-						out=in.getContainerItem();
-						in.shrink(1);
-						int nvalue=value*25;
-						outfluid=new FluidStack(getProtein(),nvalue);
-						lprocess=0;
-						process = processMax = 20 * 20*value;
-						water=1;
 					}
 				}
 				boolean changed=false;
@@ -396,9 +398,9 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	@Nonnull
 	@Override
 	public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability, @Nullable Direction facing) {
+		if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)
+			return fluidHandler.cast();
 		if (facing != null) {
-			if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)
-				return fluidHandler.cast();
 			if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
 				if (facing == Direction.UP)
 					return invHandlerUp.cast();

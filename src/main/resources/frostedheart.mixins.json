@@ -74,6 +74,7 @@
     "minecraft.TemplateAccess",
     "minecraft.TemplateManagerMixin",
     "minecraft.TileEntityMixin",
+    "minecraft.AbstractTopPlantBlockMixin",
     "minecraft.VillagerMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
