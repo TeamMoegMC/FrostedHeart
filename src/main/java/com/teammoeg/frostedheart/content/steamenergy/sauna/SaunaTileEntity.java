@@ -179,7 +179,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean canConnectAt(Direction to) {
-        return to == Direction.UP;
+        return to == Direction.DOWN;
     }
 
     @Override
