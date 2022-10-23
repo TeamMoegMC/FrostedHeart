@@ -364,7 +364,6 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		public int fill(FluidStack resource, FluidAction action) {
 			int f=fluid[0].fill(resource, action);
 			if(f>0&&action==FluidAction.EXECUTE) {
-				markDirty();
 				markContainingBlockForUpdate(null);
 			}
 			return f;
@@ -374,7 +373,6 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		public FluidStack drain(FluidStack resource, FluidAction action) {
 			FluidStack fs= fluid[1].drain(resource, action);
 			if(!fs.isEmpty()&&action==FluidAction.EXECUTE) {
-				markDirty();
 				markContainingBlockForUpdate(null);
 			}
 			return fs;
@@ -384,7 +382,6 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		public FluidStack drain(int maxDrain, FluidAction action) {
 			FluidStack fs= fluid[1].drain(maxDrain, action);
 			if(!fs.isEmpty()&&action==FluidAction.EXECUTE) {
-				markDirty();
 				markContainingBlockForUpdate(null);
 			}
 			return fs;
