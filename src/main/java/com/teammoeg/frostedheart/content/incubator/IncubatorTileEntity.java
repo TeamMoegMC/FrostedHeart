@@ -330,12 +330,12 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 	@Override
 	public int[] getCurrentProcessesMax() {
-		return new int[] { processMax, fuelMax };
+		return new int[] { processMax,100, fuelMax };
 	}
 
 	@Override
 	public int[] getCurrentProcessesStep() {
-		return new int[] { process, fuel };
+		return new int[] { process,MathHelper.ceil(efficiency*100),fuel };
 	}
 
 	public LazyOptional<IFluidHandler> fluidHandler = registerConstantCap(new IFluidHandler() {
@@ -347,7 +347,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 		@Override
 		public FluidStack getFluidInTank(int tank) {
-			return fluid[tank].getFluidInTank(0);
+			return fluid[tank].getFluidInTank(tank);
 		}
 
 		@Override

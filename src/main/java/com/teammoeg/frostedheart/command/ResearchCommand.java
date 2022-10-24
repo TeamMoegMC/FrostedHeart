@@ -131,7 +131,7 @@ public class ResearchCommand {
                     return s.buildFuture();
                 }).executes(ct -> {
                 	String rsn = ct.getArgument("name", String.class).toString();
-                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get());
+                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get(),true);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct->{
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
