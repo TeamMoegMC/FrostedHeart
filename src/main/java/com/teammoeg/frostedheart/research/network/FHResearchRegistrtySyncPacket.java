@@ -54,6 +54,7 @@ public class FHResearchRegistrtySyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
+        	FHResearch.clearAll();
             FHResearch.load(data);
             Researches.initFromPacket(rss);
             DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);

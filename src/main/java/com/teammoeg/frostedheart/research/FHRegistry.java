@@ -127,6 +127,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
             if (index != -1 && index + 1 == item.getRId()) {
                 items.set(index, null);
             }
+            item.setRId(0);
         }
     }
 
@@ -239,7 +240,12 @@ public class FHRegistry<T extends FHRegisteredItem> {
         rnamesl.stream().map(StringNBT::valueOf).forEach(e -> cn.add(e));
         return cn;
     }
-
+    public void clear() {
+    	rnames.clear();
+        rnamesl.clear();
+        items.clear();
+        cache.clear();
+    }
     /**
      * Deserialize.
      *

@@ -61,6 +61,8 @@ public class ItemClue extends Clue {
     public ITextComponent getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
+        if(consume)
+        	return GuiUtils.translate("clue." + FHMain.MODID + ".consume_item");
         return GuiUtils.translate("clue." + FHMain.MODID + ".item");
     }
 

@@ -188,7 +188,7 @@ public class FHMain {
 
     private void serverStart(final FMLServerAboutToStartEvent event) {
         new FHResearchDataManager(event.getServer());
-        Researches.init();
+        
 
         FHResearchDataManager.INSTANCE.load();
 

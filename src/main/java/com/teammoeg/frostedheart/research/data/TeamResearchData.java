@@ -143,8 +143,10 @@ public class TeamResearchData {
      */
     public void setClueTriggered(int id, boolean trig) {
         ensureClue(id);
-        clueComplete.set(id - 1, trig);
-        getCurrentResearch().ifPresent(r -> this.getData(r).checkComplete());
+        if(id>0) {
+	        clueComplete.set(id - 1, trig);
+	        getCurrentResearch().ifPresent(r -> this.getData(r).checkComplete());
+        }
     }
 
     /**
@@ -182,7 +184,7 @@ public class TeamResearchData {
      * @return if is clue triggered,true.
      */
     public boolean isClueTriggered(int id) {
-        if (clueComplete.size() >= id) {
+        if (clueComplete.size() >= id&&id>0) {
             Boolean b = clueComplete.get(id - 1);
             if (b != null && b == true)
                 return true;
@@ -245,6 +247,7 @@ public class TeamResearchData {
      * @return data<br>
      */
     public ResearchData getData(Research rs) {
+    	if(rs==null)return ResearchData.EMPTY;
         return getData(rs.getRId());
     }
 
@@ -370,7 +373,7 @@ public class TeamResearchData {
      * @return if is effect granted,true.
      */
     public boolean isEffectGranted(int id) {
-        if (grantedEffects.size() >= id) {
+        if (grantedEffects.size() >= id&&id>0) {
             return grantedEffects.get(id - 1);
         }
         return false;
@@ -395,10 +398,11 @@ public class TeamResearchData {
     public void grantEffect(Effect e,@Nullable ServerPlayerEntity player) {
         int id = e.getRId();
         ensureEffect(id);
-        if (!grantedEffects.get(id - 1)) {
-            grantedEffects.set(id - 1, e.grant(this, player, false));
-            getTeam().ifPresent(t -> e.sendProgressPacket(t));
-        }
+        if(id>0)
+	        if (!grantedEffects.get(id - 1)) {
+	            grantedEffects.set(id - 1, e.grant(this, player, false));
+	            getTeam().ifPresent(t -> e.sendProgressPacket(t));
+	        }
     }
 
     /**
@@ -538,24 +542,23 @@ public class TeamResearchData {
      *
      * @param r the r<br>
      */
-    public void resetData(Research r) {
+    public void resetData(Research r,boolean causeUpdate) {
         if (r.getRId() <= this.rdata.size()) {
             this.rdata.set(r.getRId() - 1, null);
             Team t = this.getTeam().orElse(null);
             for (Clue c : r.getClues()) {
                 this.setClueTriggered(c, false);
-                if (t != null)
+                if (t != null&&causeUpdate)
                     c.sendProgressPacket(t);
             }
             for (Effect e : r.getEffects()) {
                 this.setGrant(e, false);
                 e.revoke(this);
-                if (t != null) {
-
+                if (t != null&&causeUpdate) {
                     e.sendProgressPacket(t);
                 }
             }
-            if (t != null) {
+            if (t != null&&causeUpdate) {
                 FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(r.getRId());
                 for (ServerPlayerEntity spe : t.getOnlineMembers())
                     PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);

@@ -38,6 +38,10 @@ public class ResearchDataAPI {
 
     }
 
+    public static boolean isResearchComplete(ServerPlayerEntity id,String research) {
+        return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam(id).getId()).getData(research).isCompleted();
+
+    }
     public static TeamResearchData getData(UUID id) {
         return FHResearchDataManager.INSTANCE.getData(id);
 

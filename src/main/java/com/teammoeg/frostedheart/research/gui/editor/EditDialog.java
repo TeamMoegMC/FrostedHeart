@@ -52,6 +52,7 @@ public abstract class EditDialog extends Panel {
         try {
             onClose();
         } catch (Exception ex) {
+        	ex.printStackTrace();
         }
         ;
         try {

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.research.data;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Researches;
 
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.item.crafting.RecipeManager;
@@ -70,6 +71,7 @@ public class FHResearchDataManager {
     public void load() {
         local = server.func_240776_a_(dataFolder);
         regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
+        FHResearch.clearAll();
         if (regfile.exists()) {
             try {
                 FHResearch.load(CompressedStreamTools.readCompressed(regfile));
@@ -80,6 +82,7 @@ public class FHResearchDataManager {
 
             }
         }
+        Researches.init();
         local.toFile().mkdirs();
         for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {
             try {

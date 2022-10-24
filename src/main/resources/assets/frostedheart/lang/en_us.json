@@ -28,6 +28,7 @@
   "block.frostedheart.incubator": "Incubator",
   "block.frostedheart.heat_incubator": "Steam Incubator",
   "clue.frostedheart.item": "Examine Item",
+  "clue.frostedheart.consume_item": "Submit Item",
   "clue.frostedheart.kill": "Kill Mob",
   "clue.frostedheart.minigame": "Finish paper",
   "clue.frostedheart.advancement": "Complete",

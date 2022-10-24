@@ -117,7 +117,8 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     }
     @Override
     public float calculateStressApplied() {
-        if (currentPoints < maxPoints && MathHelper.abs(super.getSpeed()) <= 64) {
+    	float rspd=MathHelper.abs(super.getSpeed());
+        if (currentPoints < maxPoints &&  rspd<= 64) {
             this.lastStressApplied = 64;
             return 64;
         }
@@ -171,4 +172,9 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 
 
     }
+	@Override
+	public void onSpeedChanged(float previousSpeed) {
+		super.onSpeedChanged(previousSpeed);
+		requireNetworkUpdate();
+	}
 }

@@ -382,7 +382,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 
     @OnlyIn(Dist.CLIENT)
     public void resetData() {
-        TeamResearchData.getClientInstance().resetData(this);
+        TeamResearchData.getClientInstance().resetData(this,false);
     }
     @OnlyIn(Dist.CLIENT)
     public boolean hasUnclaimedReward() {
@@ -467,7 +467,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
+        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this,false));
 
         FHResearch.delete(this);
     }
@@ -486,14 +486,21 @@ public class Research extends FHRegisteredItem implements Writeable {
     }
 
     public void setNewId(String nid) {
+    	System.out.println("nid:"+nid);
+    	System.out.println("oid:"+id);
         if (!id.equals(nid)) {
-            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
+        	System.out.println("changed");
+            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this,false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);
             FHResearch.register(this);
+            
             this.getChildren().forEach(e -> e.addParent(this.getSupplier()));
+            this.getEffects().forEach(e->e.setRId(0));
+            this.getClues().forEach(e->e.setRId(0));
             this.doIndex();
+            System.out.println("fid"+id);
         }
     }
 

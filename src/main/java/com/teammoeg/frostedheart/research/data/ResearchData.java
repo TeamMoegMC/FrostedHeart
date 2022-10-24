@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class ResearchData {
+
     boolean active;// is all items fulfilled?
     boolean finished;
     private Supplier<Research> rs;
@@ -279,4 +280,111 @@ public class ResearchData {
 	public void setLevel(int level) {
 		this.level = level;
 	}
+	public static final ResearchData EMPTY=new ResearchData(null,null) {
+
+		@Override
+		public long getCommitted() {
+			return 0;
+		}
+
+		@Override
+		public long getTotalCommitted() {
+			return 0;
+		}
+
+		@Override
+		public long commitPoints(long pts) {
+			return pts;
+		}
+
+		@Override
+		public boolean canComplete() {
+			return false;
+		}
+
+		@Override
+		public void checkComplete() {
+		}
+
+		@Override
+		public void announceCompletion() {
+		}
+
+		@Override
+		public void setFinished(boolean finished) {
+		}
+
+		@Override
+		public void sendProgressPacket() {
+		}
+
+		@Override
+		public Research getResearch() {
+			return null;
+		}
+
+		@Override
+		public void write(PacketBuffer pb) {
+			super.write(pb);
+		}
+
+		@Override
+		public void read(PacketBuffer pb) {
+			super.read(pb);
+		}
+
+		@Override
+		public CompoundNBT serialize() {
+			return super.serialize();
+		}
+
+		@Override
+		public void deserialize(CompoundNBT cn) {
+			super.deserialize(cn);
+		}
+
+		@Override
+		public boolean isCompleted() {
+			return false;
+		}
+
+		@Override
+		public boolean isInProgress() {
+			return false;
+		}
+
+		@Override
+		public boolean canResearch() {
+			return false;
+		}
+
+		@Override
+		public boolean isUnlocked() {
+			return false;
+		}
+
+		@Override
+		public boolean commitItem(ServerPlayerEntity player) {
+			return false;
+		}
+
+		@Override
+		public void setActive() {
+		}
+
+		@Override
+		public float getProgress() {
+			return 0;
+		}
+
+		@Override
+		public int getLevel() {
+			return 0;
+		}
+
+		@Override
+		public void setLevel(int level) {
+		}
+		
+	};
 }

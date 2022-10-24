@@ -243,7 +243,7 @@ public class ResearchListeners {
                 if (c instanceof ItemClue)
                     i.shrink(((ItemClue) c).test(trd, i));
         if(!i.isEmpty()&&i.getCount()>0) {
-        	if(i.getItem() instanceof RubbingTool) {
+        	if(i.getItem() instanceof RubbingTool&&ResearchDataAPI.isResearchComplete(s,"rubbing_tool")) {
         		if(RubbingTool.hasResearch(i)) {
         			int pts=RubbingTool.getPoint(i);
         			if(pts>0) {

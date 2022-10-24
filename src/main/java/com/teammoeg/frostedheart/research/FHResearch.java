@@ -249,4 +249,10 @@ public class FHResearch {
     public static boolean isEditor() {
         return editor;
     }
+
+	public static void clearAll() {
+		clues.clear();
+		researches.clear();
+		effects.clear();
+	}
 }
