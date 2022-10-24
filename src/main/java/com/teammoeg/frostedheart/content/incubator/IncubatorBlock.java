@@ -42,7 +42,7 @@ import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.RegistryObject;
 import javax.annotation.Nullable;
 
-public class IncubatorBlock extends FHGuiBlock /*implements ILiquidContainer */{
+public class IncubatorBlock extends FHGuiBlock{
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     static BooleanProperty LIT = BlockStateProperties.LIT;
     private RegistryObject<TileEntityType<?>> type;
@@ -72,30 +72,6 @@ public class IncubatorBlock extends FHGuiBlock /*implements ILiquidContainer */{
     public boolean hasTileEntity(BlockState state) {
         return true;
     }
-   /* @Override
-    public boolean canContainFluid(IBlockReader w, BlockPos p, BlockState s, Fluid f) {
-        TileEntity te = w.getTileEntity(p);
-        if (te instanceof IncubatorTileEntity) {
-        	IncubatorTileEntity ele = (IncubatorTileEntity) te;
-            if (ele.fluid[0].fill(new FluidStack(f, 1000), IFluidHandler.FluidAction.SIMULATE) == 1000)
-                return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean receiveFluid(IWorld w, BlockPos p, BlockState s,
-                                FluidState f) {
-        TileEntity te = w.getTileEntity(p);
-        if (te instanceof IncubatorTileEntity) {
-        	IncubatorTileEntity ele = (IncubatorTileEntity) te;
-            if (ele.fluid[0].fill(new FluidStack(f.getFluid(), 1000), IFluidHandler.FluidAction.SIMULATE) == 1000) {
-                ele.fluid[0].fill(new FluidStack(f.getFluid(), 1000), IFluidHandler.FluidAction.EXECUTE);
-                return true;
-            }
-        }
-        return false;
-    }*/
 
 	@Override
 	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,

@@ -153,8 +153,6 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	public void tick() {
 		if (!this.world.isRemote) {
 			if (process > 0) {
-				if(efficiency<=0.2&&!isFoodRecipe)
-					efficiency=0.2f;
 				if(efficiency<=0) {
 					out=ItemStack.EMPTY;
 					outfluid=FluidStack.EMPTY;
@@ -195,6 +193,8 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 						process--;
 					fuel--;
 				}else efficiency-=0.0005;
+				if(efficiency<=0.2&&!isFoodRecipe)
+					efficiency=0.2f;
 				this.markDirty();
 				this.markContainingBlockForUpdate(null);
 				return;
@@ -337,8 +337,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	public int[] getCurrentProcessesStep() {
 		return new int[] { process,MathHelper.ceil(efficiency*100),fuel };
 	}
-
-	public LazyOptional<IFluidHandler> fluidHandler = registerConstantCap(new IFluidHandler() {
+	IFluidHandler handler=new IFluidHandler() {
 
 		@Override
 		public int getTanks() {
@@ -347,16 +346,21 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 		@Override
 		public FluidStack getFluidInTank(int tank) {
-			return fluid[tank].getFluidInTank(tank);
+			if(tank==0||tank==1)
+				return fluid[tank].getFluid();
+			return null;
 		}
 
 		@Override
 		public int getTankCapacity(int tank) {
-			return fluid[tank].getCapacity();
+			if(tank==0||tank==1)
+				return fluid[tank].getCapacity();
+			return 0;
 		}
 
 		@Override
 		public boolean isFluidValid(int tank, FluidStack stack) {
+			if(tank!=0)return false;
 			return fluid[tank].isFluidValid(tank, stack);
 		}
 
@@ -365,6 +369,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 			int f=fluid[0].fill(resource, action);
 			if(f>0&&action==FluidAction.EXECUTE) {
 				markContainingBlockForUpdate(null);
+				
 			}
 			return f;
 		}
@@ -387,7 +392,8 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 			return fs;
 		}
 
-	});
+	};
+	LazyOptional<IFluidHandler> fluidHandler = LazyOptional.of(()->handler);
 	LazyOptional<IItemHandler> invHandlerUp = registerConstantCap(new IEInventoryHandler(2, this, 1, true, false));
 	LazyOptional<IItemHandler> invHandlerSide = registerConstantCap(new IEInventoryHandler(1, this, 0, true, false));
 	LazyOptional<IItemHandler> invHandlerDown = registerConstantCap(new IEInventoryHandler(1, this, 3, false, true));
@@ -395,8 +401,14 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	@Nonnull
 	@Override
 	public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability, @Nullable Direction facing) {
-		if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)
+		if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+			if(!fluidHandler.isPresent()) {
+				LazyOptional<IFluidHandler> old=fluidHandler;
+				fluidHandler = LazyOptional.of(()->handler);
+				old.invalidate();	
+			}
 			return fluidHandler.cast();
+		}
 		if (facing != null) {
 			if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
 				if (facing == Direction.UP)

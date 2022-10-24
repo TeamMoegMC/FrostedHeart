@@ -113,6 +113,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
         }
     }
     public void requireNetworkUpdate() {
+    	if(this.hasNetwork())
     	this.getOrCreateNetwork().updateStressFor(this,calculateStressApplied());
     }
     @Override
