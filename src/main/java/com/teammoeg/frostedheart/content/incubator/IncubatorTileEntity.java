@@ -400,7 +400,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 	@Nonnull
 	@Override
-	public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability, @Nullable Direction facing) {
+	public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability,Direction facing) {
 		if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
 			if(!fluidHandler.isPresent()) {
 				LazyOptional<IFluidHandler> old=fluidHandler;
