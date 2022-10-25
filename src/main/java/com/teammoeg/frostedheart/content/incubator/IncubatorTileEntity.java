@@ -347,7 +347,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 
 	@Override
 	public int[] getCurrentProcessesStep() {
-		return new int[] { process,MathHelper.ceil(efficiency*100),fuel };
+		return new int[] { processMax-process,MathHelper.ceil(efficiency*100),fuel };
 	}
 	IFluidHandler handler=new IFluidHandler() {
 
