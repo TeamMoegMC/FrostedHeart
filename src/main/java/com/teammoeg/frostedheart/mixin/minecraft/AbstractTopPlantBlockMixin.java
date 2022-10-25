@@ -5,6 +5,9 @@ import java.util.Random;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.block.AbstractPlantBlock;
 import net.minecraft.block.AbstractTopPlantBlock;
@@ -32,8 +35,9 @@ public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
 	 * @reason fix forge event bug
 	 * @author khjxiaogu
 	 */
-	@Overwrite
-	public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
+	@Inject(at=@At("HEAD"),method="randomTick",cancellable=true,remap=true)
+	
+	public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random,CallbackInfo cbi) {
 		if (state.get(AbstractTopPlantBlock.AGE) < 25 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn,
 				pos.offset(this.growthDirection), state,
 				random.nextDouble() < this.growthChance)) {
@@ -44,6 +48,7 @@ public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
 						worldIn.getBlockState(blockpos));
 			}
 		}
+		cbi.cancel();
 
 	}
 }

@@ -139,12 +139,13 @@ public class EffectBuilding extends Effect {
 
 	@Override
 	public void onClick() {
-		if(ClientUtils.getPlayer().inventory.hasAny(ImmutableSet.of(IEItems.Tools.manual))) {
+		if(this.isGranted()&&ClientUtils.getPlayer().inventory.hasAny(ImmutableSet.of(IEItems.Tools.manual))) {
 			ResourceLocation loc=multiblock.getUniqueName();
 			ResourceLocation manual=new ResourceLocation(loc.getNamespace(),loc.getPath().substring(loc.getPath().lastIndexOf("/")+1));
+			ManualScreen screen=ManualHelper.getManual().getGui();
 			ManualEntry entry=ManualHelper.getManual().getEntry(manual);
 			if(entry!=null) {
-				ManualScreen screen=ManualHelper.getManual().getGui(false);
+				
 				ClientUtils.mc().displayGuiScreen(screen);
 				System.out.println(manual);
 				screen.setCurrentNode(entry.getTreeNode());

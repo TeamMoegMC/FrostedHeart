@@ -244,6 +244,7 @@ public class EffectCrafting extends Effect {
 
 	@Override
 	public void onClick() {
+		if(!this.isGranted())return;
 		if(item!=null)
 			JEICompat.showJEIFor(new ItemStack(item));
 		else if(itemStack!=null)
