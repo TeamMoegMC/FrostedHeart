@@ -59,6 +59,8 @@
   "gui.frostedheart.effect.use": "New Usage",
   "gui.frostedheart.effect.category": "New Recipes",
   "gui.frostedheart.effect_unknown": "Reveals after research complete",
+  "gui.frostedheart.effect.stats.max_energy":"Max Inspiration",
+  "gui.frostedheart.effect.stats.max_energy_multiplier":"Max Inspiration",
   "gui.frostedheart.generator.mode.off": "Turn Off Generator",
   "gui.frostedheart.generator.mode.on": "Turn On Generator",
   "gui.frostedheart.generator.overdrive.off": "Turn Off Overdrive",

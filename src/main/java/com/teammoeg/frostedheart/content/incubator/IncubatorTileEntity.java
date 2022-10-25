@@ -19,23 +19,20 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.thermopolium.api.ThermopoliumApi;
 import com.teammoeg.thermopolium.items.StewItem;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -44,11 +41,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -65,7 +62,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTileEntity,
+public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTileEntity,
 		FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE, IEBlockInterfaces.IProcessTile {
 	protected NonNullList<ItemStack> inventory;
 	protected FluidTank[] fluid = new FluidTank[] { new FluidTank(6000, w -> w.getFluid() == Fluids.WATER),
@@ -87,13 +84,11 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	public IncubatorTileEntity() {
 		super(FHTileTypes.INCUBATOR.get());
 		this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
-		LazyOptional.of(() -> new IEInventoryHandler(15, this));
 	}
 
 	public IncubatorTileEntity(TileEntityType<?> type) {
 		super(type);
 		this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
-		LazyOptional.of(() -> new IEInventoryHandler(15, this));
 	}
 
 	@Nullable
@@ -148,7 +143,14 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	protected float getMaxEfficiency() {
 		return 1f;
 	}
-	
+    @Override
+    public void markBlockForUpdate(BlockPos pos, BlockState newState)
+	{
+		BlockState state = world.getBlockState(pos);
+		if(newState==null)
+			newState = state;
+		world.notifyBlockUpdate(pos, state, newState, 3);
+	}
 	@Override
 	public void tick() {
 		if (!this.world.isRemote) {
@@ -159,6 +161,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 					process=processMax=0;
 					efficiency=0;
 					lprocess=0;
+					this.setActive(false);
 					this.markDirty();
 					this.markContainingBlockForUpdate(null);
 					return;
@@ -183,6 +186,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 							lprocess=process/20;
 						}else {
 							efficiency-=0.005;
+							this.setActive(false);
 							this.markDirty();
 							this.markContainingBlockForUpdate(null);
 							return;
@@ -191,8 +195,12 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 					if(e)process--;
 					if(d) 
 						process--;
+					this.setActive(true);
 					fuel--;
-				}else efficiency-=0.0005;
+				}else {
+					efficiency-=0.0005;
+					this.setActive(false);
+				}
 				if(efficiency<=0.2&&!isFoodRecipe)
 					efficiency=0.2f;
 				this.markDirty();
@@ -265,6 +273,10 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 							lprocess=0;
 							process = processMax = 20 * 20*value;
 							water=1;
+							this.setActive(true);
+							this.markDirty();
+							this.markContainingBlockForUpdate(null);
+							return;
 						}
 					}
 				}
@@ -278,6 +290,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 					efficiency=0;
 					changed=true;
 				}
+				this.setActive(false);
 				if(changed) {
 					this.markDirty();
 					this.markContainingBlockForUpdate(null);
@@ -346,16 +359,13 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 
 		@Override
 		public FluidStack getFluidInTank(int tank) {
-			if(tank==0||tank==1)
-				return fluid[tank].getFluid();
-			return null;
+			
+			return fluid[tank].getFluid();
 		}
 
 		@Override
 		public int getTankCapacity(int tank) {
-			if(tank==0||tank==1)
-				return fluid[tank].getCapacity();
-			return 0;
+			return 6000;
 		}
 
 		@Override
@@ -393,6 +403,7 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 		}
 
 	};
+	
 	LazyOptional<IFluidHandler> fluidHandler = LazyOptional.of(()->handler);
 	LazyOptional<IItemHandler> invHandlerUp = registerConstantCap(new IEInventoryHandler(2, this, 1, true, false));
 	LazyOptional<IItemHandler> invHandlerSide = registerConstantCap(new IEInventoryHandler(1, this, 0, true, false));
@@ -402,12 +413,13 @@ public class IncubatorTileEntity extends IEBaseTileEntity implements ITickableTi
 	@Override
 	public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability,Direction facing) {
 		if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+			
 			if(!fluidHandler.isPresent()) {
 				LazyOptional<IFluidHandler> old=fluidHandler;
 				fluidHandler = LazyOptional.of(()->handler);
-				old.invalidate();	
+				old.invalidate();
 			}
-			return fluidHandler.cast();
+			return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.orEmpty(capability, fluidHandler);
 		}
 		if (facing != null) {
 			if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {

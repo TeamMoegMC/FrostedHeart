@@ -18,11 +18,12 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -36,9 +37,10 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveState, ITickableTileEntity {
+public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveState, ITickableTileEntity {
     ResourceLocation burnable = new ResourceLocation("frostedheart", "flammable_fluid");
     FluidTank input = new FluidTank(10000, s -> s.getFluid().getTags().contains(burnable));
+    int vals;
     private LazyOptional<IFluidHandler> holder = LazyOptional.empty();
 
     public OilBurnerTileEntity() {
@@ -48,11 +50,13 @@ public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveStat
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean dp) {
         input.readFromNBT(nbt.getCompound("in"));
+        vals=nbt.getInt("burntick");
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
         nbt.put("in", input.writeToNBT(new CompoundNBT()));
+        nbt.putInt("burntick", vals);
     }
 
 
@@ -82,9 +86,16 @@ public class OilBurnerTileEntity extends IEBaseTileEntity implements IActiveStat
                     }
                 }
             }
-            if (input.drain(1000, FluidAction.EXECUTE).getAmount() >= 5) {
-                this.setActive(true);
-            } else
+            int drained=input.drain(1000, FluidAction.EXECUTE).getAmount();
+            if (drained >= 5) {
+            	vals=Math.min(vals+drained/5, 100);
+            }
+            if(this.getIsActive()) {
+            	vals--;
+            }else if(vals>20){
+            	this.setActive(true);
+            }
+            if(vals<=0)
                 this.setActive(false);
             this.markContainingBlockForUpdate(null);
         }

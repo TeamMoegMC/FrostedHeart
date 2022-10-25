@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
 
@@ -75,8 +76,8 @@ public class EnergyCore {
         if (!isBodyNotWell) {
             double m;
             TeamResearchData trd = ResearchDataAPI.getData(player);
-            long M = (long) trd.getVariants().getDouble("maxEnergy") + 30000;
-            M *= (1 + trd.getVariants().getDouble("pmaxEnergy"));
+            long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
+            M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
             double dietValue = 0;
             IDietTracker idt = DietCapability.get(player).orElse(null);
             if(idt!=null) {

@@ -23,6 +23,7 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.util.IOwnerTile;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
@@ -85,16 +86,15 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         UUID owner = getOwner();
         if (owner == null) return;
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
-        if (!vars.contains("generator_loc")) return;
-        long pos = vars.getLong("generator_loc");
+        if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) return;
+        long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
         BlockPos bp = BlockPos.fromLong(pos);
         if (bp.equals(this.pos))
-            vars.remove("generator_loc");
+            vars.remove(ResearchVariant.GENERATOR_LOCATION.getToken());
     }
 
     public void regist() {
-        CompoundNBT vars = ResearchDataAPI.getVariants(getOwner());
-        vars.putLong("generator_loc", master().pos.toLong());
+        ResearchDataAPI.putVariantLong(getOwner(),ResearchVariant.GENERATOR_LOCATION,master().pos.toLong());
     }
 
     public void setOwner(UUID owner) {
@@ -105,11 +105,11 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         UUID owner = getOwner();
         if (owner == null) return false;
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
-        if (!vars.contains("generator_loc")) {
-            vars.putLong("generator_loc", master().pos.toLong());
+        if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) {
+            vars.putLong(ResearchVariant.GENERATOR_LOCATION.getToken(), master().pos.toLong());
             return true;
         }
-        long pos = vars.getLong("generator_loc");
+        long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
         BlockPos bp = BlockPos.fromLong(pos);
         if (bp.equals(this.pos))
             return true;
