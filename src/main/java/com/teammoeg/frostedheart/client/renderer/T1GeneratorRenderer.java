@@ -52,7 +52,7 @@ public class T1GeneratorRenderer extends TileEntityRenderer<T1GeneratorTileEntit
                        IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
         if (!te.formed || te.isDummy() || !te.getWorldNonnull().isBlockLoaded(te.getPos()))
             return;
-        if (te.process > 0 || !te.getInventory().get(0).isEmpty()) {
+        if (te.process > 0 || te.hasFuel) {
 
         } else
             return;

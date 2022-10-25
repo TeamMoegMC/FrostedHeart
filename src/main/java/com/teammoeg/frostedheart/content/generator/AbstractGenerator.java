@@ -141,40 +141,44 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
                 onShutDown();
                 ChunkData.removeTempAdjust(world, getPos());
             }
-        if (!world.isRemote && formed && !isDummy() && isWorking()) {
-            if (shouldUnique()) {
-                if (checkInterval <= 0) {
-                    if (getOwner() != null)
-                        checkInterval = 10;
-                    isLocked = !shouldWork();
-                } else checkInterval--;
-            }
-            final boolean activeBeforeTick = getIsActive();
-            if (!isLocked)
-                tickFuel();
-            else
-                this.setActive(false);
-            // set activity status
-            final boolean activeAfterTick = getIsActive();
-            if (activeBeforeTick != activeAfterTick) {
-                this.markDirty();
-                if (activeAfterTick) {
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
-                } else {
-                    ChunkData.removeTempAdjust(world, getPos());
-                }
-                setAllActive(activeAfterTick);
-            } else if (activeAfterTick) {
-                if (isChanged() || !initialized) {
-                    initialized = true;
-                    markChanged(false);
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
-                }
-            }
+        
+        if (!world.isRemote && formed && !isDummy()) {
+        	if(isWorking()) {
+	            if (shouldUnique()) {
+	                if (checkInterval <= 0) {
+	                    if (getOwner() != null)
+	                        checkInterval = 10;
+	                    isLocked = !shouldWork();
+	                } else checkInterval--;
+	            }
+	            final boolean activeBeforeTick = getIsActive();
+	            if (!isLocked)
+	                tickFuel();
+	            else
+	                this.setActive(false);
+	            // set activity status
+	            final boolean activeAfterTick = getIsActive();
+	            if (activeBeforeTick != activeAfterTick) {
+	                this.markDirty();
+	                if (activeAfterTick) {
+	                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
+	                } else {
+	                    ChunkData.removeTempAdjust(world, getPos());
+	                }
+	                setAllActive(activeAfterTick);
+	            } else if (activeAfterTick) {
+	                if (isChanged() || !initialized) {
+	                    initialized = true;
+	                    markChanged(false);
+	                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
+	                }
+	            }
+        	}else
+        		shutdownTick();
         }
 
     }
-
+    public void shutdownTick() {}
     public void setWorking(boolean working) {
         if (master() != null) {
             master().isWorking = working;

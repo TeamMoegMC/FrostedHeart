@@ -25,15 +25,17 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
 public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
-
+    public boolean hasFuel;
     public T1GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false, 1, 2, 1);
     }
+
 
     @Override
     public void forEachBlock(Consumer<T1GeneratorTileEntity> consumer) {
@@ -46,4 +48,28 @@ public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Generator
                         consumer.accept((T1GeneratorTileEntity) te);
                 }
     }
+	@Override
+	protected void tickFuel() {
+		this.hasFuel=!inventory.get(INPUT_SLOT).isEmpty();
+		super.tickFuel();
+	}
+	@Override
+	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+		super.readCustomNBT(nbt, descPacket);
+		hasFuel=nbt.getBoolean("hasFuel");
+	}
+	@Override
+	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+		super.writeCustomNBT(nbt, descPacket);
+		nbt.putBoolean("hasFuel", hasFuel);
+	}
+	@Override
+	public void shutdownTick() {
+		boolean invState=!inventory.get(INPUT_SLOT).isEmpty();
+		if(invState!=hasFuel) {
+			hasFuel=invState;
+			this.markContainingBlockForUpdate(null);
+		}
+		
+	}
 }
