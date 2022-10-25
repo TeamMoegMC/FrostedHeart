@@ -97,7 +97,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
             CUSTOM.open(p, l, (CustomClue) v, e -> c.accept(e));
     };
     public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, EDITOR, e -> e.getClass().getSimpleName() + ":" + e.getName().getString(), c).open();
+        new EditListDialog<>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
     };
     String lbl;
     T e;

@@ -61,6 +61,7 @@ public class EffectWidget extends Widget {
         if (isMouseOver()) {
             if (getWidgetType() != WidgetType.DISABLED) {
                 //TODO edit effect
+            	e.onClick();
             }
 
             return true;

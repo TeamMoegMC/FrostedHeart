@@ -119,5 +119,11 @@ public class ItemClue extends Clue {
         return stack.getMatchingStacks()[0].getDisplayName().copyRaw()
                 .appendSibling(new StringTextComponent(" x" + stack.getCount()));
     }
-
+	@Override
+	public String getBrief() {
+		if(consume)
+			return "Submit item "+getDescription().getString();
+		else
+			return "Inspect item "+getDescription().getString();
+	}
 }

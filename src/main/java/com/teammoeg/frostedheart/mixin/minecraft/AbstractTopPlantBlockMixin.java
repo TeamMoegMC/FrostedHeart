@@ -29,6 +29,8 @@ public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
 
 	/**
 	 * Performs a random tick on a block.
+	 * @reason fix forge event bug
+	 * @author khjxiaogu
 	 */
 	@Overwrite
 	public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {

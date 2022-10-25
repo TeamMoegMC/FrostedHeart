@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.research.gui.editor;
 
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -31,7 +32,7 @@ public class LabeledPane<T extends Widget> extends Panel {
 
     public LabeledPane(Panel panel, String lab) {
         super(panel);
-        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab);
+        label = new TextField(this).setMaxWidth(200).setTrim().setText(lab).setColor(Color4I.BLACK);
 
     }
 

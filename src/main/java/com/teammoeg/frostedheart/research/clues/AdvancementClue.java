@@ -74,7 +74,7 @@ public class AdvancementClue extends TickListenerClue {
     public ITextComponent getDescription() {
         ITextComponent itc = super.getDescription();
         if (itc != null) return itc;
-        ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancementManager();
+        ClientAdvancementManager cam = ClientUtils.getPlayer().connection.getAdvancementManager();
         Advancement adv = cam.getAdvancementList().getAdvancement(advancement);
         if (adv != null)
             return adv.getDisplayText();
@@ -119,6 +119,11 @@ public class AdvancementClue extends TickListenerClue {
         buffer.writeResourceLocation(advancement);
         buffer.writeString(criterion);
     }
+
+	@Override
+	public String getBrief() {
+		return "Advancement "+getDescription().getString();
+	}
 
 
 

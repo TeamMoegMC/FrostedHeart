@@ -31,7 +31,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
@@ -239,5 +241,13 @@ public class EffectCrafting extends Effect {
             return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
         return "Craft nothing";
     }
+
+	@Override
+	public void onClick() {
+		if(item!=null)
+			JEICompat.showJEIFor(new ItemStack(item));
+		else if(itemStack!=null)
+			JEICompat.showJEIFor(itemStack);
+	}
 
 }

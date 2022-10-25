@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.research.gui.ResearchGui;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.IScreenWrapper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.ParticleTypes;
@@ -44,7 +45,7 @@ public class ClientUtils {
         return Minecraft.getInstance().world;
     }
 
-    public static PlayerEntity getPlayer() {
+    public static ClientPlayerEntity getPlayer() {
         return Minecraft.getInstance().player;
     }
 

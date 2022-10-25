@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 
@@ -33,6 +34,7 @@ import dev.ftb.mods.ftblibrary.ui.ScrollBar.Plane;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 
 public abstract class ResearchPanel extends Panel {
@@ -53,11 +55,29 @@ public abstract class ResearchPanel extends Panel {
         researchCategoryPanel = new ResearchCategoryPanel(this);
         researchListPanel = new ResearchListPanel(this);
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
-        progressPanel = new ResearchProgressPanel(this);
+        progressPanel = new ResearchProgressPanel(this) {
+        	@Override
+        	public boolean mousePressed(MouseButton arg0) {
+        		if(super.mousePressed(arg0))
+        			return true;
+        		if(isMouseOver()) {
+	    			Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+	    			if(inprog!=null) {
+	    				selectResearch(inprog);
+	    				return true;
+	    			}
+        		}
+        		return false;
+        	}
+        };
         hierarchyBar = new TechScrollBar(this, Plane.HORIZONTAL, researchHierarchyPanel);
         detailframe = new ResearchDetailPanel(this);
         //TODO default select on progress research
-        Research cr = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+        Research cr=null;
+        if(ClientResearchData.last!=null&&ClientResearchData.last.getRId()>0)
+        	cr=ClientResearchData.last;
+        else
+        	cr= ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
         selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
         selectedResearch = cr == null ? FHResearch.getFirstResearchInCategory(selectedCategory) : cr;
     }
@@ -94,6 +114,7 @@ public abstract class ResearchPanel extends Panel {
 
     public void selectResearch(Research research) {
         if (selectedResearch != research) {
+        	ClientResearchData.last=research;
             selectedResearch = research;
             if (selectedResearch != null)
                 selectCategory(selectedResearch.getCategory());

@@ -81,5 +81,8 @@ public class MinigameClue extends CustomClue {
     public void setLevel(int level) {
         this.level = Math.min(Math.max(level, 0), 3);
     }
-
+	@Override
+	public String getBrief() {
+		return "Complete game level "+this.level;
+	}
 }

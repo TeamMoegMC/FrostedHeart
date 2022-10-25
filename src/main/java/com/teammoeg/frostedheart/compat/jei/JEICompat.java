@@ -72,6 +72,7 @@ import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.helpers.IGuiHelper;
+import mezz.jei.api.recipe.IFocus.Mode;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
@@ -143,6 +144,12 @@ public class JEICompat implements IModPlugin {
 		rcps.add(new IncubateRecipe());
 		registration.addRecipes(rcps,IncubatorCategory.UID);
 	}
+	public static void showJEIFor(ItemStack stack) {
+		jei.getRecipesGui().show(man.createFocus(Mode.OUTPUT,stack));
+	}
+	public static void showJEICategory(ResourceLocation rl) {
+		jei.getRecipesGui().showCategories(Arrays.asList(rl));
+	}
 	@Override
 	public void registerCategories(IRecipeCategoryRegistration registration) {
 		IGuiHelper guiHelper = registration.getJeiHelpers().getGuiHelper();
@@ -168,11 +175,11 @@ public class JEICompat implements IModPlugin {
 		registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29,IncubatorCategory.UID);
 	}
 	public static IRecipeManager man;
-
+	public static IJeiRuntime jei;
 	@Override
 	public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
 		man = jeiRuntime.getRecipeManager();
-
+		jei=jeiRuntime;
 		syncJEI();
 		man.hideRecipeCategory(VanillaRecipeCategoryUid.BLASTING);
 		man.hideRecipeCategory(VanillaRecipeCategoryUid.SMOKING);

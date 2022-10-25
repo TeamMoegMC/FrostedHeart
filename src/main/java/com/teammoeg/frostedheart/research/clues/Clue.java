@@ -254,7 +254,15 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             this.sendProgressPacket(team);
         });
     }
-
+    /**
+     * Get brief string describe this clue for show in editor.
+     *
+     * @return brief<br>
+     */
+    public abstract String getBrief();
+    public String getBriefDesc() {
+    	return "   "+(this.required?"required ":"")+"+"+(int)(this.contribution*100)+"%";
+    };
 	public boolean isRequired() {
 		return required;
 	}

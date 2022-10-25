@@ -22,17 +22,22 @@ package com.teammoeg.frostedheart.research.effects;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 
+import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.items.IEItems;
+import blusunrize.lib.manual.ManualEntry;
+import blusunrize.lib.manual.gui.ManualScreen;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -131,5 +136,22 @@ public class EffectBuilding extends Effect {
     public String getBrief() {
         return "Build " + multiblock.getUniqueName();
     }
+
+	@Override
+	public void onClick() {
+		if(ClientUtils.getPlayer().inventory.hasAny(ImmutableSet.of(IEItems.Tools.manual))) {
+			ResourceLocation loc=multiblock.getUniqueName();
+			ResourceLocation manual=new ResourceLocation(loc.getNamespace(),loc.getPath().substring(loc.getPath().lastIndexOf("/")+1));
+			ManualEntry entry=ManualHelper.getManual().getEntry(manual);
+			if(entry!=null) {
+				ManualScreen screen=ManualHelper.getManual().getGui(false);
+				ClientUtils.mc().displayGuiScreen(screen);
+				System.out.println(manual);
+				screen.setCurrentNode(entry.getTreeNode());
+				screen.page=0;
+				screen.fullInit();
+			}
+		}
+	}
 
 }
