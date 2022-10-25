@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.research.clues;
 
+import java.util.function.Function;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.SerializerRegistry;
-import net.minecraft.network.PacketBuffer;
 
-import java.util.function.Function;
+import net.minecraft.network.PacketBuffer;
 
 public class Clues {
 	private static SerializerRegistry<Clue> registry=new SerializerRegistry<>();

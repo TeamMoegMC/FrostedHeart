@@ -18,12 +18,12 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
 
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;

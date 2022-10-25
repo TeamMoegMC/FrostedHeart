@@ -19,18 +19,24 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.FHDamageSources;
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.passive.*;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.passive.BeeEntity;
+import net.minecraft.entity.passive.MooshroomEntity;
+import net.minecraft.entity.passive.PigEntity;
+import net.minecraft.entity.passive.RabbitEntity;
+import net.minecraft.entity.passive.SheepEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.World;
 
 @Mixin({SheepEntity.class, BeeEntity.class, MooshroomEntity.class, PigEntity.class, RabbitEntity.class})
 public class CoolableAnimals extends MobEntity {

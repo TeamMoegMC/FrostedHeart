@@ -30,10 +30,12 @@ import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardType;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ClientResearchGame;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
+
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.TextField;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.StringTextComponent;
 
 class MainGamePanel extends Panel {
@@ -61,6 +63,11 @@ class MainGamePanel extends Panel {
                 rg.init();
                 refreshWidgets();
             }
+            @Override
+			public void addMouseOverText(TooltipList list) {
+				super.addMouseOverText(list);
+				list.add(GuiUtils.translateGui("draw_desk.reset"));
+			}
         };
         reset.setPosAndSize(157, 136, 27, 16);
         status = new TextField(this).addFlags(Theme.CENTERED).addFlags(Theme.CENTERED_V).setMaxWidth(108).setColor(TechIcons.text);
@@ -152,6 +159,12 @@ class MainGamePanel extends Panel {
             public void onClicked(MouseButton arg0) {
                 ot.openHelp();
             }
+
+			@Override
+			public void addMouseOverText(TooltipList list) {
+				super.addMouseOverText(list);
+				list.add(GuiUtils.translateGui("draw_desk.help"));
+			}
         };
         help.setPosAndSize(157, 116, 27, 16);
         add(help);

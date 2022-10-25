@@ -18,7 +18,10 @@
 
 package com.teammoeg.frostedheart.content.cmupdate;
 
+import java.util.List;
+
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -33,8 +36,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.List;
 
 public class CMUpdateItem extends FHBaseItem {
     public CMUpdateItem(String name, Properties properties) {

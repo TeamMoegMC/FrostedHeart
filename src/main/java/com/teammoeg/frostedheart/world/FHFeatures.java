@@ -18,21 +18,29 @@
 
 package com.teammoeg.frostedheart.world;
 
+import java.util.ArrayList;
+
 import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.world.feature.FlowerCoveredDepositFeature;
 import com.teammoeg.frostedheart.world.feature.FHOreFeature;
 import com.teammoeg.frostedheart.world.feature.FHOreFeatureConfig;
+import com.teammoeg.frostedheart.world.feature.FlowerCoveredDepositFeature;
 import com.teammoeg.frostedheart.world.feature.SpacecraftFeature;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.gen.feature.*;
-
-import java.util.ArrayList;
+import net.minecraft.world.gen.feature.BlockStateFeatureConfig;
+import net.minecraft.world.gen.feature.ConfiguredFeature;
+import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.feature.FeatureSpread;
+import net.minecraft.world.gen.feature.Features;
+import net.minecraft.world.gen.feature.IFeatureConfig;
+import net.minecraft.world.gen.feature.NoFeatureConfig;
+import net.minecraft.world.gen.feature.SphereReplaceConfig;
 
 public class FHFeatures {
 

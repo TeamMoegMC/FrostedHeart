@@ -18,9 +18,13 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
+import java.util.Collections;
+import java.util.Map;
+
+import com.google.common.base.Optional;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-import com.google.common.base.Optional;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -33,9 +37,6 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.Collections;
-import java.util.Map;
 
 public class RecipeInner extends SpecialRecipe {
     public static RegistryObject<IERecipeSerializer<RecipeInner>> SERIALIZER;

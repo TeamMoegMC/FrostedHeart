@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.loot;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import javax.annotation.Nonnull;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.loot.LootContext;
@@ -32,8 +35,6 @@ import net.minecraft.tileentity.LockableLootTileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
-
-import javax.annotation.Nonnull;
 
 public class TreasureLootCondition implements ILootCondition {
     public static LootConditionType TYPE;

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;
 

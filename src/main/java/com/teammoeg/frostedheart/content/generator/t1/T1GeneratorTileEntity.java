@@ -18,14 +18,15 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-
-import java.util.function.Consumer;
 
 public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();

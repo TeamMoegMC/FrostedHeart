@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.util;
 
-import net.minecraft.tileentity.TileEntity;
-
 import java.util.UUID;
+
+import net.minecraft.tileentity.TileEntity;
 
 public interface IOwnerTile {
     public UUID getStoredOwner();

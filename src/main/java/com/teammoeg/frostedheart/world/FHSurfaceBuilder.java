@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.world;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.util.registry.WorldGenRegistries;
 import net.minecraft.world.gen.surfacebuilders.ConfiguredSurfaceBuilder;

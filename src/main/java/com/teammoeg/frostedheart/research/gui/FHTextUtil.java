@@ -19,15 +19,17 @@
 
 package com.teammoeg.frostedheart.research.gui;
 
-import com.teammoeg.frostedheart.FHMain;
-import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+
+import javax.annotation.Nullable;
+
+import com.teammoeg.frostedheart.FHMain;
+
+import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class FHTextUtil {
 

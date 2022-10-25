@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.mixin.chisel;
 
-import net.minecraftforge.event.world.BiomeLoadingEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import net.minecraftforge.event.world.BiomeLoadingEvent;
 import team.chisel.common.init.ChiselWorldGen;
 
 @Mixin(ChiselWorldGen.class)

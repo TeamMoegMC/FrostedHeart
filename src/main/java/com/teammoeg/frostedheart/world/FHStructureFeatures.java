@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.world;
 
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;

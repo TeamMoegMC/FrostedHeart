@@ -19,6 +19,11 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.item.Item;
@@ -27,11 +32,6 @@ import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 import top.theillusivec4.diet.api.IDietGroup;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class DietValueRecipe extends IESerializableRecipe {
     public static IRecipeType<DietValueRecipe> TYPE;

@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.base.block.FHGuiBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 
@@ -40,7 +42,6 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.RegistryObject;
-import javax.annotation.Nullable;
 
 public class IncubatorBlock extends FHGuiBlock{
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;

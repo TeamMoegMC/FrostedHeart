@@ -19,14 +19,15 @@
 
 package com.teammoeg.frostedheart.effects;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
-
-import java.util.List;
 
 public class BaseEffect extends Effect {
 

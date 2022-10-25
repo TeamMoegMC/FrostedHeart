@@ -18,13 +18,19 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.effects.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.teammoeg.frostedheart.effects.AnemiaEffect;
+import com.teammoeg.frostedheart.effects.BaseEffect;
+import com.teammoeg.frostedheart.effects.HyperthermiaEffect;
+import com.teammoeg.frostedheart.effects.HypothermiaEffect;
+import com.teammoeg.frostedheart.effects.IonEffect;
+import com.teammoeg.frostedheart.effects.SaunaEffect;
+
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
 import net.minecraftforge.registries.IForgeRegistry;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class FHEffects {
     public static List<Effect> EFFECTS = new ArrayList<Effect>();

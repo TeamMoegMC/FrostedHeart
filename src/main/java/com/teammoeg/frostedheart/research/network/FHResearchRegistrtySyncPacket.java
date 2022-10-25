@@ -18,19 +18,20 @@
 
 package com.teammoeg.frostedheart.research.network;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.util.SerializeUtil;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 // send when player join
 public class FHResearchRegistrtySyncPacket {

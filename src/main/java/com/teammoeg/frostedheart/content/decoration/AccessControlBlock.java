@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
-
-import java.util.function.BiFunction;
 
 public class AccessControlBlock extends FHBaseBlock {
     public AccessControlBlock(String name, BiFunction<Block, Item.Properties, Item> createItemBlock) {

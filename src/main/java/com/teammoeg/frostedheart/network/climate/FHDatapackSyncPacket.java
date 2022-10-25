@@ -18,12 +18,13 @@
 
 package com.teammoeg.frostedheart.network.climate;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.data.DataEntry;
 import com.teammoeg.frostedheart.data.FHDataManager;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public class FHDatapackSyncPacket {
     DataEntry[] entries;

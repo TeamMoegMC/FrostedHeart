@@ -19,8 +19,11 @@
 
 package com.teammoeg.frostedheart.effects;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.util.FHUtils;
+
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
@@ -28,8 +31,6 @@ import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.EffectType;
 import net.minecraft.potion.Effects;
-
-import java.util.List;
 
 public class AnemiaEffect extends Effect {
 

@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.research.gui.ResearchGui;
 import com.teammoeg.frostedheart.research.gui.editor.EditDialog;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchPanel;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
+
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 

@@ -19,7 +19,10 @@
 
 package com.teammoeg.frostedheart.world.feature;
 
+import java.util.Random;
+
 import com.mojang.serialization.Codec;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -28,8 +31,6 @@ import net.minecraft.world.ISeedReader;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.feature.BlockStateFeatureConfig;
 import net.minecraft.world.gen.feature.Feature;
-
-import java.util.Random;
 
 public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig> {
     public FlowerCoveredDepositFeature(Codec<BlockStateFeatureConfig> codec) {

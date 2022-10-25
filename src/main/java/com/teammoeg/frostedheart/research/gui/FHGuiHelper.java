@@ -19,9 +19,14 @@
 
 package com.teammoeg.frostedheart.research.gui;
 
+import java.util.OptionalDouble;
+
+import org.lwjgl.opengl.GL11;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -30,9 +35,6 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.vector.Matrix4f;
-import org.lwjgl.opengl.GL11;
-
-import java.util.OptionalDouble;
 
 public class FHGuiHelper {
 	public static final RenderType BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold",

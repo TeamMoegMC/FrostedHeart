@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.client.util;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+
 import net.minecraft.client.gui.AbstractGui;
 
 public class UV extends Rect {

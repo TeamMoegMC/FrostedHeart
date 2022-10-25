@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import blusunrize.immersiveengineering.common.util.Utils;
-
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;

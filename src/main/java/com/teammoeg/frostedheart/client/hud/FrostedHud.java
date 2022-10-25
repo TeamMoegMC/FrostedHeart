@@ -18,6 +18,14 @@
 
 package com.teammoeg.frostedheart.client.hud;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.lwjgl.opengl.GL11;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHConfig;
@@ -28,13 +36,10 @@ import com.teammoeg.frostedheart.client.ClientForecastData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
-import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
-import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 
-import dev.ftb.mods.ftblibrary.icon.Color4I;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -56,15 +61,6 @@ import net.minecraft.util.FoodStats;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import org.lwjgl.opengl.GL11;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.teammoeg.frostedheart.climate.WorldClimate.*;
 
 public class FrostedHud {
 	public static boolean renderHotbar = true;

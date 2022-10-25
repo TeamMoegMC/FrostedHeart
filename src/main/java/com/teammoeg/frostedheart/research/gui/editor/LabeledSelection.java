@@ -19,6 +19,13 @@
 
 package com.teammoeg.frostedheart.research.gui.editor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -30,13 +37,6 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.client.multiplayer.ClientAdvancementManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class LabeledSelection<R> extends LabeledPane<Button> {
     public static LabeledSelection<Boolean> createBool(Panel p, String lab, boolean val) {

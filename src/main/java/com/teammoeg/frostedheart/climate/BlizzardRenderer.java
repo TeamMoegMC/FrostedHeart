@@ -19,7 +19,10 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.util.Random;
+
 import com.mojang.blaze3d.systems.RenderSystem;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.LightTexture;
@@ -31,8 +34,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.gen.Heightmap;
-
-import java.util.Random;
 
 /**
  * Render cool Blizzard!

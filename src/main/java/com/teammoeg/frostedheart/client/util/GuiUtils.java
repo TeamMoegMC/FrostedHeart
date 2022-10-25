@@ -19,6 +19,7 @@
 package com.teammoeg.frostedheart.client.util;
 
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;

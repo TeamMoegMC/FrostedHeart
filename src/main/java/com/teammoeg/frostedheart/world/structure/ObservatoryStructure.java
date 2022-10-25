@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.world.structure;
 
 import com.mojang.serialization.Codec;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.SharedSeedRandom;

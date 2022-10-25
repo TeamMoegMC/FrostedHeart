@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.world.feature;
 
+import java.util.Random;
+
 import com.mojang.serialization.Codec;
 import com.teammoeg.frostedheart.FHMain;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.IWaterLoggable;
-import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
@@ -37,12 +35,8 @@ import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.feature.NoFeatureConfig;
 import net.minecraft.world.gen.feature.template.BlockIgnoreStructureProcessor;
-import net.minecraft.world.gen.feature.template.IStructureProcessorType;
 import net.minecraft.world.gen.feature.template.PlacementSettings;
-import net.minecraft.world.gen.feature.template.StructureProcessor;
 import net.minecraft.world.gen.feature.template.Template;
-
-import java.util.Random;
 
 public class SpacecraftFeature extends Feature<NoFeatureConfig> {
     public SpacecraftFeature(Codec<NoFeatureConfig> codec) {

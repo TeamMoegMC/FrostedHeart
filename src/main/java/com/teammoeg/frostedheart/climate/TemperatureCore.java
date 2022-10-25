@@ -19,10 +19,10 @@
 package com.teammoeg.frostedheart.climate;
 
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.profiler.Profiler;
 
 /**
  * The core of our dynamic body & environment temperature system

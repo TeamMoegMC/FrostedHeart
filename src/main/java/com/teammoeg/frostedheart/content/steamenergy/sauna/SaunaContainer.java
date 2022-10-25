@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
-import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;

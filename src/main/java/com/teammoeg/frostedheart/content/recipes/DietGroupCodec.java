@@ -19,11 +19,15 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import net.minecraft.network.PacketBuffer;
 import top.theillusivec4.diet.api.IDietGroup;
 import top.theillusivec4.diet.common.group.DietGroups;
-
-import java.util.*;
 
 public class DietGroupCodec {
     private static List<IDietGroup> codecs = new ArrayList<>();

@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.research.gui.drawdesk;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardType;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import net.minecraft.util.ResourceLocation;

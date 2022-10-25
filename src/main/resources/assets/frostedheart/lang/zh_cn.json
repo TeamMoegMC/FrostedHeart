@@ -52,6 +52,8 @@
   "fluid.frostedheart.steam": "任意蒸汽",
   "fluid.frostedheart.wolfberry_tea": "枸杞水",
   "gui.frostedheart.draw_desk.examine": "研究物品",
+  "gui.frostedheart.draw_desk.help": "使用方法",
+  "gui.frostedheart.draw_desk.reset": "创建新论文",
   "gui.frostedheart.effect.building": "解锁新建筑",
   "gui.frostedheart.effect.crafting": "解锁新配方",
   "gui.frostedheart.effect.item_reward": "奖励物品",

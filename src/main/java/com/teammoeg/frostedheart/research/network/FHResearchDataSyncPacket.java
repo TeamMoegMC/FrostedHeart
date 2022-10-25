@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.research.network;
 
+import java.util.UUID;
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -27,9 +30,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.UUID;
-import java.util.function.Supplier;
 
 // send when player join
 public class FHResearchDataSyncPacket {

@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.research.machines;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 

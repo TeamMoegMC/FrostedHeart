@@ -19,14 +19,20 @@
 
 package com.teammoeg.frostedheart.research.clues;
 
+import java.util.UUID;
+import java.util.function.Supplier;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.research.*;
+import com.teammoeg.frostedheart.research.AutoIDItem;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.util.Writeable;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
@@ -34,9 +40,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
-
-import java.util.UUID;
-import java.util.function.Supplier;
 
 /**
  * "Clue" for researches, contributes completion percentage for some

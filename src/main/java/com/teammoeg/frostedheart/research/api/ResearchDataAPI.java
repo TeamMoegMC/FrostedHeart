@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.research.api;
 
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 
 public class ResearchDataAPI {
 

@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.clues;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 

@@ -35,7 +35,6 @@ import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 
 import blusunrize.immersiveengineering.api.IEProperties;

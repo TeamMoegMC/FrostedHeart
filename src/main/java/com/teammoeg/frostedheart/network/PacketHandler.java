@@ -18,7 +18,6 @@
 
 package com.teammoeg.frostedheart.network;
 
-import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
@@ -35,6 +34,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.util.FHVersion;
 
+import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;

@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
+import java.util.Collections;
+import java.util.Map;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.utils.ItemUtils;
@@ -26,12 +29,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.Collections;
-import java.util.Map;
 
 public class SaunaRecipe extends IESerializableRecipe {
     public static IRecipeType<SaunaRecipe> TYPE;

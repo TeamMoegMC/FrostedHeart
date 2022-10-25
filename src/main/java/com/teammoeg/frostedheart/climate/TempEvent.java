@@ -19,11 +19,17 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import net.minecraft.nbt.CompoundNBT;
+import static com.teammoeg.frostedheart.climate.WorldClimate.CALM_PERIOD_BASELINE;
+import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
+import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T2;
+import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T3;
+import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T4;
+import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_PEAK;
+import static com.teammoeg.frostedheart.climate.WorldClimate.WARM_PERIOD_PEAK;
 
 import java.util.Random;
 
-import static com.teammoeg.frostedheart.climate.WorldClimate.*;
+import net.minecraft.nbt.CompoundNBT;
 
 /**
  * A temperature event defined by a set of timestamps and temperature parameters.

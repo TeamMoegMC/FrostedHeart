@@ -8,10 +8,8 @@ import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
 
 import net.minecraft.data.IFinishedRecipe;
-import net.minecraft.item.Item;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.util.ResourceLocation;
-import top.theillusivec4.diet.api.IDietGroup;
 
 public class DietValueBuilder implements IFinishedRecipe {
 	final Map<String,Float> groups=new HashMap<>();

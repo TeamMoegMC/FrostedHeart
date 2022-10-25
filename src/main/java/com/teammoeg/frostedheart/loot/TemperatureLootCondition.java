@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.loot;
 
+import java.util.function.BiPredicate;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.loot.LootContext;
@@ -31,8 +34,6 @@ import net.minecraft.loot.conditions.ILootCondition;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
-
-import java.util.function.BiPredicate;
 
 public class TemperatureLootCondition implements ILootCondition {
     public static LootConditionType TYPE;

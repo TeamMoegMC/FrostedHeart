@@ -52,6 +52,8 @@
   "fluid.frostedheart.steam": "Any Steam",
   "fluid.frostedheart.wolfberry_tea": "Wolfberry Tea",
   "gui.frostedheart.draw_desk.examine": "Examine item",
+  "gui.frostedheart.draw_desk.help": "Help",
+  "gui.frostedheart.draw_desk.reset": "Create new paper",
   "gui.frostedheart.effect.building": "New Building",
   "gui.frostedheart.effect.crafting": "New Recipe",
   "gui.frostedheart.effect.item_reward": "Item Rewards",
