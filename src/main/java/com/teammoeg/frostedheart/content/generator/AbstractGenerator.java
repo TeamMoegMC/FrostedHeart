@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.util.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
@@ -106,6 +107,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public boolean shouldWork() {
         UUID owner = getOwner();
         if (owner == null) return false;
+        owner=FTBTeamsAPI.getPlayerTeam(owner).getId();
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
         if(!ResearchDataAPI.getData(owner).building.has(super.multiblockInstance))return false;
         if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) {

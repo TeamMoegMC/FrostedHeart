@@ -339,7 +339,6 @@ public class ResearchListeners {
         return true;
     }
 
-    @SuppressWarnings("resource")
     public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;
