@@ -36,7 +36,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
 
-public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState,ManagedOwnerTile {
+public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState {
 
     public int temperatureLevel;
     public int rangeLevel;
@@ -89,9 +89,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public void unregist() {
         UUID owner = getOwner();
         if (owner == null) return;
-        Team team=FTBTeamsAPI.getPlayerTeam(owner);
-        if(team==null)return;
-        owner=team.getId();
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
         if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) return;
         long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
@@ -103,9 +100,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public void regist() {
     	UUID owner = getOwner();
         if (owner == null) return;
-    	Team team=FTBTeamsAPI.getPlayerTeam(owner);
-    	if(team==null)return;
-    	owner=team.getId();
         ResearchDataAPI.putVariantLong(owner,ResearchVariant.GENERATOR_LOCATION,master().pos.toLong());
     }
 
@@ -116,9 +110,6 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public boolean shouldWork() {
         UUID owner = getOwner();
         if (owner == null) return false;
-        Team team=FTBTeamsAPI.getPlayerTeam(owner);
-        if(team==null)return false;
-        owner=team.getId();
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
         if(!ResearchDataAPI.getData(owner).building.has(super.multiblockInstance))return false;
         if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) {
