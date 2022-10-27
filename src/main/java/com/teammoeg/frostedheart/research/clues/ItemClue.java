@@ -83,11 +83,12 @@ public class ItemClue extends Clue {
     }
 
     public int test(TeamResearchData t, ItemStack stack) {
-        if (this.stack.test(stack)) {
-            this.setCompleted(t, true);
-            if (consume)
-                return this.stack.getCount();
-        }
+    	if(!this.isCompleted(t))
+	        if (this.stack.test(stack)) {
+	            this.setCompleted(t, true);
+	            if (consume)
+	                return this.stack.getCount();
+	        }
         return 0;
     }
 
