@@ -20,15 +20,19 @@
 package com.teammoeg.frostedheart.research.data;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.SerializeUtil.CompoundBuilder;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -45,6 +49,7 @@ public class ResearchData {
     int level;
     private long committed;// points committed
     final TeamResearchData parent;
+    private Map<Integer,IClueData> data=new HashMap<>();
 
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
@@ -118,6 +123,7 @@ public class ResearchData {
     public void setFinished(boolean finished) {
         this.finished = finished;
         if (finished) {
+        	data.clear();
             Research r = rs.get();
             parent.clearCurrentResearch(r);
             r.grantEffects(parent, null);
@@ -160,6 +166,7 @@ public class ResearchData {
         cnbt.putBoolean("finished", finished);
         if(level>0)
         	cnbt.putInt("level", level);
+        cnbt.put("clues",SerializeUtil.toNBTList(data.entrySet(),t->CompoundBuilder.create().put("id",t.getKey()).put("data",t.getValue().serialize()).build()));
         // cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 
@@ -171,6 +178,10 @@ public class ResearchData {
         finished = cn.getBoolean("finished");
         if(cn.contains("level"))
         	level=cn.getInt("level");
+        data.clear();
+        cn.getList("clues",10).stream().map(t->(CompoundNBT)t).forEach(e->{
+        	data.put(e.getInt("id"),ClueDatas.serializers.deserialize(e.getCompound("data")));
+        });
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
 

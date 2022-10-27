@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterBlock;
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 import com.teammoeg.frostedheart.util.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IETileProviderBlock;
@@ -61,7 +62,7 @@ public class BlockMixin extends Block {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
         if (placer != null && placer instanceof ServerPlayerEntity)
-            IOwnerTile.setOwner(Utils.getExistingTileEntity(worldIn, pos), FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) placer).getId());
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) placer).getId());
     }
 
     @Inject(at = @At("HEAD"), method = "onBlockActivated(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/math/BlockRayTraceResult;)Lnet/minecraft/util/ActionResultType;")

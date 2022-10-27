@@ -23,9 +23,16 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.clues.Clue;
 
+import net.minecraft.nbt.CompoundNBT;
+
 public abstract class IClueData {
 	Supplier<Clue> clue;
-	
-	
+
+	public IClueData(Supplier<Clue> clue) {
+		super();
+		this.clue = clue;
+	}
+	public abstract CompoundNBT serialize() ;
+	public abstract void deserialize(CompoundNBT nbt);
 
 }

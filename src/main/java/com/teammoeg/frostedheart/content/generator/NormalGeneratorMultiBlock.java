@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.generator;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -63,10 +64,12 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
         if (!world.isRemote) {
             TileEntity te = Utils.getExistingTileEntity(world, pos);
             if (te instanceof AbstractGenerator && ((AbstractGenerator) te).shouldUnique()) {
+            	te=((AbstractGenerator) te).master();
                 if (((AbstractGenerator) te).getOwner() == null) {
                     ((AbstractGenerator) te).setOwner(player.getUniqueID());
                     ((AbstractGenerator) te).regist();
                 }
+                
             }
         }
         return super.onBlockActivated(state, world, pos, player, hand, hit);

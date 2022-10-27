@@ -90,6 +90,10 @@ public class SerializeUtil {
     	public CompoundNBT build() {
     		return nbt;
     	}
+		public CompoundBuilder put(String key,int val) {
+			nbt.putInt(key, val);
+			return this;
+		}
     }
 
 

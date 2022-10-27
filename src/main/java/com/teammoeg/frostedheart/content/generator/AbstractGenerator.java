@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
@@ -30,12 +31,12 @@ import com.teammoeg.frostedheart.util.IOwnerTile;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
 
-public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState {
+public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState,ManagedOwnerTile {
 
     public int temperatureLevel;
     public int rangeLevel;
@@ -88,6 +89,9 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public void unregist() {
         UUID owner = getOwner();
         if (owner == null) return;
+        Team team=FTBTeamsAPI.getPlayerTeam(owner);
+        if(team==null)return;
+        owner=team.getId();
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
         if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) return;
         long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
@@ -97,7 +101,12 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     }
 
     public void regist() {
-        ResearchDataAPI.putVariantLong(getOwner(),ResearchVariant.GENERATOR_LOCATION,master().pos.toLong());
+    	UUID owner = getOwner();
+        if (owner == null) return;
+    	Team team=FTBTeamsAPI.getPlayerTeam(owner);
+    	if(team==null)return;
+    	owner=team.getId();
+        ResearchDataAPI.putVariantLong(owner,ResearchVariant.GENERATOR_LOCATION,master().pos.toLong());
     }
 
     public void setOwner(UUID owner) {
@@ -107,7 +116,9 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public boolean shouldWork() {
         UUID owner = getOwner();
         if (owner == null) return false;
-        owner=FTBTeamsAPI.getPlayerTeam(owner).getId();
+        Team team=FTBTeamsAPI.getPlayerTeam(owner);
+        if(team==null)return false;
+        owner=team.getId();
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
         if(!ResearchDataAPI.getData(owner).building.has(super.multiblockInstance))return false;
         if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) {

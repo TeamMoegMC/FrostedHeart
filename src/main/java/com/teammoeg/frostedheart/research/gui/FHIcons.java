@@ -29,7 +29,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.SerializerRegistry;
+import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
 import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
 import com.teammoeg.frostedheart.research.gui.editor.EditPrompt;
@@ -77,7 +77,7 @@ public class FHIcons {
         	return jo;
         }
     }
-    private static SerializerRegistry<FHIcon> serializers=new SerializerRegistry<>();
+    private static JsonSerializerRegistry<FHIcon> serializers=new JsonSerializerRegistry<>();
     private static class FHNopIcon extends FHIcon {
         public static final FHNopIcon INSTANCE = new FHNopIcon();
         /**

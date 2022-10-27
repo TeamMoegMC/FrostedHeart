@@ -58,6 +58,6 @@ public abstract class TemplateMultiblockMixin implements IMultiblock {
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
     public void fh$on$form(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
         if (pe != null)
-            IOwnerTile.setOwner(Utils.getExistingTileEntity(world, master), FTBTeamsAPI.getPlayerTeam(pe).getId());
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), FTBTeamsAPI.getPlayerTeam(pe).getId());
     }
 }

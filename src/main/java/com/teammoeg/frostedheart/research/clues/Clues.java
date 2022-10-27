@@ -22,12 +22,12 @@ package com.teammoeg.frostedheart.research.clues;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.research.SerializerRegistry;
+import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;
 
 public class Clues {
-	private static SerializerRegistry<Clue> registry=new SerializerRegistry<>();
+	private static JsonSerializerRegistry<Clue> registry=new JsonSerializerRegistry<>();
     private Clues() {
     }
 
