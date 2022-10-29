@@ -152,6 +152,11 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 	            dailyTempData.offer(new DayTemperatureData(0));
 	        }
 		}
+
+		@Override
+		public String toString() {
+			return "No temp data for this world";
+		}
 		
 	}
     @CapabilityInject(ClimateData.class)

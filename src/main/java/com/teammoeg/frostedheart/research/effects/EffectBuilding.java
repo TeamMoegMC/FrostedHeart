@@ -45,6 +45,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Allows forming multiblock
@@ -136,7 +138,7 @@ public class EffectBuilding extends Effect {
     public String getBrief() {
         return "Build " + multiblock.getUniqueName();
     }
-
+    @OnlyIn(Dist.CLIENT)
 	@Override
 	public void onClick() {
 		if(this.isGranted()&&ClientUtils.getPlayer().inventory.hasAny(ImmutableSet.of(IEItems.Tools.manual))) {

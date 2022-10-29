@@ -49,7 +49,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     int lastact;
     int maxPoints = 100;
     boolean doProduct = true;
-
+    boolean requireUpdate;
     public MechCalcTileEntity() {
         super(FHTileTypes.MECH_CALC.get());
     }
@@ -87,6 +87,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
         super.tick();
         if (!world.isRemote) {
             float spd = MathHelper.abs(super.getSpeed());
+            
             if (spd > 0 && spd <= 64 && currentPoints <= maxPoints-20) {
                 process += spd;
                 int curact = process / 1067;
@@ -110,9 +111,14 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
                 } else ticsSlp--;
                 this.notifyUpdate();
             }
+            if(requireUpdate)
+            	doNetworkUpdate();
         }
     }
     public void requireNetworkUpdate() {
+    	requireUpdate=true;
+    }
+    public void doNetworkUpdate() {
     	if(this.hasNetwork())
     	this.getOrCreateNetwork().updateStressFor(this,calculateStressApplied());
     }

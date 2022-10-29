@@ -37,6 +37,8 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Allows the research team to use certain machines
@@ -118,7 +120,7 @@ public class EffectShowCategory extends Effect {
     public String getBrief() {
         return "JEI Category " + cate.toString();
     }
-
+    @OnlyIn(Dist.CLIENT)
 	@Override
 	public void onClick() {
 		if(cate!=null)

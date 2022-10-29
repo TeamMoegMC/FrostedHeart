@@ -408,5 +408,6 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     public boolean isHidden() {
         return hidden;
     }
+    @OnlyIn(Dist.CLIENT)
     public void onClick() {}
 }

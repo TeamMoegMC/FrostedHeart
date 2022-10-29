@@ -52,6 +52,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class EffectCrafting extends Effect {
@@ -241,7 +243,7 @@ public class EffectCrafting extends Effect {
             return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
         return "Craft nothing";
     }
-
+    @OnlyIn(Dist.CLIENT)
 	@Override
 	public void onClick() {
 		if(!this.isGranted())return;
