@@ -19,17 +19,30 @@
 
 package com.teammoeg.frostedheart.research.clues;
 
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.gui.FHIcons;
-import com.teammoeg.frostedheart.research.gui.editor.*;
-import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.ui.Widget;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.gui.FHIcons;
+import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.research.gui.editor.Editor;
+import com.teammoeg.frostedheart.research.gui.editor.EditorSelector;
+import com.teammoeg.frostedheart.research.gui.editor.IngredientEditor;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledOpenEditorButton;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledSelection;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
+import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
+import com.teammoeg.frostedheart.research.gui.editor.RealBox;
+import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
+
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     public static final Editor<ItemClue> ITEM = (p, l, v, c) -> {
@@ -84,7 +97,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
             CUSTOM.open(p, l, (CustomClue) v, e -> c.accept(e));
     };
     public static final Editor<Collection<Clue>> EDITOR_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, EDITOR, e -> e.getClass().getSimpleName() + ":" + e.getName().getString(), c).open();
+        new EditListDialog<>(p, l, v, EDITOR, e -> e.getBrief() + e.getBriefDesc(), c).open();
     };
     String lbl;
     T e;

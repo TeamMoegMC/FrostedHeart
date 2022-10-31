@@ -25,4 +25,5 @@ public interface HeatProvider extends EnergyNetworkProvider {
     float drainHeat(float value);
 
     float getTemperatureLevel();
+    
 }

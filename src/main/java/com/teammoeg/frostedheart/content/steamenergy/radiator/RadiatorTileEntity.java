@@ -18,17 +18,20 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.radiator;
 
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.AbstractGenerator;
-import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
+
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
@@ -38,11 +41,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
-import java.util.function.Consumer;
-
 public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> implements
         INetworkConsumer, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
-    public float power = 0;
     public int process = 0;
     public int processMax = 0;
     public float tempLevelLast;
@@ -53,13 +53,13 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
     }
 
-    NetworkHolder network = new NetworkHolder();
+    SteamNetworkConsumer network = new SteamNetworkConsumer(3000,24);
 
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        power = nbt.getFloat("power");
+        network.load(nbt);
         process = nbt.getInt("process");
         processMax = nbt.getInt("processMax");
         tempLevelLast = nbt.getFloat("temp");
@@ -68,7 +68,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.putFloat("power", power);
+        network.save(nbt);
         nbt.putInt("process", process);
         nbt.putInt("processMax", processMax);
         nbt.putFloat("temp", tempLevelLast);
@@ -76,13 +76,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 
     @Override
     public boolean connect(Direction to, int dist) {
-        if (this.offsetToMaster.getY() != 0) return false;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof EnergyNetworkProvider) {
-            network.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
-            return true;
-        }
-        return false;
+        return network.reciveConnection(world, pos, to, dist);
     }
 
 
@@ -96,9 +90,6 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         return false;
     }
 
-    public float getMaxPower() {
-        return 1280;
-    }
 
     @Override
     public int[] getCurrentProcessesStep() {
@@ -121,21 +112,13 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 
     @Override
     protected void tickFuel() {
-        if (network.isValid()) {
-            network.tick();
-            float actual = network.drainHeat(Math.min(24, getMaxPower() - power));
-            if (actual > 0) {
-                power += actual;
-                //world.notifyBlockUpdate(this.getPos(),this.getBlockState(),this.getBlockState(),3);
-            }
-        }
+        network.tick();
         if (process > 0) {
             if (network.isValid())
                 process -= network.getTemperatureLevel();
             else
                 process -= tempLevelLast;
-        } else if (network.isValid() && power >= 4 * 160 * network.getTemperatureLevel()) {
-            power -= 4 * 160 * network.getTemperatureLevel();
+        } else if (network.isValid() && network.tryDrainHeat(4 * 160 * network.getTemperatureLevel())) {
             process = (int) (160 * network.getTemperatureLevel());
             processMax = (int) (160 * network.getTemperatureLevel());
             this.setActive(true);
@@ -201,7 +184,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     }
 
     @Override
-    public NetworkHolder getHolder() {
+    public SteamNetworkHolder getHolder() {
         return network;
     }
 }

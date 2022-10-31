@@ -22,12 +22,12 @@ package com.teammoeg.frostedheart.research.effects;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.research.SerializerRegistry;
+import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;
 
 public class Effects {
-    private static SerializerRegistry<Effect> registry=new SerializerRegistry<>();
+    private static JsonSerializerRegistry<Effect> registry=new JsonSerializerRegistry<>();
 
     static {
     	registry.register(EffectBuilding.class,"multiblock", EffectBuilding::new, EffectBuilding::new);

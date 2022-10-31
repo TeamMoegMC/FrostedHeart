@@ -21,19 +21,14 @@ package com.teammoeg.frostedheart.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ClimateData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
+
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.BlockPosArgument;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
-
-import java.util.Collection;
 
 public class ClimateCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
@@ -55,7 +50,14 @@ public class ClimateCommand {
             ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
         });
-
-        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild)));
+        LiteralArgumentBuilder<CommandSource> reset = Commands.literal("resetVanilla")
+                .executes((ct) -> {
+                	ct.getSource().getWorld().serverWorldInfo.setThunderTime(0);
+                	ct.getSource().getWorld().serverWorldInfo.setRainTime(0);
+                	ct.getSource().getWorld().serverWorldInfo.setClearWeatherTime(0);
+                    return Command.SINGLE_SUCCESS;
+                });
+        
+        dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(Commands.literal("climate").then(get).then(init).then(rebuild).then(reset)));
     }
 }

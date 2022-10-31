@@ -19,10 +19,14 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.teammoeg.frostedheart.FHTileTypes;
+
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.FHTileTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.ItemStackHelper;
@@ -38,9 +42,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class RelicChestTileEntity extends LockableLootTileEntity implements IIEInventory {
     protected NonNullList<ItemStack> inventory;

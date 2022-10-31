@@ -18,9 +18,14 @@
 
 package com.teammoeg.frostedheart.base.block;
 
+import java.util.function.BiFunction;
+
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.IWaterLoggable;
@@ -41,9 +46,6 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.TickPriority;
 
-import javax.annotation.Nullable;
-import java.util.function.BiFunction;
-
 public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock implements IWaterLoggable {
     Class<T> type;
     public final String name;
@@ -59,7 +61,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
         if (state.isOpaqueCube(worldIn, pos))
             return lightOpacity;

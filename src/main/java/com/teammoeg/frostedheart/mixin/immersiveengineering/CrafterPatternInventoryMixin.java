@@ -19,20 +19,22 @@
 
 package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
-import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;
-import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity.CrafterPatternInventory;
-import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.IOwnerTile;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.util.NonNullList;
+import java.util.UUID;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.UUID;
+import com.teammoeg.frostedheart.research.ResearchListeners;
+import com.teammoeg.frostedheart.util.IOwnerTile;
+
+import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity;
+import blusunrize.immersiveengineering.common.blocks.metal.AssemblerTileEntity.CrafterPatternInventory;
+import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.NonNullList;
 
 @Mixin(CrafterPatternInventory.class)
 public class CrafterPatternInventoryMixin {

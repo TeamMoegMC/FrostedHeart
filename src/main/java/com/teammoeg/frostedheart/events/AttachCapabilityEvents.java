@@ -26,9 +26,14 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.relic.RelicData;
 import com.teammoeg.frostedheart.world.FHDimensions;
 import net.minecraft.entity.player.PlayerEntity;
+import com.teammoeg.frostedheart.data.DeathInventoryData;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -60,7 +65,14 @@ public class AttachCapabilityEvents {
     }
 
     @SubscribeEvent
-    public static void attachToPlayer(AttachCapabilitiesEvent<PlayerEntity> event) {
+    public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
+    	if(event.getObject() instanceof ServerPlayerEntity) {
+    		ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
+            if(!(player instanceof FakePlayer))
+                if (!event.getCapabilities().containsKey(DeathInventoryData.ID))
+                    event.addCapability(DeathInventoryData.ID,new DeathInventoryData());
+
+    	}
 
     }
 

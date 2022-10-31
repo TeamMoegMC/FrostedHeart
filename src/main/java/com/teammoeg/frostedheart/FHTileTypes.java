@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart;
 
+import java.util.Collection;
+import java.util.function.Supplier;
+
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
@@ -34,15 +37,13 @@ import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
+
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.Collection;
-import java.util.function.Supplier;
 
 public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(

@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.mixin.stone_age;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 

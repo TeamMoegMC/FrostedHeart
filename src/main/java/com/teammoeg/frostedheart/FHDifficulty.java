@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart;
 
-import net.minecraft.entity.player.ServerPlayerEntity;
-
 import java.util.function.Function;
+
+import net.minecraft.entity.player.ServerPlayerEntity;
 
 public enum FHDifficulty {
     Easy(s -> 0.05F),

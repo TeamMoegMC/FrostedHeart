@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedheart.compat.jei.extension;
 
+import java.util.Arrays;
+
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
 import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.Arrays;
 
 public class FuelingExtension implements ICraftingCategoryExtension {
     RecipeFueling fuel;

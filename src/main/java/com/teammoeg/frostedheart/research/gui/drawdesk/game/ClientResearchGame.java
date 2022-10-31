@@ -19,17 +19,17 @@
 
 package com.teammoeg.frostedheart.research.gui.drawdesk.game;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
-
-import net.minecraft.util.math.BlockPos;
-
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
+
+import net.minecraft.util.math.BlockPos;
 
 public class ClientResearchGame implements Consumer<ResearchGame> {
     ResearchGame rg;

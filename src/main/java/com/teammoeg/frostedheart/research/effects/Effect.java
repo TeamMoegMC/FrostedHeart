@@ -19,20 +19,29 @@
 
 package com.teammoeg.frostedheart.research.effects;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.research.*;
+import com.teammoeg.frostedheart.research.AutoIDItem;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
+import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -44,13 +53,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -406,4 +408,6 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     public boolean isHidden() {
         return hidden;
     }
+    @OnlyIn(Dist.CLIENT)
+    public void onClick() {}
 }

@@ -19,9 +19,11 @@
 
 package com.teammoeg.frostedheart.util;
 
-import net.minecraft.tileentity.TileEntity;
-
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
+
+import net.minecraft.tileentity.TileEntity;
 
 public interface IOwnerTile {
     public UUID getStoredOwner();
@@ -42,7 +44,7 @@ public interface IOwnerTile {
     }
 
     public static void trySetOwner(TileEntity te, UUID id) {
-        if (te instanceof IOwnerTile) {
+        if (te instanceof IOwnerTile&&!(te instanceof ManagedOwnerTile)) {
             if (((IOwnerTile) te).getStoredOwner() == null) {
                 ((IOwnerTile) te).setStoredOwner(id);
             }

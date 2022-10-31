@@ -19,10 +19,14 @@
 
 package com.teammoeg.frostedheart.world;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.world.structure.ObservatoryPiece;
 import com.teammoeg.frostedheart.world.structure.ObservatoryStructure;
+
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
 import net.minecraft.world.gen.feature.NoFeatureConfig;
@@ -30,9 +34,6 @@ import net.minecraft.world.gen.feature.structure.IStructurePieceType;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.settings.DimensionStructuresSettings;
 import net.minecraft.world.gen.settings.StructureSeparationSettings;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class FHStructures {
 

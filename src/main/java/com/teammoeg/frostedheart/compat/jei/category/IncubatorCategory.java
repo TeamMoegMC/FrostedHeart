@@ -18,10 +18,15 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 
@@ -41,10 +46,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fluids.FluidStack;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "incubator");
@@ -88,6 +89,14 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         FIRE.draw(transform, 31, 31);
         PROC.draw(transform,76,24);
         EFF.draw(transform,15,31);
+        
+        String burnTime;
+        if(recipe.time<1000||recipe.time%60!=0)
+        	burnTime= String.valueOf(recipe.time) + " s";
+        else
+        	burnTime= String.valueOf(recipe.time/60) + " m";
+        int width=ClientUtils.mc().fontRenderer.getStringWidth(burnTime);
+        ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 162-width, 62, 0xFFFFFF);
     }
 
     public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {

@@ -18,17 +18,18 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("incubatorii");
@@ -63,8 +64,8 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
             int w = (int) (14 * (tile.process / (float) tile.processMax));
             this.blit(transform, guiLeft + 107, guiTop + 28, 176,0,14-w,29);
         }
-        if(tile.fuel>0&&tile.fuelMax>0) {
-            float v=tile.fuel*1f/tile.fuelMax;
+        if(tile.network.getPower()>0) {
+            float v=tile.network.getPower()/tile.network.getMaxPower();
             boolean a=false,b=false;
             if(v>0.75) {
             	a=b=true;

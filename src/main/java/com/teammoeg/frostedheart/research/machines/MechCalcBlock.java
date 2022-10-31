@@ -18,11 +18,18 @@
 
 package com.teammoeg.frostedheart.research.machines;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.List;
+import java.util.function.BiFunction;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
@@ -48,11 +55,6 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.function.BiFunction;
 
 public class MechCalcBlock extends FHKineticBlock {
     static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 9, 16), Block.makeCuboidShape(0, 9, 0, 16, 16, 13)), Direction.SOUTH);

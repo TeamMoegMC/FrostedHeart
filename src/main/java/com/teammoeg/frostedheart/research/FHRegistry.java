@@ -19,16 +19,21 @@
 
 package com.teammoeg.frostedheart.research;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.util.LazyOptional;
+
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.network.PacketBuffer;
-
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Our own registry type to reduce network and storage cost.
@@ -127,6 +132,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
             if (index != -1 && index + 1 == item.getRId()) {
                 items.set(index, null);
             }
+            item.setRId(0);
         }
     }
 
@@ -239,7 +245,12 @@ public class FHRegistry<T extends FHRegisteredItem> {
         rnamesl.stream().map(StringNBT::valueOf).forEach(e -> cn.add(e));
         return cn;
     }
-
+    public void clear() {
+    	rnames.clear();
+        rnamesl.clear();
+        items.clear();
+        cache.clear();
+    }
     /**
      * Deserialize.
      *

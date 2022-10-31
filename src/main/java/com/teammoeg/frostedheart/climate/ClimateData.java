@@ -19,12 +19,23 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
 import com.teammoeg.frostedheart.events.CommonEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -42,21 +53,6 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
-
-import javax.annotation.Nullable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
 
 /**
  * Climate Data Capability attached to a world.
@@ -155,6 +151,11 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 			while (dailyTempData.size() <= DAY_CACHE_LENGTH) {
 	            dailyTempData.offer(new DayTemperatureData(0));
 	        }
+		}
+
+		@Override
+		public String toString() {
+			return "No temp data for this world";
 		}
 		
 	}

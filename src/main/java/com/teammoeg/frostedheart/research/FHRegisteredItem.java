@@ -29,7 +29,7 @@ public abstract class FHRegisteredItem {
         return id;
     }
 
-    void setRId(int id) {
+    protected void setRId(int id) {
         this.id = id;
     }
 

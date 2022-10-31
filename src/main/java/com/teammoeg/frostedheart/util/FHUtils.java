@@ -18,13 +18,23 @@
 
 package com.teammoeg.frostedheart.util;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import java.util.Random;
+import java.util.function.ToIntFunction;
+
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ILivingEntityData;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -44,10 +54,6 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.crafting.NBTIngredient;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Random;
-import java.util.function.ToIntFunction;
 
 public class FHUtils {
     private static class NBTIngredientAccess extends NBTIngredient {
@@ -112,8 +118,8 @@ public class FHUtils {
             cr.setReturnValue(false);
     }
 
-    public static boolean canSmallTreeGenerate(World w, BlockPos p, Random r) {
-        return r.nextInt(2) == 0;
+    public static boolean canTreeGenerate(World w, BlockPos p, Random r,int chance) {
+        return r.nextInt(chance) == 0;
 
     }
     public static boolean canTreeGrow(World w, BlockPos p, Random r) {
@@ -128,7 +134,7 @@ public class FHUtils {
     }
     public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
 
-        return r.nextInt(6) == 0;
+        return canTreeGenerate(w,p,r,20);
 
     }
 

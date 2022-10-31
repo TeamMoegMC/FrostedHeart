@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.util;
 
-import net.minecraft.util.math.BlockPos;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;

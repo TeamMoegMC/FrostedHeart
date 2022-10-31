@@ -18,11 +18,17 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.Random;
+
+import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
+
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ActionResultType;
@@ -34,9 +40,8 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.Random;
 
 public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends FHStoneMultiblockBlock<T> {
     public NormalGeneratorMultiBlock(String name, RegistryObject type) {
@@ -61,11 +66,14 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
                                              Hand hand, BlockRayTraceResult hit) {
         if (!world.isRemote) {
             TileEntity te = Utils.getExistingTileEntity(world, pos);
-            if (te instanceof AbstractGenerator && ((AbstractGenerator) te).shouldUnique()) {
+            if (te instanceof AbstractGenerator && ((AbstractGenerator) te).shouldUnique()&&!(player instanceof FakePlayer)) {
+            	
                 if (((AbstractGenerator) te).getOwner() == null) {
-                    ((AbstractGenerator) te).setOwner(player.getUniqueID());
+                	te=((AbstractGenerator) te).master();
+                    ((AbstractGenerator) te).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player).getId());
                     ((AbstractGenerator) te).regist();
                 }
+                
             }
         }
         return super.onBlockActivated(state, world, pos, player, hand, hit);

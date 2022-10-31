@@ -19,33 +19,37 @@
 
 package com.teammoeg.frostedheart.research.data;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
-import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.SerializeUtil.CompoundBuilder;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
 public class ResearchData {
+
     boolean active;// is all items fulfilled?
     boolean finished;
     private Supplier<Research> rs;
     int level;
     private long committed;// points committed
     final TeamResearchData parent;
+    private Map<Integer,IClueData> data=new HashMap<>();
 
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
@@ -119,6 +123,7 @@ public class ResearchData {
     public void setFinished(boolean finished) {
         this.finished = finished;
         if (finished) {
+        	data.clear();
             Research r = rs.get();
             parent.clearCurrentResearch(r);
             r.grantEffects(parent, null);
@@ -161,6 +166,7 @@ public class ResearchData {
         cnbt.putBoolean("finished", finished);
         if(level>0)
         	cnbt.putInt("level", level);
+        cnbt.put("clues",SerializeUtil.toNBTList(data.entrySet(),t->CompoundBuilder.create().put("id",t.getKey()).put("data",t.getValue().serialize()).build()));
         // cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 
@@ -172,6 +178,10 @@ public class ResearchData {
         finished = cn.getBoolean("finished");
         if(cn.contains("level"))
         	level=cn.getInt("level");
+        data.clear();
+        cn.getList("clues",10).stream().map(t->(CompoundNBT)t).forEach(e->{
+        	data.put(e.getInt("id"),ClueDatas.serializers.deserialize(e.getCompound("data")));
+        });
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
 
@@ -279,4 +289,111 @@ public class ResearchData {
 	public void setLevel(int level) {
 		this.level = level;
 	}
+	public static final ResearchData EMPTY=new ResearchData(null,null) {
+
+		@Override
+		public long getCommitted() {
+			return 0;
+		}
+
+		@Override
+		public long getTotalCommitted() {
+			return 0;
+		}
+
+		@Override
+		public long commitPoints(long pts) {
+			return pts;
+		}
+
+		@Override
+		public boolean canComplete() {
+			return false;
+		}
+
+		@Override
+		public void checkComplete() {
+		}
+
+		@Override
+		public void announceCompletion() {
+		}
+
+		@Override
+		public void setFinished(boolean finished) {
+		}
+
+		@Override
+		public void sendProgressPacket() {
+		}
+
+		@Override
+		public Research getResearch() {
+			return null;
+		}
+
+		@Override
+		public void write(PacketBuffer pb) {
+			super.write(pb);
+		}
+
+		@Override
+		public void read(PacketBuffer pb) {
+			super.read(pb);
+		}
+
+		@Override
+		public CompoundNBT serialize() {
+			return super.serialize();
+		}
+
+		@Override
+		public void deserialize(CompoundNBT cn) {
+			super.deserialize(cn);
+		}
+
+		@Override
+		public boolean isCompleted() {
+			return false;
+		}
+
+		@Override
+		public boolean isInProgress() {
+			return false;
+		}
+
+		@Override
+		public boolean canResearch() {
+			return false;
+		}
+
+		@Override
+		public boolean isUnlocked() {
+			return false;
+		}
+
+		@Override
+		public boolean commitItem(ServerPlayerEntity player) {
+			return false;
+		}
+
+		@Override
+		public void setActive() {
+		}
+
+		@Override
+		public float getProgress() {
+			return 0;
+		}
+
+		@Override
+		public int getLevel() {
+			return 0;
+		}
+
+		@Override
+		public void setLevel(int level) {
+		}
+		
+	};
 }

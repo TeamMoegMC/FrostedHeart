@@ -18,18 +18,19 @@
 
 package com.teammoeg.frostedheart.research.network;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.Objects;
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.Objects;
-import java.util.function.Supplier;
 
 // send when data update
 public class FHDrawingDeskOperationPacket {

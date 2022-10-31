@@ -19,20 +19,29 @@
 
 package com.teammoeg.frostedheart.research;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.clues.*;
+import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.clues.ItemClue;
+import com.teammoeg.frostedheart.research.clues.KillClue;
+import com.teammoeg.frostedheart.research.clues.MinigameClue;
+import com.teammoeg.frostedheart.research.clues.TickListenerClue;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.RubbingTool;
 import com.teammoeg.frostedheart.util.LazyOptional;
+
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.Block;
@@ -47,11 +56,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 public class ResearchListeners {
     public static class RecipeUnlockList extends UnlockList<IRecipe<?>> {
@@ -243,7 +247,7 @@ public class ResearchListeners {
                 if (c instanceof ItemClue)
                     i.shrink(((ItemClue) c).test(trd, i));
         if(!i.isEmpty()&&i.getCount()>0) {
-        	if(i.getItem() instanceof RubbingTool) {
+        	if(i.getItem() instanceof RubbingTool&&ResearchDataAPI.isResearchComplete(s,"rubbing_tool")) {
         		if(RubbingTool.hasResearch(i)) {
         			int pts=RubbingTool.getPoint(i);
         			if(pts>0) {
@@ -335,7 +339,6 @@ public class ResearchListeners {
         return true;
     }
 
-    @SuppressWarnings("resource")
     public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;

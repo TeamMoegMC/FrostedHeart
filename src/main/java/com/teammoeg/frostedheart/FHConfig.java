@@ -18,12 +18,12 @@
 
 package com.teammoeg.frostedheart;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class FHConfig {
 

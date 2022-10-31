@@ -19,7 +19,9 @@
 
 package com.teammoeg.frostedheart.research.gui.tech;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.network.PacketHandler;
@@ -37,15 +39,13 @@ import com.teammoeg.frostedheart.research.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket.Operator;
 
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ResearchInfoPanel extends Panel {
 

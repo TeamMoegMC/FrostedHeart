@@ -18,14 +18,16 @@
 
 package com.teammoeg.frostedheart.mixin.jei;
 
-import com.teammoeg.frostedheart.FHConfig;
-import mezz.jei.util.CommandUtilServer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import com.teammoeg.frostedheart.FHConfig;
+
+import mezz.jei.util.CommandUtilServer;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.MinecraftServer;
 
 @Mixin(CommandUtilServer.class)
 public class MixinCommandUtilServer {

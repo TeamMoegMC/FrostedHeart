@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.gui.editor;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
+
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.Key;
@@ -52,6 +53,7 @@ public abstract class EditDialog extends Panel {
         try {
             onClose();
         } catch (Exception ex) {
+        	ex.printStackTrace();
         }
         ;
         try {

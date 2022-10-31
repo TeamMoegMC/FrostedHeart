@@ -19,23 +19,35 @@
 
 package com.teammoeg.frostedheart.research;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.Clues;
-import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.Effects;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
+import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
+
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -48,10 +60,6 @@ import net.minecraft.util.text.TextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
-
-import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Only Definition of research.
@@ -382,7 +390,7 @@ public class Research extends FHRegisteredItem implements Writeable {
 
     @OnlyIn(Dist.CLIENT)
     public void resetData() {
-        TeamResearchData.getClientInstance().resetData(this);
+        TeamResearchData.getClientInstance().resetData(this,false);
     }
     @OnlyIn(Dist.CLIENT)
     public boolean hasUnclaimedReward() {
@@ -467,7 +475,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
+        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this,false));
 
         FHResearch.delete(this);
     }
@@ -486,14 +494,21 @@ public class Research extends FHRegisteredItem implements Writeable {
     }
 
     public void setNewId(String nid) {
+    	System.out.println("nid:"+nid);
+    	System.out.println("oid:"+id);
         if (!id.equals(nid)) {
-            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this));
+        	System.out.println("changed");
+            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this,false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);
             FHResearch.register(this);
+            
             this.getChildren().forEach(e -> e.addParent(this.getSupplier()));
+            this.getEffects().forEach(e->e.setRId(0));
+            this.getClues().forEach(e->e.setRId(0));
             this.doIndex();
+            System.out.println("fid"+id);
         }
     }
 

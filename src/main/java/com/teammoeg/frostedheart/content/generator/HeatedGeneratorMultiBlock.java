@@ -18,17 +18,9 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import blusunrize.immersiveengineering.common.util.Utils;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.World;
+
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import net.minecraftforge.fml.RegistryObject;
 
 public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends NormalGeneratorMultiBlock<T> implements ISteamEnergyBlock {
@@ -42,16 +34,5 @@ public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
         super(name, props, type);
     }
 
-
-    @Override
-    public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
-                                boolean isMoving) {
-        TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);
-        if (te instanceof INetworkConsumer) {
-            Vector3i vec = pos.subtract(fromPos);
-            Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((INetworkConsumer) te).connect(dir, 0);
-        }
-    }
 
 }

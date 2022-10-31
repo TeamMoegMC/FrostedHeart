@@ -26,9 +26,11 @@ import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.RTextField;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ResearchProgressPanel extends Panel {
 
@@ -98,4 +100,6 @@ public class ResearchProgressPanel extends Panel {
 	public boolean isEnabled() {
 		return researchScreen.canEnable(this);
 	}*/
+
+
 }

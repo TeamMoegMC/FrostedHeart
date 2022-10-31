@@ -19,6 +19,14 @@
 
 package com.teammoeg.frostedheart;
 
+import java.io.File;
+import java.io.InputStreamReader;
+
+import javax.annotation.Nonnull;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -32,6 +40,7 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
+import com.teammoeg.frostedheart.data.DeathInventoryData;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
@@ -40,7 +49,12 @@ import com.teammoeg.frostedheart.relic.RelicData;
 import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.resources.FHRecipeReloadListener;
-import com.teammoeg.frostedheart.util.*;
+import com.teammoeg.frostedheart.util.BlackListPredicate;
+import com.teammoeg.frostedheart.util.ChException;
+import com.teammoeg.frostedheart.util.FHProps;
+import com.teammoeg.frostedheart.util.FHRemote;
+import com.teammoeg.frostedheart.util.FHVersion;
+import com.teammoeg.frostedheart.util.VersionRemap;
 import com.teammoeg.frostedheart.world.FHBiomes;
 import com.teammoeg.frostedheart.world.FHDimensions;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -75,12 +89,6 @@ import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.InputStreamReader;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -152,7 +160,8 @@ public class FHMain {
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
-    public void setup(final FMLCommonSetupEvent event) {
+    @SuppressWarnings("unused")
+	public void setup(final FMLCommonSetupEvent event) {
 
         MinecraftForge.EVENT_BUS.addListener(this::serverStart);
         MinecraftForge.EVENT_BUS.addListener(this::serverSave);
@@ -175,6 +184,7 @@ public class FHMain {
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
         PacketHandler.register();
         ClimateData.setup();
+        DeathInventoryData.setup();
         RelicData.setup();
         FHBiomes.Biomes();
         FHDimensions.register();
@@ -185,45 +195,47 @@ public class FHMain {
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
     }
 
-    private void enqueueIMC(final InterModEnqueueEvent event) {
+    @SuppressWarnings("unused")
+	private void enqueueIMC(final InterModEnqueueEvent event) {
         CuriosCompat.sendIMCS();
     }
 
     private void serverStart(final FMLServerAboutToStartEvent event) {
         new FHResearchDataManager(event.getServer());
-        Researches.init();
+
 
         FHResearchDataManager.INSTANCE.load();
 
     }
 
-    private void serverStop(final FMLServerStoppedEvent event) {
+    @SuppressWarnings("unused")
+	private void serverStop(final FMLServerStoppedEvent event) {
         FHResearchDataManager.server = null;
 
     }
 
-    private void serverSave(final WorldEvent.Save event) {
+    @SuppressWarnings("unused")
+	private void serverSave(final WorldEvent.Save event) {
         if (FHResearchDataManager.INSTANCE != null)
             FHResearchDataManager.INSTANCE.save();
     }
 
-    private void processIMC(final InterModProcessEvent event) {
+    @SuppressWarnings("unused")
+	private void processIMC(final InterModProcessEvent event) {
 
     }
 
     private void missingMappingR(MissingMappings<Item> miss) {
-        ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
         for (Mapping<Item> i : miss.getAllMappings()) {
-            ResourceLocation rl = RankineRemap.rankineremap.get(i.key);
+            ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
                 i.remap(ForgeRegistries.ITEMS.getValue(rl));
         }
     }
 
     private void missingMappingB(MissingMappings<Block> miss) {
-        ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
         for (Mapping<Block> i : miss.getAllMappings()) {
-            ResourceLocation rl = RankineRemap.rankineremap.get(i.key);
+            ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
                 i.remap(ForgeRegistries.BLOCKS.getValue(rl));
         }

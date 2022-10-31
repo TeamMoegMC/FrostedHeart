@@ -20,7 +20,12 @@
 package com.teammoeg.frostedheart.research.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import dev.ftb.mods.ftblibrary.ui.*;
+
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
 
 public class TechScrollBar extends PanelScrollBar {
     public TechScrollBar(Panel parent, Panel panel) {

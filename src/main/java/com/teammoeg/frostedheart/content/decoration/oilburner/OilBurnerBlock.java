@@ -18,33 +18,33 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
+import java.util.Random;
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.util.FHUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.ILiquidContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.FluidState;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.minecraftforge.fluids.FluidUtil;
 
-import java.util.Random;
-import java.util.function.BiFunction;
-
-public class OilBurnerBlock extends FHBaseBlock implements ILiquidContainer {
+public class OilBurnerBlock extends FHBaseBlock{
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
@@ -78,18 +78,6 @@ public class OilBurnerBlock extends FHBaseBlock implements ILiquidContainer {
     }
 
     @Override
-    public boolean canContainFluid(IBlockReader w, BlockPos p, BlockState s, Fluid f) {
-        TileEntity te = w.getTileEntity(p);
-        if (te instanceof OilBurnerTileEntity) {
-            OilBurnerTileEntity boiler = (OilBurnerTileEntity) te;
-            if (boiler.input.fill(new FluidStack(f, 1000), FluidAction.SIMULATE) == 1000)
-                return true;
-        }
-        return false;
-
-    }
-
-    @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.get(LIT)) {
@@ -100,16 +88,12 @@ public class OilBurnerBlock extends FHBaseBlock implements ILiquidContainer {
         }
     }
 
-    @Override
-    public boolean receiveFluid(IWorld w, BlockPos p, BlockState s, FluidState f) {
-        TileEntity te = w.getTileEntity(p);
-        if (te instanceof OilBurnerTileEntity) {
-            OilBurnerTileEntity boiler = (OilBurnerTileEntity) te;
-            if (boiler.input.fill(new FluidStack(f.getFluid(), 1000), FluidAction.SIMULATE) == 1000) {
-                boiler.input.fill(new FluidStack(f.getFluid(), 1000), FluidAction.EXECUTE);
-                return true;
-            }
-        }
-        return false;
-    }
+	@Override
+	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
+			Hand handIn, BlockRayTraceResult hit) {
+		if (FluidUtil.interactWithFluidHandler(player, handIn,worldIn, pos,hit.getFace()))
+			return ActionResultType.SUCCESS;
+		return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+	}
+
 }

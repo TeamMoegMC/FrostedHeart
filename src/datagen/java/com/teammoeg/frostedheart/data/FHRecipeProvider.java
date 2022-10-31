@@ -84,6 +84,7 @@ public class FHRecipeProvider extends RecipeProvider {
 					String line=sc.nextLine();
 					if(!line.isEmpty()) {
 						String[] parts=line.split(",");
+						if(parts.length==0)break;
 						ResourceLocation id=new ResourceLocation(FHMain.MODID,"diet_value/"+parts[0].replaceAll(":","/"));
 						ResourceLocation item=new ResourceLocation(parts[0]);
 						Item it=ForgeRegistries.ITEMS.getValue(item);

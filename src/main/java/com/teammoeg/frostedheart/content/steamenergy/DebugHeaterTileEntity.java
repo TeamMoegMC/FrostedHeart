@@ -18,13 +18,12 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
+
+import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
 public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider, INetworkConsumer, ITickableTileEntity {
@@ -33,7 +32,11 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
     }
 
     SteamEnergyNetwork network = new SteamEnergyNetwork(this);
-
+    HeatProviderManager manager=new HeatProviderManager(this,c->{
+    	for (Direction d : Direction.values()) {
+    		c.accept(pos.offset(d), d.getOpposite());
+        }
+    });
     @Override
     public SteamEnergyNetwork getNetwork() {
         return network;
@@ -72,24 +75,14 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
         return false;
     }
 
-    int propcd = 0;
 
     @Override
     public void tick() {
-        if (propcd == 0) {
-            for (Direction d : Direction.values()) {
-                TileEntity te = Utils.getExistingTileEntity(this.getWorld(), pos.offset(d));
-                if (te instanceof INetworkConsumer)
-                    if (((INetworkConsumer) te).canConnectAt(d.getOpposite()))
-                        ((INetworkConsumer) te).connect(d.getOpposite(), 0);
-            }
-            propcd = 5;
-        } else
-            propcd--;
+    	manager.tick();
     }
 
     @Override
-    public NetworkHolder getHolder() {
+    public SteamNetworkHolder getHolder() {
         return null;
     }
 }

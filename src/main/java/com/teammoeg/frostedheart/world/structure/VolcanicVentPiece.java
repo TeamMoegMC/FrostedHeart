@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.world.structure;
 
+import java.util.Random;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
@@ -29,8 +31,6 @@ import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.feature.structure.StructureManager;
 import net.minecraft.world.gen.feature.structure.StructurePiece;
 import net.minecraft.world.gen.feature.template.TemplateManager;
-
-import java.util.Random;
 
 
 public class VolcanicVentPiece extends StructurePiece {

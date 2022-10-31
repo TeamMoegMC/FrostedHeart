@@ -19,9 +19,10 @@
 
 package com.teammoeg.frostedheart.research.gui.drawdesk;
 
+import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
+
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;

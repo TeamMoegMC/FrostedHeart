@@ -18,10 +18,11 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+
+import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -29,7 +30,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
 public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider, ITickableTileEntity, FHBlockInterfaces.IActiveState, INetworkConsumer {
-    private NetworkHolder network = new NetworkHolder();
+    private SteamNetworkHolder network = new SteamNetworkHolder();
     private boolean isPathFinding;
     private boolean justPropagated;
 
@@ -67,7 +68,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 BlockPos n = this.getPos().offset(d);
                 TileEntity te = Utils.getExistingTileEntity(this.getWorld(), n);
                 if (te instanceof INetworkConsumer) {
-                    ((INetworkConsumer) te).connect(d.getOpposite(), lengthx + 1);
+                		((INetworkConsumer) te).tryConnectAt(d.getOpposite(), lengthx + 1);
                 }
             }
             return;
@@ -107,7 +108,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     }
 
     @Override
-    public NetworkHolder getHolder() {
+    public SteamNetworkHolder getHolder() {
         return network;
     }
 }

@@ -19,21 +19,22 @@
 
 package com.teammoeg.frostedheart.research.effects;
 
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Effect on numerical stats of the team's machines or abilities

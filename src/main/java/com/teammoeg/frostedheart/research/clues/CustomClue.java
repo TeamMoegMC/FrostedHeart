@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
+
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;
 
@@ -63,6 +64,9 @@ public class CustomClue extends Clue {
     @Override
     public void end(Team team) {
     }
-
+	@Override
+	public String getBrief() {
+		return "Custom "+getDescription().getString();
+	}
 
 }

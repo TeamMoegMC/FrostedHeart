@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.research.machines;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
-import java.util.function.Supplier;
+
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 
 public interface IPen {
 

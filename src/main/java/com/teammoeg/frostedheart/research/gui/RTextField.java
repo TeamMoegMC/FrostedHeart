@@ -19,7 +19,10 @@
 
 package com.teammoeg.frostedheart.research.gui;
 
+import java.util.List;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.math.Bits;
@@ -32,8 +35,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
-
-import java.util.List;
 
 public class RTextField extends Widget {
 

@@ -18,15 +18,16 @@
 
 package com.teammoeg.frostedheart.effects;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHDamageSources;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
-
-import java.util.List;
 
 public class HyperthermiaEffect extends Effect {
     public HyperthermiaEffect(EffectType typeIn, int liquidColorIn) {

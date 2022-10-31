@@ -18,9 +18,10 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
+import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
+
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
-import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;

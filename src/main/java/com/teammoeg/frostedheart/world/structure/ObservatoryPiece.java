@@ -19,8 +19,11 @@
 
 package com.teammoeg.frostedheart.world.structure;
 
+import java.util.Random;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.world.FHStructures;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.ResourceLocation;
@@ -32,8 +35,6 @@ import net.minecraft.world.gen.feature.structure.TemplateStructurePiece;
 import net.minecraft.world.gen.feature.template.PlacementSettings;
 import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.TemplateManager;
-
-import java.util.Random;
 
 
 public class ObservatoryPiece extends TemplateStructurePiece {

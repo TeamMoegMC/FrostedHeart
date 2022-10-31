@@ -19,16 +19,6 @@
 
 package com.teammoeg.frostedheart.research.data;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.research.FHResearch;
-
-import dev.ftb.mods.ftbteams.data.TeamManager;
-import net.minecraft.item.crafting.RecipeManager;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.storage.FolderName;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,6 +27,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Researches;
+
+import dev.ftb.mods.ftbteams.data.TeamManager;
+import net.minecraft.item.crafting.RecipeManager;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.storage.FolderName;
 
 public class FHResearchDataManager {
     public static MinecraftServer server;
@@ -70,6 +71,7 @@ public class FHResearchDataManager {
     public void load() {
         local = server.func_240776_a_(dataFolder);
         regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
+        FHResearch.clearAll();
         if (regfile.exists()) {
             try {
                 FHResearch.load(CompressedStreamTools.readCompressed(regfile));
@@ -80,6 +82,7 @@ public class FHResearchDataManager {
 
             }
         }
+        Researches.init();
         local.toFile().mkdirs();
         for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {
             try {

@@ -1,9 +1,0 @@
-{
-  "type": "frostedheart:diet_override",
-  "groups": {
-    "sugars": 0.009207825,
-    "plant_oil": 0.01778604,
-    "grains": 0.01422883
-  },
-  "item": "rankine:chickpea"
-}

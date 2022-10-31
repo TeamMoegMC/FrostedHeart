@@ -19,17 +19,15 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonObject;
-import com.mojang.realmsclient.util.JsonUtils;
 import com.teammoeg.frostedheart.FHBlocks;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;

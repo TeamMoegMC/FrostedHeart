@@ -18,16 +18,17 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMultiblocks;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.Nullable;
 
 public class GeneratorRecipeSerializer extends IERecipeSerializer<GeneratorRecipe> {
     @Override

@@ -18,9 +18,14 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.function.BiFunction;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -34,15 +39,10 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.function.BiFunction;
 
 public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public DebugHeaterBlock(String name, Properties blockProps,
@@ -55,17 +55,6 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
         return FHTileTypes.DEBUGHEATER.get().create();
-    }
-
-    @Override
-    public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
-                                boolean isMoving) {
-        TileEntity te = Utils.getExistingTileEntity(worldIn, fromPos);
-        if (te instanceof INetworkConsumer) {
-            Vector3i vec = pos.subtract(fromPos);
-            Direction dir = Direction.getFacingFromVector(vec.getX(), vec.getY(), vec.getZ());
-            ((INetworkConsumer) te).connect(dir, 0);
-        }
     }
 
     @Override

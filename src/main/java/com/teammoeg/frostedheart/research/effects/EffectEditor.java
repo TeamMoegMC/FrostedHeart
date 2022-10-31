@@ -19,20 +19,33 @@
 
 package com.teammoeg.frostedheart.research.effects;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import com.teammoeg.frostedheart.research.gui.FHIcons.IconEditor;
-import com.teammoeg.frostedheart.research.gui.editor.*;
+import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
+import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
+import com.teammoeg.frostedheart.research.gui.editor.Editor;
+import com.teammoeg.frostedheart.research.gui.editor.EditorSelector;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledOpenEditorButton;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledSelection;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
+import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
+import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
+import com.teammoeg.frostedheart.research.gui.editor.RealBox;
+import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
+import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     public static final Editor<EffectBuilding> BUILD = (p, l, v, c) -> {

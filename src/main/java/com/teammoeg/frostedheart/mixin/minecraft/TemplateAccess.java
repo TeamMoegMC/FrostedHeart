@@ -18,11 +18,12 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import net.minecraft.world.gen.feature.template.Template;
+import java.util.List;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-import java.util.List;
+import net.minecraft.world.gen.feature.template.Template;
 
 @Mixin(Template.class)
 public interface TemplateAccess {

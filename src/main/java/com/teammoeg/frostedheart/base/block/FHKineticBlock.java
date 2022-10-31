@@ -18,17 +18,18 @@
 
 package com.teammoeg.frostedheart.base.block;
 
+import java.util.function.BiFunction;
+
 import com.simibubi.create.content.contraptions.base.HorizontalKineticBlock;
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
-
-import java.util.function.BiFunction;
 
 public abstract class FHKineticBlock extends HorizontalKineticBlock {
     public final String name;
@@ -60,7 +61,6 @@ public abstract class FHKineticBlock extends HorizontalKineticBlock {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
         if (state.isOpaqueCube(worldIn, pos))
             return lightOpacity;

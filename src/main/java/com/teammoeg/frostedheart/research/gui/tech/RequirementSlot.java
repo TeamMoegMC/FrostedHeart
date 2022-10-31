@@ -19,11 +19,18 @@
 
 package com.teammoeg.frostedheart.research.gui.tech;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.util.ITooltipFlag;
@@ -44,7 +51,7 @@ public class RequirementSlot extends Widget {
     public void addMouseOverText(TooltipList list) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         //list.add(cur.getDisplayName());
-        cur.getTooltip(null, ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
+        cur.getTooltip(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
     }
 
     @Override
@@ -52,6 +59,7 @@ public class RequirementSlot extends Widget {
         if (isMouseOver()) {
             if (getWidgetType() != WidgetType.DISABLED) {
                 //TODO edit ingredient
+            	JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
             }
 
             return true;

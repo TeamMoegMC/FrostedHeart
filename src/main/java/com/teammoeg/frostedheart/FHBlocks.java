@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedheart;
 
+import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
+import static com.teammoeg.frostedheart.util.FHProps.cropProps;
+import static com.teammoeg.frostedheart.util.FHProps.metalDecoProps;
+import static com.teammoeg.frostedheart.util.FHProps.ore_gravel;
+import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
+
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
@@ -38,12 +44,11 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraftforge.common.ToolType;
-
-import static com.teammoeg.frostedheart.util.FHProps.*;
 
 public class FHBlocks {
 

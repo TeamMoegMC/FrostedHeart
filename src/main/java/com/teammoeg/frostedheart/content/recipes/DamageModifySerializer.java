@@ -18,17 +18,17 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.data.JsonHelper;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.Nullable;
 
 public class DamageModifySerializer extends IERecipeSerializer<RecipeModifyDamage> {
     @Override

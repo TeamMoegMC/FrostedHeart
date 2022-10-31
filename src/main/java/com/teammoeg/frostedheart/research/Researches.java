@@ -19,10 +19,8 @@
 
 package com.teammoeg.frostedheart.research;
 
-import blusunrize.immersiveengineering.api.EnumMetals;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-import blusunrize.immersiveengineering.common.items.IEItems;
+import java.util.List;
+
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.simibubi.create.AllItems;
@@ -30,12 +28,20 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.research.clues.CustomClue;
-import com.teammoeg.frostedheart.research.effects.*;
+import com.teammoeg.frostedheart.research.data.ClientResearchData;
+import com.teammoeg.frostedheart.research.effects.EffectBuilding;
+import com.teammoeg.frostedheart.research.effects.EffectCrafting;
+import com.teammoeg.frostedheart.research.effects.EffectItemReward;
+import com.teammoeg.frostedheart.research.effects.EffectStats;
+import com.teammoeg.frostedheart.research.effects.EffectUse;
 import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
 
+import blusunrize.immersiveengineering.api.EnumMetals;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import blusunrize.immersiveengineering.common.items.IEItems;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
-import java.util.List;
 
 /**
  * Store some constant research instances
@@ -44,6 +50,7 @@ public class Researches {
 
 
     public static void init() {
+    	ClientResearchData.last=null;
         FHResearch.prepareReload();
         ResearchCategories.init();
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
@@ -56,6 +63,7 @@ public class Researches {
     }
 
     public static void initFromPacket(List<Research> rs) {
+    	ClientResearchData.last=null;
         FHResearch.prepareReload();
         ResearchCategories.init();
         FHResearch.readAll(rs);

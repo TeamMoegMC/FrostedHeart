@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import net.minecraft.block.DirectionalBlock;
-import net.minecraft.block.PistonBlock;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+
+import net.minecraft.block.DirectionalBlock;
+import net.minecraft.block.PistonBlock;
 
 @Mixin(PistonBlock.class)
 public abstract class PistonBlockMixin extends DirectionalBlock {

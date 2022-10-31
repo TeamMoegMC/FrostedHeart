@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.research;
 
-import net.minecraft.util.ResourceLocation;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import net.minecraft.util.ResourceLocation;
 
 public class ResearchCategories {
     public static Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();

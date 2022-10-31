@@ -19,24 +19,32 @@
 
 package com.teammoeg.frostedheart.research.gui.editor;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.Icons;
-import dev.ftb.mods.ftblibrary.ui.*;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
+import dev.ftb.mods.ftblibrary.ui.SimpleButton;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * @author LatvianModder, khjxiaogu
@@ -72,10 +80,10 @@ public class EditListDialog<T> extends EditDialog {
                 }
             }
 
-            theme.drawString(matrixStack, read.apply(list.get(index)), x + 4 + ioffset, y + 2);
+            theme.drawString(matrixStack, read.apply(list.get(index)), x + 4 + ioffset, y + 2, Color4I.BLACK, 0);
 
             if (mouseOver) {
-                theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.WHITE, 0);
+                theme.drawString(matrixStack, "[-]", x + w - 16, y + 2, Color4I.BLACK, 0);
             }
 
             RenderSystem.color4f(1F, 1F, 1F, 1F);
@@ -124,7 +132,7 @@ public class EditListDialog<T> extends EditDialog {
                 Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
             }
 
-            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, theme.getContentColor(getWidgetType()), Theme.SHADOW);
+            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.BLACK, 0);
             RenderSystem.color4f(1F, 1F, 1F, 1F);
         }
 

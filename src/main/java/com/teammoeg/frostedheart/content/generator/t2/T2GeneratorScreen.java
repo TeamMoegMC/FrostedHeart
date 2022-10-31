@@ -18,21 +18,22 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.network.PacketHandler;
+
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generator_t2");
@@ -154,7 +155,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         // power
         int offset = (int) ((1 - powerRatio) * 56);
         int bar = (int) (powerRatio * 56);
-        this.blit(transform, guiLeft + 146, guiTop + offset + 12, 181, 30, 2, bar);
+        this.blit(transform, guiLeft + 146, guiTop + offset + 13, 181, 30, 2, bar);
     }
 
     @Override

@@ -18,8 +18,11 @@
 
 package com.teammoeg.frostedheart.content.cmupdate;
 
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
@@ -28,8 +31,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.IBlockReader;
-
-import java.util.function.BiFunction;
 
 public class CMUpdateBlock extends FHBaseBlock {
 

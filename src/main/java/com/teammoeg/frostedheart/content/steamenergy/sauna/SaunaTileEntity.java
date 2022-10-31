@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
-import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.util.Utils;
-import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
-import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHTileTypes;
@@ -31,10 +32,14 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
-import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+
+import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
+import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
+import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -47,7 +52,6 @@ import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
@@ -60,11 +64,6 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.Set;
 
 public class SaunaTileEntity extends IEBaseTileEntity implements
         INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
@@ -86,7 +85,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     private boolean formed = false;
     Set<BlockPos> floor = new HashSet<>();
     Set<BlockPos> edges = new HashSet<>();
-    NetworkHolder network = new NetworkHolder();
+    SteamNetworkHolder network = new SteamNetworkHolder();
 
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
@@ -174,21 +173,16 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean connect(Direction to, int dist) {
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof EnergyNetworkProvider) {
-            network.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
-            return true;
-        }
-        return false;
+        return network.reciveConnection(world, pos, to, dist);
     }
 
     @Override
     public boolean canConnectAt(Direction to) {
-        return to == Direction.UP;
+        return to == Direction.DOWN;
     }
 
     @Override
-    public NetworkHolder getHolder() {
+    public SteamNetworkHolder getHolder() {
         return network;
     }
 

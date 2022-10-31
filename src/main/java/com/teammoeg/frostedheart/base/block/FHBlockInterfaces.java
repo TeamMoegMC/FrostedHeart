@@ -34,8 +34,10 @@ public class FHBlockInterfaces {
 
         default void setActive(boolean active) {
             BlockState state = this.getState();
-            BlockState newState = state.with(BlockStateProperties.LIT, active);
-            this.setState(newState);
+            if(state.get(BlockStateProperties.LIT)!=active) {
+	            BlockState newState = state.with(BlockStateProperties.LIT, active);
+	            this.setState(newState);
+            }
         }
     }
 }

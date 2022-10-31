@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import com.google.common.collect.ImmutableList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.List;
 
 public class InspireRecipe extends IESerializableRecipe {
     public static IRecipeType<InspireRecipe> TYPE;

@@ -18,13 +18,20 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.Random;
+import java.util.function.Consumer;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -45,10 +52,6 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Random;
-
 public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> extends AbstractGenerator<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
@@ -61,6 +64,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
     public static final int OUTPUT_SLOT = 1;
     public int process = 0;
     public int processMax = 0;
+    
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     protected ItemStack currentItem;
 
@@ -110,27 +114,31 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
+        process = nbt.getInt("process");
+        processMax = nbt.getInt("processMax");
+        
         if (!descPacket) {
-
-            process = nbt.getInt("process");
-            processMax = nbt.getInt("processMax");
+            
             currentItem = ItemStack.read(nbt.getCompound("currentItem"));
+            ItemStackHelper.loadAllItems(nbt, inventory);
         }
-        ItemStackHelper.loadAllItems(nbt, inventory);
+        
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
+        nbt.putInt("process", process);
+        nbt.putInt("processMax", processMax);
+        
         if (!descPacket) {
             if (currentItem != null)
                 nbt.put("current", currentItem.serializeNBT());
             else
                 nbt.remove("current");
-            nbt.putInt("process", process);
-            nbt.putInt("processMax", processMax);
+            ItemStackHelper.saveAllItems(nbt, inventory);
         }
-        ItemStackHelper.saveAllItems(nbt, inventory);
+        
     }
 
     @Nonnull
@@ -278,6 +286,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
     @Override
     protected void tickFuel() {
         // just finished process or during process
+    	
         if (process > 0) {
             if (isOverdrive() && !isActualOverdrive()) {
                 GeneratorRecipe recipe = getRecipe();
@@ -305,6 +314,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
             else
                 process--;
             this.setActive(true);
+            this.markDirty();
             this.markContainingBlockForUpdate(null);
         }
         // process not started yet
@@ -333,10 +343,16 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
                 this.process = recipe.time * modifier;
                 this.processMax = process;
                 setActive(true);
+                this.markDirty();
+                markContainingBlockForUpdate(null);
             } else {
-                this.process = 0;
-                processMax = 0;
-                setActive(false);
+            	if(this.processMax!=0) {
+	                this.process = 0;
+	                processMax = 0;
+	                setActive(false);
+	                this.markDirty();
+	                markContainingBlockForUpdate(null);
+            	}
             }
         }
     }
@@ -355,6 +371,18 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
             }
         }
     }
+
+	@Override
+	public void tick() {
+		
+		super.tick();
+		
+	}
+
+	@Override
+	public void forEachBlock(Consumer<T> consumer) {
+	}
+
 
 
 }

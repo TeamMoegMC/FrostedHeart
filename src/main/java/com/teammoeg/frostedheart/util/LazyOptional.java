@@ -19,20 +19,22 @@
 
 package com.teammoeg.frostedheart.util;
 
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.NonNullConsumer;
-import net.minecraftforge.common.util.NonNullFunction;
-import net.minecraftforge.common.util.NonNullPredicate;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.NonNullConsumer;
+import net.minecraftforge.common.util.NonNullFunction;
+import net.minecraftforge.common.util.NonNullPredicate;
 
 /**
  * An modified version for LazyOptional by forge, compatibilities for null return

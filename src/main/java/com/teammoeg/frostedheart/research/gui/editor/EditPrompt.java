@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedheart.research.gui.editor;
 
+import java.util.function.Consumer;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-
-import java.util.function.Consumer;
 
 public class EditPrompt extends BaseEditDialog {
     public static Editor<String> TEXT_EDITOR = (p, l, v, c) -> {

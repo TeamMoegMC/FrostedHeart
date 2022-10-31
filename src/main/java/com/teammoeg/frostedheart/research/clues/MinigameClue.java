@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.clues;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.text.ITextComponent;
 
@@ -80,5 +81,8 @@ public class MinigameClue extends CustomClue {
     public void setLevel(int level) {
         this.level = Math.min(Math.max(level, 0), 3);
     }
-
+	@Override
+	public String getBrief() {
+		return "Complete game level "+this.level;
+	}
 }

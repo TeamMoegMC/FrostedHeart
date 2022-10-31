@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.research.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 
 public class ThickLine {

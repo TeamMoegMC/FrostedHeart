@@ -18,18 +18,23 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.util.IOwnerTile;
+
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
-
-import java.util.UUID;
-import java.util.function.Consumer;
 
 public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState {
 
@@ -85,16 +90,17 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         UUID owner = getOwner();
         if (owner == null) return;
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
-        if (!vars.contains("generator_loc")) return;
-        long pos = vars.getLong("generator_loc");
+        if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) return;
+        long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
         BlockPos bp = BlockPos.fromLong(pos);
         if (bp.equals(this.pos))
-            vars.remove("generator_loc");
+            vars.remove(ResearchVariant.GENERATOR_LOCATION.getToken());
     }
 
     public void regist() {
-        CompoundNBT vars = ResearchDataAPI.getVariants(getOwner());
-        vars.putLong("generator_loc", master().pos.toLong());
+    	UUID owner = getOwner();
+        if (owner == null) return;
+        ResearchDataAPI.putVariantLong(owner,ResearchVariant.GENERATOR_LOCATION,master().pos.toLong());
     }
 
     public void setOwner(UUID owner) {
@@ -105,11 +111,12 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         UUID owner = getOwner();
         if (owner == null) return false;
         CompoundNBT vars = ResearchDataAPI.getVariants(owner);
-        if (!vars.contains("generator_loc")) {
-            vars.putLong("generator_loc", master().pos.toLong());
+        if(!ResearchDataAPI.getData(owner).building.has(super.multiblockInstance))return false;
+        if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) {
+            vars.putLong(ResearchVariant.GENERATOR_LOCATION.getToken(), master().pos.toLong());
             return true;
         }
-        long pos = vars.getLong("generator_loc");
+        long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
         BlockPos bp = BlockPos.fromLong(pos);
         if (bp.equals(this.pos))
             return true;
@@ -138,40 +145,44 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
                 onShutDown();
                 ChunkData.removeTempAdjust(world, getPos());
             }
-        if (!world.isRemote && formed && !isDummy() && isWorking()) {
-            if (shouldUnique()) {
-                if (checkInterval <= 0) {
-                    if (getOwner() != null)
-                        checkInterval = 10;
-                    isLocked = !shouldWork();
-                } else checkInterval--;
-            }
-            final boolean activeBeforeTick = getIsActive();
-            if (!isLocked)
-                tickFuel();
-            else
-                this.setActive(false);
-            // set activity status
-            final boolean activeAfterTick = getIsActive();
-            if (activeBeforeTick != activeAfterTick) {
-                this.markDirty();
-                if (activeAfterTick) {
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
-                } else {
-                    ChunkData.removeTempAdjust(world, getPos());
-                }
-                setAllActive(activeAfterTick);
-            } else if (activeAfterTick) {
-                if (isChanged() || !initialized) {
-                    initialized = true;
-                    markChanged(false);
-                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
-                }
-            }
+        
+        if (!world.isRemote && formed && !isDummy()) {
+        	if(isWorking()) {
+	            if (shouldUnique()) {
+	                if (checkInterval <= 0) {
+	                    if (getOwner() != null)
+	                        checkInterval = 10;
+	                    isLocked = !shouldWork();
+	                } else checkInterval--;
+	            }
+	            final boolean activeBeforeTick = getIsActive();
+	            if (!isLocked)
+	                tickFuel();
+	            else
+	                this.setActive(false);
+	            // set activity status
+	            final boolean activeAfterTick = getIsActive();
+	            if (activeBeforeTick != activeAfterTick) {
+	                this.markDirty();
+	                if (activeAfterTick) {
+	                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
+	                } else {
+	                    ChunkData.removeTempAdjust(world, getPos());
+	                }
+	                setAllActive(activeAfterTick);
+	            } else if (activeAfterTick) {
+	                if (isChanged() || !initialized) {
+	                    initialized = true;
+	                    markChanged(false);
+	                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
+	                }
+	            }
+        	}else
+        		shutdownTick();
         }
 
     }
-
+    public void shutdownTick() {}
     public void setWorking(boolean working) {
         if (master() != null) {
             master().isWorking = working;

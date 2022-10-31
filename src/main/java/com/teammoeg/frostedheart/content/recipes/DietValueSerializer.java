@@ -19,17 +19,18 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.google.gson.JsonObject;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class DietValueSerializer extends IERecipeSerializer<DietValueRecipe> {
 

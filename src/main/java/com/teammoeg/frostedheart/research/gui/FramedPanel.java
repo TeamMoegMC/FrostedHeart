@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.research.gui;
 
+import java.util.function.Consumer;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
+
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import net.minecraft.util.text.ITextComponent;
-
-import java.util.function.Consumer;
 
 public class FramedPanel extends Panel {
     ITextComponent title;

@@ -18,13 +18,15 @@
 
 package com.teammoeg.frostedheart.research.machines;
 
+import java.util.List;
+
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.content.steamenergy.NetworkHolder;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -40,8 +42,6 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.List;
-
 public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggleInformation {
     int processMax = 6400;
     public int process = 0;
@@ -49,7 +49,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
     int lastact;
     int maxPoints = 100;
     boolean doProduct = true;
-
+    boolean requireUpdate;
     public MechCalcTileEntity() {
         super(FHTileTypes.MECH_CALC.get());
     }
@@ -87,6 +87,7 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
         super.tick();
         if (!world.isRemote) {
             float spd = MathHelper.abs(super.getSpeed());
+            
             if (spd > 0 && spd <= 64 && currentPoints <= maxPoints-20) {
                 process += spd;
                 int curact = process / 1067;
@@ -110,14 +111,21 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
                 } else ticsSlp--;
                 this.notifyUpdate();
             }
+            if(requireUpdate)
+            	doNetworkUpdate();
         }
     }
     public void requireNetworkUpdate() {
+    	requireUpdate=true;
+    }
+    public void doNetworkUpdate() {
+    	if(this.hasNetwork())
     	this.getOrCreateNetwork().updateStressFor(this,calculateStressApplied());
     }
     @Override
     public float calculateStressApplied() {
-        if (currentPoints < maxPoints && MathHelper.abs(super.getSpeed()) <= 64) {
+    	float rspd=MathHelper.abs(super.getSpeed());
+        if (currentPoints < maxPoints &&  rspd<= 64) {
             this.lastStressApplied = 64;
             return 64;
         }
@@ -171,4 +179,9 @@ public class MechCalcTileEntity extends KineticTileEntity implements IHaveGoggle
 
 
     }
+	@Override
+	public void onSpeedChanged(float previousSpeed) {
+		super.onSpeedChanged(previousSpeed);
+		requireNetworkUpdate();
+	}
 }

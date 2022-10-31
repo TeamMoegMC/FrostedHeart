@@ -26,14 +26,20 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.research.*;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
-import net.minecraft.command.arguments.ArgumentTypes;
+import net.minecraft.command.arguments.NBTTagArgument;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 
@@ -44,26 +50,26 @@ public class ResearchCommand {
                     for (Research r : FHResearch.getAllResearch())
                         if (r.getId().startsWith(s.getRemaining())) 
                             s.suggest(r.getId(),r.getName());
-                    if("all".startsWith(s.getRemaining()))
-                    	s.suggest("all");
                     return s.buildFuture();
                 }).executes(ct -> {
                     String rsn = ct.getArgument("name", String.class).toString();
-                    if (rsn.equals("all")) {
-                        TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
-                        for (Research r : FHResearch.getAllResearch()) {
-                        	if(r.isInCompletable())continue;
-                            ResearchData rd = trd.getData(r);
-                            rd.setFinished(true);
-                            rd.announceCompletion();
-                        }
-                    } else {
-                        Research rs = FHResearch.getResearch(rsn).get();
-                        if (rs == null) {
-                            ct.getSource().sendErrorMessage(new StringTextComponent("Research not found").mergeStyle(TextFormatting.RED));
-                            return Command.SINGLE_SUCCESS;
-                        }
-                        ResearchData rd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
+            
+                    Research rs = FHResearch.getResearch(rsn).get();
+                    if (rs == null) {
+                        ct.getSource().sendErrorMessage(new StringTextComponent("Research not found").mergeStyle(TextFormatting.RED));
+                        return Command.SINGLE_SUCCESS;
+                    }
+                    ResearchData rd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
+                    rd.setFinished(true);
+                    rd.announceCompletion();
+                    
+                    ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    return Command.SINGLE_SUCCESS;
+                })).then(Commands.literal("all").executes(ct->{
+                	TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
+                    for (Research r : FHResearch.getAllResearch()) {
+                    	if(r.isInCompletable())continue;
+                        ResearchData rd = trd.getData(r);
                         rd.setFinished(true);
                         rd.announceCompletion();
                     }
@@ -82,27 +88,57 @@ public class ResearchCommand {
                 .then(Commands.literal("energy").executes(ct -> {
                     EnergyCore.reportEnergy(ct.getSource().asPlayer());
                     return Command.SINGLE_SUCCESS;
-                }))
-                .then(Commands.literal("addenergy").then(Commands.argument("amount",IntegerArgumentType.integer(0)).executes(ct -> {
+                }).then(Commands.literal("add").then(Commands.argument("amount",IntegerArgumentType.integer(0)).executes(ct -> {
                     EnergyCore.addPersistentEnergy(ct.getSource().asPlayer(),ct.getArgument("amount",Integer.class));
                     return Command.SINGLE_SUCCESS;
-                })))
+                }))))
+                
+                .then(Commands.literal("attribute").then(Commands.argument("name",StringArgumentType.string()).suggests((ct,s)->{
+                	CompoundNBT cnbt=ResearchDataAPI.getVariants(ct.getSource().asPlayer());
+                	cnbt.keySet().forEach(st->s.suggest(st));
+                    return s.buildFuture();
+                	
+                }).executes(ct -> {
+                	CompoundNBT cnbt=ResearchDataAPI.getVariants(ct.getSource().asPlayer());
+                	String rsn = ct.getArgument("name", String.class).toString();
+                		ct.getSource().sendFeedback(GuiUtils.str(String.valueOf(cnbt.get(rsn))), false);
+                    return Command.SINGLE_SUCCESS;
+                })).then(Commands.literal("all").executes(ct->{
+                	
+                	CompoundNBT cnbt=ResearchDataAPI.getVariants(ct.getSource().asPlayer());
+                	ct.getSource().sendFeedback(GuiUtils.str(cnbt.toString()), false);
+                    return Command.SINGLE_SUCCESS;
+                	
+                }))
+                		
+                		.then(Commands.literal("set").then(Commands.argument("name",StringArgumentType.string()).suggests((ct,s)->{
+                	CompoundNBT cnbt=ResearchDataAPI.getVariants(ct.getSource().asPlayer());
+                	cnbt.keySet().forEach(st->s.suggest(st));
+                	
+                    if("all".startsWith(s.getRemaining()))
+                    	s.suggest("all");
+                    return s.buildFuture();
+                	
+                }).then(Commands.argument("value",NBTTagArgument.func_218085_a()).executes(ct->{
+                	CompoundNBT cnbt=ResearchDataAPI.getVariants(ct.getSource().asPlayer());
+                	String rsn = ct.getArgument("name", String.class).toString();
+                	INBT nbt=ct.getArgument("value", INBT.class);
+                	cnbt.put(rsn, nbt);
+                	return Command.SINGLE_SUCCESS;
+                })))))
                 .then(Commands.literal("reset").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {
                     for (Research r : FHResearch.getAllResearch())
                         if (r.getId().startsWith(s.getRemaining()))
                             s.suggest(r.getId(),r.getName());
-                    if("all".startsWith(s.getRemaining()))
-                    	s.suggest("all");
                     return s.buildFuture();
                 }).executes(ct -> {
                 	String rsn = ct.getArgument("name", String.class).toString();
-                	if (rsn.equals("all")) {
-                        TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
-                        for (Research r : FHResearch.getAllResearch()) {
-                            trd.resetData(r);
-                        }
-                    } else {
-                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get());
+                    ResearchDataAPI.getData(ct.getSource().asPlayer()).resetData(FHResearch.getResearch(rsn).get(),true);
+                    return Command.SINGLE_SUCCESS;
+                })).then(Commands.literal("all").executes(ct->{
+                    TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
+                    for (Research r : FHResearch.getAllResearch()) {
+                        trd.resetData(r,true);
                     }
                     return Command.SINGLE_SUCCESS;
                 })));

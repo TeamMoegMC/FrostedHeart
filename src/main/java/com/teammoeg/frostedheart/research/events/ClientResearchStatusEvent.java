@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.research.events;
 
 import com.teammoeg.frostedheart.research.Research;
+
 import net.minecraftforge.eventbus.api.Event;
 
 public class ClientResearchStatusEvent extends Event {

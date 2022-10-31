@@ -18,16 +18,17 @@
 
 package com.teammoeg.frostedheart.base.block;
 
+import java.util.function.BiFunction;
+
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
-
-import java.util.function.BiFunction;
 
 public class FHBaseBlock extends Block {
     public final String name;
@@ -59,7 +60,6 @@ public class FHBaseBlock extends Block {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
         if (state.isOpaqueCube(worldIn, pos))
             return lightOpacity;
