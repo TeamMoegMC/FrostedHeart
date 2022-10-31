@@ -1,6 +1,6 @@
 {
   "variants": {
-    "axis=x": { "model": "frostedheart:block/relic_chest", "y": 90 },
-    "axis=z": { "model": "frostedheart:block/relic_chest", "y": 0 }
+    "axis=x": { "model": "frostedheart:block/relic/relic_chest", "y": 90 },
+    "axis=z": { "model": "frostedheart:block/relic/relic_chest", "y": 0 }
   }
 }

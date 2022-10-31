@@ -53,6 +53,12 @@ public class FHProps {
             .setRequiresTool()
             .harvestTool(ToolType.SHOVEL)
             .hardnessAndResistance(0.6F);
+    public static final AbstractBlock.Properties relic_block = AbstractBlock.Properties
+            .create(Material.IRON)
+            .sound(SoundType.STONE)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(35, 600);
     public static final Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
     public static final AbstractBlock.Properties berryBushBlocks = AbstractBlock.Properties.create(Material.PLANTS).tickRandomly().doesNotBlockMovement().sound(SoundType.SWEET_BERRY_BUSH);
 }
