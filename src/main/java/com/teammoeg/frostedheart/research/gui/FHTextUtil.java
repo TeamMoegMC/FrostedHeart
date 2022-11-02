@@ -37,7 +37,7 @@ public class FHTextUtil {
     }
 
     public static ITextComponent get(String orig, String type, Supplier<String> pid) {
-        if (orig.length() == 0)
+        if (orig==null||orig.length() == 0)
             return new TranslationTextComponent(type + "." + FHMain.MODID + "." + pid.get());
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
