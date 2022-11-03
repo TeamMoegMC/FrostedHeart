@@ -93,7 +93,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     public SaunaTileEntity() {
         super(FHTileTypes.SAUNA.get());
         this.inventory = NonNullList.withSize(1, ItemStack.EMPTY);
-        this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(15, this));
+        this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(1, this));
     }
 
     public float getPowerFraction() {
