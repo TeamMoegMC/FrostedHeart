@@ -1,10 +1,10 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "frostedheart:block/obj/relic_chest"
+    "particle": "frostedheart:block/relic/general_machine_top"
   },
   "loader": "forge:obj",
-  "model": "frostedheart:models/block/relic_chest.obj",
+  "model": "frostedheart:models/block/relic/relic_machine_a.obj",
   "detectCullableFaces": false,
   "flip-v": true
 }

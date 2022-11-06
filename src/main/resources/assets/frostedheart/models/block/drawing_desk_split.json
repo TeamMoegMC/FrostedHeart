@@ -1,7 +1,7 @@
 {
 	"parent": "minecraft:block/block",
 	"textures": {
-		"particle": "frostedheart:block/escritoire_main"
+		"particle": "frostedheart:block/obj/escritoire_main"
 	},
 	"loader": "immersiveengineering:basic_split",
 	"dynamic": false,

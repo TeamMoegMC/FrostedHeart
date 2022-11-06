@@ -1,0 +1,9 @@
+{
+    "ctm": {
+        "ctm_version": 1,
+        "type": "ctm",
+        "textures": [
+            "frostedheart:block/relic/ruined_fluctuating-ctm"
+        ]
+    }
+}

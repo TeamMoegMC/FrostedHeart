@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/relic/relic_screen_cracked"
+    },
+    "facing=south": {
+      "model": "frostedheart:block/relic/relic_screen_cracked",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "frostedheart:block/relic/relic_screen_cracked",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "frostedheart:block/relic/relic_screen_cracked",
+      "y": 270
+    }
+  }
+}

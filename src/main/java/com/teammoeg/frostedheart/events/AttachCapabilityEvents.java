@@ -23,11 +23,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
-import com.teammoeg.frostedheart.relic.RelicData;
-import com.teammoeg.frostedheart.world.FHDimensions;
-import net.minecraft.entity.player.PlayerEntity;
 import com.teammoeg.frostedheart.data.DeathInventoryData;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.ChunkPos;
@@ -47,9 +43,9 @@ public class AttachCapabilityEvents {
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
             event.addCapability(ClimateData.ID, new ClimateData());
         }
-        if (event.getObject().getDimensionKey() == FHDimensions.RELIC_DIM) {
-            event.addCapability(RelicData.ID, new RelicData());
-        }
+//        if (event.getObject().getDimensionKey() == FHDimensions.RELIC_DIM) {
+//            event.addCapability(RelicData.ID, new RelicData());
+//        }
     }
 
     @SubscribeEvent

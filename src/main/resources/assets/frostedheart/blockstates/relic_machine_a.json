@@ -1,0 +1,23 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/relic/relic_machine_a",
+      "uvlock": true
+    },
+    "facing=south": {
+      "model": "frostedheart:block/relic/relic_machine_a",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=east": {
+      "model": "frostedheart:block/relic/relic_machine_a",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=west": {
+      "model": "frostedheart:block/relic/relic_machine_a",
+      "y": 270,
+      "uvlock": true
+    }
+  }
+}

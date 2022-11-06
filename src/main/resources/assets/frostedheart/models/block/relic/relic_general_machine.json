@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "up": "frostedheart:block/relic/general_machine_top",
+    "west": "frostedheart:block/relic/general_machine_left",
+    "south": "frostedheart:block/relic/general_machine_back",
+    "down": "frostedheart:block/relic/chassis",
+    "east": "frostedheart:block/relic/general_machine_right",
+    "north": "frostedheart:block/relic/general_machine_front",
+    "particle": "frostedheart:block/relic/general_machine_top"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "frostedheart:block/relic/ruined_striped",
+    "side": "frostedheart:block/relic/ruined_ladder"
+  }
+}

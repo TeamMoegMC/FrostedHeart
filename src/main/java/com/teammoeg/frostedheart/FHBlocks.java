@@ -19,12 +19,6 @@
 
 package com.teammoeg.frostedheart;
 
-import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
-import static com.teammoeg.frostedheart.util.FHProps.cropProps;
-import static com.teammoeg.frostedheart.util.FHProps.metalDecoProps;
-import static com.teammoeg.frostedheart.util.FHProps.ore_gravel;
-import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
-
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
@@ -33,7 +27,7 @@ import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
-import com.teammoeg.frostedheart.content.decoration.RelicScreen;
+import com.teammoeg.frostedheart.content.decoration.RelicDirectionBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
@@ -44,11 +38,12 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraftforge.common.ToolType;
+
+import static com.teammoeg.frostedheart.util.FHProps.*;
 
 public class FHBlocks {
 
@@ -65,16 +60,15 @@ public class FHBlocks {
     public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", -10, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
     public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel, FHBlockItem::new);
     public static Block relic_chest = new RelicChestBlock("relic_chest");
-    public static Block incubator1 = new IncubatorBlock("incubator", stoneDecoProps,FHTileTypes.INCUBATOR);
-    public static Block incubator2 = new HeatIncubatorBlock("heat_incubator",metalDecoProps,FHTileTypes.INCUBATOR2);
-    public static Block relic_general_machine = new FHBaseBlock("relic_general_machine", relic_block, FHBlockItem::new);
-    public static Block relic_screen = new RelicScreen("relic_screen", relic_block, FHBlockItem::new);
-    public static Block relic_screen_cracked = new RelicScreen("relic_screen_cracked", relic_block, FHBlockItem::new);
-    public static Block relic_machine_a = new FHBaseBlock("relic_machine_a", relic_block, FHBlockItem::new);
+    public static Block incubator1 = new IncubatorBlock("incubator", stoneDecoProps, FHTileTypes.INCUBATOR);
+    public static Block incubator2 = new HeatIncubatorBlock("heat_incubator", metalDecoProps, FHTileTypes.INCUBATOR2);
+    public static Block relic_general_machine = new RelicDirectionBlock("relic_general_machine", relic_block, FHBlockItem::new);
+    public static Block relic_screen = new RelicDirectionBlock("relic_screen", relic_block, FHBlockItem::new);
+    public static Block relic_screen_cracked = new RelicDirectionBlock("relic_screen_cracked", relic_block, FHBlockItem::new);
     public static Block relic_fluctuating = new FHBaseBlock("relic_fluctuating", relic_block, FHBlockItem::new);
     public static Block relic_ladder = new FHBaseBlock("relic_ladder", relic_block, FHBlockItem::new);
-    public static Block relic_scale_tile= new FHBaseBlock("relic_scale_tile", relic_block, FHBlockItem::new);
-    public static Block relic_striped= new FHBaseBlock("relic_striped", relic_block, FHBlockItem::new);
+    public static Block relic_scale_tile = new FHBaseBlock("relic_scale_tile", relic_block, FHBlockItem::new);
+    public static Block relic_striped = new FHBaseBlock("relic_striped", relic_block, FHBlockItem::new);
     //        public static Block access_control = new AccessControlBlock("access_control", FHBlockItem::new);
 //        public static Block gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK), FHBlockItem::new);
     public static Block fluorite_ore;
@@ -139,5 +133,12 @@ public class FHBlocks {
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)
+            .notSolid(), FHBlockItem::new);
+    public static Block relic_machine_a = new RelicDirectionBlock("relic_machine_a", Block.Properties
+            .create(Material.IRON)
+            .sound(SoundType.STONE)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(35, 600)
             .notSolid(), FHBlockItem::new);
 }

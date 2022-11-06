@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/relic/relic_general_machine"
+    },
+    "facing=south": {
+      "model": "frostedheart:block/relic/relic_general_machine",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "frostedheart:block/relic/relic_general_machine",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "frostedheart:block/relic/relic_general_machine",
+      "y": 270
+    }
+  }
+}

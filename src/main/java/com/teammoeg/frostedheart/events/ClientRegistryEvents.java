@@ -18,10 +18,12 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
-
-import java.util.Map;
-
+import blusunrize.immersiveengineering.api.ManualHelper;
+import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import blusunrize.lib.manual.ManualEntry;
+import blusunrize.lib.manual.ManualInstance;
+import blusunrize.lib.manual.Tree;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
@@ -44,13 +46,6 @@ import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRender
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.util.FHLogger;
-
-import blusunrize.immersiveengineering.api.ManualHelper;
-import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import blusunrize.lib.manual.ManualEntry;
-import blusunrize.lib.manual.ManualInstance;
-import blusunrize.lib.manual.Tree;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
@@ -75,9 +70,14 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.Map;
+
+import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
+
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
     private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
+
     /**
      * @param event
      */
@@ -100,6 +100,7 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHMultiblocks.generator, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHMultiblocks.generator_t2, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.relic_machine_a, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.getCutout());
