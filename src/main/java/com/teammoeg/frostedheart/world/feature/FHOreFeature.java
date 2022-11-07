@@ -48,9 +48,9 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
 
         BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable();
 
-        for (int x = pos.getX() - 5; x < pos.getX() + 5; x += 2) {
+        for (int x = pos.getX() - 4; x < pos.getX() + 4; x += 2) {
             for (int y = pos.getY() - 2; y < pos.getY() + 2; ++y) {
-                for (int z = pos.getZ() - 5; z < pos.getZ() + 5; z += 2) {
+                for (int z = pos.getZ() - 4; z < pos.getZ() + 4; z += 2) {
                     blockpos$mutable.setPos(x, y, z);
                     if (config.target.test(reader.getBlockState(blockpos$mutable), rand)) {
                         pos = blockpos$mutable;
