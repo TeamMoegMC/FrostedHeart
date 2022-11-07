@@ -27,6 +27,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.ISeedReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.gen.ChunkGenerator;
+import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.Feature;
 
 import java.util.BitSet;
@@ -39,6 +40,12 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
 
     @Override
     public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, FHOreFeatureConfig config) {
+
+        if (pos.getY() > reader.getHeight
+                (Heightmap.Type.OCEAN_FLOOR_WG, pos.getX(), pos.getZ()) + 3) {
+            return false;
+        }
+
         BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable();
 
         for (int x = pos.getX() - 5; x < pos.getX() + 5; x += 2) {

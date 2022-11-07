@@ -18,22 +18,20 @@
 
 package com.teammoeg.frostedheart.world.feature;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.world.gen.feature.template.BlockMatchRuleTest;
 import net.minecraft.world.gen.feature.template.IRuleTestType;
 import net.minecraft.world.gen.feature.template.RuleTest;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 public class FHRuleTest extends RuleTest {
-    public final Block[] blocks;
     public final List<RuleTest> list;
 
     public FHRuleTest(Block[] blocks) {
-        this.blocks = blocks;
         this.list = new ArrayList();
         for (Block block : blocks) {
             RuleTest b = new BlockMatchRuleTest(block);
