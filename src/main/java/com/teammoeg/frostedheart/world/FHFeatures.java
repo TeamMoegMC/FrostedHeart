@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart.world;
 
-import java.util.ArrayList;
-
 import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.google.common.collect.ImmutableList;
@@ -28,19 +26,13 @@ import com.teammoeg.frostedheart.world.feature.FHOreFeature;
 import com.teammoeg.frostedheart.world.feature.FHOreFeatureConfig;
 import com.teammoeg.frostedheart.world.feature.FlowerCoveredDepositFeature;
 import com.teammoeg.frostedheart.world.feature.SpacecraftFeature;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.gen.feature.BlockStateFeatureConfig;
-import net.minecraft.world.gen.feature.ConfiguredFeature;
-import net.minecraft.world.gen.feature.Feature;
-import net.minecraft.world.gen.feature.FeatureSpread;
-import net.minecraft.world.gen.feature.Features;
-import net.minecraft.world.gen.feature.IFeatureConfig;
-import net.minecraft.world.gen.feature.NoFeatureConfig;
-import net.minecraft.world.gen.feature.SphereReplaceConfig;
+import net.minecraft.world.gen.feature.*;
+
+import java.util.ArrayList;
 
 public class FHFeatures {
 
@@ -141,21 +133,21 @@ public class FHFeatures {
         registerFHOre("ore_pentlandite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pentlandite, RankineBlocks.PENTLANDITE_ORE.get().getDefaultState(), 35)).range(65).square().chance(5));
         registerFHOre("ore_native_tin", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.native_tin, RankineBlocks.NATIVE_TIN_ORE.get().getDefaultState(), 40)).range(65).square().chance(2));
         registerFHOre("ore_cassiterite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.cassiterite, RankineBlocks.CASSITERITE_ORE.get().getDefaultState(), 45)).range(65).square().chance(2));
-        registerFHOre("ore_bituminous", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bituminous, RankineBlocks.BITUMINOUS_ORE.get().getDefaultState(), 55)).range(80).square().chance(12));
+        registerFHOre("ore_bituminous", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bituminous, RankineBlocks.BITUMINOUS_ORE.get().getDefaultState(), 55)).range(80).square().chance(10));
         registerFHOre("ore_lignite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.lignite, RankineBlocks.LIGNITE_ORE.get().getDefaultState(), 50)).range(80).square().chance(2));
-        registerFHOre("ore_bauxite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bauxite, RankineBlocks.BAUXITE_ORE.get().getDefaultState(), 50)).range(60).square().chance(2));
+        registerFHOre("ore_bauxite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bauxite, RankineBlocks.BAUXITE_ORE.get().getDefaultState(), 50)).range(60).square().chance(3));
         registerFHOre("ore_stibnite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.stibnite, RankineBlocks.STIBNITE_ORE.get().getDefaultState(), 35)).range(65).square().chance(12));
         registerFHOre("ore_cinnabar", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.CINNABAR_ORE.get().getDefaultState(), 40)).range(30).square().chance(6));
         registerFHOre("ore_magnesite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.magnesite, RankineBlocks.MAGNESITE_ORE.get().getDefaultState(), 40)).range(65).square().chance(10));
         registerFHOre("ore_galena", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.GALENA_ORE.get().getDefaultState(), 40)).range(40).square().chance(7));
         registerFHOre("ore_fluorite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, FHBlocks.fluorite_ore.getDefaultState(), 35)).range(65).square().chance(10));
-        registerFHOre("ore_silver", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_SILVER_ORE.get().getDefaultState(), 35)).range(30).square().chance(12));
-        registerFHOre("ore_gold", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_GOLD_ORE.get().getDefaultState(), 35)).range(30).square().chance(12));
+        registerFHOre("ore_silver", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_SILVER_ORE.get().getDefaultState(), 35)).range(30).square().chance(10));
+        registerFHOre("ore_gold", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.gold, RankineBlocks.NATIVE_GOLD_ORE.get().getDefaultState(), 35)).range(30).square().chance(10));
         registerFHOre("ore_sphalerite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.pyrite, RankineBlocks.SPHALERITE_ORE.get().getDefaultState(), 40)).range(65).square().chance(4));
-        registerFHOre("ore_anthracite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.anthracite, RankineBlocks.ANTHRACITE_ORE.get().getDefaultState(), 50)).range(48).chance(15));
-        registerFHOre("ore_graphite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.graphite, RankineBlocks.PLUMBAGO_ORE.get().getDefaultState(), 35)).range(50).chance(12));
+        registerFHOre("ore_anthracite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.anthracite, RankineBlocks.ANTHRACITE_ORE.get().getDefaultState(), 50)).range(48).chance(14));
+        registerFHOre("ore_graphite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.graphite, RankineBlocks.PLUMBAGO_ORE.get().getDefaultState(), 35)).range(50).chance(10));
         registerFHOre("ore_halite", FHORE.withConfiguration(new FHOreFeatureConfig(FHOreFeatureConfig.FillerBlockType.bauxite, FHBlocks.halite_ore.getDefaultState(), 40)).range(65).square().chance(7));
-        
+
         registerFHDisk("copper_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(COPPER_GRAVEL, FeatureSpread.create(1, 2), 1, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
         registerFHDisk("fh_disk_clay", Feature.DISK.withConfiguration(new SphereReplaceConfig(CLAY, FeatureSpread.create(2, 3), 1, clay_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).chance(2));
         registerFHDisk("fh_disk_gravel", Feature.DISK.withConfiguration(new SphereReplaceConfig(GRAVEL, FeatureSpread.create(2, 3), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT));

@@ -18,13 +18,9 @@
 
 package com.teammoeg.frostedheart.world.feature;
 
-import java.util.BitSet;
-import java.util.Random;
-
 import com.cannolicatfish.rankine.blocks.RankineOreBlock;
 import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.mojang.serialization.Codec;
-
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -34,6 +30,9 @@ import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.Feature;
 
+import java.util.BitSet;
+import java.util.Random;
+
 public class FHOreFeature extends Feature<FHOreFeatureConfig> {
     public FHOreFeature(Codec<FHOreFeatureConfig> codec) {
         super(codec);
@@ -41,30 +40,41 @@ public class FHOreFeature extends Feature<FHOreFeatureConfig> {
 
     @Override
     public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, FHOreFeatureConfig config) {
-        float f = rand.nextFloat() * (float) Math.PI;
-        float f1 = config.size / 8.0F;
-        int i = MathHelper.ceil((config.size / 16.0F * 2.0F + 1.0F) / 2.0F);
-        double maxX = pos.getX() + Math.sin(f) * f1;
-        double minX = pos.getX() - Math.sin(f) * f1;
-        double maxZ = pos.getZ() + Math.cos(f) * f1;
-        double minZ = pos.getZ() - Math.cos(f) * f1;
-        int j = 2;
-        double maxY = pos.getY() + rand.nextInt(3) - 2;
-        double minY = pos.getY() + rand.nextInt(3) - 2;
-        int startX = pos.getX() - MathHelper.ceil(f1) - i;
-        int startY = pos.getY() - 2 - i;
-        int startZ = pos.getZ() - MathHelper.ceil(f1) - i;
-        int maxSizeXZ = 2 * (MathHelper.ceil(f1) + i);
-        int maxSizeY = 2 * (2 + i);
 
-        for (int l1 = startX; l1 <= startX + maxSizeXZ; ++l1) {
-            for (int i2 = startZ; i2 <= startZ + maxSizeXZ; ++i2) {
-                if (startY <= reader.getHeight(Heightmap.Type.OCEAN_FLOOR_WG, l1, i2)) {
-                    return this.generate(reader, rand, config, maxX, minX, maxZ, minZ, maxY, minY, startX, startY, startZ, maxSizeXZ, maxSizeY);
+        if (pos.getY() > reader.getHeight
+                (Heightmap.Type.OCEAN_FLOOR_WG, pos.getX(), pos.getZ()) + 3) {
+            return false;
+        }
+
+        BlockPos.Mutable blockpos$mutable = new BlockPos.Mutable();
+
+        for (int x = pos.getX() - 4; x < pos.getX() + 4; x += 2) {
+            for (int y = pos.getY() - 2; y < pos.getY() + 2; ++y) {
+                for (int z = pos.getZ() - 4; z < pos.getZ() + 4; z += 2) {
+                    blockpos$mutable.setPos(x, y, z);
+                    if (config.target.test(reader.getBlockState(blockpos$mutable), rand)) {
+                        pos = blockpos$mutable;
+                        float f = rand.nextFloat() * (float) Math.PI;
+                        float f1 = config.size / 8.0F;
+                        int i = MathHelper.ceil((config.size / 16.0F * 2.0F + 1.0F) / 2.0F);
+                        double maxX = pos.getX() + Math.sin(f) * f1;
+                        double minX = pos.getX() - Math.sin(f) * f1;
+                        double maxZ = pos.getZ() + Math.cos(f) * f1;
+                        double minZ = pos.getZ() - Math.cos(f) * f1;
+                        int j = 2;
+                        double maxY = pos.getY() + rand.nextInt(3) - 2;
+                        double minY = pos.getY() + rand.nextInt(3) - 2;
+                        int startX = pos.getX() - MathHelper.ceil(f1) - i;
+                        int startY = pos.getY() - 2 - i;
+                        int startZ = pos.getZ() - MathHelper.ceil(f1) - i;
+                        int maxSizeXZ = 2 * (MathHelper.ceil(f1) + i);
+                        int maxSizeY = 2 * (2 + i);
+
+                        return this.generate(reader, rand, config, maxX, minX, maxZ, minZ, maxY, minY, startX, startY, startZ, maxSizeXZ, maxSizeY);
+                    }
                 }
             }
         }
-
         return false;
     }
 
