@@ -18,10 +18,12 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
+import java.util.Random;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -63,6 +65,20 @@ public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Generator
 		super.writeCustomNBT(nbt, descPacket);
 		nbt.putBoolean("hasFuel", hasFuel);
 	}
+    @Override
+    protected void tickEffects(boolean isActive) {
+        if (isActive) {
+            BlockPos blockpos = this.getPos();
+            Random random = world.rand;
+            if (random.nextFloat() < 0.2F) {
+                //for (int i = 0; i < random.nextInt(2) + 2; ++i) {
+                    ClientUtils.spawnSmokeParticles(world, blockpos);
+                    ClientUtils.spawnFireParticles(world, blockpos);
+                //}
+            }
+        }
+    }
+
 	@Override
 	public void shutdownTick() {
 		boolean invState=!inventory.get(INPUT_SLOT).isEmpty();
