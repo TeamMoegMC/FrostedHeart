@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,11 +36,15 @@ import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.util.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.FTBTeamsCommon;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -274,10 +279,15 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         if (p.getArmorCoverPercentage() > 0.0F) {
             return;
         }
+        UUID owner=IOwnerTile.getOwner(this);
+        if(owner==null)return;
+        Team t=FTBTeamsAPI.getPlayerTeam(p);
+        if(t==null||!t.getId().equals(owner))return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {
             p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));
         }
+        
         // add sauna effect
         if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA)) {
             // initial reward

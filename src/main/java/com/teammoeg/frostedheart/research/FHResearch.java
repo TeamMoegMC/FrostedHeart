@@ -32,13 +32,19 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
+import com.teammoeg.frostedheart.research.events.ResearchLoadEvent.Finish;
+import com.teammoeg.frostedheart.research.events.ResearchLoadEvent.Post;
+import com.teammoeg.frostedheart.research.events.ResearchLoadEvent.Pre;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
@@ -75,6 +81,11 @@ public class FHResearch {
     //clear cache when modification applied
     public static void clearCache() {
         allResearches = LazyOptional.of(() -> researches.all());
+    }
+    //called after reload
+    public static void reindex() {
+    	allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
+        allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
     }
 
     //called after reload
@@ -253,5 +264,27 @@ public class FHResearch {
 		clues.clear();
 		researches.clear();
 		effects.clear();
+	}
+
+	public static void init() {
+		ClientResearchData.last=null;
+	    prepareReload();
+	    ResearchCategories.init();
+	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
+	    loadAll();
+	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
+	    finishReload();
+	    
+	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
+	    //FHResearch.saveAll();
+	}
+
+	public static void initFromPacket(List<Research> rs) {
+		ClientResearchData.last=null;
+	    prepareReload();
+	    ResearchCategories.init();
+	    readAll(rs);
+	    finishReload();
+	    //FHResearch.saveAll();
 	}
 }

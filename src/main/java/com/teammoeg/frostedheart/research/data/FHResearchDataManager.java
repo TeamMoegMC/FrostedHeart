@@ -30,7 +30,6 @@ import java.util.UUID;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Researches;
 
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.item.crafting.RecipeManager;
@@ -82,7 +81,7 @@ public class FHResearchDataManager {
 
             }
         }
-        Researches.init();
+        FHResearch.init();
         local.toFile().mkdirs();
         for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {
             try {

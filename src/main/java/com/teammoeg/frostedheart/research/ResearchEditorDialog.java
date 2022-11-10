@@ -98,17 +98,18 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.showfdesc = alt.getSelection();
             r.isHidden=hidden.getSelection();
             r.setInCompletable(locked.getSelection());
+            
             if (r.getRId() == 0) {//creating new research
                 if (!id.getText().isEmpty()) {
                     r.setId(id.getText());
                     FHResearch.register(r);
-                    r.doIndex();
                 }
             } else {//modify old research
                 r.setNewId(id.getText());
             }
             EditUtils.saveResearch(r);
         }
+        FHResearch.reindex();
     }
 
     @Override

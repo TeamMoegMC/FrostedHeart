@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.Researches;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -82,7 +81,6 @@ public class ResearchCommand {
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("default").executes(ct -> {
-                    Researches.createDefaultResearches();
                     return Command.SINGLE_SUCCESS;
                 }))
                 .then(Commands.literal("energy").executes(ct -> {

@@ -86,7 +86,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     boolean isHidden=false;
     boolean alwaysShow=false;
     long points = 1000;// research point
-
+    boolean isInfinite;
     @SafeVarargs
     public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
         this(path, category, new ItemStack(Items.AIR), parents);
@@ -297,9 +297,12 @@ public class Research extends FHRegisteredItem implements Writeable {
         return FHResearch.getResearch(this.getLId());
 
     }
-
+    public void doReindex() {
+    	children.clear();
+    }
     public void doIndex() {
         Supplier<Research> objthis = getSupplier();
+        
         for (Supplier<Research> r : this.parents) {
             Research rx = r.get();
             if (rx != null)
@@ -385,7 +388,10 @@ public class Research extends FHRegisteredItem implements Writeable {
 
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
-        return TeamResearchData.getClientInstance().getData(this);
+        ResearchData rd=TeamResearchData.getClientInstance().getData(this);
+        if(rd==null)
+        	return ResearchData.EMPTY;
+        return rd;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -486,7 +492,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     }
 
     public void removeParent(Research parent) {
-        this.parents.removeIf(e -> parent == e.get());
+        this.parents.removeIf(e -> parent.equals(e.get()));
     }
 
     public void addParent(Supplier<Research> par) {

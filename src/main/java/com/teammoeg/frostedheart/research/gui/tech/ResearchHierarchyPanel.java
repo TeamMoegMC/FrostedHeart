@@ -123,7 +123,7 @@ public class ResearchHierarchyPanel extends Panel {
                         Research r = researchPanel.selectedResearch;
                         ResearchEditorDialog.RESEARCH_LIST.open(this, "Edit parents", r.getParents(), s -> {
                             r.setParents(s.stream().map(Research::getSupplier).collect(Collectors.toList()));
-                            r.doIndex();
+                            FHResearch.reindex();
                             EditUtils.saveResearch(r);
                         });
                     }
@@ -143,9 +143,8 @@ public class ResearchHierarchyPanel extends Panel {
                             });
                             s.forEach(e -> {
                                 e.addParent(r.getSupplier());
-                                e.doIndex();
                             });
-                            r.doIndex();
+                            FHResearch.reindex();
                             EditUtils.saveResearch(r);
                         });
                     }
