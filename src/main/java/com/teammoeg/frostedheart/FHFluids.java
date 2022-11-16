@@ -37,12 +37,11 @@ public class FHFluids {
 	public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(ForgeRegistries.FLUIDS, FHMain.MODID);
 
 	public static RegistryObject<FlowingFluid> registerGas(String name, int color) {
-		ReferenceSupplier<FlowingFluid> rs=new ReferenceSupplier<>();
-		return FLUIDS.register(name, rs.set(() -> {
-			return new ForgeFlowingFluid.Source(new ForgeFlowingFluid.Properties(rs,rs,
-					FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE).color(color).density(-1)
-					.gaseous().viscosity(-1)).block(null).slopeFindDistance(3).explosionResistance(100F));
-		}));
+		ReferenceSupplier<FlowingFluid> rss=new ReferenceSupplier<>();
+		ForgeFlowingFluid.Properties props=new ForgeFlowingFluid.Properties(rss,rss,
+				FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE).color(color).density(-1)
+				.gaseous().viscosity(-1)).block(null).slopeFindDistance(3).explosionResistance(100F);
+		return rss.set(FLUIDS.register(name, () -> new ForgeFlowingFluid.Source(props)));
 	}
 	public static RegistryObject<FlowingFluid> FLUORINE =registerGas("fluorine",0xFF00AA00);
 	public static RegistryObject<FlowingFluid> CHLORINE = registerGas("chlorine",0xFFADFF2F);
