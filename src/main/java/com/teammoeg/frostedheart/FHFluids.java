@@ -18,6 +18,8 @@
 
 package com.teammoeg.frostedheart;
 
+import com.teammoeg.frostedheart.util.ReferenceSupplier;
+
 import net.minecraft.fluid.FlowingFluid;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.util.ResourceLocation;
@@ -35,13 +37,14 @@ public class FHFluids {
 	public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(ForgeRegistries.FLUIDS, FHMain.MODID);
 
 	public static RegistryObject<FlowingFluid> registerGas(String name, int color) {
-		return FLUIDS.register(name, () -> {
-			return new ForgeFlowingFluid.Source(new ForgeFlowingFluid.Properties(null,null,
-					FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE).color(0xFF00AA00).density(-1)
+		ReferenceSupplier<FlowingFluid> rs=new ReferenceSupplier<>();
+		return FLUIDS.register(name, rs.set(() -> {
+			return new ForgeFlowingFluid.Source(new ForgeFlowingFluid.Properties(rs,rs,
+					FluidAttributes.builder(STILL_FLUID_TEXTURE, FLOWING_FLUID_TEXTURE).color(color).density(-1)
 					.gaseous().viscosity(-1)).block(null).slopeFindDistance(3).explosionResistance(100F));
-		});
+		}));
 	}
-	RegistryObject<FlowingFluid> FLUORINE =registerGas("fluorine",0xFF00AA00);
+	public static RegistryObject<FlowingFluid> FLUORINE =registerGas("fluorine",0xFF00AA00);
 	public static RegistryObject<FlowingFluid> CHLORINE = registerGas("chlorine",0xFFADFF2F);
 	public static RegistryObject<FlowingFluid> STEAM = registerGas("steam",0xFFFFFFFF);
 	public static RegistryObject<FlowingFluid> SO2 = registerGas("sulfur_dioxide",0xFFEEE888);

@@ -12,8 +12,9 @@ public class ReferenceSupplier<T> implements Supplier<T> {
 		
 		return ref!=null?ref.get():null;
 	}
-	public void set(Supplier<T> sup) {
+	public Supplier<T> set(Supplier<T> sup) {
 		ref=sup;
+		return ref;
 	}
 
 }
