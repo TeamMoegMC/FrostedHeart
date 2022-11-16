@@ -18,17 +18,8 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.world.biome.Biome.Category.BEACH;
-import static net.minecraft.world.biome.Biome.Category.DESERT;
-import static net.minecraft.world.biome.Biome.Category.EXTREME_HILLS;
-import static net.minecraft.world.biome.Biome.Category.NETHER;
-import static net.minecraft.world.biome.Biome.Category.OCEAN;
-import static net.minecraft.world.biome.Biome.Category.RIVER;
-import static net.minecraft.world.biome.Biome.Category.TAIGA;
-import static net.minecraft.world.biome.Biome.Category.THEEND;
-
-import javax.annotation.Nonnull;
-
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
@@ -65,15 +56,8 @@ import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
-
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.IGrowable;
-import net.minecraft.block.SaplingBlock;
+import net.minecraft.block.*;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -130,6 +114,10 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
+
+import javax.annotation.Nonnull;
+
+import static net.minecraft.world.biome.Biome.Category.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {
@@ -482,8 +470,12 @@ public class CommonEvents {
             float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
-                    // TODO: allow planting trees now, maybe i will add some restrictions in the
-                    // future
+                    if (temp < -5) {
+                        event.setCanceled(true);
+                        player.sendStatusMessage(
+                                new TranslationTextComponent("message.frostedheart.crop_not_growable", -5),
+                                true);
+                    }
                 } else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
@@ -506,6 +498,8 @@ public class CommonEvents {
                         player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
                                 WorldClimate.HEMP_GROW_TEMPERATURE), true);
                     }
+                } else if (growBlock.matchesBlock(Blocks.NETHERRACK)) {
+
                 } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
                     event.setCanceled(true);
                     player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
