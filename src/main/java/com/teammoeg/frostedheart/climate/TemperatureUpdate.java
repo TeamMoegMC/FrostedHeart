@@ -102,7 +102,7 @@ public class TemperatureUpdate {
                 current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed;
             //world and chunk temperature
             World world = player.getEntityWorld();
-            BlockPos pos = player.getPosition();
+            BlockPos pos = new BlockPos(player.getPosX(),player.getPosYEye(),player.getPosZ());
             float envtemp = ChunkData.getTemperature(world, pos);
             //time temperature
             float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);

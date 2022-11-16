@@ -145,7 +145,7 @@ public class FHMain {
         JsonParser gs = new JsonParser();
         JsonObject jo = gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID + ".mixins.json"))).getAsJsonObject();
         JsonArray mixins = jo.get("mixins").getAsJsonArray();
-
+        
         if (!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone")) ||
                 !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone")) ||
                 !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))

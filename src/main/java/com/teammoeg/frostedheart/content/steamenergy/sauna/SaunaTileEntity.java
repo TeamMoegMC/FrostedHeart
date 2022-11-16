@@ -250,7 +250,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                 this.markContainingBlockForUpdate(null);
 
                 for (PlayerEntity p : this.getWorld().getPlayers()) {
-                    if (floor.contains(p.getPosition().offset(Direction.DOWN))) {
+                    if (floor.contains(p.getPosition().down())||floor.contains(p.getPosition())) {
                         grantEffects((ServerPlayerEntity) p);
                     }
                 }

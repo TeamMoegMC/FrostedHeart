@@ -107,7 +107,7 @@ public class TemperatureSimulator {
 	public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();// position to info cache
 
 	public TemperatureSimulator(ServerPlayerEntity player) {
-		int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosY(), sourceZ = (int) player.getPosZ();
+		int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosYEye(), sourceZ = (int) player.getPosZ();
 		// System.out.println(sourceX+","+sourceY+","+sourceZ);
 		// these are block position offset
 		int offsetN = sourceZ - range;
