@@ -18,8 +18,6 @@
 
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.util.ReferenceSupplier;
-
 import net.minecraft.fluid.FlowingFluid;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.util.ResourceLocation;
@@ -46,7 +44,7 @@ public class FHFluids {
 	RegistryObject<FlowingFluid> FLUORINE =registerGas("fluorine",0xFF00AA00);
 	public static RegistryObject<FlowingFluid> CHLORINE = registerGas("chlorine",0xFFADFF2F);
 	public static RegistryObject<FlowingFluid> STEAM = registerGas("steam",0xFFFFFFFF);
-	public static RegistryObject<FlowingFluid> SO2 = registerGas("sodium_dioxide",0xFFEEE888);
+	public static RegistryObject<FlowingFluid> SO2 = registerGas("sulfur_dioxide",0xFFEEE888);
 
 	
 
