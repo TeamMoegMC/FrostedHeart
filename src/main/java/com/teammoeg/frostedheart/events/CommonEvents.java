@@ -470,7 +470,7 @@ public class CommonEvents {
             float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
-                    if (temp < -12) {
+                    if (temp < -15) {
                         event.setCanceled(true);
                         player.sendStatusMessage(
                                 new TranslationTextComponent("message.frostedheart.crop_not_growable", -5),
