@@ -37,7 +37,7 @@ public class KillClue extends ListenerClue {
     EntityType<?> type;
 
     public KillClue(EntityType<?> t, float contribution) {
-        super("@clue." + FHMain.MODID + ".kill", "@" + t.getTranslationKey(), "", contribution);
+        super("", "", "", contribution);
     }
 
 
