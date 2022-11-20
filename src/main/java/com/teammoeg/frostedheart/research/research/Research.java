@@ -811,10 +811,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param nid value to set new id to.
      */
     public void setNewId(String nid) {
-    	System.out.println("nid:"+nid);
-    	System.out.println("oid:"+id);
         if (!id.equals(nid)) {
-        	System.out.println("changed");
             FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this,false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
@@ -825,7 +822,6 @@ public class Research extends FHRegisteredItem implements Writeable {
             this.getEffects().forEach(e->e.setRId(0));
             this.getClues().forEach(e->e.setRId(0));
             this.doIndex();
-            System.out.println("fid"+id);
         }
     }
 

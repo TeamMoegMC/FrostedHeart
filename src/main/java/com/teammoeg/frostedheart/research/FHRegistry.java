@@ -261,8 +261,6 @@ public class FHRegistry<T extends FHRegisteredItem> {
         rnamesl.clear();
         ArrayList<T> temp = new ArrayList<>(items);
         temp.removeIf(Objects::isNull);
-        System.out.println(load);
-        System.out.println("Loading "+load.size()+" registry items");
         
         load.stream().map(INBT::getString).forEach(e -> rnamesl.add(e));
         for (int i = 0; i < rnamesl.size(); i++) {

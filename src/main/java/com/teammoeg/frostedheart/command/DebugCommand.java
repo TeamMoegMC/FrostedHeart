@@ -81,7 +81,6 @@ public class DebugCommand {
             						Item it=ForgeRegistries.ITEMS.getValue(item);
             						
             						if(it==null||it==Items.AIR) {
-            							System.out.println(item.toString()+" not exist");
             							ps.println(item+","+parts[1]);
             						}else {
             							items.add(it);

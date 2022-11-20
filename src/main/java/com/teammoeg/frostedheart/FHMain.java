@@ -169,7 +169,6 @@ public class FHMain {
         MinecraftForge.EVENT_BUS.addGenericListener(Block.class, this::missingMappingB);
         if (ModList.get().isLoaded("projecte")) {
             MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
-            System.out.println("pe loaded");
         } else
             try {
                 Class.forName("moze_intel.projecte.PECore");

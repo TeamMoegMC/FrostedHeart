@@ -71,16 +71,16 @@ public class FHRemote {
         public void doFetch() {
             fromTLV();
             if (this.stableVersion != null) {
-                System.out.println("[TWR Version Check] Fetched FH local version from .twrlastversion: " + this.stableVersion);
+            	FHMain.LOGGER.info("[TWR Version Check] Fetched FH local version from .twrlastversion: " + this.stableVersion);
                 return;
             }
             // fromCFM();
             // if (this.stableVersion != null) return;
             fromModVersion();
             if (this.stableVersion != null) {
-                System.out.println("[TWR Version Check] Fetched FH local version from mod version: " + this.stableVersion);
+            	FHMain.LOGGER.info("[TWR Version Check] Fetched FH local version from mod version: " + this.stableVersion);
             } else {
-                System.out.println("[TWR Version Check] Failed to fetch FH local version, check your installation.");
+            	FHMain.LOGGER.info("[TWR Version Check] Failed to fetch FH local version, check your installation.");
                 this.stableVersion = "";
             }
         }

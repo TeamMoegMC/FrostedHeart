@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 
@@ -77,7 +78,7 @@ public class FHResearchDataManager {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-                System.out.println("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+                FHMain.LOGGER.fatal("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
 
             }
         }
@@ -91,11 +92,11 @@ public class FHResearchDataManager {
                 trd.deserialize(nbt, false);
                 data.put(tud, trd);
             } catch (IllegalArgumentException ex) {
-                System.out.println("Unexpected data file " + f.getName() + ", ignoring...");
+            	FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
                 continue;
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println("Unable to read data file " + f.getName() + ", ignoring...");
+                FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
             }
         }
     }
@@ -106,7 +107,7 @@ public class FHResearchDataManager {
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
-            System.out.println("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+            FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
         }
         for (Entry<UUID, TeamResearchData> entry : data.entrySet()) {
             File f = local.resolve(entry.getKey().toString() + ".nbt").toFile();
@@ -115,7 +116,7 @@ public class FHResearchDataManager {
 
             } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println("Unable to save data file for team " + entry.getKey().toString() + ", ignoring...");
+                FHMain.LOGGER.error("Unable to save data file for team " + entry.getKey().toString() + ", ignoring...");
             }
         }
     }

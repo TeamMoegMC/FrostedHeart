@@ -31,7 +31,6 @@ import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
-import com.teammoeg.frostedheart.content.cmupdate.CMUpdateBlock;
 import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
@@ -51,7 +50,6 @@ import net.minecraftforge.common.ToolType;
 
 public class FHBlocks {
 
-    public static Block cmupdate = new CMUpdateBlock("cmupdate", Block.Properties.create(Material.ROCK), FHBlockItem::new);
 
     public static void init() {
     }
