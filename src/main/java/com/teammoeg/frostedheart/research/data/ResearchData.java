@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.SerializeUtil;

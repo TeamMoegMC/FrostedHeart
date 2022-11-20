@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.RubbingTool;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;

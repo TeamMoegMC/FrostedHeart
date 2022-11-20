@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.research;
 
 import java.util.HashMap;
 import java.util.Map;

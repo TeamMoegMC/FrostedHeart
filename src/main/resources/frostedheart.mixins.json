@@ -88,6 +88,8 @@
     "rankine.MixinSmallTree",
     "rankine.MixinXSmallTree",
     "rankine.MixinPostWorldReplacer",
+    "rankine.MixinStickBlock",
+    
     "snow.HookMixin",
     "snow.ModSnowBlockMixin",
     "snow.ModUtilMixin",

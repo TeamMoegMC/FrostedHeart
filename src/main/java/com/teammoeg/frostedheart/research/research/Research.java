@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.research.research;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.research.FHRegisteredItem;
+import com.teammoeg.frostedheart.research.FHRegistry;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.Clues;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
@@ -63,48 +66,70 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * Only Definition of research.
- * Part of Research Category {@link ResearchCategory}
+ *
+ * @author khjxiaogu
  */
 public class Research extends FHRegisteredItem implements Writeable {
 
     private String id;// id of this research
-    FHIcon icon;// icon for this research in term of item
+    
+    /** The icon for this research.<br> */
+    FHIcon icon;
     private ResearchCategory category;
     private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
     private HashSet<Supplier<Research>> children = new HashSet<>();// child researches, this is set automatically,
     // should not set manually.
 
     private List<Clue> clues = new ArrayList<>();// research clues
+    
+    /** The required items.<br> */
     List<IngredientWithSize> requiredItems = new ArrayList<>();
     private List<Effect> effects = new ArrayList<>();// effects of this research
+    
+    /** The name.<br> */
     String name = "";
+    
+    /** The desc.<br> */
     List<String> desc;
+    
+    /** The fdesc.<br> */
     List<String> fdesc;
+    
+    /** The showfdesc.<br> */
     boolean showfdesc;
+    
+    /** The hide effects.<br> */
     boolean hideEffects;
     private boolean inCompletable=false;
+    
+    /** The is hidden.<br> */
     boolean isHidden=false;
+    
+    /** The always show.<br> */
     boolean alwaysShow=false;
+    
+    /** The points.<br> */
     long points = 1000;// research point
+    
+    /** The is infinite.<br> */
     boolean isInfinite;
+    
+    /**
+     * Instantiates a new Research.<br>
+     *
+     * @param path the research id<br>
+     * @param category the category<br>
+     * @param parents parents<br>
+     */
     @SafeVarargs
     public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
         this(path, category, new ItemStack(Items.AIR), parents);
 
     }
 
-    /*public ConfigGroup getConfigGroup() {
-        ConfigGroup cg=new ConfigGroup("research");
-        cg.addString("id", id,e->id=e,id);
-        cg.addString("name", name,e->name=e,"");
-        cg.addList("desc",desc,new StringConfig(null),"");
-
-        cg.addItemStack("icon",icon instanceof FHItemIcon?((FHItemIcon) icon).getStack():ItemStack.EMPTY,i->{if(icon instanceof FHItemIcon||!i.isEmpty())icon=FHIcons.getIcon(i);},new ItemStack(FHItems.energy_core),true,true);
-        cg.addEnum("category", category,c->category=c,NameMap.of(ResearchCategory.RESCUE,ResearchCategory.values()).icon(r->Icon.getIcon(r.getIcon())).id(r->r.getId().toString()).name(r->new StringTextComponent(r.name())).create());
-        cg.addLong("points", points,l->this.points=l,2000, 0,Long.MAX_VALUE);
-
-        return cg;
-    }*/
+    /**
+     * Instantiates a new Research.<br>
+     */
     public Research() {
         this.id = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
         this.icon = FHIcons.nop();
@@ -112,11 +137,23 @@ public class Research extends FHRegisteredItem implements Writeable {
         fdesc = new ArrayList<>();
     }
 
+    /**
+     * Instantiates a new Research read from json.<br>
+     *
+     * @param id the id<br>
+     * @param jo the json<br>
+     */
     public Research(String id, JsonObject jo) {
         this.id = id;
         load(jo);
 
     }
+    
+    /**
+     * Load from json
+     *
+     * @param jo the jo<br>
+     */
     public void load(JsonObject jo) {
         if (jo.has("name"))
             name = jo.get("name").getAsString();
@@ -161,6 +198,12 @@ public class Research extends FHRegisteredItem implements Writeable {
         else
         	alwaysShow=false;
     }
+    
+    /**
+     * Serialize to json.<br>
+     *
+     * @return returns serialize
+     */
     @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();
@@ -191,7 +234,17 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
         return jo;
     }
-
+    
+    private ResourceLocation categoryRL;
+    
+    private List<Integer> parentIds;
+    
+    /**
+     * Instantiates a new Research with a PacketBuffer object.<br>
+     * This would be called before research registry and category init.
+     * Shouldn't call methods provide by these in this method.
+     * @param data the packet<br>
+     */
     public Research(PacketBuffer data) {
         id = data.readString();
         //System.out.println("read "+id);
@@ -199,10 +252,10 @@ public class Research extends FHRegisteredItem implements Writeable {
         desc = SerializeUtil.readList(data, PacketBuffer::readString);
         fdesc = SerializeUtil.readList(data, PacketBuffer::readString);
         icon = FHIcons.readIcon(data);
-        ResourceLocation rl = data.readResourceLocation();
-        setCategory(ResearchCategories.ALL.get(rl));
+        categoryRL = data.readResourceLocation();
+        parentIds=SerializeUtil.readList(data,PacketBuffer::readVarInt);
         //System.out.println("category "+rl.toString());
-        parents.addAll(SerializeUtil.readList(data, FHResearch.researches::readSupplier));
+        
         clues.addAll(SerializeUtil.readList(data, Clues::read));
         requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
         effects = SerializeUtil.readList(data, Effects::deserialize);
@@ -214,8 +267,21 @@ public class Research extends FHRegisteredItem implements Writeable {
         inCompletable=bools[3];
         alwaysShow=bools[4];
     }
+    
+    /**
+     * Packet init, this would be call after everything is ready and packet is taking effect.
+     */
+    public void packetInit() {
+    	setCategory(ResearchCategories.ALL.get(categoryRL));
+    	parents.clear();
+    	parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);;
+    }
 
-
+    /**
+     * Write to packet.
+     *
+     * @param buffer the packet<br>
+     */
     @Override
     public void write(PacketBuffer buffer) {
         buffer.writeString(id);
@@ -232,44 +298,96 @@ public class Research extends FHRegisteredItem implements Writeable {
         SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,inCompletable,alwaysShow);
     }
 
+    /**
+     * Get clues.
+     *
+     * @return clues<br>
+     */
     public List<Clue> getClues() {
         return clues;
     }
 
+    /**
+     * Attach clue.
+     *
+     * @param cl the cl<br>
+     */
     public void attachClue(Clue cl) {
         clues.add(cl);
     }
 
+    /**
+     * Get effects.
+     *
+     * @return effects<br>
+     */
     public List<Effect> getEffects() {
         return effects;
     }
 
+    /**
+     * Attach effect.
+     *
+     * @param effs the effs<br>
+     */
     public void attachEffect(Effect... effs) {
         for (Effect effect : effs) {
             effects.add(effect);
         }
     }
     
+    /**
+     * Grant effects.
+     *
+     * @param team the team<br>
+     * @param spe the spe<br>
+     */
     public void grantEffects(TeamResearchData team,ServerPlayerEntity spe) {
     	for (Effect e : getEffects())
             team.grantEffect(e, spe);
     }
     
+    /**
+     * Get required items.
+     *
+     * @return required items<br>
+     */
     public List<IngredientWithSize> getRequiredItems() {
         return Collections.unmodifiableList(requiredItems);
     }
 
+    /**
+     * Attach required item.
+     *
+     * @param ingredients the ingredients<br>
+     */
     public void attachRequiredItem(IngredientWithSize... ingredients) {
         for (IngredientWithSize ingredient : ingredients) {
             requiredItems.add(ingredient);
         }
     }
 
+    /**
+     * Instantiates a new Research.<br>
+     *
+     * @param id the id<br>
+     * @param category the category<br>
+     * @param icon the icon<br>
+     * @param parents the parents<br>
+     */
     @SafeVarargs
     public Research(String id, ResearchCategory category, IItemProvider icon, Supplier<Research>... parents) {
         this(id, category, new ItemStack(icon), parents);
     }
 
+    /**
+     * Instantiates a new Research.<br>
+     *
+     * @param id the id<br>
+     * @param category the category<br>
+     * @param icon the icon<br>
+     * @param parents the parents<br>
+     */
     @SafeVarargs
     public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
         this.id = id;
@@ -285,21 +403,44 @@ public class Research extends FHRegisteredItem implements Writeable {
      * }
      */
 
+    /**
+     * Get id.
+     *
+     * @return id<br>
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * set id.
+     *
+     * @param id value to set id to.
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Get supplier.
+     *
+     * @return supplier<br>
+     */
     public Supplier<Research> getSupplier() {
         return FHResearch.getResearch(this.getLId());
 
     }
+    
+    /**
+     * Do reindex.
+     */
     public void doReindex() {
     	children.clear();
     }
+    
+    /**
+     * Do index.
+     */
     public void doIndex() {
         Supplier<Research> objthis = getSupplier();
         
@@ -324,68 +465,144 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
     }
 
+    /**
+     * Populate child.
+     *
+     * @param child the child<br>
+     */
     public void populateChild(Supplier<Research> child) {
         children.add(child);
     }
 
+    /**
+     * Get children.
+     *
+     * @return children<br>
+     */
     public Set<Research> getChildren() {
         return children.stream().map(r -> r.get()).filter(e -> e != null).collect(Collectors.toSet());
     }
 
+    /**
+     * Get parents.
+     *
+     * @return parents<br>
+     */
     public Set<Research> getParents() {
         return parents.stream().filter(e -> e != null).map(r -> r.get()).filter(e -> e != null).collect(Collectors.toSet());
     }
 
+    /**
+     * set parents.
+     *
+     * @param parents value to set parents to.
+     */
     @SafeVarargs
     public final void setParents(Supplier<Research>... parents) {
         this.parents.clear();
         this.parents.addAll(Arrays.asList(parents));
     }
 
+    /**
+     * Get icon.
+     *
+     * @return icon<br>
+     */
     public FHIcon getIcon() {
         return icon;
     }
 
+    /**
+     * Get name.
+     *
+     * @return name<br>
+     */
     public TextComponent getName() {
         return (TextComponent) FHTextUtil.get(name, "research", () -> id + ".name");
     }
 
+    /**
+     * Get desc.
+     *
+     * @return desc<br>
+     */
     public List<ITextComponent> getDesc() {
         if (showfdesc && !isCompleted())
             return getAltDesc();
         return getODesc();
     }
 
+    /**
+     * Get o desc.
+     *
+     * @return o desc<br>
+     */
     public List<ITextComponent> getODesc() {
         return FHTextUtil.get(desc, "research", () -> id + ".desc");
     }
 
+    /**
+     * Get alt desc.
+     *
+     * @return alt desc<br>
+     */
     public List<ITextComponent> getAltDesc() {
         return FHTextUtil.get(fdesc, "research", () -> id + ".desc_alt");
     }
 
+    /**
+     * Get category.
+     *
+     * @return category<br>
+     */
     public ResearchCategory getCategory() {
         return category;
     }
 
+    /**
+     * Get required points.
+     *
+     * @return required points<br>
+     */
     public long getRequiredPoints() {
         return points;
     }
 
+    /**
+     * Get current points.
+     *
+     * @return current points<br>
+     */
     @OnlyIn(Dist.CLIENT)
     public long getCurrentPoints() {
         return getData().getTotalCommitted();
     }
 
+    /**
+     * Get progress fraction.
+     *
+     * @return progress fraction<br>
+     */
     @OnlyIn(Dist.CLIENT)
     public float getProgressFraction() {
         return getData().getProgress();
     }
 
+    /**
+     * Get data.
+     *
+     * @param team the team<br>
+     * @return data<br>
+     */
     public ResearchData getData(Team team) {
         return FHResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
     }
 
+    /**
+     * Get data.
+     *
+     * @return data<br>
+     */
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
         ResearchData rd=TeamResearchData.getClientInstance().getData(this);
@@ -394,10 +611,19 @@ public class Research extends FHRegisteredItem implements Writeable {
         return rd;
     }
 
+    /**
+     * Reset data.
+     */
     @OnlyIn(Dist.CLIENT)
     public void resetData() {
         TeamResearchData.getClientInstance().resetData(this,false);
     }
+    
+    /**
+     * Checks for unclaimed reward.<br>
+     *
+     * @return true, if
+     */
     @OnlyIn(Dist.CLIENT)
     public boolean hasUnclaimedReward() {
     	if(!this.isCompleted())return false;
@@ -407,29 +633,63 @@ public class Research extends FHRegisteredItem implements Writeable {
     }
     
     
+    /**
+     * Send progress packet.
+     *
+     * @param team the team<br>
+     */
     public void sendProgressPacket(Team team) {
         sendProgressPacket(team, getData(team));
     }
 
+    /**
+     * Send progress packet.
+     *
+     * @param team the team<br>
+     * @param rd the rd<br>
+     */
     public void sendProgressPacket(Team team, ResearchData rd) {
         FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
-        for (ServerPlayerEntity spe : team.getOnlineMembers())
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+        if(team!=null)
+        	for (ServerPlayerEntity spe : team.getOnlineMembers())
+        		PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
+    /**
+     * To string.<br>
+     *
+     * @return returns to string
+     */
     public String toString() {
         return "Research[" + id + "]";
     }
 
+    /**
+     * Get l id.
+     *
+     * @return l id<br>
+     */
     @Override
     public String getLId() {
         return id;
     }
 
+    /**
+     * Checks if is completed.<br>
+     *
+     * @param t the t<br>
+     * @return if is completed,true.
+     */
     public boolean isCompleted(Team t) {
         return getData(t).isCompleted();
     }
 
+    /**
+     * Checks if is unlocked.<br>
+     *
+     * @param t the t<br>
+     * @return if is unlocked,true.
+     */
     public boolean isUnlocked(Team t) {
         for (Research parent : this.getParents()) {
             if (!parent.getData(t).isCompleted()) {
@@ -439,11 +699,21 @@ public class Research extends FHRegisteredItem implements Writeable {
         return true;
     }
 
+    /**
+     * Checks if is completed.<br>
+     *
+     * @return if is completed,true.
+     */
     @OnlyIn(Dist.CLIENT)
     public boolean isCompleted() {
         return getData().isCompleted();
     }
 
+    /**
+     * Checks if is unlocked.<br>
+     *
+     * @return if is unlocked,true.
+     */
     @OnlyIn(Dist.CLIENT)
     public boolean isUnlocked() {
         for (Research parent : this.getParents()) {
@@ -453,6 +723,12 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
         return true;
     }
+    
+    /**
+     * Checks if is showable.<br>
+     *
+     * @return if is showable,true.
+     */
     @OnlyIn(Dist.CLIENT)
     public boolean isShowable() {
     	if(alwaysShow)return true;
@@ -465,9 +741,21 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
         return false;
     }
+    
+    /**
+     * Checks if is hidden.<br>
+     *
+     * @return if is hidden,true.
+     */
     public boolean isHidden() {
     	return isHidden;
     }
+    
+    /**
+     * set category.
+     *
+     * @param category value to set category to.
+     */
     public void setCategory(ResearchCategory category) {
         this.category = category;
     }
@@ -477,6 +765,9 @@ public class Research extends FHRegisteredItem implements Writeable {
         this.getParents().forEach(e -> e.children.removeIf(e2 -> e2.get() == this));
     }
 
+    /**
+     * Delete.
+     */
     public void delete() {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
@@ -486,19 +777,39 @@ public class Research extends FHRegisteredItem implements Writeable {
         FHResearch.delete(this);
     }
 
+    /**
+     * set parents.
+     *
+     * @param collect value to set parents to.
+     */
     public void setParents(Collection<Supplier<Research>> collect) {
         this.parents.clear();
         this.parents.addAll(collect);
     }
 
+    /**
+     * Removes the parent.
+     *
+     * @param parent the parent<br>
+     */
     public void removeParent(Research parent) {
         this.parents.removeIf(e -> parent.equals(e.get()));
     }
 
+    /**
+     * Adds the parent.
+     *
+     * @param par the par<br>
+     */
     public void addParent(Supplier<Research> par) {
         this.parents.add(par);
     }
 
+    /**
+     * set new id.
+     *
+     * @param nid value to set new id to.
+     */
     public void setNewId(String nid) {
     	System.out.println("nid:"+nid);
     	System.out.println("oid:"+id);
@@ -518,14 +829,29 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
     }
 
+    /**
+     * Checks if is hide effects.<br>
+     *
+     * @return if is hide effects,true.
+     */
     public boolean isHideEffects() {
         return hideEffects;
     }
 
+	/**
+	 * Checks if is in completable.<br>
+	 *
+	 * @return if is in completable,true.
+	 */
 	public boolean isInCompletable() {
 		return inCompletable;
 	}
 
+	/**
+	 * set in completable.
+	 *
+	 * @param inCompletable value to set in completable to.
+	 */
 	public void setInCompletable(boolean inCompletable) {
 		this.inCompletable = inCompletable;
 	}

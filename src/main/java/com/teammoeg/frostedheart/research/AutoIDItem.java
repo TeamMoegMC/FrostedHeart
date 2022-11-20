@@ -30,7 +30,9 @@ public abstract class AutoIDItem extends FHRegisteredItem {
     public void addID(String id, int index) {
         AssignedID = id + "." + getType() + "." + index;
     }
-
+    public void setRId(int id) {
+        super.setRId(id);
+    }
     public abstract String getType();
 
     public abstract String getNonce();

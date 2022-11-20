@@ -31,20 +31,23 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
-import com.teammoeg.frostedheart.research.events.ResearchLoadEvent.Finish;
-import com.teammoeg.frostedheart.research.events.ResearchLoadEvent.Post;
-import com.teammoeg.frostedheart.research.events.ResearchLoadEvent.Pre;
+import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.research.research.ResearchCategories;
+import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
@@ -90,7 +93,7 @@ public class FHResearch {
 
     //called after reload
     public static void finishReload() {
-        allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
+    	reindex();
         effects.all().forEach(Effect::init);
         clues.all().forEach(Clue::init);
     }
@@ -129,7 +132,7 @@ public class FHResearch {
         ArrayList<Research> showed = new ArrayList<>();
         for (Research r : all) {
         	if (r.getCategory() != cate) continue;
-        	if(r.isHidden) {locked.add(r);continue;}
+        	if(r.isHidden()) {locked.add(r);continue;}
             
             if (r.isCompleted()) unlocked.add(r);
             else if (r.isUnlocked()) available.add(r);
@@ -158,7 +161,7 @@ public class FHResearch {
         Research unl = null;
         for (Research r : all) {
             if (r.getCategory() != cate) continue;
-            if(r.isHidden)continue;
+            if(r.isHidden())continue;
             if (r.isCompleted() && unl == null) unl = r;
             else if (r.isUnlocked()) return r;
         }
@@ -248,6 +251,7 @@ public class FHResearch {
     public static void readAll(List<Research> rss) {
 
         for (Research r : rss) {
+        	r.packetInit();
             researches.register(r);
         }
     }
@@ -268,23 +272,30 @@ public class FHResearch {
 
 	public static void init() {
 		ClientResearchData.last=null;
+		FHResearch.clearAll();
 	    prepareReload();
 	    ResearchCategories.init();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
 	    loadAll();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
 	    finishReload();
-	    
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
 	    //FHResearch.saveAll();
 	}
 
-	public static void initFromPacket(List<Research> rs) {
+	public static void initFromPacket(CompoundNBT data,List<Research> rs) {
 		ClientResearchData.last=null;
+		FHResearch.clearAll();
 	    prepareReload();
 	    ResearchCategories.init();
+	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
+	    FHResearch.load(data);
 	    readAll(rs);
+	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
 	    finishReload();
+	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
+	    DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
+        FHResearch.editor=false;
 	    //FHResearch.saveAll();
 	}
 }

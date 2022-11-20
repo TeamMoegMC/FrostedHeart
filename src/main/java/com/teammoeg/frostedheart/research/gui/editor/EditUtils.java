@@ -20,8 +20,8 @@
 package com.teammoeg.frostedheart.research.gui.editor;
 
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.ResearchEditorDialog;
+import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.research.research.ResearchEditorDialog;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.Panel;

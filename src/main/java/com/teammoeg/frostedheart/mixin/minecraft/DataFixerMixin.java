@@ -31,7 +31,7 @@ import net.minecraft.util.datafix.DataFixesManager;
 @Mixin({DataFixesManager.class})
 public class DataFixerMixin {
 
-    @Redirect(method = "createFixer", at = @At(value = "NEW", target = "com/mojang/datafixers/DataFixerBuilder"))
+    @Redirect(method = "createFixer", at = @At(value = "NEW", target = "com/mojang/datafixers/DataFixerBuilder",remap=false))
     private static DataFixerBuilder create$replaceBuilder(int dataVersion) {
         return new LazyDataFixerBuilder(dataVersion);
     }

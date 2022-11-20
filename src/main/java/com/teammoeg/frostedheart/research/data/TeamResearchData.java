@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
@@ -37,6 +36,7 @@ import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.data.Team;

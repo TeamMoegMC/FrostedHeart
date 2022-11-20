@@ -20,9 +20,9 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.research.ResearchCategories;
-import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.research.ResearchCategories;
+import com.teammoeg.frostedheart.research.research.ResearchCategory;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
