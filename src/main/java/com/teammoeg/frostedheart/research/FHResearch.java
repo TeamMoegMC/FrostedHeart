@@ -272,7 +272,6 @@ public class FHResearch {
 
 	public static void init() {
 		ClientResearchData.last=null;
-		FHResearch.clearAll();
 	    prepareReload();
 	    ResearchCategories.init();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
