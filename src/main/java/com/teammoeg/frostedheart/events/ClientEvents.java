@@ -234,6 +234,7 @@ public class ClientEvents {
 								.applyFormatting(TextFormatting.UNDERLINE))),
 						false);
 			}
+		
 	}
 
 	/**

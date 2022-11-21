@@ -241,6 +241,8 @@
   "message.frostedheart.energy.lack": "I feel very sad, maybe I should treat myself.",
   "message.frostedheart.structure_formed": "Structure is formed.",
   "message.frostedheart.structure_not_formed": "Structure not formed.",
+  "message.frostedheart.temperature_help": "If your locale use fahrenheit, you can change display in frostedheart client config",
+  "message.frostedheart.creative_help": "[Click to unlock all research]",
   "research.category.desc.frostedheart.ars": "Techniques and artistry",
   "research.category.desc.frostedheart.exploration": "Explore the world and find clues to unveil the mystery.",
   "research.category.desc.frostedheart.living": "Survive before thrive.",

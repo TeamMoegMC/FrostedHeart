@@ -240,6 +240,8 @@
   "message.frostedheart.energy.lack": "今天有点沮丧，也许应该出去走走，吃点好的。",
   "message.frostedheart.structure_formed": "结构已形成。",
   "message.frostedheart.structure_not_formed": "结构未形成。",
+  "message.frostedheart.temperature_help": "如果您的地区使用的是华氏度，可以在frostedheart客户端配置中修改。",
+  "message.frostedheart.creative_help": "[点击以解锁全部研究]",
   "research.category.desc.frostedheart.ars": "装备和工具",
   "research.category.desc.frostedheart.exploration": "解锁这个世界的奥秘",
   "research.category.desc.frostedheart.living": "生存是第一要务",

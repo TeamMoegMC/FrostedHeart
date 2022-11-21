@@ -419,9 +419,15 @@ public class FrostedHud {
 		RenderSystem.enableBlend();
 
 		HUDElements.temperature_orb_frame.blit(mc.ingameGUI, stack, x, y + 3, BasePos.temperature_orb_frame);
+		boolean f=FHConfig.CLIENT.useFahrenheit.get();
+		int temperature =0;
+		int tlvl=(int) TemperatureCore.getEnvTemperature(player);
+		if(f)
+			temperature=(int)( TemperatureCore.getEnvTemperature(player)*9/5+32);
+		else
+			temperature=tlvl;
 
-		int temperature = (int) TemperatureCore.getEnvTemperature(player);
-		renderTemp(stack, mc, temperature, x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3, true);
+		renderTemp(stack, mc, temperature,tlvl, x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3, !f);
 
 		RenderSystem.disableBlend();
 		mc.getProfiler().endSection();
@@ -858,7 +864,7 @@ public class FrostedHud {
 	static final ResourceLocation hadean = new ResourceLocation(FHMain.MODID,
 			"textures/gui/temperature_orb/hadean.png");
 
-	private static void renderTemp(MatrixStack stack, Minecraft mc, double temp, int offsetX, int offsetY,
+	private static void renderTemp(MatrixStack stack, Minecraft mc, double temp,int tlevel, int offsetX, int offsetY,
 			boolean celsius) {
 		UV unitUV = celsius ? UV.delta(0, 25, 13, 34) : UV.delta(13, 25, 26, 34);
 		UV signUV = temp >= 0 ? UV.delta(61, 17, 68, 24) : UV.delta(68, 17, 75, 24);
@@ -868,21 +874,21 @@ public class FrostedHud {
 		int integer = bigDecimal.intValue();
 		int decimal = (int) (bigDecimal.subtract(new BigDecimal(integer)).doubleValue() * 10);
 		// draw orb
-		if (temp > 80) {
+		if (tlevel > 80) {
 			mc.getTextureManager().bindTexture(ardent);
-		} else if (temp > 60) {
+		} else if (tlevel > 60) {
 			mc.getTextureManager().bindTexture(fervid);
-		} else if (temp > 40) {
+		} else if (tlevel > 40) {
 			mc.getTextureManager().bindTexture(hot);
-		} else if (temp > 20) {
+		} else if (tlevel > 20) {
 			mc.getTextureManager().bindTexture(warm);
-		} else if (temp > 0) {
+		} else if (tlevel > 0) {
 			mc.getTextureManager().bindTexture(moderate);
-		} else if (temp > -20) {
+		} else if (tlevel > -20) {
 			mc.getTextureManager().bindTexture(chilly);
-		} else if (temp > -40) {
+		} else if (tlevel > -40) {
 			mc.getTextureManager().bindTexture(cold);
-		} else if (temp > -80) {
+		} else if (tlevel > -80) {
 			mc.getTextureManager().bindTexture(frigid);
 		} else {
 			mc.getTextureManager().bindTexture(hadean);
@@ -913,6 +919,7 @@ public class FrostedHud {
 	}
 
 	private static ArrayList<UV> getIntegerDigitUVs(int digit) {
+		
 		ArrayList<UV> rtn = new ArrayList<>();
 		UV v1, v2, v3;
 		if (digit / 10 == 0) { // len = 1

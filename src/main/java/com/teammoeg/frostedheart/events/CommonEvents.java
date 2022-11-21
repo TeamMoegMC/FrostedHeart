@@ -75,7 +75,11 @@ import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -531,6 +535,14 @@ public class CommonEvents {
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_leg"))));
             event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_foot"))));
+            if(event.getPlayer().abilities.isCreativeMode) {
+    			event.getPlayer().sendMessage(new TranslationTextComponent("message.frostedheart.creative_help")
+    					.setStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW)
+    							.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,GuiUtils.str("Click to use command")))
+    							.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,"/frostedheart research complete all"))), event.getPlayer().getUniqueID());
+    		}
+            
+            event.getPlayer().sendMessage(new TranslationTextComponent("message.frostedheart.temperature_help"), event.getPlayer().getUniqueID());
         }
     }
 
