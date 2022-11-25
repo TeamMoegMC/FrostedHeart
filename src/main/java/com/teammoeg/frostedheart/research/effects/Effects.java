@@ -36,6 +36,7 @@ public class Effects {
     	registry.register(EffectStats.class,"stats", EffectStats::new, EffectStats::new);
     	registry.register(EffectUse.class,"use", EffectUse::new, EffectUse::new);
     	registry.register(EffectShowCategory.class,"category", EffectShowCategory::new, EffectShowCategory::new);
+    	registry.register(EffectCommand.class,"command",EffectCommand::new,EffectCommand::new);
     }
     public static void registerEffectType(Class<? extends Effect> cls,String type,Function<JsonObject, Effect> json,Function<PacketBuffer, Effect> packet) {
     	registry.register(cls, type, json, packet);
