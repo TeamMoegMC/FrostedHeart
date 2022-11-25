@@ -43,6 +43,7 @@ public class AttachCapabilityEvents {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
             event.addCapability(ClimateData.ID, new ClimateData());
+            
         }
     }
 

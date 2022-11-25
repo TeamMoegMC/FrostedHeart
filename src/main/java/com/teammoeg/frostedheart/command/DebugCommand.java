@@ -22,8 +22,13 @@ package com.teammoeg.frostedheart.command;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,25 +40,36 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.util.FileUtil;
+import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.thermopolium.items.StewItem;
 
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
+import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.QuestObject;
 import dev.ftb.mods.ftbquests.quest.reward.Reward;
 import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -162,7 +178,38 @@ public class DebugCommand {
 						e1.printStackTrace();
 					}
                     return Command.SINGLE_SUCCESS;
-                }));
+                })).then(Commands.literal("sort_chunks").executes(ct -> {
+                	long now = System.currentTimeMillis();
+                	ReferenceValue<Integer> tchunks=new ReferenceValue<>(0);
+                	Map<RegistryKey<World>,Map<Team,List<SendChunkPacket.SingleChunk>>> chunksToSend = new HashMap<>();
+                	FTBTeamsAPI.getManager().getKnownPlayers().values().stream().filter(t->t.actualTeam!=t).map(t->Pair.of(t,FTBChunksAPI.manager.getData(t))).filter(p->p.getSecond()!=null)
+                	.forEach(d->{
+           
+                		FTBChunksTeamData newData=FTBChunksAPI.getManager().getData(d.getFirst().actualTeam);
+                		d.getSecond().getClaimedChunks().forEach(c->{
+                			d.getSecond().manager.claimedChunks.remove(c.pos);
+                			d.getSecond().save();
+            				c.teamData = newData;
+            				newData.manager.claimedChunks.put(c.pos, c);
+            				newData.save();
+            				chunksToSend.computeIfAbsent(c.pos.dimension, s -> new HashMap<>()).computeIfAbsent(d.getFirst().actualTeam,s->new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x, c.pos.z, c));
+                			tchunks.val++;
+                		});
+                		
+                	});
+                	if(tchunks.val>0)
+                	for (Entry<RegistryKey<World>, Map<Team, List<SingleChunk>>> entry : chunksToSend.entrySet()) {
+                		for(Entry<Team, List<SingleChunk>> entry2:entry.getValue().entrySet()) {
+	            			SendManyChunksPacket packet = new SendManyChunksPacket();
+	            			packet.dimension = entry.getKey();
+	            			packet.teamId = entry2.getKey().getId();
+	            			packet.chunks = entry2.getValue();
+	            			packet.sendToAll(ct.getSource().getServer());
+                		}
+            		}
+                	ct.getSource().sendFeedback(GuiUtils.str("Fixed "+tchunks.val+" Chunks"), true);
+                           return Command.SINGLE_SUCCESS;
+                       }));
         
         dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(add));
     }
