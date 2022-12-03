@@ -32,6 +32,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinAlloyItem {
     @Inject(at = @At("HEAD"), method = "inventoryTick", cancellable = true)
     private void inventoryNBT(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected, CallbackInfo ci) {
+        if (stack.getTag() != null) {
+            stack.setTag(null);
+        }
         ci.cancel();
     }
 }
