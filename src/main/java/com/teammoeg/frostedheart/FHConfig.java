@@ -66,11 +66,14 @@ public class FHConfig {
 
     public static class Common {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
-
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
                     .define("enablesTemperatureForecast", true);
+            blackmods= builder
+                    .comment("BlackListed mods to kick player")
+                    .defineList("Mod Blacklist",new ArrayList<>(), s -> true);
         }
     }
 
@@ -99,7 +102,7 @@ public class FHConfig {
                     .defineEnum("temperatureDifficulty", FHDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
-
+            
 
         }
     }

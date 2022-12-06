@@ -38,6 +38,8 @@ import com.teammoeg.frostedheart.climate.TemperatureSimulator;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
+import com.teammoeg.frostedheart.compat.tetra.TetraClient;
+import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.data.DeathInventoryData;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
@@ -125,8 +127,10 @@ public class FHMain {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
+        
+        
         FHConfig.register();
-
+        TetraCompat.init();
         FHProps.init();
         FHItems.init();
         FHBlocks.init();

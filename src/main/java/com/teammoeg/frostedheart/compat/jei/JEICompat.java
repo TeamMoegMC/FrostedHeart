@@ -210,10 +210,12 @@ public class JEICompat implements IModPlugin {
 		}
 		ITextComponent it = GuiUtils.translate("gui.jei.info.require_research");
 		for (Item i : items) {
-
+			if(infos.containsKey(i))
+				continue;
 			List<IngredientInfoRecipe<ItemStack>> il = IngredientInfoRecipe.create(ImmutableList.of(new ItemStack(i)),
 					VanillaTypes.ITEM, it);
 			il.forEach(r -> man.addRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
+		
 			infos.put(i, il);
 
 		}

@@ -43,6 +43,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -178,7 +183,87 @@ public class DebugCommand {
 						e1.printStackTrace();
 					}
                     return Command.SINGLE_SUCCESS;
-                })).then(Commands.literal("sort_chunks").executes(ct -> {
+                })).then(Commands.literal("export_researches").executes(ct -> {
+                	List<Research> quests=FHResearch.getAllResearch();
+                		JsonObject out=new JsonObject();
+                		JsonObject categories=new JsonObject();
+                		for(ResearchCategory rc:ResearchCategory.values()) {
+                			JsonObject cat=new JsonObject();
+                			cat.addProperty("name",rc.getName().getString());
+                			cat.addProperty("desc", rc.getDesc().getString());
+                			categories.add(rc.name(),cat);
+                		}
+                		out.add("categories", categories);
+                       	JsonArray ja=new JsonArray();
+                       	
+                       	Gson gs=new GsonBuilder().setPrettyPrinting().create();
+                       	quests.stream().map(e->{
+                       		JsonObject jo=new JsonObject();
+                       		jo.addProperty("title", e.getName().getString());
+                       		jo.addProperty("points", e.getRequiredPoints());
+                       		jo.addProperty("category",e.getCategory().toString());
+                       		JsonArray odec=new JsonArray();
+                       		for(ITextComponent it:e.getODesc()) {
+                       			odec.add(it.getString());
+                       		}
+                       		jo.add("description", odec);
+                       		JsonArray adec=new JsonArray();
+                       		for(ITextComponent it:e.getAltDesc()) {
+                       			adec.add(it.getString());
+                       		}
+                       		jo.add("alt_description", adec);
+                       		JsonArray fow=new JsonArray();
+                       		for(Research qo:e.getParents()) {
+                       			fow.add(qo.getName().getString());
+                       		}
+                       		jo.add("parents", fow);
+                       		JsonArray chi=new JsonArray();
+                       		for(Research qo:e.getChildren()) {
+                       			chi.add(qo.getName().getString());
+                       		}
+                       		jo.add("children",chi);
+                       		JsonArray tsk=new JsonArray();
+                       		
+                       		for(Clue t:e.getClues()) {
+                       			JsonObject joc=new JsonObject();
+                       			joc.addProperty("name", t.getName().getString());
+                       			ITextComponent desc=t.getDescription();
+                       			ITextComponent hint=t.getHint();
+                       			if(desc!=null)
+                       				joc.addProperty("desc",desc.getString());
+                       			if(hint!=null)
+                           			joc.addProperty("hint",hint.getString());
+                       			joc.addProperty("percent",t.getResearchContribution());
+                       			joc.addProperty("required",t.isRequired());
+                       			tsk.add(joc);
+                       		}
+                       		jo.add("clues", tsk);
+                       		JsonArray rwd=new JsonArray();
+                       		for(Effect r:e.getEffects()) {
+                       			JsonObject joe=new JsonObject();
+                       			joe.addProperty("name",r.getName().getString());
+                       			
+                       			JsonArray dec=new JsonArray();
+                           		for(ITextComponent it:r.getTooltip()) {
+                           			dec.add(it.getString());
+                           		}
+                           		joe.add("description", dec);
+                       			rwd.add(joe);
+                       		}
+                       		jo.add("effects", rwd);
+                       		
+                       		return jo;
+                       	}).forEach(ja::add);
+                       	out.add("researches", ja);
+                       	try {
+       						FileUtil.transfer(gs.toJson(out), new File(FMLPaths.GAMEDIR.get().toFile(),"research_export.json"));
+ 
+       					} catch (IOException e1) {
+       						// TODO Auto-generated catch block
+       						e1.printStackTrace();
+       					}
+                           return Command.SINGLE_SUCCESS;
+                       })).then(Commands.literal("sort_chunks").executes(ct -> {
                 	long now = System.currentTimeMillis();
                 	ReferenceValue<Integer> tchunks=new ReferenceValue<>(0);
                 	Map<RegistryKey<World>,Map<Team,List<SendChunkPacket.SingleChunk>>> chunksToSend = new HashMap<>();

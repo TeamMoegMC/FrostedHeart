@@ -29,6 +29,7 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameterSets;
 import net.minecraft.loot.LootParameters;
 import net.minecraft.loot.conditions.ILootCondition;
 import net.minecraft.tileentity.LockableLootTileEntity;
@@ -45,13 +46,7 @@ public class TreasureLootCondition implements ILootCondition {
     @SuppressWarnings("resource")
     @Override
     public boolean test(LootContext t) {
-        if (t.has(LootParameters.ORIGIN)) {
-            Vector3d v = t.get(LootParameters.ORIGIN);
-            BlockPos bp = new BlockPos(v.x, v.y, v.z);
-            World w = t.getWorld();
-            return Utils.getExistingTileEntity(w, bp) instanceof LockableLootTileEntity;
-        }
-        return false;
+        return t.getLootTable(t.getQueriedLootTableId()).getParameterSet()==LootParameterSets.CHEST;
     }
 
     @Override

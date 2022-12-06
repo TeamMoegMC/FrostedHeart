@@ -184,7 +184,11 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 							fluid[0].drain(water, FluidAction.EXECUTE);
 							lprocess=process/20;
 						}else {
-							efficiency-=0.005;
+							if(efficiency<=0.2&&!isFoodRecipe) {
+								efficiency=0.2f;
+								return;
+							}else
+								efficiency-=0.005;
 							this.setActive(false);
 							this.markDirty();
 							this.markContainingBlockForUpdate(null);
@@ -197,11 +201,14 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 					this.setActive(true);
 					fuel--;
 				}else {
-					efficiency-=0.0005;
+					if(efficiency<=0.2&&!isFoodRecipe) {
+						efficiency=0.2f;
+						return;
+					}else
+						efficiency-=0.0005;
 					this.setActive(false);
 				}
-				if(efficiency<=0.2&&!isFoodRecipe)
-					efficiency=0.2f;
+		
 				this.markDirty();
 				this.markContainingBlockForUpdate(null);
 				return;

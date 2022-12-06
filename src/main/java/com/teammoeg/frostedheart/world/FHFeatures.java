@@ -118,8 +118,8 @@ public class FHFeatures {
 
     // Configured features, generate at CommonEvents#addOreGenFeatures
     public static final ConfiguredFeature<?, ?> spacecraft_feature = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "spacecraft", SPACECRAFT.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
-    public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.CLAY)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(8));
-    public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.GRAVEL)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(8));
+    public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.CLAY)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(12));
+    public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.GRAVEL)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(12));
 
     public static ArrayList<ConfiguredFeature<?, ?>> FH_ORES = new ArrayList<>();
     public static ArrayList<ConfiguredFeature<?, ?>> FH_DISK = new ArrayList<>();

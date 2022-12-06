@@ -35,9 +35,13 @@ import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.DebugCommand;
 import com.teammoeg.frostedheart.command.ResearchCommand;
+import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
+import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
+import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.data.DeathInventoryData;
 import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.data.FHDataReloadManager;
@@ -63,9 +67,12 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -73,6 +80,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.resources.DataPackRegistries;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.Style;
@@ -87,6 +95,7 @@ import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.ToolType;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
@@ -116,12 +125,17 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import se.mickelus.tetra.effect.ItemEffect;
+import se.mickelus.tetra.effect.ItemEffectHandler;
+import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 import javax.annotation.Nonnull;
 
 import static net.minecraft.world.biome.Biome.Category.*;
+
+import java.util.Set;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {
@@ -380,12 +394,35 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
-
+    	if(event.getItemStack().getItem() instanceof IModularItem) {
+    		Set<ToolType> tt=event.getItemStack().getToolTypes();
+    		int type=0;
+    		if(tt.contains(TetraCompat.coreSpade))
+    			type=1;
+    		else if(tt.contains(TetraCompat.geoHammer))
+    			type=2;
+    		else if(tt.contains(TetraCompat.proPick))
+    			type=3;
+    		if(type!=0)
+	    		if(!event.getPlayer().getCooldownTracker().hasCooldown(event.getItemStack().getItem())) {
+		    		event.getPlayer().getCooldownTracker().setCooldown(event.getItemStack().getItem(),10);
+		    		if((type==3&&event.getWorld().getRandom().nextBoolean())||(type!=3&&event.getWorld().getRandom().nextInt(3)==0))
+		    			((IModularItem)event.getItemStack().getItem()).tickProgression(event.getPlayer(),event.getItemStack(), 1);
+		    		switch(type) {
+		    		case 1:CoreSpade.doProspect(event.getPlayer(), event.getWorld(), event.getPos(), event.getItemStack(), event.getHand());break;
+		    		case 2:GeologistsHammer.doProspect(event.getPlayer(), event.getWorld(), event.getPos(), event.getItemStack(), event.getHand());break;
+		    		case 3:ProspectorPick.doProspect(event.getPlayer(), event.getWorld(), event.getPos(), event.getItemStack(), event.getHand());break;
+		    		}
+		    		event.setCancellationResult(ActionResultType.SUCCESS);
+		    		event.setCanceled(true);
+	    		}
+    	}
         if (!ResearchListeners.canUseBlock(event.getPlayer(), event.getWorld().getBlockState(event.getHitVec().getPos()).getBlock())) {
             event.setUseBlock(Result.DENY);
             
             event.getPlayer().sendStatusMessage(GuiUtils.translateMessage("research.cannot_use_block"), true);
         }
+        
     }
 
     @SubscribeEvent

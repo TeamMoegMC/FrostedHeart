@@ -190,6 +190,8 @@ dependencies {
 	implementation fg.deobf("curse.maven:diet-443570:3756693")
     implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 	implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
+	implementation fg.deobf("curse.maven:tetra-289712:3585032")
+	implementation fg.deobf("curse.maven:mgui-351914:3456505")
     //compile fg.deobf("curse.maven:better-weather-400714:3420517")
     //implementation fg.deobf("curse.maven:better-weather-400714:3420517")
     

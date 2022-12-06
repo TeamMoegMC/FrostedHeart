@@ -1,0 +1,40 @@
+{
+    "replace": true,
+    "localizationKey": "single/shared_head/hone_pro_pick_corr_3",
+    "slots": [
+        "double/head_left",
+        "double/head_right"
+    ],
+    "keySuffixes": [
+        "_left",
+        "_right"
+    ],
+    "materialSlotCount": 0,
+    "hone": true,
+    "rarity": "hone",
+    "displayType": "major",
+    "glyph": {
+        "textureX": 176,
+        "textureY": 32
+    },
+    "requirement": {
+        "type": "tetra:modular_item",
+        "modules": [
+            ["double/basic_pro_pick_right"],
+            ["double/basic_pro_pick_left"]
+        ],
+        "improvements": {
+            "head_hone/pro_pick_corr": 2
+        }
+    },
+    "outcomes": [
+        {
+            "requiredTools": {
+                "hammer": 3
+            },
+            "improvements": {
+                "head_hone/pro_pick_corr": 3
+            }
+        }
+    ]
+}

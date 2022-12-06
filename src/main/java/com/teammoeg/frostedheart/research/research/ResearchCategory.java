@@ -18,6 +18,9 @@
 
 package com.teammoeg.frostedheart.research.research;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 
@@ -35,14 +38,18 @@ public enum ResearchCategory {
     private TranslationTextComponent name;
     private TranslationTextComponent desc;
     private ResourceLocation icon;
-
+	public static Map<ResourceLocation, ResearchCategory> ALL = new HashMap<>();
+	static {
+		for(ResearchCategory rc:ResearchCategory.values())
+		ResearchCategory.ALL.put(rc.id, rc);
+	}
     ResearchCategory(String id) {
         this.id = FHMain.rl(id);
         this.name = GuiUtils.translateResearchCategoryName(id);
         this.desc = GuiUtils.translateResearchCategoryDesc(id);
         this.icon = FHMain.rl("textures/gui/research/category/" + id + ".png");
         //FHMain.rl("textures/gui/research/category/background/" + id + ".png");
-        ResearchCategories.ALL.put(this.id, this);
+        
     }
 
     public ResourceLocation getIcon() {

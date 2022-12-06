@@ -37,7 +37,6 @@ import com.teammoeg.frostedheart.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
 import com.teammoeg.frostedheart.research.research.Research;
-import com.teammoeg.frostedheart.research.research.ResearchCategories;
 import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.LazyOptional;
@@ -273,7 +272,6 @@ public class FHResearch {
 	public static void init() {
 		ClientResearchData.last=null;
 	    prepareReload();
-	    ResearchCategories.init();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
 	    loadAll();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
@@ -286,7 +284,6 @@ public class FHResearch {
 		ClientResearchData.last=null;
 		FHResearch.clearAll();
 	    prepareReload();
-	    ResearchCategories.init();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
 	    FHResearch.load(data);
 	    readAll(rs);

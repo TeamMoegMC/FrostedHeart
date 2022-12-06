@@ -251,6 +251,7 @@ public class FrostedHud {
 		mc.getProfiler().startSection("frostedheart_hypothermia");
 		mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
 		RenderSystem.enableBlend();
+		
 		float temp = TemperatureCore.getBodyTemperature(player);
 		HUDElements.exp_bar_frame.blit(mc.ingameGUI, stack, x, y, BasePos.exp_bar);
 //        double startTemp = -0.5, endTemp = -3.0;

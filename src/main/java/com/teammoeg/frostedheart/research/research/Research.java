@@ -47,6 +47,8 @@ import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.research.number.ConstResearchNumber;
+import com.teammoeg.frostedheart.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
@@ -84,6 +86,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     
     /** The required items.<br> */
     List<IngredientWithSize> requiredItems = new ArrayList<>();
+    List<IResearchNumber> requiredItemsCountOverride=new ArrayList<>();
     private List<Effect> effects = new ArrayList<>();// effects of this research
     
     /** The name.<br> */
@@ -107,7 +110,7 @@ public class Research extends FHRegisteredItem implements Writeable {
     
     /** The always show.<br> */
     boolean alwaysShow=false;
-    
+    private static ConstResearchNumber defnum=new ConstResearchNumber(1000);
     /** The points.<br> */
     long points = 1000;// research point
     
@@ -166,7 +169,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         else
             fdesc = new ArrayList<>();
         icon = FHIcons.getIcon(jo.get("icon"));
-        setCategory(ResearchCategories.ALL.get(new ResourceLocation(jo.get("category").getAsString())));
+        setCategory(ResearchCategory.ALL.get(new ResourceLocation(jo.get("category").getAsString())));
         
         if (jo.has("parents"))
             parents.addAll(
@@ -272,7 +275,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * Packet init, this would be call after everything is ready and packet is taking effect.
      */
     public void packetInit() {
-    	setCategory(ResearchCategories.ALL.get(categoryRL));
+    	setCategory(ResearchCategory.ALL.get(categoryRL));
     	parents.clear();
     	parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);;
     }
