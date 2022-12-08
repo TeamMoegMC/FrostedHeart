@@ -31,7 +31,6 @@
     "create.MixinToolboxInventory",
     "create.RecipeGridHandlerMixin",
     "diet.DietApiImplMixin",
-    "diet.EventMixin",
     "engdecor.EdFluidFunnelHandler",
     "engdecor.EdMilkerMixin",
     "forge.FluidHandlerItemStackMixin",

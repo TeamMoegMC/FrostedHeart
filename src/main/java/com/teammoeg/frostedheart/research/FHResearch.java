@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.data.ClientResearchData;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
 import com.teammoeg.frostedheart.research.research.Research;
@@ -271,6 +272,9 @@ public class FHResearch {
 
 	public static void init() {
 		ClientResearchData.last=null;
+		ResearchListeners.reload();
+		//No need to clear all as data manager would handle this.
+		DistExecutor.safeRunWhenOn(Dist.CLIENT,()->TeamResearchData::resetClientInstance);
 	    prepareReload();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
 	    loadAll();
@@ -282,6 +286,7 @@ public class FHResearch {
 
 	public static void initFromPacket(CompoundNBT data,List<Research> rs) {
 		ClientResearchData.last=null;
+		ResearchListeners.reload();
 		FHResearch.clearAll();
 	    prepareReload();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());

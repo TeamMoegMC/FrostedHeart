@@ -239,7 +239,15 @@ public class ResearchListeners {
     public static ListenerList<TickListenerClue> getTickClues() {
         return tickClues;
     }
-
+    public static void reload() {
+    	recipe.clear();
+    	multiblock.clear();
+    	block.clear();
+    	categories.clear();
+    	tickClues.clear();
+    	killClues.clear();
+    	te=null;
+    }
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         LazyOptional<Research> cur = trd.getCurrentResearch();

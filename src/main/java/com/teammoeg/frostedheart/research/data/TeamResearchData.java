@@ -459,7 +459,16 @@ public class TeamResearchData {
     public CompoundNBT getVariants() {
         return variants;
     }
-
+    public void reload() {
+    	crafting.clear();
+    	building.clear();
+    	block.clear();
+    	categories.clear();
+    	for(int i=0;i<grantedEffects.length();i++) {
+            if (grantedEffects.get(i))
+                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
+        }
+    }
     /**
      * Deserialize.
      *
@@ -469,6 +478,10 @@ public class TeamResearchData {
     public void deserialize(CompoundNBT data, boolean updatePacket) {
         clueComplete.clear();
         rdata.clear();
+        crafting.clear();
+    	building.clear();
+    	block.clear();
+    	categories.clear();
         if(data.contains("clues",NBT.TAG_BYTE_ARRAY)) {
 	        byte[] ba = data.getByteArray("clues");
 	        ensureClue(ba.length);

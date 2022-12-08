@@ -854,5 +854,8 @@ public class Research extends FHRegisteredItem implements Writeable {
 	public void setInCompletable(boolean inCompletable) {
 		this.inCompletable = inCompletable;
 	}
-
+	public void reload() {
+		for(Effect e:this.effects)
+			e.reload();
+	}
 }

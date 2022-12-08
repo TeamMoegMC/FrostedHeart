@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -74,6 +75,7 @@ public class EffectCrafting extends Effect {
     }
 
     private void initItem() {
+    	unlocks.clear();
         for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
             if (r.getRecipeOutput().getItem().equals(this.item)) {
                 unlocks.add(r);
@@ -82,13 +84,24 @@ public class EffectCrafting extends Effect {
     }
 
     private void initStack() {
+    	unlocks.clear();
         for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
             if (r.getRecipeOutput().equals(item)) {
                 unlocks.add(r);
             }
         }
     }
-
+	@Override
+	public void reload() {
+		if(item!=null) {
+			initItem();
+		}else if(itemStack!=null) {
+			initStack();
+		}else {
+			unlocks.replaceAll(o->FHResearchDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
+			unlocks.removeIf(o->o==null);
+		}
+	}
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
         Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(recipe);

@@ -215,7 +215,9 @@ public abstract class Effect extends AutoIDItem implements Writeable {
             return getDefaultIcon();
         return icon;
     }
-
+    public void reload() {
+    	
+    }
     /**
      * Get name.
      *
