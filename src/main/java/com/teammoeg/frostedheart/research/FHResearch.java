@@ -287,6 +287,7 @@ public class FHResearch {
 	public static void initFromPacket(CompoundNBT data,List<Research> rs) {
 		ClientResearchData.last=null;
 		ResearchListeners.reload();
+		//no need
 		FHResearch.clearAll();
 	    prepareReload();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());

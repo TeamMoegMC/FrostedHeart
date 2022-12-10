@@ -191,6 +191,8 @@ public class JEICompat implements IModPlugin {
 
 	static{
 		types.computeIfAbsent(IRecipeType.CRAFTING, i -> new HashSet<>()).add(VanillaRecipeCategoryUid.CRAFTING);
+		
+		
 	}
 	private static boolean cachedInfoAdd = false;
 	private static Map<Item, List<IngredientInfoRecipe<ItemStack>>> infos = new HashMap<>();
@@ -213,7 +215,6 @@ public class JEICompat implements IModPlugin {
 		List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
 		for(IngredientInfoRecipe<ItemStack> info:rinfos) {
 			List<ItemStack> iss=info.getIngredients();
-			System.out.println("Found Info "+iss.get(0).getItem().getRegistryName());
 			if(iss.size()==1) {
 				if(items.remove(iss.get(0).getItem())) {
 					infos.put(iss.get(0).getItem(),rinfos);
@@ -225,7 +226,6 @@ public class JEICompat implements IModPlugin {
 		for (Item i : items) {
 			List<IngredientInfoRecipe<ItemStack>> il = IngredientInfoRecipe.create(ImmutableList.of(new ItemStack(i)),
 					VanillaTypes.ITEM, it);
-			System.out.println("New Info "+i.getRegistryName());
 			il.forEach(r -> man.addRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
 		
 			infos.put(i, il);
@@ -240,9 +240,9 @@ public class JEICompat implements IModPlugin {
 			return;
 		if (cachedInfoAdd)
 			addInfo();
-		System.out.println("Sync JEI");
 		Map<Class<?>, Set<ResourceLocation>> cates = new HashMap<>();
 		for (IRecipeCategory<?> rg : man.getRecipeCategories()) {
+			//System.out.println(rg.getUid()+" : "+rg.getRecipeClass().getSimpleName());
 			if (rg.getRecipeClass() == ICraftingRecipe.class)
 				types.computeIfAbsent(IRecipeType.CRAFTING, i -> new HashSet<>()).add(rg.getUid());
 			else
@@ -261,8 +261,10 @@ public class JEICompat implements IModPlugin {
 			//System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
 			ItemStack irs=i.getRecipeOutput();
 			if (!TeamResearchData.getClientInstance().crafting.has(i)) {
-				for (ResourceLocation rl : all) 
+				for (ResourceLocation rl : all) {
 					man.hideRecipe(i, rl);
+					//System.out.println("hiding "+i.getId()+" for "+rl);
+				}
 				if(!irs.isEmpty())
 					locked.add(irs.getItem());
 			} else {
