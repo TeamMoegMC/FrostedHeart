@@ -195,6 +195,7 @@ public class JEICompat implements IModPlugin {
 		
 	}
 	private static boolean cachedInfoAdd = false;
+	public static Map<ResourceLocation,IRecipe<?>> overrides=new HashMap<>();
 	private static Map<Item, List<IngredientInfoRecipe<ItemStack>>> infos = new HashMap<>();
 
 	public static void addInfo() {
@@ -260,16 +261,22 @@ public class JEICompat implements IModPlugin {
 			}
 			//System.out.println(i.getType().toString()+":"+String.join(",",all.stream().map(Object::toString).collect(Collectors.toList())));
 			ItemStack irs=i.getRecipeOutput();
+			IRecipe<?> ovrd=overrides.get(i.getId());
 			if (!TeamResearchData.getClientInstance().crafting.has(i)) {
 				for (ResourceLocation rl : all) {
 					man.hideRecipe(i, rl);
+					if(ovrd!=null)
+						man.hideRecipe(ovrd, rl);
 					//System.out.println("hiding "+i.getId()+" for "+rl);
 				}
 				if(!irs.isEmpty())
 					locked.add(irs.getItem());
 			} else {
-				for (ResourceLocation rl : all)
+				for (ResourceLocation rl : all) {
 					man.unhideRecipe(i, rl);
+					if(ovrd!=null)
+						man.unhideRecipe(ovrd, rl);
+				}
 				if(!irs.isEmpty()) 
 					unlocked.add(irs.getItem());
 			}

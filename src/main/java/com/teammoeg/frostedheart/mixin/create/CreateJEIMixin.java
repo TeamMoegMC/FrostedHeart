@@ -33,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.compat.jei.CreateJEI;
 import com.simibubi.create.compat.jei.category.CreateRecipeCategory;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
 
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeSerializer;
@@ -54,7 +55,9 @@ public abstract class CreateJEIMixin {
         if (outcopy.size() > 3)
             while (outcopy.size() % 3 != 0)
                 outcopy.add(Ingredient.EMPTY);
-        return new ShapedRecipe(r.getId(), r.getGroup(), Math.min(i.size(), 3), Math.max(1, (outcopy.size() + 2) / 3), outcopy, r.getRecipeOutput());
+        IRecipe<?> packed=new ShapedRecipe(r.getId(), r.getGroup(), Math.min(i.size(), 3), Math.max(1, (outcopy.size() + 2) / 3), outcopy, r.getRecipeOutput());
+        JEICompat.overrides.put(r.getId(),packed);
+        return packed;
     }
 
     /*
