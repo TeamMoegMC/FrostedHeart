@@ -148,6 +148,8 @@
   "gui.frostedheart.effect_unknown": "解锁研究后查看",
   "gui.frostedheart.effect.stats.max_energy":"精力最大值",
   "gui.frostedheart.effect.stats.max_energy_multiplier":"精力最大值",
+  "gui.frostedheart.effect.stats.generator_effi":"能量塔燃烧效率",
+  "gui.frostedheart.effect.stats.generator_heat":"能量塔热能产率",
   "gui.frostedheart.generator.mode.off": "关闭能量塔",
   "gui.frostedheart.generator.mode.on": "开启能量塔",
   "gui.frostedheart.generator.overdrive.off": "关闭超频",

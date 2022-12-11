@@ -31,6 +31,8 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatProviderManager;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
+import com.teammoeg.frostedheart.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.util.ReferenceValue;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
@@ -116,7 +118,13 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
     protected boolean canDrainTankFrom(int iTank, Direction side) {
         return false;
     }
-
+    protected double getHeatEfficiency() {
+    	ReferenceValue<Double> eff=new ReferenceValue<>(1d);
+        getTeamData().ifPresent(t->{
+        	eff.map(n->n+t.getVariantDouble(ResearchVariant.GENERATOR_HEAT));
+        });
+        return eff.getVal();
+    }
     protected void tickLiquid() {
         if (!this.getIsActive()) return;
         float rt = this.getTemperatureLevel();
@@ -129,12 +137,14 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
             noliquidtick--;
             return;
         }
+        double eff=getHeatEfficiency();
         if (liquidtick >= rt) {
             liquidtick -= rt;
-
-            this.power += this.spowerMod * rt;
+            
+            this.power += this.spowerMod * rt*eff;
             if (this.power >= this.getMaxPower())
                 this.power = this.getMaxPower();
+            
             return;
         }
         GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
@@ -146,6 +156,9 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
                 if (this.stempMod != sgr.tempMod || this.srangeMod != sgr.rangeMod)
                     this.markChanged(true);
                 this.spowerMod = sgr.power;
+                this.power+=this.spowerMod*rt*eff;
+                if (this.power >= this.getMaxPower())
+                    this.power = this.getMaxPower();
                 this.srangeMod = sgr.rangeMod;
                 this.stempMod = sgr.tempMod;
                 this.liquidtick = rdrain;

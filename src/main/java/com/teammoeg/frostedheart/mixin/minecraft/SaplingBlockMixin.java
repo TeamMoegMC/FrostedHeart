@@ -30,11 +30,13 @@ import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BushBlock;
+import net.minecraft.block.FungusBlock;
 import net.minecraft.block.IGrowable;
+import net.minecraft.block.MushroomBlock;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
-@Mixin(SaplingBlock.class)
+@Mixin({SaplingBlock.class,MushroomBlock.class})
 public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
 	
 	public SaplingBlockMixin(Properties properties) {

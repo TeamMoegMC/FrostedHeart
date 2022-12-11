@@ -1,0 +1,10 @@
+{
+  "type": "frostedheart:charger",
+  "result": {
+    "item": "create:tree_fertilizer"
+  },
+  "input": {
+    "item": "minecraft:bone_meal"
+  },
+  "cost": 2500
+}

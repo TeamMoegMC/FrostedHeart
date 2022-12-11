@@ -47,6 +47,7 @@
     "minecraft.AbstractTopPlantBlockMixin",
     "minecraft.AnimalEntityMixin",
     "minecraft.BeeHiveMixin",
+    "minecraft.FungisBlockMixin",
     "minecraft.BigTreeMixin",
     "minecraft.BlockMixin",
     "minecraft.CampfireBlockMixin",

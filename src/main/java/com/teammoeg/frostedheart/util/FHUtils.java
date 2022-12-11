@@ -48,6 +48,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
@@ -131,6 +133,17 @@ public class FHUtils {
         if(temp>0)
         	return true;
     	return r.nextInt(Math.max(1,MathHelper.ceil(-temp/2))) == 0;
+    }
+    public static boolean canNetherTreeGrow(IBlockReader w, BlockPos p) {
+    	if(!(w instanceof IWorld)) {
+    		return false;
+    	}
+        float temp=ChunkData.getTemperature((IWorld) w, p);
+        if(temp<=300)
+        	return false;
+        if(temp>300+WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+        	return false;
+        return true;
     }
     public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
 
