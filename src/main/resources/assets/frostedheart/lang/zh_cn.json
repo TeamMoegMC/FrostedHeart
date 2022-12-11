@@ -82,7 +82,8 @@
   "tetra.module.single/basic_geo_hammer.material_name": "%s 地质锤",
   "tetra.variant.basic_geo_hammer.item_name":"地质锤",
   "tetra.module.single/basic_geo_hammer.prefix": "%s",
-  
+  "tetra.material.cast_iron": "铸铁",
+  "tetra.material.cast_iron.prefix": "铸铁",
   "tetra.stats.core_spade.tooltip": "这个部件可以用于进行地质探测，探测范围%s级，同时探测准确率提升%s倍",
   "tetra.stats.geo_hammer.tooltip": "这个部件可以用于进行地质探测，探测范围%s级，同时探测准确率提升%s倍",
   "tetra.stats.prospector_pick.tooltip": "这个部件可以用于进行地质探测，探测范围%s级，同时探测准确率提升%s倍",

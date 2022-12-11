@@ -101,7 +101,8 @@
   "tetra.module.single/basic_geo_hammer.material_name": "%s Geologists Hammer",
   "tetra.variant.basic_geo_hammer.item_name":"Geologists Hammer",
   "tetra.module.single/basic_geo_hammer.prefix": "%s",
-  
+  "tetra.material.cast_iron": "Cast Iron",
+  "tetra.material.cast_iron.prefix": "Cast Iron",
   "tetra.stats.core_spade.tooltip": "This module can be used to detect geology info, range level %s, with %s times correctness boost.",
   "tetra.stats.geo_hammer.tooltip": "This module can be used to detect geology info, range level %s, with %s times correctness boost.",
   "tetra.stats.prospector_pick.tooltip": "This module can be used to detect geology info, range level %s, with %s times correctness boost.",
