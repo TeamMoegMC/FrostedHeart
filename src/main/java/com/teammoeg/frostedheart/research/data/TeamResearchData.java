@@ -594,4 +594,25 @@ public class TeamResearchData {
             }
         }
     }
+    public long getVariantLong(ResearchVariant name) {
+        return variants.getLong(name.getToken());
+
+    }
+    public double getVariantDouble(ResearchVariant name) {
+        return variants.getDouble(name.getToken());
+
+    }
+    public void putVariantLong(ResearchVariant name,long val) {
+    	variants.putLong(name.getToken(),val);
+    }
+    public void putVariantDouble(ResearchVariant name,double val) {
+    	variants.putDouble(name.getToken(),val);
+    }
+    public boolean hasVariant(ResearchVariant name) {
+    	return variants.contains(name.getToken());
+    }
+
+	public void removeVariant(ResearchVariant name) {
+		variants.remove(name.getToken());
+	}
 }

@@ -102,7 +102,7 @@ public class EffectUse extends Effect {
 
     @Override
     public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(FHIcons.getIcon(blocks.toArray(new Block[0])), FHIcons.getIcon(TechIcons.HAND));
+        return FHIcons.getIcon(FHIcons.getIcon(blocks.toArray(new Block[0])), FHIcons.getDelegateIcon("hand"));
     }
 
     @Override

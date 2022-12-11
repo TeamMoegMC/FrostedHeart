@@ -1,5 +1,8 @@
 package com.teammoeg.frostedheart.util;
 
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+
 public class ReferenceValue<T> {
 	public T val;
 
@@ -27,7 +30,17 @@ public class ReferenceValue<T> {
 		result = prime * result + ((val == null) ? 0 : val.hashCode());
 		return result;
 	}
-
+	public void map(UnaryOperator<T> oo) {
+		val=oo.apply(val);
+	}
+	public void mapIfPresent(UnaryOperator<T> oo) {
+		if(val!=null)
+			val=oo.apply(val);
+	}
+	public void setIfAbsent(Supplier<T> s) {
+		if(val==null)
+			val=s.get();
+	}
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

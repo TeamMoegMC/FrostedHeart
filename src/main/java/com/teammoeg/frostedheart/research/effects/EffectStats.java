@@ -40,7 +40,7 @@ import net.minecraft.util.text.StringTextComponent;
  * Effect on numerical stats of the team's machines or abilities
  */
 public class EffectStats extends Effect {
-    private static FHIcon addIcon = FHIcons.getIcon(TechIcons.ADD);
+    private static FHIcon addIcon = FHIcons.getDelegateIcon("plus");
     String vars;
     double val;
     boolean isPercentage = false;

@@ -212,7 +212,7 @@ public class EffectCrafting extends Effect {
             if (!stacks.isEmpty())
                 return FHIcons.getIcon(FHIcons.getStackIcons(stacks), FHIcons.getIcon(Items.CRAFTING_TABLE));
         }
-        return FHIcons.getIcon(FHIcons.getIcon(TechIcons.Question), FHIcons.getIcon(Items.CRAFTING_TABLE));
+        return FHIcons.getIcon(FHIcons.getDelegateIcon("question"), FHIcons.getIcon(Items.CRAFTING_TABLE));
     }
 
     @Override

@@ -26,6 +26,8 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.util.ReferenceValue;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
@@ -282,7 +284,13 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
             currentItem = null;
         }
     }
-
+    protected double getEfficiency() {
+    	ReferenceValue<Double> eff=new ReferenceValue<>(0.7);
+        getTeamData().ifPresent(t->{
+        	eff.map(n->n+t.getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY));
+        });
+        return eff.getVal();
+    }
     @Override
     protected void tickFuel() {
         // just finished process or during process
@@ -301,10 +309,11 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
                                 inventory.set(OUTPUT_SLOT, currentItem);
                             currentItem = null;
                         }
+                        double effi=getEfficiency();
                         currentItem = recipe.output.copy();
                         currentItem.setCount(4 * currentItem.getCount());
-                        this.process += recipe.time * 4;
-                        this.processMax += recipe.time * 4;
+                        this.process += (int)(recipe.time*effi) * 4;
+                        this.processMax += (int)(recipe.time*effi) * 4;
                         setActualOverdrive(true);
                     }
                 }
@@ -340,7 +349,8 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
                 Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
                 currentItem = recipe.output.copy();
                 currentItem.setCount(currentItem.getCount() * modifier);
-                this.process = recipe.time * modifier;
+                double effi=getEfficiency();
+                this.process = (int)(recipe.time*effi) * modifier;
                 this.processMax = process;
                 setActive(true);
                 this.markDirty();

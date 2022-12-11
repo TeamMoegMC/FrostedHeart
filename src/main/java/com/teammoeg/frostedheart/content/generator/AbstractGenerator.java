@@ -18,6 +18,7 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -26,6 +27,7 @@ import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
@@ -87,40 +89,43 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     }
 
     public void unregist() {
-        UUID owner = getOwner();
-        if (owner == null) return;
-        CompoundNBT vars = ResearchDataAPI.getVariants(owner);
-        if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) return;
-        long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
+    	getTeamData().ifPresent(t->{
+        if (!t.hasVariant(ResearchVariant.GENERATOR_LOCATION)) return;
+        long pos = t.getVariantLong(ResearchVariant.GENERATOR_LOCATION);
         BlockPos bp = BlockPos.fromLong(pos);
         if (bp.equals(this.pos))
-            vars.remove(ResearchVariant.GENERATOR_LOCATION.getToken());
+            t.removeVariant(ResearchVariant.GENERATOR_LOCATION);
+    	});
     }
 
     public void regist() {
-    	UUID owner = getOwner();
-        if (owner == null) return;
-        ResearchDataAPI.putVariantLong(owner,ResearchVariant.GENERATOR_LOCATION,master().pos.toLong());
+    	getTeamData().ifPresent(t->t.putVariantLong(ResearchVariant.GENERATOR_LOCATION,master().pos.toLong()));
     }
 
     public void setOwner(UUID owner) {
         forEachBlock(s -> IOwnerTile.setOwner(s, owner));
     }
-
+    protected Optional<TeamResearchData> getTeamData() {
+    	UUID owner=getOwner();
+    	if(owner!=null)
+    		return Optional.of(ResearchDataAPI.getData(owner));
+    	return Optional.empty();
+    }
+    //
     public boolean shouldWork() {
-        UUID owner = getOwner();
-        if (owner == null) return false;
-        CompoundNBT vars = ResearchDataAPI.getVariants(owner);
-        if(!ResearchDataAPI.getData(owner).building.has(super.multiblockInstance))return false;
-        if (!vars.contains(ResearchVariant.GENERATOR_LOCATION.getToken())) {
-            vars.putLong(ResearchVariant.GENERATOR_LOCATION.getToken(), master().pos.toLong());
-            return true;
-        }
-        long pos = vars.getLong(ResearchVariant.GENERATOR_LOCATION.getToken());
-        BlockPos bp = BlockPos.fromLong(pos);
-        if (bp.equals(this.pos))
-            return true;
-        return false;
+    	return getTeamData().map(t->{
+	        if(!t.building.has(super.multiblockInstance))return false;
+	        if (!t.hasVariant(ResearchVariant.GENERATOR_LOCATION)) {
+	            t.putVariantLong(ResearchVariant.GENERATOR_LOCATION, master().pos.toLong());
+	            return true;
+	        }
+	        long pos = t.getVariantLong(ResearchVariant.GENERATOR_LOCATION);
+	        BlockPos bp = BlockPos.fromLong(pos);
+	        if (bp.equals(this.pos))
+	            return true;
+	        return false;
+    	}).orElse(false);
+        
     }
 
     protected abstract void onShutDown();
