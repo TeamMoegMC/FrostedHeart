@@ -511,8 +511,7 @@ public class CommonEvents {
             float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
-                    if (temp < -15) {
-                        event.setCanceled(true);
+                    if (temp < -5) {
                         player.sendStatusMessage(
                                 new TranslationTextComponent("message.frostedheart.crop_not_growable", -5),
                                 true);
@@ -539,7 +538,7 @@ public class CommonEvents {
                         player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
                                 WorldClimate.HEMP_GROW_TEMPERATURE), true);
                     }
-                } else if (growBlock.matchesBlock(Blocks.NETHERRACK)) {
+                } else if (growBlock==Blocks.NETHERRACK) {
 
                 } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
                     event.setCanceled(true);
