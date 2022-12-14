@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import mezz.jei.api.constants.VanillaTypes;
@@ -34,9 +34,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class InnerExtension implements ICraftingCategoryExtension {
-    RecipeInner inner;
+    InstallInnerRecipe inner;
 
-    public InnerExtension(RecipeInner ri) {
+    public InnerExtension(InstallInnerRecipe ri) {
         inner = ri;
     }
 

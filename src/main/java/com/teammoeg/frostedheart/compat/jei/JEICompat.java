@@ -49,6 +49,7 @@ import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.extension.DamageModifierExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
+import com.teammoeg.frostedheart.compat.jei.extension.ShapelessCopyDataExtension;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
@@ -57,12 +58,13 @@ import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.RecipeInner;
-import com.teammoeg.frostedheart.content.recipes.RecipeModifyDamage;
+import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
+import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
+import com.teammoeg.frostedheart.content.recipes.ShapelessCopyDataRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
-import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
+import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHNBT;
@@ -161,9 +163,10 @@ public class JEICompat implements IModPlugin {
 
 	@Override
 	public void registerVanillaCategoryExtensions(IVanillaCategoryExtensionRegistration registration) {
-		registration.getCraftingCategory().addCategoryExtension(RecipeFueling.class, FuelingExtension::new);
-		registration.getCraftingCategory().addCategoryExtension(RecipeInner.class, InnerExtension::new);
-		registration.getCraftingCategory().addCategoryExtension(RecipeModifyDamage.class, DamageModifierExtension::new);
+		registration.getCraftingCategory().addCategoryExtension(FuelingRecipe.class, FuelingExtension::new);
+		registration.getCraftingCategory().addCategoryExtension(InstallInnerRecipe.class, InnerExtension::new);
+		registration.getCraftingCategory().addCategoryExtension(ModifyDamageRecipe.class, DamageModifierExtension::new);
+		//registration.getCraftingCategory().addCategoryExtension(ShapelessCopyDataRecipe.class,ShapelessCopyDataExtension::new);
 	}
 
 	@Override

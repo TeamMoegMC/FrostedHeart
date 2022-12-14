@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.compat.jei.extension;
 
 import java.util.Arrays;
 
-import com.teammoeg.frostedheart.content.recipes.RecipeModifyDamage;
+import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
@@ -30,9 +30,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class DamageModifierExtension implements ICraftingCategoryExtension {
-    RecipeModifyDamage fuel;
+    ModifyDamageRecipe fuel;
 
-    public DamageModifierExtension(RecipeModifyDamage rf) {
+    public DamageModifierExtension(ModifyDamageRecipe rf) {
         fuel = rf;
     }
 

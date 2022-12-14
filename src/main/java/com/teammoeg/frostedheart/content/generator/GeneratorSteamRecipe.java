@@ -21,11 +21,18 @@ package com.teammoeg.frostedheart.content.generator;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMultiblocks;
+
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
@@ -67,5 +74,38 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     @Override
     public ItemStack getRecipeOutput() {
         return super.outputDummy;
+    }
+    public static class Serializer extends IERecipeSerializer<GeneratorSteamRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHMultiblocks.generator);
+        }
+
+        @Override
+        public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
+            float power = JSONUtils.getFloat(json, "energy");
+            float tempMod = JSONUtils.getFloat(json, "temp_multiplier");
+            float rangeMod = JSONUtils.getFloat(json, "range_multiplier");
+            return new GeneratorSteamRecipe(recipeId, input, power, tempMod, rangeMod);
+        }
+
+        @Nullable
+        @Override
+        public GeneratorSteamRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            FluidTagInput input = FluidTagInput.read(buffer);
+            float power = buffer.readFloat();
+            float tempMod = buffer.readFloat();
+            float rangeMod = buffer.readFloat();
+            return new GeneratorSteamRecipe(recipeId, input, power, tempMod, rangeMod);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, GeneratorSteamRecipe recipe) {
+            recipe.input.write(buffer);
+            buffer.writeFloat(recipe.power);
+            buffer.writeFloat(recipe.tempMod);
+            buffer.writeFloat(recipe.rangeMod);
+        }
     }
 }

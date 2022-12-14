@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "frostedheart:item/flask_ii/insulated_flask_ii_pouch_yellow"
+  }
+}

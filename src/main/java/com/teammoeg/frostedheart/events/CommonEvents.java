@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.command.ResearchCommand;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
-import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
@@ -333,7 +333,7 @@ public class CommonEvents {
                         continue;
                     int crdmg = cnbt.getInt("Damage");
                     crdmg += amount;
-                    RecipeInner ri = RecipeInner.recipeList.get(new ResourceLocation(inner));
+                    InstallInnerRecipe ri = InstallInnerRecipe.recipeList.get(new ResourceLocation(inner));
 
                     if (ri != null && ri.getDurability() <= crdmg) {// damaged
                         cn.remove("inner_cover");

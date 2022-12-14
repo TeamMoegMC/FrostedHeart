@@ -1,0 +1,20 @@
+{
+  "type": "frostedheart:shapless_copy_data",
+  "ingredients": [
+    {
+      "item": "frostedheart:thermos"
+    },
+    {
+      "item": "minecraft:string"
+    },
+    {
+      "item": "minecraft:string"
+    },
+    {
+      "item": "minecraft:green_dye"
+    }
+  ],
+  "result": {
+    "item": "frostedheart:green_thermos"
+  }
+}

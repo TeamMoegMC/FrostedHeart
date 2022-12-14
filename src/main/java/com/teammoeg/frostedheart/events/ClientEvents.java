@@ -37,7 +37,7 @@ import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
-import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.data.BlockTempData;
 import com.teammoeg.frostedheart.data.FHDataManager;
@@ -316,7 +316,7 @@ public class ClientEvents {
 						CompoundNBT cn = stack.getTag().getCompound("inner_cover_tag");
 						int damage = cn.getInt("Damage");
 						if (damage != 0) {
-							RecipeInner ri = RecipeInner.recipeList.get(new ResourceLocation(s));
+							InstallInnerRecipe ri = InstallInnerRecipe.recipeList.get(new ResourceLocation(s));
 							if (ri != null) {
 								int maxDmg = ri.getDurability();
 								float temp = damage * 1.0F / maxDmg;

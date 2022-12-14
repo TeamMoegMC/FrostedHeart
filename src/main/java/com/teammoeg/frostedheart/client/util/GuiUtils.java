@@ -18,7 +18,9 @@
 
 package com.teammoeg.frostedheart.client.util;
 
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.TemperatureCore;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -65,5 +67,11 @@ public class GuiUtils {
 
     public static ITextComponent translate(String string) {
         return new TranslationTextComponent(string);
+    }
+    public static String toTemperatureIntString(float celsus) {
+    	if(FHConfig.CLIENT.useFahrenheit.get())
+			return (celsus*9/5+32)+"F";
+		else
+			return ((int)celsus)+"C";
     }
 }

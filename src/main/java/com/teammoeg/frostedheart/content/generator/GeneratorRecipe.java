@@ -23,12 +23,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMultiblocks;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -81,5 +88,35 @@ public class GeneratorRecipe extends IESerializableRecipe {
             if (!all.contains(i)) all.add(i);
         });
         return all;
+    }
+    public static class Serializer extends IERecipeSerializer<GeneratorRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHMultiblocks.generator);
+        }
+
+        @Override
+        public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            ItemStack output = readOutput(json.get("result"));
+            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
+            int time = JSONUtils.getInt(json, "time");
+            return new GeneratorRecipe(recipeId, output, input, time);
+        }
+
+        @Nullable
+        @Override
+        public GeneratorRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            ItemStack output = buffer.readItemStack();
+            IngredientWithSize input = IngredientWithSize.read(buffer);
+            int time = buffer.readInt();
+            return new GeneratorRecipe(recipeId, output, input, time);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, GeneratorRecipe recipe) {
+            buffer.writeItemStack(recipe.output);
+            recipe.input.write(buffer);
+            buffer.writeInt(recipe.time);
+        }
     }
 }

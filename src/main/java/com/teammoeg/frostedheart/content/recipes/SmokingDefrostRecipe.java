@@ -28,6 +28,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.item.crafting.SmokingRecipe;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -78,5 +79,19 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
 
     public ItemStack[] getIss() {
         return iss;
+    }
+    public static class Serializer extends DefrostRecipe.Serializer<SmokingDefrostRecipe> {
+
+        public Serializer() {
+            super(SmokingDefrostRecipe::new);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, SmokingDefrostRecipe recipe) {
+            super.write(buffer, recipe);
+            buffer.writeFloat(recipe.getExperience());
+            buffer.writeVarInt(recipe.getCookTime());
+        }
+
     }
 }

@@ -33,8 +33,8 @@ import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.DietValueRecipe;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
-import com.teammoeg.frostedheart.content.recipes.PaperRecipe;
-import com.teammoeg.frostedheart.content.recipes.RecipeInner;
+import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
+import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
@@ -108,10 +108,10 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         GeneratorRecipe.recipeList = filterRecipes(recipes, GeneratorRecipe.class, GeneratorRecipe.TYPE);
         ChargerRecipe.recipeList = filterRecipes(recipes, ChargerRecipe.class, ChargerRecipe.TYPE);
         GeneratorSteamRecipe.recipeList = filterRecipes(recipes, GeneratorSteamRecipe.class, GeneratorSteamRecipe.TYPE);
-        RecipeInner.recipeList = recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass() == RecipeInner.class)
-                .map(e -> (RecipeInner) e)
-                .collect(Collectors.<RecipeInner, ResourceLocation, RecipeInner>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
+        InstallInnerRecipe.recipeList = recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass() == InstallInnerRecipe.class)
+                .map(e -> (InstallInnerRecipe) e)
+                .collect(Collectors.<InstallInnerRecipe, ResourceLocation, InstallInnerRecipe>toMap(recipe -> recipe.getBuffType(), recipe -> recipe));
         CampfireDefrostRecipe.recipeList = recipes.stream()
                 .filter(iRecipe -> iRecipe.getClass() == CampfireDefrostRecipe.class)
                 .map(e -> (CampfireDefrostRecipe) e)
@@ -125,7 +125,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .map(e -> (DietValueRecipe) e)
                 .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
         InspireRecipe.recipes=filterRecipes(recipes, InspireRecipe.class, InspireRecipe.TYPE).values().stream().collect(Collectors.toList());
-        PaperRecipe.recipes = filterRecipes(recipes, PaperRecipe.class, PaperRecipe.TYPE).values().stream().collect(Collectors.toList());
+        ResearchPaperRecipe.recipes = filterRecipes(recipes, ResearchPaperRecipe.class, ResearchPaperRecipe.TYPE).values().stream().collect(Collectors.toList());
         SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
         IncubateRecipe.recipeList=filterRecipes(recipes, IncubateRecipe.class, IncubateRecipe.TYPE);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);

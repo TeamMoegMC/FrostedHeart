@@ -21,12 +21,19 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHBlocks;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -64,4 +71,35 @@ public class ChargerRecipe extends IESerializableRecipe {
                 return recipe;
         return null;
     }
+    public static class Serializer extends IERecipeSerializer<ChargerRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHBlocks.charger);
+        }
+
+        @Override
+        public ChargerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            ItemStack output = readOutput(json.get("result"));
+            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
+            float cost = JSONUtils.getInt(json, "cost");
+            return new ChargerRecipe(recipeId, output, input, cost);
+        }
+
+        @Nullable
+        @Override
+        public ChargerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            ItemStack output = buffer.readItemStack();
+            IngredientWithSize input = IngredientWithSize.read(buffer);
+            float cost = buffer.readFloat();
+            return new ChargerRecipe(recipeId, output, input, cost);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, ChargerRecipe recipe) {
+            buffer.writeItemStack(recipe.output);
+            recipe.input.write(buffer);
+            buffer.writeFloat(recipe.cost);
+        }
+    }
+
 }

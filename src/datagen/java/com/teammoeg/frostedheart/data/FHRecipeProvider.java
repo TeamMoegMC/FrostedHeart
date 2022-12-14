@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
@@ -30,20 +31,27 @@ import javax.annotation.Nonnull;
 import com.cannolicatfish.rankine.init.RankineLists;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.content.recipes.ShapelessCopyDataRecipe;
 import com.teammoeg.thermopolium.THPFluids;
 import com.teammoeg.thermopolium.data.recipes.FoodValueRecipe;
 
 import blusunrize.immersiveengineering.api.IETags;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.Advancement.Builder;
 import net.minecraft.block.Block;
+import net.minecraft.data.CustomRecipeBuilder;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
+import net.minecraft.data.ShapelessRecipeBuilder;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -110,6 +118,16 @@ public class FHRecipeProvider extends RecipeProvider {
 					}
 				}
 			}
+			out.accept(new ShapelessCopyDataRecipe(toRL("thermos_from_dyed"),new ItemStack(FHItems.thermos),NonNullList.from(Ingredient.EMPTY,Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"colored_thermos"))))));
+			out.accept(new ShapelessCopyDataRecipe(toRL("advanced_thermos_from_dyed"),new ItemStack(FHItems.advanced_thermos),NonNullList.from(Ingredient.EMPTY,Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"colored_advanced_thermos"))))));
+			for(String i:FHItems.colors) {
+				Item thermos=ForgeRegistries.ITEMS.getValue(new ResourceLocation(FHMain.MODID,i+"_thermos"));
+				out.accept(new ShapelessCopyDataRecipe(toRL(thermos.getRegistryName().getPath()+"_from_other"),new ItemStack(thermos),NonNullList.from(Ingredient.EMPTY,Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"colored_thermos"))),Ingredient.fromItems(ForgeRegistries.ITEMS.getValue(new ResourceLocation(i+"_dye"))))));
+				out.accept(new ShapelessCopyDataRecipe(toRL(thermos.getRegistryName().getPath()),new ItemStack(thermos),NonNullList.from(Ingredient.EMPTY,Ingredient.fromItems(FHItems.thermos),Ingredient.fromItems(Items.STRING),Ingredient.fromItems(Items.STRING),Ingredient.fromItems(ForgeRegistries.ITEMS.getValue(new ResourceLocation(i+"_dye"))))));
+				thermos=ForgeRegistries.ITEMS.getValue(new ResourceLocation(FHMain.MODID,i+"_advanced_thermos"));
+				out.accept(new ShapelessCopyDataRecipe(toRL(thermos.getRegistryName().getPath()+"_from_other"),new ItemStack(thermos),NonNullList.from(Ingredient.EMPTY,Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"colored_advanced_thermos"))),Ingredient.fromItems(ForgeRegistries.ITEMS.getValue(new ResourceLocation(i+"_dye"))))));
+				out.accept(new ShapelessCopyDataRecipe(toRL(thermos.getRegistryName().getPath()),new ItemStack(thermos),NonNullList.from(Ingredient.EMPTY,Ingredient.fromItems(FHItems.advanced_thermos),Ingredient.fromItems(Items.STRING),Ingredient.fromItems(Items.STRING),Ingredient.fromItems(ForgeRegistries.ITEMS.getValue(new ResourceLocation(i+"_dye"))))));
+			}
 		}
 		
 		// recipesGenerator(out);
@@ -122,8 +140,8 @@ public class FHRecipeProvider extends RecipeProvider {
 	private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out) {
 		GeneratorRecipeBuilder.builder(IETags.slag, 1).addInput(ItemTags.COALS).setTime(1000).build(out,
 				toRL("generator/slag"));
+		
 	}
-
 	private ResourceLocation toRL(String s) {
 		if (!s.contains("/"))
 			s = "crafting/" + s;

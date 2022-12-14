@@ -28,6 +28,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CampfireCookingRecipe;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -75,4 +76,19 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
     public IRecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
+    public static class Serializer extends DefrostRecipe.Serializer<CampfireDefrostRecipe> {
+
+        public Serializer() {
+            super(CampfireDefrostRecipe::new);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, CampfireDefrostRecipe recipe) {
+            super.write(buffer, recipe);
+            buffer.writeFloat(recipe.getExperience());
+            buffer.writeVarInt(recipe.getCookTime());
+        }
+
+    }
+
 }

@@ -1,0 +1,20 @@
+{
+  "type": "frostedheart:shapless_copy_data",
+  "ingredients": [
+    {
+      "item": "frostedheart:advanced_thermos"
+    },
+    {
+      "item": "minecraft:string"
+    },
+    {
+      "item": "minecraft:string"
+    },
+    {
+      "item": "minecraft:black_dye"
+    }
+  ],
+  "result": {
+    "item": "frostedheart:black_advanced_thermos"
+  }
+}

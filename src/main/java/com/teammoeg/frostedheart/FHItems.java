@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
 import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
@@ -49,6 +52,7 @@ import net.minecraft.item.Item.Properties;
 import net.minecraft.item.Items;
 
 public class FHItems {
+	public static String[] colors=new String[]{"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
     public static void init() {
     }
 
@@ -103,8 +107,20 @@ public class FHItems {
     public static Item hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, createProps());
     public static Item hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, createProps());
     public static Item heater_vest = new HeaterVestItem("heater_vest", createProps().maxStackSize(1).setNoRepair());
-    public static Item thermos = new ThermosItem("thermos", 1500, 250);
-    public static Item advanced_thermos = new ThermosItem("advanced_thermos", 3000, 250);
+    public static List<Item> allthermos=new ArrayList<>();
+    public static List<Item> alladvthermos=new ArrayList<>();
+    public static Item thermos = new ThermosItem("thermos","item.frostedheart.thermos", 1500, 250,true);
+    public static Item advanced_thermos = new ThermosItem("advanced_thermos","item.frostedheart.advanced_thermos", 3000, 250,true);
+    static {
+	    for(String s:FHItems.colors) {
+	    	allthermos.add(new ThermosItem(s+"_thermos","item.frostedheart.thermos", 1500, 250,false));
+		}
+	    for(String s:FHItems.colors) {
+	    	alladvthermos.add(new ThermosItem(s+"_advanced_thermos","item.frostedheart.advanced_thermos", 3000, 250,false));
+	    }
+    }
+	
+    
     public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick",1, createProps().defaultMaxDamage(128));
     public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 2, createProps().defaultMaxDamage(192));
     public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 3, createProps().defaultMaxDamage(256));

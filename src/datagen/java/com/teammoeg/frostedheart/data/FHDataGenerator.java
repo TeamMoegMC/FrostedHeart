@@ -37,6 +37,8 @@ public class FHDataGenerator {
         if (event.includeServer()) {
             gen.addProvider(new FHRecipeProvider(gen));
             gen.addProvider(new FHMultiblockStatesProvider(gen, exHelper));
+            gen.addProvider(new FHItemModelProvider(gen,exHelper));
+            gen.addProvider(new FHItemTagProvider(gen,exHelper));
         }
     }
 }

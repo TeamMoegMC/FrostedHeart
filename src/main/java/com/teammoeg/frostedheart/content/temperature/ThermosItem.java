@@ -78,13 +78,15 @@ import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
 
 public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     final int unit;
-
-    public ThermosItem(String name, int capacity, int unit) {
+    final boolean doAddItems;
+    final String lang;
+    public ThermosItem(String name,String lang, int capacity, int unit,boolean add) {
         super(new Properties().maxStackSize(1).setNoRepair().maxDamage(capacity).group(FHMain.itemGroup).food(new Food.Builder().hunger(1).saturation(1).build()), capacity);
         this.unit = unit;
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
-
+        doAddItems=add;
+        this.lang=lang;
     }
 
     @Override
@@ -167,6 +169,10 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
         if (this.isInGroup(group)) {
+        	if(!doAddItems) {
+        		super.fillItemGroup(group, items);
+        		return;
+        	}
             ITag<Fluid> tag = FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID, "drink"));
             ResourceLocation hidden = new ResourceLocation(FHMain.MODID, "hidden_drink");
             items.add(new ItemStack(this));
@@ -179,7 +185,6 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
                 });
                 items.add(itemStack);
             }
-
         }
     }
 
@@ -286,4 +291,11 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     public float getMinTemp(ItemStack is) {
         return -1;
     }
+
+	@Override
+	public String getTranslationKey() {
+		return lang;
+	}
+
+
 }

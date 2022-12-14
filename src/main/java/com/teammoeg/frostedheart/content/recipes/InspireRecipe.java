@@ -22,12 +22,15 @@ package com.teammoeg.frostedheart.content.recipes;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
@@ -53,5 +56,29 @@ public class InspireRecipe extends IESerializableRecipe {
     protected IERecipeSerializer getIESerializer() {
         return SERIALIZER.get();
     }
+    public static class Serializer extends IERecipeSerializer<InspireRecipe> {
 
+
+        @Override
+        public InspireRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            return new InspireRecipe(recipeId, Ingredient.read(buffer), buffer.readVarInt());
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, InspireRecipe recipe) {
+            recipe.item.write(buffer);
+            buffer.writeVarInt(recipe.inspire);
+        }
+
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(Items.PAPER);
+        }
+
+        @Override
+        public InspireRecipe readFromJson(ResourceLocation arg0, JsonObject arg1) {
+            return new InspireRecipe(arg0, Ingredient.deserialize(arg1.get("item")), arg1.get("amount").getAsInt());
+        }
+
+    }
 }

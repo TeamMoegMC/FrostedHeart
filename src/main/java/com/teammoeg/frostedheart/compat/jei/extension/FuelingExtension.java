@@ -23,7 +23,7 @@ import java.util.Arrays;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.content.temperature.handstoves.CoalHandStove;
-import com.teammoeg.frostedheart.content.temperature.handstoves.RecipeFueling;
+import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
@@ -32,9 +32,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class FuelingExtension implements ICraftingCategoryExtension {
-    RecipeFueling fuel;
+    FuelingRecipe fuel;
 
-    public FuelingExtension(RecipeFueling rf) {
+    public FuelingExtension(FuelingRecipe rf) {
         fuel = rf;
     }
 
