@@ -45,6 +45,7 @@ public class ResearchDetailPanel extends Panel {
     ResearchPanel researchScreen;
 
     public PanelScrollBar scrollInfo;
+    public TechScrollBar scrolldetail;
 
     public ResearchDetailPanel(ResearchPanel panel) {
         super(panel);
@@ -53,6 +54,7 @@ public class ResearchDetailPanel extends Panel {
         descPanel = new DescPanel(this);
         infoPanel = new ResearchInfoPanel(this);
         scrollInfo = new TechScrollBar(this, infoPanel);
+        scrolldetail = new TechScrollBar(this, descPanel);
         dashboardPanel = new ResearchDashboardPanel(this);
         researchScreen = panel;
 
@@ -69,6 +71,8 @@ public class ResearchDetailPanel extends Panel {
 
         add(descPanel);
         descPanel.setPosAndSize(8, 64, 132, 100);
+        add(scrolldetail);
+        scrolldetail.setPosAndSize(142, 64, 8, 100);
 
         add(infoPanel);
         infoPanel.setPosAndSize(150, 15, 135, 151);
@@ -102,6 +106,7 @@ public class ResearchDetailPanel extends Panel {
 		}*/
         status.setPos(0, 6);
         add(status);
+        
     }
 
     @Override
@@ -154,8 +159,6 @@ public class ResearchDetailPanel extends Panel {
 
         public DescPanel(ResearchDetailPanel panel) {
             super(panel);
-            this.setOnlyInteractWithWidgetsInside(true);
-            this.setOnlyRenderWidgetsInside(true);
             detailPanel = panel;
         }
 
@@ -170,9 +173,15 @@ public class ResearchDetailPanel extends Panel {
                 desc.setPosAndSize(0, offset, width, height);
                 desc.setText(itx);
                 desc.setColor(TechIcons.text);
-                offset += desc.height;
+                offset += desc.height+2;
             }
-            this.setHeight(offset);
+            if(offset+3>height) {
+            	detailPanel.scrolldetail.unhide();
+            	detailPanel.scrolldetail.setMaxValue(offset+3);
+            }else
+            	detailPanel.scrolldetail.hide();
+            //this.setHeight(offset+3);
+
         }
 
         @Override
