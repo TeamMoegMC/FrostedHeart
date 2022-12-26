@@ -230,7 +230,7 @@ public class FHResearch {
                 JsonElement je = jp.parse(FileUtil.readString(f));
                 if (je.isJsonObject()) {
                     String id = f.getName();
-                    researches.register(new Research(id.substring(0, id.length() - 5), je.getAsJsonObject()));
+                    researches.register(SpecialResearch.deserialize(id.substring(0, id.length() - 5), je.getAsJsonObject()));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -241,7 +241,7 @@ public class FHResearch {
     }
 
     public static void readAll(PacketBuffer pb) {
-        List<Research> rss = SerializeUtil.readList(pb, Research::new);
+        List<Research> rss = SerializeUtil.readList(pb, SpecialResearch::deserialize);
 
         for (Research r : rss) {
             researches.register(r);

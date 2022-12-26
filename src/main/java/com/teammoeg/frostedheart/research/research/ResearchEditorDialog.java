@@ -56,7 +56,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
     NumberBox pts;
-    LabeledSelection<Boolean> hide,alt,hidden,locked,showed;
+    LabeledSelection<Boolean> hide,alt,hidden,locked,showed,inf;
     boolean removed;
     public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> {
         new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
@@ -80,6 +80,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         alt = LabeledSelection.createBool(this, "Show alt description before complete", r.showfdesc);
         hidden = LabeledSelection.createBool(this, "Hide this research in list", r.isHidden);
         locked = LabeledSelection.createBool(this, "Lock this research", r.isInCompletable());
+        inf = LabeledSelection.createBool(this, "Infinite", r.infinite);
         
     }
 
@@ -98,6 +99,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
             r.hideEffects = hide.getSelection();
             r.showfdesc = alt.getSelection();
             r.isHidden=hidden.getSelection();
+            r.infinite=inf.getSelection();
             r.setInCompletable(locked.getSelection());
             
             if (r.getRId() == 0) {//creating new research
@@ -169,6 +171,7 @@ public class ResearchEditorDialog extends BaseEditDialog {
         add(showed);
         add(hide);
         add(alt);
+        add(inf);
         add(hidden);
         add(locked);
     }

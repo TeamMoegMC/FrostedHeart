@@ -53,9 +53,10 @@ import net.minecraftforge.fml.network.PacketDistributor;
 /**
  * Class TeamResearchData.
  *
+ * This stores all data for research, restrcitions, locks, clues and points data.
+ * This data is available for both team and player.
  * @author khjxiaogu
- * file: TeamResearchData.java
- * @date 2022年9月2日
+ * @date 2022/9/2
  */
 public class TeamResearchData {
     private static TeamResearchData INSTANCE = new TeamResearchData(null);

@@ -89,7 +89,7 @@ public class ResearchListPanel extends Panel {
             this.research = research;
             this.listPanel = panel;
             setSize(101, RESEARCH_HEIGHT);
-            tf = new RTextField(panel).setMaxLine(1).setMaxWidth(84).setText(research.getName());
+            tf = new RTextField(panel).setMaxLine(1).setMaxWidth(86).setText(research.getName());
             if(research.hasUnclaimedReward())
             	tf.setColor(Color4I.rgb(0x5555ff));
             else if (research.isCompleted()) {

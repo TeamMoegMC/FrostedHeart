@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialResearch;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
@@ -44,7 +45,7 @@ public class FHResearchRegistrtySyncPacket {
 
     public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
-        rss = SerializeUtil.readList(buffer, Research::new);
+        rss = SerializeUtil.readList(buffer,SpecialResearch::deserialize);
     }
 
     public void encode(PacketBuffer buffer) {

@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.research.FHRegistry;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.SpecialResearch;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.Clues;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
@@ -47,7 +48,6 @@ import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
-import com.teammoeg.frostedheart.research.number.ConstResearchNumber;
 import com.teammoeg.frostedheart.research.number.IResearchNumber;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
@@ -110,12 +110,11 @@ public class Research extends FHRegisteredItem implements Writeable {
     
     /** The always show.<br> */
     boolean alwaysShow=false;
-    private static ConstResearchNumber defnum=new ConstResearchNumber(1000);
     /** The points.<br> */
     long points = 1000;// research point
     
     /** The is infinite.<br> */
-    boolean isInfinite;
+    boolean infinite;
     
     /**
      * Instantiates a new Research.<br>
@@ -200,6 +199,10 @@ public class Research extends FHRegisteredItem implements Writeable {
         	alwaysShow=jo.get("keepShow").getAsBoolean();
         else
         	alwaysShow=false;
+        if(jo.has("infinite"))
+        	infinite=jo.get("infinite").getAsBoolean();
+        else
+        	infinite=false;
     }
     
     /**
@@ -232,9 +235,10 @@ public class Research extends FHRegisteredItem implements Writeable {
         	jo.addProperty("hidden", true);
         if(inCompletable)
         	jo.addProperty("locked", true);
-        if(alwaysShow) {
+        if(alwaysShow)
         	jo.addProperty("keepShow",true);
-        }
+        if(infinite)
+        	jo.addProperty("infinite", true);
         return jo;
     }
     
@@ -269,6 +273,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         isHidden=bools[2];
         inCompletable=bools[3];
         alwaysShow=bools[4];
+        infinite=bools[5];
     }
     
     /**
@@ -287,6 +292,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @Override
     public void write(PacketBuffer buffer) {
+    	SpecialResearch.writeId(this, buffer);
         buffer.writeString(id);
         buffer.writeString(name);
         SerializeUtil.writeList2(buffer, desc, PacketBuffer::writeString);
@@ -298,7 +304,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
         SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
         buffer.writeVarLong(points);
-        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,inCompletable,alwaysShow);
+        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,inCompletable,alwaysShow,infinite);
     }
 
     /**
@@ -346,8 +352,17 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @param spe the spe<br>
      */
     public void grantEffects(TeamResearchData team,ServerPlayerEntity spe) {
-    	for (Effect e : getEffects())
+    	boolean granted=true;
+    	for (Effect e : getEffects()) {
             team.grantEffect(e, spe);
+            granted&=team.isEffectGranted(e);
+    	}
+    	if(infinite&&granted) {
+    		int lvl=team.getData(this).getLevel();
+    		team.resetData(this, true);
+    		team.getData(this).setLevel(lvl+1);
+    	}
+  
     }
     
     /**
