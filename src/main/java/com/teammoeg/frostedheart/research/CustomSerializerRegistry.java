@@ -94,6 +94,8 @@ public class CustomSerializerRegistry<T, U> {
 
 	public U getDeserializeOrDefault(JsonElement je, U def) {
 		JsonObject jo = je.getAsJsonObject();
+		if(!jo.has("type"))
+			return def;
 		U func = fromJson.get(jo.get("type").getAsString());
 		if (func == null)
 			return def;
