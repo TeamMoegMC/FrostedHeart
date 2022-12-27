@@ -31,7 +31,6 @@ import com.teammoeg.frostedheart.FHMain;
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 
 public class FHTextUtil {
 
@@ -40,11 +39,11 @@ public class FHTextUtil {
     @Nonnull
     public static ITextComponent get(String orig, String type, Supplier<String> pid) {
         if (orig==null||orig.length() == 0)
-            return new TranslationTextComponent(type + "." + FHMain.MODID + "." + pid.get());
+            return ClientTextComponentUtils.parse("{"+type + "." + FHMain.MODID + "." + pid.get()+"}");
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return new TranslationTextComponent(type + "." + FHMain.MODID + "." + pid.get());
-            return new TranslationTextComponent(orig.substring(1));
+                return ClientTextComponentUtils.parse("{"+type + "." + FHMain.MODID + "." + pid.get()+"}");
+            return ClientTextComponentUtils.parse("{"+orig.substring(1)+"}");
         }
 
         return ClientTextComponentUtils.parse(orig);
@@ -55,13 +54,13 @@ public class FHTextUtil {
         if (orig==null||orig.length() == 0) {
         	String key=type + "." + FHMain.MODID + "." + pid.get();
     		if(I18n.hasKey(key))
-    			return new TranslationTextComponent(key);
+    			return ClientTextComponentUtils.parse("{"+key+"}");
     		return null;
         }
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return new TranslationTextComponent(type + "." + FHMain.MODID + "." + pid.get());
-            return new TranslationTextComponent(orig.substring(1));
+                return ClientTextComponentUtils.parse("{"+type + "." + FHMain.MODID + "." + pid.get()+"}");
+            return ClientTextComponentUtils.parse("{"+orig.substring(1)+"}");
         }
 
         return ClientTextComponentUtils.parse(orig);
