@@ -70,6 +70,7 @@ public class EnergyCore {
         long tsls = data.getLong("lastsleep");
         tsls++;
         data.putLong("lastsleep", tsls);
+        
         int adenergy=0;
         boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA) != null;
         if (!isBodyNotWell) {
@@ -103,6 +104,7 @@ public class EnergyCore {
             //System.out.println(dietValue);
             double nenergy=(0.3934f * (1 - tenergy / m) + 1.3493f * (dietValue - 0.4))*tenergy / 1200;
             //System.out.println(nenergy);
+            double cenergy=5/n;
             if(tenergy*2<M&&nenergy<=5) {
             	player.addPotionEffect(new EffectInstance(FHEffects.SAD,200));
             }
@@ -117,6 +119,11 @@ public class EnergyCore {
                 	adenergy++;
 
             }
+            int adcenergy=(int) cenergy;
+            double ff=MathHelper.frac(cenergy);
+            if(ff>0&& Math.random() <ff)
+            	adcenergy++;
+            data.putLong("cenergy",Math.min(data.getLong("cenergy")+adcenergy,12000));
         }
         data.putLong("energy",oenergy+adenergy);
         TemperatureCore.setFHData(player, data);
@@ -210,10 +217,46 @@ public class EnergyCore {
         TemperatureCore.setFHData(player, data);
         PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
     }
-
-    public static void addEnergy(ServerPlayerEntity player, int val) {
+    public static void addExtraEnergy(ServerPlayerEntity player, int val) {
+    	
         CompoundNBT data = TemperatureCore.getFHData(player);
-        long energy = data.getLong("energy") + val;
+        long energy = data.getLong("cenergy") + val;
+        data.putLong("cenergy", energy);
+        TemperatureCore.setFHData(player, data);
+    }
+    public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {
+    	if (player.abilities.isCreativeMode) return true;
+        CompoundNBT data = TemperatureCore.getFHData(player);
+        long energy = data.getLong("cenergy");
+        if(energy>=val) {
+	        data.putLong("cenergy", energy-val);
+	        TemperatureCore.setFHData(player, data);
+	        return true;
+        }
+        return false;
+    }
+    public static boolean hasExtraEnergy(PlayerEntity player, int val) {
+    	if (player.abilities.isCreativeMode) return true;
+        CompoundNBT data = TemperatureCore.getFHData(player);
+        long energy = data.getLong("cenergy");
+        return energy>=val;
+    }
+    public static void addEnergy(ServerPlayerEntity player, int val) {
+    	TeamResearchData trd = ResearchDataAPI.getData(player);
+    	long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
+        M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
+        double n = trd.getTeam().get().getOnlineMembers().size();
+        n = 1 + 0.8 * (n - 1);
+        CompoundNBT data = TemperatureCore.getFHData(player);
+        if (val > 0) {
+        	double rv=val/n;
+            double frac = MathHelper.frac(rv);
+            val=(int) rv;
+            if (frac > 0 && Math.random() < frac)
+            	val++;
+
+        }
+        long energy = Math.min(data.getLong("energy") + val,M);
         data.putLong("energy", energy);
         TemperatureCore.setFHData(player, data);
         PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
@@ -231,7 +274,7 @@ public class EnergyCore {
     }
     public static void reportEnergy(PlayerEntity player) {
         CompoundNBT data = TemperatureCore.getFHData(player);
-        player.sendMessage(new StringTextComponent("Energy:" + data.getLong("energy") + ",Persist Energy: " + data.getLong("penergy")), player.getUniqueID());
+        player.sendMessage(new StringTextComponent("Energy:" + data.getLong("energy") + ",Persist Energy: " + data.getLong("penergy")+",Extra Energy: "+data.getLong("cenergy")), player.getUniqueID());
     }
 
     @SubscribeEvent

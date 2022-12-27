@@ -617,14 +617,18 @@ public class CommonEvents {
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
         CompoundNBT cnbt = new CompoundNBT();
-        cnbt.putLong("penergy", TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
+        CompoundNBT olddata=TemperatureCore.getFHData(ev.getOriginal());
+        cnbt.putLong("penergy", olddata.getLong("penergy"));
+        cnbt.putLong("cenergy", olddata.getLong("cenergy"));
         TemperatureCore.setFHData(ev.getPlayer(), cnbt);
+        //FHMain.LOGGER.info("clone");
         if(!ev.getPlayer().world.isRemote) {
 	        DeathInventoryData orig=DeathInventoryData.get(ev.getOriginal());
 	        DeathInventoryData nw=DeathInventoryData.get(ev.getPlayer());
 	       
 	        if(nw!=null&&orig!=null)
-	        nw.copy(orig);
+	        	nw.copy(orig);
+	        nw.calledClone();
         }
     }
     @SubscribeEvent
@@ -650,13 +654,13 @@ public class CommonEvents {
  
     @SubscribeEvent
     public static void respawn(PlayerRespawnEvent event) {
-        if (event.getPlayer() instanceof ServerPlayerEntity) {
-        	
+        if (event.getPlayer() instanceof ServerPlayerEntity&&!(event.getPlayer() instanceof FakePlayer)) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
+            DeathInventoryData dit=DeathInventoryData.get(event.getPlayer());
+            dit.tryCallClone(event.getPlayer());
             if(FHConfig.SERVER.keepEquipments.get()&&!event.getPlayer().world.isRemote) {
-            	DeathInventoryData dit=DeathInventoryData.get(event.getPlayer());
         		if(dit!=null)
-        		dit.alive(event.getPlayer().inventory);
+        			dit.alive(event.getPlayer().inventory);
         	}
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(ClimateData.get(serverWorld)));

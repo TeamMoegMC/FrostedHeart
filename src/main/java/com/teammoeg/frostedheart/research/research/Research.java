@@ -468,6 +468,8 @@ public class Research extends FHRegisteredItem implements Writeable {
                 rx.populateChild(objthis);
         }
         int i = 0;
+        effects.removeIf(e->e==null);
+        clues.removeIf(c->c==null);
         for (Effect e : effects) {
             e.addID(this.getLId(), i);
             e.parent = getSupplier();

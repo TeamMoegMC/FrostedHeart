@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.research.gui.editor.LabeledOpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledSelection;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBox;
 import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
+import com.teammoeg.frostedheart.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.RealBox;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
@@ -66,6 +67,12 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
     public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> {
         new Category(p, l, v, c).open();
     };
+    public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> {
+        new Command(p, l, v, c).open();
+    };
+    public static final Editor<EffectExperience> EXP = (p, l, v, c) -> {
+        new Exp(p, l, v, c).open();
+    };
     public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
         if (v instanceof EffectBuilding)
             BUILD.open(p, l, (EffectBuilding) v, e -> c.accept(e));
@@ -79,8 +86,21 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
             USE.open(p, l, (EffectUse) v, e -> c.accept(e));
         else if (v instanceof EffectShowCategory)
             CAT.open(p, l, (EffectShowCategory) v, e -> c.accept(e));
+        else if(v instanceof EffectCommand)
+        	COMMAND.open(p,l,(EffectCommand) v,e->c.accept(e));
+        else if(v instanceof EffectExperience)
+        	EXP.open(p,l,(EffectExperience) v,e->c.accept(e));
         else
-            new EditorSelector<>(p, l, c).addEditor("Building", BUILD).addEditor("Craft", CRAFT).addEditor("Item Reward", ITEM).addEditor("Add Stats", STATS).addEditor("Add Usage", USE).addEditor("Recipe Category", CAT).open();
+            new EditorSelector<>(p, l, c)
+            	.addEditor("Building", BUILD)
+            	.addEditor("Craft", CRAFT)
+            	.addEditor("Item Reward", ITEM)
+            	.addEditor("Add Stats", STATS)
+            	.addEditor("Add Usage", USE)
+            	.addEditor("Recipe Category", CAT)
+            	.addEditor("Add Command",COMMAND)
+            	.addEditor("Add Experience", EXP)
+            .open();
 
     };
 
@@ -298,6 +318,57 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         @Override
         public EffectUse createEffect() {
             return new EffectUse();
+        }
+
+    }
+    private static class Command extends EffectEditor<EffectCommand> {
+        public Command(Widget panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
+            super(panel, lbl, e, cb);
+
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(new OpenEditorButton<>(this, "Edit Commands", EditListDialog.STRING_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
+        }
+
+        @Override
+        public EffectCommand createEffect() {
+            return new EffectCommand();
+        }
+
+        @Override
+        public void onClose() {
+            super.onClose();
+        }
+
+    }
+    private static class Exp extends EffectEditor<EffectExperience> {
+        NumberBox val;
+
+        public Exp(Widget panel, String lbl, EffectExperience e, Consumer<EffectExperience> cb) {
+            super(panel, lbl, e, cb);
+            val = new NumberBox(this, "Exp", this.e.exp);
+
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(val);
+
+        }
+
+        @Override
+        public EffectExperience createEffect() {
+            return new EffectExperience(0);
+        }
+
+        @Override
+        public void onClose() {
+            e.exp=(int) val.getNum();
+            super.onClose();
         }
 
     }

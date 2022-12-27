@@ -39,6 +39,7 @@ public class TechIcons {
     public static final Icon DOTS = ALL.withUV(303, 237, 16, 16, 512, 512);
     public static final Icon SELECTED = ALL.withUV(298, 228, 4, 4, 512, 512);
     public static final Icon HAND = ALL.withUV(320, 237, 16, 16, 512, 512);
+    public static final Icon INF = ALL.withUV(303, 267, 16, 16, 512, 512);
 
     public static final Icon CHECKBOX = ALL.withUV(320, 227, 9, 9, 512, 512);
     public static final Icon CHECKBOX_CHECKED = ALL.withUV(329, 227, 9, 9, 512, 512);
@@ -70,6 +71,7 @@ public class TechIcons {
         internals.put("plus", ADD);
         internals.put("dots", DOTS);
         internals.put("hand", HAND);
+        internals.put("inf", INF);
     }
 
     public TechIcons() {

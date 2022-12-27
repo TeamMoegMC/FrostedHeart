@@ -20,11 +20,15 @@
 package com.teammoeg.frostedheart.research.gui.drawdesk;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechButton;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchProgressPanel;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket.Operator;
@@ -60,7 +64,7 @@ public class DrawDeskPanel extends Panel {
     }
 
     boolean showHelp;
-
+    
     @Override
     public void addWidgets() {
 
@@ -105,14 +109,17 @@ public class DrawDeskPanel extends Panel {
 
             @Override
             public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-                if (isMouseOver())
+                if (isMouseOver()||!ResearchListeners.canExamine(dd.getTile().getInventory().get(DrawingDeskTileEntity.EXAMINE_SLOT)))
                     DrawDeskIcons.EXAMINE.draw(matrixStack, x, y, w, h);
             }
 
             @Override
             public void addMouseOverText(TooltipList list) {
                 super.addMouseOverText(list);
-                list.add(GuiUtils.translateGui("draw_desk.examine"));
+                if(!ResearchListeners.canExamine(dd.getTile().getInventory().get(DrawingDeskTileEntity.EXAMINE_SLOT)))
+                	list.add(GuiUtils.translateGui("draw_desk.unable_examine"));
+                else
+                	list.add(GuiUtils.translateGui("draw_desk.examine"));
             }
 
         };

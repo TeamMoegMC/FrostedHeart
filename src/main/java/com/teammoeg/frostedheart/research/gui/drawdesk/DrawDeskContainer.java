@@ -68,27 +68,28 @@ public class DrawDeskContainer extends IEBaseContainer<DrawingDeskTileEntity> {
 
     public DrawDeskContainer(int id, PlayerInventory inventoryPlayer, DrawingDeskTileEntity tile) {
         super(tile, id);
-        this.addSlot(new EnableIESlot(this, this.inv, 0, 114, 93) {// research
+       
+        this.addSlot(new EnableIESlot(this, this.inv,DrawingDeskTileEntity.PAPER_SLOT, 114, 161) {// paper
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return tile.isStackValid(0, itemStack);
+                return tile.isStackValid(DrawingDeskTileEntity.PAPER_SLOT, itemStack);
+            }
+        });
+        this.addSlot(new EnableIESlot(this, this.inv, DrawingDeskTileEntity.INK_SLOT, 114, 178) {// pen
+            @Override
+            public boolean isItemValid(ItemStack itemStack) {
+                return tile.isStackValid(DrawingDeskTileEntity.INK_SLOT, itemStack);
+            }
+        });
+        this.addSlot(new EnableIESlot(this, this.inv,DrawingDeskTileEntity.EXAMINE_SLOT, 114, 93) {// research
+            @Override
+            public boolean isItemValid(ItemStack itemStack) {
+                return tile.isStackValid(DrawingDeskTileEntity.EXAMINE_SLOT, itemStack);
             }
 
         });
-        this.addSlot(new EnableIESlot(this, this.inv, 1, 114, 161) {// paper
-            @Override
-            public boolean isItemValid(ItemStack itemStack) {
-                return tile.isStackValid(1, itemStack);
-            }
-        });
-        this.addSlot(new EnableIESlot(this, this.inv, 2, 114, 178) {// pen
-            @Override
-            public boolean isItemValid(ItemStack itemStack) {
-                return tile.isStackValid(2, itemStack);
-            }
-        });
-
-        slotCount = 3;
+        
+        slotCount = 4;
 
         for (int i = 0; i < 36; i++) {
             int posi = i;

@@ -25,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.data.DeathInventoryData;
 
 import net.minecraft.entity.player.PlayerInventory;
@@ -35,22 +36,23 @@ import net.minecraftforge.common.util.FakePlayer;
 @Mixin(PlayerInventory.class)
 public abstract class PlayerInventoryMixin implements IInventory, INameable {
 
-    public PlayerInventoryMixin() {
-    }
+	public PlayerInventoryMixin() {
+	}
 
-    private PlayerInventory getThis() {
-        return (PlayerInventory) (Object) this;
-    }
+	private PlayerInventory getThis() {
+		return (PlayerInventory) (Object) this;
+	}
 
-    @Inject(at = @At("HEAD"), method = "dropAllItems", cancellable = true)
-    public void fh$dropAllItems(CallbackInfo cbi) {
-        if (FHConfig.SERVER.keepEquipments.get()) {
-        	if(getThis().player instanceof FakePlayer)
-        		return;
-        	DeathInventoryData dit=DeathInventoryData.get(getThis().player);
-        	if(dit!=null)
-        		dit.death(getThis());
-        }
-    }
+	@Inject(at = @At("HEAD"), method = "dropAllItems", cancellable = true)
+	public void fh$dropAllItems(CallbackInfo cbi) {
+		if (getThis().player instanceof FakePlayer)
+			return;
+		DeathInventoryData dit = DeathInventoryData.get(getThis().player);
+		dit.startClone();
+		if (FHConfig.SERVER.keepEquipments.get()) {
+			if (dit != null)
+				dit.death(getThis());
+		}
+	}
 
 }

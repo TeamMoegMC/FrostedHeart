@@ -51,7 +51,7 @@ public class MinigameClue extends CustomClue {
     public ITextComponent getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
-        return GuiUtils.translate("clue." + FHMain.MODID + ".minigame");
+        return GuiUtils.translate("clue." + FHMain.MODID + ".minigame.t"+level);
     }
 
     @Override

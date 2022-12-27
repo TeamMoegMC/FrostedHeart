@@ -31,6 +31,7 @@ import java.util.UUID;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.util.FileUtil;
 
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.item.crafting.RecipeManager;
@@ -107,9 +108,28 @@ public class FHResearchDataManager {
 				FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
 			}
 		}
+		
+		try {
+			File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
+			if (dbg.exists() && FileUtil.readString(dbg).equals("true"))
+				FHResearch.editor = true;
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 	}
 
 	public void save() {
+		File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
+		try {
+			if (FHResearch.isEditor())
+				FileUtil.transfer("true", dbg);
+			else if (dbg.exists())
+				FileUtil.transfer("false", dbg);
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		try {
 			CompressedStreamTools.writeCompressed(FHResearch.save(new CompoundNBT()), regfile);
 		} catch (IOException e1) {

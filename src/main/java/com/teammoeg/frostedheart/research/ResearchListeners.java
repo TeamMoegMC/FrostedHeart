@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
@@ -248,6 +249,16 @@ public class ResearchListeners {
     	killClues.clear();
     	te=null;
     }
+    @OnlyIn(Dist.CLIENT)
+    public static boolean canExamine(ItemStack i) {
+    	if(i.isEmpty())return false;
+    	for(InspireRecipe ir:InspireRecipe.recipes) {
+    		if(ir.item.test(i)) {
+    			return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(),ir.inspire);
+    		}
+    	}
+    	return true;
+    }
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         LazyOptional<Research> cur = trd.getCurrentResearch();
@@ -273,8 +284,10 @@ public class ResearchListeners {
         	}
         	for(InspireRecipe ir:InspireRecipe.recipes) {
         		if(ir.item.test(i)) {
-        			i.shrink(1);
-        			EnergyCore.addPersistentEnergy(s, ir.inspire);
+        			if(EnergyCore.useExtraEnergy(s,ir.inspire)) {
+        				i.shrink(1);
+        				EnergyCore.addPersistentEnergy(s, ir.inspire);
+        			}
         			return i;
         		}
         	}

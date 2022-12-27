@@ -132,7 +132,7 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
     public Card get(int x, int y) {
         return rg.get(x, y);
     }
-
+    
     @Override
     public void accept(ResearchGame t) {
         this.calculateCardNum();

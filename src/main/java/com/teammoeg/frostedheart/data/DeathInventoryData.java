@@ -19,16 +19,9 @@
 
 package com.teammoeg.frostedheart.data;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.SerializeUtil;
-import com.teammoeg.frostedheart.util.SerializeUtil.CompoundBuilder;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.ItemStackHelper;
@@ -38,23 +31,26 @@ import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 
 public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> {
     @CapabilityInject(DeathInventoryData.class)
     public static Capability<DeathInventoryData> CAPABILITY;
     private final LazyOptional<DeathInventoryData> capability;
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "death_inventory");
-    Map<UUID,CopyInventory> invs=new HashMap<>();
-    
+    CopyInventory inv;
+    boolean calledClone=false;
     private static class CopyInventory{
     	NonNullList<ItemStack> inv=NonNullList.withSize(9, ItemStack.EMPTY);
     	NonNullList<ItemStack> armor=NonNullList.withSize(4, ItemStack.EMPTY);
     	ItemStack offhand=ItemStack.EMPTY;
+    	
 		public CopyInventory(PlayerInventory othis) {
             for (int i = 0; i < 9; i++) {
                 ItemStack itemstack = othis.mainInventory.get(i);
@@ -163,30 +159,46 @@ public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> 
 		return LazyOptional.empty();
 	}
 	public void death(PlayerInventory inv) {
-		invs.put(inv.player.getUniqueID(),new CopyInventory(inv));
+		this.inv=new CopyInventory(inv);
 	}
 	public void alive(PlayerInventory inv) {
-		CopyInventory rem=invs.remove(inv.player.getUniqueID());
-		if(rem!=null) {
-			rem.restoreInventory(inv);
+		if(this.inv!=null) {
+			this.inv.restoreInventory(inv);
+			this.inv=null;
 		}
 	}
 	public void copy(DeathInventoryData data) {
-		this.invs=data.invs;
+		this.inv=data.inv;
 	}
-	
+	public void calledClone() {
+		calledClone=true;
+	}
+	public void tryCallClone(PlayerEntity pe) {
+		if(!calledClone) {
+			MinecraftForge.EVENT_BUS.post(new PlayerEvent.Clone(pe,pe,true));
+		}
+	}
 	@Override
 	public CompoundNBT serializeNBT() {
 		CompoundNBT cnbt=new CompoundNBT();
-		cnbt.put("data", SerializeUtil.toNBTList(invs.entrySet(),t->CompoundBuilder.create().put("uuid",t.getKey()).put("inv",t.getValue().serializeNBT()).build()));
+		if(inv!=null)
+			cnbt.put("inv",inv.serializeNBT());
+		cnbt.putBoolean("cloned", calledClone);
 		return cnbt;
 	}
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
-		invs.clear();
-		nbt.getList("data", 10).stream().map(t->(CompoundNBT)t).forEach(e->{
-			invs.put(e.getUniqueId("uuid"),CopyInventory.deserializeNBT(e.getCompound("inv")));
-		});;
+		inv=null;
+		calledClone=nbt.getBoolean("cloned");
+		if(nbt.contains("data"))
+			nbt.getList("data", 10).stream().map(t->(CompoundNBT)t).forEach(e->{
+				inv=CopyInventory.deserializeNBT(e.getCompound("inv"));
+			});
+		else if(nbt.contains("inv"))
+			inv=CopyInventory.deserializeNBT(nbt.getCompound("inv"));
+	}
+	public void startClone() {
+		calledClone=false;
 	}
 
 }
