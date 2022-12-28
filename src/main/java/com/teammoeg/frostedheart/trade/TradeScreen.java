@@ -20,94 +20,67 @@
 package com.teammoeg.frostedheart.trade;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.gui.ResearchGui;
-import com.teammoeg.frostedheart.research.gui.editor.EditDialog;
-import com.teammoeg.frostedheart.research.gui.tech.ResearchPanel;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 
+import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
+import dev.ftb.mods.ftblibrary.ui.Button;
+import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.inventory.container.Slot;
 
 public class TradeScreen extends BaseScreen implements ResearchGui {
-    DrawDeskContainer cx;
-    DrawDeskPanel p;
-    ResearchPanel r;
-    EditDialog dialog;
 
-    public TradeScreen(DrawDeskContainer cx) {
-        super();
-        this.cx = cx;
-        p = new DrawDeskPanel(this);
-        p.setEnabled(true);
+	public TradeScreen() {
+		super();
 
-    }
+	}
 
-    public DrawingDeskTileEntity getTile() {
-        return cx.tile;
-    }
+	@Override
+	public boolean onInit() {
+		int sw = 250;
+		int sh = 177;
+		this.setSize(sw, sh);
+		return super.onInit();
+	}
 
-    public void showTechTree() {
-        if (r == null) {
-            r = new ResearchPanel(this) {
-                @Override
-                public void onDisabled() {
-                    hideTechTree();
-                }
-            };
-            r.setPos(0, 0);
-        }
-        r.setEnabled(true);
-        p.setEnabled(false);
-        cx.setEnabled(false);
-        this.refreshWidgets();
+	@Override
+	public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+		theme.drawPanelBackground(matrixStack, x, y, w, h);
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				theme.drawContainerSlot(matrixStack, 7 + x + i * 16, 15 + y + j * 16, 16, 16);
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				theme.drawContainerSlot(matrixStack, 16 * 5 + 7 + x + i * 16, 15 + y + j * 16, 16, 16);
+		for (int i = 0; i < 4; i++)
+			for (int j = 0; j < 4; j++)
+				theme.drawContainerSlot(matrixStack, 16 * 9 + 10 + x + i * 16, 15 + y + j * 16, 16, 16);
+		theme.drawButton(matrixStack, x+160, y+81,70, 20,WidgetType.NORMAL);
+		for (int k = 0; k < 3; ++k) {
+			for (int i1 = 0; i1 < 9; ++i1) {
+				theme.drawContainerSlot(matrixStack, 8 + i1 * 18, 84 + k * 18, 16, 16);
+			}
+		}
 
-    }
+		for (int l = 0; l < 9; ++l) {
+			theme.drawContainerSlot(matrixStack, 8 + l * 18, 142, 16, 16);
+		}
+	}
 
-    public void hideTechTree() {
-        p.setEnabled(true);
-        r.setEnabled(false);
-        cx.setEnabled(true);
-        this.refreshWidgets();
-    }
+	@Override
+	public void addWidgets() {
+		SimpleTextButton trade;
+		super.add(trade=new SimpleTextButton(this,GuiUtils.str("Trade"),Icon.EMPTY) {
 
-    public void openDialog(EditDialog dialog, boolean refresh) {
-        this.dialog = dialog;
-        r.setEnabled(false);
-        if (refresh)
-            this.refreshWidgets();
-    }
-
-    public void closeDialog(boolean refresh) {
-        this.dialog = null;
-        r.setEnabled(true);
-        if (refresh)
-            this.refreshWidgets();
-    }
-
-    @Override
-    public void addWidgets() {
-        if (p != null && p.isEnabled())
-            add(p);
-        if (r != null && r.isEnabled())
-            add(r);
-        if (getDialog() != null)
-            add(getDialog());
-    }
-
-    @Override
-    public boolean onInit() {
-        int sw = 387;
-        int sh = 203;
-        this.setSize(sw, sh);
-        return super.onInit();
-    }
-
-    @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-    }
-
-    public EditDialog getDialog() {
-        return dialog;
-    }
+			@Override
+			public void onClicked(MouseButton arg0) {
+			}
+			
+		});
+	}
 
 }
