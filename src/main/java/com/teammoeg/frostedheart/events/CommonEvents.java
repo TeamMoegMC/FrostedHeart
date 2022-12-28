@@ -113,6 +113,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerXpEvent.PickupXp;
+import net.minecraftforge.event.entity.player.SleepingTimeCheckEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -548,7 +549,12 @@ public class CommonEvents {
             }
         }
     }
-
+    @SubscribeEvent
+    public static void onSleep(SleepingTimeCheckEvent event) {
+    	long ttime=event.getEntity().getEntityWorld().getDayTime()%24000;
+    	if(ttime<12000)
+    		event.setResult(Result.DENY);
+    }
     @SubscribeEvent
     public static void addManualToPlayer(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
         CompoundNBT nbt = event.getPlayer().getPersistentData();
