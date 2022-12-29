@@ -179,6 +179,10 @@ public class JEICompat implements IModPlugin {
 	}
 	public static IRecipeManager man;
 	public static IJeiRuntime jei;
+	public static void resetRuntime() {
+		man=null;
+		jei=null;
+	}
 	@Override
 	public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
 		man = jeiRuntime.getRecipeManager();
@@ -206,6 +210,7 @@ public class JEICompat implements IModPlugin {
 			cachedInfoAdd = true;
 			return;
 		}
+		FHMain.LOGGER.info("added info");
 		cachedInfoAdd = false;
 		Set<Item> items = new HashSet<>();
 		for (IRecipe<?> i : ResearchListeners.recipe) {
@@ -216,7 +221,7 @@ public class JEICompat implements IModPlugin {
 		}
 		infos.clear();
 		ITextComponent it = GuiUtils.translate("gui.jei.info.require_research");
-		List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
+		/*List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
 		for(IngredientInfoRecipe<ItemStack> info:rinfos) {
 			List<ItemStack> iss=info.getIngredients();
 			if(iss.size()==1) {
@@ -224,7 +229,7 @@ public class JEICompat implements IModPlugin {
 					infos.put(iss.get(0).getItem(),rinfos);
 				}
 			}
-		}
+		}*/
 		
 		
 		for (Item i : items) {
@@ -237,6 +242,7 @@ public class JEICompat implements IModPlugin {
 		}
 	}
 	public static void scheduleSyncJEI() {
+		//cachedInfoAdd=true;
 		Minecraft.getInstance().runImmediately(()->syncJEI());
 	}
 	public static void syncJEI() {

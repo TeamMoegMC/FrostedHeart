@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.data;
+package com.teammoeg.frostedheart.climate.data;
 
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 

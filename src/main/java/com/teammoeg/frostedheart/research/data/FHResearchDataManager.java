@@ -71,6 +71,7 @@ public class FHResearchDataManager {
 	}
 
 	public void load() {
+		FHResearch.editor=false;
 		local = server.func_240776_a_(dataFolder);
 		regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
 		FHResearch.clearAll();
@@ -84,6 +85,7 @@ public class FHResearchDataManager {
 
 			}
 		}
+		data.clear();
 		FHResearch.init();
 		local.toFile().mkdirs();
 		for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {

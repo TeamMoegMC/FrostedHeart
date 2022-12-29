@@ -34,6 +34,8 @@ import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
+import com.teammoeg.frostedheart.trade.TradePolicy;
+
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraftforge.registries.DeferredRegister;
@@ -60,6 +62,7 @@ public class FHRecipes {
         ModifyDamageRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("modify_damage", ModifyDamageRecipe.Serializer::new);
         InspireRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("inspire",InspireRecipe.Serializer::new);
         ShapelessCopyDataRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("shapless_copy_data",ShapelessCopyDataRecipe.Serializer::new);
+        TradePolicy.SERIALIZER=RECIPE_SERIALIZERS.register("trade",TradePolicy.Serializer::new);
     }
 
     public static void registerRecipeTypes() {
@@ -71,5 +74,6 @@ public class FHRecipes {
         ResearchPaperRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":paper");
         SaunaRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":sauna");
         InspireRecipe.TYPE=IRecipeType.register(FHMain.MODID + ":inspire");
+        TradePolicy.TYPE=IRecipeType.register(FHMain.MODID+":trade");
     }
 }

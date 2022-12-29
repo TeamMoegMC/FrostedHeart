@@ -297,7 +297,7 @@ public class FHResearch {
 	    finishReload();
 	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
 	    DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
-        FHResearch.editor=false;
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
 	    //FHResearch.saveAll();
 	}
 }

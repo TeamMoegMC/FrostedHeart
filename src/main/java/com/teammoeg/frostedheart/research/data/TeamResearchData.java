@@ -35,10 +35,12 @@ import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -460,15 +462,16 @@ public class TeamResearchData {
     public CompoundNBT getVariants() {
         return variants;
     }
+    public void sendUpdate() {
+ 
+    	FHResearchDataSyncPacket packet=new FHResearchDataSyncPacket(this.serialize(true));
+    	getTeam().ifPresent(t->t.getOnlineMembers().forEach(p->PacketHandler.send(PacketDistributor.PLAYER.with(() ->p ),packet)));
+    }
     public void reload() {
-    	crafting.clear();
-    	building.clear();
-    	block.clear();
-    	categories.clear();
-    	for(int i=0;i<grantedEffects.length();i++) {
-            if (grantedEffects.get(i))
-                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
-        }
+    	crafting.reload();
+    	building.reload();
+    	FHResearchDataSyncPacket packet=new FHResearchDataSyncPacket(this.serialize(true));
+    	getTeam().ifPresent(t->t.getOnlineMembers().forEach(p->PacketHandler.send(PacketDistributor.PLAYER.with(() ->p ),packet)));
     }
     /**
      * Deserialize.

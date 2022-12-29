@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.data.BlockTempData;
-import com.teammoeg.frostedheart.data.FHDataManager;
+import com.teammoeg.frostedheart.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.climate.data.FHDataManager;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;

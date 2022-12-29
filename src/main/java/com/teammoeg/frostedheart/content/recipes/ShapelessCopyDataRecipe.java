@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.recipes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.teammoeg.thermopolium.data.recipes.SerializeUtil;
+import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.block.Blocks;

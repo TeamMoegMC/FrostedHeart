@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
-import com.teammoeg.frostedheart.data.DeathInventoryData;
+import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;

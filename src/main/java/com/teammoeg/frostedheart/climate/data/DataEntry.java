@@ -16,10 +16,10 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.data;
+package com.teammoeg.frostedheart.climate.data;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.data.FHDataManager.FHDataType;
+import com.teammoeg.frostedheart.climate.data.FHDataManager.FHDataType;
 
 import net.minecraft.network.PacketBuffer;
 

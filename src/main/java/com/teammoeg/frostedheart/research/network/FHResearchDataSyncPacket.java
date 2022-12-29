@@ -39,7 +39,12 @@ public class FHResearchDataSyncPacket {
         this.data = FHResearchDataManager.INSTANCE.getData(team).serialize(true);
     }
 
-    public FHResearchDataSyncPacket(PacketBuffer buffer) {
+    public FHResearchDataSyncPacket(CompoundNBT data) {
+		super();
+		this.data = data;
+	}
+
+	public FHResearchDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
     }
 

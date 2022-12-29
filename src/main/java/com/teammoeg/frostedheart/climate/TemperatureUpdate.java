@@ -24,8 +24,8 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.data.FHDataManager;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -98,8 +98,11 @@ public class TemperatureUpdate {
             //load current data
             float current = TemperatureCore.getBodyTemperature(player);
             double tspeed = FHConfig.SERVER.tempSpeed.get();
-            if (current < 0)
-                current += FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed;
+            if (current < 0) {
+            	float delt=(float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
+            	player.addExhaustion(Math.min(delt,-current)*0.5f);//cost hunger for cold.
+                current += delt;
+            }
             //world and chunk temperature
             World world = player.getEntityWorld();
             BlockPos pos = new BlockPos(player.getPosX(),player.getPosYEye(),player.getPosZ());

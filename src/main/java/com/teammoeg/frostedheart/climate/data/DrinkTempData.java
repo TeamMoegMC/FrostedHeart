@@ -16,18 +16,17 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.data;
+package com.teammoeg.frostedheart.climate.data;
 
 import com.google.gson.JsonObject;
 
-public class WorldTempData extends JsonDataHolder {
+public class DrinkTempData extends JsonDataHolder {
 
-    public WorldTempData(JsonObject data) {
+    public DrinkTempData(JsonObject data) {
         super(data);
     }
 
-    public float getTemp() {
-        return this.getFloatOrDefault("temperature", 0F);
+    public float getHeat() {
+        return this.getFloatOrDefault("heat", 0F);
     }
-
 }

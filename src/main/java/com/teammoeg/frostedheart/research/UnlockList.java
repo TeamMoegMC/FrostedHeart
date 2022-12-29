@@ -95,4 +95,9 @@ public abstract class UnlockList<T> implements Iterable<T> {
     public Spliterator<T> spliterator() {
         return s.spliterator();
     }
+    public void reload() {
+    	Set<T> ns=new HashSet<>(s);
+    	s.clear();
+    	ns.stream().map(this::getString).map(this::getObject).forEach(s::add);
+    }
 }

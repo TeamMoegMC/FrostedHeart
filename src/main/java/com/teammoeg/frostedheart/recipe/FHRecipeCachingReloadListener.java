@@ -16,9 +16,11 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.resources;
+package com.teammoeg.frostedheart.recipe;
 
 import javax.annotation.Nonnull;
+
+import com.teammoeg.frostedheart.research.ResearchListeners;
 
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IResourceManager;
@@ -34,5 +36,6 @@ public class FHRecipeCachingReloadListener implements IResourceManagerReloadList
     @Override
     public void onResourceManagerReload(@Nonnull IResourceManager resourceManager) {
         FHRecipeReloadListener.buildRecipeLists(dataPackRegistries.getRecipeManager());
+        ResearchListeners.ServerReload();
     }
 }

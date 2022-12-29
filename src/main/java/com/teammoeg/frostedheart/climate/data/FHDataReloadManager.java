@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.data;
+package com.teammoeg.frostedheart.climate.data;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +25,7 @@ import java.io.InputStreamReader;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.data.FHDataManager.FHDataType;
+import com.teammoeg.frostedheart.climate.data.FHDataManager.FHDataType;
 import com.teammoeg.frostedheart.util.StructureUtils;
 
 import net.minecraft.resources.IResource;

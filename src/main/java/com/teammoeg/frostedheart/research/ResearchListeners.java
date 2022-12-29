@@ -25,8 +25,10 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
+import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.clues.Clue;
@@ -39,6 +41,7 @@ import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.RubbingTool;
+import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
@@ -47,6 +50,7 @@ import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultib
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -57,6 +61,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class ResearchListeners {
@@ -248,6 +253,20 @@ public class ResearchListeners {
     	tickClues.clear();
     	killClues.clear();
     	te=null;
+    }
+    public static void ServerReload() {
+    	if(FHResearchDataManager.INSTANCE==null)return;
+    	FHMain.LOGGER.info("reloading research system");
+    	FHResearchDataManager.INSTANCE.save();
+    	FHResearchDataManager.INSTANCE.load();
+    	FHResearchRegistrtySyncPacket packet=new FHResearchRegistrtySyncPacket();
+    	PacketHandler.send(PacketDistributor.ALL.noArg(),packet);
+    	FHResearchDataManager.INSTANCE.getAllData().forEach(t->t.sendUpdate());
+    }
+    @OnlyIn(Dist.CLIENT)
+    public static void reloadEditor() {
+    	if(!Minecraft.getInstance().isSingleplayer())
+    		FHResearch.editor=false;
     }
     @OnlyIn(Dist.CLIENT)
     public static boolean canExamine(ItemStack i) {
