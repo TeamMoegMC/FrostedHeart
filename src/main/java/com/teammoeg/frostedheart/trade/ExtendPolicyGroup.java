@@ -25,12 +25,8 @@ public class ExtendPolicyGroup extends PolicyGroup {
 		ref=pb.readResourceLocation();
 	}
 	@Override
-	public void tickNoCheck(int deltaDay, Map<String, Float> data, VillagerEntity ve) {
-		TradePolicy.policies.get(ref).tick(deltaDay, data,ve);
-	}
-	@Override
-	public void fetchNoCheck(List<BuyData> buys, List<SellData> sell, Map<String, Float> data, VillagerEntity ve) {
-		TradePolicy.policies.get(ref).fetch(buys, sell, data, ve);
+	public void CollectPoliciesNoCheck(PolicySnapshot policy,VillagerEntity ve) {
+		TradePolicy.policies.get(ref).CollectPolicies(policy,ve);
 	}
 	@Override
 	public JsonElement serialize() {

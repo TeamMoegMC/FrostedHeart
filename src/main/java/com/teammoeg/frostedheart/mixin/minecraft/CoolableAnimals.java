@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.util.IFeedStore;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
@@ -38,39 +39,47 @@ import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.world.World;
 
-@Mixin({SheepEntity.class, BeeEntity.class, MooshroomEntity.class, PigEntity.class, RabbitEntity.class})
+@Mixin({ SheepEntity.class, BeeEntity.class, PigEntity.class, RabbitEntity.class })
 public class CoolableAnimals extends MobEntity {
-    short hxteTimer;
+	short hxteTimer;
 
-    protected CoolableAnimals(EntityType<? extends MobEntity> type, World worldIn) {
-        super(type, worldIn);
-    }
+	protected CoolableAnimals(EntityType<? extends MobEntity> type, World worldIn) {
+		super(type, worldIn);
+	}
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        compound.putShort("hxthermia", hxteTimer);
+	@Inject(at = @At("HEAD"), method = "writeAdditional")
+	public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+		compound.putShort("hxthermia", hxteTimer);
 
-    }
+	}
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        hxteTimer = compound.getShort("hxthermia");
-    }
+	@Inject(at = @At("HEAD"), method = "writeAdditional")
+	public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+		hxteTimer = compound.getShort("hxthermia");
+	}
 
-    @Override
-    public void tick() {
-        super.tick();
-        if (!this.world.isRemote) {
-            float temp = ChunkData.getTemperature(this.getEntityWorld(), this.getPosition());
-            if (temp < WorldClimate.ANIMAL_ALIVE_TEMPERATURE || temp > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-                if (hxteTimer < 100) {
-                    hxteTimer++;
-                } else {
-                    hxteTimer = 0;
-                    this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
-                }
-            } else if (hxteTimer > 0)
-                hxteTimer--;
-        }
-    }
+	@Override
+	public void tick() {
+		super.tick();
+		if (!this.world.isRemote) {
+			float temp = ChunkData.getTemperature(this.getEntityWorld(), this.getPosition());
+			if (temp < WorldClimate.ANIMAL_ALIVE_TEMPERATURE
+					|| temp > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+				if (hxteTimer < 100) {
+					hxteTimer++;
+				} else {
+					if (temp > WorldClimate.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
+						if (this instanceof IFeedStore) {
+							if (((IFeedStore) this).consumeFeed()) {
+								hxteTimer = -7900;
+								return;
+							}
+						}
+					hxteTimer = 0;
+					this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+				}
+			} else if (hxteTimer > 0)
+				hxteTimer--;
+		}
+	}
 }

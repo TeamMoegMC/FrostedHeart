@@ -41,12 +41,13 @@ public class TradePolicy  extends IESerializableRecipe{
 	protected IERecipeSerializer<TradePolicy> getIESerializer() {
 		return SERIALIZER.get();
 	}
-	public void tick(int deltaDay, Map<String, Float> data,VillagerEntity ve) {
-		if(deltaDay>0)
-			groups.forEach(t->t.tick(deltaDay, data,ve));
+	public PolicySnapshot get(VillagerEntity ve) {
+		PolicySnapshot ps=new PolicySnapshot();
+		this.CollectPolicies(ps, ve);
+		return ps;
 	}
-	public void fetch(List<BuyData> buys, List<SellData> sell, Map<String, Float> data, VillagerEntity ve) {
-		groups.forEach(t->t.fetch(buys, sell, data, ve));
+	public void CollectPolicies(PolicySnapshot policy,VillagerEntity ve) {
+		groups.forEach(t->t.CollectPolicies(policy,ve));
 	}
 	public static class Serializer extends IERecipeSerializer<TradePolicy> {
         @Override

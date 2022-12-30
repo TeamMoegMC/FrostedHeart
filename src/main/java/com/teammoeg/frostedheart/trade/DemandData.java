@@ -9,33 +9,38 @@ import com.google.gson.JsonObject;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 
-public class DemandData extends BaseData{
+public class DemandData extends BaseData {
 	Ingredient item;
+
 	public DemandData(String id, int maxstore, float recover, int price, Ingredient item) {
 		super(id, maxstore, recover, price);
 		this.item = item;
 	}
+
 	public DemandData(JsonObject jo) {
 		super(jo);
-		item=Ingredient.deserialize(jo.get("demand"));
+		item = Ingredient.deserialize(jo.get("demand"));
 	}
 
 	public DemandData(PacketBuffer pb) {
 		super(pb);
-		item=Ingredient.read(pb);
+		item = Ingredient.read(pb);
 	}
-	
 
 	@Override
 	public void fetch(List<BuyData> buys, List<SellData> sell, Map<String, Float> data) {
-		buys.add(new BuyData(item,(int)(float)data.getOrDefault(id,0f), id));
+		int num = (int) (float) data.getOrDefault(getId(), 0f);
+		if (num > 0)
+			buys.add(new BuyData(item, num, getId()));
 	}
+
 	@Override
 	public JsonElement serialize() {
-		JsonObject jo= super.serialize().getAsJsonObject();
-		jo.add("demand",item.serialize());
+		JsonObject jo = super.serialize().getAsJsonObject();
+		jo.add("demand", item.serialize());
 		return jo;
 	}
+
 	@Override
 	public void write(PacketBuffer buffer) {
 		buffer.writeBoolean(false);
@@ -43,5 +48,9 @@ public class DemandData extends BaseData{
 		item.write(buffer);
 	}
 
-	
+	@Override
+	public String getType() {
+		return "b";
+	}
+
 }

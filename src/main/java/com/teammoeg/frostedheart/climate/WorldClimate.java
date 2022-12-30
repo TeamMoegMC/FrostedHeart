@@ -98,6 +98,8 @@ public class WorldClimate {
     public static final float HEMP_GROW_TEMPERATURE = 0;
     
     public static final float ANIMAL_ALIVE_TEMPERATURE = -1.5f;
+    
+    public static final float FEEDED_ANIMAL_ALIVE_TEMPERATURE = -15f;
 
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
 

@@ -10,7 +10,7 @@ import com.teammoeg.frostedheart.util.Writeable;
 import net.minecraft.network.PacketBuffer;
 
 public abstract class BaseData implements Writeable{
-	String id;
+	private String id;
 	int maxstore;
 	float recover;
 	int price;
@@ -38,6 +38,10 @@ public abstract class BaseData implements Writeable{
 	public void tick(int deltaDay,Map<String,Float> data) {
 		if(deltaDay>0) 
 			data.compute(id,(k,v)->v==null?recover*deltaDay:Math.min(recover*deltaDay+v,maxstore));
+	}
+	public abstract String getType();
+	public String getId() {
+		return id+"_"+getType();
 	}
 	public abstract void fetch(List<BuyData> buys,List<SellData> sell,Map<String,Float> data);
 	@Override

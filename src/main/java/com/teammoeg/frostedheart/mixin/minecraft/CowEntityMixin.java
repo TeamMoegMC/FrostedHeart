@@ -19,14 +19,20 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import javax.annotation.Nullable;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.util.IFeedStore;
 import com.teammoeg.frostedheart.util.IMilkable;
 
 import net.minecraft.entity.EntityType;
@@ -54,7 +60,7 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.world.World;
 
 @Mixin(CowEntity.class)
-public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
+public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, IFeedStore {
 	private final static ResourceLocation cow_feed = new ResourceLocation(FHMain.MODID, "cow_feed");
 	private EatGrassGoal eatGrassGoal;
 
@@ -85,8 +91,17 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 
 	protected CowEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
 		super(type, worldIn);
+	}/*
+	@Override
+	public void setInLove(PlayerEntity player) {
+		new Exception().printStackTrace();
+		super.setInLove(player);
 	}
-
+	@Override
+	public void setInLove(int player) {
+		new Exception().printStackTrace();
+		super.setInLove(player);
+	}*/
 	@Override
 	public void tick() {
 		super.tick();
@@ -109,6 +124,12 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 				if (hxteTimer < 100) {
 					hxteTimer++;
 				} else {
+					if (temp > WorldClimate.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
+						if (((IFeedStore) this).consumeFeed()) {
+							hxteTimer = -7900;
+							return;
+						}
+
 					hxteTimer = 0;
 					this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
 				}
@@ -158,23 +179,21 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 	 * @author khjxiaogu
 	 * @reason change to our own milk logic
 	 */
-	@Override
 	@Overwrite
 	public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
 		ItemStack itemstack = playerIn.getHeldItem(hand);
-
+		//FHMain.LOGGER.info("start feed"+this.isInLove());
 		if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
 			if (feeded < 2) {
-				ActionResultType parent = ActionResultType.PASS;
-				if (this.isBreedingItem(itemstack))
-					parent = super.getEntityInteractionResult(playerIn, hand);
-				if (!parent.isSuccessOrConsume() && !this.world.isRemote)
-					this.consumeItemFromStack(playerIn, itemstack);
 				feeded++;
+				//FHMain.LOGGER.info("yield feed"+this.isInLove());
+				if (!this.world.isRemote)
+					this.consumeItemFromStack(playerIn, itemstack);
+				//FHMain.LOGGER.info("ret feed"+this.isInLove());
 				return ActionResultType.func_233537_a_(this.world.isRemote);
 			}
 		}
-
+		//FHMain.LOGGER.info("end feed"+this.isInLove());
 		if (itemstack.getItem() == Items.BUCKET) {
 			if (milk > 0 && !this.isChild()) {
 				playerIn.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
@@ -191,5 +210,18 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable {
 			}
 		}
 		return super.getEntityInteractionResult(playerIn, hand);
+	}
+
+	@Override
+	public boolean consumeFeed() {
+		if (feeded > 0) {
+			feeded--;
+			return true;
+		}
+		if (milk > 0) {
+			milk--;
+			return true;
+		}
+		return false;
 	}
 }

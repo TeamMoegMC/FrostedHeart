@@ -29,15 +29,10 @@ public abstract class PolicyGroup implements Writeable{
 		super();
 		conditions=SerializeUtil.readList(pb, Conditions::deserialize);
 	}
-	public abstract void tickNoCheck(int deltaDay, Map<String, Float> data, VillagerEntity ve);
-	public void tick(int deltaDay, Map<String, Float> data, VillagerEntity ve) {
+	public abstract void CollectPoliciesNoCheck(PolicySnapshot policy,VillagerEntity ve);
+	public void CollectPolicies(PolicySnapshot policy,VillagerEntity ve) {
 		if(conditions.stream().allMatch(t->t.test(ve)))
-			tickNoCheck(deltaDay,data,ve);
-	};
-	public abstract void fetchNoCheck(List<BuyData> buys,List<SellData> sell,Map<String,Float> data, VillagerEntity ve);
-	public void fetch(List<BuyData> buys,List<SellData> sell,Map<String,Float> data, VillagerEntity ve) {
-		if(conditions.stream().allMatch(t->t.test(ve)))
-			this.fetchNoCheck(buys, sell, data, ve);
+			CollectPoliciesNoCheck(policy,ve);
 	}
 	@Override
 	public JsonElement serialize() {

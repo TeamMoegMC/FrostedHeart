@@ -27,13 +27,10 @@ public class BasicPolicyGroup extends PolicyGroup{
 	}
 	
 	@Override
-	public void tickNoCheck(int deltaDay,Map<String,Float> data, VillagerEntity ve) {
-		bdata.forEach(d->d.tick(deltaDay, data));
+	public void CollectPoliciesNoCheck(PolicySnapshot policy,VillagerEntity ve) {
+		bdata.forEach(policy::register);
 	}
-	@Override
-	public void fetchNoCheck(List<BuyData> buys, List<SellData> sell, Map<String, Float> data, VillagerEntity ve) {
-		bdata.forEach(t->t.fetch(buys, sell, data));
-	}
+
 	@Override
 	public JsonElement serialize() {
 		JsonObject jo=super.serialize().getAsJsonObject();

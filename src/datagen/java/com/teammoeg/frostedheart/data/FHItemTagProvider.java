@@ -23,6 +23,7 @@ package com.teammoeg.frostedheart.data;
 
 import java.nio.file.Path;
 
+import com.cannolicatfish.rankine.init.RankineTags;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
@@ -49,6 +50,8 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 	protected void registerTags() {
 		tag("colored_thermos").add(FHItems.allthermos.toArray(new Item[0]));
 		tag("colored_advanced_thermos").add(FHItems.alladvthermos.toArray(new Item[0]));
+		tag("chicken_feed").addTag(RankineTags.Items.BREEDABLES_CHICKEN).addTag(ftag("seeds"));
+		tag("cow_feed").addTag(RankineTags.Items.BREEDABLES_COW);
 	}
 
 

@@ -10,34 +10,37 @@ import com.teammoeg.frostedheart.util.SerializeUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 
-public class ProductionData extends BaseData{
+public class ProductionData extends BaseData {
 	ItemStack item;
+
 	public ProductionData(String id, int maxstore, float recover, int price, ItemStack item) {
 		super(id, maxstore, recover, price);
 		this.item = item;
-		
+
 	}
 
 	public ProductionData(JsonObject jo) {
 		super(jo);
-		item=SerializeUtil.fromJson(jo.get("produce"));
+		item = SerializeUtil.fromJson(jo.get("produce"));
 	}
 
 	public ProductionData(PacketBuffer pb) {
 		super(pb);
-		item=pb.readItemStack();
+		item = pb.readItemStack();
 	}
-
-	
 
 	@Override
 	public void fetch(List<BuyData> buys, List<SellData> sell, Map<String, Float> data) {
-		sell.add(new SellData(item,(int)(float)data.getOrDefault(id,0f), id));
+
+		int num = (int) (float) data.getOrDefault(getId(), 0f);
+		if (num > 0)
+			sell.add(new SellData(item, num, getId()));
 	}
+
 	@Override
 	public JsonElement serialize() {
-		JsonObject jo= super.serialize().getAsJsonObject();
-		jo.add("produce",SerializeUtil.toJson(item));
+		JsonObject jo = super.serialize().getAsJsonObject();
+		jo.add("produce", SerializeUtil.toJson(item));
 		return jo;
 	}
 
@@ -46,5 +49,10 @@ public class ProductionData extends BaseData{
 		buffer.writeBoolean(true);
 		super.write(buffer);
 		buffer.writeItemStack(item);
+	}
+
+	@Override
+	public String getType() {
+		return "s";
 	}
 }

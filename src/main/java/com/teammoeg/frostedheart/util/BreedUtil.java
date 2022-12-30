@@ -1,0 +1,35 @@
+package com.teammoeg.frostedheart.util;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.cannolicatfish.rankine.init.RankineTags;
+
+import net.minecraft.entity.EntityType;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.Tags.IOptionalNamedTag;
+
+public class BreedUtil {
+	static Map<EntityType<?>,IOptionalNamedTag<Item>> tag=new HashMap<>();
+	static {
+		tag.put(EntityType.PIG,RankineTags.Items.BREEDABLES_PIG);
+		tag.put(EntityType.COW,RankineTags.Items.BREEDABLES_COW);
+		tag.put(EntityType.MOOSHROOM,RankineTags.Items.BREEDABLES_COW);
+		tag.put(EntityType.SHEEP,RankineTags.Items.BREEDABLES_SHEEP);
+		tag.put(EntityType.LLAMA,RankineTags.Items.BREEDABLES_LLAMA);
+		tag.put(EntityType.CHICKEN,RankineTags.Items.BREEDABLES_CHICKEN);
+		
+		tag.put(EntityType.FOX,RankineTags.Items.BREEDABLES_FOX);
+		tag.put(EntityType.RABBIT,RankineTags.Items.BREEDABLES_RABBIT);
+		tag.put(EntityType.CAT,RankineTags.Items.BREEDABLES_CAT);
+		tag.put(EntityType.HORSE,RankineTags.Items.BREEDABLES_HORSE);
+		tag.put(EntityType.DONKEY,RankineTags.Items.BREEDABLES_HORSE);
+	}
+	public static boolean isBreedingItem(EntityType<?> type,ItemStack itemStack) {
+		IOptionalNamedTag<Item> t=tag.get(type);
+		if(t!=null)
+			return itemStack.getItem().isIn(t);
+		return false;
+	}
+}
