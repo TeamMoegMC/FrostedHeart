@@ -230,7 +230,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 				if (ir != null) {
 					ItemStack outslot = inventory.get(3);
 					if (ir.output.isEmpty() || outslot.isEmpty()
-							|| (ir.output.getCount() + outslot.getCount() < outslot.getMaxStackSize()
+							|| (ir.output.getCount() + outslot.getCount() <= outslot.getMaxStackSize()
 									&& ItemHandlerHelper.canItemStacksStack(ir.output, outslot))) {
 						if (ir.output_fluid.isEmpty() || fluid[1].fill(ir.output_fluid,
 								FluidAction.SIMULATE) == ir.output_fluid.getAmount()) {

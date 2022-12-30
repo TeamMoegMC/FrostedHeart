@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
+import com.teammoeg.frostedheart.content.decoration.oilburner.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
@@ -71,7 +72,9 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<OilBurnerTileEntity>> OIL_BURNER = REGISTER.register(
             "oil_burner", makeType(OilBurnerTileEntity::new, () -> FHBlocks.oilburner)
     );
-
+    public static final RegistryObject<TileEntityType<GasVentTileEntity>> GAS_VENT = REGISTER.register(
+            "gas_vent", makeType(GasVentTileEntity::new, () -> FHBlocks.gasvent)
+    );
 
     public static final RegistryObject<TileEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
             "drawing_desk", makeType(DrawingDeskTileEntity::new, () -> FHBlocks.drawing_desk)

@@ -1,0 +1,8 @@
+{
+  "variants": {
+      "": {
+      "model": "frostedheart:block/gas_vent",
+      "uvlock": true
+    }
+  }
+}

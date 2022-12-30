@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
 import com.teammoeg.frostedheart.content.decoration.RelicChestBlock;
+import com.teammoeg.frostedheart.content.decoration.oilburner.GasVentBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerBlock;
 import com.teammoeg.frostedheart.content.decoration.oilburner.SmokeBlockT1;
 import com.teammoeg.frostedheart.content.incubator.HeatIncubatorBlock;
@@ -90,6 +91,13 @@ public class FHBlocks {
     public static Block oilburner = new OilBurnerBlock("oil_burner", Block.Properties
             .create(Material.ROCK)
             .sound(SoundType.STONE)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(2, 10)
+            .notSolid(), FHBlockItem::new);
+    public static Block gasvent = new GasVentBlock("gas_vent", Block.Properties
+            .create(Material.IRON)
+            .sound(SoundType.METAL)
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)

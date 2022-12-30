@@ -127,7 +127,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     	}).orElse(false);
         
     }
-
+    protected void tickControls() {}
     protected abstract void onShutDown();
 
     protected abstract void tickFuel();
@@ -139,19 +139,22 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     @Override
     public void tick() {
         checkForNeedlessTicking();
+        if(isDummy())return;
         // spawn smoke particle
-        if (world != null && world.isRemote && formed && !isDummy()) {
+        if (world != null && world.isRemote && formed) {
             tickEffects(getIsActive());
         }
+        
+        tickControls();
         //user set shutdown
         if (isUserOperated())
-            if (!world.isRemote && formed && !isDummy() && !isWorking()) {
+            if (!world.isRemote && formed && !isWorking()) {
                 setAllActive(false);
                 onShutDown();
                 ChunkData.removeTempAdjust(world, getPos());
             }
         
-        if (!world.isRemote && formed && !isDummy()) {
+        if (!world.isRemote && formed) {
         	if(isWorking()) {
 	            if (shouldUnique()) {
 	                if (checkInterval <= 0) {
