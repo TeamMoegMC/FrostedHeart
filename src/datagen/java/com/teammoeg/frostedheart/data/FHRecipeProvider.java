@@ -70,13 +70,12 @@ public class FHRecipeProvider extends RecipeProvider {
 				"nail_soup"
 		};
 		THPFluids.getAll().filter(o->!Arrays.stream(ovride).anyMatch(o.getRegistryName().getPath()::equals)).forEach(f-> {
-			for(Item i:new Item[] {FHItems.advanced_thermos,FHItems.thermos})
-				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_"+i.getRegistryName().getPath()),Ingredient.fromItems(i),f,2,2));
+			
+				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_thermos"),Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"thermos"))),f,2,2));
 		});
 		THPFluids.getAll().filter(o->o.getRegistryName().getPath().equals("dilute_soup")).forEach(f-> {
-			for(Item i:new Item[] {FHItems.advanced_thermos,FHItems.thermos})
-				
-				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_"+i.getRegistryName().getPath()),Ingredient.fromItems(i),f,3,2));
+		
+				out.accept(new WaterLevelFluidRecipe(new ResourceLocation(FHMain.MODID,"water_level/"+f.getRegistryName().getPath()+"_thermos"),Ingredient.fromTag(ItemTags.createOptional(new ResourceLocation(FHMain.MODID,"thermos"))),f,3,2));
 		});
 		for(Block i:RankineLists.MUSHROOM_BLOCKS) {
 			Item mi=i.asItem();

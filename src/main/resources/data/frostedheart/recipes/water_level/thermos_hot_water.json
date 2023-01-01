@@ -1,9 +1,0 @@
-{
-  "type": "watersource:water_level_fluid",
-  "ingredient": {
-    "item": "frostedheart:thermos"
-  },
-  "fluid": "thermopolium:nail_soup",
-  "waterLevel": 5,
-  "waterSaturationLevel": 6
-}

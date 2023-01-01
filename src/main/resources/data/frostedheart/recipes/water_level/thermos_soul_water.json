@@ -1,9 +1,0 @@
-{
-  "type": "watersource:water_level_fluid",
-  "ingredient": {
-    "item": "frostedheart:thermos"
-  },
-  "fluid": "watersource:soul_water",
-  "waterLevel": 4,
-  "waterSaturationLevel": 3
-}

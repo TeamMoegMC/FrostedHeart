@@ -57,7 +57,6 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     public void tick() {
         if (this.world != null && !this.world.isRemote) {
         	int val=input.drain(1000, FluidAction.EXECUTE).getAmount();
-            FHMain.LOGGER.info(val);
         	if(val>0) {
             	if(!this.getIsActive()) {
                 	this.setActive(true);

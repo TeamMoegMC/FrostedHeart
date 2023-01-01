@@ -107,16 +107,16 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	@Override
 	protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
 		T2GeneratorTileEntity master = master();
-		if (master != null && side == this.getFacing() && this.offsetToMaster.equals(fluidIn))
+		if (master != null && side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
 			return new FluidTank[] { master.tank };
 		return new FluidTank[0];
 	}
 
-	private static final BlockPos fluidIn = new BlockPos(-1, -1, 0);
+	private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
 
 	@Override
 	protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-		if (side == this.getFacing() && this.offsetToMaster.equals(fluidIn))
+		if (side == this.getFacing() && this.posInMultiblock.equals(fluidIn))
 			return true;
 		return false;
 	}
@@ -236,7 +236,6 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	}
 
 	private static final BlockPos networkTile = new BlockPos(1, 0, 0);
-	private static final BlockPos networkTileOffset=networkTile.down();
 	@Override
 	public SteamEnergyNetwork getNetwork() {
 		BlockPos actualPos = getBlockPosForPos(networkTile);
@@ -301,7 +300,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
 	@Override
 	public boolean canConnectAt(Direction to) {
-		return to == this.getFacing().getOpposite() && this.offsetToMaster.equals(networkTileOffset);
+		return to == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile);
 	}
 
 	@Override
