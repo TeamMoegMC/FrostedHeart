@@ -160,7 +160,11 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     public ITextComponent getDescription() {
         return FHTextUtil.getOptional(desc, "clue", () -> this.getLId() + ".desc");
     }
+    public String getDescriptionString() {
+    	ITextComponent tc=getDescription();
 
+    	return tc!=null?tc.getString():"";
+    }
     public ITextComponent getHint() {
         return FHTextUtil.getOptional(hint, "clue", () -> this.getLId() + ".hint");
     }

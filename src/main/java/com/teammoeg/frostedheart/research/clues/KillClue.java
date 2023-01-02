@@ -107,7 +107,7 @@ public class KillClue extends ListenerClue {
     }
 	@Override
 	public String getBrief() {
-		return "Kill "+getDescription().getString();
+		return "Kill "+getDescriptionString();
 	}
 
 

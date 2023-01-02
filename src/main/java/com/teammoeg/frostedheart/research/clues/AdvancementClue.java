@@ -122,7 +122,7 @@ public class AdvancementClue extends TickListenerClue {
 
 	@Override
 	public String getBrief() {
-		return "Advancement "+getDescription().getString();
+		return "Advancement "+getDescriptionString();
 	}
 
 

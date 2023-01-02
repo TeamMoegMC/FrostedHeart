@@ -113,7 +113,7 @@ public class ItemClue extends Clue {
     @Override
     public ITextComponent getDescription() {
         ITextComponent itc = super.getDescription();
-        if (itc != null || stack == null)
+        if (itc != null||stack == null)
             return itc;
         if (stack.hasNoMatchingItems())
             return null;
@@ -123,8 +123,7 @@ public class ItemClue extends Clue {
 	@Override
 	public String getBrief() {
 		if(consume)
-			return "Submit item "+getDescription().getString();
-		else
-			return "Inspect item "+getDescription().getString();
+			return "Submit item "+getDescriptionString();
+		return "Inspect item "+getDescriptionString();
 	}
 }

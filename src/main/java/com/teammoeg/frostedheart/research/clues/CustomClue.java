@@ -66,7 +66,7 @@ public class CustomClue extends Clue {
     }
 	@Override
 	public String getBrief() {
-		return "Custom "+getDescription().getString();
+		return "Custom "+getDescriptionString();
 	}
 
 }
