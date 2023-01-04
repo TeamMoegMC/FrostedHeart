@@ -98,7 +98,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         clientRecipeManager = event.getRecipeManager();
         if (!Minecraft.getInstance().isSingleplayer())
             buildRecipeLists(clientRecipeManager);
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::syncJEI);
+        
     }
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
@@ -128,6 +128,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         PaperRecipe.recipes = filterRecipes(recipes, PaperRecipe.class, PaperRecipe.TYPE).values().stream().collect(Collectors.toList());
         SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
         IncubateRecipe.recipeList=filterRecipes(recipes, IncubateRecipe.class, IncubateRecipe.TYPE);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {

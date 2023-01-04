@@ -36,6 +36,7 @@ import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
 import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
@@ -56,6 +57,7 @@ import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.ArmorItem;
@@ -65,6 +67,7 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -119,8 +122,23 @@ public class ClientRegistryEvents {
         render = skinMap.get("slim");
         render.addLayer(new HeaterVestRenderer<>(render));
         addManual();
+        TetraClient.init();
     }
-
+    @SubscribeEvent
+    public static void provideTextures(final TextureStitchEvent.Pre event) {
+        if (AtlasTexture.LOCATION_BLOCKS_TEXTURE.equals(event.getMap().getTextureLocation())) {
+            Minecraft.getInstance().getResourceManager().getAllResourceLocations("textures/item/module", s -> s.endsWith(".png")).stream()
+                    .filter(resourceLocation -> FHMain.MODID.equals(resourceLocation.getNamespace()))
+                    // 9 is the length of "textures/" & 4 is the length of ".png"
+                   
+                    .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
+                    .map(rl->{
+                    	FHMain.LOGGER.info("stitching texture"+rl.toString());
+                    	return rl;
+                    })
+                    .forEach(event::addSprite);
+        }
+    }
     public static <C extends Container, S extends Screen & IHasContainer<C>> void
     registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
         @SuppressWarnings("unchecked")

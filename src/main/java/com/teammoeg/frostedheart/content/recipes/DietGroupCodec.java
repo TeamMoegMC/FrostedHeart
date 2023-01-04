@@ -49,7 +49,7 @@ public class DietGroupCodec {
                     codecs.add(idg);
                     continue outer;
                 }
-            throw new IllegalArgumentException("Failed to load diet groups, delete your serverconfig. If the persists, reinstall this modpack!");
+            throw new IllegalArgumentException("Failed to load diet groups, delete your \"serverconfig\" folder. If persists, reinstall this modpack!");
         }
     }
 

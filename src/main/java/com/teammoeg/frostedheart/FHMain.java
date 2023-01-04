@@ -39,6 +39,8 @@ import com.teammoeg.frostedheart.climate.TemperatureSimulator;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
+import com.teammoeg.frostedheart.compat.tetra.TetraClient;
+import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.data.DeathInventoryData;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
@@ -129,8 +131,10 @@ public class FHMain {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
+        
+        
         FHConfig.register();
-
+        TetraCompat.init();
         FHProps.init();
         FHItems.init();
         FHBlocks.init();
@@ -149,7 +153,7 @@ public class FHMain {
         JsonParser gs = new JsonParser();
         JsonObject jo = gs.parse(new InputStreamReader(ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID + ".mixins.json"))).getAsJsonObject();
         JsonArray mixins = jo.get("mixins").getAsJsonArray();
-
+        
         if (!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone")) ||
                 !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone")) ||
                 !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
@@ -173,7 +177,6 @@ public class FHMain {
         MinecraftForge.EVENT_BUS.addGenericListener(Block.class, this::missingMappingB);
         if (ModList.get().isLoaded("projecte")) {
             MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
-            System.out.println("pe loaded");
         } else
             try {
                 Class.forName("moze_intel.projecte.PECore");

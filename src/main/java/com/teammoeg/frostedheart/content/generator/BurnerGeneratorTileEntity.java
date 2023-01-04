@@ -360,16 +360,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
 
     @Override
     protected void tickEffects(boolean isActive) {
-        if (isActive) {
-            BlockPos blockpos = this.getPos();
-            Random random = world.rand;
-            if (random.nextFloat() < 0.4F) {
-                for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                    ClientUtils.spawnSmokeParticles(world, blockpos);
-                    ClientUtils.spawnFireParticles(world, blockpos);
-                }
-            }
-        }
+
     }
 
 	@Override

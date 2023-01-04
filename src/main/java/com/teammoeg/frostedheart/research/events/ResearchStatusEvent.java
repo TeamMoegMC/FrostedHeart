@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.research.events;
 
-import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.research.Research;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraftforge.eventbus.api.Event;

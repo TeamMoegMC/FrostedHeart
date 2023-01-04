@@ -189,7 +189,7 @@ public class JEICompat implements IModPlugin {
 
 	static Map<IRecipeType<?>, Set<ResourceLocation>> types = new HashMap<>();
 
-	static {
+	static{
 		types.computeIfAbsent(IRecipeType.CRAFTING, i -> new HashSet<>()).add(VanillaRecipeCategoryUid.CRAFTING);
 	}
 	private static boolean cachedInfoAdd = false;
@@ -208,22 +208,39 @@ public class JEICompat implements IModPlugin {
 				items.add(out.getItem());
 			}
 		}
+		infos.clear();
 		ITextComponent it = GuiUtils.translate("gui.jei.info.require_research");
+		List<IngredientInfoRecipe<ItemStack>> rinfos=(List<IngredientInfoRecipe<ItemStack>>) man.getRecipes(man.getRecipeCategory(VanillaRecipeCategoryUid.INFORMATION));
+		for(IngredientInfoRecipe<ItemStack> info:rinfos) {
+			List<ItemStack> iss=info.getIngredients();
+			System.out.println("Found Info "+iss.get(0).getItem().getRegistryName());
+			if(iss.size()==1) {
+				if(items.remove(iss.get(0).getItem())) {
+					infos.put(iss.get(0).getItem(),rinfos);
+				}
+			}
+		}
+		
+		
 		for (Item i : items) {
-
 			List<IngredientInfoRecipe<ItemStack>> il = IngredientInfoRecipe.create(ImmutableList.of(new ItemStack(i)),
 					VanillaTypes.ITEM, it);
+			System.out.println("New Info "+i.getRegistryName());
 			il.forEach(r -> man.addRecipe(r, VanillaRecipeCategoryUid.INFORMATION));
+		
 			infos.put(i, il);
 
 		}
 	}
-
+	public static void scheduleSyncJEI() {
+		Minecraft.getInstance().runImmediately(()->syncJEI());
+	}
 	public static void syncJEI() {
 		if (man == null)
 			return;
 		if (cachedInfoAdd)
 			addInfo();
+		System.out.println("Sync JEI");
 		Map<Class<?>, Set<ResourceLocation>> cates = new HashMap<>();
 		for (IRecipeCategory<?> rg : man.getRecipeCategories()) {
 			if (rg.getRecipeClass() == ICraftingRecipe.class)
@@ -256,11 +273,11 @@ public class JEICompat implements IModPlugin {
 			}
 		}
 		for(Entry<Item, List<IngredientInfoRecipe<ItemStack>>> entry:infos.entrySet()) {
-			if(locked.contains(entry.getKey())||!unlocked.contains(entry.getKey()))
+			if(locked.contains(entry.getKey())||!unlocked.contains(entry.getKey())) {
 				entry.getValue().forEach(r->man.unhideRecipe(r,VanillaRecipeCategoryUid.INFORMATION));
-			else 
+			}else {
 				entry.getValue().forEach(r->man.hideRecipe(r,VanillaRecipeCategoryUid.INFORMATION));
-				
+			}
 		}
 		for (ResourceLocation rl : ResearchListeners.categories) {
 			if (!TeamResearchData.getClientInstance().categories.has(rl))

@@ -51,13 +51,11 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PlayerEvents {
 	@SuppressWarnings("resource")
-	@SubscribeEvent
 	public static void onRC(PlayerInteractEvent.RightClickItem rci) {
 		if (!rci.getWorld().isRemote
 				&& rci.getItemStack().getItem().getRegistryName().getNamespace().equals("projecte")) {
 			rci.setCancellationResult(ActionResultType.SUCCESS);
 			rci.setCanceled(true);
-			System.out.println("faq");
 			World world = rci.getWorld();
 			PlayerEntity player = rci.getPlayer();
 			BlockPos pos = rci.getPos();

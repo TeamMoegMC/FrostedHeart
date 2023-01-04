@@ -806,7 +806,7 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
 	@Override
 	public String toString() {
 		return "ClimateData [tempEventStream=\n" + String.join("\n",tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource + ",\n hourcache="
-				+ hourcache + ",\n daycache=" + daycache + ",\n frames="+String.join("\n",IntStream.range(0, frames.length).mapToObj(i->frames[i]).map(TemperatureFrame::unpack).map(Object::toString).collect(Collectors.toList())) + "]";
+				+ hourcache + ",\n daycache=" + daycache + ",\n frames="+String.join("\n",IntStream.range(0, frames.length).mapToObj(i->frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.toList())) + "]";
 	}
 
 	public short[] getFrames() {

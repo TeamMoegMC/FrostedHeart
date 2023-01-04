@@ -59,6 +59,7 @@ import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
+import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -80,6 +81,7 @@ import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -234,6 +236,7 @@ public class ClientEvents {
 								.applyFormatting(TextFormatting.UNDERLINE))),
 						false);
 			}
+		
 	}
 
 	/**
@@ -271,6 +274,7 @@ public class ClientEvents {
 				return;
 			}
 	}
+
 
 	@SubscribeEvent
 	public static void addNormalItemTooltip(ItemTooltipEvent event) {

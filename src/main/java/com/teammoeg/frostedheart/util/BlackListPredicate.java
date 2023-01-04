@@ -45,7 +45,7 @@ public class BlackListPredicate extends ItemPredicate {
 
     public JsonElement serialize() {
         new Exception().printStackTrace();
-        System.out.println("serl");
+
         JsonElement je = white.serialize();
         je.getAsJsonObject().addProperty("type", FHMain.MODID + ":blacklist");
         return je;

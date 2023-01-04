@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterBlock;
 import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
+import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.util.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IETileProviderBlock;
@@ -49,7 +50,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 
 @SuppressWarnings("unused")
-@Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class})
+@Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class,SaunaBlock.class})
 public class BlockMixin extends Block {
 
 

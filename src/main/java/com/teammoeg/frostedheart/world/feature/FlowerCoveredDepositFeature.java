@@ -26,6 +26,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ISeedReader;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -42,11 +43,15 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
         while(true) {
             moveDownUntilDirt: {
                 // check whether the block beneath pos is dirt
+            	if(reader.getBlockState(pos).isIn(BlockTags.ICE))//do not generate in ice or 
+            		return false;
                 if (pos.getY() > 3) {
                     if (reader.isAirBlock(pos.down())) {
                         break moveDownUntilDirt;
                     }
-
+                    if(!reader.getFluidState(pos).isEmpty())
+                    	return false;
+                    
                     Block block = reader.getBlockState(pos.down()).getBlock();
                     if (!isDirt(block)) {
                         break moveDownUntilDirt;

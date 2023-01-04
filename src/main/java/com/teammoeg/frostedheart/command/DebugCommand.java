@@ -22,9 +22,14 @@ package com.teammoeg.frostedheart.command;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,14 +41,26 @@ import com.google.gson.JsonObject;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.relic.RelicData;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.clues.Clue;
+import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.world.FHDimensions;
+import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.thermopolium.items.StewItem;
 
+import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
+import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
+import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
+import dev.ftb.mods.ftbchunks.net.SendChunkPacket.SingleChunk;
+import dev.ftb.mods.ftbchunks.net.SendManyChunksPacket;
 import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.QuestObject;
@@ -51,6 +68,8 @@ import dev.ftb.mods.ftbquests.quest.reward.Reward;
 import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.player.PlayerEntity;
@@ -59,9 +78,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -106,7 +127,6 @@ public class DebugCommand {
             						Item it=ForgeRegistries.ITEMS.getValue(item);
 
             						if(it==null||it==Items.AIR) {
-            							System.out.println(item.toString()+" not exist");
             							ps.println(item+","+parts[1]);
             						}else {
             							items.add(it);
@@ -188,7 +208,118 @@ public class DebugCommand {
 						e1.printStackTrace();
 					}
                     return Command.SINGLE_SUCCESS;
-                }));
+                })).then(Commands.literal("export_researches").executes(ct -> {
+                	List<Research> quests=FHResearch.getAllResearch();
+                		JsonObject out=new JsonObject();
+                		JsonObject categories=new JsonObject();
+                		for(ResearchCategory rc:ResearchCategory.values()) {
+                			JsonObject cat=new JsonObject();
+                			cat.addProperty("name",rc.getName().getString());
+                			cat.addProperty("desc", rc.getDesc().getString());
+                			categories.add(rc.name(),cat);
+                		}
+                		out.add("categories", categories);
+                       	JsonArray ja=new JsonArray();
+
+                       	Gson gs=new GsonBuilder().setPrettyPrinting().create();
+                       	quests.stream().map(e->{
+                       		JsonObject jo=new JsonObject();
+                       		jo.addProperty("title", e.getName().getString());
+                       		jo.addProperty("points", e.getRequiredPoints());
+                       		jo.addProperty("category",e.getCategory().toString());
+                       		JsonArray odec=new JsonArray();
+                       		for(ITextComponent it:e.getODesc()) {
+                       			odec.add(it.getString());
+                       		}
+                       		jo.add("description", odec);
+                       		JsonArray adec=new JsonArray();
+                       		for(ITextComponent it:e.getAltDesc()) {
+                       			adec.add(it.getString());
+                       		}
+                       		jo.add("alt_description", adec);
+                       		JsonArray fow=new JsonArray();
+                       		for(Research qo:e.getParents()) {
+                       			fow.add(qo.getName().getString());
+                       		}
+                       		jo.add("parents", fow);
+                       		JsonArray chi=new JsonArray();
+                       		for(Research qo:e.getChildren()) {
+                       			chi.add(qo.getName().getString());
+                       		}
+                       		jo.add("children",chi);
+                       		JsonArray tsk=new JsonArray();
+
+                       		for(Clue t:e.getClues()) {
+                       			JsonObject joc=new JsonObject();
+                       			joc.addProperty("name", t.getName().getString());
+                       			ITextComponent desc=t.getDescription();
+                       			ITextComponent hint=t.getHint();
+                       			if(desc!=null)
+                       				joc.addProperty("desc",desc.getString());
+                       			if(hint!=null)
+                           			joc.addProperty("hint",hint.getString());
+                       			joc.addProperty("percent",t.getResearchContribution());
+                       			joc.addProperty("required",t.isRequired());
+                       			tsk.add(joc);
+                       		}
+                       		jo.add("clues", tsk);
+                       		JsonArray rwd=new JsonArray();
+                       		for(Effect r:e.getEffects()) {
+                       			JsonObject joe=new JsonObject();
+                       			joe.addProperty("name",r.getName().getString());
+
+                       			JsonArray dec=new JsonArray();
+                           		for(ITextComponent it:r.getTooltip()) {
+                           			dec.add(it.getString());
+                           		}
+                           		joe.add("description", dec);
+                       			rwd.add(joe);
+                       		}
+                       		jo.add("effects", rwd);
+
+                       		return jo;
+                       	}).forEach(ja::add);
+                       	out.add("researches", ja);
+                       	try {
+       						FileUtil.transfer(gs.toJson(out), new File(FMLPaths.GAMEDIR.get().toFile(),"research_export.json"));
+
+       					} catch (IOException e1) {
+       						// TODO Auto-generated catch block
+       						e1.printStackTrace();
+       					}
+                           return Command.SINGLE_SUCCESS;
+                       })).then(Commands.literal("sort_chunks").executes(ct -> {
+                	long now = System.currentTimeMillis();
+                	ReferenceValue<Integer> tchunks=new ReferenceValue<>(0);
+                	Map<RegistryKey<World>,Map<Team,List<SendChunkPacket.SingleChunk>>> chunksToSend = new HashMap<>();
+                	FTBTeamsAPI.getManager().getKnownPlayers().values().stream().filter(t->t.actualTeam!=t).map(t->Pair.of(t,FTBChunksAPI.manager.getData(t))).filter(p->p.getSecond()!=null)
+                	.forEach(d->{
+
+                		FTBChunksTeamData newData=FTBChunksAPI.getManager().getData(d.getFirst().actualTeam);
+                		d.getSecond().getClaimedChunks().forEach(c->{
+                			d.getSecond().manager.claimedChunks.remove(c.pos);
+                			d.getSecond().save();
+            				c.teamData = newData;
+            				newData.manager.claimedChunks.put(c.pos, c);
+            				newData.save();
+            				chunksToSend.computeIfAbsent(c.pos.dimension, s -> new HashMap<>()).computeIfAbsent(d.getFirst().actualTeam,s->new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, c.pos.x, c.pos.z, c));
+                			tchunks.val++;
+                		});
+
+                	});
+                	if(tchunks.val>0)
+                	for (Entry<RegistryKey<World>, Map<Team, List<SingleChunk>>> entry : chunksToSend.entrySet()) {
+                		for(Entry<Team, List<SingleChunk>> entry2:entry.getValue().entrySet()) {
+	            			SendManyChunksPacket packet = new SendManyChunksPacket();
+	            			packet.dimension = entry.getKey();
+	            			packet.teamId = entry2.getKey().getId();
+	            			packet.chunks = entry2.getValue();
+	            			packet.sendToAll(ct.getSource().getServer());
+                		}
+            		}
+                	ct.getSource().sendFeedback(GuiUtils.str("Fixed "+tchunks.val+" Chunks"), true);
+                           return Command.SINGLE_SUCCESS;
+                       }));
         
         dispatcher.register(Commands.literal(FHMain.MODID).requires(s -> s.hasPermissionLevel(2)).then(add));
     }

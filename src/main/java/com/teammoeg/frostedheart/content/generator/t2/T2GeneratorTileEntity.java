@@ -191,20 +191,20 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
             BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
             Random random = world.rand;
             if (isActualOverdrive()) {
-                if (random.nextFloat() < 0.9F) {
-                    for (int i = 0; i < random.nextInt(2) + 2; ++i) {
+                if (random.nextFloat() < 0.6F) {
+                    //for (int i = 0; i < random.nextInt(2)+1; ++i) {
                         if (this.liquidtick != 0)
                             ClientUtils.spawnSteamParticles(world, blockpos);
                         ClientUtils.spawnT2FireParticles(world, blockpos);
-                    }
+                    //}
                 }
             } else {
-                if (random.nextFloat() < 0.5F) {
-                    for (int i = 0; i < random.nextInt(2) + 2; ++i) {
+                if (random.nextFloat() < 0.3F) {
+                   // for (int i = 0; i < random.nextInt(2)+1; ++i) {
                         if (this.liquidtick != 0)
                             ClientUtils.spawnSteamParticles(world, blockpos);
                         ClientUtils.spawnT2FireParticles(world, blockpos);
-                    }
+                    //}
                 }
             }
 

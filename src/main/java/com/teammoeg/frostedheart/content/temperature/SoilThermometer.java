@@ -49,6 +49,11 @@ public class SoilThermometer extends FHBaseItem {
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
     	playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"),true);
         playerIn.setActiveHand(handIn);
+        if (playerIn instanceof ServerPlayerEntity&&playerIn.abilities.isCreativeMode) {
+            BlockRayTraceResult brtr = rayTrace(worldIn, playerIn, FluidMode.ANY);
+            if (brtr.getType() != Type.MISS)
+            	playerIn.sendMessage(GuiUtils.translateMessage("info.soil_thermometerbody", ((int)(ChunkData.getTemperature(playerIn.world, brtr.getPos())*10))/10f), playerIn.getUniqueID());
+        }
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
     }
 

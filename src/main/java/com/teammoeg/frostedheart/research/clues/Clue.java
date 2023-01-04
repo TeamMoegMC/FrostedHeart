@@ -26,11 +26,11 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.Writeable;
 
 import dev.ftb.mods.ftbteams.data.Team;

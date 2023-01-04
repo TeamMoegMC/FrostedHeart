@@ -41,7 +41,9 @@ public abstract class UnlockList<T> implements Iterable<T> {
         this();
         load(nbt);
     }
-
+    public void clear() {
+    	s.clear();
+    }
     public boolean has(T key) {
         return s.contains(key);
     }

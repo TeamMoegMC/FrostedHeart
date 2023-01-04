@@ -20,9 +20,8 @@
 package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.research.ResearchCategories;
-import com.teammoeg.frostedheart.research.ResearchCategory;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
+import com.teammoeg.frostedheart.research.research.ResearchCategory;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
@@ -84,7 +83,7 @@ public class ResearchCategoryPanel extends Panel {
     @Override
     public void addWidgets() {
         int k = 0;
-        for (ResearchCategory r : ResearchCategories.ALL.values()) {
+        for (ResearchCategory r : ResearchCategory.ALL.values()) {
             CategoryButton button = new CategoryButton(this, r);
             button.setPosAndSize(k * 40, 0, 30, 21);
             add(button);

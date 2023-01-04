@@ -39,7 +39,7 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue tempOrbOffsetX;
         public final ForgeConfigSpec.IntValue tempOrbOffsetY;
         public final ForgeConfigSpec.EnumValue<TempOrbPos> tempOrbPosition;
-
+        public final ForgeConfigSpec.BooleanValue useFahrenheit;
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -48,7 +48,8 @@ public class FHConfig {
                     .comment("Enables the temperature orb overlay. ")
                     .define("enableTemperatureOrb", true);
 
-
+            useFahrenheit=builder.comment("Use Fahrenheit temperature instead of celsus.")
+            		.define("useFahrenheit", false);
             tempOrbPosition = builder
                     .comment("Position of the temperature orb in game screen. ")
                     .defineEnum("renderTempOrbAtCenter", TempOrbPos.MIDDLE);
@@ -65,11 +66,14 @@ public class FHConfig {
 
     public static class Common {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
-
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
                     .define("enablesTemperatureForecast", true);
+            blackmods= builder
+                    .comment("BlackListed mods to kick player")
+                    .defineList("Mod Blacklist",new ArrayList<>(), s -> true);
         }
     }
 
@@ -98,7 +102,7 @@ public class FHConfig {
                     .defineEnum("temperatureDifficulty", FHDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
-
+            
 
         }
     }

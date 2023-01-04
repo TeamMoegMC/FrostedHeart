@@ -30,7 +30,7 @@ public class MinigameClue extends CustomClue {
     private int level = 0;
 
     public MinigameClue(float contribution) {
-        super("@clue." + FHMain.MODID + ".minigame", contribution);
+        super("",contribution);
     }
 
     public MinigameClue(JsonObject jo) {

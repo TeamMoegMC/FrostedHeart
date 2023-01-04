@@ -25,14 +25,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.SerializeUtil.CompoundBuilder;
+import com.teammoeg.frostedheart.util.VariantProvider;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -41,7 +42,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
 
-public class ResearchData {
+public class ResearchData implements VariantProvider{
 
     boolean active;// is all items fulfilled?
     boolean finished;
@@ -50,7 +51,12 @@ public class ResearchData {
     private long committed;// points committed
     final TeamResearchData parent;
     private Map<Integer,IClueData> data=new HashMap<>();
-
+	@Override
+	public Double get(String k) {
+		if(k.equals("level"))
+			return (double) level;
+		return null;
+	}
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
         this.parent = parent;
@@ -396,4 +402,6 @@ public class ResearchData {
 		}
 		
 	};
+
+
 }

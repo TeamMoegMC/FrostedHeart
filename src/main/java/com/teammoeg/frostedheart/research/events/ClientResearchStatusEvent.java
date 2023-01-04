@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.research.events;
 
-import com.teammoeg.frostedheart.research.Research;
+import com.teammoeg.frostedheart.research.research.Research;
 
 import net.minecraftforge.eventbus.api.Event;
 

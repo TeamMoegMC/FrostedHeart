@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
-import com.teammoeg.frostedheart.content.cmupdate.CMUpdateTileEntity;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
@@ -73,9 +72,6 @@ public class FHTileTypes {
             "oil_burner", makeType(OilBurnerTileEntity::new, () -> FHBlocks.oilburner)
     );
 
-    public static final RegistryObject<TileEntityType<CMUpdateTileEntity>> CMUPDATE = REGISTER.register(
-            "cm_update", makeType(CMUpdateTileEntity::new, () -> FHBlocks.cmupdate)
-    );
 
     public static final RegistryObject<TileEntityType<DrawingDeskTileEntity>> DRAWING_DESK = REGISTER.register(
             "drawing_desk", makeType(DrawingDeskTileEntity::new, () -> FHBlocks.drawing_desk)

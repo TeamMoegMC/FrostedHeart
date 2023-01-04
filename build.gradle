@@ -155,6 +155,11 @@ repositories {
     maven {
         name = "teammoeg maven"
         url = "http://server.teammoeg.com:8888/releases"
+        content {
+            includeGroup "gloridifice.watersource"
+            includeGroup "com.alcatrazescapee.primalwinter"
+            includeGroup "java.moze_intel"
+        }
     }
 }
 
@@ -167,6 +172,7 @@ dependencies {
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}")
     compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
+    implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:1605.3.2-build.115")
 
     compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.6-141")
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.6-141:datagen")
@@ -184,6 +190,8 @@ dependencies {
 	implementation fg.deobf("curse.maven:diet-443570:3756693")
     implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
 	implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
+	implementation fg.deobf("curse.maven:tetra-289712:3585032")
+	implementation fg.deobf("curse.maven:mgui-351914:3456505")
     //compile fg.deobf("curse.maven:better-weather-400714:3420517")
     //implementation fg.deobf("curse.maven:better-weather-400714:3420517")
     

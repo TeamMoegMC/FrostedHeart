@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.RubbingTool;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
@@ -238,7 +239,15 @@ public class ResearchListeners {
     public static ListenerList<TickListenerClue> getTickClues() {
         return tickClues;
     }
-
+    public static void reload() {
+    	recipe.clear();
+    	multiblock.clear();
+    	block.clear();
+    	categories.clear();
+    	tickClues.clear();
+    	killClues.clear();
+    	te=null;
+    }
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         LazyOptional<Research> cur = trd.getCurrentResearch();

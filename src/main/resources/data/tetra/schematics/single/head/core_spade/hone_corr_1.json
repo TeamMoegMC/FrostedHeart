@@ -1,0 +1,37 @@
+{
+    "replace": true,
+    "localizationKey": "single/shared_head/hone_core_spade_corr_1",
+    "slots": [
+        "single/head"
+    ],
+    "materialSlotCount": 0,
+    "hone": true,
+    "rarity": "hone",
+    "displayType": "major",
+    "glyph": {
+        "textureX": 176,
+        "textureY": 32
+    },
+    "requirement": {
+        "type": "tetra:modular_item",
+        "modules": [
+            [
+                "single/basic_core_spade"
+            ]
+        ],
+        "improvements": {
+            "!head_hone/core_spade_corr": -1,
+            "head_hone/speed": 3
+        }
+    },
+    "outcomes": [
+        {
+            "requiredTools": {
+                "hammer": 3
+            },
+            "improvements": {
+                "head_hone/core_spade_corr": 1
+            }
+        }
+    ]
+}

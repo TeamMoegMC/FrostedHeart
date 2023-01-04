@@ -23,8 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
-import com.teammoeg.frostedheart.research.Researches;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -55,11 +54,7 @@ public class FHResearchRegistrtySyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-        	FHResearch.clearAll();
-            FHResearch.load(data);
-            Researches.initFromPacket(rss);
-            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
-            FHResearch.editor=false;
+            FHResearch.initFromPacket(data,rss);
         });
         context.get().setPacketHandled(true);
     }

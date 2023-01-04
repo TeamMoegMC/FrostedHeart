@@ -157,4 +157,9 @@ public class EffectBuilding extends Effect {
 		}
 	}
 
+	@Override
+	public void reload() {
+		multiblock = MultiblockHandler.getByUniqueName(multiblock.getUniqueName());
+	}
+
 }

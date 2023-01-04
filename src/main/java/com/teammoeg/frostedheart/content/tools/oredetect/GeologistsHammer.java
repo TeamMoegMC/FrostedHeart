@@ -23,14 +23,16 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
+import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.IFormattableTextComponent;
@@ -38,34 +40,37 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
+import se.mickelus.tetra.properties.IToolProvider;
 
-public class GeologistsHammer extends FHBaseItem {
+public class GeologistsHammer extends FHLeveledTool {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
 
-    public GeologistsHammer(String name, int hrange, int vrange, Properties properties) {
-        super(name, properties);
-        this.vrange = vrange;
-        this.hrange = hrange;
+    public GeologistsHammer(String name, int lvl, Properties properties) {
+        super(name,lvl, properties);
+
     }
 
-    private int vrange;
-    private int hrange;
-
-    public int getHorizonalRange(ItemStack item) {
-        return hrange;
+    public static int getHorizonalRange(ItemStack item) {
+        return getLevel(item)+4;
     }
 
-    public int getVerticalRange(ItemStack item) {
-        return vrange;
+    public static int getVerticalRange(ItemStack item) {
+        return getLevel(item)+3;
     }
-
-    @SuppressWarnings("resource")
-    @Override
-    public ActionResultType onItemUse(ItemUseContext context) {
-        PlayerEntity player = context.getPlayer();
+    public static int getLevel(ItemStack item) {
+    	if(item.getItem() instanceof FHLeveledTool)
+    		return ((FHLeveledTool)item.getItem()).getLevel();
+    	
+    	return ((IToolProvider)item.getItem()).getToolLevel(item,TetraCompat.geoHammer);
+    }
+    public static float getCorrectness(ItemStack item) {
+    	if(item.getItem() instanceof FHLeveledTool)
+    		return 1;
+    	
+    	return ((IToolProvider)item.getItem()).getToolEfficiency(item,TetraCompat.geoHammer)+1;
+    }
+    public static ActionResultType doProspect(PlayerEntity player,World world,BlockPos blockpos,ItemStack is,Hand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
-            World world = context.getWorld();
-            BlockPos blockpos = context.getPos();
             if (world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
                 player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD), false);
                 return ActionResultType.SUCCESS;
@@ -73,16 +78,18 @@ public class GeologistsHammer extends FHBaseItem {
             int x = blockpos.getX();
             int y = blockpos.getY();
             int z = blockpos.getZ();
-            context.getItem().damageItem(1, player, (player2) -> player2.sendBreakAnimation(context.getHand()));
+            is.damageItem(1, player, (player2) -> player2.sendBreakAnimation(h));
             if (!world.isRemote) {
+            	float corr=getCorrectness(is);
                 Random rnd = new Random(BlockPos.pack(x, y, z) ^ 0xebd763e5b71a0128L);//randomize
                 //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this.
-                if (rnd.nextInt(20) != 0) {//mistaken rate 5%
+                if (rnd.nextInt((int) (20*corr)) != 0) {//mistaken rate 5%
                     BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
                     Block ore;
                     HashMap<String, Integer> founded = new HashMap<>();
-                    int hrange = this.getHorizonalRange(context.getItem());
-                    int vrange = this.getVerticalRange(context.getItem());
+
+                    int hrange = getHorizonalRange(is);
+                    int vrange = getVerticalRange(is);
                     for (int x2 = -hrange; x2 < hrange; x2++)
                         for (int y2 = -Math.min(y, vrange); y2 < vrange; y2++)
                             for (int z2 = -hrange; z2 < hrange; z2++) {
@@ -98,11 +105,12 @@ public class GeologistsHammer extends FHBaseItem {
                         int count = 0;
                         IFormattableTextComponent s = GuiUtils.translateMessage("vein_size.found");
                         for (Entry<String, Integer> f : founded.entrySet()) {
-                            if (rnd.nextInt(f.getValue()) != 0) {
+                            if (rnd.nextInt((int) (f.getValue()*corr)) != 0) {
                                 int rval = f.getValue();
                                 if (rval >= 5) {
-                                    int err = rval / 5;
-                                    rval += rnd.nextInt(err * 2) - err;
+                                    int err = (int) (rval / 5 / corr);
+                                    if(err>0)
+                                    	rval += rnd.nextInt(err * 2) - err;
                                 }
                                 s = s.appendSibling(GuiUtils.translateMessage("vein_size.count", rval).appendSibling(new TranslationTextComponent(f.getKey()).mergeStyle(TextFormatting.GREEN)).appendString(" "));
                                 count++;
@@ -118,5 +126,10 @@ public class GeologistsHammer extends FHBaseItem {
             }
         }
         return ActionResultType.SUCCESS;
+    }
+    @SuppressWarnings("resource")
+    @Override
+    public ActionResultType onItemUse(ItemUseContext context) {
+    	return doProspect(context.getPlayer(),context.getWorld(),context.getPos(),context.getItem(),context.getHand());
     }
 }

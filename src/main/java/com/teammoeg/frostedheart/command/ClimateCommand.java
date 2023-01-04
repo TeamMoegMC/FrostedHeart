@@ -34,7 +34,11 @@ public class ClimateCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
-                           ct.getSource().sendFeedback(new StringTextComponent(ClimateData.get(ct.getSource().getWorld()).toString()),true);
+                	try {
+                           ct.getSource().sendFeedback(new StringTextComponent(String.valueOf(ClimateData.get(ct.getSource().getWorld()))),true);
+                	}catch(Exception ex) {
+                		ex.printStackTrace();
+                	}
                             return Command.SINGLE_SUCCESS;
                         });
         LiteralArgumentBuilder<CommandSource> rebuild = Commands.literal("rebuild")

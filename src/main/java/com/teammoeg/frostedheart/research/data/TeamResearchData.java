@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
@@ -37,6 +36,7 @@ import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
+import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -230,7 +230,7 @@ public class TeamResearchData {
      * @return data<br>
      */
     public ResearchData getData(int id) {
-        if (id == 0) return null;
+        if (id <= 0) return null;
         ensureResearch(id);
         ResearchData rnd = rdata.get(id - 1);
         if (rnd == null) {
@@ -459,7 +459,16 @@ public class TeamResearchData {
     public CompoundNBT getVariants() {
         return variants;
     }
-
+    public void reload() {
+    	crafting.clear();
+    	building.clear();
+    	block.clear();
+    	categories.clear();
+    	for(int i=0;i<grantedEffects.length();i++) {
+            if (grantedEffects.get(i))
+                FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
+        }
+    }
     /**
      * Deserialize.
      *
@@ -469,6 +478,10 @@ public class TeamResearchData {
     public void deserialize(CompoundNBT data, boolean updatePacket) {
         clueComplete.clear();
         rdata.clear();
+        crafting.clear();
+    	building.clear();
+    	block.clear();
+    	categories.clear();
         if(data.contains("clues",NBT.TAG_BYTE_ARRAY)) {
 	        byte[] ba = data.getByteArray("clues");
 	        ensureClue(ba.length);

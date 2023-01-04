@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.research.Research;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
@@ -40,6 +39,7 @@ import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.RealBox;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
+import com.teammoeg.frostedheart.research.research.Research;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
