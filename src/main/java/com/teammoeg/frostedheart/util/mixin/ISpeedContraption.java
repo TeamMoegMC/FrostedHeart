@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2022 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,14 +14,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
-public interface ICampfireExtra {
-    int getLifeTime();
+public interface ISpeedContraption {
+    float getSpeed();
 
-    void addLifeTime(int add);
+    void setSpeed(float spd);
 
-    void setLifeTime(int set);
+    void contributeSpeed(float s);
 }

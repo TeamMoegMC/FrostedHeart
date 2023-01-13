@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
 public interface IStressContraption {
 

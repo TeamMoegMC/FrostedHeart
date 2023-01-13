@@ -25,6 +25,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import com.cannolicatfish.rankine.world.trees.BalsamFirTree;
 import com.cannolicatfish.rankine.world.trees.CedarTree;
+import com.cannolicatfish.rankine.world.trees.ErythrinaTree;
 import com.cannolicatfish.rankine.world.trees.RedBirchTree;
 import com.teammoeg.frostedheart.util.FHUtils;
 
@@ -34,7 +35,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 
-@Mixin({CedarTree.class,BalsamFirTree.class,RedBirchTree.class})
+@Mixin({CedarTree.class,BalsamFirTree.class,RedBirchTree.class,ErythrinaTree.class})
 public abstract class MixinSmallTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,

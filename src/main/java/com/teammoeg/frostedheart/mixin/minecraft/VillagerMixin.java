@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.trade.FHVillagerData;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
@@ -37,6 +38,7 @@ import net.minecraft.world.World;
 
 @Mixin(VillagerEntity.class)
 public abstract class VillagerMixin extends AbstractVillagerEntity {
+	FHVillagerData fh$data=new FHVillagerData();
     public VillagerMixin(EntityType<? extends AbstractVillagerEntity> type, World worldIn) {
         super(type, worldIn);
     }
@@ -74,6 +76,7 @@ public abstract class VillagerMixin extends AbstractVillagerEntity {
 				return ActionResultType.func_233537_a_(this.world.isRemote);
 			}*/
             if (!this.world.isRemote) {
+            	//return fh$data.trade(playerIn);
                 this.shakeHead();
                 playerIn.sendMessage(GuiUtils.translateMessage("village.unknown"), playerIn.getUniqueID());
 

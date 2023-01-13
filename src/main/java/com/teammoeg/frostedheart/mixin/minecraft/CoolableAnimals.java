@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.util.IFeedStore;
+import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
@@ -46,7 +46,6 @@ public class CoolableAnimals extends MobEntity {
 	protected CoolableAnimals(EntityType<? extends MobEntity> type, World worldIn) {
 		super(type, worldIn);
 	}
-
 	@Inject(at = @At("HEAD"), method = "writeAdditional")
 	public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
 		compound.putShort("hxthermia", hxteTimer);

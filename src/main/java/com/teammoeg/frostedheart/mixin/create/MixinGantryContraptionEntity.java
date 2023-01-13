@@ -28,7 +28,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Abs
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraptionEntity;
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
-import com.teammoeg.frostedheart.util.IGantryShaft;
+import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.tileentity.TileEntity;

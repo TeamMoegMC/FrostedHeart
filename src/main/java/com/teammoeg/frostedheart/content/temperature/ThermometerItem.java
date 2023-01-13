@@ -23,6 +23,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -52,7 +53,7 @@ public class ThermometerItem extends FHBaseItem {
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         if (worldIn.isRemote) return stack;
         if (entityLiving instanceof ServerPlayerEntity) {
-        	entityLiving.sendMessage(GuiUtils.translateMessage("info.thermometerbody", getTemperature((ServerPlayerEntity) entityLiving) / 10f + 37.0), entityLiving.getUniqueID());
+        	FHTemperatureDisplayPacket.send((ServerPlayerEntity)entityLiving,"info.thermometerbody",getTemperature((ServerPlayerEntity)entityLiving) / 10f + 37f);
         }
 
         return stack;
@@ -73,7 +74,7 @@ public class ThermometerItem extends FHBaseItem {
     	playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"),true);
         playerIn.setActiveHand(handIn);
         if (playerIn instanceof ServerPlayerEntity&&playerIn.abilities.isCreativeMode) {
-        	playerIn.sendMessage(GuiUtils.translateMessage("info.thermometerbody", getTemperature((ServerPlayerEntity) playerIn) / 10f + 37.0), playerIn.getUniqueID());
+        	FHTemperatureDisplayPacket.send((ServerPlayerEntity)playerIn,"info.thermometerbody",getTemperature((ServerPlayerEntity) playerIn) / 10f + 37f);
         }
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
     }

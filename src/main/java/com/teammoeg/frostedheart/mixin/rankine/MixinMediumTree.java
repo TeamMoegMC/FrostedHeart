@@ -36,7 +36,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 
-@Mixin({YellowBirchTree.class,PinyonPineTree.class,CoconutPalmTree.class,BlackWalnutTree.class, CoconutPalmTree.class,BlackBirchTree.class})
+@Mixin({PinyonPineTree.class,CoconutPalmTree.class,BlackWalnutTree.class, CoconutPalmTree.class,BlackBirchTree.class})
 public abstract class MixinMediumTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,

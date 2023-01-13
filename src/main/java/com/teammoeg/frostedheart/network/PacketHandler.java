@@ -22,6 +22,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
@@ -101,7 +102,8 @@ public class PacketHandler {
                 FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHEnergyDataSyncPacket.class, FHEnergyDataSyncPacket::encode,
                 FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
-
+        CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class,FHTemperatureDisplayPacket::encode,
+        		FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
 
     }
 

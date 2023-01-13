@@ -69,9 +69,27 @@ public class GuiUtils {
         return new TranslationTextComponent(string);
     }
     public static String toTemperatureIntString(float celsus) {
+    	celsus=Math.max(-273.15f, celsus);
     	if(FHConfig.CLIENT.useFahrenheit.get())
-			return (celsus*9/5+32)+"F";
-		else
-			return ((int)celsus)+"C";
+			return ((int)((celsus*9/5+32)*10))/10+" °F";
+		return ((int)(celsus*10))/10+" °C";
+    }
+    public static String toTemperatureFloatString(float celsus) {
+    	celsus=Math.max(-273.15f, celsus);
+    	if(FHConfig.CLIENT.useFahrenheit.get())
+			return (celsus*9/5+32)+" °F";
+		return celsus+" °C";
+    }
+    public static String toTemperatureDeltaIntString(float celsus) {
+    	celsus=Math.max(-273.15f, celsus);
+    	if(FHConfig.CLIENT.useFahrenheit.get())
+			return ((int)((celsus*9/5)*10))/10+" °F";
+		return ((int)(celsus*10))/10+" °C";
+    }
+    public static String toTemperatureDeltaFloatString(float celsus) {
+    	celsus=Math.max(-273.15f, celsus);
+    	if(FHConfig.CLIENT.useFahrenheit.get())
+			return (celsus*9/5)+" °F";
+		return celsus+" °C";
     }
 }

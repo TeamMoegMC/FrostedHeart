@@ -41,12 +41,12 @@ public class TradePolicy  extends IESerializableRecipe{
 	protected IERecipeSerializer<TradePolicy> getIESerializer() {
 		return SERIALIZER.get();
 	}
-	public PolicySnapshot get(VillagerEntity ve) {
+	public PolicySnapshot get(FHVillagerData ve) {
 		PolicySnapshot ps=new PolicySnapshot();
 		this.CollectPolicies(ps, ve);
 		return ps;
 	}
-	public void CollectPolicies(PolicySnapshot policy,VillagerEntity ve) {
+	public void CollectPolicies(PolicySnapshot policy,FHVillagerData ve) {
 		groups.forEach(t->t.CollectPolicies(policy,ve));
 	}
 	public static class Serializer extends IERecipeSerializer<TradePolicy> {

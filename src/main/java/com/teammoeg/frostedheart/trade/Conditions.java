@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
-
+import com.teammoeg.frostedheart.trade.conditions.LevelCondition;
 
 import net.minecraft.network.PacketBuffer;
 
@@ -12,6 +12,7 @@ public class Conditions {
     private static JsonSerializerRegistry<PolicyCondition> registry=new JsonSerializerRegistry<>();
 
     static {
+    	registerType(LevelCondition.class,"level",LevelCondition::new,LevelCondition::new);
     }
     public static void registerType(Class<? extends PolicyCondition> cls,String type,Function<JsonObject, PolicyCondition> json,Function<PacketBuffer, PolicyCondition> packet) {
     	registry.register(cls, type, json, packet);

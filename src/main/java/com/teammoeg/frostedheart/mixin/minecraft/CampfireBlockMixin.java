@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.ICampfireExtra;
+import com.teammoeg.frostedheart.util.mixin.ICampfireExtra;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CampfireBlock;

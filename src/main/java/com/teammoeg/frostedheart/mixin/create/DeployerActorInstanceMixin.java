@@ -34,7 +34,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.ren
 import com.simibubi.create.foundation.utility.AnimationTickHolder;
 import com.simibubi.create.foundation.utility.VecHelper;
 import com.simibubi.create.foundation.utility.worldWrappers.PlacementSimulationWorld;
-import com.teammoeg.frostedheart.util.ISpeedContraption;
+import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;

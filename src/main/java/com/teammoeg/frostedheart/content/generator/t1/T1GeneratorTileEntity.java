@@ -25,13 +25,14 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
+import com.teammoeg.frostedheart.research.data.ResearchVariant;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
-public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
+public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
     public boolean hasFuel;
     public T1GeneratorTileEntity() {
@@ -49,6 +50,10 @@ public class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Generator
                     if (te instanceof T1GeneratorTileEntity)
                         consumer.accept((T1GeneratorTileEntity) te);
                 }
+    }
+    public boolean shouldWork() {
+    	return getTeam().map(t->!t.getOnlineMembers().isEmpty()).orElse(false)&&super.shouldWork();
+        
     }
 	@Override
 	protected void tickFuel() {

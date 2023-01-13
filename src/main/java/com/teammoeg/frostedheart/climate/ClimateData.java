@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.events.CommonEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
@@ -43,7 +44,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -265,7 +268,9 @@ public class ClimateData implements ICapabilitySerializable<CompoundNBT> {
         }
         return data.dailyTempData.get(deltaDays).getTemp(deltaHours);
     }
-
+    public static long getWorldDay(IWorld w) {
+    	return get(w).getDay();
+    }
     /**
      * Retrieves hourly updated temperature from cache
      * If exceeds cache size, return NaN

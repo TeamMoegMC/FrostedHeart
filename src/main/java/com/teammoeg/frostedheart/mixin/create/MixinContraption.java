@@ -41,7 +41,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Con
 import com.simibubi.create.content.contraptions.components.structureMovement.glue.SuperGlueEntity;
 import com.simibubi.create.foundation.config.AllConfigs;
 import com.simibubi.create.foundation.utility.Iterate;
-import com.teammoeg.frostedheart.util.ISpeedContraption;
+import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

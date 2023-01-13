@@ -23,11 +23,11 @@ import java.util.Random;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.cannolicatfish.rankine.world.trees.CinnamonTree;
-import com.cannolicatfish.rankine.world.trees.CorkOakTree;
-import com.cannolicatfish.rankine.world.trees.MagnoliaTree;
-import com.cannolicatfish.rankine.world.trees.MapleTree;
-import com.cannolicatfish.rankine.world.trees.SharingaTree;
+import com.cannolicatfish.rankine.world.trees.BlackBirchTree;
+import com.cannolicatfish.rankine.world.trees.BlackWalnutTree;
+import com.cannolicatfish.rankine.world.trees.CoconutPalmTree;
+import com.cannolicatfish.rankine.world.trees.PinyonPineTree;
+import com.cannolicatfish.rankine.world.trees.YellowBirchTree;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.block.BlockState;
@@ -36,12 +36,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 
-@Mixin({MagnoliaTree.class,SharingaTree.class,MapleTree.class,CorkOakTree.class,CinnamonTree.class})
-public abstract class MixinXSmallTree extends Tree {
+@Mixin({YellowBirchTree.class,BlackWalnutTree.class})
+public abstract class MixinXMediumTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
-        if (FHUtils.canTreeGenerate(world, pos, rand,3))
+        if (FHUtils.canTreeGenerate(world, pos, rand,10))
             return super.attemptGrowTree(world, chunkGenerator, pos, state, rand);
         return false;
     }

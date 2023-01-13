@@ -20,6 +20,8 @@ package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+
+import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
@@ -48,6 +50,7 @@ import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.ResearchListeners;
@@ -60,12 +63,16 @@ import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
+import com.yanny.age.stone.config.Config;
+
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.*;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -97,6 +104,7 @@ import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.world.MobSpawnInfoBuilder;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -134,6 +142,10 @@ import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 import javax.annotation.Nonnull;
 
+import static net.minecraft.entity.EntityType.CHICKEN;
+import static net.minecraft.entity.EntityType.COW;
+import static net.minecraft.entity.EntityType.PIG;
+import static net.minecraft.entity.EntityType.SHEEP;
 import static net.minecraft.world.biome.Biome.Category.*;
 
 import java.util.Set;
@@ -425,7 +437,16 @@ public class CommonEvents {
         }
         
     }
+    private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(COW, SHEEP, PIG, CHICKEN);
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void biomeLoadingEventRemove(@Nonnull BiomeLoadingEvent event) {
+        MobSpawnInfoBuilder spawns = event.getSpawns();
 
+        	for(EntityClassification en:EntityClassification.values())
+            spawns.getSpawner(en).removeIf(entry -> VANILLA_ENTITIES.contains(entry.type));
+
+        
+    }
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock =event.getState().getBlock();
@@ -472,33 +493,32 @@ public class CommonEvents {
     @SubscribeEvent
     public static void onUseBoneMeal(BonemealEvent event) {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
-            PlayerEntity player = event.getPlayer();
+            ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
             Block growBlock = event.getBlock().getBlock();
             float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature()+WorldClimate.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(
-                            new TranslationTextComponent("message.frostedheart.crop_no_bonemeal", growTemp), false);
+                    FHTemperatureDisplayPacket.sendStatus(player,
+                            "crop_no_bonemeal",false,growTemp);
                 }
             } else if (growBlock instanceof FHBerryBushBlock) {
                 int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature()+WorldClimate.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(
-                            new TranslationTextComponent("message.frostedheart.crop_no_bonemeal", growTemp), false);
+                    FHTemperatureDisplayPacket.sendStatus(player,"crop_no_bonemeal",false, growTemp);
                 }
             } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                 if (temp < WorldClimate.HEMP_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
-                            WorldClimate.HEMP_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE), true);
+                    FHTemperatureDisplayPacket.sendStatus(player,"crop_no_bonemeal",false,
+                            WorldClimate.HEMP_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE);
                 }
             } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE) {
                 event.setCanceled(true);
-                player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_no_bonemeal",
-                        WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE), true);
+                FHTemperatureDisplayPacket.sendStatus(player,"crop_no_bonemeal",false,
+                        WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE+WorldClimate.BONEMEAL_TEMPERATURE);
             }
         }
     }
@@ -513,38 +533,32 @@ public class CommonEvents {
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
-                        player.sendStatusMessage(
-                                new TranslationTextComponent("message.frostedheart.crop_not_growable", -5),
-                                true);
+                    	FHTemperatureDisplayPacket.sendStatus(player,"crop_not_growable",true, -5);
                     }
                 } else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(
-                                new TranslationTextComponent("message.frostedheart.crop_not_growable", growTemp),
-                                true);
+                        FHTemperatureDisplayPacket.sendStatus(player,"crop_not_growable",true, growTemp);
                     }
                 } else if (growBlock instanceof FHBerryBushBlock) {
                     int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(
-                                new TranslationTextComponent("message.frostedheart.crop_not_growable", growTemp),
-                                true);
+                        FHTemperatureDisplayPacket.sendStatus(player,"crop_not_growable",true, growTemp);
                     }
                 } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                     if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
                         event.setCanceled(true);
-                        player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
-                                WorldClimate.HEMP_GROW_TEMPERATURE), true);
+                        FHTemperatureDisplayPacket.sendStatus(player,"crop_not_growable",true,
+                                WorldClimate.HEMP_GROW_TEMPERATURE);
                     }
                 } else if (growBlock==Blocks.NETHERRACK) {
 
                 } else if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
                     event.setCanceled(true);
-                    player.sendStatusMessage(new TranslationTextComponent("message.frostedheart.crop_not_growable",
-                            WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE), true);
+                    FHTemperatureDisplayPacket.sendStatus(player,"crop_not_growable",true,
+                            WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE);
                 }
             }
         }

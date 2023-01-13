@@ -343,51 +343,43 @@ public class ClientEvents {
 		if (btd != null) {
 			float temp = btd.getTemp();
 			temp = (Math.round(temp * 100)) / 100.0F;// round
-			String temps = Float.toString(temp);
 			if (temp != 0)
 				if (temp > 0)
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("block_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
+							.add(GuiUtils.translateTooltip("block_temp", GuiUtils.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
 				else
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("block_temp", temps).mergeStyle(TextFormatting.AQUA));
+							.add(GuiUtils.translateTooltip("block_temp", GuiUtils.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
 		}
 		if (itf != null) {
 			float temp = itf.getHeat(stack,
 					event.getPlayer() == null ? 37 : TemperatureCore.getEnvTemperature(event.getPlayer())) * tspeed;
 			temp = (Math.round(temp * 1000)) / 1000.0F;// round
-			String temps = Float.toString(temp);
 			if (temp != 0)
 				if (temp > 0)
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("food_temp", "+" + temps).mergeStyle(TextFormatting.GOLD));
+							.add(GuiUtils.translateTooltip("food_temp", "+" + GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
 				else
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("food_temp", temps).mergeStyle(TextFormatting.AQUA));
+							.add(GuiUtils.translateTooltip("food_temp", GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
 		}
 		if (iwe != null) {
 			float temp = iwe.getFactor(null, stack);
 			temp = Math.round(temp * 100);
 			String temps = Float.toString(temp);
-			if (temp != 0)
-				if (temp > 0)
-					event.getToolTip()
-							.add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.GOLD));
-				else
-					event.getToolTip()
-							.add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.AQUA));
+			if(temp!=0)
+			event.getToolTip().add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.GOLD));
 		}
 		if (i instanceof IHeatingEquipment) {
 			float temp = ((IHeatingEquipment) i).getMax(stack) * tspeed;
 			temp = (Math.round(temp * 2000)) / 1000.0F;
-			String temps = Float.toString(temp);
 			if (temp != 0)
 				if (temp > 0)
 					event.getToolTip().add(
-							GuiUtils.translateTooltip("armor_heating", "+" + temps).mergeStyle(TextFormatting.GOLD));
+							GuiUtils.translateTooltip("armor_heating", "+" + GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
 				else
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("armor_heating", temps).mergeStyle(TextFormatting.AQUA));
+							.add(GuiUtils.translateTooltip("armor_heating", GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
 		}
 	}
 

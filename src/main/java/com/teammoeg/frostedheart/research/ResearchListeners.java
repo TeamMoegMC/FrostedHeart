@@ -372,6 +372,8 @@ public class ResearchListeners {
 
     @SuppressWarnings("resource")
     public static boolean canUseRecipe(PlayerEntity s, IRecipe<?> r) {
+    	if(s==null)
+    		return canUseRecipe(r);
         if (recipe.has(r)) {
             if (s.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().crafting.has(r);

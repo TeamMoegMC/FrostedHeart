@@ -25,7 +25,7 @@ public class ExtendPolicyGroup extends PolicyGroup {
 		ref=pb.readResourceLocation();
 	}
 	@Override
-	public void CollectPoliciesNoCheck(PolicySnapshot policy,VillagerEntity ve) {
+	public void CollectPoliciesNoCheck(PolicySnapshot policy,FHVillagerData ve) {
 		TradePolicy.policies.get(ref).CollectPolicies(policy,ve);
 	}
 	@Override

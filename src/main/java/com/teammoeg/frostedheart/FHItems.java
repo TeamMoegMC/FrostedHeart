@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
 import com.teammoeg.frostedheart.content.foods.FHSoupItem;
 import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
+import com.teammoeg.frostedheart.content.temperature.GeneratorUpgraderI;
 import com.teammoeg.frostedheart.content.temperature.MushroomBed;
 import com.teammoeg.frostedheart.content.temperature.SoilThermometer;
 import com.teammoeg.frostedheart.content.temperature.SteamBottleItem;
@@ -111,6 +112,7 @@ public class FHItems {
     public static List<Item> alladvthermos=new ArrayList<>();
     public static Item thermos = new ThermosItem("thermos","item.frostedheart.thermos", 1500, 250,true);
     public static Item advanced_thermos = new ThermosItem("advanced_thermos","item.frostedheart.advanced_thermos", 3000, 250,true);
+    public static Item generatorupgrader=new GeneratorUpgraderI("generator_upgrade_i",createProps().maxStackSize(0));
     static {
 	    for(String s:FHItems.colors) {
 	    	allthermos.add(new ThermosItem(s+"_thermos","item.frostedheart.thermos", 1500, 250,false));

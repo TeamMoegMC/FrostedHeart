@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.util.IFeedStore;
+import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.AnimalEntity;

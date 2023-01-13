@@ -13,7 +13,7 @@ public class EntityInteractHandlerMixin {
 	 * @param event 
 	 * @reason cancel rankine breed
 	 * */
-	@Overwrite
+	@Overwrite(remap=false)
 	public static void onBreedEvent( PlayerInteractEvent.EntityInteract event) {
 		
 	}

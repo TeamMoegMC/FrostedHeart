@@ -28,7 +28,7 @@ import com.simibubi.create.content.contraptions.components.crafter.MechanicalCra
 import com.simibubi.create.content.contraptions.components.crafter.RecipeGridHandler;
 import com.simibubi.create.content.contraptions.components.crafter.RecipeGridHandler.GroupedItems;
 import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.util.IOwnerTile;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;

@@ -17,12 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
-public interface ISpeedContraption {
-    float getSpeed();
+public interface IMilkable {
 
-    void setSpeed(float spd);
+    byte getMilk();
 
-    void contributeSpeed(float s);
+    void setMilk(byte milk);
+
 }

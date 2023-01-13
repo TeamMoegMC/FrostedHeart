@@ -29,8 +29,8 @@ public abstract class PolicyGroup implements Writeable{
 		super();
 		conditions=SerializeUtil.readList(pb, Conditions::deserialize);
 	}
-	public abstract void CollectPoliciesNoCheck(PolicySnapshot policy,VillagerEntity ve);
-	public void CollectPolicies(PolicySnapshot policy,VillagerEntity ve) {
+	public abstract void CollectPoliciesNoCheck(PolicySnapshot policy,FHVillagerData ve);
+	public void CollectPolicies(PolicySnapshot policy,FHVillagerData ve) {
 		if(conditions.stream().allMatch(t->t.test(ve)))
 			CollectPoliciesNoCheck(policy,ve);
 	}

@@ -114,7 +114,11 @@ public class TemperatureUpdate {
             gameTime = MathHelper.sin((float) Math.toRadians(gameTime));
             float bt=TemperatureCore.getBlockTemp(player);
             envtemp += bt;
-            envtemp += skyLight > 5.0F ? (FHUtils.isRainingAt(pos, world) ? -8F : (gameTime * 5.0F)) : (-5.0F);
+            envtemp += skyLight > 5.0F ?
+            		(world.isRaining() ?
+            				(FHUtils.isRainingAt(player.getPosition(), world)?-8F:-5f)
+            				: (gameTime * 5.0F)) 
+            		: -5F;
             // burning heat
             if (player.isBurning())
                 envtemp += 150F;

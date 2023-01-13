@@ -90,7 +90,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         }
 
         if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
-              tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureIntString(tile.getIsActive()?tile.getActualTemp():0)));
+              tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getIsActive()?tile.getActualTemp():0)));
            
         }
 

@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
@@ -121,8 +122,8 @@ public class PlayerEvents {
 					float midnightTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
 					float tomorrowMorningTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 1, 0) * 10)
 							/ 10.0F;
-					serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.morning", morningTemp, noonTemp,
-							nightTemp, midnightTemp, tomorrowMorningTemp), false);
+					FHTemperatureDisplayPacket.sendStatus(serverPlayer,"forecast.morning",false,morningTemp, noonTemp,
+							nightTemp, midnightTemp, tomorrowMorningTemp);
 					boolean snow = morningTemp < WorldClimate.SNOW_TEMPERATURE
 							|| noonTemp < WorldClimate.SNOW_TEMPERATURE || nightTemp < WorldClimate.SNOW_TEMPERATURE
 							|| midnightTemp < WorldClimate.SNOW_TEMPERATURE

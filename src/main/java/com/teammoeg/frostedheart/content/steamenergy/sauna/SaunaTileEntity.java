@@ -36,7 +36,7 @@ import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.util.IOwnerTile;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;

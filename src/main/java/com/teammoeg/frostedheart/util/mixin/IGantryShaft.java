@@ -17,12 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
-public interface IMilkable {
+import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 
-    byte getMilk();
-
-    void setMilk(byte milk);
-
+public interface IGantryShaft {
+    void setEntity(AbstractContraptionEntity comp);
 }

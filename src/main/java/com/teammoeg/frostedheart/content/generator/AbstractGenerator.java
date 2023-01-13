@@ -28,12 +28,16 @@ import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.IOwnerTile;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import dev.ftb.mods.ftbteams.FTBTeams;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.FTBTeamsCommon;
+import dev.ftb.mods.ftbteams.FTBTeamsForge;
 import dev.ftb.mods.ftbteams.data.Team;
+import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
@@ -104,6 +108,12 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 
     public void setOwner(UUID owner) {
         forEachBlock(s -> IOwnerTile.setOwner(s, owner));
+    }
+    protected Optional<Team> getTeam() {
+    	UUID owner=getOwner();
+    	if(owner!=null)
+    		return Optional.ofNullable(TeamManager.INSTANCE.getTeamByID(owner));
+    	return Optional.empty();
     }
     protected Optional<TeamResearchData> getTeamData() {
     	UUID owner=getOwner();

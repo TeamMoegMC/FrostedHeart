@@ -27,7 +27,7 @@ public class BasicPolicyGroup extends PolicyGroup{
 	}
 	
 	@Override
-	public void CollectPoliciesNoCheck(PolicySnapshot policy,VillagerEntity ve) {
+	public void CollectPoliciesNoCheck(PolicySnapshot policy,FHVillagerData ve) {
 		bdata.forEach(policy::register);
 	}
 

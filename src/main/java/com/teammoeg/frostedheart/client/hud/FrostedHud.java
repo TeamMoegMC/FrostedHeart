@@ -421,14 +421,15 @@ public class FrostedHud {
 
 		HUDElements.temperature_orb_frame.blit(mc.ingameGUI, stack, x, y + 3, BasePos.temperature_orb_frame);
 		boolean f=FHConfig.CLIENT.useFahrenheit.get();
-		int temperature =0;
-		int tlvl=(int) TemperatureCore.getEnvTemperature(player);
+		float temperature =0;
+		float tlvl=TemperatureCore.getEnvTemperature(player);
+		tlvl=Math.max(-273, tlvl);
 		if(f)
-			temperature=(int)( TemperatureCore.getEnvTemperature(player)*9/5+32);
+			temperature=(tlvl*9/5+32);
 		else
 			temperature=tlvl;
 
-		renderTemp(stack, mc, temperature,tlvl, x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3, !f);
+		renderTemp(stack, mc, temperature,(int) tlvl, x + BarPos.temp_orb.getX(), y + BarPos.temp_orb.getY() + 3, !f);
 
 		RenderSystem.disableBlend();
 		mc.getProfiler().endSection();
@@ -865,7 +866,7 @@ public class FrostedHud {
 	static final ResourceLocation hadean = new ResourceLocation(FHMain.MODID,
 			"textures/gui/temperature_orb/hadean.png");
 
-	private static void renderTemp(MatrixStack stack, Minecraft mc, double temp,int tlevel, int offsetX, int offsetY,
+	private static void renderTemp(MatrixStack stack, Minecraft mc,float temp,int tlevel, int offsetX, int offsetY,
 			boolean celsius) {
 		UV unitUV = celsius ? UV.delta(0, 25, 13, 34) : UV.delta(13, 25, 26, 34);
 		UV signUV = temp >= 0 ? UV.delta(61, 17, 68, 24) : UV.delta(68, 17, 75, 24);

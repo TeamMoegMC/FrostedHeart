@@ -30,7 +30,7 @@ import com.simibubi.create.content.contraptions.components.deployer.DeployerMove
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
-import com.teammoeg.frostedheart.util.ISpeedContraption;
+import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 
 import net.minecraft.util.math.MathHelper;
 

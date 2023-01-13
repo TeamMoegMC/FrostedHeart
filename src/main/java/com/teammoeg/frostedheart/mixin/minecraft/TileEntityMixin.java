@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.teammoeg.frostedheart.util.IOwnerTile;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
