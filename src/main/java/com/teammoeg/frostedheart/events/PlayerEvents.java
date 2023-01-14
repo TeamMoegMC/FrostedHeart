@@ -151,8 +151,8 @@ public class PlayerEvents {
 							/ 10.0F;
 					float tomorrowNightTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 1, 0) * 10)
 							/ 10.0F;
-					serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.night", nightTemp, midnightTemp,
-							tomorrowMorningTemp, tomorrowNoonTemp, tomorrowNightTemp), false);
+					FHTemperatureDisplayPacket.sendStatus(serverPlayer,"forecast.night", false, nightTemp, midnightTemp,
+							tomorrowMorningTemp, tomorrowNoonTemp, tomorrowNightTemp);
 					boolean snow = nightTemp < WorldClimate.SNOW_TEMPERATURE
 							|| midnightTemp < WorldClimate.SNOW_TEMPERATURE
 							|| tomorrowMorningTemp < WorldClimate.SNOW_TEMPERATURE
