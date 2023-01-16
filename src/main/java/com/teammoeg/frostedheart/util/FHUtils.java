@@ -147,7 +147,7 @@ public class FHUtils {
     }
     public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
 
-        return canTreeGenerate(w,p,r,20);
+        return canTreeGenerate(w,p,r,7);
 
     }
 
