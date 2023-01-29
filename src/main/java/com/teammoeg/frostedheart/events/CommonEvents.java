@@ -533,7 +533,7 @@ public class CommonEvents {
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
-                    	FHTemperatureDisplayPacket.sendStatus(player,"crop_not_growable",true, -5);
+                    	FHTemperatureDisplayPacket.sendStatus(player,"crop_not_growable",true, -6);
                     }
                 } else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
