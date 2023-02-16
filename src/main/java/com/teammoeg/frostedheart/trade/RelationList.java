@@ -1,9 +1,6 @@
 package com.teammoeg.frostedheart.trade;
 
-import java.util.Arrays;
-
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.IntArrayNBT;
+import net.minecraft.network.PacketBuffer;
 
 public class RelationList {
 	public final int[] relations=new int[RelationModifier.values().length];
@@ -24,15 +21,14 @@ public class RelationList {
 		}
 		return sum;
 	}
-	public INBT serialize() {
-		return new IntArrayNBT(relations);
+	public void write(PacketBuffer pb) {
+		pb.writeVarIntArray(relations);
 	}
-	public void deserialize(INBT nbt) {
-		
-		if(nbt instanceof IntArrayNBT) {
-			int[] is=((IntArrayNBT) nbt).getIntArray();
-			Arrays.setAll(relations,i->is[i]);
-			sum=null;
+	public void read(PacketBuffer pb) {
+		int[] arr=pb.readVarIntArray();
+		int minl=Math.min(arr.length, relations.length);
+		for(int i=0;i<minl;i++) {
+			relations[i]=arr[i];
 		}
 	}
 }

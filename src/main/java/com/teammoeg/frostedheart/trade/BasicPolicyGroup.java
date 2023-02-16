@@ -18,7 +18,7 @@ public class BasicPolicyGroup extends PolicyGroup{
 	}
 	public BasicPolicyGroup(JsonObject jo) {
 		super(jo);
-		bdata=SerializeUtil.parseJsonList(jo,BaseData::read);
+		bdata=SerializeUtil.parseJsonList(jo.get("data"),BaseData::read);
 	}
 
 	public BasicPolicyGroup(PacketBuffer pb) {

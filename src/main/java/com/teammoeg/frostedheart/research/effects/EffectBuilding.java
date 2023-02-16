@@ -149,7 +149,7 @@ public class EffectBuilding extends Effect {
 			if(entry!=null) {
 				
 				ClientUtils.mc().displayGuiScreen(screen);
-				System.out.println(manual);
+				//System.out.println(manual);
 				screen.setCurrentNode(entry.getTreeNode());
 				screen.page=0;
 				screen.fullInit();

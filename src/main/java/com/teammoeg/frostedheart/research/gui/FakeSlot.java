@@ -1,0 +1,112 @@
+/*
+ * Copyright (c) 2022 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+package com.teammoeg.frostedheart.research.gui;
+
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
+import dev.ftb.mods.ftblibrary.ui.Panel;
+import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.ui.Widget;
+import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
+
+public class FakeSlot extends Widget {
+    ItemStack[] i;
+    int cnt;
+
+    public FakeSlot(Panel panel, Ingredient is) {
+        super(panel);
+        this.i = is.getMatchingStacks();
+        this.setSize(16, 16);
+    }
+    public FakeSlot(Panel panel, ItemStack iss) {
+        super(panel);
+        this.i = new ItemStack[] {iss};
+        this.setSize(16, 16);
+    }
+    public FakeSlot(Panel panel) {
+    	super(panel);
+    	this.setSize(16, 16);
+	}
+	public void setSlot(Ingredient is) {
+    	this.i=is.getMatchingStacks();
+    }
+    public void setSlot(ItemStack iss) {
+    	this.i=new ItemStack[] {iss};
+    }
+    public void clear() {
+    	i=null;
+    	cnt=0;
+    }
+    @Override
+    public void addMouseOverText(TooltipList list) {
+    	if(i==null)return;
+        ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
+        //list.add(cur.getDisplayName());
+        cur.getTooltip(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
+    }
+    public void onClick(MouseButton btn) {
+    	
+    }
+    @Override
+    public boolean mousePressed(MouseButton button) {
+        if (isMouseOver()) {
+        	if(i==null)return false;
+            if (getWidgetType() != WidgetType.DISABLED) {
+            	onClick(button);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    	if(i==null)return;
+        ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
+        GuiHelper.setupDrawing();
+        matrixStack.push();
+        matrixStack.translate(0, 0, 100);
+        GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
+        if (cnt > 1) {
+            matrixStack.push();
+            matrixStack.translate(0, 0, 100);
+            int dx = 5;
+            if (cnt >= 10)
+                dx = 0;
+            theme.drawString(matrixStack, String.valueOf(cnt), dx + x + 8, y + 9, Color4I.WHITE, Theme.SHADOW);
+            matrixStack.pop();
+        }
+        matrixStack.pop();
+    }
+	public void setCount(int store) {
+		cnt=store;
+	}
+
+
+}

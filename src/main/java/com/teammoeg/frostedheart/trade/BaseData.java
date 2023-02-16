@@ -36,14 +36,15 @@ public abstract class BaseData implements Writeable{
 	}
 	
 	public void tick(int deltaDay,Map<String,Float> data) {
+		System.out.println("try recover for "+id+" : "+deltaDay);
 		if(deltaDay>0) 
-			data.compute(id,(k,v)->v==null?recover*deltaDay:Math.min(recover*deltaDay+v,maxstore));
+			data.compute(getId(),(k,v)->v==null?Math.min(recover*deltaDay,maxstore):Math.min(recover*deltaDay+v,maxstore));
 	}
 	public abstract String getType();
 	public String getId() {
 		return id+"_"+getType();
 	}
-	public abstract void fetch(List<BuyData> buys,List<SellData> sell,Map<String,Float> data);
+	public abstract void fetch(PolicySnapshot shot,Map<String,Float> data);
 	@Override
 	public JsonElement serialize() {
 		JsonObject jo=new JsonObject();
@@ -72,5 +73,9 @@ public abstract class BaseData implements Writeable{
 			return new DemandData(jo);
 		throw new IllegalArgumentException("Missing produce or demand field");
 			
+	}
+	@Override
+	public String toString() {
+		return "BaseData [id=" + id + ", maxstore=" + maxstore + ", recover=" + recover + ", price=" + price + "]";
 	}
 }

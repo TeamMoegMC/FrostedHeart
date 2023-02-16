@@ -22,23 +22,31 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
+import com.teammoeg.frostedheart.trade.RelationList;
+import com.teammoeg.frostedheart.trade.TradeHandler;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 @Mixin(VillagerEntity.class)
 public abstract class VillagerMixin extends AbstractVillagerEntity {
-	FHVillagerData fh$data=new FHVillagerData();
+	FHVillagerData fh$data=new FHVillagerData(getThis());
     public VillagerMixin(EntityType<? extends AbstractVillagerEntity> type, World worldIn) {
         super(type, worldIn);
     }
@@ -49,7 +57,20 @@ public abstract class VillagerMixin extends AbstractVillagerEntity {
     @Shadow
     protected abstract void displayMerchantGui(PlayerEntity pe);
 
+    private VillagerEntity getThis() {
+    	return (VillagerEntity)(Object)this;
+    }
+	@Inject(at = @At("HEAD"), method = "writeAdditional")
+	public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+		CompoundNBT cnbt=new CompoundNBT();
+		fh$data.serialize(cnbt);
+		compound.put("fhdata",cnbt);
+	}
 
+	@Inject(at = @At("HEAD"), method = "writeAdditional")
+	public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+		fh$data.deserialize(compound.getCompound("fhdata"));
+	}
     /**
      * @author khjxiaogu
      * @reason disable villager trade for our system
@@ -71,14 +92,18 @@ public abstract class VillagerMixin extends AbstractVillagerEntity {
 
 				playerIn.addStat(Stats.TALKED_TO_VILLAGER);
 			}*/
-
 			/*if (flag) {
 				return ActionResultType.func_233537_a_(this.world.isRemote);
 			}*/
             if (!this.world.isRemote) {
             	//return fh$data.trade(playerIn);
-                this.shakeHead();
-                playerIn.sendMessage(GuiUtils.translateMessage("village.unknown"), playerIn.getUniqueID());
+            	/*fh$data.update((ServerWorld) super.world, playerIn);
+            	RelationList list=fh$data.getRelationShip(playerIn);
+            	if(list.sum()<-30) {
+	                this.shakeHead();
+	                playerIn.sendMessage(GuiUtils.translateMessage("village.unknown"), playerIn.getUniqueID());
+            	}*/
+            	TradeHandler.openTradeScreen((ServerPlayerEntity) playerIn, fh$data);
 
             }
 

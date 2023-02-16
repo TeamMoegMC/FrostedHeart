@@ -18,6 +18,8 @@
 
 package com.teammoeg.frostedheart.util;
 
+import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.ToIntFunction;
 
@@ -193,5 +195,8 @@ public class FHUtils {
     public static boolean canGrassSurvive(IWorldReader world, BlockPos pos) {
         float t = ChunkData.getTemperature(world, pos);
         return t >= WorldClimate.HEMP_GROW_TEMPERATURE && t <= WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
+    }
+    public static <O,T> Optional<T> ofMap(Map<O,T> map,O key){
+    	return Optional.ofNullable(map.get(key));
     }
 }

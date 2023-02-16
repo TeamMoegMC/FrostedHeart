@@ -154,7 +154,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 	public void tick() {
 		if (!this.world.isRemote) {
 			if (process > 0) {
-				if(efficiency<=0) {
+				if(efficiency<=0.005) {
 					out=ItemStack.EMPTY;
 					outfluid=FluidStack.EMPTY;
 					process=processMax=0;

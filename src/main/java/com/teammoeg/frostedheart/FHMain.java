@@ -47,6 +47,7 @@ import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FlowerPotMixin;
+import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
@@ -126,12 +127,12 @@ public class FHMain {
 		CreateCompat.init();
 
 		IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
-
+		
 		mod.addListener(this::setup);
 		mod.addListener(this::processIMC);
 		mod.addListener(this::enqueueIMC);
 		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
-		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::modification);
+		mod.addListener(this::modification);
 		FHConfig.register();
 		TetraCompat.init();
 		FHProps.init();
@@ -142,6 +143,7 @@ public class FHMain {
 		FHTileTypes.REGISTER.register(mod);
 		FHFluids.FLUIDS.register(mod);
 		FHSounds.SOUNDS.register(mod);
+		FHContent.CONTAINERS.register(mod);
 		FHRecipes.RECIPE_SERIALIZERS.register(mod);
 		FHParticleTypes.REGISTER.register(mod);
 		FHBiomes.BIOME_REGISTER.register(mod);
@@ -170,7 +172,7 @@ public class FHMain {
 		for(Item i:ForgeRegistries.ITEMS.getValues()) {
 			if(i.isFood()) {
 				if(i.getRegistryName().getNamespace().equals("crockpot")) {
-					i.getFood().effects.removeIf(t->t.getFirst().get().getPotion().isBeneficial());
+					((FoodAccess)i.getFood()).getEffectsSuppliers().removeIf(t->t.getFirst().get().getPotion().isBeneficial());
 				}
 			}
 		}

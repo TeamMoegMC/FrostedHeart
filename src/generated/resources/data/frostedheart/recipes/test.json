@@ -1,0 +1,43 @@
+{
+  "type": "frostedheart:trade",
+  "policies": [
+    {
+      "conditions": [],
+      "data": [
+        {
+          "id": "frostedheart:rye_bread",
+          "store": 10,
+          "recover": 10.0,
+          "price": 10,
+          "demand": {
+            "item": "frostedheart:rye_bread"
+          }
+        },
+        {
+          "id": "frostedheart:straw_lining",
+          "store": 1,
+          "recover": 0.1,
+          "price": 20,
+          "demand": {
+            "item": "frostedheart:straw_lining"
+          }
+        },
+        {
+          "id": "rankine:malachite",
+          "store": 10,
+          "recover": 10.0,
+          "price": 10,
+          "produce": "rankine:malachite"
+        },
+        {
+          "id": "frostedheart:energy_core",
+          "store": 10,
+          "recover": 1.0,
+          "price": 100,
+          "produce": "frostedheart:energy_core"
+        }
+      ]
+    }
+  ],
+  "weight": 1
+}

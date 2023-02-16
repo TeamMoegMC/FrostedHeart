@@ -30,11 +30,11 @@ public class ProductionData extends BaseData {
 	}
 
 	@Override
-	public void fetch(List<BuyData> buys, List<SellData> sell, Map<String, Float> data) {
+	public void fetch(PolicySnapshot ps, Map<String, Float> data) {
 
 		int num = (int) (float) data.getOrDefault(getId(), 0f);
-		if (num > 0)
-			sell.add(new SellData(item, num, getId()));
+		//if (num > 0)
+			ps.registerSell(new SellData(item, num, getId(),price));
 	}
 
 	@Override

@@ -28,10 +28,10 @@ public class DemandData extends BaseData {
 	}
 
 	@Override
-	public void fetch(List<BuyData> buys, List<SellData> sell, Map<String, Float> data) {
+	public void fetch(PolicySnapshot ps, Map<String, Float> data) {
 		int num = (int) (float) data.getOrDefault(getId(), 0f);
-		if (num > 0)
-			buys.add(new BuyData(item, num, getId()));
+		//if (num > 0)
+			ps.registerBuy(new BuyData(item, num, getId(),price));
 	}
 
 	@Override

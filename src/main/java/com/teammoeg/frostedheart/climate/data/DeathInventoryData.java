@@ -171,10 +171,13 @@ public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> 
 		this.inv=data.inv;
 	}
 	public void calledClone() {
+		//System.out.println("called clone event");
 		calledClone=true;
 	}
 	public void tryCallClone(PlayerEntity pe) {
+		//System.out.println("Detecting clone event");
 		if(!calledClone) {
+			//System.out.println("calling clone event");
 			MinecraftForge.EVENT_BUS.post(new PlayerEvent.Clone(pe,pe,true));
 		}
 	}

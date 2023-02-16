@@ -152,6 +152,7 @@ public class RTextField extends Widget {
                 matrixStack.scale(scale, scale, 1.0F);
 
                 for (i = 0; i < formattedText.length; ++i) {
+                
                     theme.drawString(matrixStack, formattedText[i], 0.0F, i * textSpacing, col, textFlags);
                 }
 

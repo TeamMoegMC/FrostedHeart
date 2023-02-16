@@ -84,6 +84,7 @@
     "minecraft.PigEntityMixin",
     "minecraft.RabbitEntityMixin",
     "minecraft.SheepEntityMixin",
+    "minecraft.PlayerEntityMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

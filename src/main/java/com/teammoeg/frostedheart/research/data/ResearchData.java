@@ -76,7 +76,7 @@ public class ResearchData implements VariantProvider{
         for (Clue ac : r.getClues())
             if (ac.isCompleted(parent))
                 contribution += ac.getResearchContribution();
-        if(contribution>=0.98)
+        if(contribution>=0.999)
         	return r.getRequiredPoints();
         currentProgress += contribution * r.getRequiredPoints();
         return Math.min(currentProgress,r.getRequiredPoints());

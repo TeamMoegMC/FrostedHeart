@@ -3,17 +3,21 @@ package com.teammoeg.frostedheart.trade;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.util.SerializeUtil;
-
+import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -22,75 +26,114 @@ import net.minecraft.stats.StatisticsManager;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.village.GossipType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
-public class FHVillagerData {
+public class FHVillagerData implements INamedContainerProvider{
 	ResourceLocation policytype;
 	Map<String,Float> storage=new HashMap<>();
-	long totaltraded;
-	int sawmurder;
-	int bargain;
-	int totalbenefit;
-	int tradelevel;
+	Map<UUID,PlayerRelationData> relations=new HashMap<>();
 	long lastUpdated;
-	
+	int bargain;
+	long totaltraded;
+	int tradelevel;
+	VillagerEntity parent;
+	public FHVillagerData(VillagerEntity parent) {
+		super();
+		this.parent = parent;
+	}
 	public ActionResultType trade(PlayerEntity pe) {
 		return ActionResultType.func_233537_a_(pe.world.isRemote);
 	}
-	public void initLegacy() {
+	public void initLegacy(VillagerEntity ve) {
 		if(policytype==null) {
-			
+			policytype=TradePolicy.random(ve.getRNG()).getName();
 		}
 	}
-	public void update(ServerWorld w) {
+	public void update(ServerWorld w,PlayerEntity trigger) {
+		initLegacy(parent);
 		long day=ClimateData.getWorldDay(w);
+		FHUtils.ofMap(relations, trigger.getUniqueID()).ifPresent(t->t.update(day));;
 		if(day>lastUpdated) {
 			long delta=day-lastUpdated;
 			bargain=0;
-			totalbenefit=(int) (totalbenefit*Math.pow(0.75f, delta));
 			lastUpdated=day;
 			getPolicy().calculateRecovery((int) delta, storage);
 		}
 	}
 	public PolicySnapshot getPolicy() {
+		if(policytype==null)return PolicySnapshot.empty;
 		return TradePolicy.policies.get(policytype).get(this);
 	}
 	public CompoundNBT serialize(CompoundNBT data) {
-		CompoundNBT list=new CompoundNBT();
-		
+		ListNBT list=new ListNBT();
+		CompoundNBT stor=new CompoundNBT();
 		for(Entry<String, Float> k:storage.entrySet()) {
-			list.putFloat(k.getKey(),k.getValue());
+			stor.putFloat(k.getKey(),k.getValue());
 		}
-		data.put("storage", list);
+		for(Entry<UUID, PlayerRelationData> i:relations.entrySet()) {
+			CompoundNBT items=new CompoundNBT();
+			items.putUniqueId("id", i.getKey());
+			i.getValue().serialize(items);
+			list.add(items);
+		}
+		data.putLong("total",totaltraded);
+		data.putInt("level", tradelevel);
+		data.put("storage", stor);
+		data.put("relations", list);
 		if(policytype!=null)
 			data.putString("type",policytype.toString());
-		data.putLong("total",totaltraded);
-		data.putInt("murder",sawmurder);
-		data.putInt("bargain", bargain);
-		data.putInt("benefit", totalbenefit);
-		data.putInt("level", tradelevel);
 		data.putLong("last", lastUpdated);
 		return data;
 	}
 	public void deserialize(CompoundNBT data) {
 		CompoundNBT nbt=data.getCompound("storage");
 		storage.clear();
-		for(String k:nbt.keySet()) {
+		for(String k:nbt.keySet()) 
 			storage.put(k,nbt.getFloat(k));
+		tradelevel=data.getInt("level");
+		totaltraded=data.getLong("total");
+		ListNBT rel=data.getList("relations",NBT.TAG_COMPOUND);
+		relations.clear();
+		for(INBT u:rel) {
+			CompoundNBT item = (CompoundNBT) u;
+			PlayerRelationData prd=new PlayerRelationData();
+			prd.deserialize(item);
+			relations.put(item.getUniqueId("id"),prd);
 		}
 		if(data.contains("type"))
 			policytype=new ResourceLocation(data.getString("type"));
-		totaltraded=data.getLong("total");
-		data.putInt("murder",sawmurder);
-		data.putInt("bargain", bargain);
-		data.putInt("benefit", totalbenefit);
-		data.putInt("level", tradelevel);
 		data.putLong("last", lastUpdated);
 	}
-	public RelationList getRelationShip(PlayerEntity pe,VillagerEntity ve) {
+	public CompoundNBT serializeForSend(CompoundNBT data) {
+		ListNBT list=new ListNBT();
+		CompoundNBT stor=new CompoundNBT();
+		for(Entry<String, Float> k:storage.entrySet()) {
+			stor.putFloat(k.getKey(),k.getValue());
+		}
+		data.putLong("total",totaltraded);
+		data.putInt("level", tradelevel);
+		data.put("storage", stor);
+		data.put("relations", list);
+		if(policytype!=null)
+			data.putString("type",policytype.toString());
+		return data;
+	}
+	public void deserializeFromRecv(CompoundNBT data) {
+		CompoundNBT nbt=data.getCompound("storage");
+		storage.clear();
+		for(String k:nbt.keySet()) 
+			storage.put(k,nbt.getFloat(k));
+		tradelevel=data.getInt("level");
+		totaltraded=data.getLong("total");
+		if(data.contains("type"))
+			policytype=new ResourceLocation(data.getString("type"));
+	}
+	public RelationList getRelationShip(PlayerEntity pe) {
 		RelationList list=new RelationList();
+		PlayerRelationData player=relations.getOrDefault(pe.getUniqueID(),PlayerRelationData.EMPTY);
 		list.put(RelationModifier.FOREIGNER,-10);
 		if(!ResearchDataAPI.isResearchComplete(pe,"villager_language"))
 			list.put(RelationModifier.UNKNOWN_LANGUAGE, -30);
@@ -98,28 +141,33 @@ public class FHVillagerData {
 		int killed=getStats(pe).getValue(Stats.ENTITY_KILLED,EntityType.VILLAGER);
 		int kdc=(int) Math.min(killed,ResearchDataAPI.getVariantDouble(pe,ResearchVariant.VILLAGER_FORGIVENESS));
 		list.put(RelationModifier.KILLED_HISTORY, (killed-kdc)*-5);
-		if(ve.getGossip().getReputation(pe.getUniqueID(),e->e==GossipType.MINOR_NEGATIVE)>0)
+		if(parent.getGossip().getReputation(pe.getUniqueID(),e->e==GossipType.MINOR_NEGATIVE)>0)
 			list.put(RelationModifier.HURT,-10);
-		list.put(RelationModifier.KILLED_SAW,-25*sawmurder);
-		if(pe.getActivePotionEffect(Effects.HERO_OF_THE_VILLAGE)!=null) 
+		list.put(RelationModifier.KILLED_SAW,-25*player.sawmurder);
+		if(pe.getActivePotionEffect(Effects.HERO_OF_THE_VILLAGE)!=null)
 			list.put(RelationModifier.SAVED_VILLAGE,10);
 		list.put(RelationModifier.RECENT_BARGAIN,-bargain*10);
-		list.put(RelationModifier.TRADE_LEVEL,getTradeRelation());
-		list.put(RelationModifier.RECENT_BENEFIT,getRecentBenefit());
+		list.put(RelationModifier.TRADE_LEVEL,tradelevel*5);
+		list.put(RelationModifier.RECENT_BENEFIT,player.totalbenefit);
 		return list;
-	}
-	public int getRecentBenefit() {
-		return 0;
-	}
-	public int getTradeRelation() {
-		return 0;
-	}
-	public int getTradeLevel() {
-		return tradelevel;
 	}
 	private static StatisticsManager getStats(PlayerEntity pe) {
 		if(pe instanceof ServerPlayerEntity)
 			return ((ServerPlayerEntity) pe).getStats();
 		return ((ClientPlayerEntity)pe).getStats();
+	}
+	@Override
+	public Container createMenu(int p1, PlayerInventory p2, PlayerEntity p3) {
+		TradeContainer tc=new TradeContainer(p1,p2,parent);
+		tc.setPolicy(getPolicy());
+		tc.policy.fetchTrades(storage);
+		return tc;
+	}
+	@Override
+	public ITextComponent getDisplayName() {
+		return GuiUtils.translateGui("trade.title");
+	}
+	public int getTradeLevel() {
+		return tradelevel;
 	}
 }
