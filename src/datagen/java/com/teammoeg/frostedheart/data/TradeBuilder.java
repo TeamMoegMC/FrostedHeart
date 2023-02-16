@@ -18,6 +18,7 @@ import com.teammoeg.frostedheart.trade.conditions.LevelCondition;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.data.IFinishedRecipe;
+import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
@@ -29,6 +30,7 @@ public class TradeBuilder implements IFinishedRecipe{
 	private ResourceLocation name;
 	private ResourceLocation id;
 	private int weight;
+	private VillagerProfession prof;
 	public static class GroupBuilder{
 		private List<PolicyCondition> conditions=new ArrayList<>();
 		private List<BaseData> bdata=new ArrayList<>();
@@ -103,6 +105,10 @@ public class TradeBuilder implements IFinishedRecipe{
 		this.weight=weight;
 		return this;
 	}
+	public TradeBuilder profession(VillagerProfession prof) {
+		this.prof=prof;
+		return this;
+	}
 	public void finish(Consumer<IFinishedRecipe> out) {
 		out.accept(this);
 	}
@@ -129,6 +135,8 @@ public class TradeBuilder implements IFinishedRecipe{
 		arg0.add("policies",SerializeUtil.toJsonList(groups,PolicyGroup::serialize));
         if(weight>0)
         	arg0.addProperty("weight", weight);
+        if(prof!=null&&prof!=VillagerProfession.NONE)
+        	arg0.addProperty("profession",prof.getRegistryName().toString());
 	}
 	
 }

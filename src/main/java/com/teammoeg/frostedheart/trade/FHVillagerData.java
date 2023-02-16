@@ -34,6 +34,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 public class FHVillagerData implements INamedContainerProvider{
 	ResourceLocation policytype;
 	Map<String,Float> storage=new HashMap<>();
+	public Map<String,Integer> flags=new HashMap<>();
 	Map<UUID,PlayerRelationData> relations=new HashMap<>();
 	long lastUpdated;
 	int bargain;
@@ -50,6 +51,7 @@ public class FHVillagerData implements INamedContainerProvider{
 	public void initLegacy(VillagerEntity ve) {
 		if(policytype==null) {
 			policytype=TradePolicy.random(ve.getRNG()).getName();
+			parent.setVillagerData(parent.getVillagerData().withProfession(getPolicyType().getProfession()));
 		}
 	}
 	public void update(ServerWorld w,PlayerEntity trigger) {
@@ -63,6 +65,10 @@ public class FHVillagerData implements INamedContainerProvider{
 			getPolicy().calculateRecovery((int) delta, storage);
 		}
 	}
+	public TradePolicy getPolicyType() {
+		if(policytype==null)return null;
+		return TradePolicy.policies.get(policytype);
+	}
 	public PolicySnapshot getPolicy() {
 		if(policytype==null)return PolicySnapshot.empty;
 		return TradePolicy.policies.get(policytype).get(this);
@@ -73,13 +79,17 @@ public class FHVillagerData implements INamedContainerProvider{
 		for(Entry<String, Float> k:storage.entrySet()) {
 			stor.putFloat(k.getKey(),k.getValue());
 		}
+		CompoundNBT flag=new CompoundNBT();
+		for(Entry<String, Integer> k:flags.entrySet())
+			flag.putInt(k.getKey(), k.getValue());
+		data.put("flags", flag);
 		for(Entry<UUID, PlayerRelationData> i:relations.entrySet()) {
 			CompoundNBT items=new CompoundNBT();
 			items.putUniqueId("id", i.getKey());
 			i.getValue().serialize(items);
 			list.add(items);
 		}
-		data.putLong("total",totaltraded);
+		data.putLong("total",getTotaltraded());
 		data.putInt("level", tradelevel);
 		data.put("storage", stor);
 		data.put("relations", list);
@@ -93,6 +103,9 @@ public class FHVillagerData implements INamedContainerProvider{
 		storage.clear();
 		for(String k:nbt.keySet()) 
 			storage.put(k,nbt.getFloat(k));
+		flags.clear();
+		for(String ks:data.getCompound("flags").keySet()) 
+			flags.put(ks, nbt.getInt(ks));
 		tradelevel=data.getInt("level");
 		totaltraded=data.getLong("total");
 		ListNBT rel=data.getList("relations",NBT.TAG_COMPOUND);
@@ -113,7 +126,11 @@ public class FHVillagerData implements INamedContainerProvider{
 		for(Entry<String, Float> k:storage.entrySet()) {
 			stor.putFloat(k.getKey(),k.getValue());
 		}
-		data.putLong("total",totaltraded);
+		CompoundNBT flag=new CompoundNBT();
+		for(Entry<String, Integer> k:flags.entrySet())
+			flag.putInt(k.getKey(), k.getValue());
+		data.put("flags", flag);
+		data.putLong("total",getTotaltraded());
 		data.putInt("level", tradelevel);
 		data.put("storage", stor);
 		data.put("relations", list);
@@ -126,6 +143,9 @@ public class FHVillagerData implements INamedContainerProvider{
 		storage.clear();
 		for(String k:nbt.keySet()) 
 			storage.put(k,nbt.getFloat(k));
+		flags.clear();
+		for(String ks:data.getCompound("flags").keySet()) 
+			flags.put(ks, nbt.getInt(ks));
 		tradelevel=data.getInt("level");
 		totaltraded=data.getLong("total");
 		if(data.contains("type"))
@@ -169,5 +189,8 @@ public class FHVillagerData implements INamedContainerProvider{
 	}
 	public int getTradeLevel() {
 		return tradelevel;
+	}
+	public long getTotaltraded() {
+		return totaltraded;
 	}
 }
