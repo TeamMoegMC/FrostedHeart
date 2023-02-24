@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.util.ZipFile;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.storage.FolderName;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mixin(ServerLifecycleHooks.class)
@@ -72,12 +73,27 @@ public class ServerLifecycleHooksMixin {
         }
         FHMain.saveNeedUpdate = true;
         try {
+        	LOGGER.info("Making backup for old config files...");
             configbkf.toFile().mkdirs();
             File backup = new File(configbkf.toFile(), "backup-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + ".zip");
             ZipFile zf = new ZipFile(backup, config);
+            
             zf.addAndDel(config.toFile(), f -> !f.getName().startsWith(".") && f.getName().endsWith(".toml"));
+            
             zf.close();
             fconfig.mkdirs();
+            
+            LOGGER.info("Trying to copy new files...");
+            File defau=FMLPaths.GAMEDIR.get().resolve("defaultconfigs").toFile();
+            for(File f:defau.listFiles(f->f.getName().endsWith(".toml"))) {
+            	File nf=new File(fconfig,f.getName());
+            	
+        		FileUtil.transfer(f,nf);
+        		LOGGER.info("Copied "+f.getName());
+            	
+            }
+            
+            LOGGER.info("Finishing update...");
             FileUtil.transfer(localVersion, saveVersion);
             FHMain.lastbkf = backup;
             FHMain.saveNeedUpdate = false;

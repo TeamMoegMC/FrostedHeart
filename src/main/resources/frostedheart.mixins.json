@@ -57,6 +57,7 @@
     "minecraft.CowEntityMixin",
     "minecraft.CraftResultInventoryMixin",
     "minecraft.DataFixerMixin",
+    "minecraft.FoodAccess",
     "minecraft.GameRulesMixin",
     "minecraft.IceMixin",
     "minecraft.RecipeManagerMixin",
