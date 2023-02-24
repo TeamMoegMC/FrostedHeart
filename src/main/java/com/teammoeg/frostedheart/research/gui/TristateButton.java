@@ -19,17 +19,20 @@
 
 package com.teammoeg.frostedheart.research.gui;
 
+import java.util.function.Consumer;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.CursorType;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
+import dev.ftb.mods.ftblibrary.util.TooltipList;
 
 public abstract class TristateButton extends Button {
     boolean enabled;
     Icon normal,over,locked;
-
+    Consumer<TooltipList> tooltips;
 
     public TristateButton(Panel panel, Icon normal, Icon over, Icon locked) {
 		super(panel);
@@ -86,6 +89,24 @@ public abstract class TristateButton extends Button {
 
 	public void setLocked(Icon locked) {
 		this.locked = locked;
+	}
+
+	@Override
+	public void addMouseOverText(TooltipList list) {
+		super.addMouseOverText(list);
+		if(tooltips!=null)
+			tooltips.accept(list);
+	}
+
+	public Consumer<TooltipList> getTooltips() {
+		return tooltips;
+	}
+
+	public void setTooltips(Consumer<TooltipList> tooltips) {
+		this.tooltips = tooltips;
+	}
+	public void resetTooltips() {
+		this.tooltips = null;
 	}
 
 }

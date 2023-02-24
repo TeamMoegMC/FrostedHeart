@@ -21,8 +21,6 @@ package com.teammoeg.frostedheart.trade;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.stream.Stream;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -36,7 +34,6 @@ import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
-import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
@@ -50,7 +47,8 @@ public class TradeScreen extends BaseScreen {
 	FakeSlot[] slots = new FakeSlot[27];
 	SellData[] sds = new SellData[27];
 	FakeSlot[] orders = new FakeSlot[12];
-
+	TristateButton trade;
+	TristateButton bargain;
 	public TradeScreen(TradeContainer cx) {
 		this.cx = cx;
 		tab = new SwitchButton(this, TradeIcons.PTABSELL, TradeIcons.PTABBUY, false) {
@@ -159,6 +157,22 @@ public class TradeScreen extends BaseScreen {
 			curs.setCount(cur.getValue());
 		}
 		cx.recalc();
+		if(cx.balance>=0&&cx.poffer>0) {
+			trade.setEnabled(true);
+			trade.resetTooltips();
+			if(cx.originalVOffer>cx.poffer) {
+				trade.setNormal(TradeIcons.DEALGRN);
+				trade.setTooltips(c->c.add(GuiUtils.translateGui("trade.discounted_offering")));
+			}else if(cx.balance>1) {
+				trade.setNormal(TradeIcons.DEALYEL);
+				trade.setTooltips(c->c.add(GuiUtils.translateGui("trade.too_much_offering")));
+			}
+		}else {
+			trade.setTooltips(c->c.add(GuiUtils.translateGui("trade.not_enough_offering")));
+		}
+		if(cx.relations.sum()>30&&cx.voffer>0) {
+			bargain.setEnabled(true);
+		}else bargain.setEnabled(false);
 	}
 	public void updateOffers() {
 		for (FakeSlot fs : slots)
@@ -218,8 +232,7 @@ public class TradeScreen extends BaseScreen {
 
 	@Override
 	public void addWidgets() {
-		TristateButton trade;
-		TristateButton bargain;
+		
 
 		RTextField ptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
 				.setMaxLine(1).setText(GuiUtils.translateGui("trade.me"));

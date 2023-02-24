@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.trade;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.FHContent;
@@ -20,11 +21,11 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class TradeContainer extends Container {
-	FHVillagerData data;
-	PlayerRelationData pld;
-	RelationList relations;
-	PolicySnapshot policy;
-	VillagerEntity ve;
+	public FHVillagerData data;
+	public PlayerRelationData pld;
+	public RelationList relations;
+	public PolicySnapshot policy;
+	public VillagerEntity ve;
 	ItemStackHandler inv = new ItemStackHandler(12) {
 
 		@Override
@@ -40,9 +41,9 @@ public class TradeContainer extends Container {
 	};
 	//client side memory
 	LinkedHashMap<String,Integer> order=new LinkedHashMap<>();
-	int balance;
-	int maxdiscount;
-	float discountRatio;
+	public int balance;
+	public int maxdiscount;
+	public float discountRatio;
 	public TradeContainer(int id, PlayerInventory inventoryPlayer, PacketBuffer pb) {
 		this(id, inventoryPlayer,(VillagerEntity) inventoryPlayer.player.getEntityWorld().getEntityByID(pb.readVarInt()));
 
@@ -57,7 +58,11 @@ public class TradeContainer extends Container {
 		policy = data.getPolicy();
 		policy.fetchTrades(data.storage);
 	}
-
+	public void setOrder(Map<String,Integer> order) {
+		this.order.clear();
+		this.order.putAll(order);
+		this.recalc();
+	}
 	public TradeContainer(int id, PlayerInventory inventoryPlayer,
 			VillagerEntity ve /*,PlayerRelationData prd,RelationList rel */) {
 		super(FHContent.TRADE_GUI.get(), id);
@@ -137,8 +142,9 @@ public class TradeContainer extends Container {
 	public void setPolicy(PolicySnapshot ps) {
 		this.policy=ps;
 	}
+	int voffer,poffer,originalVOffer;
 	public void recalc() {
-		int poffer=0;
+		poffer=0;
 		outer:for(int i=0;i<inv.getSlots();i++) {
 			ItemStack is=inv.getStackInSlot(i);
 			for(BuyData bd:policy.buys) {
@@ -149,10 +155,15 @@ public class TradeContainer extends Container {
 				}
 			}
 		}
-		int voffer=0;
+		voffer=0;
 		for(Entry<String, Integer> entry:order.entrySet()) {
 			voffer+=policy.sells.get(entry.getKey()).price*entry.getValue();
 		}
+		originalVOffer=voffer;
+		int relation=relations.sum();
+		if(relation<0)
+			voffer+=-relation*4;
+		voffer=Math.max((int)(voffer*(1-discountRatio)),voffer-maxdiscount);
 		if(voffer>2*poffer)
 			balance=-3;
 		else if(voffer>1.5f*poffer)

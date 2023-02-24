@@ -24,6 +24,12 @@ public class RelationList {
 	public void write(PacketBuffer pb) {
 		pb.writeVarIntArray(relations);
 	}
+	public void copy(RelationList rel) {
+		for(int i=0;i<relations.length;i++) {
+			relations[i]=rel.relations[i];
+		}
+		sum=rel.sum;
+	}
 	public void read(PacketBuffer pb) {
 		int[] arr=pb.readVarIntArray();
 		int minl=Math.min(arr.length, relations.length);
