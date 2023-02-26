@@ -31,7 +31,7 @@ public class DemandData extends BaseData {
 	public void fetch(PolicySnapshot ps, Map<String, Float> data) {
 		int num = (int) (float) data.getOrDefault(getId(), 0f);
 		//if (num > 0)
-			ps.registerBuy(new BuyData(item, num, getId(),price));
+			ps.registerBuy(new BuyData(getId(),num,this));
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class DemandData extends BaseData {
 
 	@Override
 	public void write(PacketBuffer buffer) {
-		buffer.writeBoolean(false);
+		buffer.writeVarInt(2);
 		super.write(buffer);
 		item.write(buffer);
 	}

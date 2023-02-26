@@ -12,8 +12,9 @@ public class TradeHandler {
 			CompoundNBT tag=new CompoundNBT();
 			e.writeCompoundTag(vd.serializeForSend(tag));
 			tag=new CompoundNBT();
-			e.writeCompoundTag(vd.relations.getOrDefault(spe.getUniqueID(),PlayerRelationData.EMPTY).serialize(tag));
+			e.writeCompoundTag(vd.getRelationDataForRead(spe).serialize(tag));
 			vd.getRelationShip(spe).write(e);
 		});
 	}
+	
 }

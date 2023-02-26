@@ -34,6 +34,7 @@ public class BargainRequestPacket {
 			if(cont instanceof TradeContainer) {
 				TradeContainer trade=(TradeContainer) cont;
 				trade.setOrder(offer);
+				trade.handleBargain(context.get().getSender());
 			}
 		});
 		context.get().setPacketHandled(true);

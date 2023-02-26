@@ -39,7 +39,6 @@ public class BlackListPredicate extends ItemPredicate {
     @Override
     public boolean test(ItemStack item) {
         boolean rs = !white.test(item);
-        System.out.println(rs);
         return rs;
     }
 

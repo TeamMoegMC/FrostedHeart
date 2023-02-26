@@ -10,7 +10,7 @@ public class PolicySnapshot {
 		@Override
 		public void register(BaseData bd) {}
 		@Override
-		public void calculateRecovery(int deltaDays, Map<String, Float> data) {}
+		public void calculateRecovery(int deltaDays,FHVillagerData data) {}
 		@Override
 		public void fetchTrades(Map<String, Float> data) {}
 	};
@@ -20,7 +20,7 @@ public class PolicySnapshot {
 	public void register(BaseData bd) {
 		data.put(bd.getId(), bd);
 	}
-	public void calculateRecovery(int deltaDays,Map<String,Float> data) {
+	public void calculateRecovery(int deltaDays,FHVillagerData data) {
 		System.out.println(data);
 		this.data.values().forEach(t->t.tick(deltaDays, data));
 		System.out.println(data);

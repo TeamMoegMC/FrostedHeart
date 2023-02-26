@@ -22,7 +22,7 @@ public class Conditions {
     	registerType(GreaterFlagCondition.class,"greater",GreaterFlagCondition::new,GreaterFlagCondition::new);
     	registerType(NotCondition.class,"not",NotCondition::new,NotCondition::new);
     	registerType(TotalTradeCondition.class,"total",TotalTradeCondition::new,TotalTradeCondition::new);
-    	registerType(WithFlagCondition.class,"greater",WithFlagCondition::new,WithFlagCondition::new);
+    	registerType(WithFlagCondition.class,"has",WithFlagCondition::new,WithFlagCondition::new);
     }
     public static void registerType(Class<? extends PolicyCondition> cls,String type,Function<JsonObject, PolicyCondition> json,Function<PacketBuffer, PolicyCondition> packet) {
     	registry.register(cls, type, json, packet);

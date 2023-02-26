@@ -38,16 +38,19 @@ public class TradeIcons {
     public static final Icon DEALO = ALL.withUV(77, 227, 20, 14,256,256);
     public static final Icon DEALD = ALL.withUV(97, 227, 20, 14,256,256);
     public static final Icon DEALYEL = ALL.withUV(117, 227, 20, 14,256,256);
-    public static final Icon DEALGRN = ALL.withUV(137, 227, 20, 14,256,256);
+    public static final Icon DEALYELO = ALL.withUV(117,241, 20, 14,256,256);
     
+    public static final Icon DEALGRN = ALL.withUV(137, 227, 20, 14,256,256);
+    public static final Icon DEALGRNO = ALL.withUV(137,241, 20, 14,256,256);
+    		
     public static final Icon BARGAINN = ALL.withUV(57, 241, 20, 14,256,256);
     public static final Icon BARGAINO = ALL.withUV(77, 241, 20, 14,256,256);
     public static final Icon BARGAIND = ALL.withUV(97, 241, 20, 14,256,256);
     
     public static final Icon SALEABLE = ALL.withUV(0, 237, 7, 6,256,256);
-    public static final Icon NOSTOCK = ALL.withUV(7, 237, 7, 6,256,256);
+    public static final Icon NORESTOCK = ALL.withUV(7, 237, 7, 6,256,256);
     public static final Icon NOBUY = ALL.withUV(14, 237, 7, 6,256,256);
-    public static final Icon NORESTOCK = ALL.withUV(21, 237, 7, 6,256,256);
+    public static final Icon RESTOCKS = ALL.withUV(21, 237, 7, 6,256,256);
     public static final Icon FULL = ALL.withUV(28, 237, 7, 6,256,256);
     public static final Icon STOCKOUT = ALL.withUV(35, 237, 7, 6,256,256);
 

@@ -138,7 +138,14 @@ public class FHRecipeProvider extends RecipeProvider {
 		recipeTrade(out);
 	}
 	private void recipeTrade(@Nonnull Consumer<IFinishedRecipe> out) {
-		trade().group().buy(10,10,10,FHItems.rye_bread).buy(1, 0.1f,20,FHItems.straw_lining).sell(10,10,10,RankineItems.MALACHITE.get()).sell(10, 1, 100,FHItems.energy_core).basic().finish().weight(1).id("test").finish(out);;
+		trade().group().buy(10,10,10,FHItems.rye_bread)
+		.buy(1, 0.1f,20,FHItems.straw_lining)
+		.sell(10,10,10,RankineItems.MALACHITE.get()).useAction().addFlag("copper", 1).finish()
+		.sell(10, 1, 100,FHItems.energy_core)
+		.sell(10, 1, 5,RankineItems.COPPER_INGOT.get()).restockAction().addFlag("copper", -1).finish().restocksBy().hasFlag("copper").finish()
+		.basic()
+		.finish()
+		.weight(1).id("test").finish(out);;
 		
 	}
 	private TradeBuilder trade() {

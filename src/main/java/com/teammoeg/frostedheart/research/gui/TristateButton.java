@@ -43,11 +43,11 @@ public abstract class TristateButton extends Button {
 
 	@Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        if (isEnabled()) {
+        if (getEnabled()) {
             if(super.isMouseOver())
             	over.draw(matrixStack, x, y, w, h);
             else
-            	locked.draw(matrixStack, x, y, w, h);
+            	normal.draw(matrixStack, x, y, w, h);
         }else
         	locked.draw(matrixStack, x, y, w, h);
     }
@@ -59,7 +59,7 @@ public abstract class TristateButton extends Button {
         return CursorType.ARROW;
     }
 
-	public boolean isEnabled() {
+	public boolean getEnabled() {
 		return enabled;
 	}
 

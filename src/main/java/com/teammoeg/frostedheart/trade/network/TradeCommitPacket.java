@@ -33,6 +33,7 @@ public class TradeCommitPacket {
 			if(cont instanceof TradeContainer) {
 				TradeContainer trade=(TradeContainer) cont;
 				trade.setOrder(offer);
+				trade.commitTrade(context.get().getSender());
 			}
 		});
 		context.get().setPacketHandled(true);

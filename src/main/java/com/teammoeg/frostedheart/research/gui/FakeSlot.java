@@ -19,9 +19,13 @@
 
 package com.teammoeg.frostedheart.research.gui;
 
+import java.util.function.Consumer;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.icon.Icon;
+import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
@@ -36,7 +40,9 @@ import net.minecraft.item.crafting.Ingredient;
 public class FakeSlot extends Widget {
     ItemStack[] i;
     int cnt;
-
+    int ovlw,ovlh;
+    Icon overlay;
+    Consumer<TooltipList> tooltip;
     public FakeSlot(Panel panel, Ingredient is) {
         super(panel);
         this.i = is.getMatchingStacks();
@@ -67,10 +73,10 @@ public class FakeSlot extends Widget {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         //list.add(cur.getDisplayName());
         cur.getTooltip(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
+        if(tooltip!=null)
+        	tooltip.accept(list);
     }
-    public void onClick(MouseButton btn) {
-    	
-    }
+ 
     @Override
     public boolean mousePressed(MouseButton button) {
         if (isMouseOver()) {
@@ -93,7 +99,7 @@ public class FakeSlot extends Widget {
         matrixStack.push();
         matrixStack.translate(0, 0, 100);
         GuiHelper.drawItem(matrixStack, cur, x, y, w / 16F, h / 16F, true, null);
-        if (cnt > 1) {
+        if (cnt != 1) {
             matrixStack.push();
             matrixStack.translate(0, 0, 100);
             int dx = 5;
@@ -102,11 +108,33 @@ public class FakeSlot extends Widget {
             theme.drawString(matrixStack, String.valueOf(cnt), dx + x + 8, y + 9, Color4I.WHITE, Theme.SHADOW);
             matrixStack.pop();
         }
+        matrixStack.translate(0, 0, 100);
+        if(overlay!=null)
+        	overlay.draw(matrixStack, x, y, ovlw, ovlh);
+        
         matrixStack.pop();
     }
 	public void setCount(int store) {
 		cnt=store;
 	}
-
+	public Icon getOverlay() {
+		return overlay;
+	}
+	public void setOverlay(Icon overlay,int height,int width) {
+		this.overlay = overlay;
+		this.ovlh=height;
+		this.ovlw=width;
+	}
+	public void resetOverlay() {
+		this.overlay=null;
+	}
+	public Consumer<TooltipList> getTooltip() {
+		return tooltip;
+	}
+	public void setTooltip(Consumer<TooltipList> tooltip) {
+		this.tooltip = tooltip;
+	}
+	public void onClick(MouseButton btn) {
+	}
 
 }

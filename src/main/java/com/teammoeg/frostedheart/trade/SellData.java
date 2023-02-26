@@ -1,33 +1,38 @@
 package com.teammoeg.frostedheart.trade;
 
-import java.util.Map;
-
 import net.minecraft.item.ItemStack;
 
 public class SellData {
-	ItemStack item;
-	int store;
 	String id;
-	int price;
+	int store;
+	
+	ProductionData data;
 
-	public SellData(ItemStack item, int store, String id, int price) {
+	public SellData(String id, int store, ProductionData data) {
 		super();
-		this.item = item;
-		this.store = store;
 		this.id = id;
-		this.price = price;
+		this.store = store;
+		this.data = data;
 	}
 	public ItemStack getItem() {
-		return item;
+		return data.item;
 	}
 	public int getStore() {
 		return store;
 	}
-	public boolean reduceStock(Map<String,Double> d,int count) {
-		return d.computeIfPresent(id, (k,v)->v-count)!=null;
+	public int getPrice() {
+		return data.price;
 	}
-	@Override
-	public String toString() {
-		return "SellData [item=" + item + ", store=" + store + ", id=" + id + ", price=" + price + "]";
+	public boolean canRestock(FHVillagerData data) {
+		
+		return this.data.canRestock(data);
 	}
+	public boolean isFullStock() {
+		return store>=data.maxstore;
+	}
+	public void reduceStock(FHVillagerData data,int count) {
+		data.storage.computeIfPresent(id, (k,v)->v-count);
+		this.data.soldactions.forEach(c->c.deal(data, count));
+	}
+
 }

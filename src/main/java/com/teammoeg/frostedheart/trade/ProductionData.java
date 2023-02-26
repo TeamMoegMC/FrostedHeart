@@ -34,7 +34,7 @@ public class ProductionData extends BaseData {
 
 		int num = (int) (float) data.getOrDefault(getId(), 0f);
 		//if (num > 0)
-			ps.registerSell(new SellData(item, num, getId(),price));
+			ps.registerSell(new SellData(getId(),num,this));
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class ProductionData extends BaseData {
 
 	@Override
 	public void write(PacketBuffer buffer) {
-		buffer.writeBoolean(true);
+		buffer.writeVarInt(1);
 		super.write(buffer);
 		buffer.writeItemStack(item);
 	}

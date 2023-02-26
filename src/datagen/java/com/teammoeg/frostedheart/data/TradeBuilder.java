@@ -10,11 +10,21 @@ import com.teammoeg.frostedheart.trade.BaseData;
 import com.teammoeg.frostedheart.trade.BasicPolicyGroup;
 import com.teammoeg.frostedheart.trade.DemandData;
 import com.teammoeg.frostedheart.trade.ExtendPolicyGroup;
+import com.teammoeg.frostedheart.trade.NopData;
+import com.teammoeg.frostedheart.trade.PolicyAction;
 import com.teammoeg.frostedheart.trade.PolicyCondition;
 import com.teammoeg.frostedheart.trade.PolicyGroup;
 import com.teammoeg.frostedheart.trade.ProductionData;
 import com.teammoeg.frostedheart.trade.TradePolicy;
+import com.teammoeg.frostedheart.trade.actions.AddFlagValueAction;
+import com.teammoeg.frostedheart.trade.actions.SetFlagAction;
+import com.teammoeg.frostedheart.trade.actions.SetFlagValueAction;
+import com.teammoeg.frostedheart.trade.conditions.FlagValueCondition;
+import com.teammoeg.frostedheart.trade.conditions.GreaterFlagCondition;
 import com.teammoeg.frostedheart.trade.conditions.LevelCondition;
+import com.teammoeg.frostedheart.trade.conditions.NotCondition;
+import com.teammoeg.frostedheart.trade.conditions.TotalTradeCondition;
+import com.teammoeg.frostedheart.trade.conditions.WithFlagCondition;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.data.IFinishedRecipe;
@@ -31,20 +41,110 @@ public class TradeBuilder implements IFinishedRecipe{
 	private ResourceLocation id;
 	private int weight;
 	private VillagerProfession prof;
+	public static class ConditionBuilder<T>{
+		Consumer<PolicyCondition> consumer;
+		T parent;
+		public ConditionBuilder(Consumer<PolicyCondition> consumer, T parent) {
+			super();
+			this.consumer = consumer;
+			this.parent = parent;
+		}
+		public ConditionBuilder<T> level(int lvl) {
+			return condition(new LevelCondition(lvl));
+		}
+		public ConditionBuilder<T> lowerLevel(int lvl) {
+			return not(new LevelCondition(lvl));
+		}
+		public ConditionBuilder<T> not(PolicyCondition pc) {
+			return condition(new NotCondition(pc));
+		}
+		public ConditionBuilder<T> total(int val) {
+			return condition(new TotalTradeCondition(val));
+		}
+		public ConditionBuilder<T> lowerTotal(int val) {
+			return not(new TotalTradeCondition(val));
+		}
+		public ConditionBuilder<T> hasFlag(String flag) {
+			return condition(new WithFlagCondition(flag));
+		}
+		public ConditionBuilder<T> hasNoFlag(String flag) {
+			return not(new WithFlagCondition(flag));
+		}
+		public ConditionBuilder<T> hasFlag(String flag,int val) {
+			return condition(new FlagValueCondition(flag,val));
+		}
+		public ConditionBuilder<T> hasNoFlag(String flag,int val) {
+			return not(new FlagValueCondition(flag,val));
+		}
+		public ConditionBuilder<T> greaterFlag(String flag,int val) {
+			return condition(new GreaterFlagCondition(flag,val));
+		}
+		public ConditionBuilder<T> lesserFlag(String flag,int val) {
+			return not(new GreaterFlagCondition(flag,val));
+		}
+		public ConditionBuilder<T> condition(PolicyCondition pc) {
+			consumer.accept(pc);
+			return this;
+		}
+		public T finish() {
+			return parent;
+		}
+	}
+	public static class ActionBuilder<T>{
+		Consumer<PolicyAction> consumer;
+		T parent;
+		public ActionBuilder(Consumer<PolicyAction> consumer, T parent) {
+			super();
+			this.consumer = consumer;
+			this.parent = parent;
+		}
+		public ActionBuilder<T> addFlag(String name,int val) {
+			action(new AddFlagValueAction(name,val));
+			return this;
+		}
+		public ActionBuilder<T> setFlag(String name) {
+			action(new SetFlagAction(name));
+			return this;
+		}
+		public ActionBuilder<T> unsetFlag(String name) {
+			action(new SetFlagValueAction(name,0));
+			return this;
+		}
+		public ActionBuilder<T> setFlag(String name,int val) {
+			action(new SetFlagValueAction(name,val));
+			return this;
+		}
+		public ActionBuilder<T> action(PolicyAction act){
+			consumer.accept(act);
+			return this;
+		}
+		public T finish() {
+			return parent;
+		}
+	}
 	public static class GroupBuilder{
 		private List<PolicyCondition> conditions=new ArrayList<>();
 		private List<BaseData> bdata=new ArrayList<>();
 		private TradeBuilder parent;
+		BaseData lastAction;
 		public GroupBuilder(TradeBuilder parent) {
 			super();
 			this.parent = parent;
 		}
-		public GroupBuilder level(int lvl) {
-			conditions.add(new LevelCondition(lvl));
-			return this;
+		public ConditionBuilder<GroupBuilder> groupCondition(){
+			return new ConditionBuilder<>(conditions::add,this);
+		}
+		public ConditionBuilder<GroupBuilder> restocksBy(){
+			return new ConditionBuilder<>(lastAction.restockconditions::add,this);
+		}
+		public ActionBuilder<GroupBuilder> restockAction(){
+			return new ActionBuilder<>(lastAction.actions::add,this);
+		}
+		public ActionBuilder<GroupBuilder> useAction(){
+			return new ActionBuilder<>(lastAction.soldactions::add,this);
 		}
 		public GroupBuilder buy(String id,int maxstore,float recover,int price,Ingredient item) {
-			bdata.add(new DemandData(id,maxstore,recover,price,item));
+			bdata.add(lastAction=new DemandData(id,maxstore,recover,price,item));
 			return this;
 		}
 		public GroupBuilder buy(int maxstore,float recover,int price,ItemStack item) {
@@ -54,8 +154,15 @@ public class TradeBuilder implements IFinishedRecipe{
 			return this.buy(item.getRegistryName().toString(),maxstore, recover, price,Ingredient.fromItems(item));
 		}
 		public GroupBuilder sell(String id,int maxstore,float recover,int price,ItemStack item) {
-			bdata.add(new ProductionData(id,maxstore,recover,price,item));
+			bdata.add(lastAction=new ProductionData(id,maxstore,recover,price,item));
 			return this;
+		}
+		public GroupBuilder nop(String id,int maxstore,float recover,int price) {
+			bdata.add(lastAction=new NopData(id,maxstore,recover,price));
+			return this;
+		}
+		public GroupBuilder nop(String id) {
+			return nop(id,1,0,0);
 		}
 		public GroupBuilder sell(int maxstore,float recover,int price,ItemStack item) {
 			return this.sell(item.getItem().getRegistryName().toString(),maxstore, recover, price,item);
@@ -66,6 +173,7 @@ public class TradeBuilder implements IFinishedRecipe{
 		public GroupBuilder sell(int maxstore,float recover,int price,Item item,int count) {
 			return this.sell(item.getRegistryName().toString(),maxstore, recover, price,new ItemStack(item,count));
 		}
+
 		public GroupBuilder basic() {
 			parent.groups.add(new BasicPolicyGroup(conditions,bdata));
 			return this;

@@ -20,6 +20,6 @@ public class GreaterFlagCondition extends FlagValueCondition {
 	}
 	@Override
 	public boolean test(FHVillagerData ve) {
-		return ve.flags.getOrDefault(name,0)>value;
+		return ve.flags.getOrDefault(name,0)>=value;
 	}
 }

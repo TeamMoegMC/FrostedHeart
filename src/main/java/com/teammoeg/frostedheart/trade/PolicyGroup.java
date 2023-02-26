@@ -21,7 +21,7 @@ public abstract class PolicyGroup implements Writeable{
 	public PolicyGroup(JsonObject jo) {
 		super();
 		if(jo.has("conditions"))
-			conditions=SerializeUtil.parseJsonList(jo.get("conditions").getAsJsonArray(),Conditions::deserialize);
+			conditions=SerializeUtil.parseJsonList(jo.get("conditions"),Conditions::deserialize);
 		else
 			conditions=ImmutableList.of();
 	}
@@ -31,8 +31,9 @@ public abstract class PolicyGroup implements Writeable{
 	}
 	public abstract void CollectPoliciesNoCheck(PolicySnapshot policy,FHVillagerData ve);
 	public void CollectPolicies(PolicySnapshot policy,FHVillagerData ve) {
-		if(conditions.stream().allMatch(t->t.test(ve)))
+		if(conditions.stream().allMatch(t->t.test(ve))) 
 			CollectPoliciesNoCheck(policy,ve);
+		
 	}
 	@Override
 	public JsonElement serialize() {

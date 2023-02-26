@@ -36,7 +36,7 @@ public class FHVillagerData implements INamedContainerProvider{
 	Map<String,Float> storage=new HashMap<>();
 	public Map<String,Integer> flags=new HashMap<>();
 	Map<UUID,PlayerRelationData> relations=new HashMap<>();
-	long lastUpdated;
+	long lastUpdated=-1;
 	int bargain;
 	long totaltraded;
 	int tradelevel;
@@ -58,11 +58,14 @@ public class FHVillagerData implements INamedContainerProvider{
 		initLegacy(parent);
 		long day=ClimateData.getWorldDay(w);
 		FHUtils.ofMap(relations, trigger.getUniqueID()).ifPresent(t->t.update(day));;
+		if(lastUpdated==-1) {
+			lastUpdated=day-1;
+		}
 		if(day>lastUpdated) {
 			long delta=day-lastUpdated;
 			bargain=0;
 			lastUpdated=day;
-			getPolicy().calculateRecovery((int) delta, storage);
+			getPolicy().calculateRecovery((int) delta,this);
 		}
 	}
 	public TradePolicy getPolicyType() {
@@ -104,7 +107,8 @@ public class FHVillagerData implements INamedContainerProvider{
 		for(String k:nbt.keySet()) 
 			storage.put(k,nbt.getFloat(k));
 		flags.clear();
-		for(String ks:data.getCompound("flags").keySet()) 
+		nbt=data.getCompound("flags");
+		for(String ks:nbt.keySet()) 
 			flags.put(ks, nbt.getInt(ks));
 		tradelevel=data.getInt("level");
 		totaltraded=data.getLong("total");
@@ -118,7 +122,7 @@ public class FHVillagerData implements INamedContainerProvider{
 		}
 		if(data.contains("type"))
 			policytype=new ResourceLocation(data.getString("type"));
-		data.putLong("last", lastUpdated);
+		lastUpdated=data.getLong("last");
 	}
 	public CompoundNBT serializeForSend(CompoundNBT data) {
 		ListNBT list=new ListNBT();
@@ -144,7 +148,8 @@ public class FHVillagerData implements INamedContainerProvider{
 		for(String k:nbt.keySet()) 
 			storage.put(k,nbt.getFloat(k));
 		flags.clear();
-		for(String ks:data.getCompound("flags").keySet()) 
+		nbt=data.getCompound("flags");
+		for(String ks:nbt.keySet()) 
 			flags.put(ks, nbt.getInt(ks));
 		tradelevel=data.getInt("level");
 		totaltraded=data.getLong("total");
@@ -179,8 +184,7 @@ public class FHVillagerData implements INamedContainerProvider{
 	@Override
 	public Container createMenu(int p1, PlayerInventory p2, PlayerEntity p3) {
 		TradeContainer tc=new TradeContainer(p1,p2,parent);
-		tc.setPolicy(getPolicy());
-		tc.policy.fetchTrades(storage);
+		tc.setData(this, p3);
 		return tc;
 	}
 	@Override
@@ -192,5 +196,23 @@ public class FHVillagerData implements INamedContainerProvider{
 	}
 	public long getTotaltraded() {
 		return totaltraded;
+	}
+	public void updateLevel() {
+		if(totaltraded>4000) {
+			tradelevel=4;
+			return;
+		}
+		for(int i=1;i<5;i++) {
+			if(totaltraded<400*(i*(i+1)/2)) {
+				tradelevel=i-1;
+				break;
+			}
+		}
+	}
+	public PlayerRelationData getRelationDataForRead(PlayerEntity pe) {
+		return relations.getOrDefault(pe.getUniqueID(),PlayerRelationData.EMPTY);
+	}
+	public PlayerRelationData getRelationDataForWrite(PlayerEntity pe) {
+		return relations.computeIfAbsent(pe.getUniqueID(),d->new PlayerRelationData());
 	}
 }

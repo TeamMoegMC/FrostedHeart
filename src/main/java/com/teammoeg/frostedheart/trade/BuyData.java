@@ -1,33 +1,36 @@
 package com.teammoeg.frostedheart.trade;
 
-import java.util.Map;
-
 import net.minecraft.item.crafting.Ingredient;
 
 public class BuyData {
-	Ingredient item;
-	int store;
+	
 	String id;
-	int price;
+	int store;
+	DemandData bd;
 
-	public BuyData(Ingredient item, int store, String id, int price) {
+	public BuyData(String id, int store,DemandData bd) {
 		super();
-		this.item = item;
-		this.store = store;
 		this.id = id;
-		this.price = price;
+		this.store = store;
+		this.bd = bd;
 	}
 	public Ingredient getItem() {
-		return item;
+		return bd.item;
+	}
+	public int getPrice() {
+		return bd.price;
+	}
+	public boolean isFullStock() {
+		return store>=bd.maxstore;
+	}
+	public boolean canRestock(FHVillagerData data) {
+		return bd.canRestock(data);
 	}
 	public int getStore() {
 		return store;
 	}
-	public boolean reduceStock(Map<String,Float> d,int count) {
-		return d.computeIfPresent(id, (k,v)->v-count)!=null;
-	}
-	@Override
-	public String toString() {
-		return "BuyData [item=" + item + ", store=" + store + ", id=" + id + ", price=" + price + "]";
+	public void reduceStock(FHVillagerData data,int count) {
+		bd.soldactions.forEach(c->c.deal(data, count));
+		data.storage.computeIfPresent(id, (k,v)->v-count);
 	}
 }
