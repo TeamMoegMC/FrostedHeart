@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.trade.TradeContainer;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.inventory.container.Container;

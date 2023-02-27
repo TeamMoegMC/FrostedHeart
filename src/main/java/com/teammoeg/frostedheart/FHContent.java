@@ -35,7 +35,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.trade.TradeContainer;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.block.Block;

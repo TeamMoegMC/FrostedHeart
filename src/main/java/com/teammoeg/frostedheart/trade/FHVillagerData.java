@@ -9,6 +9,9 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ClimateData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
+import com.teammoeg.frostedheart.trade.policy.TradePolicy;
+import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.entity.EntityType;
@@ -33,7 +36,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 public class FHVillagerData implements INamedContainerProvider{
 	ResourceLocation policytype;
-	Map<String,Float> storage=new HashMap<>();
+	public Map<String,Float> storage=new HashMap<>();
 	public Map<String,Integer> flags=new HashMap<>();
 	Map<UUID,PlayerRelationData> relations=new HashMap<>();
 	long lastUpdated=-1;

@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.trade.RelationList;
-import com.teammoeg.frostedheart.trade.TradeContainer;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.Container;

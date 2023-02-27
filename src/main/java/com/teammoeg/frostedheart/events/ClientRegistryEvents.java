@@ -46,8 +46,8 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.trade.TradeContainer;
-import com.teammoeg.frostedheart.trade.TradeScreen;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
+import com.teammoeg.frostedheart.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.util.FHLogger;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
