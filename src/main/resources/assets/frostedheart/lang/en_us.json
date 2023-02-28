@@ -379,5 +379,9 @@
   "tooltip.frostedheart.weather_radar": "Carry it with you to receive weather forecast at morning and evening",
   "tooltip.frostedheart.weather_helmet": "Gear it up to receive weather forecast at morning and evening",
   "tooltip.frostedheart.inspire_item":"Inspect this in drawing desk yields inspiration.",
+  "tooltip.frostedheart.rubbing.current": "Research: %s",
+  "tooltip.frostedheart.rubbing.current.empty": "Examine in drawing desk to select research",
+  "tooltip.frostedheart.rubbing.points": "Points: %s",
+  "tooltip.frostedheart.rubbing.points.hint": "Examine in drawing desk to obtain research points",
   "manual.frostedheart.main": "Generators"
 }
