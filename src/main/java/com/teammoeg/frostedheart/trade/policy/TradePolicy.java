@@ -6,6 +6,7 @@ import java.util.Random;
 
 import javax.annotation.Nullable;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
@@ -41,16 +42,23 @@ public class TradePolicy  extends IESerializableRecipe{
     private ResourceLocation name;
     private VillagerProfession vp;
     List<PolicyGroup> groups;
+    private int[] expBar;
     int weight=0;
 
-	public TradePolicy(ResourceLocation id, ResourceLocation name,List<PolicyGroup> groups,int weight,VillagerProfession vp) {
+	public TradePolicy(ResourceLocation id, ResourceLocation name,List<PolicyGroup> groups,int weight,VillagerProfession vp,int[] expBar) {
 		super(ItemStack.EMPTY,TYPE, id);
 		this.name = name;
 		this.groups = groups;
 		this.weight=weight;
 		this.vp=vp;
+		this.expBar=expBar;
 	}
-
+	public int getExp(int level) {
+		if(level>=expBar.length)
+			return 0;
+		return expBar[level];
+		
+	}
 
 	@Override
 	public ItemStack getRecipeOutput() {
@@ -67,6 +75,7 @@ public class TradePolicy  extends IESerializableRecipe{
 	}
 	public PolicySnapshot get(FHVillagerData ve) {
 		PolicySnapshot ps=new PolicySnapshot();
+		ps.maxExp=this.getExp(ve.getTradeLevel());
 		this.CollectPolicies(ps, ve);
 		return ps;
 	}
@@ -90,10 +99,15 @@ public class TradePolicy  extends IESerializableRecipe{
             ResourceLocation name=json.has("name")?new ResourceLocation(json.get("name").getAsString()):null;
             List<PolicyGroup> groups=SerializeUtil.parseJsonList(json.get("policies"),PolicyGroup::read);
             int root=json.has("weight")?json.get("weight").getAsInt():0;
+            int[] expBar;
             VillagerProfession vp=VillagerProfession.NONE;
             if(json.has("profession"))
             	vp=ForgeRegistries.PROFESSIONS.getValue(new ResourceLocation(json.get("profession").getAsString()));
-            return new TradePolicy(recipeId,name,groups,root,vp);
+            if(json.has("exps"))
+            	expBar=SerializeUtil.parseJsonElmList(json.get("exps"),JsonElement::getAsInt).stream().mapToInt(t->t).toArray();
+            else
+            	expBar=new int[0];
+            return new TradePolicy(recipeId,name,groups,root,vp,expBar);
         }
 
         @Nullable
@@ -103,8 +117,7 @@ public class TradePolicy  extends IESerializableRecipe{
             List<PolicyGroup> groups=SerializeUtil.readList(buffer,PolicyGroup::read);
             int root=buffer.readVarInt();
             VillagerProfession vp=buffer.readRegistryIdUnsafe(ForgeRegistries.PROFESSIONS);
-     
-            return new TradePolicy(recipeId,name,groups,root,vp);
+            return new TradePolicy(recipeId,name,groups,root,vp,buffer.readVarIntArray());
         }
 
         @Override
@@ -113,6 +126,7 @@ public class TradePolicy  extends IESerializableRecipe{
         	SerializeUtil.writeList(buffer,recipe.groups,PolicyGroup::write);
         	buffer.writeVarInt(recipe.weight);
         	buffer.writeRegistryIdUnsafe(ForgeRegistries.PROFESSIONS,recipe.vp);
+        	buffer.writeVarIntArray(recipe.expBar);
         }
     }
 	public ResourceLocation getName() {

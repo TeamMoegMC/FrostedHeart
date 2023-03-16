@@ -34,7 +34,7 @@ public class ProductionData extends BaseData {
 	public void fetch(PolicySnapshot ps, Map<String, Float> data) {
 
 		int num = (int) (float) data.getOrDefault(getId(), 0f);
-		//if (num > 0)
+		if (!hideStockout||num > 0)
 			ps.registerSell(new SellData(getId(),num,this));
 	}
 

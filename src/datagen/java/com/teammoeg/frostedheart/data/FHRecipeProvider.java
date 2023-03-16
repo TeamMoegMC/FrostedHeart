@@ -33,6 +33,7 @@ import com.cannolicatfish.rankine.init.RankineLists;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.ShapelessCopyDataRecipe;
+import com.teammoeg.frostedheart.trade.policy.TradeBuilder;
 import com.teammoeg.thermopolium.THPFluids;
 import com.teammoeg.thermopolium.data.recipes.FoodValueRecipe;
 

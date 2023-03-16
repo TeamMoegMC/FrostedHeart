@@ -35,15 +35,15 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class FHVillagerData implements INamedContainerProvider{
-	ResourceLocation policytype;
+	public ResourceLocation policytype;
 	public Map<String,Float> storage=new HashMap<>();
 	public Map<String,Integer> flags=new HashMap<>();
 	Map<UUID,PlayerRelationData> relations=new HashMap<>();
 	long lastUpdated=-1;
-	int bargain;
-	long totaltraded;
-	int tradelevel;
-	VillagerEntity parent;
+	public int bargain;
+	public long totaltraded;
+	private int tradelevel;
+	public VillagerEntity parent;
 	public FHVillagerData(VillagerEntity parent) {
 		super();
 		this.parent = parent;
@@ -96,7 +96,7 @@ public class FHVillagerData implements INamedContainerProvider{
 			list.add(items);
 		}
 		data.putLong("total",getTotaltraded());
-		data.putInt("level", tradelevel);
+		data.putInt("level", getTradeLevel());
 		data.put("storage", stor);
 		data.put("relations", list);
 		if(policytype!=null)
@@ -113,7 +113,7 @@ public class FHVillagerData implements INamedContainerProvider{
 		nbt=data.getCompound("flags");
 		for(String ks:nbt.keySet()) 
 			flags.put(ks, nbt.getInt(ks));
-		tradelevel=data.getInt("level");
+		setTradelevel(data.getInt("level"));
 		totaltraded=data.getLong("total");
 		ListNBT rel=data.getList("relations",NBT.TAG_COMPOUND);
 		relations.clear();
@@ -138,7 +138,7 @@ public class FHVillagerData implements INamedContainerProvider{
 			flag.putInt(k.getKey(), k.getValue());
 		data.put("flags", flag);
 		data.putLong("total",getTotaltraded());
-		data.putInt("level", tradelevel);
+		data.putInt("level", getTradeLevel());
 		data.put("storage", stor);
 		data.put("relations", list);
 		if(policytype!=null)
@@ -154,7 +154,7 @@ public class FHVillagerData implements INamedContainerProvider{
 		nbt=data.getCompound("flags");
 		for(String ks:nbt.keySet()) 
 			flags.put(ks, nbt.getInt(ks));
-		tradelevel=data.getInt("level");
+		setTradelevel(data.getInt("level"));
 		totaltraded=data.getLong("total");
 		if(data.contains("type"))
 			policytype=new ResourceLocation(data.getString("type"));
@@ -175,7 +175,7 @@ public class FHVillagerData implements INamedContainerProvider{
 		if(pe.getActivePotionEffect(Effects.HERO_OF_THE_VILLAGE)!=null)
 			list.put(RelationModifier.SAVED_VILLAGE,10);
 		list.put(RelationModifier.RECENT_BARGAIN,-bargain*10);
-		list.put(RelationModifier.TRADE_LEVEL,tradelevel*5);
+		list.put(RelationModifier.TRADE_LEVEL,getTradeLevel()*5);
 		list.put(RelationModifier.RECENT_BENEFIT,player.totalbenefit);
 		return list;
 	}
@@ -202,12 +202,12 @@ public class FHVillagerData implements INamedContainerProvider{
 	}
 	public void updateLevel() {
 		if(totaltraded>4000) {
-			tradelevel=4;
+			setTradelevel(4);
 			return;
 		}
 		for(int i=1;i<5;i++) {
 			if(totaltraded<400*(i*(i+1)/2)) {
-				tradelevel=i-1;
+				setTradelevel(i-1);
 				break;
 			}
 		}
@@ -217,5 +217,8 @@ public class FHVillagerData implements INamedContainerProvider{
 	}
 	public PlayerRelationData getRelationDataForWrite(PlayerEntity pe) {
 		return relations.computeIfAbsent(pe.getUniqueID(),d->new PlayerRelationData());
+	}
+	public void setTradelevel(int tradelevel) {
+		this.tradelevel = tradelevel;
 	}
 }

@@ -32,7 +32,7 @@ public class DemandData extends BaseData {
 	@Override
 	public void fetch(PolicySnapshot ps, Map<String, Float> data) {
 		int num = (int) (float) data.getOrDefault(getId(), 0f);
-		//if (num > 0)
+		if (!hideStockout||num > 0)
 			ps.registerBuy(new BuyData(getId(),num,this));
 	}
 

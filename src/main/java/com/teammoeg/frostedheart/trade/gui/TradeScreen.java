@@ -336,11 +336,9 @@ public class TradeScreen extends BaseScreen {
 			TradeIcons.OVLBUY.draw(matrixStack, x + 189, y + 56, 48, 48);
 		else
 			TradeIcons.OVLSELL.draw(matrixStack, x + 189, y + 56, 48, 48);
-		if (cx.data.tradelevel < 4) {
-			int min = 400 * (cx.data.tradelevel * (cx.data.tradelevel + 1) / 2);
-			int nl = cx.data.tradelevel + 1;
-			int max = 400 * (cx.data.tradelevel + 1);
-			float progress = ((float) (cx.data.totaltraded - min)) / max;
+		int max=cx.policy.maxExp;
+		if (max>0) {
+			float progress = ((float) (cx.data.totaltraded)) / max;
 
 			TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, (int) (54 * progress), 5);
 		} else {

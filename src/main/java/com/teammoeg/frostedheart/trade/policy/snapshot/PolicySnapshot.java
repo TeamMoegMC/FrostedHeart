@@ -20,14 +20,12 @@ public class PolicySnapshot {
 	Map<String,BaseData> data=new HashMap<>();
 	List<BuyData> buys=new ArrayList<>();
 	Map<String,SellData> sells=new HashMap<>();
+	public int maxExp;
 	public void register(BaseData bd) {
 		data.put(bd.getId(), bd);
 	}
 	public void calculateRecovery(int deltaDays,FHVillagerData data) {
-		System.out.println(data);
 		this.data.values().forEach(t->t.tick(deltaDays, data));
-		System.out.println(data);
-		
 	}
 	public void fetchTrades(Map<String,Float> data){
 		this.data.values().forEach(t->t.fetch(this,data));

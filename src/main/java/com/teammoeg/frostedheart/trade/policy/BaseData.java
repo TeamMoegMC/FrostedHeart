@@ -22,6 +22,7 @@ public abstract class BaseData implements Writeable{
 	public List<PolicyAction> actions;
 	public List<PolicyAction> soldactions=new ArrayList<>();
 	public List<PolicyCondition> restockconditions=new ArrayList<>();
+	boolean hideStockout;
 	public BaseData(String id, int maxstore, float recover, int price,PolicyAction...restock) {
 		super();
 		this.id = id;
@@ -38,6 +39,7 @@ public abstract class BaseData implements Writeable{
 		this.actions=SerializeUtil.parseJsonList(jo.get("actions"),Actions::deserialize);
 		this.soldactions=SerializeUtil.parseJsonList(jo.get("use_actions"),Actions::deserialize);
 		this.restockconditions=SerializeUtil.parseJsonList(jo.get("restock_condition"),Conditions::deserialize);
+		hideStockout=jo.get("hide_stockout").getAsBoolean();
 	}
 	public BaseData(PacketBuffer pb) {
 		id=pb.readString();
@@ -47,6 +49,7 @@ public abstract class BaseData implements Writeable{
 		this.actions=SerializeUtil.readList(pb,Actions::deserialize);
 		this.soldactions=SerializeUtil.readList(pb,Actions::deserialize);
 		this.restockconditions=SerializeUtil.readList(pb,Conditions::deserialize);
+		hideStockout=pb.readBoolean();
 	}
 	
 	public void tick(int deltaDay,FHVillagerData data) {
@@ -81,6 +84,8 @@ public abstract class BaseData implements Writeable{
 		jo.add("actions",SerializeUtil.toJsonList(actions, PolicyAction::serialize));
 		jo.add("use_actions",SerializeUtil.toJsonList(soldactions, PolicyAction::serialize));
 		jo.add("restock_condition",SerializeUtil.toJsonList(restockconditions, PolicyCondition::serialize));
+		jo.addProperty("hide_stockout", hideStockout);
+		
 		return jo;
 	}
 	@Override
@@ -92,6 +97,7 @@ public abstract class BaseData implements Writeable{
 		SerializeUtil.writeList(buffer, actions, PolicyAction::write);
 		SerializeUtil.writeList(buffer, soldactions, PolicyAction::write);
 		SerializeUtil.writeList(buffer, restockconditions, PolicyCondition::write);
+		buffer.writeBoolean(hideStockout);
 	}
 	public static BaseData read(PacketBuffer pb) {
 		switch(pb.readVarInt()) {

@@ -4,7 +4,7 @@ import net.minecraft.nbt.CompoundNBT;
 
 public class PlayerRelationData {
 	public static final PlayerRelationData EMPTY=new PlayerRelationData();
-	int totalbenefit;
+	public int totalbenefit;
 	int sawmurder;
 	
 	long lastUpdated;
