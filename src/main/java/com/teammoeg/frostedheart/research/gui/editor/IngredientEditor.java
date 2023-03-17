@@ -76,18 +76,6 @@ public class IngredientEditor extends BaseEditDialog {
             EDITOR_ITEMLIST.open(p, l, (SingleItemList) v, e -> c.accept(e));
     };
 
-    private static String getText(IItemList li) {
-        if (li instanceof TagList) {
-            try {
-                return "Tag:" + TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(((TagList) li).tag).toString();
-            } catch (Exception ex) {
-                return "Unknown tag list";
-            }
-        } else if (li instanceof SingleItemList)
-            return "Item: " + ((SingleItemList) li).stack.getDisplayName().getString();
-        else
-            return "Unknown item list";
-    }
 
     public static final Editor<Collection<IItemList>> EDITOR_LIST_LIST = (p, l, v, c) -> {
         new EditListDialog<>(p, l, v, EDITOR_LIST, IngredientEditor::getText, c).open();
@@ -167,6 +155,19 @@ public class IngredientEditor extends BaseEditDialog {
         new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, FHIcons::getIcon, e -> c.accept(new ArrayList<>(e))).open();
 
     };
+    private static String getText(IItemList li) {
+        if (li instanceof TagList) {
+            try {
+                return "Tag:" + TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(((TagList) li).tag).toString();
+            } catch (Exception ex) {
+                return "Unknown tag list";
+            }
+        } else if (li instanceof SingleItemList)
+            return "Item: " + ((SingleItemList) li).stack.getDisplayName().getString();
+        else
+            return "Unknown item list";
+    }
+
     String label;
     Consumer<IngredientWithSize> callback;
     int cnt;
