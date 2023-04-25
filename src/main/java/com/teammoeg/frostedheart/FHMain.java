@@ -47,6 +47,7 @@ import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FlowerPotMixin;
+import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
@@ -170,7 +171,7 @@ public class FHMain {
 		for(Item i:ForgeRegistries.ITEMS.getValues()) {
 			if(i.isFood()) {
 				if(i.getRegistryName().getNamespace().equals("crockpot")) {
-					i.getFood().effects.removeIf(t->t.getFirst().get().getPotion().isBeneficial());
+					((FoodAccess)i.getFood()).getEffectsSuppliers().removeIf(t->t.getFirst().get().getPotion().isBeneficial());
 				}
 			}
 		}
