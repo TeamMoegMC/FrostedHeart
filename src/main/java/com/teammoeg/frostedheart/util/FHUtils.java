@@ -69,7 +69,13 @@ public class FHUtils {
     public static <T> T notNull() {
         return null;
     }
-
+    public static void applyEffectTo(EffectInstance effectinstance,PlayerEntity playerentity) {
+    	if (effectinstance.getPotion().isInstant()) {
+            effectinstance.getPotion().affectEntity(playerentity, playerentity, playerentity, effectinstance.getAmplifier(), 1.0D);
+         } else {
+        	 playerentity.addPotionEffect(new EffectInstance(effectinstance));
+         }
+    }
     public static Ingredient createIngredient(ItemStack is) {
         if (is.hasTag()) return new NBTIngredientAccess(is);
         return Ingredient.fromStacks(is);

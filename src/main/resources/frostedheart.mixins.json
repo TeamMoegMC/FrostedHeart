@@ -118,7 +118,8 @@
     "client.ToastGuiMixin",
     "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
-    "create.MixinOpenConfigButtonHandler"
+    "create.MixinOpenConfigButtonHandler",
+    "minecraft.MinecraftMPFixMixin"
   ],
   "injectors": {
     "defaultRequire": 1
