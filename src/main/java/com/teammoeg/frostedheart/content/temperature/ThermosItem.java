@@ -230,7 +230,11 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public ItemStack getContainerItem(ItemStack itemStack) {
         ItemStack itemStack1 = itemStack.copy();
-        itemStack1.setDamage(capacity);
+        itemStack1.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+            FluidStack fs = data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
+        });
+
+
         return itemStack1;
     }
 
