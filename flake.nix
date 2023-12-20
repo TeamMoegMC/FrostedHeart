@@ -16,7 +16,7 @@
           jetbrains.idea-community
           (gradle_6.override {
             javaToolchains = [
-              openjdk8
+              jdk8
             ];
           })
         ];
@@ -27,7 +27,6 @@
         # is further fed into `runClient`
         # by use of JVM parameter `-Dorg.lwjgl.glfw.libname`.
         LIBGLFW_PATH = glfw;
-        MC_JAVA_HOME = openjdk8;
       });
     });
 }
