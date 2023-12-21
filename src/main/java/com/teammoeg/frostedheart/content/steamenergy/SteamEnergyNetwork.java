@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.content.steamenergy;
 import net.minecraft.tileentity.TileEntity;
 
 public class SteamEnergyNetwork {
-    private HeatProvider provider;
+    private HeatController provider;
     private boolean isValid = true;
 
-    public SteamEnergyNetwork(HeatProvider provider) {
+    public SteamEnergyNetwork(HeatController provider) {
         this.provider = provider;
     }
     
@@ -34,7 +34,11 @@ public class SteamEnergyNetwork {
     public float drainHeat(float val) {
         return provider.drainHeat(val);
     }
-
+    
+    public float fillHeat(float val) {
+    	return provider.fillHeat(val);
+    }
+    
     public float getTemperatureLevel() {
         return provider.getTemperatureLevel();
     }

@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.HeatProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatController;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProviderManager;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
@@ -48,7 +48,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity>
-		implements HeatProvider, INetworkConsumer {
+		implements HeatController, INetworkConsumer {
 	@Override
 	public void disassemble() {
 		if (sen != null)
@@ -325,6 +325,17 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 				if(this.isWorking())this.setWorking(false);
 			}
 		}
+	}
+
+	@Override
+	public float fillHeat(float value) {
+		float maxfill=this.getMaxPower()-this.getMaxHeat();
+		if(maxfill>value) {
+			master().power+=value;
+			return 0;
+		}
+		master().power+=maxfill;
+		return value-maxfill;
 	}
 
 }
