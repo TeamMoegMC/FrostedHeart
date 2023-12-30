@@ -18,12 +18,40 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-public interface HeatProvider extends EnergyNetworkProvider {
+/**
+ * The Interface HeatController.
+ * Central controller for heat network.
+ */
+public interface HeatController extends EnergyNetworkProvider {
 
+    /**
+     * Gets max heat storage value.
+     *
+     * @return the max heat
+     */
     float getMaxHeat();
 
+    /**
+     * Drain heat from the network.
+     *
+     * @param value the value
+     * @return the heat drained
+     */
     float drainHeat(float value);
+    
+    /**
+     * Fill heat into the network.
+     *
+     * @param value the value
+     * @return the heat not filled
+     */
+    float fillHeat(float value);
 
+    /**
+     * get temperature level for the network.
+     *
+     * @return the temperature level
+     */
     float getTemperatureLevel();
     
 }

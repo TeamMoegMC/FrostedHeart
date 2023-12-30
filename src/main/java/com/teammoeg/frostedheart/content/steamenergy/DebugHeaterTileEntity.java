@@ -26,7 +26,7 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvider, INetworkConsumer, ITickableTileEntity {
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatController, INetworkConsumer, ITickableTileEntity {
     public DebugHeaterTileEntity() {
         super(FHTileTypes.DEBUGHEATER.get());
     }
@@ -85,4 +85,9 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatProvi
     public SteamNetworkHolder getHolder() {
         return null;
     }
+
+	@Override
+	public float fillHeat(float value) {
+		return value;
+	}
 }

@@ -58,6 +58,9 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             //jvmArgs '-Xdebug','-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9009'
+	    if (System.env.LIBGLFW_PATH != null) {
+	    	jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH}/lib/libglfw.so"
+	    }
             arg "-mixin.config=" + "frostedheart.mixins.json"
             mods {
                 frostedheart {
