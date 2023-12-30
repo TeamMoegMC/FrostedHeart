@@ -34,4 +34,5 @@ public interface FoodAccess {
     @Accessor("effects")
     List<Pair<Supplier<EffectInstance>, Float>> getEffectsSuppliers();
 
+
 }

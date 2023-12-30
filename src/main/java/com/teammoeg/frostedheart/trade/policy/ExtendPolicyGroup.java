@@ -1,10 +1,12 @@
-package com.teammoeg.frostedheart.trade;
+package com.teammoeg.frostedheart.trade.policy;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.trade.FHVillagerData;
+import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.network.PacketBuffer;

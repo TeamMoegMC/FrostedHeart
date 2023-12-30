@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.recipe;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -38,7 +39,8 @@ import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
-import com.teammoeg.frostedheart.trade.TradePolicy;
+import com.teammoeg.frostedheart.trade.policy.TradePolicy;
+import com.teammoeg.frostedheart.trade.policy.TradePolicy.Weighted;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.utils.TagUtils;
@@ -130,6 +132,11 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
         IncubateRecipe.recipeList=filterRecipes(recipes, IncubateRecipe.class, IncubateRecipe.TYPE);
         TradePolicy.policies=filterRecipes(recipes,TradePolicy.class,TradePolicy.TYPE).values().stream().collect(Collectors.toMap(t->t.getName(),t->t));
+        //System.out.println(TradePolicy.policies.size());
+        TradePolicy.items=TradePolicy.policies.values().stream().map(TradePolicy::asWeight).filter(Objects::nonNull).collect(Collectors.toList());
+        //System.out.println(TradePolicy.items.size());
+        TradePolicy.totalW=TradePolicy.items.stream().mapToInt(w->w.itemWeight).sum();
+        //System.out.println(TradePolicy.totalW);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);
         
     }

@@ -1,10 +1,12 @@
-package com.teammoeg.frostedheart.trade;
+package com.teammoeg.frostedheart.trade.policy;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.trade.FHVillagerData;
+import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.entity.merchant.villager.VillagerEntity;
@@ -18,7 +20,7 @@ public class BasicPolicyGroup extends PolicyGroup{
 	}
 	public BasicPolicyGroup(JsonObject jo) {
 		super(jo);
-		bdata=SerializeUtil.parseJsonList(jo,BaseData::read);
+		bdata=SerializeUtil.parseJsonList(jo.get("data"),BaseData::read);
 	}
 
 	public BasicPolicyGroup(PacketBuffer pb) {

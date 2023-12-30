@@ -1,16 +1,18 @@
-package com.teammoeg.frostedheart.trade;
+package com.teammoeg.frostedheart.trade.policy;
 
 import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.trade.policy.snapshot.BuyData;
+import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 
 public class DemandData extends BaseData {
-	Ingredient item;
+	public Ingredient item;
 
 	public DemandData(String id, int maxstore, float recover, int price, Ingredient item) {
 		super(id, maxstore, recover, price);
@@ -28,10 +30,10 @@ public class DemandData extends BaseData {
 	}
 
 	@Override
-	public void fetch(List<BuyData> buys, List<SellData> sell, Map<String, Float> data) {
+	public void fetch(PolicySnapshot ps, Map<String, Float> data) {
 		int num = (int) (float) data.getOrDefault(getId(), 0f);
-		if (num > 0)
-			buys.add(new BuyData(item, num, getId()));
+		if (!hideStockout||num > 0)
+			ps.registerBuy(new BuyData(getId(),num,this));
 	}
 
 	@Override
@@ -43,7 +45,7 @@ public class DemandData extends BaseData {
 
 	@Override
 	public void write(PacketBuffer buffer) {
-		buffer.writeBoolean(false);
+		buffer.writeVarInt(2);
 		super.write(buffer);
 		item.write(buffer);
 	}

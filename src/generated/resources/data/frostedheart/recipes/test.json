@@ -1,0 +1,82 @@
+{
+  "type": "frostedheart:trade",
+  "policies": [
+    {
+      "conditions": [],
+      "data": [
+        {
+          "id": "frostedheart:rye_bread",
+          "store": 10,
+          "recover": 10.0,
+          "price": 10,
+          "actions": [],
+          "use_actions": [],
+          "restock_condition": [],
+          "demand": {
+            "item": "frostedheart:rye_bread"
+          }
+        },
+        {
+          "id": "frostedheart:straw_lining",
+          "store": 1,
+          "recover": 0.1,
+          "price": 20,
+          "actions": [],
+          "use_actions": [],
+          "restock_condition": [],
+          "demand": {
+            "item": "frostedheart:straw_lining"
+          }
+        },
+        {
+          "id": "rankine:malachite",
+          "store": 10,
+          "recover": 10.0,
+          "price": 10,
+          "actions": [],
+          "use_actions": [
+            {
+              "type": "add",
+              "name": "copper",
+              "value": 1
+            }
+          ],
+          "restock_condition": [],
+          "produce": "rankine:malachite"
+        },
+        {
+          "id": "frostedheart:energy_core",
+          "store": 10,
+          "recover": 1.0,
+          "price": 100,
+          "actions": [],
+          "use_actions": [],
+          "restock_condition": [],
+          "produce": "frostedheart:energy_core"
+        },
+        {
+          "id": "rankine:copper_ingot",
+          "store": 10,
+          "recover": 1.0,
+          "price": 5,
+          "actions": [
+            {
+              "type": "add",
+              "name": "copper",
+              "value": -1
+            }
+          ],
+          "use_actions": [],
+          "restock_condition": [
+            {
+              "type": "has",
+              "name": "copper"
+            }
+          ],
+          "produce": "rankine:copper_ingot"
+        }
+      ]
+    }
+  ],
+  "weight": 1
+}

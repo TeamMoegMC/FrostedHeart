@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.trade;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public enum RelationModifier {
 	KILLED_HISTORY("history_killed"),
@@ -22,7 +23,7 @@ public enum RelationModifier {
 		this.tkey = tkey;
 	}
 	
-	public ITextComponent getDesc() {
+	public TranslationTextComponent getDesc() {
 		return GuiUtils.translateGui("trade.relation."+tkey);
 	}
 }

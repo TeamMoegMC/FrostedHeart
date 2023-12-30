@@ -35,19 +35,28 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.extensions.IForgeContainerType;
+import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHContent {
 
     public static List<Block> registeredFHBlocks = new ArrayList<>();
     public static List<Item> registeredFHItems = new ArrayList<>();
     public static List<Fluid> registeredFHFluids = new ArrayList<>();
-
+    public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS,
+			FHMain.MODID);
+    public static final RegistryObject<ContainerType<TradeContainer>> TRADE_GUI=CONTAINERS.register("trade",()->IForgeContainerType.create(TradeContainer::new));
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
@@ -56,5 +65,6 @@ public class FHContent {
         GuiHandler.register(SaunaTileEntity.class, new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaContainer::new);
         GuiHandler.register(IncubatorTileEntity.class, new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Container::new);
         GuiHandler.register(HeatIncubatorTileEntity.class, new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Container::new);
+        
     }
 }

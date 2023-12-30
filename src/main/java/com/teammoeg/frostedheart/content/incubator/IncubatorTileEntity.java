@@ -154,7 +154,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 	public void tick() {
 		if (!this.world.isRemote) {
 			if (process > 0) {
-				if(efficiency<=0) {
+				if(efficiency<=0.005) {
 					out=ItemStack.EMPTY;
 					outfluid=FluidStack.EMPTY;
 					process=processMax=0;
@@ -271,9 +271,11 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
 							int value=in.getItem().getFood().getHealing();
 							if(in.getItem() instanceof StewItem) {
 								value=ThermopoliumApi.getInfo(in).healing;
+								
+							}else {
+								out=in.getContainerItem();
+								in.shrink(1);
 							}
-							out=in.getContainerItem();
-							in.shrink(1);
 							int nvalue=value*25;
 							outfluid=new FluidStack(getProtein(),nvalue);
 							lprocess=0;

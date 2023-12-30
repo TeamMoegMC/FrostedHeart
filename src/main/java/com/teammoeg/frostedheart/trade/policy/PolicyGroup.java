@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.trade;
+package com.teammoeg.frostedheart.trade.policy;
 
 import java.util.List;
 import java.util.Map;
@@ -6,6 +6,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.trade.FHVillagerData;
+import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
@@ -21,7 +23,7 @@ public abstract class PolicyGroup implements Writeable{
 	public PolicyGroup(JsonObject jo) {
 		super();
 		if(jo.has("conditions"))
-			conditions=SerializeUtil.parseJsonList(jo.get("conditions").getAsJsonArray(),Conditions::deserialize);
+			conditions=SerializeUtil.parseJsonList(jo.get("conditions"),Conditions::deserialize);
 		else
 			conditions=ImmutableList.of();
 	}
@@ -31,8 +33,9 @@ public abstract class PolicyGroup implements Writeable{
 	}
 	public abstract void CollectPoliciesNoCheck(PolicySnapshot policy,FHVillagerData ve);
 	public void CollectPolicies(PolicySnapshot policy,FHVillagerData ve) {
-		if(conditions.stream().allMatch(t->t.test(ve)))
+		if(conditions.stream().allMatch(t->t.test(ve))) 
 			CollectPoliciesNoCheck(policy,ve);
+		
 	}
 	@Override
 	public JsonElement serialize() {

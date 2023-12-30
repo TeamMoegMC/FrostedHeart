@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.fluids.PotionFluid;
 import net.minecraft.client.util.ITooltipFlag;
@@ -112,10 +113,10 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
                 Fluid f = fs.getFluid();
                 if (f instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid) {
                     for (EffectInstance ei : PotionUtils.getEffectsFromTag(fs.getOrCreateTag()))
-                        entityplayer.addPotionEffect(ei);
+                    	FHUtils.applyEffectTo(ei, entityplayer);
                 } else if (f instanceof PotionFluid) {
                     for (EffectInstance ei : PotionFluid.getType(fs).getEffects())
-                        entityplayer.addPotionEffect(ei);
+                    	FHUtils.applyEffectTo(ei, entityplayer);
                 }
             }
         });
@@ -229,7 +230,11 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public ItemStack getContainerItem(ItemStack itemStack) {
         ItemStack itemStack1 = itemStack.copy();
-        itemStack1.setDamage(capacity);
+        itemStack1.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(data -> {
+            FluidStack fs = data.drain(unit, IFluidHandler.FluidAction.EXECUTE);
+        });
+
+
         return itemStack1;
     }
 

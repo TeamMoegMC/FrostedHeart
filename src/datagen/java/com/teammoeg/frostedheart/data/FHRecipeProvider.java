@@ -28,10 +28,12 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import com.cannolicatfish.rankine.init.RankineItems;
 import com.cannolicatfish.rankine.init.RankineLists;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.ShapelessCopyDataRecipe;
+import com.teammoeg.frostedheart.trade.policy.TradeBuilder;
 import com.teammoeg.thermopolium.THPFluids;
 import com.teammoeg.thermopolium.data.recipes.FoodValueRecipe;
 
@@ -134,8 +136,22 @@ public class FHRecipeProvider extends RecipeProvider {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		recipeTrade(out);
 	}
-
+	private void recipeTrade(@Nonnull Consumer<IFinishedRecipe> out) {
+		trade().group().buy(10,10,10,FHItems.rye_bread)
+		.buy(1, 0.1f,20,FHItems.straw_lining)
+		.buy(10,10,10,RankineItems.MALACHITE.get()).useAction().addFlag("copper", 1).finish()
+		.sell(10, 1, 100,FHItems.energy_core)
+		.sell(10, 1, 5,RankineItems.COPPER_INGOT.get()).restockAction().addFlag("copper", -1).finish().restocksBy().hasFlag("copper").finish()
+		.basic()
+		.finish()
+		.weight(1).id("test").finish(out);;
+		
+	}
+	private TradeBuilder trade() {
+		return new TradeBuilder();
+	}
 	private void recipesGenerator(@Nonnull Consumer<IFinishedRecipe> out) {
 		GeneratorRecipeBuilder.builder(IETags.slag, 1).addInput(ItemTags.COALS).setTime(1000).build(out,
 				toRL("generator/slag"));

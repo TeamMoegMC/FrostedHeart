@@ -21,8 +21,10 @@ package com.teammoeg.frostedheart.events;
 import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
 
 import java.util.Map;
+import java.util.function.Function;
 
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
@@ -44,6 +46,8 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
+import com.teammoeg.frostedheart.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.util.FHLogger;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
@@ -52,6 +56,7 @@ import blusunrize.immersiveengineering.common.gui.GuiHandler;
 import blusunrize.lib.manual.ManualEntry;
 import blusunrize.lib.manual.ManualInstance;
 import blusunrize.lib.manual.Tree;
+import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IHasContainer;
@@ -90,11 +95,13 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
-        ClientRegistryEvents.<DrawDeskContainer, MenuScreenWrapper<DrawDeskContainer>>
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), (c, i, t) -> new MenuScreenWrapper<DrawDeskContainer>(new DrawDeskScreen(c), c, i, t).disableSlotDrawing());
+        ClientRegistryEvents.
+        registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
+        registerFTBScreen(FHContent.TRADE_GUI.get(),TradeScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Screen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Screen::new);
+        
         // Register translucent render type
 
         RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutout());
@@ -144,7 +151,14 @@ public class ClientRegistryEvents {
         ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
         ScreenManager.registerFactory(type, factory);
     }
-
+    public static <C extends Container, S extends BaseScreen> void
+    registerFTBScreen(ContainerType<C> type, Function<C, S> factory) {
+        ScreenManager.registerFactory(type,FTBScreenFactory(factory));
+    }
+    public static <C extends Container, S extends BaseScreen> ScreenManager.IScreenFactory<C,MenuScreenWrapper<C>>
+    FTBScreenFactory(Function<C, S> factory) {
+        return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
+    }
     /**
      * @param event
      */

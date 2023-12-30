@@ -5,7 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "frostedheart.refmap.json",
   "warning": [
-    "Modify or share modified version of our modpack violates The Winter Rescue Term of Use.",
+    "Share modified version of our modpack violates The Winter Rescue Term of Use.",
     "擅自修改和分发我们的整合包违反了《冬季救援使用协议》，我们有权拒绝为您提供帮助！"
   ],
   "mixins": [
@@ -86,6 +86,9 @@
     "minecraft.PigEntityMixin",
     "minecraft.RabbitEntityMixin",
     "minecraft.SheepEntityMixin",
+    "minecraft.PlayerEntityMixin",
+    "minecraft.AssignProfessionTaskMixin",
+    "minecraft.ChangeJobTaskMixin",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",
@@ -117,7 +120,8 @@
     "client.ToastGuiMixin",
     "client.WorldRendererMixin",
     "create.DeployerActorInstanceMixin",
-    "create.MixinOpenConfigButtonHandler"
+    "create.MixinOpenConfigButtonHandler",
+    "minecraft.MinecraftMPFixMixin"
   ],
   "injectors": {
     "defaultRequire": 1

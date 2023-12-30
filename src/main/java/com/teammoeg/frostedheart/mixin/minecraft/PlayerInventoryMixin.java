@@ -48,7 +48,6 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
 		if (getThis().player instanceof FakePlayer)
 			return;
 		DeathInventoryData dit = DeathInventoryData.get(getThis().player);
-		dit.startClone();
 		if (FHConfig.SERVER.keepEquipments.get()) {
 			if (dit != null)
 				dit.death(getThis());

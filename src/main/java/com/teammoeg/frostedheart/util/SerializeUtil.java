@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -198,7 +199,27 @@ public class SerializeUtil {
         buffer.writeVarInt(elms.size());
         elms.forEach(e -> func.accept(buffer, e));
     }
-
+    public static <K,V> void writeMap(PacketBuffer buffer,Map<K,V> elms, BiConsumer<K, PacketBuffer> keywriter, BiConsumer<V, PacketBuffer> valuewriter) {
+        writeList(buffer,elms.entrySet(),(p,b)->{
+        	keywriter.accept(p.getKey(),b);
+        	valuewriter.accept(p.getValue(), b);
+        });
+    }
+    public static <V> void writeStringMap(PacketBuffer buffer,Map<String,V> elms, BiConsumer<V, PacketBuffer> valuewriter) {
+        writeMap(buffer,elms,(p,b)->b.writeString(p),valuewriter);
+    }
+    public static <V> Map<String,V> readStringMap(PacketBuffer buffer,Map<String,V> map,Function<PacketBuffer, V> valuereader) {
+        return readMap(buffer,map,PacketBuffer::readString,valuereader);
+    }
+    public static <K,V> Map<K,V> readMap(PacketBuffer buffer,Map<K,V> map, Function<PacketBuffer, K> keyreader,Function<PacketBuffer, V> valuereader) {
+    	map.clear(); 
+    	if (!buffer.readBoolean())
+             return map;
+         int cnt = buffer.readVarInt();
+         for (int i = 0; i < cnt; i++)
+             map.put(keyreader.apply(buffer),valuereader.apply(buffer));
+         return map;
+    }
     public static <T> List<T> parseJsonList(JsonElement elm, Function<JsonObject, T> mapper) {
         if (elm == null)
             return Lists.newArrayList();

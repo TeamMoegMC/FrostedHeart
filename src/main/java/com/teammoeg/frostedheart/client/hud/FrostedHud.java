@@ -440,17 +440,19 @@ public class FrostedHud {
 		clrs.put(2, 0x99FF9800);
 		clrs.put(1, 0x44FF9800);
 		clrs.put(0, 0x0);
-		clrs.put(-1, 0x3057BDE8);
-		clrs.put(-2, 0x4057BDE8);
-		clrs.put(-3, 0x5057BDE8);
-		clrs.put(-4, 0x6057BDE8);
-		clrs.put(-5, 0x7057BDE8);
-		clrs.put(-6, 0x8057BDE8);
-		clrs.put(-7, 0x9057BDE8);
-		clrs.put(-8, 0xa057BDE8);
-		clrs.put(-9, 0xb057BDE8);
-		clrs.put(-10, 0xc057BDE8);
-		clrs.put(-11, 0xd057BDE8);
+		clrs.put(-1, 0x3357BDE8);
+		clrs.put(-2, 0x4457BDE8);
+		clrs.put(-3, 0x5557BDE8);
+		clrs.put(-4, 0x6657BDE8);
+		clrs.put(-5, 0x7757BDE8);
+		clrs.put(-6, 0x8857BDE8);
+		clrs.put(-7, 0x9957BDE8);
+		clrs.put(-8, 0xaa57BDE8);
+		clrs.put(-9, 0xbb57BDE8);
+		clrs.put(-10, 0xcc57BDE8);
+		clrs.put(-11, 0xdd57BDE8);
+		clrs.put(-12, 0xee57BDE8);
+		clrs.put(-13, 0xff57BDE8);
 	}
 
 	public static void renderForecast(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
@@ -469,7 +471,6 @@ public class FrostedHud {
 		int markerH = HUDElements.forecast_marker.getH();
 		int firstDayU = HUDElements.forecast_marker.getX() + markerMovingOffset;
 		int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset;
-
 		// forecast arrows
 		// find the first hour lower than cold period bottom
 		TemperatureFrame[] toRender = ClientForecastData.tfs;

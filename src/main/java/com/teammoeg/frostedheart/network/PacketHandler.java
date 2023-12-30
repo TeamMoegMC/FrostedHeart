@@ -33,6 +33,10 @@ import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
+import com.teammoeg.frostedheart.trade.network.BargainResponse;
+import com.teammoeg.frostedheart.trade.network.TradeCommitPacket;
+import com.teammoeg.frostedheart.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.util.FHVersion;
 
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
@@ -104,6 +108,14 @@ public class PacketHandler {
                 FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class,FHTemperatureDisplayPacket::encode,
         		FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
+        CHANNEL.registerMessage(id++, BargainRequestPacket.class,BargainRequestPacket::encode,
+        		BargainRequestPacket::new, BargainRequestPacket::handle);
+        CHANNEL.registerMessage(id++, BargainResponse.class,BargainResponse::encode,
+        		BargainResponse::new, BargainResponse::handle);
+        CHANNEL.registerMessage(id++, TradeCommitPacket.class,TradeCommitPacket::encode,
+        		TradeCommitPacket::new, TradeCommitPacket::handle);
+        CHANNEL.registerMessage(id++, TradeUpdatePacket.class,TradeUpdatePacket::encode,
+        		TradeUpdatePacket::new, TradeUpdatePacket::handle);
 
     }
 
