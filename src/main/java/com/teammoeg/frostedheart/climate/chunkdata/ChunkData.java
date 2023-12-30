@@ -224,14 +224,16 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     }
 
     /**
-     * Used on a ServerWorld context to add temperature in a spheric region
+     * Used on a ServerWorld context to add temperature in a piller region
      *
      * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the cube
      * @param range   the distance from the heatPos to the boundary
+     * @param up y range above the plane
+     * @param down y range below the plane
      * @param tempMod the temperature added
      */
-    public static void addSphericTempAdjust(IWorld world, BlockPos heatPos, int range, int tempMod) {
+    public static void addPillarTempAdjust(IWorld world, BlockPos heatPos, int range,int up,int down, int tempMod) {
         removeTempAdjust(world, heatPos);
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
@@ -247,7 +249,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetN = offsetN >>4;
         int chunkOffsetS = offsetS >>4;
         // add adjust to effected chunks
-        ITemperatureAdjust adj = new SphericTemperatureAdjust(heatPos, range, tempMod);
+        ITemperatureAdjust adj = new PillerTemperatureAdjust(heatPos, range, up, down, tempMod);
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
                 ChunkPos cp = new ChunkPos(x, z);

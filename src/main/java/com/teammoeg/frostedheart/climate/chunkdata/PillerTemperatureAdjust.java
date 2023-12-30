@@ -25,34 +25,43 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Spheric Temperature Adjust, would adjust temperature in a ball.
  */
-public class SphericTemperatureAdjust extends CubicTemperatureAdjust {
+public class PillerTemperatureAdjust extends CubicTemperatureAdjust {
 
     long r2;
-
-    public SphericTemperatureAdjust(int cx, int cy, int cz, int r, int value) {
+    int upper;
+    int lower;
+    public PillerTemperatureAdjust(int cx, int cy, int cz, int r,int upper,int lower, int value) {
         super(cx, cy, cz, r, value);
         r2 = r * r;
+        this.upper=upper;
+        this.lower=lower;
     }
 
-    public SphericTemperatureAdjust(PacketBuffer buffer) {
+    public PillerTemperatureAdjust(PacketBuffer buffer) {
         super(buffer);
         r2 = r * r;
+        this.upper=buffer.readVarInt();
+        this.lower=buffer.readVarInt();
     }
 
-    public SphericTemperatureAdjust(CompoundNBT nc) {
+    public PillerTemperatureAdjust(CompoundNBT nc) {
         super(nc);
         r2 = r * r;
+        this.upper=nc.getInt("upper");
+        this.lower=nc.getInt("lower");
     }
 
-    public SphericTemperatureAdjust(BlockPos heatPos, int range, int tempMod) {
+    public PillerTemperatureAdjust(BlockPos heatPos, int range,int u,int d, int tempMod) {
         super(heatPos, range, tempMod);
         r2 = r * r;
+        this.upper=u;
+        this.lower=d;
     }
 
     @Override
     public boolean isEffective(int x, int y, int z) {
+    	if(y>upper+cy||y<lower+cy)return false;
         long l = (long) Math.pow(x - cx, 2);
-        l += (long) Math.pow(y - cy, 2);
         l += (long) Math.pow(z - cz, 2);
         return l <= r;
     }
@@ -61,13 +70,22 @@ public class SphericTemperatureAdjust extends CubicTemperatureAdjust {
     public CompoundNBT serializeNBT() {
         CompoundNBT nbt = serializeNBTData();
         nbt.putInt("type", 2);
+        nbt.putInt("upper", upper);
+        nbt.putInt("lower", lower);
         return nbt;
     }
 
     @Override
     public void serialize(PacketBuffer buffer) {
         buffer.writeInt(2);
-        super.serializeData(buffer);
+        serializeData(buffer);
     }
+
+	@Override
+	protected void serializeData(PacketBuffer buffer) {
+		super.serializeData(buffer);
+		buffer.writeVarInt(upper);
+		buffer.writeVarInt(lower);
+	}
 
 }

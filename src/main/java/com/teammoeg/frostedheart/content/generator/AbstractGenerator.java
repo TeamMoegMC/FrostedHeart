@@ -41,6 +41,7 @@ import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 
 public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends MultiblockPartTileEntity<T> implements FHBlockInterfaces.IActiveState {
 
@@ -61,9 +62,14 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     }
 
     public int getActualRange() {
-        return (int) (8 + (getRangeLevel() - 1) * 4);
+        return (int) (8 + (getRangeLevel()) * 4);
     }
-
+    public int getUpperBound() {
+    	return MathHelper.ceil (getRangeLevel()*4);
+    }
+    public int getLowerBound() {
+    	return MathHelper.ceil(getRangeLevel());
+    }
     public int getActualTemp() {
         return (int) (getTemperatureLevel() * 10);
     }
@@ -183,7 +189,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	            if (activeBeforeTick != activeAfterTick) {
 	                this.markDirty();
 	                if (activeAfterTick) {
-	                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
+	                    ChunkData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),getLowerBound(),getActualTemp());
 	                } else {
 	                    ChunkData.removeTempAdjust(world, getPos());
 	                }
@@ -192,7 +198,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	                if (isChanged() || !initialized) {
 	                    initialized = true;
 	                    markChanged(false);
-	                    ChunkData.addCubicTempAdjust(world, getPos(), getActualRange(), getActualTemp());
+	                    ChunkData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),getLowerBound(), getActualTemp());
 	                }
 	            }
         	}else

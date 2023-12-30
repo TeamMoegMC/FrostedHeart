@@ -138,7 +138,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 
     @Override
     public int getActualRange() {
-        return 5;
+        return 8;
     }
 
     @Override
@@ -187,4 +187,14 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
     public SteamNetworkHolder getHolder() {
         return network;
     }
+
+	@Override
+	public int getUpperBound() {
+		return 4;
+	}
+
+	@Override
+	public int getLowerBound() {
+		return 1;
+	}
 }
