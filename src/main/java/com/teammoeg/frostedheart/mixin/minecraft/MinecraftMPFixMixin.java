@@ -9,12 +9,12 @@ import net.minecraft.client.Minecraft;
 
 @Mixin(Minecraft.class)
 public class MinecraftMPFixMixin {
-	@Inject(at = @At("HEAD"), method = "allowsMultiplayer", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "isMultiplayerEnabled", cancellable = true)
 	public void allowMP(CallbackInfoReturnable<Boolean> callbackInfo) {
 		callbackInfo.setReturnValue(true);
 	}
 
-	@Inject(at = @At("HEAD"), method = "allowsChat", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "isChatEnabled", cancellable = true)
 
 	public void allowChat(CallbackInfoReturnable<Boolean> callbackInfo) {
 		callbackInfo.setReturnValue(true);
