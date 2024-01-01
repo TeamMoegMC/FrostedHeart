@@ -39,7 +39,8 @@ public abstract class BaseData implements Writeable{
 		this.actions=SerializeUtil.parseJsonList(jo.get("actions"),Actions::deserialize);
 		this.soldactions=SerializeUtil.parseJsonList(jo.get("use_actions"),Actions::deserialize);
 		this.restockconditions=SerializeUtil.parseJsonList(jo.get("restock_condition"),Conditions::deserialize);
-		hideStockout=jo.get("hide_stockout").getAsBoolean();
+		if(jo.has("hide_stockout"))
+			hideStockout=jo.get("hide_stockout").getAsBoolean();
 	}
 	public BaseData(PacketBuffer pb) {
 		id=pb.readString();
