@@ -111,7 +111,7 @@ mixin {
 repositories {
     mavenLocal()
     maven {
-        url "https://www.cursemaven.com"
+        url "https://cursemaven.com"
         content {
             includeGroup "curse.maven"
         }
@@ -155,9 +155,18 @@ repositories {
             includeGroup "dev.latvian.mods"
         }
     }
+//    maven {
+//        name = "teammoeg maven"
+//        url = "http://server.teammoeg.com:8888/releases"
+//        content {
+//            includeGroup "gloridifice.watersource"
+//            includeGroup "com.alcatrazescapee.primalwinter"
+//            includeGroup "java.moze_intel"
+//        }
+//    }
     maven {
-        name = "teammoeg maven"
-        url = "http://server.teammoeg.com:8888/releases"
+        name = "TeamMoeg COS Maven"
+        url = "https://maven-1301510336.cos.ap-guangzhou.myqcloud.com"
         content {
             includeGroup "gloridifice.watersource"
             includeGroup "com.alcatrazescapee.primalwinter"
@@ -199,18 +208,16 @@ dependencies {
 	implementation fg.deobf("curse.maven:selene-499980:3517008")
     //compile fg.deobf("curse.maven:better-weather-400714:3420517")
     //implementation fg.deobf("curse.maven:better-weather-400714:3420517")
-    
-    
+    compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
     implementation fg.deobf("curse.maven:age-api-353992:3176394")
     implementation fg.deobf("curse.maven:neolithic-world-534605:3937806")
 
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
-
     implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
 
     // runtimeOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
-    compileOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
+//    compileOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
 
     // FG5 requires 0.8.3
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
@@ -285,6 +292,25 @@ String getChangelogText() {
     return str
 }
 
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 // changelog debugging
 //new File("changelog.html").write getChangelogText()
 
@@ -329,16 +355,20 @@ publishing {
         }
     }
     repositories {
+//        maven {
+//            name = "TeamMoeg"
+//            url = "http://server.teammoeg.com:8888/releases"
+//            credentials {
+//                username = System.getenv('TEAMMOEG_USER')
+//                password = System.getenv('TEAMMOEG_TOKEN')
+//            }
+//            authentication {
+//                basic(BasicAuthentication)
+//            }
+//        }
         maven {
-            name = "TeamMoeg"
-            url = "http://server.teammoeg.com:8888/releases"
-            credentials {
-                username = System.getenv('TEAMMOEG_USER')
-                password = System.getenv('TEAMMOEG_TOKEN')
-            }
-            authentication {
-                basic(BasicAuthentication)
-            }
+            name = "COS"
+            url = "http://127.0.0.1:9999"
         }
     }
 }
