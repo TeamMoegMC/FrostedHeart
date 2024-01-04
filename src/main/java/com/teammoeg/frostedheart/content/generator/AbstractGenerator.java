@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.generator;
@@ -64,12 +65,15 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     public int getActualRange() {
         return (int) (8 + (getRangeLevel()) * 4);
     }
+
     public int getUpperBound() {
     	return MathHelper.ceil (getRangeLevel()*4);
     }
+
     public int getLowerBound() {
     	return MathHelper.ceil(getRangeLevel());
     }
+
     public int getActualTemp() {
         return (int) (getTemperatureLevel() * 10);
     }

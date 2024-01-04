@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.climate.chunkdata;
@@ -60,10 +61,10 @@ public class PillerTemperatureAdjust extends CubicTemperatureAdjust {
 
     @Override
     public boolean isEffective(int x, int y, int z) {
-    	if(y>upper+cy||y<lower+cy)return false;
+    	if (y > upper + cy || y < cy - lower) return false;
         long l = (long) Math.pow(x - cx, 2);
         l += (long) Math.pow(z - cz, 2);
-        return l <= r;
+        return l <= r2;
     }
 
     @Override

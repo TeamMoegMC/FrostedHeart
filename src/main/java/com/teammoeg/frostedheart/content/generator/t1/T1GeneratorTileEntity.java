@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.generator.t1;
@@ -31,6 +32,7 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 
 public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
@@ -93,4 +95,18 @@ public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Gen
 		}
 		
 	}
+
+    @Override
+    public int getUpperBound() {
+        int distanceToTowerTop = 2;
+        int extra = MathHelper.ceil (getRangeLevel()*2);
+        return distanceToTowerTop + extra;
+    }
+
+    @Override
+    public int getLowerBound() {
+        int distanceToGround = 2;
+        int extra = MathHelper.ceil(getRangeLevel());
+        return distanceToGround + extra;
+    }
 }

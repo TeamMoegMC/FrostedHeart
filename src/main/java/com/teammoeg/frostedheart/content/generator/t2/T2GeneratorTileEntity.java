@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.generator.t2;
@@ -41,6 +42,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
@@ -338,4 +340,17 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		return value-maxfill;
 	}
 
+	@Override
+	public int getUpperBound() {
+		int distanceToTowerTop = 5;
+		int extra = MathHelper.ceil (getRangeLevel()*2);
+		return distanceToTowerTop + extra;
+	}
+
+	@Override
+	public int getLowerBound() {
+		int distanceToGround = 2;
+		int extra = MathHelper.ceil(getRangeLevel());
+		return distanceToGround + extra;
+	}
 }
