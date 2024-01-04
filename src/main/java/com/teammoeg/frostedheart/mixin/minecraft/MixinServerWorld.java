@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import static com.teammoeg.frostedheart.climate.WorldClimate.BLIZZARD_TEMPERATURE;
 import static com.teammoeg.frostedheart.climate.WorldClimate.SNOW_TEMPERATURE;
 
 import java.util.function.BooleanSupplier;
