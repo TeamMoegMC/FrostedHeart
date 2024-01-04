@@ -85,21 +85,25 @@ public class WorldClimate {
      * The temperature when snow becomes blizzard.
      */
     public static final float BLIZZARD_TEMPERATURE = -18;
-
     /**
-     * The temperature when vanilla plants can grow.
+     * The temperature when cold plant can grow.
      */
-    public static final float VANILLA_PLANT_GROW_TEMPERATURE = 15;
-    public static final int BONEMEAL_TEMPERATURE = 5;
-
+    public static final int COLD_RESIST_GROW_TEMPERATURE = -20;
     /**
      * The temperature when hemp can grow.
      */
-    public static final float HEMP_GROW_TEMPERATURE = 0;
+    public static final float HEMP_GROW_TEMPERATURE = -15;
+    /**
+     * The temperature when vanilla plants can grow.
+     */
+    public static final float VANILLA_PLANT_GROW_TEMPERATURE = -10;
+    public static final int BONEMEAL_TEMPERATURE = 5;
+
+
     
-    public static final float ANIMAL_ALIVE_TEMPERATURE = -1.5f;
+    public static final float ANIMAL_ALIVE_TEMPERATURE = -9f;
     
-    public static final float FEEDED_ANIMAL_ALIVE_TEMPERATURE = -15f;
+    public static final float FEEDED_ANIMAL_ALIVE_TEMPERATURE = -30f;
 
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
 
