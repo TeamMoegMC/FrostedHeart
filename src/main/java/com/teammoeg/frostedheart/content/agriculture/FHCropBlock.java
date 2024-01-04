@@ -23,8 +23,9 @@ import java.util.function.BiFunction;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -78,9 +79,10 @@ public class FHCropBlock extends CropsBlock {
             return; // Forge: prevent loading unloaded chunks when checking neighbor's light
         if (worldIn.getLightSubtracted(pos, 0) >= 9) {
             int i = this.getAge(state);
-            float temp = ChunkData.getTemperature(worldIn, pos);
-            if (temp < growTemperature) {
-                if (temp < growTemperature-10&&worldIn.getRandom().nextInt(3) == 0) {
+            float temp = ChunkHeatData.getTemperature(worldIn, pos);
+            boolean bz=WorldClimateData.isBlizzard(worldIn);
+            if (temp < growTemperature||bz) {
+                if ((bz||temp < growTemperature-10)&&worldIn.getRandom().nextInt(3) == 0) {
                     worldIn.setBlockState(pos, this.getDefaultState(), 2);
                 }
             }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
@@ -99,7 +101,7 @@ public class FHCropBlock extends CropsBlock {
 
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
-        float temp = ChunkData.getTemperature(worldIn, pos);
+        float temp = ChunkHeatData.getTemperature(worldIn, pos);
         return temp >= growTemperature;
     }
 }

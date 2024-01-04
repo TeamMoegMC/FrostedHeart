@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.util.FHGameRule;
 
 import net.minecraft.profiler.IProfiler;
@@ -80,7 +80,7 @@ public abstract class MixinServerWorld extends World {
             return;
 
         // get hourly temp data
-        float currentTemp = ClimateData.getTemp(this);
+        float currentTemp = WorldClimateData.getTemp(this);
         // System.out.println("Current Temp: " + currentTemp);
 
         // vanilla weather params
@@ -93,7 +93,7 @@ public abstract class MixinServerWorld extends World {
         // calculate raining status and blizzard status based on our temp system
         // 'thundering' is replaced by our BlizzardRenderer
         isRaining = currentTemp < SNOW_TEMPERATURE;
-        isThundering = currentTemp < BLIZZARD_TEMPERATURE;
+        isThundering = WorldClimateData.isBlizzard(this);
 
         // To make vanilla weather commands work, we still implement the following
         // This overrides the previous calculation on isRaining and isThundering

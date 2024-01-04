@@ -34,9 +34,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.client.DynamicModelSetup;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
-import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.climate.TemperatureSimulator;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -197,10 +197,10 @@ public class FHMain {
 				MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
 			} catch (Throwable ignored) {
 			}
-		ChunkDataCapabilityProvider.setup();
+		ChunkHeatDataCapabilityProvider.setup();
 		CrashReportExtender.registerCrashCallable(new ClimateCrash());
 		PacketHandler.register();
-		ClimateData.setup();
+		WorldClimateData.setup();
 		DeathInventoryData.setup();
 		FHBiomes.Biomes();
 		FHStructures.registerStructureGenerate();

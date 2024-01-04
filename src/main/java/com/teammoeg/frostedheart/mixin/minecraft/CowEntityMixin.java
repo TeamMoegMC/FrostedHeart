@@ -31,7 +31,7 @@ import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 import com.teammoeg.frostedheart.util.mixin.IMilkable;
 
@@ -118,7 +118,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
 			} else if (feeded > 0) {
 				digestTimer = 14400;
 			}
-			float temp = ChunkData.getTemperature(this.getEntityWorld(), this.getPosition());
+			float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
 			if (temp < WorldClimate.ANIMAL_ALIVE_TEMPERATURE
 					|| temp > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
 				if (hxteTimer < 100) {

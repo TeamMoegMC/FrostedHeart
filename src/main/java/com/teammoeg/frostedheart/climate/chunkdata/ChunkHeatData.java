@@ -42,10 +42,10 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
-    public static final ChunkData EMPTY = new Immutable();
+public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
+    public static final ChunkHeatData EMPTY = new Immutable();
 
-    public static ChunkData get(IWorld world, BlockPos pos) {
+    public static ChunkHeatData get(IWorld world, BlockPos pos) {
         return get(world, new ChunkPos(pos));
     }
 
@@ -78,16 +78,16 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * If on server, will either query capability falling back to cache, or query
      * provider to generate the data.
      */
-    public static ChunkData get(IWorldReader world, ChunkPos pos) {
+    public static ChunkHeatData get(IWorldReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
         //System.out.println("no cache at"+pos);
         if (world instanceof IWorld)
             return ((IWorld) world).getChunkProvider().isChunkLoaded(pos) ? getCapability(world.getChunk(pos.asBlockPos()))
-                    .orElse(ChunkData.EMPTY) : ChunkData.EMPTY;
+                    .orElse(ChunkHeatData.EMPTY) : ChunkHeatData.EMPTY;
         return world.chunkExists(pos.x, pos.z) ? getCapability(world.getChunk(pos.asBlockPos()))
-                .orElse(ChunkData.EMPTY) : ChunkData.EMPTY;
+                .orElse(ChunkHeatData.EMPTY) : ChunkHeatData.EMPTY;
         //}
         //return data;
     }
@@ -95,9 +95,9 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     /**
      * Helper method, since lazy optionals and instanceof checks together are ugly
      */
-    public static LazyOptional<ChunkData> getCapability(@Nullable IChunk chunk) {
+    public static LazyOptional<ChunkHeatData> getCapability(@Nullable IChunk chunk) {
         if (chunk instanceof Chunk) {
-            return ((Chunk) chunk).getCapability(ChunkDataCapabilityProvider.CAPABILITY);
+            return ((Chunk) chunk).getCapability(ChunkHeatDataCapabilityProvider.CAPABILITY);
         }
         return LazyOptional.empty();
     }
@@ -110,7 +110,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void addChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adjx) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
-            ChunkData data = ChunkData.getCapability(chunk).orElseGet(() -> null);
+            ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null) {
                 data.adjusters.removeIf(adj -> adj.getCenterX() == adjx.getCenterX()
                         && adj.getCenterY() == adjx.getCenterY() && adj.getCenterZ() == adjx.getCenterZ());
@@ -127,7 +127,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, BlockPos src) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
-            ChunkData data = ChunkData.getCapability(chunk).orElseGet(() -> null);
+            ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null)
                 data.adjusters.removeIf(adj -> adj.getCenterX() == src.getX() && adj.getCenterY() == src.getY()
                         && adj.getCenterZ() == src.getZ());
@@ -142,7 +142,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
     private static void removeChunkAdjust(IWorld world, ChunkPos chunkPos, ITemperatureAdjust adj) {
         if (world != null && !world.isRemote()) {
             IChunk chunk = world.getChunk(chunkPos.x, chunkPos.z);
-            ChunkData data = ChunkData.getCapability(chunk).orElseGet(() -> null);
+            ChunkHeatData data = ChunkHeatData.getCapability(chunk).orElseGet(() -> null);
             if (data != null)
                 data.adjusters.remove(adj);
         }
@@ -249,7 +249,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
         int chunkOffsetN = offsetN >>4;
         int chunkOffsetS = offsetS >>4;
         // add adjust to effected chunks
-        ITemperatureAdjust adj = new PillerTemperatureAdjust(heatPos, range, up, down, tempMod);
+        ITemperatureAdjust adj = new PillarTemperatureAdjust(heatPos, range, up, down, tempMod);
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
                 ChunkPos cp = new ChunkPos(x, z);
@@ -277,7 +277,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      */
     public static void removeTempAdjust(IWorld world, BlockPos heatPos) {
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
-        ChunkData cd = ChunkData.get(world, heatPos);
+        ChunkHeatData cd = ChunkHeatData.get(world, heatPos);
         ITemperatureAdjust oadj = cd.getAdjustAt(heatPos);
         if (oadj == null) return;
         int range = oadj.getRadius();
@@ -324,12 +324,12 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
                 removeChunkAdjust(world, new ChunkPos(x, z), adj);
     }
 
-    private final LazyOptional<ChunkData> capability;
+    private final LazyOptional<ChunkHeatData> capability;
     private final ChunkPos pos;
 
     private List<ITemperatureAdjust> adjusters = new LinkedList<>();
 
-    public ChunkData(ChunkPos pos) {
+    public ChunkHeatData(ChunkPos pos) {
         this.pos = pos;
         this.capability = LazyOptional.of(() -> this);
 
@@ -378,7 +378,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        return ChunkDataCapabilityProvider.CAPABILITY.orEmpty(cap, capability);
+        return ChunkHeatDataCapabilityProvider.CAPABILITY.orEmpty(cap, capability);
     }
 
     @Override
@@ -420,7 +420,7 @@ public class ChunkData implements ICapabilitySerializable<CompoundNBT> {
      * New empty instances can be constructed via constructor, EMPTY instance is
      * specifically for an immutable empty copy, representing invalid chunk data
      */
-    private static final class Immutable extends ChunkData {
+    private static final class Immutable extends ChunkHeatData {
         private Immutable() {
             super(new ChunkPos(ChunkPos.SENTINEL));
         }

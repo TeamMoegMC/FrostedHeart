@@ -23,7 +23,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
@@ -35,7 +35,7 @@ public class ClimateCommand {
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
                 	try {
-                           ct.getSource().sendFeedback(new StringTextComponent(String.valueOf(ClimateData.get(ct.getSource().getWorld()))),true);
+                           ct.getSource().sendFeedback(new StringTextComponent(String.valueOf(WorldClimateData.get(ct.getSource().getWorld()))),true);
                 	}catch(Exception ex) {
                 		ex.printStackTrace();
                 	}
@@ -44,13 +44,13 @@ public class ClimateCommand {
         LiteralArgumentBuilder<CommandSource> rebuild = Commands.literal("rebuild")
                 .executes((ct) -> {
                 	
-                    ClimateData.get(ct.getSource().getWorld()).resetTempEvent(ct.getSource().getWorld());
+                    WorldClimateData.get(ct.getSource().getWorld()).resetTempEvent(ct.getSource().getWorld());
                     ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
         });
         LiteralArgumentBuilder<CommandSource> init = Commands.literal("init")
         .executes((ct) -> {
-            ClimateData.get(ct.getSource().getWorld()).addInitTempEvent(ct.getSource().getWorld());
+            WorldClimateData.get(ct.getSource().getWorld()).addInitTempEvent(ct.getSource().getWorld());
             ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
             return Command.SINGLE_SUCCESS;
         });

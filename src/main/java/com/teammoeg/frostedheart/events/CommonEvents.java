@@ -28,11 +28,11 @@ import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
@@ -161,7 +161,7 @@ public class CommonEvents {
                 ServerWorld serverWorld = (ServerWorld) world;
                 // Update clock source every second, and check hour data if it needs an update
                 if (serverWorld.getGameTime() % 20 == 0) {
-                    ClimateData data = ClimateData.get(serverWorld);
+                    WorldClimateData data = WorldClimateData.get(serverWorld);
                     data.updateClock(serverWorld);
                     data.updateCache(serverWorld);
                     data.trimTempEventStream();
@@ -451,13 +451,13 @@ public class CommonEvents {
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock =event.getState().getBlock();
    
-        float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
-        
+        float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
+        boolean bz=WorldClimateData.isBlizzard(event.getWorld());
         if (growBlock instanceof FHCropBlock) {
             return;
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
-            if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
-                if (temp<-6&&event.getWorld().getRandom().nextInt(3) == 0) {
+            if (temp < WorldClimate.HEMP_GROW_TEMPERATURE||bz) {
+                if ((bz||temp<-6)&&event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);
@@ -470,9 +470,9 @@ public class CommonEvents {
             	event.setResult(Event.Result.DENY);
             }
         } else {
-            if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE) {
+            if (temp < WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE||bz) {
                 // Set back to default state, might not be necessary
-                if (temp<0&& event.getWorld().getRandom().nextInt(3) == 0) {
+                if ((bz||temp<0)&& event.getWorld().getRandom().nextInt(3) == 0) {
                 	BlockState cbs=event.getWorld().getBlockState(event.getPos());
                 	if(cbs.matchesBlock(growBlock)&&cbs!= growBlock.getDefaultState())
                 		event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
@@ -495,7 +495,7 @@ public class CommonEvents {
         if (event.getPlayer() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getPlayer();
             Block growBlock = event.getBlock().getBlock();
-            float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
+            float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof FHCropBlock) {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature()+WorldClimate.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
@@ -529,7 +529,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
             Block growBlock = event.getPlacedBlock().getBlock();
-            float temp = ChunkData.getTemperature(event.getWorld(), event.getPos());
+            float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
@@ -615,7 +615,7 @@ public class CommonEvents {
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
-            serverWorld.getCapability(ClimateData.CAPABILITY).ifPresent((cap) -> {
+            serverWorld.getCapability(WorldClimateData.CAPABILITY).ifPresent((cap) -> {
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                         new FHClimatePacket(cap));
             });
@@ -630,7 +630,7 @@ public class CommonEvents {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
             
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                        new FHClimatePacket(ClimateData.get(serverWorld)));
+                        new FHClimatePacket(WorldClimateData.get(serverWorld)));
         }
     }
 
@@ -683,7 +683,7 @@ public class CommonEvents {
         			dit.alive(event.getPlayer().inventory);
         	}
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                    new FHClimatePacket(ClimateData.get(serverWorld)));
+                    new FHClimatePacket(WorldClimateData.get(serverWorld)));
             CompoundNBT cnbt = new CompoundNBT();
             cnbt.putLong("penergy", TemperatureCore.getFHData(event.getPlayer()).getLong("penergy"));
             cnbt.putDouble("utbody", 1);

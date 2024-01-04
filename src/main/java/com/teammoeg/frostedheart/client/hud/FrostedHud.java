@@ -36,7 +36,7 @@ import com.teammoeg.frostedheart.client.ClientForecastData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
-import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
+import com.teammoeg.frostedheart.climate.WorldClimateData.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 

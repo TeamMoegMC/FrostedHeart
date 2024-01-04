@@ -20,11 +20,13 @@
 package com.teammoeg.frostedheart.climate;
 
 import java.util.Arrays;
+import java.util.BitSet;
 
 import net.minecraft.nbt.CompoundNBT;
 
 public class DayTemperatureData {
     int[] hourData = new int[24];
+    BitSet blizzard=new BitSet(24);
     float dayHumidity;
     float dayNoise;
     long day;
@@ -43,7 +45,15 @@ public class DayTemperatureData {
     public float getTemp(int hourInDay) {
         return Float.intBitsToFloat(hourData[hourInDay]);
     }
-
+    public boolean getBlizzard(WorldClockSource wcs) {
+    	return blizzard.get(wcs.getHourInDay());
+    }  
+    public boolean getBlizzard(int hourInDay) {
+    	return blizzard.get(hourInDay);
+    }  
+    public void setBlizzard(int hourInDay,boolean data) {
+    	blizzard.set(hourInDay, data);
+    }
     void setHourTemp(int h, float temp) {
         hourData[h] = Float.floatToRawIntBits(temp);
     }
@@ -54,6 +64,7 @@ public class DayTemperatureData {
         cnbt.putFloat("humidity", dayHumidity);
         cnbt.putFloat("noise", dayNoise);
         cnbt.putLong("day", day);
+        cnbt.putLongArray("blizzard", blizzard.toLongArray());
         return cnbt;
     }
 
@@ -64,6 +75,8 @@ public class DayTemperatureData {
         dayHumidity = cnbt.getFloat("humidity");
         dayNoise = cnbt.getFloat("noise");
         day = cnbt.getLong("day");
+        if(cnbt.contains("blizzard"))
+        	blizzard=BitSet.valueOf(cnbt.getLongArray("blizzard"));
     }
 
     public static DayTemperatureData read(CompoundNBT data) {

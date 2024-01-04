@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.client;
 
-import com.teammoeg.frostedheart.climate.ClimateData.TemperatureFrame;
+import com.teammoeg.frostedheart.climate.WorldClimateData.TemperatureFrame;
 
 public class ClientForecastData {
 	public static final TemperatureFrame[] tfs=new TemperatureFrame[40];

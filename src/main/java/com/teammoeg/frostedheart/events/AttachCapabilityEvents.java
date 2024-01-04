@@ -20,9 +20,9 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.ClimateData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkDataCapabilityProvider;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 
 import net.minecraft.entity.Entity;
@@ -42,7 +42,7 @@ public class AttachCapabilityEvents {
     public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
-            event.addCapability(ClimateData.ID, new ClimateData());
+            event.addCapability(WorldClimateData.ID, new WorldClimateData());
             
         }
     }
@@ -53,8 +53,8 @@ public class AttachCapabilityEvents {
             World world = event.getObject().getWorld();
             ChunkPos chunkPos = event.getObject().getPos();
             if (!world.isRemote) {
-                if (!event.getCapabilities().containsKey(ChunkDataCapabilityProvider.KEY))
-                    event.addCapability(ChunkDataCapabilityProvider.KEY, new ChunkData(chunkPos));
+                if (!event.getCapabilities().containsKey(ChunkHeatDataCapabilityProvider.KEY))
+                    event.addCapability(ChunkHeatDataCapabilityProvider.KEY, new ChunkHeatData(chunkPos));
             }
         }
     }

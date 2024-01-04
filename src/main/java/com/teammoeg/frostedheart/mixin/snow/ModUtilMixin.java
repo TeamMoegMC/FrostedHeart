@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.mixin.snow;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
@@ -42,7 +42,7 @@ public class ModUtilMixin {
             return false;
         if (world.getLightFor(LightType.BLOCK, pos) > 11)
             return true;
-        if (ChunkData.getTemperature(world, pos) > 0.5)
+        if (ChunkHeatData.getTemperature(world, pos) > 0.5)
             return true;
         Biome biome = world.getBiome(pos);
         return ModUtil.snowMeltsInWarmBiomes(biome) && !ModUtil.isColdAt(world, biome, pos) && world.canSeeSky(pos);

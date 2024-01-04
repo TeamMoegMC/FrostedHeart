@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
@@ -37,7 +37,7 @@ import snownee.snow.Hook;
 public class HookMixin {
     @Inject(at = @At("HEAD"), method = "canSurvive", remap = false, cancellable = true)
     private static void canSurvive(BlockState blockState, IWorldReader world, BlockPos pos, CallbackInfoReturnable<Boolean> cbi) {
-        float t = ChunkData.getTemperature(world, pos);
+        float t = ChunkHeatData.getTemperature(world, pos);
         if (t < WorldClimate.HEMP_GROW_TEMPERATURE || t > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
             cbi.setReturnValue(false);
 

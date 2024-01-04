@@ -24,7 +24,7 @@ import java.util.function.BiPredicate;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
@@ -70,7 +70,7 @@ public class TemperatureLootCondition implements ILootCondition {
             Vector3d v = t.get(LootParameters.ORIGIN);
             BlockPos bp = new BlockPos(v.x, v.y, v.z);
             World w = t.getWorld();
-            return comparator.test(ChunkData.getTemperature(w, bp), temp);
+            return comparator.test(ChunkHeatData.getTemperature(w, bp), temp);
         }
         return false;
     }

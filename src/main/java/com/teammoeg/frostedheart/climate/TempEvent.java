@@ -23,7 +23,7 @@ import static com.teammoeg.frostedheart.climate.WorldClimate.CALM_PERIOD_BASELIN
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T2;
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T3;
-import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T4;
+import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T8;
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_PEAK;
 import static com.teammoeg.frostedheart.climate.WorldClimate.WARM_PERIOD_PEAK;
 
@@ -43,6 +43,7 @@ public class TempEvent {
     public float bottomTemp;
     public long endTime;
     public boolean isCold;
+    public boolean isBlizzard;
     public long calmEndTime;
 
     public TempEvent() {
@@ -50,7 +51,7 @@ public class TempEvent {
     }
 
     public TempEvent(long startTime, long peakTime, float peakTemp, long bottomTime, float bottomTemp, long endTime,
-                     long calmEndTime, boolean isCold) {
+                     long calmEndTime, boolean isCold,boolean isBlizzard) {
         this.startTime = startTime;
         this.peakTime = peakTime;
         this.peakTemp = peakTemp;
@@ -59,6 +60,7 @@ public class TempEvent {
         this.endTime = endTime;
         this.isCold = isCold;
         this.calmEndTime = calmEndTime;
+        this.isBlizzard=isBlizzard;
     }
 
     public CompoundNBT serialize(CompoundNBT cnbt) {
@@ -69,6 +71,7 @@ public class TempEvent {
         cnbt.putFloat("bottomTemp", bottomTemp); // not used when not is cold
         cnbt.putLong("endTime", endTime);
         cnbt.putBoolean("isCold", isCold);
+        cnbt.putBoolean("isBlizzard", isBlizzard);
         cnbt.putLong("calmEndTime", calmEndTime);
         return cnbt;
     }
@@ -81,6 +84,7 @@ public class TempEvent {
         bottomTemp = cnbt.getFloat("bottomTemp");
         endTime = cnbt.getLong("endTime");
         isCold = cnbt.getBoolean("isCold");
+        isBlizzard = cnbt.getBoolean("isBlizzard");
         calmEndTime = cnbt.getLong("calmEndTime");
     }
 
@@ -119,7 +123,7 @@ public class TempEvent {
         Random random = new Random();
         
         long peakTime = 0, bottomTime = 0, endTime = 0; float peakTemp = 0, bottomTemp = 0;
-
+        boolean isBlizzard=false;
         // Cold Period
         if (isCold) {
             long length = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
@@ -131,9 +135,11 @@ public class TempEvent {
             bottomTemp = (float) (random.nextGaussian());
             switch (random.nextInt(10)) {
                 case 0:
-                    bottomTemp += COLD_PERIOD_BOTTOM_T4;
+                    bottomTemp += COLD_PERIOD_BOTTOM_T8;
+                    isBlizzard=true;
                     break;
                 case 1:
+                	isBlizzard=true;
                 case 2:
                     bottomTemp += COLD_PERIOD_BOTTOM_T3;
                     break;
@@ -161,7 +167,7 @@ public class TempEvent {
         long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
         long calmEndTime = endTime + calmLength;
 
-        return new TempEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, isCold);
+        return new TempEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, isCold,isBlizzard);
     }
 
     /**

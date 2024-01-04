@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.TemperatureCore;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
@@ -302,7 +302,7 @@ public class EnergyCore {
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
-            EnergyCore.applySleep(ChunkData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
         }
     }
 }

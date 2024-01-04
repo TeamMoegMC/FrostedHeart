@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.entity.EntityType;
@@ -107,7 +107,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
 			} else if (feeded > 0) {
 				digestTimer = 6000;
 			}
-			float temp = ChunkData.getTemperature(this.getEntityWorld(), this.getPosition());
+			float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
 			if (temp < WorldClimate.ANIMAL_ALIVE_TEMPERATURE
 					|| temp > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
 				if (hxteTimer < 100) {

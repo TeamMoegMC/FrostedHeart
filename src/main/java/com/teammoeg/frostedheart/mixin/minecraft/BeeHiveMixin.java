@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.tileentity.BeehiveTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -39,7 +39,7 @@ public class BeeHiveMixin extends TileEntity {
 
     @Inject(at = @At("HEAD"), method = "tick", cancellable = true)
     public void tick(CallbackInfo cbi) {
-        if (!world.isRemote && ChunkData.getTemperature(world, pos) < 14)
+        if (!world.isRemote && ChunkHeatData.getTemperature(world, pos) < 14)
             cbi.cancel();
     }
 }

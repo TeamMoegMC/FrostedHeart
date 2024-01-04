@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.ClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -96,17 +96,19 @@ public class PlayerEvents {
 					.isItemEqualIgnoreDurability(new ItemStack(FHItems.weatherHelmet));
 			if (configAllows && (hasRadar || hasHelmet)) {
 				// Blizzard warning
-				float thisHour = ClimateData.getTemp(serverPlayer.world);
-				float nextHour = ClimateData.getFutureTemp(serverPlayer.world, 1);
-				if (thisHour >= WorldClimate.BLIZZARD_TEMPERATURE) { // not in blizzard yet
-					if (nextHour < WorldClimate.BLIZZARD_TEMPERATURE) {
+				float thisHour = WorldClimateData.getTemp(serverPlayer.world);
+				boolean thisHourB=WorldClimateData.isBlizzard(serverPlayer.world);
+				float nextHour = WorldClimateData.getFutureTemp(serverPlayer.world, 1);
+				boolean nextHourB=WorldClimateData.isFutureBlizzard(serverPlayer.world, 1);
+				if (!thisHourB) { // not in blizzard yet
+					if (nextHourB) {
 						serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_warning")
 								.mergeStyle(TextFormatting.DARK_RED).mergeStyle(TextFormatting.BOLD), true);
 						// serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
 						// GuiUtils.translateMessage("forecast.blizzard_warning")));
 					}
 				} else { // in blizzard now
-					if (nextHour >= WorldClimate.BLIZZARD_TEMPERATURE) {
+					if (!nextHourB) {
 						serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_retreating")
 								.mergeStyle(TextFormatting.GREEN).mergeStyle(TextFormatting.BOLD), true);
 						// serverPlayer.connection.sendPacket(new STitlePacket(STitlePacket.Type.TITLE,
@@ -116,11 +118,11 @@ public class PlayerEvents {
 
 				// Morning forecast wakeup time
 				if (serverPlayer.world.getDayTime() % 24000 == 40) {
-					float morningTemp = Math.round(ClimateData.getTemp(serverPlayer.world) * 10) / 10.0F;
-					float noonTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F;
-					float nightTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 0, 12) * 10) / 10.0F;
-					float midnightTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
-					float tomorrowMorningTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 1, 0) * 10)
+					float morningTemp = Math.round(WorldClimateData.getTemp(serverPlayer.world) * 10) / 10.0F;
+					float noonTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F;
+					float nightTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 0, 12) * 10) / 10.0F;
+					float midnightTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
+					float tomorrowMorningTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 1, 0) * 10)
 							/ 10.0F;
 					FHTemperatureDisplayPacket.sendStatus(serverPlayer,"forecast.morning",false,morningTemp, noonTemp,
 							nightTemp, midnightTemp, tomorrowMorningTemp);
@@ -128,11 +130,11 @@ public class PlayerEvents {
 							|| noonTemp < WorldClimate.SNOW_TEMPERATURE || nightTemp < WorldClimate.SNOW_TEMPERATURE
 							|| midnightTemp < WorldClimate.SNOW_TEMPERATURE
 							|| tomorrowMorningTemp < WorldClimate.SNOW_TEMPERATURE;
-					boolean blizzard = morningTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| noonTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| nightTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| midnightTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| tomorrowMorningTemp < WorldClimate.BLIZZARD_TEMPERATURE;
+					boolean blizzard = WorldClimateData.isBlizzard(serverPlayer.world)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,0,6)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,0,12)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,0,18)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,1,0);
 					if (blizzard)
 						serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_today"), false);
 					else if (snow)
@@ -143,13 +145,13 @@ public class PlayerEvents {
 
 				// Night forecast bedtime
 				if (serverPlayer.world.getDayTime() % 24000 == 12542) {
-					float nightTemp = Math.round(ClimateData.getTemp(serverPlayer.world) * 10) / 10.0F;
-					float midnightTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F;
-					float tomorrowMorningTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 0, 12) * 10)
+					float nightTemp = Math.round(WorldClimateData.getTemp(serverPlayer.world) * 10) / 10.0F;
+					float midnightTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F;
+					float tomorrowMorningTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 0, 12) * 10)
 							/ 10.0F;
-					float tomorrowNoonTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 0, 18) * 10)
+					float tomorrowNoonTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 0, 18) * 10)
 							/ 10.0F;
-					float tomorrowNightTemp = Math.round(ClimateData.getFutureTemp(serverPlayer.world, 1, 0) * 10)
+					float tomorrowNightTemp = Math.round(WorldClimateData.getFutureTemp(serverPlayer.world, 1, 0) * 10)
 							/ 10.0F;
 					FHTemperatureDisplayPacket.sendStatus(serverPlayer,"forecast.night", false, nightTemp, midnightTemp,
 							tomorrowMorningTemp, tomorrowNoonTemp, tomorrowNightTemp);
@@ -158,11 +160,11 @@ public class PlayerEvents {
 							|| tomorrowMorningTemp < WorldClimate.SNOW_TEMPERATURE
 							|| tomorrowNoonTemp < WorldClimate.SNOW_TEMPERATURE
 							|| tomorrowNightTemp < WorldClimate.SNOW_TEMPERATURE;
-					boolean blizzard = nightTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| midnightTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| tomorrowMorningTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| tomorrowNoonTemp < WorldClimate.BLIZZARD_TEMPERATURE
-							|| tomorrowNightTemp < WorldClimate.BLIZZARD_TEMPERATURE;
+					boolean blizzard = WorldClimateData.isBlizzard(serverPlayer.world)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,0,6)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,0,12)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,0,18)
+							|| WorldClimateData.isFutureBlizzard(serverPlayer.world,1,0);
 					if (blizzard)
 						serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.blizzard_tomorrow"), false);
 					else if (snow)

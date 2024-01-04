@@ -24,6 +24,7 @@ import java.util.Map;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -33,7 +34,7 @@ public class WorldClimate {
     /**
      * Baseline temperature for temperate period.
      */
-    public static final float CALM_PERIOD_BASELINE = -10;
+    public static final float CALM_PERIOD_BASELINE = 0;
 
     /**
      * The temporary uprising peak temperature of a cold period.
@@ -84,7 +85,7 @@ public class WorldClimate {
     /**
      * The temperature when snow becomes blizzard.
      */
-    public static final float BLIZZARD_TEMPERATURE = -18;
+    //public static final float BLIZZARD_TEMPERATURE = -18;
     /**
      * The temperature when cold plant can grow.
      */
@@ -125,19 +126,24 @@ public class WorldClimate {
         if (w instanceof World) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
                 Float fw = FHDataManager.getWorldTemp((World) w);
-                if (fw == null) return 0F;
+                if (fw == null) return -10F;
                 return fw;
             });
 
             // Add dynamic temperature baseline
-            wt += ClimateData.getTemp((World) w);
+            wt += WorldClimateData.getTemp((World) w)*0.25f;
         }
 
         if (temp != null)
             return wt + temp;
         return wt;
     }
-
+    public static boolean isWorldBlizzard(IWorldReader w) {
+    	if (w instanceof World) {
+    		return WorldClimateData.isBlizzard((World) w);
+    	}
+    	return false;
+    }
     public static void clear() {
         worldbuffer.clear();
         biomebuffer.clear();

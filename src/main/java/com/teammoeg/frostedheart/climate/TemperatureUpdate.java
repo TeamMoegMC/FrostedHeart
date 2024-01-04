@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.network.PacketHandler;
@@ -106,7 +106,7 @@ public class TemperatureUpdate {
             //world and chunk temperature
             World world = player.getEntityWorld();
             BlockPos pos = new BlockPos(player.getPosX(),player.getPosYEye(),player.getPosZ());
-            float envtemp = ChunkData.getTemperature(world, pos);
+            float envtemp = ChunkHeatData.getTemperature(world, pos);
             //time temperature
             float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
             float gameTime = world.getDayTime() % 24000L;

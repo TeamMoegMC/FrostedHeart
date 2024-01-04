@@ -23,8 +23,9 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SweetBerryBushBlock;
@@ -73,9 +74,10 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     @Override
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
         int i = state.get(AGE);
-        float temp = ChunkData.getTemperature(worldIn, pos);
-        if (temp < this.growTemperature) {
-            if (temp < this.growTemperature-5&&worldIn.getRandom().nextInt(3) == 0) {
+        float temp = ChunkHeatData.getTemperature(worldIn, pos);
+        boolean bz=WorldClimateData.isBlizzard(worldIn);
+        if (temp < this.growTemperature||bz) {
+            if ((bz||temp < this.growTemperature-5)&&worldIn.getRandom().nextInt(3) == 0) {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
             //我也不知道这玩意干啥用的，我看FHCropBlock里有就加上了
@@ -91,7 +93,7 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
 
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
-        float temp = ChunkData.getTemperature(worldIn, pos);
+        float temp = ChunkHeatData.getTemperature(worldIn, pos);
         return temp >= growTemperature;
     }
 

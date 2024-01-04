@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FlowingFluidBlock;
@@ -41,7 +41,7 @@ public abstract class BiomeMixin {
         if (this.getTemperature(water) >= 0.15F) {
             return false;
         }
-        if (water.getY() >= 0 && water.getY() < 256 && worldIn.getLightFor(LightType.BLOCK, water) < 10 && ChunkData.getTemperature(worldIn, water) < 0) {
+        if (water.getY() >= 0 && water.getY() < 256 && worldIn.getLightFor(LightType.BLOCK, water) < 10 && ChunkHeatData.getTemperature(worldIn, water) < 0) {
             BlockState blockstate = worldIn.getBlockState(water);
             FluidState fluidstate = worldIn.getFluidState(water);
             if (fluidstate.getFluid() == Fluids.WATER && blockstate.getBlock() instanceof FlowingFluidBlock) {

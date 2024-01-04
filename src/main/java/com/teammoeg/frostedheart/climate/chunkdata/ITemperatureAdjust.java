@@ -96,7 +96,7 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
             case 1:
                 return new CubicTemperatureAdjust(buffer);
             case 2:
-                return new PillerTemperatureAdjust(buffer);
+                return new PillarTemperatureAdjust(buffer);
             default:
                 return new CubicTemperatureAdjust(buffer);
         }
@@ -113,7 +113,7 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
             case 1:
                 return new CubicTemperatureAdjust(nc);
             case 2:
-                return new PillerTemperatureAdjust(nc);
+                return new PillarTemperatureAdjust(nc);
             default:
                 return new CubicTemperatureAdjust(nc);
         }

@@ -20,7 +20,7 @@ package com.teammoeg.frostedheart.climate;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.noise.INoise1D;
 
 import net.minecraft.util.math.BlockPos;
@@ -59,7 +59,7 @@ public final class Climate {
      * MUST NOT be used by world generation, it should use {@link Climate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
      */
     public static float getTemperature(IWorld world, BlockPos pos) {
-        return calculateTemperature(pos.getZ(), pos.getY(), ChunkData.getTemperature(world, pos));
+        return calculateTemperature(pos.getZ(), pos.getY(), ChunkHeatData.getTemperature(world, pos));
     }
 
     /**

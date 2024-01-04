@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -96,7 +96,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 
     @Override
     public void disassemble() {
-        ChunkData.removeTempAdjust(world, getPos());
+        ChunkHeatData.removeTempAdjust(world, getPos());
         if (shouldUnique() && master() != null)
             master().unregist();
         super.disassemble();
@@ -171,7 +171,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
             if (!world.isRemote && formed && !isWorking()) {
                 setAllActive(false);
                 onShutDown();
-                ChunkData.removeTempAdjust(world, getPos());
+                ChunkHeatData.removeTempAdjust(world, getPos());
             }
         
         if (!world.isRemote && formed) {
@@ -193,16 +193,16 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	            if (activeBeforeTick != activeAfterTick) {
 	                this.markDirty();
 	                if (activeAfterTick) {
-	                    ChunkData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),getLowerBound(),getActualTemp());
+	                    ChunkHeatData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),getLowerBound(),getActualTemp());
 	                } else {
-	                    ChunkData.removeTempAdjust(world, getPos());
+	                    ChunkHeatData.removeTempAdjust(world, getPos());
 	                }
 	                setAllActive(activeAfterTick);
 	            } else if (activeAfterTick) {
 	                if (isChanged() || !initialized) {
 	                    initialized = true;
 	                    markChanged(false);
-	                    ChunkData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),getLowerBound(), getActualTemp());
+	                    ChunkHeatData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),getLowerBound(), getActualTemp());
 	                }
 	            }
         	}else

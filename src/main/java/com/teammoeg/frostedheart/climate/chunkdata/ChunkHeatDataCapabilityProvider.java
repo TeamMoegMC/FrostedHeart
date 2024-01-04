@@ -28,18 +28,18 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 
-public final class ChunkDataCapabilityProvider {
-    @CapabilityInject(ChunkData.class)
-    public static Capability<ChunkData> CAPABILITY;
+public final class ChunkHeatDataCapabilityProvider {
+    @CapabilityInject(ChunkHeatData.class)
+    public static Capability<ChunkHeatData> CAPABILITY;
     public static final ResourceLocation KEY = new ResourceLocation(FHMain.MODID, "chunk_data");
 
     public static void setup() {
-        CapabilityManager.INSTANCE.register(ChunkData.class, new Capability.IStorage<ChunkData>() {
-            public INBT writeNBT(Capability<ChunkData> capability, ChunkData instance, Direction side) {
+        CapabilityManager.INSTANCE.register(ChunkHeatData.class, new Capability.IStorage<ChunkHeatData>() {
+            public INBT writeNBT(Capability<ChunkHeatData> capability, ChunkHeatData instance, Direction side) {
                 return instance.serializeNBT();
             }
 
-            public void readNBT(Capability<ChunkData> capability, ChunkData instance, Direction side, INBT nbt) {
+            public void readNBT(Capability<ChunkHeatData> capability, ChunkHeatData instance, Direction side, INBT nbt) {
                 instance.deserializeNBT((CompoundNBT) nbt);
             }
         }, () -> {

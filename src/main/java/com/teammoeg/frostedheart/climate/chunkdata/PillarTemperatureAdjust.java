@@ -24,35 +24,35 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 
 /**
- * Spheric Temperature Adjust, would adjust temperature in a ball.
+ * Pillar Temperature Adjust, would adjust temperature in a pillar.
  */
-public class PillerTemperatureAdjust extends CubicTemperatureAdjust {
+public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
 
     long r2;
     int upper;
     int lower;
-    public PillerTemperatureAdjust(int cx, int cy, int cz, int r,int upper,int lower, int value) {
+    public PillarTemperatureAdjust(int cx, int cy, int cz, int r,int upper,int lower, int value) {
         super(cx, cy, cz, r, value);
         r2 = r * r;
         this.upper=upper;
         this.lower=lower;
     }
 
-    public PillerTemperatureAdjust(PacketBuffer buffer) {
+    public PillarTemperatureAdjust(PacketBuffer buffer) {
         super(buffer);
         r2 = r * r;
         this.upper=buffer.readVarInt();
         this.lower=buffer.readVarInt();
     }
 
-    public PillerTemperatureAdjust(CompoundNBT nc) {
+    public PillarTemperatureAdjust(CompoundNBT nc) {
         super(nc);
         r2 = r * r;
         this.upper=nc.getInt("upper");
         this.lower=nc.getInt("lower");
     }
 
-    public PillerTemperatureAdjust(BlockPos heatPos, int range,int u,int d, int tempMod) {
+    public PillarTemperatureAdjust(BlockPos heatPos, int range,int u,int d, int tempMod) {
         super(heatPos, range, tempMod);
         r2 = r * r;
         this.upper=u;
@@ -78,7 +78,7 @@ public class PillerTemperatureAdjust extends CubicTemperatureAdjust {
 
     @Override
     public void serialize(PacketBuffer buffer) {
-        buffer.writeInt(2);
+        buffer.writeVarInt(2);
         serializeData(buffer);
     }
 

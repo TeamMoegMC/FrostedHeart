@@ -26,7 +26,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkData;
+import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
 
 import net.minecraft.command.CommandSource;
@@ -38,11 +38,11 @@ public class AddTempCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
         LiteralArgumentBuilder<CommandSource> add = Commands.literal("set")
                 .then(Commands.argument("position", BlockPosArgument.blockPos()).executes((ct) -> {
-                    ChunkData.removeTempAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
+                    ChunkHeatData.removeTempAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
                     return Command.SINGLE_SUCCESS;
                 }).then(Commands.argument("range", IntegerArgumentType.integer())
                         .then(Commands.argument("temperature", IntegerArgumentType.integer()).executes((ct) -> {
-                            ChunkData.addCubicTempAdjust(ct.getSource().getWorld(),
+                            ChunkHeatData.addCubicTempAdjust(ct.getSource().getWorld(),
                                     BlockPosArgument.getBlockPos(ct, "position"),
                                     IntegerArgumentType.getInteger(ct, "range"),
                                     IntegerArgumentType.getInteger(ct, "temperature"));
@@ -50,7 +50,7 @@ public class AddTempCommand {
                         }))));
         LiteralArgumentBuilder<CommandSource> get = Commands.literal("get")
                 .executes((ct) -> {
-                    Collection<ITemperatureAdjust> adjs = ChunkData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
+                    Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), ct.getSource().asPlayer().getPosition());
                     if (adjs.size() == 0) {
                         ct.getSource().sendFeedback(new StringTextComponent("No Active Adjust!"), true);
                     } else {
@@ -63,7 +63,7 @@ public class AddTempCommand {
                 })
                 .then(Commands.argument("position", BlockPosArgument.blockPos())
                         .executes((ct) -> {
-                            Collection<ITemperatureAdjust> adjs = ChunkData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
+                            Collection<ITemperatureAdjust> adjs = ChunkHeatData.getAdjust(ct.getSource().getWorld(), BlockPosArgument.getBlockPos(ct, "position"));
                             if (adjs.size() == 0) {
                                 ct.getSource().sendFeedback(new StringTextComponent("No Active Adjust!"), true);
                             } else {
