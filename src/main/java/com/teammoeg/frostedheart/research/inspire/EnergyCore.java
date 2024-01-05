@@ -23,13 +23,13 @@ import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.PlayerTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -193,7 +193,7 @@ public class EnergyCore {
             energy -= val;
             data.putLong("energy", energy);
             PlayerTemperature.setFHData(player, data);
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
         }
         
@@ -204,7 +204,7 @@ public class EnergyCore {
             data.putLong("penergy", penergy);
             data.putLong("energy", 0);
             PlayerTemperature.setFHData(player, data);
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
         }
         return false;
@@ -215,7 +215,7 @@ public class EnergyCore {
         long energy = data.getLong("penergy") + val;
         data.putLong("penergy", energy);
         PlayerTemperature.setFHData(player, data);
-        PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
     }
     public static void addExtraEnergy(ServerPlayerEntity player, int val) {
     	
@@ -259,7 +259,7 @@ public class EnergyCore {
         long energy = Math.min(data.getLong("energy") + val,M);
         data.putLong("energy", energy);
         PlayerTemperature.setFHData(player, data);
-        PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
     }
 
     public static boolean hasEnoughEnergy(PlayerEntity player, int val) {

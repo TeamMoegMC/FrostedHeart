@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.events;
 
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -40,7 +40,7 @@ public class FTBTeamsEvents {
 	public FTBTeamsEvents() {
 	}
 	public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
-    	PacketHandler.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
+    	FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
                 new FHResearchDataSyncPacket(
                         FTBTeamsAPI.getPlayerTeam(event.getPlayer())));
     }

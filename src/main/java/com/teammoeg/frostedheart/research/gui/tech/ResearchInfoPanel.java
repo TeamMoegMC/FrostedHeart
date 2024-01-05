@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.data.ResearchData;
@@ -103,7 +103,7 @@ public class ResearchInfoPanel extends Panel {
 	                    Icon.EMPTY) {
 	                @Override
 	                public void onClicked(MouseButton mouseButton) {
-	                    PacketHandler.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
+	                    FHPacketHandler.sendToServer(new FHResearchControlPacket(Operator.COMMIT_ITEM, detailPanel.research));
 	                }
 	            };
 	            panels.add(commitItems);
@@ -115,7 +115,7 @@ public class ResearchInfoPanel extends Panel {
             Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.stop"), Icon.EMPTY) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
-                    PacketHandler.sendToServer(new FHResearchControlPacket(Operator.PAUSE, detailPanel.research));
+                    FHPacketHandler.sendToServer(new FHResearchControlPacket(Operator.PAUSE, detailPanel.research));
                 }
             };
             panels.add(commitItems);
@@ -125,7 +125,7 @@ public class ResearchInfoPanel extends Panel {
             Button commitItems = new TechTextButton(this, GuiUtils.translateGui("research.start"), Icon.EMPTY) {
                 @Override
                 public void onClicked(MouseButton mouseButton) {
-                    PacketHandler.sendToServer(new FHResearchControlPacket(Operator.START, detailPanel.research));
+                    FHPacketHandler.sendToServer(new FHResearchControlPacket(Operator.START, detailPanel.research));
                 }
             };
 
@@ -185,7 +185,7 @@ public class ResearchInfoPanel extends Panel {
                                 Icon.EMPTY) {
                             @Override
                             public void onClicked(MouseButton mouseButton) {
-                                PacketHandler.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
+                                FHPacketHandler.sendToServer(new FHEffectTriggerPacket(detailPanel.research));
                             }
                         };
                         claimRewards.setPos(0, offset);

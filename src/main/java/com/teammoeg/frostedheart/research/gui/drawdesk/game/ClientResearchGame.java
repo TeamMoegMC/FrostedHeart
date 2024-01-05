@@ -25,8 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
 
 import net.minecraft.util.math.BlockPos;
@@ -50,7 +50,7 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
     }
 
     public void init() {
-        PacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp));
+        FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp));
     }
 
     public void deinit() {
@@ -66,13 +66,13 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
             if (rg.addcur == rg.addmax && isTouchable(c1)) {
                 Card c = get(c1);
                 if (c.ct == CardType.ADDING && c.card == 8) {
-                    PacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1));
+                    FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1));
                     return true;
                 }
             }
         } else {
             if (rg.canCombine(c1, c2)) {
-                PacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1, c2));
+                FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1, c2));
                 return true;
             }
         }

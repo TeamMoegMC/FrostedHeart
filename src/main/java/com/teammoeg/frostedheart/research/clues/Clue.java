@@ -23,7 +23,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
@@ -135,7 +135,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     public void sendProgressPacket(Team team) {
         FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team.getId(), this);
         for (ServerPlayerEntity spe : team.getOnlineMembers())
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
     /**

@@ -48,7 +48,6 @@ import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FlowerPotMixin;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
@@ -202,7 +201,7 @@ public class FHMain {
 			}
 		ChunkHeatDataCapabilityProvider.setup();
 		CrashReportExtender.registerCrashCallable(new ClimateCrash());
-		PacketHandler.register();
+		FHPacketHandler.register();
 		WorldClimate.setup();
 		DeathInventoryData.setup();
 		FHBiomes.Biomes();

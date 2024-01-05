@@ -33,10 +33,10 @@ import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
-import com.teammoeg.frostedheart.network.PacketHandler;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -616,7 +616,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             updateHourCache(hours);
             this.updateNewFrames();
             // Send to client if hour increases
-            PacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
+            FHPacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
         }
     }
 

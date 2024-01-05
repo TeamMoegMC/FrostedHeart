@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.PlayerRelationData;
@@ -279,7 +279,7 @@ public class TradeContainer extends Container {
 			relations = data.getRelationShip(pe);
 			succeed = true;
 		}
-		PacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
+		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
 	}
 
 	public void commitTrade(ServerPlayerEntity pe) {
@@ -330,7 +330,7 @@ public class TradeContainer extends Container {
 				order.clear();
 			}
 			this.setData(data, pe);
-			PacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new TradeUpdatePacket(
+			FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new TradeUpdatePacket(
 					data.serializeForSend(new CompoundNBT()), pld.serialize(new CompoundNBT()), relations, true));
 		}
 	}

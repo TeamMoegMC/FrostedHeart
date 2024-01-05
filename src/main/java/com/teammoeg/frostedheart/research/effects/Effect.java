@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.network.PacketHandler;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.research.AutoIDItem;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -113,7 +113,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     public void sendProgressPacket(Team team) {
         FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team.getId(), this);
         for (ServerPlayerEntity spe : team.getOnlineMembers())
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
     /**

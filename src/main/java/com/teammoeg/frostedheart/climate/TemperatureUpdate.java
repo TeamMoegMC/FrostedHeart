@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
@@ -203,7 +203,7 @@ public class TemperatureUpdate {
                 current = 10;
             float lenvtemp=PlayerTemperature.getEnvTemperature(player);//get a smooth change in display
             PlayerTemperature.setTemperature(player, current, (envtemp + 37)*.2f+lenvtemp*.8f);
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }
     }
 

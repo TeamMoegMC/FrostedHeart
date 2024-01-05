@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.trade.gui;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.network.PacketHandler;
 import com.teammoeg.frostedheart.research.gui.FakeSlot;
 import com.teammoeg.frostedheart.research.gui.RTextField;
 import com.teammoeg.frostedheart.research.gui.SwitchButton;
@@ -121,7 +121,7 @@ public class TradeScreen extends BaseScreen {
 			@Override
 			public void onClicked(MouseButton arg0) {
 				if (bargain.isEnabled()) {
-					PacketHandler.sendToServer(new BargainRequestPacket(cx.order));
+					FHPacketHandler.sendToServer(new BargainRequestPacket(cx.order));
 				}
 			}
 
@@ -131,7 +131,7 @@ public class TradeScreen extends BaseScreen {
 			@Override
 			public void onClicked(MouseButton arg0) {
 				if (trade.isEnabled()) {
-					PacketHandler.sendToServer(new TradeCommitPacket(cx.order));
+					FHPacketHandler.sendToServer(new TradeCommitPacket(cx.order));
 				}
 			}
 
