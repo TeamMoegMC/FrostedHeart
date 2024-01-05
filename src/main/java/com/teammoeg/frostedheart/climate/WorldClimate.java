@@ -34,7 +34,7 @@ public class WorldClimate {
     /**
      * Baseline temperature for temperate period.
      */
-    public static final float CALM_PERIOD_BASELINE = 0;
+    public static final float CALM_PERIOD_BASELINE = -10;
 
     /**
      * The temporary uprising peak temperature of a cold period.
@@ -49,16 +49,16 @@ public class WorldClimate {
     /**
      * The bottom temperature of a cold period.
      */
-    public static final float COLD_PERIOD_BOTTOM_T1 = -15;
-    public static final float COLD_PERIOD_BOTTOM_T2 = -20;
-    public static final float COLD_PERIOD_BOTTOM_T3 = -30;
-    public static final float COLD_PERIOD_BOTTOM_T4 = -40;
-    public static final float COLD_PERIOD_BOTTOM_T5 = -50;
-    public static final float COLD_PERIOD_BOTTOM_T6 = -60;
-    public static final float COLD_PERIOD_BOTTOM_T7 = -70;
-    public static final float COLD_PERIOD_BOTTOM_T8 = -80;
-    public static final float COLD_PERIOD_BOTTOM_T9 = -90;
-    public static final float COLD_PERIOD_BOTTOM_T10 = -100;
+    public static final float COLD_PERIOD_BOTTOM_T1 = -5;
+    public static final float COLD_PERIOD_BOTTOM_T2 = -10;
+    public static final float COLD_PERIOD_BOTTOM_T3 = -20;
+    public static final float COLD_PERIOD_BOTTOM_T4 = -30;
+    public static final float COLD_PERIOD_BOTTOM_T5 = -40;
+    public static final float COLD_PERIOD_BOTTOM_T6 = -50;
+    public static final float COLD_PERIOD_BOTTOM_T7 = -60;
+    public static final float COLD_PERIOD_BOTTOM_T8 = -70;
+    public static final float COLD_PERIOD_BOTTOM_T9 = -80;
+    public static final float COLD_PERIOD_BOTTOM_T10 = -90;
     public static final float[] BOTTOMS=new float[] {
     		COLD_PERIOD_BOTTOM_T1,
     		COLD_PERIOD_BOTTOM_T2,

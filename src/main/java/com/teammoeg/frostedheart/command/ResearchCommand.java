@@ -29,14 +29,18 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.research.Research;
 
+import dev.ftb.mods.ftbteams.FTBTeamsAPI;
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.NBTTagArgument;
+import net.minecraft.command.arguments.UUIDArgument;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.text.StringTextComponent;
@@ -75,6 +79,13 @@ public class ResearchCommand {
                     ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
+                .then(Commands.literal("transfer").then(Commands.argument("from", UUIDArgument.func_239194_a_())
+                		.then(Commands.argument("to", UUIDArgument.func_239194_a_())).executes(ct->{
+                			Team team=FTBTeamsAPI.getManager().getTeamByID(UUIDArgument.func_239195_a_(ct, "to"));
+                			FHResearchDataManager.INSTANCE.transfer(UUIDArgument.func_239195_a_(ct, "from"),team);
+                			ct.getSource().sendFeedback(new StringTextComponent("Transfered to " + team.getDisplayName()).mergeStyle(TextFormatting.GREEN), false);
+                            return Command.SINGLE_SUCCESS;
+                		})))
                 .then(Commands.literal("edit").then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {
                     FHResearch.editor = ct.getArgument("enable", Boolean.class);
                     ct.getSource().sendFeedback(new StringTextComponent("Editing mode set " + String.valueOf(FHResearch.editor)).mergeStyle(TextFormatting.GREEN), false);

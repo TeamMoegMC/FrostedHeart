@@ -148,6 +148,9 @@ public class FHMain {
 		FHParticleTypes.REGISTER.register(mod);
 		FHBiomes.BIOME_REGISTER.register(mod);
 		TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
+		TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
+		TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
+		TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
 //        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
 		ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
 		DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);

@@ -614,7 +614,7 @@ public class CommonEvents {
             
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHResearchDataSyncPacket(
-                            FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer()).getId()));
+                            FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));
             serverWorld.getCapability(WorldClimateData.CAPABILITY).ifPresent((cap) -> {
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                         new FHClimatePacket(cap));

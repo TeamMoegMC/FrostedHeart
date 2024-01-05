@@ -520,13 +520,13 @@ public class WorldClimateData implements ICapabilitySerializable<CompoundNBT> {
     }
     public List<TemperatureFrame> getFrames(int min,int max) {
     	List<TemperatureFrame> frames=new ArrayList<>();
-    	float lastTemp=WorldClimate.CALM_PERIOD_BASELINE;
+    	float lastTemp=0;
     	int i=0;
     	int lastlevel=0;
         for (float f:getFutureTempIterator(this,min)) {
         	if(i>=max)break;
             if(lastTemp>f) {//when temperature decreasing
-            	if(f<WorldClimate.CALM_PERIOD_BASELINE-1) {//if lower than base line
+            	if(f<0-1) {//if lower than base line
 	            	for(int j=Math.max(0,-lastlevel);j<WorldClimate.BOTTOMS.length-1;j++) {//check out its level
 	            		float b=WorldClimate.BOTTOMS[j];
 	            		if(b<f)break;
@@ -539,12 +539,12 @@ public class WorldClimateData implements ICapabilitySerializable<CompoundNBT> {
             	}else if(f<=WorldClimate.WARM_PERIOD_PEAK-2&&lastlevel>1) {//check out if its just go down from level 2
             		lastlevel=1;
             		frames.add(TemperatureFrame.calm(i,1));
-            	}else if(f<=WorldClimate.CALM_PERIOD_BASELINE+5&&lastlevel>0) {//check out if its just go back to calm
+            	}else if(f<=0+5&&lastlevel>0) {//check out if its just go back to calm
             		lastlevel=0;
             		frames.add(TemperatureFrame.calm(i,0));
             	}
             }else if(f>lastTemp) {//when temperature increasing
-            	if(f<WorldClimate.CALM_PERIOD_BASELINE-1&&lastlevel<0) {//if lower than base line
+            	if(f<0-1&&lastlevel<0) {//if lower than base line
             		for(int j=Math.max(0,-lastlevel-1);j>0;j--) {//check out its level
 	            		float b=WorldClimate.BOTTOMS[j];
 	            		if(b>f)break;
@@ -555,13 +555,13 @@ public class WorldClimateData implements ICapabilitySerializable<CompoundNBT> {
 	            		}
 	            	}
             		
-            	}else if(f<=WorldClimate.CALM_PERIOD_BASELINE+5&&lastlevel<0) {
+            	}else if(f<=0+5&&lastlevel<0) {
             		lastlevel=0;
             		frames.add(TemperatureFrame.calm(i,0));
             	}else if(f>WorldClimate.WARM_PERIOD_PEAK-2&&lastlevel<2) {
             		lastlevel=2;
             		frames.add(TemperatureFrame.increase(i,2));
-            	}else if(f>WorldClimate.CALM_PERIOD_BASELINE+5&&lastlevel<1) {
+            	}else if(f>0+5&&lastlevel<1) {
             		lastlevel=1;
             		frames.add(TemperatureFrame.increase(i,1));
             	}

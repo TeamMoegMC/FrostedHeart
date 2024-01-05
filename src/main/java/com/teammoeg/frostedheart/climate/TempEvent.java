@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import static com.teammoeg.frostedheart.climate.WorldClimate.CALM_PERIOD_BASELINE;
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T2;
 import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T3;
@@ -183,25 +182,25 @@ public class TempEvent {
 
         if (isCold) {
             if (t >= startTime && t < peakTime) {
-                return getPiecewiseTemp(t, startTime, peakTime, CALM_PERIOD_BASELINE, peakTemp, 0, 0);
+                return getPiecewiseTemp(t, startTime, peakTime, 0, peakTemp, 0, 0);
             } else if (t >= peakTime && t < bottomTime) {
                 return getPiecewiseTemp(t, peakTime, bottomTime, peakTemp, bottomTemp, 0, 0);
             } else if (t >= bottomTime && t < endTime) {
-                return getPiecewiseTemp(t, bottomTime, endTime, bottomTemp, CALM_PERIOD_BASELINE, 0, 0);
+                return getPiecewiseTemp(t, bottomTime, endTime, bottomTemp, 0, 0, 0);
             } else if (t >= endTime && t <= calmEndTime) {
-                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+                return 0 + (float) (random.nextGaussian());
             } else {
-                return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+                return 0 + (float) (random.nextGaussian());
             }
         }
 		if (t >= startTime && t < peakTime) {
-		    return getPiecewiseTemp(t, startTime, peakTime, CALM_PERIOD_BASELINE, peakTemp, 0, 0);
+		    return getPiecewiseTemp(t, startTime, peakTime, 0, peakTemp, 0, 0);
 		} else if (t >= peakTime && t < endTime) {
-		    return getPiecewiseTemp(t, peakTime, endTime, peakTemp, CALM_PERIOD_BASELINE, 0, 0);
+		    return getPiecewiseTemp(t, peakTime, endTime, peakTemp, 0, 0, 0);
 		} else if (t >= endTime && t <= calmEndTime) {
-		    return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+		    return 0 + (float) (random.nextGaussian());
 		} else {
-		    return CALM_PERIOD_BASELINE + (float) (random.nextGaussian());
+		    return 0 + (float) (random.nextGaussian());
 		}
 
     }

@@ -37,14 +37,14 @@ public class ResearchDataAPI {
 
     public static TeamResearchData getData(PlayerEntity id) {
     	if(id instanceof ServerPlayerEntity)
-    		return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id).getId());
+    		return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id));
     	return TeamResearchData.getClientInstance();
 
     }
 
     public static boolean isResearchComplete(PlayerEntity id,String research) {
     	if(id instanceof ServerPlayerEntity)
-    		return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id).getId()).getData(research).isCompleted();
+    		return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id)).getData(research).isCompleted();
     	return TeamResearchData.getClientInstance().getData(research).isCompleted();
     }
     public static TeamResearchData getData(UUID id) {
@@ -54,7 +54,7 @@ public class ResearchDataAPI {
 
     public static CompoundNBT getVariants(PlayerEntity id) {
     	if(id instanceof ServerPlayerEntity)
-        return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id).getId()).getVariants();
+        return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id)).getVariants();
     	return TeamResearchData.getClientInstance().getVariants();
 
     }
@@ -65,7 +65,7 @@ public class ResearchDataAPI {
     }
     public static long getVariantLong(PlayerEntity id,ResearchVariant name) {
     	if(id instanceof ServerPlayerEntity)
-        return getVariantLong(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id).getId(),name);
+        return getVariantLong(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id),name);
     	return TeamResearchData.getClientInstance().getVariants().getLong(name.getToken());
 
     }

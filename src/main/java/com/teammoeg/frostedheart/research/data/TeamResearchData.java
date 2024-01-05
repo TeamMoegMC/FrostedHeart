@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.data;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -55,14 +56,15 @@ import net.minecraftforge.fml.network.PacketDistributor;
 /**
  * Class TeamResearchData.
  *
- * This stores all data for research, restrcitions, locks, clues and points data.
+ * This stores all data for research, restrictions, locks, clues and points data.
  * This data is available for both team and player.
  * @author khjxiaogu
  * @date 2022/9/2
  */
 public class TeamResearchData {
     private static TeamResearchData INSTANCE = new TeamResearchData(null);
-    
+    UUID id;
+    String ownerName;
     /** The clue complete.<br> */
     BitSet clueComplete = new BitSet();
     
@@ -98,6 +100,7 @@ public class TeamResearchData {
      */
     public TeamResearchData(Supplier<Team> team) {
         this.team = team;
+        this.id=UUID.randomUUID();
     }
 
     /**
@@ -110,7 +113,18 @@ public class TeamResearchData {
             return Optional.empty();
         return Optional.ofNullable(team.get());
     }
+    public void setTeam(Supplier<Team> team) {
+		this.team = team;
+	}
 
+	/**
+     * Get id.
+     * Use this to identify research data as this may transfer across teams.
+     * @return team<br>
+     */
+    public UUID getId() {
+        return id;
+    }
     /**
      * Trigger clue, this would send packets and check current research's completion status if completed.
      *
@@ -437,10 +451,12 @@ public class TeamResearchData {
         nbt.putLongArray("clues", clueComplete.toLongArray());
         nbt.putLongArray("effects",grantedEffects.toLongArray());
         nbt.put("vars", variants);
+        nbt.putString("owner", ownerName);
         ListNBT rs = new ListNBT();
         rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(e -> rs.add(e));
         nbt.put("researches", rs);
         nbt.putInt("active", activeResearchId);
+        nbt.putUniqueId("uuid", id);
         // these data does not send to client
         //if (!updatePacket) {
         //nbt.put("crafting", crafting.serialize());
@@ -450,7 +466,15 @@ public class TeamResearchData {
         return nbt;
     }
 
-    /**
+    public String getOwnerName() {
+		return ownerName;
+	}
+
+	public void setOwnerName(String ownerName) {
+		this.ownerName = ownerName;
+	}
+
+	/**
      * get Variants for team, used to provide stats upgrade
      * Current:
      * maxEnergy| max Energy increasement
@@ -507,7 +531,11 @@ public class TeamResearchData {
             if (grantedEffects.get(i))
                 FHResearch.effects.runIfPresent(i + 1, e -> e.grant(this, null, true));
         }
+        if(data.contains("owner"))
+        	ownerName = data.getString("owner");
         variants = data.getCompound("vars");
+        if(data.contains("uuid"))
+        	id=data.getUniqueId("uuid");
         ListNBT li = data.getList("researches", 10);
         activeResearchId = data.getInt("active");
         for (int i = 0; i < li.size(); i++) {
