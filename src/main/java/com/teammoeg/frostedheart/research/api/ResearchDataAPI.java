@@ -65,7 +65,7 @@ public class ResearchDataAPI {
     }
     public static long getVariantLong(PlayerEntity id,ResearchVariant name) {
     	if(id instanceof ServerPlayerEntity)
-        return getVariantLong(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id),name);
+        return getVariantLong(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)id).getId(),name);
     	return TeamResearchData.getClientInstance().getVariants().getLong(name.getToken());
 
     }
