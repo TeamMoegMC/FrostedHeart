@@ -106,13 +106,20 @@ public class TemperatureUpdate {
             //world and chunk temperature
             World world = player.getEntityWorld();
             BlockPos pos = new BlockPos(player.getPosX(),player.getPosYEye(),player.getPosZ());
-            float envtemp = ChunkHeatData.getTemperature(world, pos);
-            //time temperature
+            
+            //Temperature from generators
+            float envtemp = ChunkHeatData.getAdditionTemperature(world, pos);
+            //Temperature from world basis and biome basis
+            envtemp+=WorldClimate.getWorldBaseTemperature(world, pos);
+            //Temperature from climate
+            envtemp+=WorldClimateData.getTemp(world);
+            //Surrounding temperature 
+            float bt=TemperatureCore.getBlockTemp(player);
+            //Day-night temperature
             float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
             float gameTime = world.getDayTime() % 24000L;
             gameTime = gameTime / (200 / 3);
             gameTime = MathHelper.sin((float) Math.toRadians(gameTime));
-            float bt=TemperatureCore.getBlockTemp(player);
             envtemp += bt;
             envtemp += skyLight > 5.0F ?
             		(world.isRaining() ?

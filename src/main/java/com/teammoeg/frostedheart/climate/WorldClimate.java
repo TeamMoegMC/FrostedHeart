@@ -44,7 +44,7 @@ public class WorldClimate {
     /**
      * The peak temperature of a warm period.
      */
-    public static final float WARM_PERIOD_PEAK = -2;
+    public static final float WARM_PERIOD_PEAK = 8;
 
     /**
      * The bottom temperature of a cold period.
@@ -134,6 +134,29 @@ public class WorldClimate {
             wt += WorldClimateData.getTemp((World) w)*0.25f;
         }
 
+        if (temp != null)
+            return wt + temp;
+        return wt;
+    }
+    /**
+     * Get World temperature for a specific world, affected by weather and so on
+     *
+     * @param w the world<br>
+     * @return world temperature<br>
+     */
+    public static float getWorldBaseTemperature(IWorldReader w, BlockPos pos) {
+    	Biome b=w.getBiome(pos);
+        Float temp =null;
+        if(b!=null)
+        	temp=biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+        float wt = 0;
+        if (w instanceof World) {
+            wt = worldbuffer.computeIfAbsent(w, (k) -> {
+                Float fw = FHDataManager.getWorldTemp((World) w);
+                if (fw == null) return -10F;
+                return fw;
+            });
+        }
         if (temp != null)
             return wt + temp;
         return wt;

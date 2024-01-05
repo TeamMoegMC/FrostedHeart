@@ -58,6 +58,15 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
     public static float getTemperature(IWorldReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
     }
+    /**
+     * Called to get temperature when a world context is available.
+     * on server, will either query capability falling back to cache, or query
+     * provider to generate the data.
+     * This method directly get temperature at any positions.
+     */
+    public static float getAdditionTemperature(IWorldReader world, BlockPos pos) {
+        return get(world, new ChunkPos(pos)).getAdditionTemperatureAtBlock(world, pos);
+    }
 
     /**
      * Called to get temperature adjusts at location when a world context is available.
@@ -355,7 +364,24 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
     public ChunkPos getPos() {
         return pos;
     }
-
+    /**
+     * Get Temperature in a world at a location
+     *
+     * @param world world in
+     * @param pos   position
+     */
+    float getAdditionTemperatureAtBlock(IWorldReader world, BlockPos pos) {
+        if (adjusters.isEmpty()) return 0;
+        float ret = 0, tmp;
+        for (ITemperatureAdjust adj : adjusters) {
+            if (adj.isEffective(pos)) {
+                tmp = adj.getValueAt(pos);
+                if (tmp > ret)
+                    ret = tmp;
+            }
+        }
+        return ret;
+    }
     /**
      * Get Temperature in a world at a location
      *
