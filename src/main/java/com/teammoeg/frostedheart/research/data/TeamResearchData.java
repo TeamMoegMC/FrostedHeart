@@ -451,7 +451,8 @@ public class TeamResearchData {
         nbt.putLongArray("clues", clueComplete.toLongArray());
         nbt.putLongArray("effects",grantedEffects.toLongArray());
         nbt.put("vars", variants);
-        nbt.putString("owner", ownerName);
+        if(ownerName!=null)
+        	nbt.putString("owner", ownerName);
         ListNBT rs = new ListNBT();
         rdata.stream().map(e -> e != null ? e.serialize() : new CompoundNBT()).forEach(e -> rs.add(e));
         nbt.put("researches", rs);

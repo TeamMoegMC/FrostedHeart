@@ -45,6 +45,7 @@ import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.world.storage.FolderName;
 
 public class FHResearchDataManager {
@@ -85,8 +86,15 @@ public class FHResearchDataManager {
 		}
 		cn = data.computeIfAbsent(team.getId(),
 				c -> new TeamResearchData(() -> team));
-		if(cn.getOwnerName()==null)
-			cn.setOwnerName(server.getPlayerProfileCache().getProfileByUUID(team.getOwner()).getName());
+		if(cn.getOwnerName()==null) {
+			PlayerProfileCache cache=server.getPlayerProfileCache();
+			if(cache!=null) {
+				GameProfile gp=cache.getProfileByUUID(team.getOwner());
+				if(gp!=null) {
+					cn.setOwnerName(gp.getName());
+				}
+			}
+		}
 		return cn;
 
 	}
