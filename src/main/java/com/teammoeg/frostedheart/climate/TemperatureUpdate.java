@@ -25,9 +25,9 @@ import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;

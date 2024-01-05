@@ -19,10 +19,10 @@
 package com.teammoeg.frostedheart.network;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.network.climate.FHBodyDataSyncPacket;
-import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
-import com.teammoeg.frostedheart.network.climate.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
+import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
+import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
+import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;

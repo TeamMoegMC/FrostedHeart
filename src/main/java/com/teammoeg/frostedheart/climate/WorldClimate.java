@@ -34,9 +34,9 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
 import com.teammoeg.frostedheart.network.PacketHandler;
-import com.teammoeg.frostedheart.network.climate.FHClimatePacket;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;

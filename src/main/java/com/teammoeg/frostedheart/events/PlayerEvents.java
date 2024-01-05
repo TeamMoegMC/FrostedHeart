@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.entity.EntitySpawnPlacementRegistry;

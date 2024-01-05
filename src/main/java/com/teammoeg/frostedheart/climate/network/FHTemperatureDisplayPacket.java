@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.network.climate;
+package com.teammoeg.frostedheart.climate.network;
 
 import java.util.Collection;
 import java.util.function.Supplier;
