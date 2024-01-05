@@ -23,8 +23,8 @@ import java.util.function.BiFunction;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import net.minecraft.block.Block;
@@ -80,12 +80,12 @@ public class FHCropBlock extends CropsBlock {
         if (worldIn.getLightSubtracted(pos, 0) >= 9) {
             int i = this.getAge(state);
             float temp = ChunkHeatData.getTemperature(worldIn, pos);
-            boolean bz=WorldClimateData.isBlizzard(worldIn);
+            boolean bz=WorldClimate.isBlizzard(worldIn);
             if (temp < growTemperature||bz) {
                 if ((bz||temp < growTemperature-10)&&worldIn.getRandom().nextInt(3) == 0) {
                     worldIn.setBlockState(pos, this.getDefaultState(), 2);
                 }
-            }else if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+            }else if(temp>WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
             	if (worldIn.getRandom().nextInt(3) == 0) {
                     worldIn.setBlockState(pos, this.getDefaultState(), 2);
                 }

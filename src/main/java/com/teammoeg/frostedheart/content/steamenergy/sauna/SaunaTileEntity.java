@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.climate.PlayerTemperature;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
@@ -296,9 +296,9 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             p.addPotionEffect(new EffectInstance(FHEffects.SAUNA, 23000, 0, true, false));
         }
         // add temperature
-        float lenvtemp = TemperatureCore.getEnvTemperature(p);//get a smooth change in display
-        float lbodytemp = TemperatureCore.getBodyTemperature(p);
-        TemperatureCore.setTemperature(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
+        float lenvtemp = PlayerTemperature.getEnvTemperature(p);//get a smooth change in display
+        float lbodytemp = PlayerTemperature.getBodyTemperature(p);
+        PlayerTemperature.setTemperature(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
         // add medical effect
         if (hasMedicine() && remainTime == 1) {
             p.addPotionEffect(getEffectInstance());

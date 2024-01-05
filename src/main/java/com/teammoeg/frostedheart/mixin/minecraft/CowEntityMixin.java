@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 import com.teammoeg.frostedheart.util.mixin.IMilkable;
@@ -119,12 +119,12 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
 				digestTimer = 14400;
 			}
 			float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
-			if (temp < WorldClimate.ANIMAL_ALIVE_TEMPERATURE
-					|| temp > WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+			if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
+					|| temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
 				if (hxteTimer < 100) {
 					hxteTimer++;
 				} else {
-					if (temp > WorldClimate.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
+					if (temp > WorldTemperature.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
 						if (((IFeedStore) this).consumeFeed()) {
 							hxteTimer = -7900;
 							return;

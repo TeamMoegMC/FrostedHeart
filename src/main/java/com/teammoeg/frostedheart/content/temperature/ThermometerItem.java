@@ -22,7 +22,7 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.climate.PlayerTemperature;
 import com.teammoeg.frostedheart.network.climate.FHTemperatureDisplayPacket;
 
 import net.minecraft.client.util.ITooltipFlag;
@@ -66,7 +66,7 @@ public class ThermometerItem extends FHBaseItem {
     }
 
     public int getTemperature(ServerPlayerEntity p) {
-        return (int) (TemperatureCore.getBodyTemperature(p) * 10);
+        return (int) (PlayerTemperature.getBodyTemperature(p) * 10);
     }
 
     @Override

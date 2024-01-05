@@ -45,7 +45,7 @@ import net.minecraft.world.server.ServerWorld;
  * @author khjxiaogu
  * @author Alphagem618
  */
-public class TemperatureSimulator {
+public class SurroundingTemperatureSimulator {
 	public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
 	public static final int range = 8;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
 										// of sections is 8
@@ -106,7 +106,7 @@ public class TemperatureSimulator {
 	public Map<BlockState, CachedBlockInfo> info = new HashMap<>();// state to info cache
 	public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();// position to info cache
 
-	public TemperatureSimulator(ServerPlayerEntity player) {
+	public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
 		int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosYEye(), sourceZ = (int) player.getPosZ();
 		// System.out.println(sourceX+","+sourceY+","+sourceZ);
 		// these are block position offset

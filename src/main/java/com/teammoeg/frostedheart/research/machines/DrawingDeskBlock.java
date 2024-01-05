@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.climate.PlayerTemperature;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
@@ -181,7 +181,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
             if (!player.isCreative() && worldIn.getLight(pos) < 8) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
             }
-            else if (!player.isCreative() && TemperatureCore.getBodyTemperature(player) < -0.2) {
+            else if (!player.isCreative() && PlayerTemperature.getBodyTemperature(player) < -0.2) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_cold"), true);
             }
             else {

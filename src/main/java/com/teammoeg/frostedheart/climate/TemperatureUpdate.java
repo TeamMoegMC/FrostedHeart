@@ -96,7 +96,7 @@ public class TemperatureUpdate {
                     player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
             }
             //load current data
-            float current = TemperatureCore.getBodyTemperature(player);
+            float current = PlayerTemperature.getBodyTemperature(player);
             double tspeed = FHConfig.SERVER.tempSpeed.get();
             if (current < 0) {
             	float delt=(float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
@@ -110,11 +110,11 @@ public class TemperatureUpdate {
             //Temperature from generators
             float envtemp = ChunkHeatData.getAdditionTemperature(world, pos);
             //Temperature from world basis and biome basis
-            envtemp+=WorldClimate.getWorldBaseTemperature(world, pos);
+            envtemp+=WorldTemperature.getBaseTemperature(world, pos);
             //Temperature from climate
-            envtemp+=WorldClimateData.getTemp(world);
+            envtemp+=WorldTemperature.getClimateTemperature(world);
             //Surrounding temperature 
-            float bt=TemperatureCore.getBlockTemp(player);
+            float bt=PlayerTemperature.getBlockTemp(player);
             //Day-night temperature
             float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
             float gameTime = world.getDayTime() % 24000L;
@@ -201,8 +201,8 @@ public class TemperatureUpdate {
                 current = -10;
             else if (current > 10)
                 current = 10;
-            float lenvtemp=TemperatureCore.getEnvTemperature(player);//get a smooth change in display
-            TemperatureCore.setTemperature(player, current, (envtemp + 37)*.2f+lenvtemp*.8f);
+            float lenvtemp=PlayerTemperature.getEnvTemperature(player);//get a smooth change in display
+            PlayerTemperature.setTemperature(player, current, (envtemp + 37)*.2f+lenvtemp*.8f);
             PacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }
     }
@@ -217,7 +217,7 @@ public class TemperatureUpdate {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            double calculatedTarget = TemperatureCore.getBodyTemperature(player);
+            double calculatedTarget = PlayerTemperature.getBodyTemperature(player);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
                     if (!player.isPotionActive(FHEffects.HYPERTHERMIA)

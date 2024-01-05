@@ -25,7 +25,7 @@ import java.util.Random;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import blusunrize.immersiveengineering.common.blocks.plant.EnumHempGrowth;
@@ -74,7 +74,7 @@ public class HempBlockMixin {
         if (light >= 12) {
             // FH Starts
             float temp = ChunkHeatData.getTemperature(world, pos);
-            if (temp < WorldClimate.HEMP_GROW_TEMPERATURE) {
+            if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
                 return;
             }
             // FH Ends

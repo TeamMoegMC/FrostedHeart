@@ -30,13 +30,13 @@ import net.minecraft.nbt.CompoundNBT;
  * @author yuesha-yc
  * @author khjxiaogu
  */
-public class TemperatureCore {
+public class PlayerTemperature {
 
 	public static float getBlockTemp(ServerPlayerEntity spe) {
 		/*long time = System.nanoTime();
 		try {*/
 
-		return new TemperatureSimulator(spe).getBlockTemperature(spe.getPosX(), spe.getPosYEye(), spe.getPosZ());
+		return new SurroundingTemperatureSimulator(spe).getBlockTemperature(spe.getPosX(), spe.getPosYEye(), spe.getPosZ());
 
 		/*} finally {
 			long delta = System.nanoTime() - time;

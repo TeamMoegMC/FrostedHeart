@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import com.alcatrazescapee.primalwinter.Config;
 import com.alcatrazescapee.primalwinter.util.WeatherData;
-import com.teammoeg.frostedheart.climate.WorldClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 
 import net.minecraft.world.GameRules;
 import net.minecraft.world.server.ServerWorld;
@@ -44,7 +44,7 @@ public class WeatherDataMixin {
             if (Config.COMMON.isWinterDimension(world.getDimensionKey().getLocation())) {
                 world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(true, world.getServer());
                 //world.setWeather(0, 64000, true, true);
-                WorldClimateData.get(world).addInitTempEvent(world);
+                WorldClimate.get(world).addInitTempEvent(world);
             }
         }
     }

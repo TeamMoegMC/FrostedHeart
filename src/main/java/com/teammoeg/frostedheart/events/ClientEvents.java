@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
-import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.climate.PlayerTemperature;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
@@ -353,7 +353,7 @@ public class ClientEvents {
 		}
 		if (itf != null) {
 			float temp = itf.getHeat(stack,
-					event.getPlayer() == null ? 37 : TemperatureCore.getEnvTemperature(event.getPlayer())) * tspeed;
+					event.getPlayer() == null ? 37 : PlayerTemperature.getEnvTemperature(event.getPlayer())) * tspeed;
 			temp = (Math.round(temp * 1000)) / 1000.0F;// round
 			if (temp != 0)
 				if (temp > 0)
@@ -393,12 +393,12 @@ public class ClientEvents {
 		if (event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && player != null) {
 
 			if (!player.isCreative() && !player.isSpectator()) {
-				if (TemperatureCore.getBodyTemperature(player) <= -0.5) {
+				if (PlayerTemperature.getBodyTemperature(player) <= -0.5) {
 					FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
-				} else if (TemperatureCore.getBodyTemperature(player) >= 0.5) {
+				} else if (PlayerTemperature.getBodyTemperature(player) >= 0.5) {
 					FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, player);
 				}
-				if (TemperatureCore.getBodyTemperature(player) <= -1.0) {
+				if (PlayerTemperature.getBodyTemperature(player) <= -1.0) {
 					FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, player);
 				}
 			}

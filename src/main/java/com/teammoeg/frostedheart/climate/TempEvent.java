@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T1;
-import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T2;
-import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T3;
-import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_BOTTOM_T8;
-import static com.teammoeg.frostedheart.climate.WorldClimate.COLD_PERIOD_PEAK;
-import static com.teammoeg.frostedheart.climate.WorldClimate.WARM_PERIOD_PEAK;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T1;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T2;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T3;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T8;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_PEAK;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.WARM_PERIOD_PEAK;
 
 import java.util.Random;
 
@@ -103,7 +103,7 @@ public class TempEvent {
      * Warm periods lasts 2-7 days.
      * Temperature will slowly rise to a peak around 50% into the cold period.
      *
-     * For more details regarding the numerical values mentioned above, see {@link WorldClimate}.
+     * For more details regarding the numerical values mentioned above, see {@link WorldTemperature}.
      *
      * @param startTime the start timestamp of next cold/warm-calm period, in seconds.
      * @return a new TempEvent.

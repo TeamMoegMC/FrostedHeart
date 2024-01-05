@@ -34,8 +34,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.client.DynamicModelSetup;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
-import com.teammoeg.frostedheart.climate.WorldClimateData;
-import com.teammoeg.frostedheart.climate.TemperatureSimulator;
+import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.compat.CreateCompat;
@@ -203,12 +203,12 @@ public class FHMain {
 		ChunkHeatDataCapabilityProvider.setup();
 		CrashReportExtender.registerCrashCallable(new ClimateCrash());
 		PacketHandler.register();
-		WorldClimateData.setup();
+		WorldClimate.setup();
 		DeathInventoryData.setup();
 		FHBiomes.Biomes();
 		FHStructures.registerStructureGenerate();
 		FHFeatures.initFeatures();
-		TemperatureSimulator.init();
+		SurroundingTemperatureSimulator.init();
 		// modify default value
 		GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
 

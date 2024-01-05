@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.climate.TemperatureCore;
+import com.teammoeg.frostedheart.climate.PlayerTemperature;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -54,10 +54,10 @@ public class FHEnergyDataSyncPacket {
             // Update client-side nbt
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (player != null) {
-                CompoundNBT data = TemperatureCore.getFHData(player);
+                CompoundNBT data = PlayerTemperature.getFHData(player);
                 data.putLong("energy", energy);
                 data.putLong("penergy", penergy);
-                TemperatureCore.setFHData(player, data);
+                PlayerTemperature.setFHData(player, data);
             }
         });
         context.get().setPacketHandled(true);

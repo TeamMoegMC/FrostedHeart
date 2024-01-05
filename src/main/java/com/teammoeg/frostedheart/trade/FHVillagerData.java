@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.WorldClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
@@ -59,7 +59,7 @@ public class FHVillagerData implements INamedContainerProvider{
 	}
 	public void update(ServerWorld w,PlayerEntity trigger) {
 		initLegacy(parent);
-		long day=WorldClimateData.getWorldDay(w);
+		long day=WorldClimate.getWorldDay(w);
 		FHUtils.ofMap(relations, trigger.getUniqueID()).ifPresent(t->t.update(day));;
 		if(lastUpdated==-1) {
 			lastUpdated=day-1;

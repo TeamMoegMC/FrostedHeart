@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.WorldClimateData;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
@@ -42,7 +42,7 @@ public class AttachCapabilityEvents {
     public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
-            event.addCapability(WorldClimateData.ID, new WorldClimateData());
+            event.addCapability(WorldClimate.ID, new WorldClimate());
             
         }
     }

@@ -25,7 +25,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -389,7 +389,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
      * @param pos   position
      */
     float getTemperatureAtBlock(IWorldReader world, BlockPos pos) {
-        if (adjusters.isEmpty()) return WorldClimate.getWorldTemperature(world, pos);
+        if (adjusters.isEmpty()) return WorldTemperature.getTemperature(world, pos);
         float ret = 0, tmp;
         for (ITemperatureAdjust adj : adjusters) {
             if (adj.isEffective(pos)) {
@@ -398,7 +398,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
                     ret = tmp;
             }
         }
-        return WorldClimate.getWorldTemperature(world, pos) + ret;
+        return WorldTemperature.getTemperature(world, pos) + ret;
     }
 
 

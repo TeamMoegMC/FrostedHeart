@@ -26,8 +26,8 @@ import java.util.function.ToIntFunction;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.climate.WorldClimateData;
 import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
@@ -135,9 +135,9 @@ public class FHUtils {
     }
     public static boolean canTreeGrow(World w, BlockPos p, Random r) {
         float temp=ChunkHeatData.getTemperature(w, p);
-        if(temp<=-6||WorldClimateData.isBlizzard(w))
+        if(temp<=-6||WorldClimate.isBlizzard(w))
         	return false;
-        if(temp>WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+        if(temp>WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
         	return false;
         if(temp>0)
         	return true;
@@ -150,7 +150,7 @@ public class FHUtils {
         float temp=ChunkHeatData.getTemperature((IWorld) w, p);
         if(temp<=300)
         	return false;
-        if(temp>300+WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+        if(temp>300+WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
         	return false;
         return true;
     }
@@ -201,7 +201,7 @@ public class FHUtils {
 
     public static boolean canGrassSurvive(IWorldReader world, BlockPos pos) {
         float t = ChunkHeatData.getTemperature(world, pos);
-        return t >= WorldClimate.HEMP_GROW_TEMPERATURE && t <= WorldClimate.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
+        return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
     }
     public static <O,T> Optional<T> ofMap(Map<O,T> map,O key){
     	return Optional.ofNullable(map.get(key));
