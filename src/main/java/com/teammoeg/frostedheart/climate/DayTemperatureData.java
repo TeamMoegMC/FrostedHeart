@@ -33,7 +33,11 @@ public class DayTemperatureData {
 
     public DayTemperatureData() {
     }
-    public DayTemperatureData(int nop) {
+    public DayTemperatureData(long day) {
+		super();
+		this.day = day;
+	}
+	public DayTemperatureData(int nop) {
     	for(int i=0;i<24;i++)
     		setHourTemp(i,0);
     }

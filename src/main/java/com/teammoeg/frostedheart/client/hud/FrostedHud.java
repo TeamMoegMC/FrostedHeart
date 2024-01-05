@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.WorldClimate.TemperatureFrame;
+import com.teammoeg.frostedheart.climate.WorldClimate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.climate.PlayerTemperature;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 
@@ -528,10 +529,16 @@ public class FrostedHud {
 			if (fr == null)
 				continue;
 			UV uv = null;
-			if (fr.isIncreasing)
+			if (fr.type==FrameType.INCRESING)
 				uv = HUDElements.forecast_increase;
-			if (fr.isDecreasing)
+			if (fr.type==FrameType.DECREASING)
 				uv = HUDElements.forecast_decrease;
+			if (fr.type==FrameType.SNOWING)
+				uv = HUDElements.forecast_snow;
+			if (fr.type==FrameType.STORMING)
+				uv = HUDElements.forecast_blizzard;
+			if (fr.type==FrameType.RETREATING)
+				uv = HUDElements.forecast_sun;
 			if (uv != null)
 				uv.blit(mc.ingameGUI, stack, windowX + i * segmentLength / 2 - (i == 0 ? 0 : 1), 3, 512, 256);
 		}
@@ -844,6 +851,10 @@ public class FrostedHud {
 		static final UV forecast_window = new UV(0, 0, 316, 16);
 		static final UV forecast_increase = new UV(0, 20, 12, 12);
 		static final UV forecast_decrease = new UV(0, 32, 12, 12);
+		
+		static final UV forecast_snow = new UV(0, 44, 12, 12);
+		static final UV forecast_blizzard = new UV(0, 56, 12, 12);
+		static final UV forecast_sun = new UV(0, 68, 12, 12);
 		static final UV forecast_marker = new UV(0, 16, 50, 4);
 	}
 

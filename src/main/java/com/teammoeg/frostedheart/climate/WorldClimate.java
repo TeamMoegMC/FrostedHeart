@@ -168,7 +168,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     private static final NopClimateData NOP=new NopClimateData();
     private final LazyOptional<WorldClimate> capability;
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
-    public static final int DAY_CACHE_LENGTH = 7;
+    public static final int DAY_CACHE_LENGTH = 8;
 
     protected LinkedList<TempEvent> tempEventStream;
     protected WorldClockSource clockSource;
@@ -288,7 +288,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
             data.populateDays();
         }
-        return data.dailyTempData.get(deltaDays).getTemp(deltaHours);
+        return data.dailyTempData.get(deltaDays+1).getTemp(deltaHours);
     }
     private static boolean getFutureBlizzard(WorldClimate data, int deltaDays, int deltaHours) {
         if (deltaDays < 0 || deltaDays > DAY_CACHE_LENGTH) {
@@ -299,7 +299,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
             data.populateDays();
         }
-        return data.dailyTempData.get(deltaDays).getBlizzard(deltaHours);
+        return data.dailyTempData.get(deltaDays+1).getBlizzard(deltaHours);
     }
     public static long getWorldDay(IWorld w) {
     	return get(w).getDay();
@@ -347,7 +347,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      */
     public static Iterable<Float> getFutureTempIterator(WorldClimate data, int deltaHours) {
         long thours = data.clockSource.getHours() + deltaHours;
-        long ddate = thours / 24 - data.clockSource.getDate();
+        long ddate = thours / 24 - data.clockSource.getDate()+1;
         long dhours = thours % 24;
         if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
             data.populateDays();
@@ -419,14 +419,22 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      * It stores hours from now and temperature level it transform to.
      */
     public static class TemperatureFrame{
-    	public final boolean isDecreasing;
-    	public final boolean isIncreasing;
+    	public enum FrameType{
+    		NOP(0),
+    		INCRESING(1),
+    		DECREASING(2),
+    		SNOWING(3),
+    		STORMING(4),
+    		RETREATING(5);
+    		int id;
+    		FrameType(int id) {this.id=id;}
+    	}
+    	public final FrameType type;
     	public final short dhours;
     	public final byte toState;
-		public TemperatureFrame(boolean isDecreasing, boolean isIncreasing, int dhours, byte toState) {
+		public TemperatureFrame(FrameType type, int dhours, byte toState) {
 			super();
-			this.isDecreasing = isDecreasing;
-			this.isIncreasing = isIncreasing;
+			this.type=type;
 			this.dhours = (short) dhours;
 			this.toState = toState;
 		}
@@ -436,25 +444,23 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 		}
 		private TemperatureFrame(int packed) {
 			super();
-			this.isDecreasing = (packed&2)==2;
-			this.isIncreasing = (packed&1)==1;
+			this.type=FrameType.values()[packed&0xFF];
 			this.dhours = (short) ((packed>>16)&0xFFFF);
 			this.toState = (byte) ((packed>>8)&0xFF);
 		}
 		private static TemperatureFrame increase(int hour,int to) {
-			return new TemperatureFrame(false,true,hour,(byte)to);
+			return new TemperatureFrame(FrameType.INCRESING,hour,(byte)to);
 		}
 		private static TemperatureFrame decrease(int hour,int to) {
-			return new TemperatureFrame(true,false,hour,(byte)to);
+			return new TemperatureFrame(FrameType.DECREASING,hour,(byte)to);
 		}
 		private static TemperatureFrame calm(int hour,int to) {
-			return new TemperatureFrame(false,false,hour,(byte)to);
+			return new TemperatureFrame(FrameType.NOP,hour,(byte)to);
 		}
 		public int pack() {
 			int ret=0;
-			ret|=isIncreasing?1:0;
-			ret|=isDecreasing?2:0;
-			ret|=4;//exist flag
+			ret|=type.ordinal();
+			ret|=0x80;//exist flag
 			ret|=toState<<8;
 			ret|=dhours<<16;
 			return ret;
@@ -464,15 +470,14 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 		 * */
 		public short packNoHour() {
 			short ret=0;
-			ret|=isIncreasing?1:0;
-			ret|=isDecreasing?2:0;
-			ret|=4;//exist flag
+			ret|=type.ordinal();
+			ret|=0x80;//exist flag
 			ret|=toState<<8;
 			return ret;
 		}
 		@Override
 		public String toString() {
-			return "TemperatureFrame [isDecreasing=" + isDecreasing + ", isIncreasing=" + isIncreasing + ", dhours="
+			return "TemperatureFrame [type=" + type + ", dhours="
 					+ dhours + ", toState=" + toState + "]";
 		}
     }
@@ -630,11 +635,11 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     }
 
     /**
-     * Trims all TempEvents that end before current time.
+     * Trims all TempEvents that end before current time and a day.
      * Called every second in server world tick loop.
      */
     public void trimTempEventStream() {
-        this.tempEventStreamTrim(this.clockSource.getTimeSecs());
+        this.tempEventStreamTrim(this.clockSource.getTimeSecs()-1200);
     }
 
     /**
@@ -654,15 +659,15 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      */
     private void updateDayCache(long date) {
         if (dailyTempData.isEmpty()) {
-            dailyTempData.offer(generateDay(date, 0, 0));
+            dailyTempData.offer(new DayTemperatureData(date-1));
         }
-        while (dailyTempData.peek().day < date) {
+        while (dailyTempData.peek().day < date-1) {
             dailyTempData.poll();
             DayTemperatureData last = dailyTempData.peekLast();
             dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity));
         }
         populateDays();
-        daycache = dailyTempData.peek();
+        daycache = dailyTempData.get(1);
         lastday = daycache.day;
         if (daycache.day != date) {
             clockSource.setDate(daycache.day);//Clock Source goes a little slow, so update.
