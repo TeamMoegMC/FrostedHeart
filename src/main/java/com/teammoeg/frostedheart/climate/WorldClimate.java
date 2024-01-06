@@ -622,10 +622,12 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         			isBlizzard=true;
         			frames.add(TemperatureFrame.blizzard(i,-7));//mark as decreased
         		}
+        		lastlevel=-7;
         		lastTemp=f;
         	}else if(isBlizzard) {
         		isBlizzard=false;
         		frames.add(TemperatureFrame.sun(i,-3));//mark as sun
+        		lastlevel=-3;
         		lastTemp=f;
         	}else if(lastTemp>f) {//when temperature decreasing
             	if(f<0-1) {//if lower than base line
