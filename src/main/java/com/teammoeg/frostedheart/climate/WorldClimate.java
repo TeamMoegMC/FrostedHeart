@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
+import com.teammoeg.frostedheart.mixin.minecraft.MixinServerWorld;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -246,6 +247,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     public static boolean isBlizzard(IWorld world) {
         return get(world).isBlizzard;
     }
+	public static boolean isSnowing(World w) {
+		return getTemp(w)<=WorldTemperature.SNOW_TEMPERATURE;
+	}
     /**
      * Retrieves hourly updated temperature from cache.
      * Useful in weather forecast.
@@ -314,11 +318,15 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      * @return temperature at hour at index
      */
     public static float getFutureTemp(IWorld world, int deltaHours) {
-        WorldClimate data = get(world);
-        long thours = data.clockSource.getHours() + deltaHours;
-        long ddate = thours / 24 - data.clockSource.getDate();
+
+        return get(world).getFutureTemp(deltaHours);
+    }
+    public float getFutureTemp(int deltaHours) {
+        long thours = this.clockSource.getHours() + deltaHours;
+        long ddate = thours / 24 - this.clockSource.getDate();
         long dhours = thours % 24;
-        return getFutureTemp(data, (int) ddate, (int) dhours);
+        if(dhours<0)return 0;
+        return getFutureTemp(this, (int) ddate, (int) dhours);
     }
     /**
      * Retrieves hourly updated temperature from cache
@@ -381,6 +389,42 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         	
         };
     }
+    public static Iterable<Pair<Float,Boolean>> getFutureTempBlizzardIterator(WorldClimate data, int deltaHours) {
+        long thours = data.clockSource.getHours() + deltaHours;
+        long ddate = thours / 24 - data.clockSource.getDate()+1;
+        long dhours = thours % 24;
+        if (data.dailyTempData.size() <= DAY_CACHE_LENGTH) { //this rarely happens, but for safety
+            data.populateDays();
+        }
+        if(ddate<0||dhours<0||ddate>=DAY_CACHE_LENGTH)return ImmutableList.of();
+        return new Iterable<Pair<Float,Boolean>>(){
+			@Override
+			public Iterator<Pair<Float,Boolean>> iterator() {
+				return new Iterator<Pair<Float,Boolean>>() {
+					int curddate=(int) ddate;
+					int curdhours=(int) (dhours-1);
+					@Override
+					public boolean hasNext() {
+						return curddate<DAY_CACHE_LENGTH;
+					}
+
+					@Override
+					public Pair<Float, Boolean> next() {
+						if(!hasNext())return null;
+						curdhours++;
+						if(curdhours>=24) {
+							curdhours=0;
+							curddate++;
+						}
+						
+				        return Pair.of(data.dailyTempData.get(curddate).getTemp(curdhours),data.dailyTempData.get(curddate).getBlizzard(curdhours));
+					}
+					
+				};
+			}
+        	
+        };
+    }
 
     /**
      * Get the number of hours after temperature first reach below lowTemp.
@@ -425,8 +469,18 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     		DECREASING(2),
     		SNOWING(3),
     		STORMING(4),
-    		RETREATING(5);
+    		RETREATING(5),
+    		CLOUDY(6);
     		int id;
+    		public boolean isIncresingEvent() {
+    			return this==INCRESING;
+    		}
+    		public boolean isDecresingEvent() {
+    			return this==DECREASING;
+    		}
+    		public boolean isWeatherEvent() {
+    			return id>=3;
+    		}
     		FrameType(int id) {this.id=id;}
     	}
     	public final FrameType type;
@@ -444,7 +498,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 		}
 		private TemperatureFrame(int packed) {
 			super();
-			this.type=FrameType.values()[packed&0xFF];
+			this.type=FrameType.values()[packed&0x7F];
 			this.dhours = (short) ((packed>>16)&0xFFFF);
 			this.toState = (byte) ((packed>>8)&0xFF);
 		}
@@ -453,6 +507,15 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 		}
 		private static TemperatureFrame decrease(int hour,int to) {
 			return new TemperatureFrame(FrameType.DECREASING,hour,(byte)to);
+		}
+		private static TemperatureFrame blizzard(int hour,int to) {
+			return new TemperatureFrame(FrameType.STORMING,hour,(byte)to);
+		}
+		private static TemperatureFrame snow(int hour,int to) {
+			return new TemperatureFrame(FrameType.SNOWING,hour,(byte)to);
+		}
+		private static TemperatureFrame sun(int hour,int to) {
+			return new TemperatureFrame(FrameType.RETREATING,hour,(byte)to);
 		}
 		private static TemperatureFrame calm(int hour,int to) {
 			return new TemperatureFrame(FrameType.NOP,hour,(byte)to);
@@ -477,7 +540,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 		}
 		@Override
 		public String toString() {
-			return "TemperatureFrame [type=" + type + ", dhours="
+			return "[type=" + type + ", dhours="
 					+ dhours + ", toState=" + toState + "]";
 		}
     }
@@ -525,22 +588,37 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     }
     public List<TemperatureFrame> getFrames(int min,int max) {
     	List<TemperatureFrame> frames=new ArrayList<>();
-    	float lastTemp=0;
+    	float lastTemp=this.getFutureTemp(-1);
     	int i=0;
     	int lastlevel=0;
-        for (float f:getFutureTempIterator(this,min)) {
+    	boolean isBlizzard=false;
+        for (Pair<Float, Boolean> pf:getFutureTempBlizzardIterator(this,min)) {
         	if(i>=max)break;
-            if(lastTemp>f) {//when temperature decreasing
+        	float f=pf.getFirst();
+        	boolean bz=pf.getSecond();
+        	if(bz) {
+        		if(!isBlizzard) {
+        			isBlizzard=true;
+        			frames.add(TemperatureFrame.blizzard(i,-7));//mark as decreased
+        			lastTemp=f;
+        		}
+        	}else if(isBlizzard) {
+        		isBlizzard=false;
+        		frames.add(TemperatureFrame.sun(i,-3));//mark as sun
+        		lastTemp=f;
+        	}else if(lastTemp>f) {//when temperature decreasing
             	if(f<0-1) {//if lower than base line
-	            	for(int j=Math.max(0,-lastlevel);j<WorldTemperature.BOTTOMS.length-1;j++) {//check out its level
-	            		float b=WorldTemperature.BOTTOMS[j];
-	            		if(b<f)break;
-	            		if(f<=b&&f>WorldTemperature.BOTTOMS[j+1]) {//just acrosss a level
-	            			lastlevel=-j-1;
-	            			frames.add(TemperatureFrame.decrease(i,lastlevel));//mark as decreased
-	            			break;
-	            		}
-	            	}
+            		
+		            	for(int j=Math.max(0,-lastlevel);j<WorldTemperature.BOTTOMS.length-1;j++) {//check out its level
+		            		float b=WorldTemperature.BOTTOMS[j];
+		            		if(b<f)break;
+		            		if(f<=b&&f>WorldTemperature.BOTTOMS[j+1]) {//just acrosss a level
+		            			lastlevel=-j-1;
+		            			frames.add(TemperatureFrame.decrease(i,lastlevel));//mark as decreased
+		            			break;
+		            		}
+		            	}
+            		
             	}else if(f<=WorldTemperature.WARM_PERIOD_PEAK-2&&lastlevel>1) {//check out if its just go down from level 2
             		lastlevel=1;
             		frames.add(TemperatureFrame.calm(i,1));
@@ -549,6 +627,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             		frames.add(TemperatureFrame.calm(i,0));
             	}
             }else if(f>lastTemp) {//when temperature increasing
+            	
             	if(f<0-1&&lastlevel<0) {//if lower than base line
             		for(int j=Math.max(0,-lastlevel-1);j>0;j--) {//check out its level
 	            		float b=WorldTemperature.BOTTOMS[j];
@@ -714,8 +793,11 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         for (int i = 0; i < 24; i++) {
         	Pair<Float, Boolean> temp=this.computeTemp(startTime + i * 50);
             dtd.setHourTemp(i, temp.getFirst()); // Removed daynoise
-            if(temp.getFirst()<=-50&&temp.getSecond()) {
+           
+            if(temp.getFirst()<=WorldTemperature.BLIZZARD_TEMPERATURE&&temp.getSecond()) {
             	dtd.setBlizzard(i, true);
+            }else {
+            	 dtd.setBlizzard(i, false);
             }
         }
         return dtd;
@@ -769,7 +851,13 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     	this.dailyTempData.clear();
     	long s=clockSource.secs;
 //    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-23,s+100*50,s+136*50,true));
-		this.tempEventStream.add(new TempEvent(s-15*50,s-5*50,-20,s+60*50,-25,s+115*50,s+163*50,true,true));
+    	//model : 8->0 : 0->-30 : -30->-50= 1 : 2 : 2
+    	int f12cptime=12*50;//1/2 storm period time
+    	long warmpeak=s+48*50;//warm period time-1/4 storm period time
+    	long coldpeak=(long) (warmpeak+2.5*f12cptime);
+    	long coldend=coldpeak+2*f12cptime;
+    	//this.tempEventStream.add(new TempEvent(s-2*50,s+12*50,0,s+24*50,0,s+36*50,s+42*50,true,true));
+		this.tempEventStream.add(new TempEvent(s+0*50,warmpeak,8,coldpeak,-50,coldend,coldend+72*50,true,true));
 		lasthour = -1;
         lastday = -1;
     	this.updateCache(w);
@@ -868,11 +956,13 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 
 	@Override
 	public String toString() {
-		return "ClimateData [tempEventStream=\n" + String.join("\n",tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource + ",\n hourcache="
-				+ hourcache + ",\n daycache=" + daycache + ",\n frames="+String.join("\n",IntStream.range(0, frames.length).mapToObj(i->frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.toList())) + "]";
+		return "[tempEventStream=\n" + String.join(",",tempEventStream.stream().map(Object::toString).collect(Collectors.toList())) + ",\n clockSource=" + clockSource + ",\n hourcache="
+				+ hourcache + ",\n daycache=" + dailyTempData.stream().map(Object::toString).reduce("",(a,b)->a+b+",") + ",\n frames="+String.join(",",IntStream.range(0, frames.length).mapToObj(i->frames[i]).map(TemperatureFrame::unpack).map(String::valueOf).collect(Collectors.toList())) + "]";
 	}
 
 	public short[] getFrames() {
 		return frames;
 	}
+
+
 }

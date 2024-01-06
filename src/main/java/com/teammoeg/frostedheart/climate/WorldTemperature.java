@@ -82,6 +82,7 @@ public class WorldTemperature {
      */
     public static final float SNOW_TEMPERATURE = -13;
 
+    public static final float BLIZZARD_TEMPERATURE = -30;
     /**
      * The temperature when snow becomes blizzard.
      */

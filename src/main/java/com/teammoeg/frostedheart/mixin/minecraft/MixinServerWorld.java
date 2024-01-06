@@ -80,7 +80,7 @@ public abstract class MixinServerWorld extends World {
             return;
 
         // get hourly temp data
-        float currentTemp = WorldTemperature.getClimateTemperature(this);
+        //float currentTemp = WorldTemperature.getClimateTemperature(this);
         // System.out.println("Current Temp: " + currentTemp);
 
         // vanilla weather params
@@ -92,7 +92,7 @@ public abstract class MixinServerWorld extends World {
 
         // calculate raining status and blizzard status based on our temp system
         // 'thundering' is replaced by our BlizzardRenderer
-        isRaining = currentTemp < SNOW_TEMPERATURE;
+        isRaining = WorldClimate.isSnowing(this);
         isThundering = WorldClimate.isBlizzard(this);
 
         // To make vanilla weather commands work, we still implement the following

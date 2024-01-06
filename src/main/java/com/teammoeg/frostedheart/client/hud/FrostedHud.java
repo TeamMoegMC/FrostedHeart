@@ -466,7 +466,7 @@ public class FrostedHud {
 		int segmentLength = 13; // we have 4 segments in each day, total 5 day in window, 20 segments.
 		int markerLength = 50;
 		int markerMovingOffset = hourInDay / 6 * segmentLength; // divide by 6 to get segment index
-		int windowOffset = 57; // distance to window edge (skip day window)
+		int windowOffset = 99; // distance to window edge (skip day window)
 		int windowX = x - 158 + windowOffset;
 		int markerV = HUDElements.forecast_marker.getY();
 		int markerH = HUDElements.forecast_marker.getH();
@@ -523,11 +523,13 @@ public class FrostedHud {
 				256);
 		
 		
-		i = -1;
-		for (TemperatureFrame fr : toRender) {
-			i++;
-			if (fr == null)
+		FrameType last=FrameType.NOP;
+		for (i=0;i<toRender.length;i++) {
+			TemperatureFrame fr=toRender[i];
+			if (fr == null) {
+				last=FrameType.NOP;
 				continue;
+			}
 			UV uv = null;
 			if (fr.type==FrameType.INCRESING)
 				uv = HUDElements.forecast_increase;
@@ -539,13 +541,33 @@ public class FrostedHud {
 				uv = HUDElements.forecast_blizzard;
 			if (fr.type==FrameType.RETREATING)
 				uv = HUDElements.forecast_sun;
+			if(last.isWeatherEvent()||(toRender.length>i+1&&toRender[i+1]!=null&&toRender[i+1].type.isWeatherEvent())) {
+				uv=null;
+			}
+			last=fr.type;
 			if (uv != null)
 				uv.blit(mc.ingameGUI, stack, windowX + i * segmentLength / 2 - (i == 0 ? 0 : 1), 3, 512, 256);
 		}
-
+		boolean f=FHConfig.CLIENT.useFahrenheit.get();
+		float temperature =0;
+		float tlvl=PlayerTemperature.getEnvTemperature(player);
+		tlvl=Math.max(-273, tlvl);
+		UV unit;
+		if(f) {
+			temperature=(tlvl*9/5+32);
+			unit=HUDElements.forecast_fehrenheit;
+		}else {
+			temperature=tlvl;
+			unit=HUDElements.forecast_celsius;
+		}
+		unit.blit(mc.ingameGUI, stack, x + BasePos.forecast_unit.getX(), BasePos.forecast_unit.getY(), 512,256);
 		// day render
-		mc.fontRenderer.drawString(stack, "Day " + date, x + BasePos.forecast_date.getX() + 8, 5, 0xe6e6f2);
-
+		mc.fontRenderer.drawString(stack, "" + date, x + BasePos.forecast_date.getX(), BasePos.forecast_date.getY(), 0xe6e6f2);
+		
+		
+		mc.fontRenderer.drawString(stack, "" + Math.round(temperature), x + BasePos.forecast_temp.getX(), BasePos.forecast_date.getY(), 0xe6e6f2);
+		
+		
 		RenderSystem.disableBlend();
 		mc.getProfiler().endSection();
 	}
@@ -748,8 +770,10 @@ public class FrostedHud {
 		static final Point right_half_1 = new Point(/* 56, -64, */18, -64);
 		static final Point right_half_2 = new Point(/* 76, -64, */38, -64);
 		static final Point right_half_3 = new Point(/* 96, -64, */58, -64);
-		static final Point forecast_window = new Point(-158, 0);
-		static final Point forecast_date = new Point(-158, 0);
+		static final Point forecast_window = new Point(-179, 0);
+		static final Point forecast_date = new Point(forecast_window.getX()+60, 4);
+		static final Point forecast_temp = new Point(forecast_window.getX()+7, 4);
+		static final Point forecast_unit = new Point(forecast_window.getX()+34, 4);
 		static final Point forecast_marker = new Point(-158, 0);
 	}
 
@@ -848,14 +872,17 @@ public class FrostedHud {
 		static final UV icon_defence_abnormal_white = new UV(182, 22, 12, 12);
 		static final UV icon_horse_normal = new UV(143, 48, 12, 12);
 		static final UV icon_horse_abnormal_white = new UV(156, 48, 12, 12);
-		static final UV forecast_window = new UV(0, 0, 316, 16);
-		static final UV forecast_increase = new UV(0, 20, 12, 12);
-		static final UV forecast_decrease = new UV(0, 32, 12, 12);
+		static final UV forecast_window = new UV(0, 0, 358, 16);
+		static final UV forecast_increase = new UV(0, 32, 12, 12);
+		static final UV forecast_decrease = new UV(0, 44, 12, 12);
 		
-		static final UV forecast_snow = new UV(0, 44, 12, 12);
-		static final UV forecast_blizzard = new UV(0, 56, 12, 12);
-		static final UV forecast_sun = new UV(0, 68, 12, 12);
+		static final UV forecast_snow =     new UV(0, 56, 12, 12);
+		static final UV forecast_blizzard = new UV(0, 68, 12, 12);
+		static final UV forecast_sun =      new UV(0, 80, 12, 12);
+		static final UV forecast_cloud =    new UV(0, 92, 12, 12);
 		static final UV forecast_marker = new UV(0, 16, 50, 4);
+		static final UV forecast_celsius =    new UV(12, 32, 7, 7);
+		static final UV forecast_fehrenheit = new UV(19, 32, 7, 7);
 	}
 
 	static final ResourceLocation digits = new ResourceLocation(FHMain.MODID,

@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -91,7 +92,7 @@ public class DayTemperatureData {
 
 	@Override
 	public String toString() {
-		return "DayTemperatureData [hourData=" + Arrays.toString(hourData) + ", dayHumidity=" + dayHumidity
+		return "[hourData=" + Arrays.stream(hourData).mapToObj(Float::intBitsToFloat).map(v->String.format("%.2f", v)).reduce("", (a,b)->a+b+",") + " dayHumidity=" + dayHumidity
 				+ ", dayNoise=" + dayNoise + ", day=" + day + "]";
 	}
 }
