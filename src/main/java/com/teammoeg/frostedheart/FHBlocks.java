@@ -60,7 +60,7 @@ public class FHBlocks {
     public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
     public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
     public static Block rye_block = new RyeBlock("rye_block", WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps, FHBlockItem::new);
-    public static Block wolfberry_bush_block = new WolfBerryBushBlock("wolfberry_bush_block",WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, berryBushBlocks, 10);
+    public static Block wolfberry_bush_block = new WolfBerryBushBlock("wolfberry_bush_block",WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, berryBushBlocks, 2);
     public static Block white_turnip_block = new WhiteTurnipBlock("white_turnip_block", WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps, ((block, properties) -> new FoodBlockItem(block, properties, FHFoods.WHITE_TURNIP)));
     public static Block copper_gravel = new FHBaseBlock("copper_gravel", ore_gravel, FHBlockItem::new);
     public static Block relic_chest = new RelicChestBlock("relic_chest");

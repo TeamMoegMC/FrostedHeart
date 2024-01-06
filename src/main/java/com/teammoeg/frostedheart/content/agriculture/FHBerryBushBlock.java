@@ -42,7 +42,7 @@ import net.minecraft.world.server.ServerWorld;
 public class FHBerryBushBlock extends SweetBerryBushBlock {
     public final String name;
     private int growTemperature;
-    protected int growSpeed = 100;//0<growSpeed<100,100growSpeed相当于原版浆果丛的生长速度
+    protected int growSpeed = 10;//0<growSpeed<50,growSpeed=50时具有原版浆果丛的生长速度
 
     public FHBerryBushBlock(String name, int growTemperature, Properties properties) {
         super(properties);
@@ -80,12 +80,11 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
             if ((bz||temp < this.growTemperature-5)&&worldIn.getRandom().nextInt(3) == 0) {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
-            //我也不知道这玩意干啥用的，我看FHCropBlock里有就加上了
         }else if(temp>WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
         	if (worldIn.getRandom().nextInt(3) == 0) {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
-        } else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(5) == 0) && this.growSpeed > random.nextInt(100)) {
+        } else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {
             worldIn.setBlockState(pos, state.with(AGE, i + 1), 2);
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
         }
