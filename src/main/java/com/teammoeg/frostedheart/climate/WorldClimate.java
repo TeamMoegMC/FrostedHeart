@@ -589,7 +589,8 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     public List<TemperatureFrame> getFrames(int min,int max) {
     	List<TemperatureFrame> frames=new ArrayList<>();
     	float lastTemp=this.getFutureTemp(-1);
-    	int i=0;
+    	
+    	int i=(int) (this.clockSource.getHours()%3);
     	int lastlevel=0;
     	boolean isBlizzard=false;
         for (Pair<Float, Boolean> pf:getFutureTempBlizzardIterator(this,min)) {
@@ -600,8 +601,8 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         		if(!isBlizzard) {
         			isBlizzard=true;
         			frames.add(TemperatureFrame.blizzard(i,-7));//mark as decreased
-        			lastTemp=f;
         		}
+        		lastTemp=f;
         	}else if(isBlizzard) {
         		isBlizzard=false;
         		frames.add(TemperatureFrame.sun(i,-3));//mark as sun
@@ -855,7 +856,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     	int f12cptime=12*50;//1/2 storm period time
     	long warmpeak=s+48*50;//warm period time-1/4 storm period time
     	long coldpeak=(long) (warmpeak+2.5*f12cptime);
-    	long coldend=coldpeak+2*f12cptime;
+    	long coldend=(long) (coldpeak+2*f12cptime);
     	//this.tempEventStream.add(new TempEvent(s-2*50,s+12*50,0,s+24*50,0,s+36*50,s+42*50,true,true));
 		this.tempEventStream.add(new TempEvent(s+0*50,warmpeak,8,coldpeak,-50,coldend,coldend+72*50,true,true));
 		lasthour = -1;

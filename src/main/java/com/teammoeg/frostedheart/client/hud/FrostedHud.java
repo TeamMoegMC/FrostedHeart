@@ -466,12 +466,12 @@ public class FrostedHud {
 		int segmentLength = 13; // we have 4 segments in each day, total 5 day in window, 20 segments.
 		int markerLength = 50;
 		int markerMovingOffset = hourInDay / 6 * segmentLength; // divide by 6 to get segment index
-		int windowOffset = 99; // distance to window edge (skip day window)
-		int windowX = x - 158 + windowOffset;
+		int windowOffset = 98; // distance to window edge (skip day window)
+		int windowX = x +BasePos.forecast_window.getX() + windowOffset;
 		int markerV = HUDElements.forecast_marker.getY();
 		int markerH = HUDElements.forecast_marker.getH();
-		int firstDayU = HUDElements.forecast_marker.getX() + markerMovingOffset;
-		int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset;
+		int firstDayU = HUDElements.forecast_marker.getX() + markerMovingOffset+2;
+		int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset-2;
 		// forecast arrows
 		// find the first hour lower than cold period bottom
 		TemperatureFrame[] toRender = ClientForecastData.tfs;
@@ -509,7 +509,7 @@ public class FrostedHud {
 		// window
 		HUDElements.forecast_window.blit(mc.ingameGUI, stack, x, 0, BasePos.forecast_window, 512, 256);
 		// markers (moving across window by hour)
-		IngameGui.blit(stack, windowX, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
+		IngameGui.blit(stack, windowX+2, 0, firstDayU, markerV, firstDayW, markerH, 512, 256);
 	
 		HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 1, 0, 512,
 				256);
