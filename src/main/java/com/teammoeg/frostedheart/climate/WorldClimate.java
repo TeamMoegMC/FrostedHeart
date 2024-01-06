@@ -590,13 +590,33 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     	List<TemperatureFrame> frames=new ArrayList<>();
     	float lastTemp=this.getFutureTemp(-1);
     	
-    	int i=(int) (this.clockSource.getHours()%3);
+    	int i=0;//(int) (this.clockSource.getHours()%3);
     	int lastlevel=0;
     	boolean isBlizzard=false;
         for (Pair<Float, Boolean> pf:getFutureTempBlizzardIterator(this,min)) {
         	if(i>=max)break;
         	float f=pf.getFirst();
         	boolean bz=pf.getSecond();
+        	TemperatureFrame current=null;
+        	int currentLevel=0;
+        	if(i==0) {
+        		if(f>WorldTemperature.WARM_PERIOD_PEAK-2) {
+        			currentLevel=2;
+            		current=(TemperatureFrame.increase(i,2));
+            	}else if(f>WorldTemperature.WARM_PERIOD_LOWER_PEAK-1) {
+            		currentLevel=1;
+            		current=(TemperatureFrame.increase(i,1));
+            	}else for(int j=0;j<WorldTemperature.BOTTOMS.length;j++) {//check out its level
+            		float b=WorldTemperature.BOTTOMS[j];
+            		if(b<f)break;
+            		if(f<=b&&f>WorldTemperature.BOTTOMS[j+1]) {//just acrosss a level
+            			currentLevel=-j-1;
+            			current=(TemperatureFrame.decrease(i,lastlevel));//mark as decreased
+            			break;
+            		}
+            	}
+        	}
+        	
         	if(bz) {
         		if(!isBlizzard) {
         			isBlizzard=true;
@@ -620,6 +640,10 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 		            		}
 		            	}
             		
+            	}else if(current!=null) {
+            		lastlevel=currentLevel;
+            		frames.add(current);
+            		
             	}else if(f<=WorldTemperature.WARM_PERIOD_PEAK-2&&lastlevel>1) {//check out if its just go down from level 2
             		lastlevel=1;
             		frames.add(TemperatureFrame.calm(i,1));
@@ -629,7 +653,16 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             	}
             }else if(f>lastTemp) {//when temperature increasing
             	
-            	if(f<0-1&&lastlevel<0) {//if lower than base line
+            	if(f>WorldTemperature.WARM_PERIOD_PEAK-2&&lastlevel<2) {
+            		lastlevel=2;
+            		frames.add(TemperatureFrame.increase(i,2));
+            	}else if(f>0+WorldTemperature.WARM_PERIOD_LOWER_PEAK-1&&lastlevel<1) {
+            		lastlevel=1;
+            		frames.add(TemperatureFrame.increase(i,1));
+            	}else if(current!=null) {
+            		lastlevel=currentLevel;
+            		frames.add(current);
+            	}else if(f<0-1&&lastlevel<0) {//if lower than base line
             		for(int j=Math.max(0,-lastlevel-1);j>0;j--) {//check out its level
 	            		float b=WorldTemperature.BOTTOMS[j];
 	            		if(b>f)break;
@@ -643,12 +676,6 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             	}else if(f<=0+5&&lastlevel<0) {
             		lastlevel=0;
             		frames.add(TemperatureFrame.calm(i,0));
-            	}else if(f>WorldTemperature.WARM_PERIOD_PEAK-2&&lastlevel<2) {
-            		lastlevel=2;
-            		frames.add(TemperatureFrame.increase(i,2));
-            	}else if(f>0+5&&lastlevel<1) {
-            		lastlevel=1;
-            		frames.add(TemperatureFrame.increase(i,1));
             	}
             }
             i++;

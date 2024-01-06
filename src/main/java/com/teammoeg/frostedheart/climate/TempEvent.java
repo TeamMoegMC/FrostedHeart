@@ -159,7 +159,7 @@ public class TempEvent {
             endTime = startTime + length;
             long padding = 8 * 50 + random.nextInt(16 * 50); // 8-24h
             peakTime = startTime + padding + (length - padding) / 2;
-            peakTemp = WARM_PERIOD_PEAK - (float) Math.abs(random.nextGaussian());
+            peakTemp = WARM_PERIOD_PEAK - 2*(float)Math.abs(random.nextGaussian());
         }
 
         // Calm Period
