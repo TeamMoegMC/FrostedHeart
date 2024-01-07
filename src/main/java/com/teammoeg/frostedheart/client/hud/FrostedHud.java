@@ -474,7 +474,7 @@ public class FrostedHud {
 		int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset-2;
 		// forecast arrows
 		// find the first hour lower than cold period bottom
-		TemperatureFrame[] toRender = ClientForecastData.tfs;
+		TemperatureFrame[] toRender = ClientForecastData.forecastData;
 		int lastStart = 0;
 		int lastLevel = 0;
 		int i = -1;
@@ -541,7 +541,7 @@ public class FrostedHud {
 				uv = HUDElements.forecast_blizzard;
 			if (fr.type==FrameType.RETREATING)
 				uv = HUDElements.forecast_sun;
-			if(last.isWeatherEvent()||(toRender.length>i+1&&toRender[i+1]!=null&&toRender[i+1].type.isWeatherEvent())) {
+			if((last.isWeatherEvent()&&!fr.type.isWeatherEvent())||(toRender.length>i+1&&toRender[i+1]!=null&&toRender[i+1].type.isWeatherEvent())) {
 				uv=null;
 			}
 			last=fr.type;

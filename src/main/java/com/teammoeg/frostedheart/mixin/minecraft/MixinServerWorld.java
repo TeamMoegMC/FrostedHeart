@@ -92,8 +92,9 @@ public abstract class MixinServerWorld extends World {
 
         // calculate raining status and blizzard status based on our temp system
         // 'thundering' is replaced by our BlizzardRenderer
-        isRaining = WorldClimate.isSnowing(this);
         isThundering = WorldClimate.isBlizzard(this);
+        isRaining = WorldClimate.isSnowing(this)||isThundering;
+        
 
         // To make vanilla weather commands work, we still implement the following
         // This overrides the previous calculation on isRaining and isThundering

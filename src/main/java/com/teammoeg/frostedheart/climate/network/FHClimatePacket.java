@@ -57,9 +57,9 @@ public class FHClimatePacket {
         		ClientForecastData.clear();
         		return;
         	}
-        	int max=Math.min(ClientForecastData.tfs.length, data.length);
+        	int max=Math.min(ClientForecastData.forecastData.length, data.length);
             for(int i=0;i<max;i++) {
-            	ClientForecastData.tfs[i]=TemperatureFrame.unpack(data[i]);
+            	ClientForecastData.forecastData[i]=TemperatureFrame.unpack(data[i]);
             }
             ClientForecastData.secs=sec;
         });

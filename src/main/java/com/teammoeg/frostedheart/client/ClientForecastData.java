@@ -22,14 +22,14 @@ package com.teammoeg.frostedheart.client;
 import com.teammoeg.frostedheart.climate.WorldClimate.TemperatureFrame;
 
 public class ClientForecastData {
-	public static final TemperatureFrame[] tfs=new TemperatureFrame[40];
+	public static final TemperatureFrame[] forecastData=new TemperatureFrame[40];
 	public static long secs=0;
 	public ClientForecastData() {
 	}
 	public static void clear() {
 		secs=0;
-		for(int i=0;i<tfs.length;i++)
-			tfs[i]=null;
+		for(int i=0;i<forecastData.length;i++)
+			forecastData[i]=null;
 	}
     public static int getHourInDay() {
         return (int) ((secs / 50) % 24);

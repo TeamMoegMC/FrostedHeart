@@ -49,6 +49,10 @@ public class WorldTemperature {
      * The peak temperature of a warm period.
      */
     public static final float WARM_PERIOD_LOWER_PEAK = 6;
+    /**
+     * The peak temperature of a blizzard period.
+     */
+    public static final float BLIZZARD_WARM_PEAK = WARM_PERIOD_LOWER_PEAK;
 
     /**
      * The bottom temperature of a cold period.
