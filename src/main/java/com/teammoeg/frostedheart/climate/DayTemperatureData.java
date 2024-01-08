@@ -25,34 +25,29 @@ import java.util.BitSet;
 import net.minecraft.nbt.CompoundNBT;
 
 public class DayTemperatureData {
-	public static class HourTemperatureData{
+	public static class HourData{
 		private float temp=0;
-		private boolean isBlizzard=false;
-		private boolean isSnow=false;
-		private boolean isSunny=false;
-		private boolean isCloudy=false;
+		
+		private ClimateType type;
 		//6
 		private byte windSpeed;//unsigned
 		
-		public HourTemperatureData() {
+		public HourData() {
 			super();
 			setWindSpeed(0);
 		}
 		
-		public HourTemperatureData(int packed) {
+		public HourData(int packed) {
 			this();
 			unpack(packed);
 		}
 
 	
-		public HourTemperatureData(float temp, boolean isBlizzard, boolean isSnow, boolean isSunny, boolean isCloudy,
+		public HourData(float temp, ClimateType type,
 				int windSpeed) {
 			super();
 			this.temp = temp;
-			this.isBlizzard = isBlizzard;
-			this.isSnow = isSnow;
-			this.isSunny = isSunny;
-			this.isCloudy = isCloudy;
+			this.type=type;
 			setWindSpeed(windSpeed);
 		}
 
@@ -65,18 +60,11 @@ public class DayTemperatureData {
 		public float getTemp() {
 			return temp;
 		}
-		public boolean isBlizzard() {
-			return isBlizzard;
-		}
-		public boolean isSnow() {
-			return isSnow;
-		}
-		public boolean isSunny() {
-			return isSunny;
-		}
 
-		public boolean isCloudy() {
-			return isCloudy;
+
+		public HourData(ClimateType type) {
+			super();
+			this.type = type;
 		}
 
 		public int pack() {
@@ -84,16 +72,8 @@ public class DayTemperatureData {
 			short tempInt=(short)(temp*100);
 			val|=(tempInt&0xFFFF);
 			val|=windSpeed<<16;
-			byte vd=0;
-			if(isBlizzard)
-				vd|=0x1;
-			if(isSnow)
-				vd|=0x2;
-			if(isSunny)
-				vd|=0x4;
-			if(isCloudy)
-				vd|=0x8;
-			val|=vd<<24;
+
+			val|=(getType().ordinal()&0xff)<<24;
 			return val;
 		}
 		public void unpack(int val) {
@@ -101,28 +81,28 @@ public class DayTemperatureData {
 			temp=tempInt/100f;
 			windSpeed=(byte) ((val>>16)&0xff);
 			int vx=(val>>24);
-			isBlizzard=(vx&0x1)>0;
-			isSnow=    (vx&0x2)>0;
-			isSunny=   (vx&0x4)>0;
-			isCloudy=  (vx&0x8)>0;
+			type=ClimateType.values()[vx];
 		}
 
 		@Override
 		public String toString() {
-			return "{temp=" + temp + ",Bz/Sn/Su/Cl=" + (isBlizzard?1:0) + "/" + (isSnow?1:0)
-					+ "/" + (isSunny?1:0) + "/" + (isCloudy?1:0) + ",windSpeed=" + getWindSpeed() + "}";
+			return "{T=" + temp + ",W=" + getType() + ",V=" + getWindSpeed() + "}";
+		}
+
+		public ClimateType getType() {
+			return type;
 		}
 
 		
 	}
-	HourTemperatureData[] hourData = new HourTemperatureData[24];
+	HourData[] hourData = new HourData[24];
     float dayHumidity;
     float dayNoise;
     long day;
 
     public DayTemperatureData() {
 		for(int i=0;i<24;i++)
-			hourData[i]=new HourTemperatureData();
+			hourData[i]=new HourData();
     }
     public DayTemperatureData(long day) {
 		this();
@@ -141,49 +121,49 @@ public class DayTemperatureData {
     }
     
     public void setBlizzard(int hourInDay,boolean data) {
-    	hourData[hourInDay].isBlizzard=data;
+    	hourData[hourInDay].type=ClimateType.BLIZZARD;
     }
     public boolean isBlizzard(WorldClockSource wcs) {
     	return isBlizzard(wcs.getHourInDay());
     }  
     public boolean isBlizzard(int hourInDay) {
-    	return hourData[hourInDay].isBlizzard();
+    	return hourData[hourInDay].getType()==ClimateType.BLIZZARD;
     }  
     
 	public void setSnow(int hourInDay, boolean data) {
-		hourData[hourInDay].isSnow=data;
+		hourData[hourInDay].type=ClimateType.SNOW;
 	}
     public boolean isSnow(WorldClockSource wcs) {
     	return isSnow(wcs.getHourInDay());
     }  
     public boolean isSnow(int hourInDay) {
-    	return hourData[hourInDay].isSnow();
+    	return hourData[hourInDay].getType()==ClimateType.SNOW;
     }
     
 	public void setCloudy(int hourInDay, boolean data) {
-		hourData[hourInDay].isCloudy=data;
+		hourData[hourInDay].type=ClimateType.CLOUDY;
 	}
     public boolean isCloudy(WorldClockSource wcs) {
     	return isCloudy(wcs.getHourInDay());
     }  
     public boolean isCloudy(int hourInDay) {
-    	return hourData[hourInDay].isCloudy();
+    	return hourData[hourInDay].getType()==ClimateType.CLOUDY;
     }
     
 	public void setSunny(int hourInDay, boolean data) {
-		hourData[hourInDay].isSunny=data;
+		hourData[hourInDay].type=ClimateType.SUN;
 	}
     public boolean isSunny(WorldClockSource wcs) {
     	return isSunny(wcs.getHourInDay());
     }  
     public boolean isSunny(int hourInDay) {
-    	return hourData[hourInDay].isSunny();
+    	return hourData[hourInDay].getType()==ClimateType.SUN;
     }
     
-	public HourTemperatureData getData(WorldClockSource clockSource) {
+	public HourData getData(WorldClockSource clockSource) {
 		return getData(clockSource.getHourInDay());
 	}
-    public HourTemperatureData getData(int hourInDay) {
+    public HourData getData(int hourInDay) {
     	return hourData[hourInDay];
     }
 
@@ -191,7 +171,7 @@ public class DayTemperatureData {
 
     public CompoundNBT serialize() {
         CompoundNBT cnbt = new CompoundNBT();
-        cnbt.putIntArray("ndata", Arrays.stream(hourData).mapToInt(HourTemperatureData::pack).toArray());
+        cnbt.putIntArray("ndata", Arrays.stream(hourData).mapToInt(HourData::pack).toArray());
        // cnbt.putIntArray("data", hourData);
         cnbt.putFloat("humidity", dayHumidity);
         cnbt.putFloat("noise", dayNoise);

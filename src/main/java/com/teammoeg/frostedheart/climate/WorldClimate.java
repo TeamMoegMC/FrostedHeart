@@ -36,12 +36,9 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHPacketHandler;
-import com.teammoeg.frostedheart.climate.DayTemperatureData.HourTemperatureData;
-import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
-import com.teammoeg.frostedheart.mixin.minecraft.MixinServerWorld;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -49,9 +46,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -180,7 +175,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     protected short[] frames=new short[40];
     protected long lastforecast;
 
-    protected HourTemperatureData hourcache = new HourTemperatureData();
+    protected HourData hourcache = new HourData();
     protected long lasthour = -1;
     protected DayTemperatureData daycache;
     protected long lastday = -1;
@@ -247,10 +242,16 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      * @return temperature at current hour
      */
     public static boolean isBlizzard(IWorld world) {
-        return get(world).hourcache.isBlizzard();
+        return get(world).hourcache.getType()==ClimateType.BLIZZARD;
     }
 	public static boolean isSnowing(World world) {
-		return get(world).hourcache.isSnow();
+		return get(world).hourcache.getType()==ClimateType.SNOW;
+	}
+    public static boolean isSun(IWorld world) {
+        return get(world).hourcache.getType()==ClimateType.SUN;
+    }
+	public static boolean isCloudy(World world) {
+		return get(world).hourcache.getType()==ClimateType.CLOUDY;
 	}
     /**
      * Retrieves hourly updated temperature from cache.
@@ -459,93 +460,6 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         return -1;
     }
 
-    /**
-     * A class to represent temperature change, basically like a key frame.
-     * A frame class means, the temperature increase in warm or decrease in cold. If it just goes back to calm, the increase or decrease would both be false.
-     * It stores hours from now and temperature level it transform to.
-     */
-    public static class TemperatureFrame{
-    	public enum FrameType{
-    		NOP(0),
-    		INCRESING(1),
-    		DECREASING(2),
-    		SNOWING(3),
-    		STORMING(4),
-    		RETREATING(5),
-    		CLOUDY(6);
-    		int id;
-    		public boolean isIncresingEvent() {
-    			return this==INCRESING;
-    		}
-    		public boolean isDecresingEvent() {
-    			return this==DECREASING;
-    		}
-    		public boolean isWeatherEvent() {
-    			return id>=3;
-    		}
-    		FrameType(int id) {this.id=id;}
-    	}
-    	public final FrameType type;
-    	public final short dhours;
-    	public final byte toState;
-		public TemperatureFrame(FrameType type, int dhours, byte toState) {
-			super();
-			this.type=type;
-			this.dhours = (short) dhours;
-			this.toState = toState;
-		}
-		public static TemperatureFrame unpack(int val) {
-			if(val==0)return null;
-			return new TemperatureFrame(val);
-		}
-		private TemperatureFrame(int packed) {
-			super();
-			this.type=FrameType.values()[packed&0x7F];
-			this.dhours = (short) ((packed>>16)&0xFFFF);
-			this.toState = (byte) ((packed>>8)&0xFF);
-		}
-		private static TemperatureFrame increase(int hour,int to) {
-			return new TemperatureFrame(FrameType.INCRESING,hour,(byte)to);
-		}
-		private static TemperatureFrame decrease(int hour,int to) {
-			return new TemperatureFrame(FrameType.DECREASING,hour,(byte)to);
-		}
-		private static TemperatureFrame blizzard(int hour,int to) {
-			return new TemperatureFrame(FrameType.STORMING,hour,(byte)to);
-		}
-		private static TemperatureFrame snow(int hour,int to) {
-			return new TemperatureFrame(FrameType.SNOWING,hour,(byte)to);
-		}
-		private static TemperatureFrame sun(int hour,int to) {
-			return new TemperatureFrame(FrameType.RETREATING,hour,(byte)to);
-		}
-		private static TemperatureFrame calm(int hour,int to) {
-			return new TemperatureFrame(FrameType.NOP,hour,(byte)to);
-		}
-		public int pack() {
-			int ret=0;
-			ret|=type.ordinal();
-			ret|=0x80;//exist flag
-			ret|=toState<<8;
-			ret|=dhours<<16;
-			return ret;
-		}
-		/**
-		 * Serialize but without hour to reduce network cost
-		 * */
-		public short packNoHour() {
-			short ret=0;
-			ret|=type.ordinal();
-			ret|=0x80;//exist flag
-			ret|=toState<<8;
-			return ret;
-		}
-		@Override
-		public String toString() {
-			return "[type=" + type + ", dhours="
-					+ dhours + ", toState=" + toState + "]";
-		}
-    }
     /**
      * Present a total update for forecast data
      */

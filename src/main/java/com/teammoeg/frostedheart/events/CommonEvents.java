@@ -30,16 +30,16 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.PlayerTemperature;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.climate.player.BodyTemperature;
+import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.DebugCommand;
@@ -637,10 +637,10 @@ public class CommonEvents {
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
         CompoundNBT cnbt = new CompoundNBT();
-        CompoundNBT olddata=PlayerTemperature.getFHData(ev.getOriginal());
+        CompoundNBT olddata=BodyTemperature.getFHData(ev.getOriginal());
         cnbt.putLong("penergy", olddata.getLong("penergy"));
         cnbt.putLong("cenergy", olddata.getLong("cenergy"));
-        PlayerTemperature.setFHData(ev.getPlayer(), cnbt);
+        BodyTemperature.setFHData(ev.getPlayer(), cnbt);
         //FHMain.LOGGER.info("clone");
         if(!ev.getPlayer().world.isRemote) {
 	        DeathInventoryData orig=DeathInventoryData.get(ev.getOriginal());
@@ -685,11 +685,11 @@ public class CommonEvents {
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
             CompoundNBT cnbt = new CompoundNBT();
-            cnbt.putLong("penergy", PlayerTemperature.getFHData(event.getPlayer()).getLong("penergy"));
+            cnbt.putLong("penergy", BodyTemperature.getFHData(event.getPlayer()).getLong("penergy"));
             cnbt.putDouble("utbody", 1);
             cnbt.putLong("lastsleep", 0);
             cnbt.putLong("lastsleepdate", 0);
-            PlayerTemperature.setFHData(event.getPlayer(), cnbt);
+            BodyTemperature.setFHData(event.getPlayer(), cnbt);
         }
     }
 
@@ -715,10 +715,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = PlayerTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
+                float current = BodyTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),PlayerTemperature.getEnvTemperature((ServerPlayerEntity) event.getEntityLiving()));
+                float heat = adj.getHeat(event.getItem(),BodyTemperature.getEnvTemperature((ServerPlayerEntity) event.getEntityLiving()));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -736,7 +736,7 @@ public class CommonEvents {
                     if (current <= min)
                         return;
                 }
-                PlayerTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(), current);
+                BodyTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(), current);
             }
         }
     }

@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.PlayerTemperature;
+import com.teammoeg.frostedheart.climate.player.BodyTemperature;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.entity.player.PlayerEntity;

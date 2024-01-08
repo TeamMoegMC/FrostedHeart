@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.climate.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.ClientForecastData;
+import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.WorldClimate.TemperatureFrame;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;

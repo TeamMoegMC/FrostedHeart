@@ -19,7 +19,7 @@
 package com.teammoeg.frostedheart.climate.data;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 
 import net.minecraft.item.ItemStack;
 

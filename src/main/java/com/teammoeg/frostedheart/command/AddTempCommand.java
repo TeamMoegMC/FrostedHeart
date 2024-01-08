@@ -26,8 +26,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.chunkdata.ITemperatureAdjust;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ITemperatureAdjust;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;

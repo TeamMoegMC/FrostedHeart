@@ -21,8 +21,8 @@ package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatDataCapabilityProvider;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 
 import net.minecraft.entity.Entity;
