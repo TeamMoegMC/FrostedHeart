@@ -558,15 +558,16 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         		continue;
         	}
         	
-        	if(lastType!= bz) {
+        	if(lastType.typeId!= bz.typeId) {
         		switch(bz) {
+        		case SNOW_BLIZZARD:
         		case BLIZZARD:lastLevel=-7;
         		default:lastLevel=getTemperatureLevel(f);
         		}
         		frames.add(TemperatureFrame.weather(i, bz, lastLevel));
         		lastType=bz;
         		lastTemp=f;
-        	}else if(lastType==ClimateType.BLIZZARD){
+        	}else if(lastType==ClimateType.BLIZZARD||lastType==ClimateType.SNOW_BLIZZARD){
         		
         	}else if(lastTemp>f) {//when temperature decreasing
             	if(f<-2) {//if lower than base line
