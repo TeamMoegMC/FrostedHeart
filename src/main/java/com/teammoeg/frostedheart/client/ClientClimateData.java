@@ -19,17 +19,25 @@
 
 package com.teammoeg.frostedheart.client;
 
+import com.teammoeg.frostedheart.climate.ClimateType;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
 
-public class ClientForecastData {
+public class ClientClimateData {
 	public static final TemperatureFrame[] forecastData=new TemperatureFrame[40];
+	public static ClimateType climate;
+	public static ClimateType lastClimate;//store last climate for transition
+	public static long climateChange;//store climate change time for transition
 	public static long secs=0;
-	public ClientForecastData() {
+	public ClientClimateData() {
 	}
+	
 	public static void clear() {
 		secs=0;
 		for(int i=0;i<forecastData.length;i++)
 			forecastData[i]=null;
+		climate=ClimateType.NONE;
+		lastClimate=ClimateType.NONE;
+		climateChange=-1;
 	}
     public static int getHourInDay() {
         return (int) ((secs / 50) % 24);

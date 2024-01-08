@@ -940,5 +940,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 		return frames;
 	}
 
+	public ClimateType getClimate() {
+		return this.getHourData().getType();
+	}
+
 
 }

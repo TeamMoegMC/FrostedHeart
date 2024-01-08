@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.ClientForecastData;
+import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
@@ -461,8 +461,8 @@ public class FrostedHud {
 		mc.getTextureManager().bindTexture(FrostedHud.FORECAST_ELEMENTS);
 		RenderSystem.enableBlend();
 
-		long date = ClientForecastData.getDate();
-		int hourInDay = ClientForecastData.getHourInDay();
+		long date = ClientClimateData.getDate();
+		int hourInDay = ClientClimateData.getHourInDay();
 		int segmentLength = 13; // we have 4 segments in each day, total 5 day in window, 20 segments.
 		int markerLength = 50;
 		int markerMovingOffset = hourInDay / 6 * segmentLength; // divide by 6 to get segment index
@@ -474,7 +474,7 @@ public class FrostedHud {
 		int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset-2;
 		// forecast arrows
 		// find the first hour lower than cold period bottom
-		TemperatureFrame[] toRender = ClientForecastData.forecastData;
+		TemperatureFrame[] toRender = ClientClimateData.forecastData;
 		int lastStart = 0;
 		int lastLevel = 0;
 		int i = -1;
