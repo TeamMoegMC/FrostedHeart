@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -38,12 +39,12 @@ import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.passive.RabbitEntity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 @Mixin({ SheepEntity.class, BeeEntity.class, PigEntity.class, RabbitEntity.class })
 public class CoolableAnimals extends MobEntity {
 	short hxteTimer;
-
 	protected CoolableAnimals(EntityType<? extends MobEntity> type, World worldIn) {
 		super(type, worldIn);
 	}
@@ -67,7 +68,7 @@ public class CoolableAnimals extends MobEntity {
 				if (hxteTimer < 20) {
 					hxteTimer++;
 				} else {
-					this.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 1);
+					this.attackEntityFrom(FHDamageSources.BLIZZARD, 1);
 				}
 			}else {
 				float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());

@@ -114,7 +114,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
 				if (hxteTimer < 20) {
 					hxteTimer++;
 				} else {
-					this.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 1);
+					this.attackEntityFrom(FHDamageSources.BLIZZARD, 1);
 				}
 			}else {
 				float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());

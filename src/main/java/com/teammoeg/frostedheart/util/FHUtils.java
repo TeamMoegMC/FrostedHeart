@@ -67,7 +67,10 @@ public class FHUtils {
             super(stack);
         }
     }
-
+    private static final ResourceLocation emptyLoot=new ResourceLocation("frostedheart:empty");
+    public static ResourceLocation getEmptyLoot() {
+    	return emptyLoot;
+    }
     public static <T> T notNull() {
         return null;
     }
