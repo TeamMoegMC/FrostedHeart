@@ -178,6 +178,16 @@ public class DayTemperatureData {
 		return hourData[hourInDay].type;
 	}
 
+	public void setWind(int hourInDay,int speed) {
+		hourData[hourInDay].setWindSpeed(speed);;
+	}
+	public int getWind(WorldClockSource wcs) {
+		return getWind(wcs.getHourInDay());
+	}
+	public int getWind(int hourInDay) {
+		return hourData[hourInDay].getWindSpeed();
+	}
+	
     public CompoundNBT serialize() {
         CompoundNBT cnbt = new CompoundNBT();
         cnbt.putIntArray("ndata", Arrays.stream(hourData).mapToInt(HourData::pack).toArray());

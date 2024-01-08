@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.entity.EntityType;
@@ -61,24 +62,33 @@ public class CoolableAnimals extends MobEntity {
 	public void tick() {
 		super.tick();
 		if (!this.world.isRemote) {
-			float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
-			if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
-					|| temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-				if (hxteTimer < 100) {
+			
+			if(FHUtils.isBlizzardHarming(world, entityBlockPosition)) {
+				if (hxteTimer < 20) {
 					hxteTimer++;
 				} else {
-					if (temp > WorldTemperature.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
-						if (this instanceof IFeedStore) {
-							if (((IFeedStore) this).consumeFeed()) {
-								hxteTimer = -7900;
-								return;
-							}
-						}
-					hxteTimer = 0;
-					this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+					this.attackEntityFrom(FHDamageSources.HYPOTHERMIA, 1);
 				}
-			} else if (hxteTimer > 0)
-				hxteTimer--;
+			}else {
+				float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
+				if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
+						|| temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+					if (hxteTimer < 100) {
+						hxteTimer++;
+					} else {
+						if (temp > WorldTemperature.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
+							if (this instanceof IFeedStore) {
+								if (((IFeedStore) this).consumeFeed()) {
+									hxteTimer = -7900;
+									return;
+								}
+							}
+						hxteTimer = 0;
+						this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+					}
+				} else if (hxteTimer > 0)
+					hxteTimer--;
+			}
 		}
 	}
 }

@@ -99,6 +99,7 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
+import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
@@ -453,11 +454,18 @@ public class CommonEvents {
    
         float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
         boolean bz=WorldClimate.isBlizzard(event.getWorld());
-        if (growBlock instanceof FHCropBlock) {
+        if(bz) {
+    		if(FHUtils.isBlizzardHarming(event.getWorld(),event.getPos())) {
+    			event.getWorld().setBlockState(event.getPos(), Blocks.AIR.getDefaultState(), 2);
+    		}else if (event.getWorld().getRandom().nextInt(3) == 0) {
+                event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+            }
+    		event.setResult(Event.Result.DENY);
+    	}else if (growBlock instanceof FHCropBlock) {
             return;
         } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
-            if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE||bz) {
-                if ((bz||temp<-6)&&event.getWorld().getRandom().nextInt(3) == 0) {
+        	if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
+                if (temp<-6&&event.getWorld().getRandom().nextInt(3) == 0) {
                     event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
                 }
                 event.setResult(Event.Result.DENY);

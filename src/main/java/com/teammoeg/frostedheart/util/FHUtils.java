@@ -56,6 +56,7 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.crafting.NBTIngredient;
@@ -132,6 +133,12 @@ public class FHUtils {
     public static boolean canTreeGenerate(World w, BlockPos p, Random r,int chance) {
         return r.nextInt(chance) == 0;
 
+    }
+    public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
+    	if(WorldClimate.isBlizzard(iWorld)&&iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES,p.getX(),p.getZ())<=p.getY()) {
+    		return true;
+    	}
+    	return false;
     }
     public static boolean canTreeGrow(World w, BlockPos p, Random r) {
         float temp=ChunkHeatData.getTemperature(w, p);
