@@ -137,7 +137,8 @@ public class DayTemperatureData {
     	return isSnow(wcs.getHourInDay());
     }  
     public boolean isSnow(int hourInDay) {
-    	return hourData[hourInDay].getType()==ClimateType.SNOW;
+    	ClimateType type=hourData[hourInDay].getType();
+    	return type==ClimateType.SNOW||type==ClimateType.SNOW_BLIZZARD;
     }
     
 	public void setCloudy(int hourInDay, boolean data) {
@@ -167,7 +168,15 @@ public class DayTemperatureData {
     	return hourData[hourInDay];
     }
 
-
+	public void setType(int hourInDay, ClimateType type) {
+		hourData[hourInDay].type=type;
+	}
+	public ClimateType getType(WorldClockSource wcs) {
+		return getType(wcs.getHourInDay());
+	}
+	public ClimateType getType(int hourInDay) {
+		return hourData[hourInDay].type;
+	}
 
     public CompoundNBT serialize() {
         CompoundNBT cnbt = new CompoundNBT();
@@ -200,6 +209,7 @@ public class DayTemperatureData {
 		return "{hourData=" + Arrays.stream(hourData).map(Object::toString).reduce("",(a,b)->a+b+",") + ",rH=" + dayHumidity
 				+ ",noise=" + dayNoise+ "}";
 	}
+
 
 
 }

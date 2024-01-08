@@ -33,14 +33,16 @@ import static com.teammoeg.frostedheart.climate.WorldTemperature.BLIZZARD_WARM_P
 
 import java.util.Random;
 
+import com.mojang.datafixers.util.Pair;
+
 import net.minecraft.nbt.CompoundNBT;
 
 /**
- * A temperature event defined by a set of timestamps and temperature
+ * A climate event defined by a set of timestamps and temperature
  * parameters.
  * Allows computation of temperature at any timestamp within this event.
  */
-public class TempEvent {
+public class ClimateEvent {
 	public long startTime;
 	public long peakTime;
 	public float peakTemp;
@@ -51,11 +53,11 @@ public class TempEvent {
 	public boolean isBlizzard;
 	public long calmEndTime;
 
-	public TempEvent() {
+	public ClimateEvent() {
 
 	}
 
-	public TempEvent(long startTime, long peakTime, float peakTemp, long bottomTime, float bottomTemp, long endTime,
+	public ClimateEvent(long startTime, long peakTime, float peakTemp, long bottomTime, float bottomTemp, long endTime,
 			long calmEndTime, boolean isCold, boolean isBlizzard) {
 		this.startTime = startTime;
 		this.peakTime = peakTime;
@@ -120,24 +122,24 @@ public class TempEvent {
 	 *                  seconds.
 	 * @return a new TempEvent.
 	 */
-	public static TempEvent getTempEvent(long startTime) {
+	public static ClimateEvent getClimateEvent(long startTime) {
 		Random random = new Random();
 		switch (random.nextInt(10)) {
 		case 0:
 		case 1:
 		case 2:
-			return getWarmTempEvent(startTime);
+			return getWarmClimateEvent(startTime);
 		case 3:
 		case 4:
-			return getBlizzardTempEvent(startTime);
+			return getBlizzardClimateEvent(startTime);
 		default:
-			return getColdTempEvent(startTime);
+			return getColdClimateEvent(startTime);
 		}
 	}
 
 	private static final long secondsPerDay = 24 * 50;
 
-	public static TempEvent getColdTempEvent(long startTime) {
+	public static ClimateEvent getColdClimateEvent(long startTime) {
 		Random random = new Random();
 		long peakTime = 0, bottomTime = 0, endTime = 0;
 		float peakTemp = 0, bottomTemp = 0;
@@ -170,10 +172,10 @@ public class TempEvent {
 		long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
 		long calmEndTime = endTime + calmLength;
 
-		return new TempEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, false);
+		return new ClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, false);
 	}
 
-	public static TempEvent getBlizzardTempEvent(long startTime) {
+	public static ClimateEvent getBlizzardClimateEvent(long startTime) {
 		Random random = new Random();
 		long peakTime = 0, bottomTime = 0, endTime = 0;
 		float peakTemp = 0, bottomTemp = 0;
@@ -206,10 +208,10 @@ public class TempEvent {
 		long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
 		long calmEndTime = endTime + calmLength;
 
-		return new TempEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, true);
+		return new ClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, true, true);
 	}
 
-	public static TempEvent getWarmTempEvent(long startTime) {
+	public static ClimateEvent getWarmClimateEvent(long startTime) {
 		Random random = new Random();
 		long peakTime = 0, bottomTime = 0, endTime = 0;
 		float peakTemp = 0, bottomTemp = 0;
@@ -222,9 +224,24 @@ public class TempEvent {
 		long calmLength = secondsPerDay * 2 + random.nextInt((int) (secondsPerDay * 5)); // 2 - 7 days length
 		long calmEndTime = endTime + calmLength;
 
-		return new TempEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, false, false);
+		return new ClimateEvent(startTime, peakTime, peakTemp, bottomTime, bottomTemp, endTime, calmEndTime, false, false);
 	}
-
+	public Pair<Float,ClimateType> getHourClimate(long t) {
+		ClimateType type=ClimateType.NONE;
+		float temp=getHourTemp(t);
+		if(isBlizzard) {
+			if(temp<=WorldTemperature.BLIZZARD_TEMPERATURE) {
+				type=ClimateType.BLIZZARD;
+			}else if(temp<=WorldTemperature.SNOW_TEMPERATURE&&t<bottomTime) {
+				type=ClimateType.SNOW_BLIZZARD;
+			}else if(t>bottomTime) {
+				type=ClimateType.SUN;
+			}
+		}else if(temp<=WorldTemperature.SNOW_TEMPERATURE) {
+			type=ClimateType.SNOW;
+		}
+		return Pair.of(temp, type);
+	}
 	/**
 	 * Compute the temperature at a given time according to this temperature event.
 	 * This algorithm is based on a piecewise interpolation technique.

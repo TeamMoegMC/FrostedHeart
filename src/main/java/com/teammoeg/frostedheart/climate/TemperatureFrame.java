@@ -49,11 +49,25 @@ public class TemperatureFrame{
 	public static TemperatureFrame decrease(int hour,int to) {
 		return new TemperatureFrame(FrameType.DECREASING,hour,(byte)to);
 	}
+	public static TemperatureFrame weather(int hour,ClimateType type,int to) {
+		switch(type) {
+		case SNOW_BLIZZARD:
+		case BLIZZARD:return blizzard(hour,to); 
+		case SUN:return sun(hour,to);
+		case SNOW:return snow(hour,to);
+		case CLOUDY:return cloud(hour,to);
+		default:return calm(hour,to);
+		}
+
+	}
 	public static TemperatureFrame blizzard(int hour,int to) {
 		return new TemperatureFrame(FrameType.STORMING,hour,(byte)to);
 	}
 	public static TemperatureFrame snow(int hour,int to) {
 		return new TemperatureFrame(FrameType.SNOWING,hour,(byte)to);
+	}
+	public static TemperatureFrame cloud(int hour,int to) {
+		return new TemperatureFrame(FrameType.CLOUDY,hour,(byte)to);
 	}
 	public static TemperatureFrame sun(int hour,int to) {
 		return new TemperatureFrame(FrameType.RETREATING,hour,(byte)to);
