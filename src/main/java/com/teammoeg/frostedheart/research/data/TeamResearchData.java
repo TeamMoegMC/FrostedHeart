@@ -94,7 +94,7 @@ public class TeamResearchData {
     /** The categories.<br> */
     public CategoryUnlockList categories = new CategoryUnlockList();
 
-    public TownData townData;
+    public TownData townData=new TownData();
     /**
      * Instantiates a new TeamResearchData with a Supplier object.<br>
      *

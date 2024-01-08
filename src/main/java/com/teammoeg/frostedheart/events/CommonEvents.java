@@ -167,7 +167,7 @@ public class CommonEvents {
                 for(TeamResearchData trd:FHResearchDataManager.INSTANCE.getAllData()) {
                 	if (serverWorld.getGameTime() % 20==i%20) {//Split town calculations to multiple seconds
 	                	if(trd.getTeam().map(t->t.getOnlineMembers().size()).orElse(0)>0) {
-	                		trd.townData.tick();
+	                		trd.townData.tick(serverWorld);
 	                	}
                 	}
                 	i++;

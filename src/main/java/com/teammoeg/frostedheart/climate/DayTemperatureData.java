@@ -28,7 +28,7 @@ public class DayTemperatureData {
 	public static class HourData{
 		private float temp=0;
 		
-		private ClimateType type;
+		private ClimateType type=ClimateType.NONE;
 		//6
 		private byte windSpeed;//unsigned
 		

@@ -906,7 +906,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             list2.add(temp.serialize());
         }
         nbt.put("hourlyTempStream", list2);
-
+        
         return nbt;
     }
 
@@ -926,6 +926,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         for (int i = 0; i < list2.size(); i++) {
             dailyTempData.add(DayTemperatureData.read(list2.getCompound(i)));
         }
+       
         readCache();
         
     }
