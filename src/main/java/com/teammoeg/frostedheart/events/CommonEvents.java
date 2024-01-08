@@ -56,6 +56,8 @@ import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
@@ -160,12 +162,23 @@ public class CommonEvents {
             World world = event.world;
             if (!world.isRemote && world instanceof ServerWorld) {
                 ServerWorld serverWorld = (ServerWorld) world;
-                // Update clock source every second, and check hour data if it needs an update
+                
+                int i=0;
+                for(TeamResearchData trd:FHResearchDataManager.INSTANCE.getAllData()) {
+                	if (serverWorld.getGameTime() % 20==i%20) {//Split town calculations to multiple seconds
+	                	if(trd.getTeam().map(t->t.getOnlineMembers().size()).orElse(0)>0) {
+	                		trd.townData.tick();
+	                	}
+                	}
+                	i++;
+                }
+             // Update clock source every second, and check hour data if it needs an update
                 if (serverWorld.getGameTime() % 20 == 0) {
                     WorldClimate data = WorldClimate.get(serverWorld);
                     data.updateClock(serverWorld);
                     data.updateCache(serverWorld);
                     data.trimTempEventStream();
+                    
                 }
                 if (world.getDayTime() % 24000 == 40) {
                 	for(PlayerEntity spe:world.getPlayers()) {

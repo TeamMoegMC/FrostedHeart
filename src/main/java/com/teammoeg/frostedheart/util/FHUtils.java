@@ -117,6 +117,7 @@ public class FHUtils {
     }
 
     public static boolean isRainingAt(BlockPos pos, World world) {
+  
         if (!world.isRaining()) {
             return false;
         } else if (!world.canSeeSky(pos)) {

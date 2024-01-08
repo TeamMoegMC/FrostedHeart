@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.town.TownData;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -93,6 +94,7 @@ public class TeamResearchData {
     /** The categories.<br> */
     public CategoryUnlockList categories = new CategoryUnlockList();
 
+    public TownData townData;
     /**
      * Instantiates a new TeamResearchData with a Supplier object.<br>
      *
@@ -458,6 +460,7 @@ public class TeamResearchData {
         nbt.put("researches", rs);
         nbt.putInt("active", activeResearchId);
         nbt.putUniqueId("uuid", id);
+        nbt.put("town",townData.serialize(updatePacket));
         // these data does not send to client
         //if (!updatePacket) {
         //nbt.put("crafting", crafting.serialize());
@@ -539,6 +542,7 @@ public class TeamResearchData {
         	id=data.getUniqueId("uuid");
         ListNBT li = data.getList("researches", 10);
         activeResearchId = data.getInt("active");
+        townData.deserialize(data.getCompound("town"), updatePacket);
         for (int i = 0; i < li.size(); i++) {
             INBT e = li.get(i);
             rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
