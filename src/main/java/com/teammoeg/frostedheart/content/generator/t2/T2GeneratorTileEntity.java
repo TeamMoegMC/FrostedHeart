@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -33,6 +34,7 @@ import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.ReferenceValue;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -102,7 +104,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		nbt.put("fluid", tankx);
 	}
 
-	public FluidTank tank = new FluidTank(20 * FluidAttributes.BUCKET_VOLUME,
+	public FluidTank tank = new FluidTank(200 * FluidAttributes.BUCKET_VOLUME,
 			f -> GeneratorSteamRecipe.findRecipe(f) != null);
 
 	@Override
@@ -136,6 +138,9 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	}
 
 	protected void tickLiquid() {
+		Optional<GeneratorData> data=getData();
+		this.power=data.map(t->t.power).orElse(0f);
+		this.liquidtick=data.map(t->t.steamLevel).orElse(0);
 		if (!this.getIsActive())
 			return;
 		float rt = this.getTemperatureLevel();
@@ -149,13 +154,11 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 			return;
 		}
 		double eff = getHeatEfficiency();
+		
+		int liquidtick=data.map(t->t.steamLevel).orElse(0);
 		if (liquidtick >= rt) {
-			liquidtick -= rt;
-
-			this.power += this.spowerMod * rt * eff;
-			if (this.power >= this.getMaxPower())
-				this.power = this.getMaxPower();
-
+			data.ifPresent(t->t.steamLevel-=rt);
+			this.fillHeat((float) (this.spowerMod * rt * eff));
 			return;
 		}
 		GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
@@ -167,13 +170,12 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 				if (this.stempMod != sgr.tempMod || this.srangeMod != sgr.rangeMod)
 					this.markChanged(true);
 				this.spowerMod = sgr.power;
-				this.power += this.spowerMod * rt * eff;
-				if (this.power >= this.getMaxPower())
-					this.power = this.getMaxPower();
+				this.fillHeat((float) (this.spowerMod * rt * eff));
 				this.srangeMod = sgr.rangeMod;
 				this.stempMod = sgr.tempMod;
-				this.liquidtick = rdrain;
-				this.tank.drain(actualDrain, FluidAction.EXECUTE);
+				data.ifPresent(t->t.steamLevel=rdrain);
+				final FluidStack fs2=this.tank.drain(actualDrain, FluidAction.EXECUTE);
+				data.ifPresent(t->t.fluid=fs2.getFluid());
 				return;
 			}
 		}
@@ -190,7 +192,15 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		return new AxisAlignedBB(pos.getX() - 2, pos.getY() - 2, pos.getZ() - 2, pos.getX() + 2, pos.getY() + 6,
 				pos.getZ() + 2);
 	}
-
+    @Override
+	public void tickHeat() {
+    	if(super.isOverdrive()) {
+    		this.setTemperatureLevel(2*stempMod);
+    	}else {
+    		this.setTemperatureLevel(1*stempMod);
+    	}
+    	this.setRangeLevel(1*srangeMod);
+	}
 	@Override
 	protected void tickFuel() {
 		super.tickFuel();
@@ -203,7 +213,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		if (isActive) {
 			BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
 			Random random = world.rand;
-			if (isActualOverdrive()) {
+			if (isOverdrive()) {
 				if (random.nextFloat() < 0.6F) {
 					// for (int i = 0; i < random.nextInt(2)+1; ++i) {
 					if (this.liquidtick != 0)
@@ -247,9 +257,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
 	@Override
 	public float getMaxHeat() {
-		if (master() != null)
-			return master().power;
-		return 0;
+		return super.getData().map(t->t.power).orElse(0f);
 	}
 
 	public float getMaxPower() {
@@ -259,29 +267,14 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	@Override
 	public float drainHeat(float value) {
 		if (master() != null) {
-			float actual = Math.min(value, master().power);
-			master().power -= actual;
+			Optional<GeneratorData> data=super.getData();
+			float pow=data.map(t->t.power).orElse(0f);
+			final float actual = Math.min(value, pow);
+			data.ifPresent(t->t.power-=actual);
 			return actual;
 		}
 		return 0;
 	}
-
-	@Override
-	public float getTemperatureLevel() {
-		if (master() != null) {
-			return (int) (master().stempMod * super.getTemperatureLevel());
-		}
-		return super.getTemperatureLevel();
-	}
-
-	@Override
-	public float getRangeLevel() {
-		if (master() != null) {
-			return (int) (master().srangeMod * super.getRangeLevel());
-		}
-		return super.getRangeLevel();
-	}
-
 	@Override
 	public boolean connect(Direction to, int dist) {
 		return false;
@@ -318,12 +311,14 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 
 	@Override
 	public float fillHeat(float value) {
-		float maxfill=this.getMaxPower()-this.getMaxHeat();
+		Optional<GeneratorData> data=super.getData();
+		final float maxfill=this.getMaxPower()-data.map(t->t.power).orElse(this.getMaxPower());
 		if(maxfill>value) {
-			master().power+=value;
+			
+			data.ifPresent(t->t.power+=value);
 			return 0;
 		}
-		master().power+=maxfill;
+		data.ifPresent(t->t.power+=maxfill);
 		return value-maxfill;
 	}
 

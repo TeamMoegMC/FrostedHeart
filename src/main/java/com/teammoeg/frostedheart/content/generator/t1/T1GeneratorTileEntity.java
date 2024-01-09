@@ -82,7 +82,15 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
 		}
 		
 	}
-
+    @Override
+	public void tickHeat() {
+    	if(super.isOverdrive()) {
+    		this.setTemperatureLevel(2);
+    	}else {
+    		this.setTemperatureLevel(1);
+    	}
+    	this.setRangeLevel(1);
+	}
     @Override
     public int getUpperBound() {
         int distanceToTowerTop = 2;

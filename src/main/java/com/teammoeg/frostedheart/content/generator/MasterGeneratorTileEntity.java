@@ -104,7 +104,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         super(multiblockInstance, type, hasRSControl);
         
     }
-    public Optional<GeneratorData> getData(){
+    public final Optional<GeneratorData> getData(){
     	return getTeamData().map(t->t.generatorData).filter(t->this.pos.equals(t.actualPos));
     }
     @Override
@@ -272,15 +272,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
 
-    @Override
-	public void tickHeat() {
-    	if(isOverdrive) {
-    		this.setTemperatureLevel(2);
-    	}else {
-    		this.setTemperatureLevel(1);
-    	}
-    	this.setRangeLevel(1);
-	}
+
 	@Override
     protected void tickEffects(boolean isActive) {
 

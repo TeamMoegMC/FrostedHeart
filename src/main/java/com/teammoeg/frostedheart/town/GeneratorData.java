@@ -5,6 +5,7 @@ import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -15,11 +16,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemHandlerHelper;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class GeneratorData {
 	public int process = 0;
 	public int processMax = 0;
 	public int overdriveLevel = 0;
+	public int steamLevel;
+	public float power;
+	public Fluid fluid;
 	public boolean isWorking;
 	public boolean isOverdrive;
 	public boolean isActive;
@@ -38,6 +43,9 @@ public class GeneratorData {
 		result.putBoolean("isWorking", isWorking);
 		result.putBoolean("isOverdrive", isOverdrive);
 		result.putBoolean("isActive", isActive);
+		result.putFloat("power", power);
+		if(fluid!=null)
+			result.putString("steamFluid",fluid.getRegistryName().toString());
 		if(!update) {
 			CompoundNBT inv=new CompoundNBT();
 			ItemStackHelper.saveAllItems(inv,inventory);
@@ -57,6 +65,12 @@ public class GeneratorData {
 		isWorking=data.getBoolean("isWorking");
 		isOverdrive=data.getBoolean("isOverdrive");
 		isActive=data.getBoolean("isActive");
+		steamLevel=data.getInt("steamLevel");
+		power=data.getFloat("power");
+		if(data.contains("steamFluid"))
+			fluid=ForgeRegistries.FLUIDS.getValue(new ResourceLocation(data.getString("steamFluid")));
+		else
+			fluid=null;
 		if(!update) {
 			ItemStackHelper.loadAllItems(data.getCompound("inv"), inventory);
 			if(data.contains("res"))
@@ -112,11 +126,10 @@ public class GeneratorData {
 			this.process = (int) (recipe.time * effi);
 			this.processMax = process;
 			return true;
-		} else {
-			if (this.processMax != 0) {
-				this.process = 0;
-				processMax = 0;
-			}
+		}
+		if (this.processMax != 0) {
+			this.process = 0;
+			processMax = 0;
 		}
 		return false;
 	}

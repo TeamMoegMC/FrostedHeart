@@ -54,7 +54,6 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 	private boolean initialized;
 	boolean isWorking;
 	boolean isOverdrive;
-	boolean isActualOverdrive;
 	boolean isDirty;// mark if temperature change required
 
 	public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
@@ -216,33 +215,22 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 		}
 	}
 
-	public boolean isActualOverdrive() {
-		if (master() != null)
-			return master().isActualOverdrive;
-		return false;
-	}
 
-	public void setActualOverdrive(boolean isActualOverdrive) {
-		if (master() != null) {
-			markChanged(true);
-			master().isActualOverdrive = isActualOverdrive;
-		}
-	}
-	public float getTemperatureLevel() {
+	public final float getTemperatureLevel() {
 		T master=master();
 		if (master==this)
 			return temperatureLevel;
 		return master==null?1:master.getTemperatureLevel();
 	}
 
-	public float getRangeLevel() {
+	public final float getRangeLevel() {
 		T master=master();
 		if (master==this)
 			return rangeLevel;
 		return master==null?1:master.getRangeLevel();
 	}
 
-	public void setTemperatureLevel(float temperatureLevel) {
+	public final void setTemperatureLevel(float temperatureLevel) {
 		if (master()==this) {
 			if(this.temperatureLevel !=temperatureLevel)
 				isDirty = true;
@@ -252,13 +240,13 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 		}
 	}
 
-	public void setRangeLevel(int rangeLevel) {
+	public final void setRangeLevel(float f) {
 		if (master()==this) {
-			if(this.rangeLevel !=rangeLevel)
+			if(this.rangeLevel !=f)
 				isDirty = true;
-			this.rangeLevel = rangeLevel;
+			this.rangeLevel = f;
 		}else {
-			master().setTemperatureLevel(rangeLevel);
+			master().setTemperatureLevel(f);
 		}
 	}
 
