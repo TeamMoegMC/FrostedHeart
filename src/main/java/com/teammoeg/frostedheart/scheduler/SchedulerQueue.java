@@ -22,6 +22,11 @@ public class SchedulerQueue {
 	int lastpos;
 	double tasksPerTick=FHConfig.SERVER.taskPerTick.get();
 	public void add(BlockPos pos) {
+		for(int i=0;i<tasks.size();i++) {
+			if(tasks.get(i).pos.equals(pos)) {
+				return;
+			}
+		}
 		tasks.add(new ScheduledData(pos));
 	}
 	public static void add(TileEntity te) {
