@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
 
+import com.teammoeg.frostedheart.town.house.HouseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -137,5 +138,12 @@ public class FHBlocks {
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)
+            .notSolid(), FHBlockItem::new);
+    public static Block house = new HouseBlock("house", Block.Properties
+            .create(Material.WOOD)
+            .sound(SoundType.WOOD)
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .hardnessAndResistance(2, 6)
             .notSolid(), FHBlockItem::new);
 }
