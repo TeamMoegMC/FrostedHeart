@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.world;
@@ -118,8 +119,8 @@ public class FHFeatures {
 
     // Configured features, generate at CommonEvents#addOreGenFeatures
     public static final ConfiguredFeature<?, ?> spacecraft_feature = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "spacecraft", SPACECRAFT.withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG));
-    public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.CLAY)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(12));
-    public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.GRAVEL)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(12));
+    public static final ConfiguredFeature<?, ?> clay_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "clay_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.CLAY)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(4));
+    public static final ConfiguredFeature<?, ?> gravel_deposit = Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, "gravel_deposit", FLOWER_COVERED_DEPOSIT_FEATURE.withConfiguration(new BlockStateFeatureConfig(FHFeatures.GRAVEL)).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).chance(4));
 
     public static ArrayList<ConfiguredFeature<?, ?>> FH_ORES = new ArrayList<>();
     public static ArrayList<ConfiguredFeature<?, ?>> FH_DISK = new ArrayList<>();

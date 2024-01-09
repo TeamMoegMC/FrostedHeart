@@ -6,5 +6,6 @@ public interface ITownBlockTE {
 	boolean isWorkValid();
 	TownWorkerType getWorker();
 	CompoundNBT getWorkData();
+	void setWorkData(CompoundNBT data);
 	int getPriority();
 }

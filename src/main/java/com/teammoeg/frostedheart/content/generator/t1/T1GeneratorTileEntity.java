@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -34,7 +34,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
-public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
+public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorUIData guiData = new T1GeneratorTileEntity.GeneratorUIData();
     public boolean hasFuel;
     public T1GeneratorTileEntity() {

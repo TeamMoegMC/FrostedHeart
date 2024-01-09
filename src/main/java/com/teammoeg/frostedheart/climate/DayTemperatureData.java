@@ -72,7 +72,7 @@ public class DayTemperatureData {
 			short tempInt=(short)(temp*100);
 			val|=(tempInt&0xFFFF);
 			val|=windSpeed<<16;
-
+			
 			val|=(getType().ordinal()&0xff)<<24;
 			return val;
 		}
@@ -90,7 +90,7 @@ public class DayTemperatureData {
 		}
 
 		public ClimateType getType() {
-			return type;
+			return type==null?ClimateType.NONE:type;//IDK why this happen, but this would fix
 		}
 
 		

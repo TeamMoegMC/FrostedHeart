@@ -1,13 +1,17 @@
 package com.teammoeg.frostedheart.town;
 
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
 
 public class TownWorkerData {
 	private TownWorkerType type;
 	private BlockPos pos;
 	private CompoundNBT workData;
 	private int priority;
+	boolean loaded;
 	public TownWorkerData(BlockPos pos) {
 		super();
 		this.pos = pos;
@@ -57,5 +61,13 @@ public class TownWorkerData {
 	public long getPriority() {
 		long prio=(priority&0xFFFFFFFF)<<32+(type.getPriority()&0xFFFFFFFF);
 		return prio;
+	}
+	public void setData(ServerWorld w) {
+		if(loaded) {
+			TileEntity te=Utils.getExistingTileEntity(w, pos);
+			if(te instanceof ITownBlockTE) {
+				((ITownBlockTE) te).setWorkData(workData);
+			}
+		}
 	}
 }
