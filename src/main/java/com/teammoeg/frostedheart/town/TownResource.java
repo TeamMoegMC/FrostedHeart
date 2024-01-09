@@ -1,13 +1,15 @@
 package com.teammoeg.frostedheart.town;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TownResource implements ITownResource{
 	Map<TownResourceType,Integer> storage;
 	Map<TownResourceType,Integer> backupStorage;
-	Map<TownResourceType,Integer> service=new HashMap<>();
-	Map<TownResourceType,Integer> maxStorage=new HashMap<>();
+	Map<TownResourceType,Integer> service=new EnumMap<>(TownResourceType.class);
+	Map<TownResourceType,Integer> costedService=new EnumMap<>(TownResourceType.class);
+	Map<TownResourceType,Integer> maxStorage=new EnumMap<>(TownResourceType.class);
 	TownData town;
 	public TownResource(TownData td) {
 		super();
@@ -87,6 +89,54 @@ public class TownResource implements ITownResource{
 		return val-remain/1000d;
 	}
 	@Override
+	public double costAsService(TownResourceType name, double val, boolean simulate) {
+		int toCost=(int) (val*1000);
+		int curVal=storage.getOrDefault(name, 0);
+		//int buVal=backupStorage.getOrDefault(name, 0);
+		int servVal=service.getOrDefault(name, 0);
+		int remain=0;
+		int costedRC=0;
+		servVal-=toCost;
+		if(servVal<0) {
+			costedRC=-servVal;
+			curVal+=servVal;
+			servVal=0;
+		}
+		if(curVal<0) {
+			remain=-curVal;
+			curVal=0;
+		}
+		
+		/*if(buVal<0) {
+			remain=-buVal;
+			buVal=0;
+		}*/
+		costedRC-=remain;
+		int costed=toCost-remain;
+		if(!simulate) {
+			if(servVal>0) {
+				service.put(name, servVal);
+			}else {
+				service.remove(name);
+			}
+			if(curVal>0) {
+				storage.put(name, curVal);
+			}else {
+				storage.remove(name);
+			}
+			/*if(buVal>0) {
+				backupStorage.put(name, buVal);
+			}else {
+				backupStorage.remove(name);
+			}*/
+			if(costedRC>0) {
+				costedRC+=costedService.getOrDefault(name,0);
+				costedService.put(name, costedRC);
+			}
+		}
+		return costed/1000d;
+	}
+	@Override
 	public double costService(TownResourceType name, double val, boolean simulate) {
 		int servVal=service.getOrDefault(name, 0);
 		int remain=0;
@@ -108,7 +158,9 @@ public class TownResource implements ITownResource{
 	}
 	@Override
 	public TownData getTown() {
-		// TODO Auto-generated method stub
 		return town;
+	}
+	public void refillCostedService() {
+		costedService.forEach((k,v)->storage.put(k, v));
 	}
 }
