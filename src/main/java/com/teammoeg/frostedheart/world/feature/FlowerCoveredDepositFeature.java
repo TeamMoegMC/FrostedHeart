@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -71,7 +71,7 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                 int flowerCount = 0;
                 for(BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.add(-xWidth, 0, -zWidth), pos.add(xWidth, 0, zWidth))) {
                     // randomly place flower
-                    if (rand.nextInt(2) == 0  && blockpos.distanceSq(pos) <= (radius * radius)) {
+                    if (rand.nextInt(5) == 0  && blockpos.distanceSq(pos) <= (radius * radius)) {
                         BlockState flowerToPlace = Blocks.OXEYE_DAISY.getDefaultState();
                         // valid plant position and open to air and not on ice
                         if (flowerToPlace.isValidPosition(reader, blockpos) && reader.isAirBlock(pos.up())
@@ -81,7 +81,7 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                             flowerCount++;
                         }
                     }
-                    if (flowerCount == 5) {
+                    if (flowerCount == 3) {
                         break;
                     }
                 }
