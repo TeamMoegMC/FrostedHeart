@@ -25,25 +25,30 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import blusunrize.immersiveengineering.common.util.Utils;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3i;
 /**
  * Common base class for any generator like block that maintains a heat area
  * 
  * */
 public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMultiblockTileEntity<T>> extends MultiblockPartTileEntity<T>
 		implements FHBlockInterfaces.IActiveState {
-	protected float temperatureLevel;
-	protected float rangeLevel;
+	private float temperatureLevel;
+	private float rangeLevel;
 	private float lastTLevel;
 	private float lastRLevel;
 	private boolean initialized;
@@ -147,6 +152,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 			int ntlevel=getActualTemp();
 			int nrlevel=getActualRange();
 			if (activeBeforeTick != activeAfterTick||lastTLevel!=ntlevel||lastRLevel!=nrlevel) {
+				this.isDirty=false;
 				lastTLevel=ntlevel;
 				lastRLevel=nrlevel;
 				this.markDirty();
@@ -222,38 +228,54 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 			master().isActualOverdrive = isActualOverdrive;
 		}
 	}
-
 	public float getTemperatureLevel() {
-		if (master() != null)
-			return master().temperatureLevel;
-		return 1;
+		T master=master();
+		if (master==this)
+			return temperatureLevel;
+		return master==null?1:master.getTemperatureLevel();
 	}
 
 	public float getRangeLevel() {
-		if (master() != null)
-			return master().rangeLevel;
-		return 1;
+		T master=master();
+		if (master==this)
+			return rangeLevel;
+		return master==null?1:master.getRangeLevel();
 	}
 
 	public void setTemperatureLevel(float temperatureLevel) {
-		if (master() != null) {
-			master().isDirty = true;
-			master().temperatureLevel = temperatureLevel;
+		if (master()==this) {
+			if(this.temperatureLevel !=temperatureLevel)
+				isDirty = true;
+			this.temperatureLevel = temperatureLevel;
+		}else {
+			master().setTemperatureLevel(temperatureLevel);
 		}
 	}
 
 	public void setRangeLevel(int rangeLevel) {
-		if (master() != null) {
-			master().isDirty = true;
-			master().rangeLevel = rangeLevel;
+		if (master()==this) {
+			if(this.rangeLevel !=rangeLevel)
+				isDirty = true;
+			this.rangeLevel = rangeLevel;
+		}else {
+			master().setTemperatureLevel(rangeLevel);
 		}
 	}
 
 	protected void setAllActive(boolean state) {
 		forEachBlock(s -> s.setActive(state));
 	}
-
-	public abstract void forEachBlock(Consumer<T> consumer);
+	protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer,TileEntity te);
+	public final void forEachBlock(Consumer<T> consumer){
+		Vector3i vec=this.multiblockInstance.getSize(world);
+		for (int x = 0; x < vec.getX(); ++x)
+			for (int y = 0; y < vec.getY(); ++y)
+				for (int z = 0; z < vec.getZ(); ++z) {
+					BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+					TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+					callBlockConsumerWithTypeCheck(consumer,te);
+				}
+	}
 
 	UUID getOwner() {
 		return IOwnerTile.getOwner(this);

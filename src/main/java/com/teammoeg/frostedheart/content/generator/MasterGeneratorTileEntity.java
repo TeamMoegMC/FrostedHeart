@@ -275,11 +275,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
 	public void tickHeat() {
     	if(isOverdrive) {
-    		this.temperatureLevel=2;
+    		this.setTemperatureLevel(2);
     	}else {
-    		this.temperatureLevel=1;
+    		this.setTemperatureLevel(1);
     	}
-		this.rangeLevel=1;
+    	this.setRangeLevel(1);
 	}
 	@Override
     protected void tickEffects(boolean isActive) {
@@ -293,9 +293,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 		
 	}
 
-	@Override
-	public void forEachBlock(Consumer<T> consumer) {
-	}
+
 
 
 

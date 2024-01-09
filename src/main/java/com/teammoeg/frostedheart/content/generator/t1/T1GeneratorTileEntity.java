@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -42,17 +43,6 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     }
 
 
-    @Override
-    public void forEachBlock(Consumer<T1GeneratorTileEntity> consumer) {
-        for (int x = 0; x < 3; ++x)
-            for (int y = 0; y < 4; ++y)
-                for (int z = 0; z < 3; ++z) {
-                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                    if (te instanceof T1GeneratorTileEntity)
-                        consumer.accept((T1GeneratorTileEntity) te);
-                }
-    }
 
 	@Override
 	protected void tickFuel() {
@@ -106,4 +96,12 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         int extra = MathHelper.ceil(getRangeLevel());
         return distanceToGround + extra;
     }
+
+
+
+	@Override
+	protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
+		if (te instanceof T1GeneratorTileEntity)
+			consumer.accept((T1GeneratorTileEntity) te);
+	}
 }

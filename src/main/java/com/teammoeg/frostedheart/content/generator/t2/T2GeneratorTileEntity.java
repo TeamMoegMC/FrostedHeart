@@ -22,12 +22,11 @@ package com.teammoeg.frostedheart.content.generator.t2;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatController;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProviderManager;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
@@ -200,18 +199,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	}
 
 	@Override
-	public void forEachBlock(Consumer<T2GeneratorTileEntity> consumer) {
-		for (int x = 0; x < 3; ++x)
-			for (int y = 0; y < 7; ++y)
-				for (int z = 0; z < 3; ++z) {
-					BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-					TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-					if (te instanceof T2GeneratorTileEntity)
-						consumer.accept((T2GeneratorTileEntity) te);
-				}
-	}
-
-	@Override
 	protected void tickEffects(boolean isActive) {
 		if (isActive) {
 			BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
@@ -352,5 +339,11 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		int distanceToGround = 2;
 		int extra = MathHelper.ceil(getRangeLevel());
 		return distanceToGround + extra;
+	}
+
+	@Override
+	protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorTileEntity> consumer, TileEntity te) {
+		if (te instanceof T2GeneratorTileEntity)
+			consumer.accept((T2GeneratorTileEntity) te);
 	}
 }

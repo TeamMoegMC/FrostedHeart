@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.ZoneHeatingMultiblockTileEntity;
+import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
@@ -174,16 +175,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         return false;
     }
 
-    @Override
-    public void forEachBlock(Consumer<RadiatorTileEntity> consumer) {
-        for (int y = 0; y < 3; ++y) {
-            BlockPos actualPos = getBlockPosForPos(new BlockPos(0, y, 0));
-            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-            if (te instanceof RadiatorTileEntity)
-                consumer.accept((RadiatorTileEntity) te);
-        }
-    }
-
+ 
     @Override
     public SteamNetworkHolder getHolder() {
         return network;
@@ -203,5 +195,11 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 	public void tickHeat() {
 
 		
+	}
+
+	@Override
+	protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, TileEntity te) {
+		if (te instanceof RadiatorTileEntity)
+			consumer.accept((RadiatorTileEntity) te);
 	}
 }
