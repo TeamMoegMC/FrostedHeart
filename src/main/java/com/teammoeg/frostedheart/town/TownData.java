@@ -63,6 +63,9 @@ public class TownData {
 		TownWorkerData data=blocks.computeIfAbsent(pos, TownWorkerData::new);
 		data.fromBlock(tile);
 	}
+	public void removeTownBlock(BlockPos pos) {
+		blocks.remove(pos);
+	}
 	public CompoundNBT getTownBlockData(BlockPos pos) {
 		TownWorkerData twd=blocks.get(pos);
 		if(twd==null)
