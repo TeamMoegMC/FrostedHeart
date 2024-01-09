@@ -94,7 +94,19 @@ public class HouseTileEntity extends TileEntity implements ITownBlockTE {
     public CompoundNBT getWorkData() {
         CompoundNBT data = new CompoundNBT();
         // TODO: Serialize resident
+        data.putInt("size", size);
+        data.putDouble("temperature", temperature);
+        data.putInt("volume", volume);
+        data.putInt("decoration", decoration);
         return data;
+    }
+
+    @Override
+    public void setWorkData(CompoundNBT data) {
+        size = data.getInt("size");
+        temperature = data.getDouble("temperature");
+        volume = data.getInt("volume");
+        decoration = data.getInt("decoration");
     }
 
     @Override
