@@ -23,7 +23,13 @@ import net.minecraftforge.common.util.Constants;
  * 
  * */
 public class TeamTownData {
+	/**
+	 * Resource generated from resident
+	 * */
 	Map<TownResourceType,Integer> resources=new EnumMap<>(TownResourceType.class);
+	/**
+	 * Resource provided by player
+	 * */
 	Map<TownResourceType,Integer> backupResources=new EnumMap<>(TownResourceType.class);
 	Map<BlockPos,TownWorkerData> blocks=new LinkedHashMap<>();
 	TeamResearchData team;
