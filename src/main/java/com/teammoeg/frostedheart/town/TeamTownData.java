@@ -2,17 +2,14 @@ package com.teammoeg.frostedheart.town;
 
 import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import blusunrize.immersiveengineering.common.util.Utils;
-
 import java.util.PriorityQueue;
 
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;

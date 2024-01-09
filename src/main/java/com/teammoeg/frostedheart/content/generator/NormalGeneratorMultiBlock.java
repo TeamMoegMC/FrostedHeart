@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.generator;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
-import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;

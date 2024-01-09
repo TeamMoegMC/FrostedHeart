@@ -3,8 +3,8 @@ package com.teammoeg.frostedheart.town;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import blusunrize.immersiveengineering.common.util.Utils;
-import me.shedaniel.architectury.registry.Registries;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;

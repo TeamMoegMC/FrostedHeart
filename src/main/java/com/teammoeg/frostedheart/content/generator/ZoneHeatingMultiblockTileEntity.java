@@ -24,24 +24,17 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import dev.ftb.mods.ftbteams.FTBTeams;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.FTBTeamsCommon;
-import dev.ftb.mods.ftbteams.FTBTeamsForge;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 /**
  * Common base class for any generator like block that maintains a heat area

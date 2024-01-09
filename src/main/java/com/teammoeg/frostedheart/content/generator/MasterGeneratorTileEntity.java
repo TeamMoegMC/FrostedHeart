@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.town.GeneratorData;
+
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -49,7 +50,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
 
 public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T>> extends ZoneHeatingMultiblockTileEntity<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {

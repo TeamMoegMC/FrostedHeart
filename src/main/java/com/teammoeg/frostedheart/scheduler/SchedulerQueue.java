@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.tileentity.TileEntity;

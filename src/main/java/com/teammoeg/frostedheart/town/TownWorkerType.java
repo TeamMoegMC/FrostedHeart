@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.town;
 
 import com.teammoeg.frostedheart.FHBlocks;
+
 import net.minecraft.block.Block;
 
 // TODO: Auto-generated Javadoc

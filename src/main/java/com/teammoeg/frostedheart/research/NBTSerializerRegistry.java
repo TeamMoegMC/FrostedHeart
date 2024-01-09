@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import net.minecraft.nbt.CompoundNBT;
