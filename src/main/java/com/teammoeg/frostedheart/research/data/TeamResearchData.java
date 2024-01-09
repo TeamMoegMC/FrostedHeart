@@ -464,6 +464,7 @@ public class TeamResearchData {
         nbt.putInt("active", activeResearchId);
         nbt.putUniqueId("uuid", id);
         nbt.put("town",townData.serialize(updatePacket));
+        nbt.put("generator", generatorData.serialize(updatePacket));
         // these data does not send to client
         //if (!updatePacket) {
         //nbt.put("crafting", crafting.serialize());
@@ -545,12 +546,14 @@ public class TeamResearchData {
         	id=data.getUniqueId("uuid");
         ListNBT li = data.getList("researches", 10);
         activeResearchId = data.getInt("active");
+        
         townData.deserialize(data.getCompound("town"), updatePacket);
+        generatorData.deserialize(data.getCompound("generator"), updatePacket);
         for (int i = 0; i < li.size(); i++) {
             INBT e = li.get(i);
             rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
         }
-
+        
         if (!updatePacket) {
         	if(activeResearchId!=0) {
         	Research r=FHResearch.researches.getById(activeResearchId);

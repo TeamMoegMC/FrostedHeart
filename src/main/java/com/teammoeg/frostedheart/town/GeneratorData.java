@@ -4,20 +4,22 @@ import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import blusunrize.immersiveengineering.common.util.Utils;
+import me.shedaniel.architectury.registry.Registries;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public class GeneratorData {
 	public int process = 0;
 	public int processMax = 0;
-	public int temperatureLevel;
-	public int rangeLevel;
-	public int overdriveLevel;
-	public boolean isUserOperated;
+	public int overdriveLevel = 0;
 	public boolean isWorking;
 	public boolean isOverdrive;
 	public boolean isActive;
@@ -28,7 +30,45 @@ public class GeneratorData {
 	private TeamResearchData teamData;
 	public BlockPos actualPos=BlockPos.ZERO;
 	public RegistryKey<World> dimension;
-
+	public CompoundNBT serialize(boolean update) {
+		CompoundNBT result=new CompoundNBT();
+		result.putInt("process", process);
+		result.putInt("processMax", processMax);
+		result.putInt("overdriveLevel", overdriveLevel);
+		result.putBoolean("isWorking", isWorking);
+		result.putBoolean("isOverdrive", isOverdrive);
+		result.putBoolean("isActive", isActive);
+		if(!update) {
+			CompoundNBT inv=new CompoundNBT();
+			ItemStackHelper.saveAllItems(inv,inventory);
+			result.put("inv", inv);
+			if(currentItem!=null)
+				result.put("res", currentItem.serializeNBT());
+			result.putLong("actualPos", actualPos.toLong());
+			if(dimension!=null)
+				result.putString("dim", dimension.getLocation().toString());
+		}
+		return result;
+	}
+	public void deserialize(CompoundNBT data,boolean update) {
+		process=data.getInt("process");
+		processMax=data.getInt("processMax");
+		overdriveLevel=data.getInt("overdriveLevel");
+		isWorking=data.getBoolean("isWorking");
+		isOverdrive=data.getBoolean("isOverdrive");
+		isActive=data.getBoolean("isActive");
+		if(!update) {
+			ItemStackHelper.loadAllItems(data.getCompound("inv"), inventory);
+			if(data.contains("res"))
+				currentItem=ItemStack.read(data.getCompound("res"));
+			else
+				currentItem=null;
+			actualPos=BlockPos.fromLong(data.getLong("actualPos"));
+			if(data.contains("dim")) {
+				dimension=RegistryKey.getOrCreateKey(Registry.WORLD_KEY,new ResourceLocation(data.getString("dim")));
+			}
+		}
+	}
 	public NonNullList<ItemStack> getInventory() {
 		return inventory;
 	}

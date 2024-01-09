@@ -83,7 +83,6 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 		super.readCustomNBT(nbt, descPacket);
 		isWorking = nbt.getBoolean("isWorking");
 		isOverdrive = nbt.getBoolean("isOverdrive");
-		isActualOverdrive = nbt.getBoolean("Overdriven");
 	}
 
 	@Override
@@ -91,26 +90,15 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 		super.writeCustomNBT(nbt, descPacket);
 		nbt.putBoolean("isWorking", isWorking);
 		nbt.putBoolean("isOverdrive", isOverdrive);
-		nbt.putBoolean("Overdriven", isActualOverdrive);
 	}
 
 	@Override
 	public void disassemble() {
+		if(this==master())
 		ChunkHeatData.removeTempAdjust(world, getPos());
-		if (shouldUnique() && master() != null)
-			master().unregist();
 		super.disassemble();
 	}
 
-	public void unregist() {
-		getTeamData().ifPresent(t -> {
-			t.generatorData.actualPos=BlockPos.ZERO;
-		});
-	}
-
-	public void regist() {
-		getTeamData().ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
-	}
 
 	public void setOwner(UUID owner) {
 		forEachBlock(s -> IOwnerTile.setOwner(s, owner));
@@ -139,8 +127,6 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 	protected abstract void tickFuel();
 
 	protected abstract void tickEffects(boolean isActive);
-
-	public abstract boolean shouldUnique();
 
 	@Override
 	public void tick() {

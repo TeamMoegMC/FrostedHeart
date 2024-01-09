@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatController;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProviderManager;
@@ -49,7 +49,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity>
+public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity>
 		implements HeatController, INetworkConsumer {
 	@Override
 	public void disassemble() {

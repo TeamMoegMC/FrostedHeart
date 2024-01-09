@@ -31,12 +31,14 @@ import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMulti
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
@@ -47,14 +49,11 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 
-public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> extends ZoneHeatingMultiblockTileEntity<T> implements IIEInventory,
+public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T>> extends ZoneHeatingMultiblockTileEntity<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
-    @Override
-    public boolean shouldUnique() {
-        return true;
-    }
 
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
@@ -101,7 +100,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
         }
     }
 
-    public BurnerGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
+    public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
         
     }
@@ -111,12 +110,29 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
+        ItemStackHelper.loadAllItems(nbt, linventory);
     }
+	public void unregist() {
+		getTeamData().ifPresent(t -> {
+			t.generatorData.actualPos=BlockPos.ZERO;
+			t.generatorData.dimension=null;
+		});
+	}
+
+	public void regist() {
+		getTeamData().ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
+	}
 
     @Override
+	public void disassemble() {
+		if (master() != null)
+			master().unregist();
+		super.disassemble();
+	}
+	@Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        
+        ItemStackHelper.saveAllItems(nbt, linventory);
     }
 
     @Nonnull
@@ -243,6 +259,10 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
     protected void tickFuel() {
         // just finished process or during process
     	Optional<GeneratorData> data=this.getData();
+    	data.ifPresent(t->{
+    		t.isOverdrive=this.isOverdrive;
+    		t.isWorking=this.isWorking;
+    	});
     	data.ifPresent(t->t.tick());
     	this.setActive(data.map(t->t.isActive).orElse(false));
     	process=data.map(t->t.process).orElse(0);

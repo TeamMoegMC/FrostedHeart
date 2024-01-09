@@ -179,11 +179,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
     @Override
-    public boolean shouldUnique() {
-        return false;
-    }
-
-    @Override
     public SteamNetworkHolder getHolder() {
         return network;
     }
