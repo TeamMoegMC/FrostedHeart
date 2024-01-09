@@ -109,7 +109,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 	}
 
 	public void regist() {
-		getTeamData().ifPresent(t -> t.generatorData.actualPos=this.pos);
+		getTeamData().ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
 	}
 
 	public void setOwner(UUID owner) {

@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.scheduler;
 
-public interface IScheduledTask {
+public interface IScheduledTaskTE {
 	void executeTask();
 	boolean isStillValid();
 }

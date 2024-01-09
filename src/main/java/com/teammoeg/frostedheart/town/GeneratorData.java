@@ -6,7 +6,9 @@ import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.items.ItemHandlerHelper;
 
 public class GeneratorData {
@@ -25,6 +27,7 @@ public class GeneratorData {
 	public ItemStack currentItem;
 	private TeamResearchData teamData;
 	public BlockPos actualPos=BlockPos.ZERO;
+	public RegistryKey<World> dimension;
 
 	public NonNullList<ItemStack> getInventory() {
 		return inventory;
