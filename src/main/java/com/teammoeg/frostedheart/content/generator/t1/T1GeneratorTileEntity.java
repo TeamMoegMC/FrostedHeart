@@ -53,10 +53,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
                         consumer.accept((T1GeneratorTileEntity) te);
                 }
     }
-    public boolean shouldWork() {
-    	return getTeam().map(t->!t.getOnlineMembers().isEmpty()).orElse(false);
-        
-    }
+
 	@Override
 	protected void tickFuel() {
 		this.hasFuel=!this.getInventory().get(INPUT_SLOT).isEmpty();

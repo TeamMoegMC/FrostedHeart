@@ -112,7 +112,13 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     protected void tickFuel() {
+    	
         network.tick();
+        if(!isWorking()) {
+        	if(this.getIsActive())
+        		this.setAllActive(false);
+        	return;
+        }
         if (process > 0) {
             if (network.isValid())
                 process -= network.getTemperatureLevel();
@@ -121,9 +127,9 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         } else if (network.isValid() && network.tryDrainHeat(4 * 160 * network.getTemperatureLevel())) {
             process = (int) (160 * network.getTemperatureLevel());
             processMax = (int) (160 * network.getTemperatureLevel());
-            this.setActive(true);
+            this.setAllActive(true);
         } else {
-            this.setActive(false);
+            this.setAllActive(false);
         }
         if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
             tempLevelLast = network.getTemperatureLevel();
@@ -191,5 +197,11 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 	@Override
 	public int getLowerBound() {
 		return 1;
+	}
+
+	@Override
+	public void tickHeat() {
+
+		
 	}
 }

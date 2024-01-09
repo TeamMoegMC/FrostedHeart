@@ -264,7 +264,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     		t.isWorking=this.isWorking;
     	});
     	data.ifPresent(t->t.tick());
-    	this.setActive(data.map(t->t.isActive).orElse(false));
+    	setAllActive(data.map(t->t.isActive).orElse(false));
     	process=data.map(t->t.process).orElse(0);
     	processMax=data.map(t->t.processMax).orElse(0);
     	/*if(this.getIsActive())
@@ -273,6 +273,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
 
     @Override
+	public void tickHeat() {
+    	if(isOverdrive) {
+    		this.temperatureLevel=2;
+    	}else {
+    		this.temperatureLevel=1;
+    	}
+		this.rangeLevel=1;
+	}
+	@Override
     protected void tickEffects(boolean isActive) {
 
     }

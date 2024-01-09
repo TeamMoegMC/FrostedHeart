@@ -151,5 +151,6 @@ public class GeneratorData {
 
 	public void tick() {
 		isActive=tickFuelProcess();
+		System.out.println(isActive);
     }
 }

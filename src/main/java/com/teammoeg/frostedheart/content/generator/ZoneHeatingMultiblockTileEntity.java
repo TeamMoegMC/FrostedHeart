@@ -42,9 +42,10 @@ import net.minecraft.util.math.MathHelper;
  * */
 public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMultiblockTileEntity<T>> extends MultiblockPartTileEntity<T>
 		implements FHBlockInterfaces.IActiveState {
-	float temperatureLevel;
-	int rangeLevel;
-
+	protected float temperatureLevel;
+	protected float rangeLevel;
+	private float lastTLevel;
+	private float lastRLevel;
 	private boolean initialized;
 	boolean isWorking;
 	boolean isOverdrive;
@@ -76,6 +77,8 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 		super.readCustomNBT(nbt, descPacket);
 		isWorking = nbt.getBoolean("isWorking");
 		isOverdrive = nbt.getBoolean("isOverdrive");
+		temperatureLevel=nbt.getFloat("temperatureLevel");
+		rangeLevel=nbt.getFloat("rangeLevel");
 	}
 
 	@Override
@@ -83,6 +86,8 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 		super.writeCustomNBT(nbt, descPacket);
 		nbt.putBoolean("isWorking", isWorking);
 		nbt.putBoolean("isOverdrive", isOverdrive);
+		nbt.putFloat("temperatureLevel", temperatureLevel);
+		nbt.putFloat("rangeLevel", rangeLevel);
 	}
 
 	@Override
@@ -134,34 +139,39 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 		tickControls();
 
 		if (!world.isRemote && formed) {
-			if (isWorking()) {
-				final boolean activeBeforeTick = getIsActive();
-				tickFuel();
-				// set activity status
-				final boolean activeAfterTick = getIsActive();
-				if (activeBeforeTick != activeAfterTick) {
-					this.markDirty();
-					if (activeAfterTick) {
-						ChunkHeatData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),
-								getLowerBound(), getActualTemp());
-					} else {
-						ChunkHeatData.removeTempAdjust(world, getPos());
-					}
-					setAllActive(activeAfterTick);
-				} else if (activeAfterTick) {
-					if (isChanged() || !initialized) {
-						initialized = true;
-						markChanged(false);
-						ChunkHeatData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),
-								getLowerBound(), getActualTemp());
-					}
+			
+			final boolean activeBeforeTick = getIsActive();
+			tickFuel();
+			// set activity status
+			final boolean activeAfterTick = getIsActive();
+			int ntlevel=getActualTemp();
+			int nrlevel=getActualRange();
+			if (activeBeforeTick != activeAfterTick||lastTLevel!=ntlevel||lastRLevel!=nrlevel) {
+				lastTLevel=ntlevel;
+				lastRLevel=nrlevel;
+				this.markDirty();
+				if (activeAfterTick) {
+					tickHeat();
+					ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
+							getLowerBound(), ntlevel);
+				} else {
+					shutdownTick();
+					ChunkHeatData.removeTempAdjust(world, getPos());
 				}
-			} else
-				shutdownTick();
+				setAllActive(activeAfterTick);
+			} else if (activeAfterTick) {
+				if (isChanged() || !initialized) {
+					initialized = true;
+					markChanged(false);
+					ChunkHeatData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),
+							getLowerBound(), getActualTemp());
+				}
+			} 
+				
 		}
 
 	}
-
+	public abstract void tickHeat();
 	public void shutdownTick() {
 	}
 
