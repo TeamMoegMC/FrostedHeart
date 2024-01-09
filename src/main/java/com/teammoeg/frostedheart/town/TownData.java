@@ -86,7 +86,9 @@ public class TownData {
 		PriorityQueue<TownWorkerData> pq=new PriorityQueue<TownWorkerData>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
 		blocks.values().removeIf(v->{
 			BlockPos pos=v.getPos();
+			v.loaded=false;
 			if(world.isBlockLoaded(pos)) {
+				v.loaded=true;
 				BlockState bs=world.getBlockState(pos);
 				TileEntity te=Utils.getExistingTileEntity(world, pos);
 				TownWorkerType twt=v.getType();
@@ -108,6 +110,9 @@ public class TownData {
 		}
 		for(TownWorkerData t:pq) {
 			t.afterWork(itt);
+		}
+		for(TownWorkerData t:pq) {
+			t.setData(world);
 		}
 	}
 }
