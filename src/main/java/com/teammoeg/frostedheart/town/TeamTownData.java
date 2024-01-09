@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.town;
 
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,8 +26,8 @@ import net.minecraftforge.common.util.Constants;
  * 
  * */
 public class TeamTownData {
-	Map<TownResourceType,Integer> resources=new HashMap<>();
-	Map<TownResourceType,Integer> backupResources=new HashMap<>();
+	Map<TownResourceType,Integer> resources=new EnumMap<>(TownResourceType.class);
+	Map<TownResourceType,Integer> backupResources=new EnumMap<>(TownResourceType.class);
 	Map<BlockPos,TownWorkerData> blocks=new LinkedHashMap<>();
 	TeamResearchData team;
 	public TeamTownData(TeamResearchData team) {
@@ -44,13 +45,15 @@ public class TeamTownData {
 		}
 		CompoundNBT list2=new CompoundNBT();
 		for(Entry<TownResourceType, Integer> v:resources.entrySet()) {
-			list2.putInt(v.getKey().getKey(), v.getValue());
+			if(v.getValue()!=null&&v.getValue()!=0)
+				list2.putInt(v.getKey().getKey(), v.getValue());
 			
 		}
 		nbt.put("resource", list2);
 		CompoundNBT list3=new CompoundNBT();
 		for(Entry<TownResourceType, Integer> v:backupResources.entrySet()) {
-			list3.putInt(v.getKey().getKey(), v.getValue());
+			if(v.getValue()!=null&&v.getValue()!=0)
+				list3.putInt(v.getKey().getKey(), v.getValue());
 		}
 		nbt.put("backupResource", list2);
 		return nbt;
@@ -101,7 +104,7 @@ public class TeamTownData {
 		for(TownWorkerData v:blocks.values()) {
 			pq.add(v);
 		}
-		Town itt=new PlayerTown(this);
+		PlayerTown itt=new PlayerTown(this);
 		for(TownWorkerData t:pq) {
 			t.beforeWork(itt);
 		}
@@ -114,5 +117,6 @@ public class TeamTownData {
 		for(TownWorkerData t:pq) {
 			t.setData(world);
 		}
+		itt.finishWork();
 	}
 }

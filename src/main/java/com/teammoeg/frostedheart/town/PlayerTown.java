@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.town;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 
@@ -49,7 +50,7 @@ public class PlayerTown implements Town{
 
 	@Override
 	public double addService(TownResourceType name, double val) {
-		storage.compute(name, (n,t)->(int)(t==null?val*1000:t+val*1000));
+		storage.merge(name,(int)val*1000,Integer::sum);
 		return val;
 	}
 
@@ -163,7 +164,13 @@ public class PlayerTown implements Town{
 	public Optional<TeamTownData> getTownData() {
 		return Optional.of(town);
 	}
-	public void refillCostedService() {
+	public void finishWork() {
 		costedService.forEach((k,v)->storage.put(k, v));
+		for(Entry<TownResourceType, Integer> ent:storage.entrySet()) {
+			int max=getIntMaxStorage(ent.getKey());
+			if(ent.getValue()>max) {
+				ent.setValue(max);
+			}
+		}
 	}
 }
