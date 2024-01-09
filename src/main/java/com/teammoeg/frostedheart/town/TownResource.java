@@ -8,11 +8,12 @@ public class TownResource implements ITownResource{
 	Map<TownResourceType,Integer> backupStorage;
 	Map<TownResourceType,Integer> service=new HashMap<>();
 	Map<TownResourceType,Integer> maxStorage=new HashMap<>();
-
-	public TownResource(Map<TownResourceType, Integer> storage, Map<TownResourceType, Integer> backupStorage) {
+	TownData town;
+	public TownResource(TownData td) {
 		super();
-		this.storage = storage;
-		this.backupStorage = backupStorage;
+		this.storage = td.resources;
+		this.backupStorage = td.backupResources;
+		this.town=td;
 	}
 	private int getIntMaxStorage(TownResourceType name) {
 		return maxStorage.computeIfAbsent(name, t->t.getIntMaxStorage(this));
@@ -104,5 +105,10 @@ public class TownResource implements ITownResource{
 			}
 		}
 		return val-remain/1000d;
+	}
+	@Override
+	public TownData getTown() {
+		// TODO Auto-generated method stub
+		return town;
 	}
 }

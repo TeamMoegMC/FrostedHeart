@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.town.TownData;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
@@ -94,7 +95,9 @@ public class TeamResearchData {
     /** The categories.<br> */
     public CategoryUnlockList categories = new CategoryUnlockList();
 
-    public TownData townData=new TownData();
+    public TownData townData=new TownData(this);
+    
+    public GeneratorData generatorData=new GeneratorData(this);
     /**
      * Instantiates a new TeamResearchData with a Supplier object.<br>
      *

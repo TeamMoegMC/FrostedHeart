@@ -4,7 +4,13 @@ package com.teammoeg.frostedheart.town;
  * Interface for accessing town data
  */
 public interface ITownResource {
-	
+	/**
+	 * Gets the whole town.
+	 *
+	 * @param name the resouce type
+	 * @return resource amount
+	 */
+	TownData getTown();
 	/**
 	 * Gets resource.
 	 *

@@ -35,10 +35,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
 public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
-    public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
+    public T1GeneratorTileEntity.GeneratorUIData guiData = new T1GeneratorTileEntity.GeneratorUIData();
     public boolean hasFuel;
     public T1GeneratorTileEntity() {
-        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false, 1, 2, 1);
+        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false);
     }
 
 
@@ -54,12 +54,12 @@ public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Gen
                 }
     }
     public boolean shouldWork() {
-    	return getTeam().map(t->!t.getOnlineMembers().isEmpty()).orElse(false)&&super.shouldWork();
+    	return getTeam().map(t->!t.getOnlineMembers().isEmpty()).orElse(false);
         
     }
 	@Override
 	protected void tickFuel() {
-		this.hasFuel=!inventory.get(INPUT_SLOT).isEmpty();
+		this.hasFuel=!this.getInventory().get(INPUT_SLOT).isEmpty();
 		super.tickFuel();
 	}
 	@Override
@@ -88,7 +88,7 @@ public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Gen
 
 	@Override
 	public void shutdownTick() {
-		boolean invState=!inventory.get(INPUT_SLOT).isEmpty();
+		boolean invState=!this.getInventory().get(INPUT_SLOT).isEmpty();
 		if(invState!=hasFuel) {
 			hasFuel=invState;
 			this.markContainingBlockForUpdate(null);

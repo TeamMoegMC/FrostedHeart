@@ -41,7 +41,8 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
     public T1GeneratorScreen(T1GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);
         this.tile = container.tile;
-        clearIntArray(tile.guiData);
+        this.clearIntArray(tile.guiData);
+        
     }
 
     @Override

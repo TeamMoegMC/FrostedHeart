@@ -58,7 +58,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		super.disassemble();
 	}
 
-	public T2GeneratorTileEntity.GeneratorData guiData = new T2GeneratorTileEntity.GeneratorData();
+	public T2GeneratorTileEntity.GeneratorUIData guiData = new T2GeneratorTileEntity.GeneratorUIData();
 	HeatProviderManager manager = new HeatProviderManager(this, c -> {
 		Direction dir = this.getFacing();
 		
@@ -67,7 +67,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	});
 
 	public T2GeneratorTileEntity() {
-		super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false, 1, 2, 1);
+		super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false);
 	}
 
 	float power = 0;

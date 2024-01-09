@@ -66,12 +66,12 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
                                              Hand hand, BlockRayTraceResult hit) {
         if (!world.isRemote) {
             TileEntity te = Utils.getExistingTileEntity(world, pos);
-            if (te instanceof AbstractGenerator && ((AbstractGenerator) te).shouldUnique()&&!(player instanceof FakePlayer)) {
+            if (te instanceof ZoneHeatingMultiblockTileEntity && ((ZoneHeatingMultiblockTileEntity) te).shouldUnique()&&!(player instanceof FakePlayer)) {
             	
-                if (((AbstractGenerator) te).getOwner() == null) {
-                	te=((AbstractGenerator) te).master();
-                    ((AbstractGenerator) te).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player).getId());
-                    ((AbstractGenerator) te).regist();
+                if (((ZoneHeatingMultiblockTileEntity) te).getOwner() == null) {
+                	te=((ZoneHeatingMultiblockTileEntity) te).master();
+                    ((ZoneHeatingMultiblockTileEntity) te).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player).getId());
+                    ((ZoneHeatingMultiblockTileEntity) te).regist();
                 }
                 
             }

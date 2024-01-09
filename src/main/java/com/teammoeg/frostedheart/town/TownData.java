@@ -10,6 +10,8 @@ import blusunrize.immersiveengineering.common.util.Utils;
 
 import java.util.PriorityQueue;
 
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -26,6 +28,11 @@ public class TownData {
 	Map<TownResourceType,Integer> resources=new HashMap<>();
 	Map<TownResourceType,Integer> backupResources=new HashMap<>();
 	Map<BlockPos,TownWorkerData> blocks=new LinkedHashMap<>();
+	TeamResearchData team;
+	public TownData(TeamResearchData team) {
+		super();
+		this.team = team;
+	}
 	public CompoundNBT serialize(boolean updatePacket) {
 		CompoundNBT nbt=new CompoundNBT();
 		if(!updatePacket) {
@@ -92,7 +99,7 @@ public class TownData {
 		for(TownWorkerData v:blocks.values()) {
 			pq.add(v);
 		}
-		ITownResource itt=new TownResource(resources,backupResources);
+		ITownResource itt=new TownResource(this);
 		for(TownWorkerData t:pq) {
 			t.beforeWork(itt);
 		}
