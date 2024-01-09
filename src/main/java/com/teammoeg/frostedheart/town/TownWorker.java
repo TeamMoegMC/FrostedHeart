@@ -14,7 +14,7 @@ public interface TownWorker {
 	 * @param workData workData provided by work type
 	 * @return true, if work done successfully
 	 */
-	default boolean beforeWork(ITownResource resource,CompoundNBT workData) {return true;};
+	default boolean beforeWork(Town resource,CompoundNBT workData) {return true;};
 	/**
 	 * Work during tick
 	 *
@@ -22,7 +22,7 @@ public interface TownWorker {
 	 * @param workData workData provided by work type
 	 * @return true, if work done successfully
 	 */
-	boolean work(ITownResource resource,CompoundNBT workData);
+	boolean work(Town resource,CompoundNBT workData);
 	/**
 	 * Work with higher priority;
 	 *
@@ -30,5 +30,5 @@ public interface TownWorker {
 	 * @param workData workData provided by work type
 	 * @return true, if work done successfully
 	 */
-	default boolean afterWork(ITownResource resource,CompoundNBT workData) {return true;};
+	default boolean afterWork(Town resource,CompoundNBT workData) {return true;};
 }

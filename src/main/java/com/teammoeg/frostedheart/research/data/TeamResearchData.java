@@ -40,7 +40,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.town.GeneratorData;
-import com.teammoeg.frostedheart.town.TownData;
+import com.teammoeg.frostedheart.town.TeamTownData;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -95,7 +95,7 @@ public class TeamResearchData {
     /** The categories.<br> */
     public CategoryUnlockList categories = new CategoryUnlockList();
 
-    public TownData townData=new TownData(this);
+    public TeamTownData townData=new TeamTownData(this);
     
     public GeneratorData generatorData=new GeneratorData(this);
     /**

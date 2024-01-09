@@ -3,15 +3,18 @@ package com.teammoeg.frostedheart.town;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
-public class TownResource implements ITownResource{
+
+
+public class PlayerTown implements Town{
 	Map<TownResourceType,Integer> storage;
 	Map<TownResourceType,Integer> backupStorage;
 	Map<TownResourceType,Integer> service=new EnumMap<>(TownResourceType.class);
 	Map<TownResourceType,Integer> costedService=new EnumMap<>(TownResourceType.class);
 	Map<TownResourceType,Integer> maxStorage=new EnumMap<>(TownResourceType.class);
-	TownData town;
-	public TownResource(TownData td) {
+	TeamTownData town;
+	public PlayerTown(TeamTownData td) {
 		super();
 		this.storage = td.resources;
 		this.backupStorage = td.backupResources;
@@ -157,8 +160,8 @@ public class TownResource implements ITownResource{
 		return val-remain/1000d;
 	}
 	@Override
-	public TownData getTown() {
-		return town;
+	public Optional<TeamTownData> getTownData() {
+		return Optional.of(town);
 	}
 	public void refillCostedService() {
 		costedService.forEach((k,v)->storage.put(k, v));

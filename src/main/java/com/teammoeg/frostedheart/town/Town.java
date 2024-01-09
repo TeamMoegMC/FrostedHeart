@@ -1,16 +1,18 @@
 package com.teammoeg.frostedheart.town;
 
+import java.util.Optional;
+
 /**
  * Interface for accessing town data
  */
-public interface ITownResource {
+public interface Town {
 	/**
-	 * Gets the whole town.
+	 * Gets the team town data, may be null if not a player team.
 	 *
 	 * @param name the resouce type
 	 * @return resource amount
 	 */
-	TownData getTown();
+	Optional<TeamTownData> getTownData();
 	/**
 	 * Gets resource.
 	 *

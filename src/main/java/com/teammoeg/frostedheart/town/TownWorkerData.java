@@ -49,13 +49,13 @@ public class TownWorkerData {
 	public void setWorkData(CompoundNBT workData) {
 		this.workData = workData;
 	}
-	public boolean beforeWork(ITownResource resource) {
+	public boolean beforeWork(Town resource) {
 		return type.getWorker().beforeWork(resource, workData);
 	}
-	public boolean work(ITownResource resource) {
+	public boolean work(Town resource) {
 		return type.getWorker().work(resource, workData);
 	}
-	public boolean afterWork(ITownResource resource) {
+	public boolean afterWork(Town resource) {
 		return type.getWorker().afterWork(resource, workData);
 	}
 	public long getPriority() {

@@ -24,12 +24,12 @@ import net.minecraftforge.common.util.Constants;
  * Town data for a whole team.
  * 
  * */
-public class TownData {
+public class TeamTownData {
 	Map<TownResourceType,Integer> resources=new HashMap<>();
 	Map<TownResourceType,Integer> backupResources=new HashMap<>();
 	Map<BlockPos,TownWorkerData> blocks=new LinkedHashMap<>();
 	TeamResearchData team;
-	public TownData(TeamResearchData team) {
+	public TeamTownData(TeamResearchData team) {
 		super();
 		this.team = team;
 	}
@@ -101,7 +101,7 @@ public class TownData {
 		for(TownWorkerData v:blocks.values()) {
 			pq.add(v);
 		}
-		ITownResource itt=new TownResource(this);
+		Town itt=new PlayerTown(this);
 		for(TownWorkerData t:pq) {
 			t.beforeWork(itt);
 		}
