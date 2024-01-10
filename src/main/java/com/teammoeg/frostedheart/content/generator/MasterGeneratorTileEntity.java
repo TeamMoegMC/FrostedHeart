@@ -118,7 +118,9 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 			t.generatorData.dimension=null;
 		});
 	}
-
+	public void registIfPossible() {
+		getTeamData().filter(t->t.generatorData.actualPos.equals(this.pos)).ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
+	}
 	public void regist() {
 		getTeamData().ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
 	}

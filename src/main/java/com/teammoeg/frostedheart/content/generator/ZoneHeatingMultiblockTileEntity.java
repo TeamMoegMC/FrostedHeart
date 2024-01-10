@@ -171,7 +171,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 				lastTLevel=ntlevel;
 				lastRLevel=nrlevel;
 				this.markDirty();
-				if (activeAfterTick) {
+				if (nrlevel>0&&ntlevel>0) {
 					tickHeat();
 					ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
 							getLowerBound(), ntlevel);
