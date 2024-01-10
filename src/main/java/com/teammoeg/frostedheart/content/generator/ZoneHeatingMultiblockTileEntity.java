@@ -76,7 +76,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 	}
 
 	public int getActualTemp() {
-		return heated / 10;
+		return (int) (getTemperatureLevel() * 10);
 	}
 
 	public int getHeated() {
@@ -162,6 +162,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 			
 			final boolean activeBeforeTick = getIsActive();
 			tickFuel();
+			tickHeat();
 			// set activity status
 			final boolean activeAfterTick = getIsActive();
 			int ntlevel=getActualTemp();
@@ -172,7 +173,6 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 				lastRLevel=nrlevel;
 				this.markDirty();
 				if (nrlevel>0&&ntlevel>0) {
-					tickHeat();
 					ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
 							getLowerBound(), ntlevel);
 				}
@@ -183,42 +183,41 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 				}
 			}
 
-			if(isWorking() && heated != getMaxHeated()) {
+		}
+	}
+	public void tickHeat() {
+		if (isWorking() && heated != getMaxHeated()) {
+			Random random = world.rand;
+			boolean needAdd = false;
+			float heatAddProbability = 1F / heatAddInterval;
+			if (isOverdrive()) {
+				heatAddProbability = 2F / heatAddInterval;
+			}
+			if (random.nextFloat() < heatAddProbability) {
+				needAdd = true;
+				markContainingBlockForUpdate(null);
+			}
+			if (heated < getMaxHeated() && needAdd) {
+				heated++;
+			} else if (heated > getMaxHeated() && needAdd) {
+				heated--;
+			}
+		} else if (!isWorking()) {
+			if (heated == 0) {
+				shutdownTick();
+				ChunkHeatData.removeTempAdjust(world, getPos());
+				setAllActive(false);
+			} else {
+				markContainingBlockForUpdate(null);
 				Random random = world.rand;
-				boolean needAdd = false;
-				float heatAddProbability = 1F/heatAddInterval;
-				if (isOverdrive()) {
-					heatAddProbability = 2F/heatAddInterval;
-				}
+				float heatAddProbability = 1F / heatAddInterval;
 				if (random.nextFloat() < heatAddProbability) {
-					needAdd = true;
-					markContainingBlockForUpdate(null);
-				}
-				if (heated < getMaxHeated() && needAdd) {
-					heated++;
-				}
-				else if (heated > getMaxHeated() && needAdd) {
 					heated--;
 				}
 			}
-			else if(!isWorking()) {
-				if(heated == 0) {
-					shutdownTick();
-					ChunkHeatData.removeTempAdjust(world, getPos());
-					setAllActive(false);
-				} else {
-					markContainingBlockForUpdate(null);
-					Random random = world.rand;
-					float heatAddProbability = 1F/heatAddInterval;
-					if (random.nextFloat() < heatAddProbability) {
-						heated--;
-					}
-				}
-			}
-
 		}
 	}
-	public abstract void tickHeat();
+
 	public void shutdownTick() {
 	}
 

@@ -197,11 +197,8 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	}
     @Override
 	public void tickHeat() {
-    	if(super.isOverdrive()) {
-    		this.setTemperatureLevel(2*stempMod);
-    	}else {
-    		this.setTemperatureLevel(1*stempMod);
-    	}
+		super.tickHeat();
+		this.setTemperatureLevel(super.getHeated()/100F);
     	this.setRangeLevel(1*srangeMod);
 	}
 	@Override
