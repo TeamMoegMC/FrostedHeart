@@ -77,6 +77,9 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	float stempMod = 1;
 	int liquidtick = 0;
 	int noliquidtick = 0;
+	int tickUntilStopBoom = 20;
+	int notFullPowerTick = 0;
+	final int nextBoom = 200; //10s
 
 	@Override
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -216,24 +219,33 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		if (isActive) {
 			BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
 			Random random = world.rand;
-			if (isActualOverdrive()) {
-				if (random.nextFloat() < 0.6F) {
-					// for (int i = 0; i < random.nextInt(2)+1; ++i) {
-					if (this.liquidtick != 0)
-						ClientUtils.spawnSteamParticles(world, blockpos);
-					ClientUtils.spawnT2FireParticles(world, blockpos);
-					// }
-				}
-			} else {
-				if (random.nextFloat() < 0.3F) {
-					// for (int i = 0; i < random.nextInt(2)+1; ++i) {
-					if (this.liquidtick != 0)
-						ClientUtils.spawnSteamParticles(world, blockpos);
-					ClientUtils.spawnT2FireParticles(world, blockpos);
-					// }
-				}
+			float particleProbability = 0.3F;
+			if(isActualOverdrive()) {
+				particleProbability = 0.6F;
 			}
 
+			if (random.nextFloat() < particleProbability) {
+				// for (int i = 0; i < random.nextInt(2)+1; ++i) {
+				if (this.liquidtick != 0 && random.nextFloat() < 0.06F) {
+					ClientUtils.spawnSteamParticles(world, blockpos);
+				}
+				ClientUtils.spawnT2FireParticles(world, blockpos);
+				ClientUtils.spawnSmokeParticles(world, blockpos);
+				// }
+			}
+
+			if (this.isWorking() && this.getHeated() == getMaxHeated() && this.tickUntilStopBoom > 0) {
+				ClientUtils.spawnSteamParticles(world, blockpos);
+				this.tickUntilStopBoom--;
+				this.notFullPowerTick = 0;
+			}
+			if(this.getHeated() < getMaxHeated()) {
+				this.notFullPowerTick++;
+				if(this.notFullPowerTick > this.nextBoom) {
+					this.notFullPowerTick = this.nextBoom;
+					this.tickUntilStopBoom = 20;
+				}
+			}
 		}
 	}
 

@@ -90,12 +90,12 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         }
 
         if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
-              tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getIsActive()?tile.getActualTemp():0)));
-           
+            //tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getIsActive()?tile.getActualTemp():0)));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {
-                tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getIsActive()?tile.getActualRange():0)));
+                tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
 
         if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54)) {
@@ -129,27 +129,25 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
             this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
         }
 
-        float tempLevel = tile.getTemperatureLevel();
+        float tempLevel = tile.getActualTemp() / 10F;
         float rangeLevel = tile.getRangeLevel();
         float powerRatio = tile.power / tile.getMaxPower(); // (0, 1)
+        int offset, bar;
 
         // temperature bar (182, 30)
-        if (tile.getIsActive()) {
-            int offset = (int) ((4 - tempLevel) * 14);
-            int bar = (int) ((tempLevel - 1) * 14);
-            this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
-        }
+        offset = (int) ((4 - tempLevel) * 14);
+        //int bar = (int) (tempLevel * 14);
+        bar = 56 - offset;
+        this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, bar);
 
         // range bar
-        if (tile.getIsActive()) {
-            int offset = (int) ((4 - rangeLevel) * 14);
-            int bar = (int) ((rangeLevel - 1) * 14);
-            this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
-        }
+        offset = (int) ((4 - rangeLevel) * 14);
+        bar = (int) ((rangeLevel - 1) * 14);
+        this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
 
         // power
-        int offset = (int) ((1 - powerRatio) * 56);
-        int bar = (int) (powerRatio * 56);
+        offset = (int) ((1 - powerRatio) * 56);
+        bar = (int) (powerRatio * 56);
         this.blit(transform, guiLeft + 146, guiTop + offset + 13, 181, 30, 2, bar);
     }
 

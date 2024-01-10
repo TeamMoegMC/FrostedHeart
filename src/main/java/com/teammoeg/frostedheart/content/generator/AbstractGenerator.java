@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.generator;
 
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -57,6 +58,8 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     boolean isDirty;//mark if temperature change required
     boolean isLocked = false;
     private int checkInterval = 0;
+    int heated = 0;
+    float heatAddInterval = 50;
 
     public AbstractGenerator(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
@@ -75,7 +78,18 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
     }
 
     public int getActualTemp() {
-        return (int) (getTemperatureLevel() * 10);
+        return (int) (getTemperatureLevel() * 10 * master().heated / getMaxHeated());
+    }
+
+    public int getHeated() {
+        return heated;
+    }
+
+    public int getMaxHeated() {
+        if(isActualOverdrive()) {
+            return 200;
+        }
+        return 100;
     }
 
     @Override
@@ -84,6 +98,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         isWorking = nbt.getBoolean("isWorking");
         isOverdrive = nbt.getBoolean("isOverdrive");
         isActualOverdrive = nbt.getBoolean("Overdriven");
+        heated = nbt.getInt("heated");
     }
 
     @Override
@@ -92,6 +107,7 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
         nbt.putBoolean("isWorking", isWorking);
         nbt.putBoolean("isOverdrive", isOverdrive);
         nbt.putBoolean("Overdriven", isActualOverdrive);
+        nbt.putInt("heated", heated);
     }
 
     @Override
@@ -199,14 +215,40 @@ public abstract class AbstractGenerator<T extends AbstractGenerator<T>> extends 
 	                }
 	                setAllActive(activeAfterTick);
 	            } else if (activeAfterTick) {
-	                if (isChanged() || !initialized) {
+	                if (isChanged() || !initialized || heated != getMaxHeated()) {
 	                    initialized = true;
 	                    markChanged(false);
 	                    ChunkHeatData.addPillarTempAdjust(world, getPos(), getActualRange(), getUpperBound(),getLowerBound(), getActualTemp());
 	                }
+                    Random random = world.rand;
+                    boolean needAdd = false;
+                    float heatAddProbability = 1F/heatAddInterval;
+                    if (isActualOverdrive()) {
+                        heatAddProbability = 2F/heatAddInterval;
+                    }
+                    if (random.nextFloat() < heatAddProbability) {
+                        needAdd = true;
+                    }
+                    if (heated < getMaxHeated() && needAdd) {
+                        heated++;
+                    }
+                    else if (heated > getMaxHeated() && needAdd) {
+                        heated--;
+                    }
 	            }
-        	}else
-        		shutdownTick();
+        	}else {
+                if(heated == 0) {
+                    shutdownTick();
+                    this.setActive(false);
+                } else {
+                    this.setActive(true);
+                    Random random = world.rand;
+                    float heatAddProbability = 1F/heatAddInterval;
+                    if (random.nextFloat() < heatAddProbability) {
+                        heated--;
+                    }
+                }
+            }
         }
 
     }

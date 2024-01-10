@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
@@ -79,6 +80,7 @@ public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Gen
             Random random = world.rand;
             if (random.nextFloat() < 0.2F) {
                 //for (int i = 0; i < random.nextInt(2) + 2; ++i) {
+                    ClientUtils.spawnSmokeParticles(world, blockpos.offset(Direction.UP, 1));
                     ClientUtils.spawnSmokeParticles(world, blockpos);
                     ClientUtils.spawnFireParticles(world, blockpos);
                 //}
