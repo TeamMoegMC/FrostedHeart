@@ -57,7 +57,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 	boolean isOverdrive;
 	boolean isDirty;// mark if temperature change required
 	int heated = 0;
-	float heatAddInterval = 20;
+	float heatAddInterval = 20;    //ticks
 
 	public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
 		super(multiblockInstance, type, hasRSControl);
@@ -177,11 +177,13 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 							getLowerBound(), ntlevel);
 				}
 			} else if (activeAfterTick) {
-				if (isChanged() || !initialized || heated != getMaxHeated()) {
+				if (isChanged() || !initialized) {
 					initialized = true;
 					markChanged(false);
 				}
-				this.setActive(true);
+			}
+
+			if(isWorking() && heated != getMaxHeated()) {
 				Random random = world.rand;
 				boolean needAdd = false;
 				float heatAddProbability = 1F/heatAddInterval;
@@ -190,6 +192,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 				}
 				if (random.nextFloat() < heatAddProbability) {
 					needAdd = true;
+					markContainingBlockForUpdate(null);
 				}
 				if (heated < getMaxHeated() && needAdd) {
 					heated++;
@@ -198,14 +201,13 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 					heated--;
 				}
 			}
-
-			if(!isWorking()) {
+			else if(!isWorking()) {
 				if(heated == 0) {
 					shutdownTick();
 					ChunkHeatData.removeTempAdjust(world, getPos());
 					setAllActive(false);
 				} else {
-					this.setActive(true);
+					markContainingBlockForUpdate(null);
 					Random random = world.rand;
 					float heatAddProbability = 1F/heatAddInterval;
 					if (random.nextFloat() < heatAddProbability) {
