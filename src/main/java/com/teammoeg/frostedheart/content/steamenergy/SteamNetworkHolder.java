@@ -25,7 +25,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-// TODO: Auto-generated Javadoc
 /**
  * Class SteamNetworkHolder.
  *
@@ -67,10 +66,10 @@ public class SteamNetworkHolder {
     }
     
     /**
-     * Connect.
+     * Recive Connection.
      *
-     * @param sen the sen<br>
-     * @param dist the dist<br>
+     * @param sen the network<br>
+     * @param dist the distance to master<br>
      */
     void connect(SteamEnergyNetwork sen, int dist) {
         this.counter = 10;
@@ -79,7 +78,7 @@ public class SteamNetworkHolder {
     }
 
     /**
-     * Tick.
+     * Tick for revalidate network.
      */
     public boolean tick() {
     	if(!isValid())return false;
@@ -155,8 +154,15 @@ public class SteamNetworkHolder {
     public int getDistance() {
         return dist;
     }
-
     /**
+     * get Heat network controller(Generator etc)
+     * @return heat controller
+     * */
+    public HeatController getController() {
+		return sen.getController();
+	}
+
+	/**
      * To string.<br>
      *
      * @return returns to string

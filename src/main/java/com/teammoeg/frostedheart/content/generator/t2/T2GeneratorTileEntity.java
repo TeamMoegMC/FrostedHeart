@@ -346,4 +346,9 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		if (te instanceof T2GeneratorTileEntity)
 			consumer.accept((T2GeneratorTileEntity) te);
 	}
+
+	@Override
+	public TileEntity getEntity() {
+		return this;
+	}
 }

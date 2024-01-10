@@ -18,6 +18,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import net.minecraft.tileentity.TileEntity;
+
 /**
  * The Interface HeatController.
  * Central controller for heat network.
@@ -53,5 +55,11 @@ public interface HeatController extends EnergyNetworkProvider {
      * @return the temperature level
      */
     float getTemperatureLevel();
+    /**
+     * get controller entity
+     *
+     * @return the controller entity
+     */
+    TileEntity getEntity();
     
 }

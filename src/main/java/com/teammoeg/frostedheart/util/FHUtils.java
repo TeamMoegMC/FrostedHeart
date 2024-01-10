@@ -217,4 +217,5 @@ public class FHUtils {
     public static <O,T> Optional<T> ofMap(Map<O,T> map,O key){
     	return Optional.ofNullable(map.get(key));
     }
+
 }

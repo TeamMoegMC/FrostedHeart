@@ -73,7 +73,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
 
 	@Override
 	public void eatGrassBonus() {
-
+		
 		if (this.isChild()) {
 			this.addGrowth(60);
 		} else if (feeded < 2)
