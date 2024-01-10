@@ -4,6 +4,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.simibubi.create.AllBlocks;
 
@@ -20,14 +21,14 @@ public class ServerPlayNetHandlerMixin {
 	@Shadow
 	ServerPlayerEntity player;
 	@Inject(at=@At("TAIL"),method="processVehicleMove(Lnet/minecraft/network/play/client/CMoveVehiclePacket;)V")
-	public void fh$processVehicleMove(CMoveVehiclePacket packetIn) {
+	public void fh$processVehicleMove(CMoveVehiclePacket packetIn,CallbackInfo cbi) {
 		if(player.getEntityWorld().getBlockState(player.getPosition())==AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()||
 				player.getEntityWorld().getBlockState(player.getPosition().up())==AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
 			vehicleFloating=false;
 		}
 	}
 	@Inject(at=@At("TAIL"),method="processPlayer(Lnet/minecraft/network/play/client/CPlayerPacket;)V")
-	public void fh$processPlayer(CPlayerPacket packetIn) {
+	public void fh$processPlayer(CPlayerPacket packetIn,CallbackInfo cbi) {
 		if(player.getEntityWorld().getBlockState(player.getPosition())==AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()||
 				player.getEntityWorld().getBlockState(player.getPosition().up())==AllBlocks.CRUSHING_WHEEL_CONTROLLER.getDefaultState()) {
 			floating=false;

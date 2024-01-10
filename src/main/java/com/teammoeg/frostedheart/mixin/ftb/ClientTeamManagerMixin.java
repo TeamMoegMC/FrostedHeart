@@ -21,6 +21,7 @@ import com.teammoeg.frostedheart.util.IFTBSecondWritable;
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.KnownClientPlayer;
+import dev.ftb.mods.ftbteams.data.TeamRank;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 
@@ -43,7 +44,7 @@ public abstract class ClientTeamManagerMixin {
 		Set<ClientTeam> tosendteam=new HashSet<>();
 		Set<KnownClientPlayer> tosendplayer=new HashSet<>();
 		for(ClientTeam i:teamMap.values()) {
-			if(i.getHighestRank(puuid).getPower()>0) {
+			if(i.getHighestRank(puuid).getPower()>75) {
 				tosendteam.add(i);
 			}
 		}
@@ -59,13 +60,20 @@ public abstract class ClientTeamManagerMixin {
 			if(kcp!=null)
 				tosendplayer.add(kcp);
 		}
-		buffer.writeVarInt(tosendteam.size());
-
+		System.out.println("sending "+tosendteam.size()+" essential teams and "+tosendplayer.size()+" essential players.");
+		buffer.writeVarInt(teamMap.size());
+		
 		for (ClientTeam t : teamMap.values()) {
-			if(tosendteam.contains(t))
+			if(tosendteam.contains(t)) {
 				t.write(buffer, now);
-			else
-				((IFTBSecondWritable)t).write2(buffer, now);
+				//((IFTBSecondWritable)t).write2(buffer, now);
+			}else {
+				buffer.writeUniqueId(t.getId());
+				buffer.writeByte(t.getType().ordinal());
+				t.properties.write(buffer);
+				buffer.writeVarInt(0);
+				buffer.writeCompoundTag(t.getExtraData());
+			}
 		}
 
 		buffer.writeVarInt(tosendplayer.size());
