@@ -20,7 +20,7 @@ package com.teammoeg.frostedheart.climate;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.noise.INoise1D;
 
 import net.minecraft.util.math.BlockPos;
@@ -28,11 +28,11 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
 
 /**
- * Central class for all FH climate requirements.
+ * No longer use
  * This is only valid in the overworld!
  */
 @Deprecated
-public final class Climate {
+public final class VanillaClimate {
     /**
      * Constants for temperature calculation. Do not reference these directly, they do not have much meaning outside the context they are used in
      */
@@ -56,7 +56,7 @@ public final class Climate {
     /**
      * Used to calculate the actual temperature at a world and position.
      * Will be valid when used on both logical sides.
-     * MUST NOT be used by world generation, it should use {@link Climate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
+     * MUST NOT be used by world generation, it should use {@link VanillaClimate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
      */
     public static float getTemperature(IWorld world, BlockPos pos) {
         return calculateTemperature(pos.getZ(), pos.getY(), ChunkHeatData.getTemperature(world, pos));
@@ -72,7 +72,7 @@ public final class Climate {
     }
 
     /**
-     * The reverse of {@link Climate#toVanillaTemperature(float)}
+     * The reverse of {@link VanillaClimate#toVanillaTemperature(float)}
      */
     public static float toActualTemperature(float vanillaTemperature) {
         return (vanillaTemperature - 0.15f) / 0.0217f;
@@ -98,6 +98,6 @@ public final class Climate {
         return averageTemperature - elevationTemperature;
     }
 
-    private Climate() {
+    private VanillaClimate() {
     }
 }

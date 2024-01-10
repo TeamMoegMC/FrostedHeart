@@ -24,7 +24,8 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.generator.AbstractGenerator;
+import com.teammoeg.frostedheart.content.generator.ZoneHeatingMultiblockTileEntity;
+import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
@@ -41,7 +42,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
-public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> implements
+public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<RadiatorTileEntity> implements
         INetworkConsumer, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
     public int process = 0;
     public int processMax = 0;
@@ -112,7 +113,13 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 
     @Override
     protected void tickFuel() {
+    	
         network.tick();
+        if(!isWorking()) {
+        	if(this.getIsActive())
+        		this.setAllActive(false);
+        	return;
+        }
         if (process > 0) {
             if (network.isValid())
                 process -= network.getTemperatureLevel();
@@ -121,9 +128,9 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         } else if (network.isValid() && network.tryDrainHeat(4 * 160 * network.getTemperatureLevel())) {
             process = (int) (160 * network.getTemperatureLevel());
             processMax = (int) (160 * network.getTemperatureLevel());
-            this.setActive(true);
+            this.setAllActive(true);
         } else {
-            this.setActive(false);
+            this.setAllActive(false);
         }
         if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
             tempLevelLast = network.getTemperatureLevel();
@@ -168,21 +175,7 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
         return false;
     }
 
-    @Override
-    public void forEachBlock(Consumer<RadiatorTileEntity> consumer) {
-        for (int y = 0; y < 3; ++y) {
-            BlockPos actualPos = getBlockPosForPos(new BlockPos(0, y, 0));
-            TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-            if (te instanceof RadiatorTileEntity)
-                consumer.accept((RadiatorTileEntity) te);
-        }
-    }
-
-    @Override
-    public boolean shouldUnique() {
-        return false;
-    }
-
+ 
     @Override
     public SteamNetworkHolder getHolder() {
         return network;
@@ -196,5 +189,17 @@ public class RadiatorTileEntity extends AbstractGenerator<RadiatorTileEntity> im
 	@Override
 	public int getLowerBound() {
 		return 1;
+	}
+
+	@Override
+	public void tickHeat() {
+
+		
+	}
+
+	@Override
+	protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, TileEntity te) {
+		if (te instanceof RadiatorTileEntity)
+			consumer.accept((RadiatorTileEntity) te);
 	}
 }

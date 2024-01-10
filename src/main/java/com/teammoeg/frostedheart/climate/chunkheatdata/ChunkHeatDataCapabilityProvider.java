@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.climate.chunkdata;
+package com.teammoeg.frostedheart.climate.chunkheatdata;
 
 import com.teammoeg.frostedheart.FHMain;
 

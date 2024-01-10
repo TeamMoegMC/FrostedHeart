@@ -18,20 +18,17 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import java.util.Random;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.research.data.ResearchVariant;
-import com.teammoeg.frostedheart.util.ReferenceValue;
+import com.teammoeg.frostedheart.town.GeneratorData;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.entity.player.PlayerEntity;
@@ -54,23 +51,19 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEntity<T>> extends AbstractGenerator<T> implements IIEInventory,
+public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T>> extends ZoneHeatingMultiblockTileEntity<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
-    @Override
-    public boolean shouldUnique() {
-        return true;
-    }
 
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
-    public int process = 0;
-    public int processMax = 0;
-    
-    protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
+    public int process;
+    public int processMax;
     protected ItemStack currentItem;
+    //local inventory, prevent lost
+	NonNullList<ItemStack> linventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
-    public class GeneratorData implements IIntArray {
+    public class GeneratorUIData implements IIntArray {
         public static final int MAX_BURN_TIME = 0;
         public static final int BURN_TIME = 1;
 
@@ -78,9 +71,9 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
         public int get(int index) {
             switch (index) {
                 case MAX_BURN_TIME:
-                    return processMax;
+                	return processMax;
                 case BURN_TIME:
-                    return process;
+                	return process;
                 default:
                     throw new IllegalArgumentException("Unknown index " + index);
             }
@@ -88,9 +81,10 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
 
         @Override
         public void set(int index, int value) {
+        	//throw new UnsupportedOperationException();
             switch (index) {
                 case MAX_BURN_TIME:
-                    processMax = value;
+                	processMax=value;
                     break;
                 case BURN_TIME:
                     process = value;
@@ -106,41 +100,39 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
         }
     }
 
-    public BurnerGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl, int temperatureLevelIn, int overdriveBoostIn, int rangeLevelIn) {
+    public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
-        temperatureLevel = temperatureLevelIn;
-        rangeLevel = rangeLevelIn;
-        overdriveBoost = overdriveBoostIn;
+        
     }
-
+    public final Optional<GeneratorData> getData(){
+    	return getTeamData().map(t->t.generatorData).filter(t->this.pos.equals(t.actualPos));
+    }
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        process = nbt.getInt("process");
-        processMax = nbt.getInt("processMax");
-        
-        if (!descPacket) {
-            
-            currentItem = ItemStack.read(nbt.getCompound("currentItem"));
-            ItemStackHelper.loadAllItems(nbt, inventory);
-        }
-        
+        ItemStackHelper.loadAllItems(nbt, linventory);
     }
+	public void unregist() {
+		getTeamData().ifPresent(t -> {
+			t.generatorData.actualPos=BlockPos.ZERO;
+			t.generatorData.dimension=null;
+		});
+	}
+
+	public void regist() {
+		getTeamData().ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
+	}
 
     @Override
+	public void disassemble() {
+		if (master() != null)
+			master().unregist();
+		super.disassemble();
+	}
+	@Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.putInt("process", process);
-        nbt.putInt("processMax", processMax);
-        
-        if (!descPacket) {
-            if (currentItem != null)
-                nbt.put("current", currentItem.serializeNBT());
-            else
-                nbt.remove("current");
-            ItemStackHelper.saveAllItems(nbt, inventory);
-        }
-        
+        ItemStackHelper.saveAllItems(nbt, linventory);
     }
 
     @Nonnull
@@ -165,6 +157,8 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
             setWorking(message.getBoolean("isWorking"));
         if (message.contains("isOverdrive", Constants.NBT.TAG_BYTE))
             setOverdrive(message.getBoolean("isOverdrive"));
+        this.markContainingBlockForUpdate(null);
+        this.markDirty();
        /* if (message.contains("temperatureLevel", Constants.NBT.TAG_INT))
             setTemperatureLevel(message.getInt("temperatureLevel"));
         if (message.contains("rangeLevel", Constants.NBT.TAG_INT))
@@ -203,7 +197,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
         T master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesStep();
-        return new int[]{processMax - process};
+        return new int[]{getData().map(t->t.processMax-t.process).orElse(0)};
     }
 
     @Override
@@ -211,17 +205,18 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
         T master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesMax();
-        return new int[]{processMax};
+        return new int[]{getData().map(t->t.processMax).orElse(0)};
     }
 
     @Override
     public NonNullList<ItemStack> getInventory() {
         T master = master();
-        if (master != null)
-            return master.inventory;
-        return this.inventory;
+        return Optional.ofNullable(master).flatMap(t->t.getData()).map(t->t.getInventory()).orElseGet(()->master!=null?master.linventory:this.linventory);
     }
-
+    public boolean isDataPresent() {
+    	T master = master();
+    	return Optional.ofNullable(master).flatMap(t->t.getData()).isPresent();
+    }
     @Override
     public boolean isStackValid(int slot, ItemStack stack) {
         if (stack.isEmpty())
@@ -257,118 +252,28 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
         return super.getCapability(capability, facing);
     }
 
-    @Nullable
-    public GeneratorRecipe getRecipe() {
-        if (inventory.get(INPUT_SLOT).isEmpty())
-            return null;
-        GeneratorRecipe recipe = GeneratorRecipe.findRecipe(inventory.get(INPUT_SLOT));
-        if (recipe == null)
-            return null;
-        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output) &&
-                inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
-            return recipe;
-        }
-        return null;
-    }
-
     @Override
     public void onShutDown() {
-        process = 0;
-        processMax = 0;
-
-        if (currentItem != null) {
-            if (!inventory.get(OUTPUT_SLOT).isEmpty())
-                inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
-            else
-                inventory.set(OUTPUT_SLOT, currentItem);
-            currentItem = null;
-        }
-    }
-    protected double getEfficiency() {
-    	ReferenceValue<Double> eff=new ReferenceValue<>(0.7);
-        getTeamData().ifPresent(t->{
-        	eff.map(n->n+t.getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY));
-        });
-        return eff.getVal();
     }
     @Override
     protected void tickFuel() {
         // just finished process or during process
-    	
-        if (process > 0) {
-            if (isOverdrive() && !isActualOverdrive()) {
-                GeneratorRecipe recipe = getRecipe();
-                if (recipe != null) {
-                    int count = recipe.input.getCount();
-                    if (inventory.get(INPUT_SLOT).getCount() >= 4 * count) {
-                        Utils.modifyInvStackSize(inventory, INPUT_SLOT, -4 * count);
-                        if (currentItem != null) {
-                            if (!inventory.get(OUTPUT_SLOT).isEmpty())
-                                inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
-                            else
-                                inventory.set(OUTPUT_SLOT, currentItem);
-                            currentItem = null;
-                        }
-                        double effi=getEfficiency();
-                        currentItem = recipe.output.copy();
-                        currentItem.setCount(4 * currentItem.getCount());
-                        this.process += (int)(recipe.time*effi) * 4;
-                        this.processMax += (int)(recipe.time*effi) * 4;
-                        setActualOverdrive(true);
-                    }
-                }
-            }
-            if (isActualOverdrive())
-                process -= 4;
-            else
-                process--;
-            this.setActive(true);
-            this.markDirty();
-            this.markContainingBlockForUpdate(null);
-        }
-        // process not started yet
-        else {
-            if (currentItem != null) {
-                if (!inventory.get(OUTPUT_SLOT).isEmpty())
-                    inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
-                else
-                    inventory.set(OUTPUT_SLOT, currentItem);
-                currentItem = null;
-            }
-            GeneratorRecipe recipe = getRecipe();
-            if (recipe != null) {
-                int modifier = 1;
-                if (isOverdrive() && inventory.get(INPUT_SLOT).getCount() >= 4 * recipe.input.getCount()) {
-                    if (!isActualOverdrive())
-                        this.setActualOverdrive(true);
-                    modifier = 4;
-                } else if (isActualOverdrive()) {
-                    this.setActualOverdrive(false);
-                }
-                int count = recipe.input.getCount() * modifier;
-                Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
-                currentItem = recipe.output.copy();
-                currentItem.setCount(currentItem.getCount() * modifier);
-                double effi=getEfficiency();
-                this.process = (int)(recipe.time*effi) * modifier;
-                this.processMax = process;
-                setActive(true);
-                this.markDirty();
-                markContainingBlockForUpdate(null);
-            } else {
-            	if(this.processMax!=0) {
-	                this.process = 0;
-	                processMax = 0;
-	                setActive(false);
-	                this.markDirty();
-	                markContainingBlockForUpdate(null);
-            	}
-            }
-        }
+    	Optional<GeneratorData> data=this.getData();
+    	data.ifPresent(t->{
+    		t.isOverdrive=this.isOverdrive;
+    		t.isWorking=this.isWorking;
+    	});
+    	data.ifPresent(t->t.tick());
+    	setAllActive(data.map(t->t.isActive).orElse(false));
+    	process=data.map(t->t.process).orElse(0);
+    	processMax=data.map(t->t.processMax).orElse(0);
+    	/*if(this.getIsActive())
+    		this.markContainingBlockForUpdate(null);*/
     }
 
 
-    @Override
+
+	@Override
     protected void tickEffects(boolean isActive) {
 
     }
@@ -380,9 +285,7 @@ public abstract class BurnerGeneratorTileEntity<T extends BurnerGeneratorTileEnt
 		
 	}
 
-	@Override
-	public void forEachBlock(Consumer<T> consumer) {
-	}
+
 
 
 

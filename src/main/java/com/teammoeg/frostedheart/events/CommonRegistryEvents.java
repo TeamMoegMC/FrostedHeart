@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
 import com.teammoeg.frostedheart.loot.AddLootModifier;
 import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
+import com.teammoeg.frostedheart.loot.BlizzardDamageCondition;
 import com.teammoeg.frostedheart.loot.DechantLootModifier;
 import com.teammoeg.frostedheart.loot.ModLootCondition;
 import com.teammoeg.frostedheart.loot.RemoveLootModifier;
@@ -87,6 +88,7 @@ public class CommonRegistryEvents {
         TagLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "block_tag"), new LootConditionType(new TagLootCondition.Serializer()));
         TreasureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "treasure"), new LootConditionType(new TreasureLootCondition.Serializer()));
         ModLootCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootConditionType(new ModLootCondition.Serializer()));
+        BlizzardDamageCondition.TYPE=Registry.register(Registry.LOOT_CONDITION_TYPE,new ResourceLocation(FHMain.MODID, "blizzard_damage"),  new LootConditionType(new BlizzardDamageCondition.Serializer()));
     }
 
     @SubscribeEvent

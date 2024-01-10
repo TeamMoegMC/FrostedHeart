@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.climate.chunkdata;
+package com.teammoeg.frostedheart.climate.chunkheatdata;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

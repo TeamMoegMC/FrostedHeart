@@ -27,7 +27,7 @@ import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 
 public class T1GeneratorContainer extends IEBaseContainer<T1GeneratorTileEntity> {
-    public T1GeneratorTileEntity.GeneratorData data;
+    public T1GeneratorTileEntity.GeneratorUIData data;
 
     public T1GeneratorContainer(int id, PlayerInventory inventoryPlayer, T1GeneratorTileEntity tile) {
         super(tile, id);

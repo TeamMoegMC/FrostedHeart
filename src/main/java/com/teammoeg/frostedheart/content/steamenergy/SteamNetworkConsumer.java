@@ -48,7 +48,7 @@ public class SteamNetworkConsumer extends SteamNetworkHolder{
 	
 	/**
 	 * Tick and absorb power.
-	 * @return 
+	 * @return atually drained
 	 */
 	@Override
 	public boolean tick() {

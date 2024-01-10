@@ -23,7 +23,10 @@ import net.minecraft.tileentity.TileEntity;
 public class SteamEnergyNetwork {
     private HeatController provider;
     private boolean isValid = true;
-
+    
+    public HeatController getController() {
+    	return provider;
+    }
     public SteamEnergyNetwork(HeatController provider) {
         this.provider = provider;
     }

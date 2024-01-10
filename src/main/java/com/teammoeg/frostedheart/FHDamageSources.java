@@ -24,6 +24,7 @@ import net.minecraft.util.DamageSource;
 public class FHDamageSources {
     public static final DamageSource HYPOTHERMIA = (new DamageSource("hypothermia")).setDamageBypassesArmor().setDamageIsAbsolute();
     public static final DamageSource HYPERTHERMIA = (new DamageSource("hyperthermia")).setDamageBypassesArmor().setDamageIsAbsolute();
+    public static final DamageSource BLIZZARD = (new DamageSource("blizzard")).setDamageBypassesArmor().setDamageIsAbsolute();
     public static final DamageSource RAD = (new DamageSource("radiation")).setDamageBypassesArmor().setDamageIsAbsolute();
     public static final DamageSource HYPOTHERMIA_INSTANT = (new DamageSource("hypothermia_instant")).setDamageBypassesArmor();
     public static final DamageSource HYPERTHERMIA_INSTANT = (new DamageSource("hyperthermia_instant")).setDamageBypassesArmor();

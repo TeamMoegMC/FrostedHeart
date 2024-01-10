@@ -19,69 +19,193 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.BitSet;
 
 import net.minecraft.nbt.CompoundNBT;
 
 public class DayTemperatureData {
-    int[] hourData = new int[24];
-    BitSet blizzard=new BitSet(24);
+	public static class HourData{
+		private float temp=0;
+		
+		private ClimateType type=ClimateType.NONE;
+		//6
+		private byte windSpeed;//unsigned
+		
+		public HourData() {
+			super();
+			setWindSpeed(0);
+		}
+		
+		public HourData(int packed) {
+			this();
+			unpack(packed);
+		}
+
+	
+		public HourData(float temp, ClimateType type,
+				int windSpeed) {
+			super();
+			this.temp = temp;
+			this.type=type;
+			setWindSpeed(windSpeed);
+		}
+
+		private void setWindSpeed(int val) {
+			windSpeed=(byte) (val);
+		}
+		public int getWindSpeed() {
+			return windSpeed&0xFF;
+		}
+		public float getTemp() {
+			return temp;
+		}
+
+
+		public HourData(ClimateType type) {
+			super();
+			this.type = type;
+		}
+
+		public int pack() {
+			int val=0;
+			short tempInt=(short)(temp*100);
+			val|=(tempInt&0xFFFF);
+			val|=windSpeed<<16;
+			
+			val|=(getType().ordinal()&0xff)<<24;
+			return val;
+		}
+		public void unpack(int val) {
+			short tempInt=(short) (val&0xFFFF);
+			temp=tempInt/100f;
+			windSpeed=(byte) ((val>>16)&0xff);
+			int vx=(val>>24);
+			type=ClimateType.values()[vx];
+		}
+
+		@Override
+		public String toString() {
+			return "{T=" + temp + ",W=" + getType() + ",V=" + getWindSpeed() + "}";
+		}
+
+		public ClimateType getType() {
+			return type==null?ClimateType.NONE:type;//IDK why this happen, but this would fix
+		}
+
+		
+	}
+	HourData[] hourData = new HourData[24];
     float dayHumidity;
     float dayNoise;
     long day;
 
     public DayTemperatureData() {
+		for(int i=0;i<24;i++)
+			hourData[i]=new HourData();
     }
     public DayTemperatureData(long day) {
-		super();
+		this();
 		this.day = day;
-	}
-	public DayTemperatureData(int nop) {
-    	for(int i=0;i<24;i++)
-    		setHourTemp(i,0);
-    }
 
+	}
+
+    void setTemp(int hourInDay, float temp) {
+        hourData[hourInDay].temp=temp;;
+    }
     public float getTemp(WorldClockSource wcs) {
         return getTemp(wcs.getHourInDay());
     }
-
     public float getTemp(int hourInDay) {
-        return Float.intBitsToFloat(hourData[hourInDay]);
+        return hourData[hourInDay].getTemp();
     }
-    public boolean getBlizzard(WorldClockSource wcs) {
-    	return blizzard.get(wcs.getHourInDay());
-    }  
-    public boolean getBlizzard(int hourInDay) {
-    	return blizzard.get(hourInDay);
-    }  
+    
     public void setBlizzard(int hourInDay,boolean data) {
-    	blizzard.set(hourInDay, data);
+    	hourData[hourInDay].type=ClimateType.BLIZZARD;
     }
-    void setHourTemp(int h, float temp) {
-        hourData[h] = Float.floatToRawIntBits(temp);
+    public boolean isBlizzard(WorldClockSource wcs) {
+    	return isBlizzard(wcs.getHourInDay());
+    }  
+    public boolean isBlizzard(int hourInDay) {
+    	return hourData[hourInDay].getType()==ClimateType.BLIZZARD;
+    }  
+    
+	public void setSnow(int hourInDay, boolean data) {
+		hourData[hourInDay].type=ClimateType.SNOW;
+	}
+    public boolean isSnow(WorldClockSource wcs) {
+    	return isSnow(wcs.getHourInDay());
+    }  
+    public boolean isSnow(int hourInDay) {
+    	ClimateType type=hourData[hourInDay].getType();
+    	return type==ClimateType.SNOW||type==ClimateType.SNOW_BLIZZARD;
+    }
+    
+	public void setCloudy(int hourInDay, boolean data) {
+		hourData[hourInDay].type=ClimateType.CLOUDY;
+	}
+    public boolean isCloudy(WorldClockSource wcs) {
+    	return isCloudy(wcs.getHourInDay());
+    }  
+    public boolean isCloudy(int hourInDay) {
+    	return hourData[hourInDay].getType()==ClimateType.CLOUDY;
+    }
+    
+	public void setSunny(int hourInDay, boolean data) {
+		hourData[hourInDay].type=ClimateType.SUN;
+	}
+    public boolean isSunny(WorldClockSource wcs) {
+    	return isSunny(wcs.getHourInDay());
+    }  
+    public boolean isSunny(int hourInDay) {
+    	return hourData[hourInDay].getType()==ClimateType.SUN;
+    }
+    
+	public HourData getData(WorldClockSource clockSource) {
+		return getData(clockSource.getHourInDay());
+	}
+    public HourData getData(int hourInDay) {
+    	return hourData[hourInDay];
     }
 
+	public void setType(int hourInDay, ClimateType type) {
+		hourData[hourInDay].type=type;
+	}
+	public ClimateType getType(WorldClockSource wcs) {
+		return getType(wcs.getHourInDay());
+	}
+	public ClimateType getType(int hourInDay) {
+		return hourData[hourInDay].type;
+	}
+
+	public void setWind(int hourInDay,int speed) {
+		hourData[hourInDay].setWindSpeed(speed);;
+	}
+	public int getWind(WorldClockSource wcs) {
+		return getWind(wcs.getHourInDay());
+	}
+	public int getWind(int hourInDay) {
+		return hourData[hourInDay].getWindSpeed();
+	}
+	
     public CompoundNBT serialize() {
         CompoundNBT cnbt = new CompoundNBT();
-        cnbt.putIntArray("data", hourData);
+        cnbt.putIntArray("ndata", Arrays.stream(hourData).mapToInt(HourData::pack).toArray());
+       // cnbt.putIntArray("data", hourData);
         cnbt.putFloat("humidity", dayHumidity);
         cnbt.putFloat("noise", dayNoise);
         cnbt.putLong("day", day);
-        cnbt.putLongArray("blizzard", blizzard.toLongArray());
+        //cnbt.putLongArray("blizzard", blizzard.toLongArray());
         return cnbt;
     }
 
     public void deserialize(CompoundNBT cnbt) {
-        int[] iar = cnbt.getIntArray("data");
+        int[] iar = cnbt.getIntArray("ndata");
         for (int i = 0; i < iar.length; i++)
-            hourData[i] = iar[i];
+            hourData[i].unpack(iar[i]);
         dayHumidity = cnbt.getFloat("humidity");
         dayNoise = cnbt.getFloat("noise");
         day = cnbt.getLong("day");
-        if(cnbt.contains("blizzard"))
-        	blizzard=BitSet.valueOf(cnbt.getLongArray("blizzard"));
     }
 
     public static DayTemperatureData read(CompoundNBT data) {
@@ -92,7 +216,10 @@ public class DayTemperatureData {
 
 	@Override
 	public String toString() {
-		return "[hourData=" + Arrays.stream(hourData).mapToObj(Float::intBitsToFloat).map(v->String.format("%.2f", v)).reduce("", (a,b)->a+b+",") + " dayHumidity=" + dayHumidity
-				+ ", dayNoise=" + dayNoise + ", day=" + day + "]";
+		return "{hourData=" + Arrays.stream(hourData).map(Object::toString).reduce("",(a,b)->a+b+",") + ",rH=" + dayHumidity
+				+ ",noise=" + dayNoise+ "}";
 	}
+
+
+
 }

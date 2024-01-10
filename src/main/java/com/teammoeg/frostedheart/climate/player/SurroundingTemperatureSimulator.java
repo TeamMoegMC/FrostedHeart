@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.climate.player;
 
 import java.util.HashMap;
 import java.util.Map;

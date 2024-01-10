@@ -29,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.BushBlock;
 import net.minecraft.block.FungusBlock;
 import net.minecraft.block.IGrowable;
@@ -45,7 +46,10 @@ public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
 
 	@Inject(at=@At("HEAD"),method="randomTick",remap=true,cancellable=true)
 	public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random,CallbackInfo cbi) {
-		if(!FHUtils.canTreeGrow(worldIn, pos, random))
+		if(FHUtils.isBlizzardHarming(worldIn, pos)) {
+			worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
+			cbi.cancel();
+		}else if(!FHUtils.canTreeGrow(worldIn, pos, random))
 			cbi.cancel();
 	}
 

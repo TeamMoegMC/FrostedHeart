@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.climate.player;
 
 import java.util.ArrayList;
 
@@ -24,7 +24,8 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHPacketHandler;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -96,7 +97,7 @@ public class TemperatureUpdate {
                     player.addPotionEffect(new EffectInstance(FHEffects.WET, 100, 0));
             }
             //load current data
-            float current = PlayerTemperature.getBodyTemperature(player);
+            float current = BodyTemperature.getBodyTemperature(player);
             double tspeed = FHConfig.SERVER.tempSpeed.get();
             if (current < 0) {
             	float delt=(float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
@@ -114,7 +115,7 @@ public class TemperatureUpdate {
             //Temperature from climate
             envtemp+=WorldTemperature.getClimateTemperature(world);
             //Surrounding temperature 
-            float bt=PlayerTemperature.getBlockTemp(player);
+            float bt=new SurroundingTemperatureSimulator(player).getBlockTemperature(player.getPosX(), player.getPosYEye(), player.getPosZ());
             //Day-night temperature
             float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
             float gameTime = world.getDayTime() % 24000L;
@@ -201,8 +202,8 @@ public class TemperatureUpdate {
                 current = -10;
             else if (current > 10)
                 current = 10;
-            float lenvtemp=PlayerTemperature.getEnvTemperature(player);//get a smooth change in display
-            PlayerTemperature.setTemperature(player, current, (envtemp + 37)*.2f+lenvtemp*.8f);
+            float lenvtemp=BodyTemperature.getEnvTemperature(player);//get a smooth change in display
+            BodyTemperature.setTemperature(player, current, (envtemp + 37)*.2f+lenvtemp*.8f);
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }
     }
@@ -217,7 +218,7 @@ public class TemperatureUpdate {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            double calculatedTarget = PlayerTemperature.getBodyTemperature(player);
+            double calculatedTarget = BodyTemperature.getBodyTemperature(player);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
                     if (!player.isPotionActive(FHEffects.HYPERTHERMIA)

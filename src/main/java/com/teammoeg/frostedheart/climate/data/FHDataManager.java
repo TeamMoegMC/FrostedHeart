@@ -26,8 +26,8 @@ import java.util.Map.Entry;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.climate.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;

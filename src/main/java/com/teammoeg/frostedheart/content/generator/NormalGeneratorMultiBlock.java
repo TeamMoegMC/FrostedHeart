@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.content.generator;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
-import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -68,12 +67,13 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
                                              Hand hand, BlockRayTraceResult hit) {
         if (!world.isRemote) {
             TileEntity te = Utils.getExistingTileEntity(world, pos);
-            if (te instanceof AbstractGenerator && ((AbstractGenerator) te).shouldUnique()&&!(player instanceof FakePlayer)) {
+            if (te instanceof ZoneHeatingMultiblockTileEntity &&!(player instanceof FakePlayer)) {
             	
-                if (((AbstractGenerator) te).getOwner() == null) {
-                	te=((AbstractGenerator) te).master();
-                    ((AbstractGenerator) te).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player).getId());
-                    ((AbstractGenerator) te).regist();
+                if (((ZoneHeatingMultiblockTileEntity) te).getOwner() == null) {
+                	te=((ZoneHeatingMultiblockTileEntity) te).master();
+                    ((ZoneHeatingMultiblockTileEntity) te).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player).getId());
+                    if(te instanceof MasterGeneratorTileEntity)
+                    	((MasterGeneratorTileEntity) te).regist();
                 }
                 
             }

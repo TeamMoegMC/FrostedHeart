@@ -16,49 +16,32 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.climate.player;
 
+import javax.annotation.Nullable;
+
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 
+// TODO: Auto-generated Javadoc
+
 /**
- * Interface IHotFood.
- * Interface for body warming consumables
+ * Interface IWarmKeepingEquipment.
+ * Interface for warmkeeping equipments
  *
  * @author khjxiaogu
- * file: IHotFood.java
+ * file: IWarmKeepingEquipment.java
  * @date 2021年9月14日
  */
-public interface ITempAdjustFood {
+public interface IWarmKeepingEquipment {
 
     /**
-     * Get max temperature this item can get.
+     * returns warm keeping factor.
+     * max factor is 1.
      *
-     * @param is the stack<br>
-     * @return max temp<br>
+     * @param pe    the player, null means get default
+     * @param stack the stack<br>
+     * @return factor<br>
      */
-    default float getMaxTemp(ItemStack is) {
-        return 15;
-    }
-
-    ;
-
-    /**
-     * Get min temperature this item can get.
-     *
-     * @param is the stack<br>
-     * @return max temp<br>
-     */
-    default float getMinTemp(ItemStack is) {
-        return -15;
-    }
-
-    ;
-
-    /**
-     * Get delta temperature this item would give.
-     *
-     * @param is the is<br>
-     * @return heat<br>
-     */
-    float getHeat(ItemStack is,float env);
+    float getFactor(@Nullable ServerPlayerEntity pe, ItemStack stack);
 }

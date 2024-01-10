@@ -22,8 +22,8 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.IHeatingEquipment;
-import com.teammoeg.frostedheart.climate.ITempAdjustFood;
+import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
+import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.advancements.CriteriaTriggers;

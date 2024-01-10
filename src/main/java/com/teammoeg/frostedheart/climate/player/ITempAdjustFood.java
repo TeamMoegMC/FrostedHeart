@@ -16,39 +16,49 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.climate.player;
 
 import net.minecraft.item.ItemStack;
 
 /**
- * Interface IHeatingEquipment.
- * Interface for Heating Equipment Item
+ * Interface IHotFood.
+ * Interface for body warming consumables
  *
  * @author khjxiaogu
- * file: IHeatingEquipment.java
+ * file: IHotFood.java
  * @date 2021年9月14日
  */
-public interface IHeatingEquipment {
+public interface ITempAdjustFood {
 
     /**
-     * Compute new body temperature.<br>
+     * Get max temperature this item can get.
      *
-     * @param stack           the stack<br>
-     * @param bodyTemp        the body temp<br>
-     * @param environmentTemp the environment temp<br>
-     * @return returns body temperature change
+     * @param is the stack<br>
+     * @return max temp<br>
      */
-    float compute(ItemStack stack, float bodyTemp, float environmentTemp);
-
-    /**
-     * get max temperature delta.<br>
-     *
-     * @param stack the stack<br>
-     * @return returns max temperature delta
-     */
-    float getMax(ItemStack stack);
-
-    default boolean canHandHeld() {
-        return false;
+    default float getMaxTemp(ItemStack is) {
+        return 15;
     }
+
+    ;
+
+    /**
+     * Get min temperature this item can get.
+     *
+     * @param is the stack<br>
+     * @return max temp<br>
+     */
+    default float getMinTemp(ItemStack is) {
+        return -15;
+    }
+
+    ;
+
+    /**
+     * Get delta temperature this item would give.
+     *
+     * @param is the is<br>
+     * @return heat<br>
+     */
+    float getHeat(ItemStack is,float env);
 }

@@ -41,7 +41,8 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
     public T1GeneratorScreen(T1GeneratorContainer container, PlayerInventory inv, ITextComponent title) {
         super(container, inv, title);
         this.tile = container.tile;
-        clearIntArray(tile.guiData);
+        this.clearIntArray(tile.guiData);
+        
     }
 
     @Override
@@ -130,7 +131,7 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
         offset = (int) ((4 - tempLevel) * 14);
         //int bar = (int) ((tempLevel - 1) * 14);
         bar = 56 - offset;
-        this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
+        this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, bar);
 
         // range bar
         offset = (int) ((4 - rangeLevel) * 14);

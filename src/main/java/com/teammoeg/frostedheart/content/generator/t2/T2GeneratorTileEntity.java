@@ -19,21 +19,22 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatController;
 import com.teammoeg.frostedheart.content.steamenergy.HeatProviderManager;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
+import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.ReferenceValue;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -49,7 +50,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2GeneratorTileEntity>
+public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity>
 		implements HeatController, INetworkConsumer {
 	@Override
 	public void disassemble() {
@@ -58,7 +59,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		super.disassemble();
 	}
 
-	public T2GeneratorTileEntity.GeneratorData guiData = new T2GeneratorTileEntity.GeneratorData();
+	public T2GeneratorTileEntity.GeneratorUIData guiData = new T2GeneratorTileEntity.GeneratorUIData();
 	HeatProviderManager manager = new HeatProviderManager(this, c -> {
 		Direction dir = this.getFacing();
 		
@@ -67,7 +68,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	});
 
 	public T2GeneratorTileEntity() {
-		super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false, 1, 2, 1);
+		super(FHMultiblocks.GENERATOR_T2, FHTileTypes.GENERATOR_T2.get(), false);
 	}
 
 	float power = 0;
@@ -106,7 +107,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		nbt.put("fluid", tankx);
 	}
 
-	public FluidTank tank = new FluidTank(20 * FluidAttributes.BUCKET_VOLUME,
+	public FluidTank tank = new FluidTank(200 * FluidAttributes.BUCKET_VOLUME,
 			f -> GeneratorSteamRecipe.findRecipe(f) != null);
 
 	@Override
@@ -140,6 +141,9 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	}
 
 	protected void tickLiquid() {
+		Optional<GeneratorData> data=getData();
+		this.power=data.map(t->t.power).orElse(0f);
+		this.liquidtick=data.map(t->t.steamLevel).orElse(0);
 		if (!this.getIsActive())
 			return;
 		float rt = this.getTemperatureLevel();
@@ -153,13 +157,11 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 			return;
 		}
 		double eff = getHeatEfficiency();
+		
+		int liquidtick=data.map(t->t.steamLevel).orElse(0);
 		if (liquidtick >= rt) {
-			liquidtick -= rt;
-
-			this.power += this.spowerMod * rt * eff;
-			if (this.power >= this.getMaxPower())
-				this.power = this.getMaxPower();
-
+			data.ifPresent(t->t.steamLevel-=rt);
+			this.fillHeat((float) (this.spowerMod * rt * eff));
 			return;
 		}
 		GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
@@ -171,13 +173,12 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 				if (this.stempMod != sgr.tempMod || this.srangeMod != sgr.rangeMod)
 					this.markChanged(true);
 				this.spowerMod = sgr.power;
-				this.power += this.spowerMod * rt * eff;
-				if (this.power >= this.getMaxPower())
-					this.power = this.getMaxPower();
+				this.fillHeat((float) (this.spowerMod * rt * eff));
 				this.srangeMod = sgr.rangeMod;
 				this.stempMod = sgr.tempMod;
-				this.liquidtick = rdrain;
-				this.tank.drain(actualDrain, FluidAction.EXECUTE);
+				data.ifPresent(t->t.steamLevel=rdrain);
+				final FluidStack fs2=this.tank.drain(actualDrain, FluidAction.EXECUTE);
+				data.ifPresent(t->t.fluid=fs2.getFluid());
 				return;
 			}
 		}
@@ -194,7 +195,15 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		return new AxisAlignedBB(pos.getX() - 2, pos.getY() - 2, pos.getZ() - 2, pos.getX() + 2, pos.getY() + 6,
 				pos.getZ() + 2);
 	}
-
+    @Override
+	public void tickHeat() {
+    	if(super.isOverdrive()) {
+    		this.setTemperatureLevel(2*stempMod);
+    	}else {
+    		this.setTemperatureLevel(1*stempMod);
+    	}
+    	this.setRangeLevel(1*srangeMod);
+	}
 	@Override
 	protected void tickFuel() {
 		super.tickFuel();
@@ -203,24 +212,12 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	}
 
 	@Override
-	public void forEachBlock(Consumer<T2GeneratorTileEntity> consumer) {
-		for (int x = 0; x < 3; ++x)
-			for (int y = 0; y < 7; ++y)
-				for (int z = 0; z < 3; ++z) {
-					BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-					TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-					if (te instanceof T2GeneratorTileEntity)
-						consumer.accept((T2GeneratorTileEntity) te);
-				}
-	}
-
-	@Override
 	protected void tickEffects(boolean isActive) {
 		if (isActive) {
 			BlockPos blockpos = this.getPos().offset(Direction.UP, 5);
 			Random random = world.rand;
 			float particleProbability = 0.3F;
-			if(isActualOverdrive()) {
+			if(isOverdrive()) {
 				particleProbability = 0.6F;
 			}
 
@@ -272,9 +269,7 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
 	@Override
 	public float getMaxHeat() {
-		if (master() != null)
-			return master().power;
-		return 0;
+		return super.getData().map(t->t.power).orElse(0f);
 	}
 
 	public float getMaxPower() {
@@ -284,29 +279,14 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 	@Override
 	public float drainHeat(float value) {
 		if (master() != null) {
-			float actual = Math.min(value, master().power);
-			master().power -= actual;
+			Optional<GeneratorData> data=super.getData();
+			float pow=data.map(t->t.power).orElse(0f);
+			final float actual = Math.min(value, pow);
+			data.ifPresent(t->t.power-=actual);
 			return actual;
 		}
 		return 0;
 	}
-
-	@Override
-	public float getTemperatureLevel() {
-		if (master() != null) {
-			return (int) (master().stempMod * super.getTemperatureLevel());
-		}
-		return super.getTemperatureLevel();
-	}
-
-	@Override
-	public float getRangeLevel() {
-		if (master() != null) {
-			return (int) (master().srangeMod * super.getRangeLevel());
-		}
-		return super.getRangeLevel();
-	}
-
 	@Override
 	public boolean connect(Direction to, int dist) {
 		return false;
@@ -343,12 +323,14 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 
 	@Override
 	public float fillHeat(float value) {
-		float maxfill=this.getMaxPower()-this.getMaxHeat();
+		Optional<GeneratorData> data=super.getData();
+		final float maxfill=this.getMaxPower()-data.map(t->t.power).orElse(this.getMaxPower());
 		if(maxfill>value) {
-			master().power+=value;
+			
+			data.ifPresent(t->t.power+=value);
 			return 0;
 		}
-		master().power+=maxfill;
+		data.ifPresent(t->t.power+=maxfill);
 		return value-maxfill;
 	}
 
@@ -364,5 +346,16 @@ public class T2GeneratorTileEntity extends BurnerGeneratorTileEntity<T2Generator
 		int distanceToGround = 2;
 		int extra = MathHelper.ceil(getRangeLevel());
 		return distanceToGround + extra;
+	}
+
+	@Override
+	protected void callBlockConsumerWithTypeCheck(Consumer<T2GeneratorTileEntity> consumer, TileEntity te) {
+		if (te instanceof T2GeneratorTileEntity)
+			consumer.accept((T2GeneratorTileEntity) te);
+	}
+
+	@Override
+	public TileEntity getEntity() {
+		return this;
 	}
 }

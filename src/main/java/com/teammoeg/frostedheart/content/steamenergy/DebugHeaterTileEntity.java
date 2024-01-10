@@ -24,6 +24,7 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
 public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatController, INetworkConsumer, ITickableTileEntity {
@@ -89,5 +90,10 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
 	@Override
 	public float fillHeat(float value) {
 		return value;
+	}
+
+	@Override
+	public TileEntity getEntity() {
+		return this;
 	}
 }

@@ -32,13 +32,13 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.ClientForecastData;
+import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
-import com.teammoeg.frostedheart.climate.WorldClimate.TemperatureFrame;
-import com.teammoeg.frostedheart.climate.WorldClimate.TemperatureFrame.FrameType;
-import com.teammoeg.frostedheart.climate.PlayerTemperature;
+import com.teammoeg.frostedheart.climate.TemperatureFrame;
+import com.teammoeg.frostedheart.climate.TemperatureFrame.FrameType;
+import com.teammoeg.frostedheart.climate.player.BodyTemperature;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 
 import gloridifice.watersource.common.capability.WaterLevelCapability;
@@ -108,7 +108,7 @@ public class FrostedHud {
 		renderJumpBar = renderHealth && player.isRidingHorse();
 		renderArmor = renderHealth && player.getTotalArmorValue() > 0;
 		renderExperience = renderHealth;
-		float bt = PlayerTemperature.getBodyTemperature(renderViewPlayer);
+		float bt = BodyTemperature.getBodyTemperature(renderViewPlayer);
 		renderHypothermia = renderHealth && bt < -0.5 || bt > 0.5;
 		renderFrozen = renderHealth && bt <= -1.0;
 		boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
@@ -253,7 +253,7 @@ public class FrostedHud {
 		mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
 		RenderSystem.enableBlend();
 		
-		float temp = PlayerTemperature.getBodyTemperature(player);
+		float temp = BodyTemperature.getBodyTemperature(player);
 		HUDElements.exp_bar_frame.blit(mc.ingameGUI, stack, x, y, BasePos.exp_bar);
 //        double startTemp = -0.5, endTemp = -3.0;
 //        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), endTemp)) - Math.abs(startTemp)) / (Math.abs(endTemp) - Math.abs(startTemp)) * 181.0F);
@@ -423,7 +423,7 @@ public class FrostedHud {
 		HUDElements.temperature_orb_frame.blit(mc.ingameGUI, stack, x, y + 3, BasePos.temperature_orb_frame);
 		boolean f=FHConfig.CLIENT.useFahrenheit.get();
 		float temperature =0;
-		float tlvl=PlayerTemperature.getEnvTemperature(player);
+		float tlvl=BodyTemperature.getEnvTemperature(player);
 		tlvl=Math.max(-273, tlvl);
 		if(f)
 			temperature=(tlvl*9/5+32);
@@ -461,8 +461,8 @@ public class FrostedHud {
 		mc.getTextureManager().bindTexture(FrostedHud.FORECAST_ELEMENTS);
 		RenderSystem.enableBlend();
 
-		long date = ClientForecastData.getDate();
-		int hourInDay = ClientForecastData.getHourInDay();
+		long date = ClientClimateData.getDate();
+		int hourInDay = ClientClimateData.getHourInDay();
 		int segmentLength = 13; // we have 4 segments in each day, total 5 day in window, 20 segments.
 		int markerLength = 50;
 		int markerMovingOffset = hourInDay / 6 * segmentLength; // divide by 6 to get segment index
@@ -474,7 +474,7 @@ public class FrostedHud {
 		int firstDayW = HUDElements.forecast_marker.getW() - markerMovingOffset-2;
 		// forecast arrows
 		// find the first hour lower than cold period bottom
-		TemperatureFrame[] toRender = ClientForecastData.tfs;
+		TemperatureFrame[] toRender = ClientClimateData.forecastData;
 		int lastStart = 0;
 		int lastLevel = 0;
 		int i = -1;
@@ -519,7 +519,7 @@ public class FrostedHud {
 				256);
 		HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 4, 0, 512,
 				256);
-		HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 5, 0,257-markerLength * 5+markerMovingOffset, 512,
+		HUDElements.forecast_marker.blit(mc.ingameGUI, stack, windowX - markerMovingOffset + markerLength * 5, 0,257-markerLength * 5+markerMovingOffset+2, 512,
 				256);
 		
 		
@@ -541,7 +541,7 @@ public class FrostedHud {
 				uv = HUDElements.forecast_blizzard;
 			if (fr.type==FrameType.RETREATING)
 				uv = HUDElements.forecast_sun;
-			if(last.isWeatherEvent()||(toRender.length>i+1&&toRender[i+1]!=null&&toRender[i+1].type.isWeatherEvent())) {
+			if((last.isWeatherEvent()&&!fr.type.isWeatherEvent())||(toRender.length>i+1&&toRender[i+1]!=null&&toRender[i+1].type.isWeatherEvent())) {
 				uv=null;
 			}
 			last=fr.type;
@@ -550,7 +550,7 @@ public class FrostedHud {
 		}
 		boolean f=FHConfig.CLIENT.useFahrenheit.get();
 		float temperature =0;
-		float tlvl=PlayerTemperature.getEnvTemperature(player);
+		float tlvl=BodyTemperature.getEnvTemperature(player);
 		tlvl=Math.max(-273, tlvl);
 		UV unit;
 		if(f) {
@@ -634,7 +634,7 @@ public class FrostedHud {
 
 	public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
 		mc.getProfiler().startSection("frostedheart_frozen");
-		float temp = PlayerTemperature.getBodyTemperature(player);
+		float temp = BodyTemperature.getBodyTemperature(player);
 		ResourceLocation texture;
 		RenderSystem.enableBlend();
 		RenderSystem.disableDepthTest();
@@ -670,7 +670,7 @@ public class FrostedHud {
 
 	public static void renderFrozenVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
 		mc.getProfiler().startSection("frostedheart_vignette");
-		float temp = MathHelper.clamp(PlayerTemperature.getBodyTemperature(player), -10, -1);
+		float temp = MathHelper.clamp(BodyTemperature.getBodyTemperature(player), -10, -1);
 		// -10 < temp < 0 ===== 1 - 0
 		float opacityDelta = (Math.abs(temp) - 0.5F) / 9.5F;
 		RenderSystem.enableBlend();
@@ -698,7 +698,7 @@ public class FrostedHud {
 
 	public static void renderHeatVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
 		mc.getProfiler().startSection("frostedheart_vignette");
-		float temp = MathHelper.clamp(PlayerTemperature.getBodyTemperature(player), 1, 10);
+		float temp = MathHelper.clamp(BodyTemperature.getBodyTemperature(player), 1, 10);
 		// 0 < temp < 10 ===== 1 - 0
 		float opacityDelta = (temp - 0.5F) / 9.5F;
 		RenderSystem.enableBlend();

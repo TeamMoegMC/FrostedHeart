@@ -20,9 +20,10 @@ package com.teammoeg.frostedheart.climate.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.client.ClientForecastData;
+import com.teammoeg.frostedheart.client.ClientClimateData;
+import com.teammoeg.frostedheart.climate.ClimateType;
+import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.WorldClimate.TemperatureFrame;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;
@@ -31,37 +32,48 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class FHClimatePacket {
     private final short[] data;
     private final long sec;
+    private final ClimateType climate;
     public FHClimatePacket(WorldClimate climateData) {
         data = climateData.getFrames();
         sec= climateData.getSec();
+        climate=climateData.getClimate();
     }
     public FHClimatePacket() {
         data = new short[0];
         sec=0;
+        climate=ClimateType.NONE;
     }
 
     public FHClimatePacket(PacketBuffer buffer) {
         data=SerializeUtil.readShortArray(buffer);
         sec=buffer.readVarLong();
+        climate=ClimateType.values()[buffer.readByte()&0xff];
     }
 
     public void encode(PacketBuffer buffer) {
         SerializeUtil.writeShortArray(buffer, data);
         buffer.writeVarLong(sec);
+        buffer.writeByte((byte)climate.ordinal());
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
         	if(data.length==0) {
-        		ClientForecastData.clear();
+        		ClientClimateData.clear();
         		return;
         	}
-        	int max=Math.min(ClientForecastData.tfs.length, data.length);
+        	int max=Math.min(ClientClimateData.forecastData.length, data.length);
             for(int i=0;i<max;i++) {
-            	ClientForecastData.tfs[i]=TemperatureFrame.unpack(data[i]);
+            	ClientClimateData.forecastData[i]=TemperatureFrame.unpack(data[i]);
             }
-            ClientForecastData.secs=sec;
+            if(ClientClimateData.climate!=climate) {
+            	ClientClimateData.climateChange=sec;
+            }
+            ClientClimateData.lastClimate=ClientClimateData.climate;
+            ClientClimateData.climate=climate;
+            
+            ClientClimateData.secs=sec;
         });
         context.get().setPacketHandled(true);
     }

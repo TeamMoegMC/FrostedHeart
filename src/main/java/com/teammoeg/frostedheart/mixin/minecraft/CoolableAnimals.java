@@ -20,13 +20,15 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IFeedStore;
 
 import net.minecraft.entity.EntityType;
@@ -37,12 +39,12 @@ import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.passive.RabbitEntity;
 import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 @Mixin({ SheepEntity.class, BeeEntity.class, PigEntity.class, RabbitEntity.class })
 public class CoolableAnimals extends MobEntity {
 	short hxteTimer;
-
 	protected CoolableAnimals(EntityType<? extends MobEntity> type, World worldIn) {
 		super(type, worldIn);
 	}
@@ -61,24 +63,33 @@ public class CoolableAnimals extends MobEntity {
 	public void tick() {
 		super.tick();
 		if (!this.world.isRemote) {
-			float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
-			if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
-					|| temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-				if (hxteTimer < 100) {
+			
+			if(FHUtils.isBlizzardHarming(world, entityBlockPosition)) {
+				if (hxteTimer < 20) {
 					hxteTimer++;
 				} else {
-					if (temp > WorldTemperature.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
-						if (this instanceof IFeedStore) {
-							if (((IFeedStore) this).consumeFeed()) {
-								hxteTimer = -7900;
-								return;
-							}
-						}
-					hxteTimer = 0;
-					this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+					this.attackEntityFrom(FHDamageSources.BLIZZARD, 1);
 				}
-			} else if (hxteTimer > 0)
-				hxteTimer--;
+			}else {
+				float temp = ChunkHeatData.getTemperature(this.getEntityWorld(), this.getPosition());
+				if (temp < WorldTemperature.ANIMAL_ALIVE_TEMPERATURE
+						|| temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+					if (hxteTimer < 100) {
+						hxteTimer++;
+					} else {
+						if (temp > WorldTemperature.FEEDED_ANIMAL_ALIVE_TEMPERATURE)
+							if (this instanceof IFeedStore) {
+								if (((IFeedStore) this).consumeFeed()) {
+									hxteTimer = -7900;
+									return;
+								}
+							}
+						hxteTimer = 0;
+						this.attackEntityFrom(temp > 0 ? FHDamageSources.HYPERTHERMIA : FHDamageSources.HYPOTHERMIA, 2);
+					}
+				} else if (hxteTimer > 0)
+					hxteTimer--;
+			}
 		}
 	}
 }

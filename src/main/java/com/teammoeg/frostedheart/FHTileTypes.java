@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -38,6 +38,7 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
 
+import com.teammoeg.frostedheart.town.house.HouseTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -96,6 +97,10 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<?>> INCUBATOR2 = REGISTER.register(
             "heat_incubator", makeType(HeatIncubatorTileEntity::new, () -> FHBlocks.incubator2)
     );
+    public static final RegistryObject<TileEntityType<HouseTileEntity>> HOUSE = REGISTER.register(
+            "house", makeType(HouseTileEntity::new, () -> FHBlocks.house)
+    );
+
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

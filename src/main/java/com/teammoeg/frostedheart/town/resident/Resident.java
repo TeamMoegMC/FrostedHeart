@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -17,12 +17,21 @@
  *
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.town.resident;
 
-public class DateCounter {
-    private long hours;
+import com.teammoeg.frostedheart.town.TownWorker;
+import com.teammoeg.frostedheart.town.TownWorkerType;
 
-    public DateCounter() {
+/**
+ * A resident of the town.
+ */
+public class Resident {
+
+    public String type;
+    public int educationLevel;
+
+
+    public Resident() {
     }
 
 }

@@ -25,7 +25,8 @@ import java.util.function.Consumer;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.content.generator.BurnerGeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
+import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -35,32 +36,18 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
-public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1GeneratorTileEntity> {
-    public T1GeneratorTileEntity.GeneratorData guiData = new T1GeneratorTileEntity.GeneratorData();
+public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
+    public T1GeneratorTileEntity.GeneratorUIData guiData = new T1GeneratorTileEntity.GeneratorUIData();
     public boolean hasFuel;
     public T1GeneratorTileEntity() {
-        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false, 1, 2, 1);
+        super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false);
     }
 
 
-    @Override
-    public void forEachBlock(Consumer<T1GeneratorTileEntity> consumer) {
-        for (int x = 0; x < 3; ++x)
-            for (int y = 0; y < 4; ++y)
-                for (int z = 0; z < 3; ++z) {
-                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-                    if (te instanceof T1GeneratorTileEntity)
-                        consumer.accept((T1GeneratorTileEntity) te);
-                }
-    }
-    public boolean shouldWork() {
-    	return getTeam().map(t->!t.getOnlineMembers().isEmpty()).orElse(false)&&super.shouldWork();
-        
-    }
+
 	@Override
 	protected void tickFuel() {
-		this.hasFuel=!inventory.get(INPUT_SLOT).isEmpty();
+		this.hasFuel=!this.getInventory().get(INPUT_SLOT).isEmpty();
 		super.tickFuel();
 	}
 	@Override
@@ -90,14 +77,22 @@ public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Gen
 
 	@Override
 	public void shutdownTick() {
-		boolean invState=!inventory.get(INPUT_SLOT).isEmpty();
+		boolean invState=!this.getInventory().get(INPUT_SLOT).isEmpty();
 		if(invState!=hasFuel) {
 			hasFuel=invState;
 			this.markContainingBlockForUpdate(null);
 		}
 		
 	}
-
+    @Override
+	public void tickHeat() {
+    	if(super.isOverdrive()) {
+    		this.setTemperatureLevel(2);
+    	}else {
+    		this.setTemperatureLevel(1);
+    	}
+    	this.setRangeLevel(1);
+	}
     @Override
     public int getUpperBound() {
         int distanceToTowerTop = 2;
@@ -111,4 +106,12 @@ public final class T1GeneratorTileEntity extends BurnerGeneratorTileEntity<T1Gen
         int extra = MathHelper.ceil(getRangeLevel());
         return distanceToGround + extra;
     }
+
+
+
+	@Override
+	protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
+		if (te instanceof T1GeneratorTileEntity)
+			consumer.accept((T1GeneratorTileEntity) te);
+	}
 }

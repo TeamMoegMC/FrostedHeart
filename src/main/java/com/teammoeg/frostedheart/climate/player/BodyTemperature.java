@@ -16,7 +16,7 @@
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.teammoeg.frostedheart.climate;
+package com.teammoeg.frostedheart.climate.player;
 
 import com.teammoeg.frostedheart.FHMain;
 
@@ -30,20 +30,7 @@ import net.minecraft.nbt.CompoundNBT;
  * @author yuesha-yc
  * @author khjxiaogu
  */
-public class PlayerTemperature {
-
-	public static float getBlockTemp(ServerPlayerEntity spe) {
-		/*long time = System.nanoTime();
-		try {*/
-
-		return new SurroundingTemperatureSimulator(spe).getBlockTemperature(spe.getPosX(), spe.getPosYEye(), spe.getPosZ());
-
-		/*} finally {
-			long delta = System.nanoTime() - time;
-			System.out.println(String.format("total cost %.3f ms", (delta / 1000000f)));
-		}*/
-
-	}
+public class BodyTemperature {
 
 	public static final String DATA_ID = FHMain.MODID + ":data";
 
