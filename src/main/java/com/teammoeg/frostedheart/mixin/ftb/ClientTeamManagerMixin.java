@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.FTBFixUtils;
+import com.teammoeg.frostedheart.util.IFTBSecondWritable;
 
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
@@ -64,7 +65,7 @@ public abstract class ClientTeamManagerMixin {
 			if(tosendteam.contains(t))
 				t.write(buffer, now);
 			else
-				((ClientTeamMixin)(Object)t).write2(buffer, now);
+				((IFTBSecondWritable)t).write2(buffer, now);
 		}
 
 		buffer.writeVarInt(tosendplayer.size());
