@@ -58,7 +58,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 	boolean isDirty;// mark if temperature change required
 	int heated = 0;
 	float heatAddInterval = 20;    //ticks
-
+	
 	public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
 		super(multiblockInstance, type, hasRSControl);
 	}

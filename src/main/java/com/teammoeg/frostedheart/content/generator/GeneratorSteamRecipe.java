@@ -42,18 +42,16 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     public static RegistryObject<IERecipeSerializer<GeneratorSteamRecipe>> SERIALIZER;
 
     public GeneratorSteamRecipe(ResourceLocation id, FluidTagInput input,
-                                float power, float tempMod, float rangeMod) {
+                                float power, float tempMod) {
         super(ItemStack.EMPTY, TYPE, id);
         this.input = input;
         this.power = power;
-        this.tempMod = tempMod;
-        this.rangeMod = rangeMod;
+        this.level = tempMod;
     }
 
     public final FluidTagInput input;
     public final float power;
-    public final float tempMod;
-    public final float rangeMod;
+    public final float level;
 
 
     @Override
@@ -86,8 +84,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
             FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
             float power = JSONUtils.getFloat(json, "energy");
             float tempMod = JSONUtils.getFloat(json, "temp_multiplier");
-            float rangeMod = JSONUtils.getFloat(json, "range_multiplier");
-            return new GeneratorSteamRecipe(recipeId, input, power, tempMod, rangeMod);
+            return new GeneratorSteamRecipe(recipeId, input, power, tempMod);
         }
 
         @Nullable
@@ -96,16 +93,14 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
             FluidTagInput input = FluidTagInput.read(buffer);
             float power = buffer.readFloat();
             float tempMod = buffer.readFloat();
-            float rangeMod = buffer.readFloat();
-            return new GeneratorSteamRecipe(recipeId, input, power, tempMod, rangeMod);
+            return new GeneratorSteamRecipe(recipeId, input, power, tempMod);
         }
 
         @Override
         public void write(PacketBuffer buffer, GeneratorSteamRecipe recipe) {
             recipe.input.write(buffer);
             buffer.writeFloat(recipe.power);
-            buffer.writeFloat(recipe.tempMod);
-            buffer.writeFloat(recipe.rangeMod);
+            buffer.writeFloat(recipe.level);
         }
     }
 }

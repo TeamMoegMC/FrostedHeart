@@ -8,7 +8,10 @@ import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.network.PacketDistributor;
-
+/**
+ * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting
+ * 
+ * */
 public class TmeperatureDisplayHelper {
 
 	public static void sendTemperature(ServerPlayerEntity pe,String format,int...temps) {

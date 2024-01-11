@@ -70,4 +70,10 @@ public class TownWorkerData {
 			}
 		}
 	}
+	public boolean firstWork(Town resource) {
+		return type.getWorker().firstWork(resource, workData);
+	}
+	public boolean lastWork(Town resource) {
+		return type.getWorker().lastWork(resource, workData);
+	}
 }

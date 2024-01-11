@@ -109,6 +109,9 @@ public class TeamTownData {
 		}
 		PlayerTown itt=new PlayerTown(this);
 		for(TownWorkerData t:pq) {
+			t.firstWork(itt);
+		}
+		for(TownWorkerData t:pq) {
 			t.beforeWork(itt);
 		}
 		for(TownWorkerData t:pq) {
@@ -116,6 +119,9 @@ public class TeamTownData {
 		}
 		for(TownWorkerData t:pq) {
 			t.afterWork(itt);
+		}
+		for(TownWorkerData t:pq) {
+			t.lastWork(itt);
 		}
 		for(TownWorkerData t:pq) {
 			t.setData(world);

@@ -85,11 +85,8 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     public void draw(GeneratorSteamRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 80, 28);
         SWITCH.draw(transform, 52, 31);
-        int offset1 = (int) ((4 - recipe.tempMod) * 14);
+        int offset1 = (int) ((4 - recipe.level) * 14);
         BAR.draw(transform, 8, 9, offset1, 0, 0, 0);
-
-        int offset2 = (int) ((4 - recipe.rangeMod) * 14);
-        BAR.draw(transform, 157, 9, offset2, 0, 0, 0);
 
         int offset3 = (int) ((1 - recipe.power / 100) * 56);
         BAR.draw(transform, 142, 9, offset3, 0, 0, 0);
@@ -105,12 +102,9 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         List<ITextComponent> tooltip = new ArrayList<>();
 
         if (isMouseIn(mouseX, mouseY, 8, 9, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(String.valueOf(recipe.tempMod)));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(String.valueOf(recipe.level)));
         }
 
-        if (isMouseIn(mouseX, mouseY, 157, 9, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(String.valueOf(recipe.rangeMod)));
-        }
 
         if (isMouseIn(mouseX, mouseY, 142, 9, 2, 54)) {
             tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(String.valueOf(recipe.power)));

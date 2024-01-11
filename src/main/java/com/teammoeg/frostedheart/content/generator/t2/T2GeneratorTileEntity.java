@@ -74,8 +74,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	float power = 0;
 	SteamEnergyNetwork sen = null;
 	float spowerMod = 0;
-	float srangeMod = 1;
-	float stempMod = 1;
+	float slevelMod = 1;
 	int liquidtick = 0;
 	int noliquidtick = 0;
 	int tickUntilStopBoom = 20;
@@ -86,8 +85,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
 		super.readCustomNBT(nbt, descPacket);
 		power = nbt.getFloat("steam_power");
-		srangeMod = nbt.getFloat("steam_range");
-		stempMod = nbt.getFloat("steam_temp");
+		slevelMod = nbt.getFloat("steam_temp");
 		spowerMod = nbt.getFloat("steam_product");
 		liquidtick = nbt.getInt("liquid_tick");
 		tank.readFromNBT(nbt.getCompound("fluid"));
@@ -100,8 +98,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		nbt.putFloat("steam_power", power);
 		CompoundNBT tankx = new CompoundNBT();
 		tank.writeToNBT(tankx);
-		nbt.putFloat("steam_range", srangeMod);
-		nbt.putFloat("steam_temp", stempMod);
+		nbt.putFloat("steam_temp", slevelMod);
 		nbt.putFloat("steam_product", spowerMod);
 		nbt.putFloat("liquid_tick", liquidtick);
 		nbt.put("fluid", tankx);
@@ -149,8 +146,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		float rt = this.getTemperatureLevel();
 		if (rt == 0) {
 			this.spowerMod = 0;
-			this.srangeMod = 1;
-			this.stempMod = 1;
+			this.slevelMod = 1;
 		}
 		if (noliquidtick > 0) {
 			noliquidtick--;
@@ -166,16 +162,15 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 		}
 		GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
 		if (sgr != null) {
-			int rdrain = (int) (20 * super.getTemperatureLevel() * sgr.tempMod);
+			int rdrain = (int) (20 * super.getTemperatureLevel() * sgr.level);
 			int actualDrain = rdrain * sgr.input.getAmount();
 			FluidStack fs = this.tank.drain(actualDrain, FluidAction.SIMULATE);
 			if (fs.getAmount() >= actualDrain) {
-				if (this.stempMod != sgr.tempMod || this.srangeMod != sgr.rangeMod)
+				if (this.slevelMod != sgr.level )
 					this.markChanged(true);
 				this.spowerMod = sgr.power;
 				this.fillHeat((float) (this.spowerMod * rt * eff));
-				this.srangeMod = sgr.rangeMod;
-				this.stempMod = sgr.tempMod;
+				this.slevelMod = sgr.level;
 				data.ifPresent(t->t.steamLevel=rdrain);
 				final FluidStack fs2=this.tank.drain(actualDrain, FluidAction.EXECUTE);
 				data.ifPresent(t->t.fluid=fs2.getFluid());
@@ -183,11 +178,9 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 			}
 		}
 		noliquidtick = 40;
-		if (this.stempMod != 1)
-			this.markChanged(true);
+		this.markChanged(true);
 		this.spowerMod = 0;
-		this.srangeMod = 1;
-		this.stempMod = 1;
+		this.slevelMod = 1;
 	}
 
 	@Override
@@ -199,7 +192,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
 	public void tickHeat() {
 		super.tickHeat();
 		this.setTemperatureLevel(super.getHeated()/100F);
-    	this.setRangeLevel(1*srangeMod);
+    	this.setRangeLevel(1*slevelMod);
 	}
 	@Override
 	protected void tickFuel() {

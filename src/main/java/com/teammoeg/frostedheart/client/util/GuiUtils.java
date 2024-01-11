@@ -19,7 +19,6 @@
 package com.teammoeg.frostedheart.client.util;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.player.BodyTemperature;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
