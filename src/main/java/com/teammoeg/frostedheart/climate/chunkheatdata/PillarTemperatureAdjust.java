@@ -62,8 +62,8 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
     @Override
     public boolean isEffective(int x, int y, int z) {
     	if (y > upper + cy || y < cy - lower) return false;
-        long l = (long) Math.pow(x - cx, 2);
-        l += (long) Math.pow(z - cz, 2);
+        long l = (long) Math.pow(x - cx + 0.5, 2);
+        l += (long) Math.pow(z - cz + 0.5, 2);
         return l <= r2;
     }
 
