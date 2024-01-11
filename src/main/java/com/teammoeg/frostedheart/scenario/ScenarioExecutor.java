@@ -1,5 +1,6 @@
 package com.teammoeg.frostedheart.scenario;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -18,7 +19,7 @@ public class ScenarioExecutor {
 	private static Function<String,Object> number=s->((Double)Double.parseDouble(s));
 	private static Function<String,Object> integer=s->((Double)Double.parseDouble(s)).intValue();
 	private static Function<String,Object> fnumber=s->((Double)Double.parseDouble(s)).floatValue();
-	static Map<String,ScenarioMethod> commands=new HashMap<>();
+	Map<String,ScenarioMethod> commands=new HashMap<>();
 	@FunctionalInterface
 	public interface ScenarioMethod{
 		void execute(ScenarioRunner runner,Map<String,String> param);
@@ -84,10 +85,23 @@ public class ScenarioExecutor {
 			}
 		}
 	}
-	public static void registerCommand(String cmdName,ScenarioMethod method) {
+	public void registerCommand(String cmdName,ScenarioMethod method) {
 		commands.put(cmdName, method);
 	}
-	public static void registerClass(Class<?> clazz) {
+	public void regiser(Class<?> clazz) {
+		registerStatic(clazz);
+		try {
+			Constructor<?> ctor=clazz.getConstructor();
+			registerInst(ctor.newInstance());
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			throw new RuntimeException(e.getTargetException());
+		}
+		
+	}
+	public void registerStatic(Class<?> clazz) {
 		for(Method met:clazz.getMethods()) {
 			if(Modifier.isPublic(met.getModifiers())&&Modifier.isStatic(met.getModifiers())) {
 				try {
@@ -100,7 +114,7 @@ public class ScenarioExecutor {
 			}
 		}
 	}
-	public static void registerAll(Object clazz) {
+	public void registerInst(Object clazz) {
 		for(Method met:clazz.getClass().getMethods()) {
 			if(Modifier.isPublic(met.getModifiers())) {
 				try {
@@ -112,7 +126,7 @@ public class ScenarioExecutor {
 			}
 		}
 	}
-	public static void callCommand(String name,ScenarioRunner runner,Map<String,String> params) {
+	public void callCommand(String name,ScenarioRunner runner,Map<String,String> params) {
 		ScenarioMethod command=commands.get(name);
 		if(command==null) {
 			throw new ScenarioExecutionException("Can not find command "+name);

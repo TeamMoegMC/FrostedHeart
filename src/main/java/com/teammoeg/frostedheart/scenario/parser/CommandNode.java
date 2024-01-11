@@ -2,7 +2,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
+import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.ScenarioRunner;
 
 public class CommandNode implements Node {
@@ -16,7 +16,7 @@ public class CommandNode implements Node {
 	}
 	@Override
 	public void run(ScenarioRunner runner) {
-		ScenarioExecutor.callCommand(command, runner, params);
+		FHScenario.callCommand(command, runner, params);
 	}
 	@Override
 	public String getText() {
