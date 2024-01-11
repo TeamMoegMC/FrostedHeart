@@ -162,6 +162,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 			
 			final boolean activeBeforeTick = getIsActive();
 			tickFuel();
+			tickHeat();
 			// set activity status
 			final boolean activeAfterTick = getIsActive();
 			int ntlevel=getActualTemp();
@@ -172,7 +173,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 				lastRLevel=nrlevel;
 				this.markDirty();
 				if (nrlevel>0&&ntlevel>0) {
-					tickHeat();
+					
 					ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
 							getLowerBound(), ntlevel);
 				}
