@@ -71,8 +71,8 @@ public class GuiUtils {
     public static String toTemperatureIntString(float celsus) {
     	celsus=Math.max(-273.15f, celsus);
     	if(FHConfig.CLIENT.useFahrenheit.get())
-			return ((int)((celsus*9/5+32)*10))/10+" °F";
-		return ((int)(celsus*10))/10+" °C";
+			return ((int)((celsus*9/5+32)*10))/10f+" °F";
+		return ((int)(celsus*10))/10f+" °C";
     }
     public static String toTemperatureFloatString(float celsus) {
     	celsus=Math.max(-273.15f, celsus);
@@ -81,13 +81,13 @@ public class GuiUtils {
 		return celsus+" °C";
     }
     public static String toTemperatureDeltaIntString(float celsus) {
-    	celsus=Math.max(-273.15f, celsus);
+    	//celsus=Math.max(-273.15f, celsus);
     	if(FHConfig.CLIENT.useFahrenheit.get())
-			return ((int)((celsus*9/5)*10))/10+" °F";
-		return ((int)(celsus*10))/10+" °C";
+			return ((int)((celsus*9/5)*10))/10f+" °F";
+		return ((int)(celsus*10))/10f+" °C";
     }
     public static String toTemperatureDeltaFloatString(float celsus) {
-    	celsus=Math.max(-273.15f, celsus);
+    	//celsus=Math.max(-273.15f, celsus);
     	if(FHConfig.CLIENT.useFahrenheit.get())
 			return (celsus*9/5)+" °F";
 		return celsus+" °C";
