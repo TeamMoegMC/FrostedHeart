@@ -18,7 +18,6 @@
 
 package com.teammoeg.frostedheart.client.util;
 
-import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.player.BodyTemperature;
 
@@ -67,29 +66,5 @@ public class GuiUtils {
 
     public static ITextComponent translate(String string) {
         return new TranslationTextComponent(string);
-    }
-    public static String toTemperatureIntString(float celsus) {
-    	celsus=Math.max(-273.15f, celsus);
-    	if(FHConfig.CLIENT.useFahrenheit.get())
-			return ((int)(celsus*9/5+32))+" °F";
-		return ((int)celsus)+" °C";
-    }
-    public static String toTemperatureFloatString(float celsus) {
-    	celsus=Math.max(-273.15f, celsus);
-    	if(FHConfig.CLIENT.useFahrenheit.get())
-			return ((int)((celsus*9/5+32)*10))/10f+" °F";
-		return ((int)(celsus*10))/10f+" °C";
-    }
-    public static String toTemperatureDeltaIntString(float celsus) {
-    	//celsus=Math.max(-273.15f, celsus);
-    	if(FHConfig.CLIENT.useFahrenheit.get())
-			return ((int)(celsus*9/5))+" °F";
-		return ((int)celsus)+" °C";
-    }
-    public static String toTemperatureDeltaFloatString(float celsus) {
-    	//celsus=Math.max(-273.15f, celsus);
-    	if(FHConfig.CLIENT.useFahrenheit.get())
-			return ((int)((celsus*9/5)*10))/10f+" °F";
-		return ((int)(celsus*10))/10f+" °C";
     }
 }

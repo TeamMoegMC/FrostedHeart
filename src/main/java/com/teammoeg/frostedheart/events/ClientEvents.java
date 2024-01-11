@@ -48,6 +48,7 @@ import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.util.FHVersion;
+import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -346,10 +347,10 @@ public class ClientEvents {
 			if (temp != 0)
 				if (temp > 0)
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("block_temp", GuiUtils.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+							.add(GuiUtils.translateTooltip("block_temp", TmeperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
 				else
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("block_temp", GuiUtils.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+							.add(GuiUtils.translateTooltip("block_temp", TmeperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
 		}
 		if (itf != null) {
 			float temp = itf.getHeat(stack,
@@ -358,10 +359,10 @@ public class ClientEvents {
 			if (temp != 0)
 				if (temp > 0)
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("food_temp", "+" + GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+							.add(GuiUtils.translateTooltip("food_temp", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
 				else
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("food_temp", GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+							.add(GuiUtils.translateTooltip("food_temp", TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
 		}
 		if (iwe != null) {
 			float temp = iwe.getFactor(null, stack);
@@ -376,10 +377,10 @@ public class ClientEvents {
 			if (temp != 0)
 				if (temp > 0)
 					event.getToolTip().add(
-							GuiUtils.translateTooltip("armor_heating", "+" + GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+							GuiUtils.translateTooltip("armor_heating", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
 				else
 					event.getToolTip()
-							.add(GuiUtils.translateTooltip("armor_heating", GuiUtils.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+							.add(GuiUtils.translateTooltip("armor_heating", TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
 		}
 	}
 

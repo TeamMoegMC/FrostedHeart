@@ -24,6 +24,7 @@ import java.util.List;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
@@ -91,7 +92,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
 
         if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
             //tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getIsActive()?tile.getActualTemp():0)));
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getActualTemp())));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TmeperatureDisplayHelper.toTemperatureDeltaIntString(tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {

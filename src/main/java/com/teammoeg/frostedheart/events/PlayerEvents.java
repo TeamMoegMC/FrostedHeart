@@ -25,8 +25,8 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
@@ -124,7 +124,7 @@ public class PlayerEvents {
 					float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
 					float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
 							/ 10.0F;
-					FHTemperatureDisplayPacket.sendStatus(serverPlayer,"forecast.morning",false,morningTemp, noonTemp,
+					TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer,"forecast.morning",false,morningTemp, noonTemp,
 							nightTemp, midnightTemp, tomorrowMorningTemp);
 					boolean snow = morningTemp < WorldTemperature.SNOW_TEMPERATURE
 							|| noonTemp < WorldTemperature.SNOW_TEMPERATURE || nightTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -153,7 +153,7 @@ public class PlayerEvents {
 							/ 10.0F;
 					float tomorrowNightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
 							/ 10.0F;
-					FHTemperatureDisplayPacket.sendStatus(serverPlayer,"forecast.night", false, nightTemp, midnightTemp,
+					TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer,"forecast.night", false, nightTemp, midnightTemp,
 							tomorrowMorningTemp, tomorrowNoonTemp, tomorrowNightTemp);
 					boolean snow = nightTemp < WorldTemperature.SNOW_TEMPERATURE
 							|| midnightTemp < WorldTemperature.SNOW_TEMPERATURE

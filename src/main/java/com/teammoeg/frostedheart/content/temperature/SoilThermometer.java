@@ -23,7 +23,7 @@ import java.util.List;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -53,7 +53,7 @@ public class SoilThermometer extends FHBaseItem {
         if (playerIn instanceof ServerPlayerEntity&&playerIn.abilities.isCreativeMode) {
             BlockRayTraceResult brtr = rayTrace(worldIn, playerIn, FluidMode.ANY);
             if (brtr.getType() != Type.MISS)
-            	FHTemperatureDisplayPacket.send((ServerPlayerEntity)playerIn,
+            	TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity)playerIn,
             			"info.soil_thermometerbody", (int)(ChunkHeatData.getTemperature(playerIn.world, brtr.getPos())*10)/10f);
         }
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
@@ -66,7 +66,7 @@ public class SoilThermometer extends FHBaseItem {
         if (entityplayer instanceof ServerPlayerEntity) {
             BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.ANY);
             if (brtr.getType() == Type.MISS) return stack;
-            FHTemperatureDisplayPacket.send((ServerPlayerEntity)entityLiving,
+            TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity)entityLiving,
         			"info.soil_thermometerbody", (int)(ChunkHeatData.getTemperature(entityLiving.world, brtr.getPos())*10)/10f);
         }
         return stack;
