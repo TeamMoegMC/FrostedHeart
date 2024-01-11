@@ -89,6 +89,7 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
         }
 
         if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54) && tile.getIsActive()) {
+            //tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getActualTemp())));
             tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getActualTemp())));
         }
 
@@ -122,22 +123,20 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
             this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
         }
 
-        float tempLevel = tile.getTemperatureLevel();
+        float tempLevel = tile.getActualTemp() / 10F;
         float rangeLevel = tile.getRangeLevel();
+        int offset, bar;
 
         // temperature bar (182, 30)
-        if (tile.getIsActive()) {
-            int offset = (int) ((4 - tempLevel) * 14);
-            int bar = (int) ((tempLevel - 1) * 14);
-            this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
-        }
+        offset = (int) ((4 - tempLevel) * 14);
+        //int bar = (int) ((tempLevel - 1) * 14);
+        bar = 56 - offset;
+        this.blit(transform, guiLeft + 12, guiTop + 13 + offset, 181, 30, 2, bar);
 
         // range bar
-        if (tile.getIsActive()) {
-            int offset = (int) ((4 - rangeLevel) * 14);
-            int bar = (int) ((rangeLevel - 1) * 14);
-            this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
-        }
+        offset = (int) ((4 - rangeLevel) * 14);
+        bar = (int) ((rangeLevel - 1) * 14);
+        this.blit(transform, guiLeft + 161, guiTop + 13 + offset, 181, 30, 2, 12 + bar);
     }
 
     @Override
