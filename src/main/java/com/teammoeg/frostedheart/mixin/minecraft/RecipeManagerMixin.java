@@ -41,7 +41,8 @@ import net.minecraftforge.common.ForgeHooks;
 @Mixin(RecipeManager.class)
 public abstract class RecipeManagerMixin {
 	/**
-	 * TODO
+	 * @author khjxiaogu
+	 * @reason TODO
 	 */
 	@Overwrite
 	public <C extends IInventory, T extends IRecipe<C>> Optional<T> getRecipe(IRecipeType<T> recipeTypeIn,

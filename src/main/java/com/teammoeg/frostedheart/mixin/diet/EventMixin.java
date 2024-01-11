@@ -37,8 +37,8 @@ import top.theillusivec4.diet.common.capability.PlayerDietTracker;
 public class EventMixin {
 
 	/**
-	 * TODO
-	 * @param evt
+	 * @author khjxiaogu
+	 * @reason TODO
 	 */
 	@Overwrite(remap = false)
 	public static void attachCapabilities(final AttachCapabilitiesEvent<Entity> evt) {

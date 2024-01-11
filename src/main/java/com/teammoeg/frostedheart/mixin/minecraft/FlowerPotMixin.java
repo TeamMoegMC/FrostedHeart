@@ -37,8 +37,8 @@ public abstract class FlowerPotMixin extends Block {
 	private java.util.function.Supplier<FlowerPotBlock> emptyPot;
 
 	/**
-	 * TODO
-	 * @return
+	 * @author khjxiaogu
+	 * @reason TODO
 	 */
 	@Overwrite(remap = false)
 	public FlowerPotBlock getEmptyPot() {

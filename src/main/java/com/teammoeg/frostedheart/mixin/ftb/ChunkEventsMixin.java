@@ -46,8 +46,8 @@ public class ChunkEventsMixin {
 	}
 
 	/**
-	 * TODO
-	 * @param event
+	 * @author khjxiaogu
+	 * @reason TODO
 	 */
 	@Overwrite(remap=false)
 	private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
