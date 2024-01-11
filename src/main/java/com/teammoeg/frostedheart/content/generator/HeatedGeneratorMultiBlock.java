@@ -21,7 +21,16 @@ package com.teammoeg.frostedheart.content.generator;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import net.minecraft.block.BlockState;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.RegistryObject;
+
+import java.util.Random;
 
 public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends NormalGeneratorMultiBlock<T> implements ISteamEnergyBlock {
 
@@ -34,5 +43,15 @@ public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
         super(name, props, type);
     }
 
-
+//    @OnlyIn(Dist.CLIENT)
+//    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+//        super.animateTick(stateIn, worldIn, pos, rand);
+//        if (stateIn.get(LIT)) {
+//            if (rand.nextInt(5) == 0) {
+//                worldIn.playSound((double) pos.getX() + 0.5D, (double) pos.getY() + 0.5D, (double) pos.getZ() + 0.5D,
+//                        SoundEvents.AMBIENT_UNDERWATER_LOOP, SoundCategory.BLOCKS, 0.5F + rand.nextFloat(),
+//                        rand.nextFloat() * 0.7F + 0.6F, false);
+//            }
+//        }
+//    }
 }
