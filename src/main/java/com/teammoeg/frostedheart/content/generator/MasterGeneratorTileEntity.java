@@ -59,7 +59,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public int processMax;
     protected ItemStack currentItem;
     //local inventory, prevent lost
-	NonNullList<ItemStack> linventory = NonNullList.withSize(2, ItemStack.EMPTY);
+    NonNullList<ItemStack> linventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
     public class GeneratorUIData implements IIntArray {
         public static final int MAX_BURN_TIME = 0;
@@ -69,9 +69,9 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         public int get(int index) {
             switch (index) {
                 case MAX_BURN_TIME:
-                	return processMax;
+                    return processMax;
                 case BURN_TIME:
-                	return process;
+                    return process;
                 default:
                     throw new IllegalArgumentException("Unknown index " + index);
             }
@@ -79,10 +79,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
         @Override
         public void set(int index, int value) {
-        	//throw new UnsupportedOperationException();
+            //throw new UnsupportedOperationException();
             switch (index) {
                 case MAX_BURN_TIME:
-                	processMax=value;
+                    processMax = value;
                     break;
                 case BURN_TIME:
                     process = value;
@@ -100,36 +100,48 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
-        
+
     }
-    public final Optional<GeneratorData> getData(){
-    	return getTeamData().map(t->t.generatorData).filter(t->this.pos.equals(t.actualPos));
+
+    public final Optional<GeneratorData> getData() {
+        return getTeamData().map(t -> t.generatorData).filter(t -> this.pos.equals(t.actualPos));
     }
+
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         ItemStackHelper.loadAllItems(nbt, linventory);
     }
-	public void unregist() {
-		getTeamData().ifPresent(t -> {
-			t.generatorData.actualPos=BlockPos.ZERO;
-			t.generatorData.dimension=null;
-		});
-	}
-	public void registIfPossible() {
-		getTeamData().filter(t->t.generatorData.actualPos.equals(this.pos)).ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
-	}
-	public void regist() {
-		getTeamData().ifPresent(t ->{ t.generatorData.actualPos=this.pos;t.generatorData.dimension=this.world.getDimensionKey();});
-	}
+
+    public void unregist() {
+        getTeamData().ifPresent(t -> {
+            t.generatorData.actualPos = BlockPos.ZERO;
+            t.generatorData.dimension = null;
+        });
+    }
+
+    public void registIfPossible() {
+        getTeamData().filter(t -> t.generatorData.actualPos.equals(this.pos)).ifPresent(t -> {
+            t.generatorData.actualPos = this.pos;
+            t.generatorData.dimension = this.world.getDimensionKey();
+        });
+    }
+
+    public void regist() {
+        getTeamData().ifPresent(t -> {
+            t.generatorData.actualPos = this.pos;
+            t.generatorData.dimension = this.world.getDimensionKey();
+        });
+    }
 
     @Override
-	public void disassemble() {
-		if (master() != null)
-			master().unregist();
-		super.disassemble();
-	}
-	@Override
+    public void disassemble() {
+        if (master() != null)
+            master().unregist();
+        super.disassemble();
+    }
+
+    @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
         ItemStackHelper.saveAllItems(nbt, linventory);
@@ -197,7 +209,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         T master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesStep();
-        return new int[]{getData().map(t->t.processMax-t.process).orElse(0)};
+        return new int[]{getData().map(t -> t.processMax - t.process).orElse(0)};
     }
 
     @Override
@@ -205,18 +217,20 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         T master = master();
         if (master != this && master != null)
             return master.getCurrentProcessesMax();
-        return new int[]{getData().map(t->t.processMax).orElse(0)};
+        return new int[]{getData().map(t -> t.processMax).orElse(0)};
     }
 
     @Override
     public NonNullList<ItemStack> getInventory() {
         T master = master();
-        return Optional.ofNullable(master).flatMap(t->t.getData()).map(t->t.getInventory()).orElseGet(()->master!=null?master.linventory:this.linventory);
+        return Optional.ofNullable(master).flatMap(t -> t.getData()).map(t -> t.getInventory()).orElseGet(() -> master != null ? master.linventory : this.linventory);
     }
+
     public boolean isDataPresent() {
-    	T master = master();
-    	return Optional.ofNullable(master).flatMap(t->t.getData()).isPresent();
+        T master = master();
+        return Optional.ofNullable(master).flatMap(t -> t.getData()).isPresent();
     }
+
     @Override
     public boolean isStackValid(int slot, ItemStack stack) {
         if (stack.isEmpty())
@@ -255,38 +269,35 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
     public void onShutDown() {
     }
+
     @Override
     protected void tickFuel() {
         // just finished process or during process
-    	Optional<GeneratorData> data=this.getData();
-    	data.ifPresent(t->{
-    		t.isOverdrive=this.isOverdrive;
-    		t.isWorking=this.isWorking;
-    	});
-    	data.ifPresent(t->t.tick());
-    	setAllActive(data.map(t->t.isActive).orElse(false));
-    	process=data.map(t->t.process).orElse(0);
-    	processMax=data.map(t->t.processMax).orElse(0);
+        Optional<GeneratorData> data = this.getData();
+        data.ifPresent(t -> {
+            t.isOverdrive = this.isOverdrive;
+            t.isWorking = this.isWorking;
+        });
+        data.ifPresent(t -> t.tick());
+        setAllActive(data.map(t -> t.isActive).orElse(false));
+        process = data.map(t -> t.process).orElse(0);
+        processMax = data.map(t -> t.processMax).orElse(0);
     	/*if(this.getIsActive())
     		this.markContainingBlockForUpdate(null);*/
     }
 
 
-
-	@Override
+    @Override
     protected void tickEffects(boolean isActive) {
 
     }
 
-	@Override
-	public void tick() {
-		
-		super.tick();
-		
-	}
+    @Override
+    public void tick() {
 
+        super.tick();
 
-
+    }
 
 
 }

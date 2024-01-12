@@ -41,9 +41,11 @@ public abstract class UnlockList<T> implements Iterable<T> {
         this();
         load(nbt);
     }
+
     public void clear() {
-    	s.clear();
+        s.clear();
     }
+
     public boolean has(T key) {
         return s.contains(key);
     }
@@ -95,9 +97,10 @@ public abstract class UnlockList<T> implements Iterable<T> {
     public Spliterator<T> spliterator() {
         return s.spliterator();
     }
+
     public void reload() {
-    	Set<T> ns=new HashSet<>(s);
-    	s.clear();
-    	ns.stream().map(this::getString).map(this::getObject).forEach(s::add);
+        Set<T> ns = new HashSet<>(s);
+        s.clear();
+        ns.stream().map(this::getString).map(this::getObject).forEach(s::add);
     }
 }

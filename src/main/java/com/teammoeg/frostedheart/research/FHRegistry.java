@@ -197,7 +197,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
             if (name != null)
                 return get(name);
         }
-        throw new IllegalArgumentException("Registry Id "+id+" does not exist!");
+        throw new IllegalArgumentException("Registry Id " + id + " does not exist!");
     }
 
     public void runIfPresent(String id, Consumer<T> in) {
@@ -245,12 +245,14 @@ public class FHRegistry<T extends FHRegisteredItem> {
         rnamesl.stream().map(StringNBT::valueOf).forEach(e -> cn.add(e));
         return cn;
     }
+
     public void clear() {
-    	rnames.clear();
+        rnames.clear();
         rnamesl.clear();
         items.clear();
         cache.clear();
     }
+
     /**
      * Deserialize.
      *
@@ -261,7 +263,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
         rnamesl.clear();
         ArrayList<T> temp = new ArrayList<>(items);
         temp.removeIf(Objects::isNull);
-        
+
         load.stream().map(INBT::getString).forEach(e -> rnamesl.add(e));
         for (int i = 0; i < rnamesl.size(); i++) {
             rnames.put(rnamesl.get(i), i);

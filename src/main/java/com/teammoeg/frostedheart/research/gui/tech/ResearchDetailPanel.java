@@ -106,7 +106,7 @@ public class ResearchDetailPanel extends Panel {
 		}*/
         status.setPos(0, 6);
         add(status);
-        
+
     }
 
     @Override
@@ -173,13 +173,13 @@ public class ResearchDetailPanel extends Panel {
                 desc.setPosAndSize(0, offset, width, height);
                 desc.setText(itx);
                 desc.setColor(TechIcons.text);
-                offset += desc.height+2;
+                offset += desc.height + 2;
             }
-            if(offset+3>height) {
-            	detailPanel.scrolldetail.unhide();
-            	detailPanel.scrolldetail.setMaxValue(offset+3);
-            }else
-            	detailPanel.scrolldetail.hide();
+            if (offset + 3 > height) {
+                detailPanel.scrolldetail.unhide();
+                detailPanel.scrolldetail.setMaxValue(offset + 3);
+            } else
+                detailPanel.scrolldetail.hide();
             //this.setHeight(offset+3);
 
         }

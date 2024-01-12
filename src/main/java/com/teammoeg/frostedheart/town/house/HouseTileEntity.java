@@ -51,6 +51,7 @@ public class HouseTileEntity extends TileEntity implements ITownBlockTE {
     /**
      * Get the rating based on house status
      * TODO: this is now a very crude numerical experiment.
+     *
      * @return a rating in range of zero to one
      */
     public double getRating() {
@@ -65,6 +66,7 @@ public class HouseTileEntity extends TileEntity implements ITownBlockTE {
      * Check room insulation
      * Check minimum volume
      * Check within generator range (or just check steam connection instead?)
+     *
      * @param housePos the core block
      * @return whether this room is well-defined
      */

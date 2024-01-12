@@ -37,22 +37,22 @@ import java.util.stream.Collectors;
 
 @Mixin(FMLHandshakeHandler.class)
 public class FMLHandshakeAntiCheatMixin {
-	@Inject(at = @At("TAIL"), method = "handleClientModListOnServer", remap = false,cancellable=true)
-	void fh$handleClientModListOnServer(FMLHandshakeMessages.C2SModListReply clientModList,
-			Supplier<NetworkEvent.Context> c, CallbackInfo cbi) {
-		Set<String> cli=clientModList.getModList().stream().map(String::toLowerCase).collect(Collectors.toSet());
-		for(String s:FHConfig.COMMON.blackmods.get()) {
-			if(cli.contains(s)) {
-				FHMain.LOGGER.warn("Rejected Connection: Blacklisted mods ");
-				StringTextComponent t=new StringTextComponent("警告：你有被认为是作弊的mod。");
-				c.get().getNetworkManager()
-				.sendPacket(new SDisconnectLoginPacket(t), (p_211391_2_) -> {
-					c.get().getNetworkManager().closeChannel(t);
-                 });
-				
-				
-				cbi.cancel();
-			}
-		}
-	}
+    @Inject(at = @At("TAIL"), method = "handleClientModListOnServer", remap = false, cancellable = true)
+    void fh$handleClientModListOnServer(FMLHandshakeMessages.C2SModListReply clientModList,
+                                        Supplier<NetworkEvent.Context> c, CallbackInfo cbi) {
+        Set<String> cli = clientModList.getModList().stream().map(String::toLowerCase).collect(Collectors.toSet());
+        for (String s : FHConfig.COMMON.blackmods.get()) {
+            if (cli.contains(s)) {
+                FHMain.LOGGER.warn("Rejected Connection: Blacklisted mods ");
+                StringTextComponent t = new StringTextComponent("警告：你有被认为是作弊的mod。");
+                c.get().getNetworkManager()
+                        .sendPacket(new SDisconnectLoginPacket(t), (p_211391_2_) -> {
+                            c.get().getNetworkManager().closeChannel(t);
+                        });
+
+
+                cbi.cancel();
+            }
+        }
+    }
 }

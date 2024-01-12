@@ -39,7 +39,7 @@ public class TreasureLootCondition implements ILootCondition {
     @SuppressWarnings("resource")
     @Override
     public boolean test(LootContext t) {
-        return t.getLootTable(t.getQueriedLootTableId()).getParameterSet()==LootParameterSets.CHEST;
+        return t.getLootTable(t.getQueriedLootTableId()).getParameterSet() == LootParameterSets.CHEST;
     }
 
     @Override

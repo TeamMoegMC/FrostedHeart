@@ -116,11 +116,11 @@ public class ResearchDashboardPanel extends Panel {
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         ResearchData rd = detailPanel.research.getData();
-        
-    	techpoint.setColor(TechIcons.text);
+
+        techpoint.setColor(TechIcons.text);
         if (rd.canResearch()) {
-        	if(!rd.canComplete()) 
-        		techpoint.setColor(TechIcons.text_red);
+            if (!rd.canComplete())
+                techpoint.setColor(TechIcons.text_red);
             techpoint.setText(toReadable(rd.getTotalCommitted()) + "/" + toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         }
         techpoint.setX(140 - techpoint.width);
@@ -132,8 +132,8 @@ public class ResearchDashboardPanel extends Panel {
         TechIcons.SHADOW.draw(matrixStack, x + 1, y + 36, 36, 9);
         detailPanel.icon.draw(matrixStack, x + 3, y + 10, 32, 32);
         theme.drawString(matrixStack, GuiUtils.translateGui("research.points"), x + 40, y + 19, TechIcons.text, 0);
-        if(rd.canResearch()&&!rd.canComplete())
-        	theme.drawString(matrixStack,GuiUtils.translateGui("research.required_clue"), x + 40, y + 38, TechIcons.text_red, 0);
+        if (rd.canResearch() && !rd.canComplete())
+            theme.drawString(matrixStack, GuiUtils.translateGui("research.required_clue"), x + 40, y + 38, TechIcons.text_red, 0);
         GuiHelper.setupDrawing();
         TechIcons.HLINE_L.draw(matrixStack, x, y + 49, 140, 3);
 

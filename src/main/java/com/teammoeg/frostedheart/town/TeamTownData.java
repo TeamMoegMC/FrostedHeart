@@ -32,114 +32,121 @@ import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
 import java.util.Map.Entry;
+
 /**
  * Town data for a whole team.
- * 
- * */
+ */
 public class TeamTownData {
-	/**
-	 * Resource generated from resident
-	 * */
-	Map<TownResourceType,Integer> resources=new EnumMap<>(TownResourceType.class);
-	/**
-	 * Resource provided by player
-	 * */
-	Map<TownResourceType,Integer> backupResources=new EnumMap<>(TownResourceType.class);
-	Map<BlockPos,TownWorkerData> blocks=new LinkedHashMap<>();
-	TeamResearchData team;
-	public TeamTownData(TeamResearchData team) {
-		super();
-		this.team = team;
-	}
-	public CompoundNBT serialize(boolean updatePacket) {
-		CompoundNBT nbt=new CompoundNBT();
-		if(!updatePacket) {
-			ListNBT list=new ListNBT();
-			for(TownWorkerData v:blocks.values()) {
-				list.add(v.serialize());
-			}
-			nbt.put("blocks", list);
-		}
-		CompoundNBT list2=new CompoundNBT();
-		for(Entry<TownResourceType, Integer> v:resources.entrySet()) {
-			if(v.getValue()!=null&&v.getValue()!=0)
-				list2.putInt(v.getKey().getKey(), v.getValue());
-			
-		}
-		nbt.put("resource", list2);
-		CompoundNBT list3=new CompoundNBT();
-		for(Entry<TownResourceType, Integer> v:backupResources.entrySet()) {
-			if(v.getValue()!=null&&v.getValue()!=0)
-				list3.putInt(v.getKey().getKey(), v.getValue());
-		}
-		nbt.put("backupResource", list2);
-		return nbt;
-	}
-	public void deserialize(CompoundNBT data, boolean updatePacket) {
-		for(INBT i:data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
-			CompoundNBT nbt=(CompoundNBT) i;
-			TownWorkerData t=new TownWorkerData(nbt);
-			blocks.put(t.getPos(), t);
-		}
-		CompoundNBT rec=data.getCompound("resource");
-		for(String i:rec.keySet()) {
-			resources.put(TownResourceType.from(i),rec.getInt(i));
-		}
-	}
-	public void registerTownBlock(BlockPos pos,ITownBlockTE tile) {
-		TownWorkerData data=blocks.computeIfAbsent(pos, TownWorkerData::new);
-		data.fromBlock(tile);
-	}
-	public void removeTownBlock(BlockPos pos) {
-		blocks.remove(pos);
-	}
-	public CompoundNBT getTownBlockData(BlockPos pos) {
-		TownWorkerData twd=blocks.get(pos);
-		if(twd==null)
-			return null;
-		return twd.getWorkData();
-	}
-	/**
-	 * This tick only works per 20 tick.
-	 * */
-	public void tick(ServerWorld world) {
-		PriorityQueue<TownWorkerData> pq=new PriorityQueue<TownWorkerData>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
-		blocks.values().removeIf(v->{
-			BlockPos pos=v.getPos();
-			v.loaded=false;
-			if(world.isBlockLoaded(pos)) {
-				v.loaded=true;
-				BlockState bs=world.getBlockState(pos);
-				TileEntity te=Utils.getExistingTileEntity(world, pos);
-				TownWorkerType twt=v.getType();
-				if(twt.getBlock()!=bs.getBlock()||te==null||!(te instanceof ITownBlockTE)||!((ITownBlockTE)te).isWorkValid()) {
-					return true;
-				}
-			}
-			return false;
-		});
-		for(TownWorkerData v:blocks.values()) {
-			pq.add(v);
-		}
-		PlayerTown itt=new PlayerTown(this);
-		for(TownWorkerData t:pq) {
-			t.firstWork(itt);
-		}
-		for(TownWorkerData t:pq) {
-			t.beforeWork(itt);
-		}
-		for(TownWorkerData t:pq) {
-			t.work(itt);
-		}
-		for(TownWorkerData t:pq) {
-			t.afterWork(itt);
-		}
-		for(TownWorkerData t:pq) {
-			t.lastWork(itt);
-		}
-		for(TownWorkerData t:pq) {
-			t.setData(world);
-		}
-		itt.finishWork();
-	}
+    /**
+     * Resource generated from resident
+     */
+    Map<TownResourceType, Integer> resources = new EnumMap<>(TownResourceType.class);
+    /**
+     * Resource provided by player
+     */
+    Map<TownResourceType, Integer> backupResources = new EnumMap<>(TownResourceType.class);
+    Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
+    TeamResearchData team;
+
+    public TeamTownData(TeamResearchData team) {
+        super();
+        this.team = team;
+    }
+
+    public CompoundNBT serialize(boolean updatePacket) {
+        CompoundNBT nbt = new CompoundNBT();
+        if (!updatePacket) {
+            ListNBT list = new ListNBT();
+            for (TownWorkerData v : blocks.values()) {
+                list.add(v.serialize());
+            }
+            nbt.put("blocks", list);
+        }
+        CompoundNBT list2 = new CompoundNBT();
+        for (Entry<TownResourceType, Integer> v : resources.entrySet()) {
+            if (v.getValue() != null && v.getValue() != 0)
+                list2.putInt(v.getKey().getKey(), v.getValue());
+
+        }
+        nbt.put("resource", list2);
+        CompoundNBT list3 = new CompoundNBT();
+        for (Entry<TownResourceType, Integer> v : backupResources.entrySet()) {
+            if (v.getValue() != null && v.getValue() != 0)
+                list3.putInt(v.getKey().getKey(), v.getValue());
+        }
+        nbt.put("backupResource", list2);
+        return nbt;
+    }
+
+    public void deserialize(CompoundNBT data, boolean updatePacket) {
+        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
+            CompoundNBT nbt = (CompoundNBT) i;
+            TownWorkerData t = new TownWorkerData(nbt);
+            blocks.put(t.getPos(), t);
+        }
+        CompoundNBT rec = data.getCompound("resource");
+        for (String i : rec.keySet()) {
+            resources.put(TownResourceType.from(i), rec.getInt(i));
+        }
+    }
+
+    public void registerTownBlock(BlockPos pos, ITownBlockTE tile) {
+        TownWorkerData data = blocks.computeIfAbsent(pos, TownWorkerData::new);
+        data.fromBlock(tile);
+    }
+
+    public void removeTownBlock(BlockPos pos) {
+        blocks.remove(pos);
+    }
+
+    public CompoundNBT getTownBlockData(BlockPos pos) {
+        TownWorkerData twd = blocks.get(pos);
+        if (twd == null)
+            return null;
+        return twd.getWorkData();
+    }
+
+    /**
+     * This tick only works per 20 tick.
+     */
+    public void tick(ServerWorld world) {
+        PriorityQueue<TownWorkerData> pq = new PriorityQueue<TownWorkerData>(Comparator.comparingLong(TownWorkerData::getPriority).reversed());
+        blocks.values().removeIf(v -> {
+            BlockPos pos = v.getPos();
+            v.loaded = false;
+            if (world.isBlockLoaded(pos)) {
+                v.loaded = true;
+                BlockState bs = world.getBlockState(pos);
+                TileEntity te = Utils.getExistingTileEntity(world, pos);
+                TownWorkerType twt = v.getType();
+                if (twt.getBlock() != bs.getBlock() || te == null || !(te instanceof ITownBlockTE) || !((ITownBlockTE) te).isWorkValid()) {
+                    return true;
+                }
+            }
+            return false;
+        });
+        for (TownWorkerData v : blocks.values()) {
+            pq.add(v);
+        }
+        PlayerTown itt = new PlayerTown(this);
+        for (TownWorkerData t : pq) {
+            t.firstWork(itt);
+        }
+        for (TownWorkerData t : pq) {
+            t.beforeWork(itt);
+        }
+        for (TownWorkerData t : pq) {
+            t.work(itt);
+        }
+        for (TownWorkerData t : pq) {
+            t.afterWork(itt);
+        }
+        for (TownWorkerData t : pq) {
+            t.lastWork(itt);
+        }
+        for (TownWorkerData t : pq) {
+            t.setData(world);
+        }
+        itt.finishWork();
+    }
 }

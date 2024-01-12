@@ -42,7 +42,7 @@ public class AttachCapabilityEvents {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
             event.addCapability(WorldClimate.ID, new WorldClimate());
-            
+
         }
     }
 
@@ -60,14 +60,14 @@ public class AttachCapabilityEvents {
 
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
-    	if(event.getObject() instanceof ServerPlayerEntity) {
-    		ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
-            if(!(player instanceof FakePlayer))
+        if (event.getObject() instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
+            if (!(player instanceof FakePlayer))
                 if (!event.getCapabilities().containsKey(DeathInventoryData.ID))
-                    event.addCapability(DeathInventoryData.ID,new DeathInventoryData());
-            
-    	}
-        
+                    event.addCapability(DeathInventoryData.ID, new DeathInventoryData());
+
+        }
+
     }
 
 }

@@ -54,7 +54,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
     }
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(3000,24);
+    SteamNetworkConsumer network = new SteamNetworkConsumer(3000, 24);
 
 
     @Override
@@ -113,12 +113,12 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     protected void tickFuel() {
-    	
+
         network.tick();
-        if(!isWorking()) {
-        	if(this.getIsActive())
-        		this.setAllActive(false);
-        	return;
+        if (!isWorking()) {
+            if (this.getIsActive())
+                this.setAllActive(false);
+            return;
         }
         if (process > 0) {
             if (network.isValid())
@@ -175,31 +175,31 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         return false;
     }
 
- 
+
     @Override
     public SteamNetworkHolder getHolder() {
         return network;
     }
 
-	@Override
-	public int getUpperBound() {
-		return 4;
-	}
+    @Override
+    public int getUpperBound() {
+        return 4;
+    }
 
-	@Override
-	public int getLowerBound() {
-		return 1;
-	}
+    @Override
+    public int getLowerBound() {
+        return 1;
+    }
 
-	@Override
-	public void tickHeat() {
+    @Override
+    public void tickHeat() {
 
-		
-	}
 
-	@Override
-	protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, TileEntity te) {
-		if (te instanceof RadiatorTileEntity)
-			consumer.accept((RadiatorTileEntity) te);
-	}
+    }
+
+    @Override
+    protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, TileEntity te) {
+        if (te instanceof RadiatorTileEntity)
+            consumer.accept((RadiatorTileEntity) te);
+    }
 }

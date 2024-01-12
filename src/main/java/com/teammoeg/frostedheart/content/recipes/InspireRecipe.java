@@ -55,6 +55,7 @@ public class InspireRecipe extends IESerializableRecipe {
     protected IERecipeSerializer getIESerializer() {
         return SERIALIZER.get();
     }
+
     public static class Serializer extends IERecipeSerializer<InspireRecipe> {
 
 

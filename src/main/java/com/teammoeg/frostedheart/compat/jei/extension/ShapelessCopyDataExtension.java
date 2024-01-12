@@ -27,11 +27,11 @@ import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategor
 import net.minecraft.util.ResourceLocation;
 
 public class ShapelessCopyDataExtension implements ICraftingCategoryExtension {
-	ShapelessCopyDataRecipe recipe;
+    ShapelessCopyDataRecipe recipe;
 
     public ShapelessCopyDataExtension(ShapelessCopyDataRecipe rf) {
         recipe = rf;
-        FHMain.LOGGER.info("Loading extension for "+rf.getId());
+        FHMain.LOGGER.info("Loading extension for " + rf.getId());
     }
 
     @Override
@@ -41,8 +41,8 @@ public class ShapelessCopyDataExtension implements ICraftingCategoryExtension {
 
     @Override
     public void setIngredients(IIngredients ingredients) {
-    	ingredients.setInputIngredients(recipe.getIngredients());
-		ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
+        ingredients.setInputIngredients(recipe.getIngredients());
+        ingredients.setOutput(VanillaTypes.ITEM, recipe.getRecipeOutput());
     }
 
 }

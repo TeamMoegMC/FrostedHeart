@@ -35,15 +35,15 @@ public class EditUtils {
     }
 
     public static void editResearch(Widget p, Research r) {
-    	if(r!=null) {
-    		FHResearch.load(r);
-    	}
+        if (r != null) {
+            FHResearch.load(r);
+        }
         new ResearchEditorDialog(p, r, r.getCategory()).open();
         ;
     }
 
     public static void saveResearch(Research r) {
-    	r.doIndex();
+        r.doIndex();
         FHResearch.save(r);
     }
 

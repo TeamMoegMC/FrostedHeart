@@ -31,12 +31,12 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.Random;
 
-@Mixin({YellowBirchTree.class,BlackWalnutTree.class})
+@Mixin({YellowBirchTree.class, BlackWalnutTree.class})
 public abstract class MixinXMediumTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
-        if (FHUtils.canTreeGenerate(world, pos, rand,10))
+        if (FHUtils.canTreeGenerate(world, pos, rand, 10))
             return super.attemptGrowTree(world, chunkGenerator, pos, state, rand);
         return false;
     }

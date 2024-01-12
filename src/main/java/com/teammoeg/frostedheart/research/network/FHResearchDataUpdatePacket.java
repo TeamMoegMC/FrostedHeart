@@ -62,17 +62,17 @@ public class FHResearchDataUpdatePacket {
             Research rs = FHResearch.researches.getById(id);
             if (data == null) {
                 rs.resetData();
-                MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, false,true));
+                MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, false, true));
                 return;
             }
             ResearchData datax = rs.getData();
             boolean status = datax.isCompleted();
             datax.deserialize(data);
             ClientUtils.refreshResearchGui();
-            
-            MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs,datax.isCompleted(),status!=datax.isCompleted()));
-            
-                
+
+            MinecraftForge.EVENT_BUS.post(new ClientResearchStatusEvent(rs, datax.isCompleted(), status != datax.isCompleted()));
+
+
         });
         context.get().setPacketHandled(true);
     }

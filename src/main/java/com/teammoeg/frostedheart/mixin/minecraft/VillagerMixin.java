@@ -45,38 +45,43 @@ import javax.annotation.Nullable;
 
 @Mixin(VillagerEntity.class)
 public abstract class VillagerMixin extends AbstractVillagerEntity implements VillagerDataHolder {
-	FHVillagerData fh$data=new FHVillagerData(getThis());
+    FHVillagerData fh$data = new FHVillagerData(getThis());
+
     public VillagerMixin(EntityType<? extends AbstractVillagerEntity> type, World worldIn) {
         super(type, worldIn);
     }
 
     @Shadow
     protected abstract void shakeHead();
+
     @Shadow
     public abstract void setCustomer(@Nullable PlayerEntity player);
-    
+
     @Shadow
     protected abstract void displayMerchantGui(PlayerEntity pe);
 
     private VillagerEntity getThis() {
-    	return (VillagerEntity)(Object)this;
+        return (VillagerEntity) (Object) this;
     }
-	@Inject(at = @At("HEAD"), method = "writeAdditional")
-	public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-		CompoundNBT cnbt=new CompoundNBT();
-		fh$data.serialize(cnbt);
-		compound.put("fhdata",cnbt);
-	}
 
-	@Inject(at = @At("HEAD"), method = "readAdditional")
-	public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
-		fh$data.deserialize(compound.getCompound("fhdata"));
-	}
-	@Inject(at=@At(value="INVOKE",target="Lnet/minecraft/entity/merchant/villager/VillagerEntity;resetCustomer()V",remap=true,ordinal=0),method="updateAITasks",cancellable=true,remap=true,require=1)
-	public void fh$updateTask(CallbackInfo cbi) {
-		super.updateAITasks();
-		cbi.cancel();
-	}
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        CompoundNBT cnbt = new CompoundNBT();
+        fh$data.serialize(cnbt);
+        compound.put("fhdata", cnbt);
+    }
+
+    @Inject(at = @At("HEAD"), method = "readAdditional")
+    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        fh$data.deserialize(compound.getCompound("fhdata"));
+    }
+
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/merchant/villager/VillagerEntity;resetCustomer()V", remap = true, ordinal = 0), method = "updateAITasks", cancellable = true, remap = true, require = 1)
+    public void fh$updateTask(CallbackInfo cbi) {
+        super.updateAITasks();
+        cbi.cancel();
+    }
+
     /**
      * @author khjxiaogu
      * @reason disable villager trade for our system
@@ -102,17 +107,17 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
 				return ActionResultType.func_233537_a_(this.world.isRemote);
 			}*/
             if (!this.world.isRemote) {
-            	//return fh$data.trade(playerIn);
+                //return fh$data.trade(playerIn);
             	/*fh$data.update((ServerWorld) super.world, playerIn);
             	RelationList list=fh$data.getRelationShip(playerIn);
             	if(list.sum()<-30) {
 	                this.shakeHead();
 	                playerIn.sendMessage(GuiUtils.translateMessage("village.unknown"), playerIn.getUniqueID());
             	}*/
-            	playerIn.addStat(Stats.TALKED_TO_VILLAGER);
-            	setCustomer(playerIn);
-            	//System.out.println(this.getCustomer());
-            	TradeHandler.openTradeScreen((ServerPlayerEntity) playerIn, fh$data);
+                playerIn.addStat(Stats.TALKED_TO_VILLAGER);
+                setCustomer(playerIn);
+                //System.out.println(this.getCustomer());
+                TradeHandler.openTradeScreen((ServerPlayerEntity) playerIn, fh$data);
 
             }
 
@@ -126,8 +131,8 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
         return super.getEntityInteractionResult(playerIn, hand);
     }
 
-	@Override
-	public FHVillagerData getFHData() {
-		return fh$data;
-	}
+    @Override
+    public FHVillagerData getFHData() {
+        return fh$data;
+    }
 }

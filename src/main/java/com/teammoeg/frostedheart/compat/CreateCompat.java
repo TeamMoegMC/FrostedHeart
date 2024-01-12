@@ -32,7 +32,7 @@ public class CreateCompat {
         BlockStressDefaults.setDefaultImpact(AllBlocks.ANDESITE_FUNNEL.getId(), 4.0);
         BlockStressDefaults.setDefaultImpact(AllBlocks.BRASS_FUNNEL.getId(), 4.0);
         BlockStressDefaults.setDefaultImpact(Blocks.DISPENSER.getRegistryName(), 4.0);
-        BlockStressValues.registerProvider(FHMain.MODID,new FHStress());
-       
+        BlockStressValues.registerProvider(FHMain.MODID, new FHStress());
+
     }
 }

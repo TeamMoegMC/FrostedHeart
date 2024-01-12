@@ -60,10 +60,10 @@ public class HeatDebugItem extends Item {
     }
 
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-    	
+
         RayTraceResult raytraceresult = rayTrace(worldIn, playerIn, RayTraceContext.FluidMode.SOURCE_ONLY);
         ItemStack itemstack = playerIn.getHeldItem(handIn);
-        if(worldIn.isRemote)return ActionResult.resultSuccess(itemstack);
+        if (worldIn.isRemote) return ActionResult.resultSuccess(itemstack);
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
             BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
             TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
@@ -72,8 +72,8 @@ public class HeatDebugItem extends Item {
             } else if (te instanceof EnergyNetworkProvider) {
                 playerIn.sendMessage(new StringTextComponent("EnergyNetworkProvider network=" + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
             } else if (te instanceof INetworkConsumer) {
-            	if(((INetworkConsumer) te).getHolder()!=null)
-            		playerIn.sendMessage(new StringTextComponent("EnergyNetworkConsumer data=" + ((INetworkConsumer) te).getHolder()), playerIn.getUniqueID());
+                if (((INetworkConsumer) te).getHolder() != null)
+                    playerIn.sendMessage(new StringTextComponent("EnergyNetworkConsumer data=" + ((INetworkConsumer) te).getHolder()), playerIn.getUniqueID());
             }
             return ActionResult.resultSuccess(itemstack);
         }

@@ -28,23 +28,23 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(FlowerPotBlock.class)
 public abstract class FlowerPotMixin extends Block {
-	public FlowerPotMixin(Properties properties) {
-		super(properties);
-	}
+    public FlowerPotMixin(Properties properties) {
+        super(properties);
+    }
 
-	@Shadow(remap = false)
-	private java.util.function.Supplier<FlowerPotBlock> emptyPot;
+    @Shadow(remap = false)
+    private java.util.function.Supplier<FlowerPotBlock> emptyPot;
 
-	/**
-	 * @author khjxiaogu
-	 * @reason TODO
-	 */
-	@Overwrite(remap = false)
-	public FlowerPotBlock getEmptyPot() {
-		
-		FlowerPotBlock emp= emptyPot == null ? (FlowerPotBlock)(Object)this : emptyPot.get();
-		if(emp==(Object)this)
-			return (FlowerPotBlock) Blocks.FLOWER_POT;
-		return emp;
-	}
+    /**
+     * @author khjxiaogu
+     * @reason TODO
+     */
+    @Overwrite(remap = false)
+    public FlowerPotBlock getEmptyPot() {
+
+        FlowerPotBlock emp = emptyPot == null ? (FlowerPotBlock) (Object) this : emptyPot.get();
+        if (emp == (Object) this)
+            return (FlowerPotBlock) Blocks.FLOWER_POT;
+        return emp;
+    }
 }

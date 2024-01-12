@@ -76,6 +76,7 @@ public class DietValueRecipe extends IESerializableRecipe {
     public String toString() {
         return "DietValueRecipe [groups=" + groups + ", item=" + item + "]";
     }
+
     public static class Serializer extends IERecipeSerializer<DietValueRecipe> {
 
         @Override

@@ -88,6 +88,7 @@ public class GeneratorRecipe extends IESerializableRecipe {
         });
         return all;
     }
+
     public static class Serializer extends IERecipeSerializer<GeneratorRecipe> {
         @Override
         public ItemStack getIcon() {

@@ -48,6 +48,7 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
 
     @OnlyIn(Dist.CLIENT)
     private static ItemStack renderStack;
+
     @Override
     @OnlyIn(Dist.CLIENT)
     public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {

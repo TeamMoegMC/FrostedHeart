@@ -58,31 +58,31 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
         GuiHelper.handleGuiTank(transform, tile.fluid[0], guiLeft + 88, guiTop + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
-        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 124, guiTop + 20, 16, 46, 177, 177, 20, 51, x,y, TEXTURE,null);
+        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 124, guiTop + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
         // recipe progress icon
         if (tile.processMax > 0 && tile.process > 0) {
             int w = (int) (14 * (tile.process / (float) tile.processMax));
-            this.blit(transform, guiLeft + 107, guiTop + 28, 176,0,14-w,29);
+            this.blit(transform, guiLeft + 107, guiTop + 28, 176, 0, 14 - w, 29);
         }
-        if(tile.network.getPower()>0) {
-            float v=tile.network.getPower()/tile.network.getMaxPower();
-            boolean a=false,b=false;
-            if(v>0.75) {
-            	a=b=true;
-            }else if(v>0.5) {
-            	b=true;
-            }else if(v>0.25)
-            	a=true;
-        	this.blit(transform, guiLeft + 10, guiTop + 24, 176+(a?38:0),81+(b?38:0), 38,38);
-        }else this.blit(transform, guiLeft + 10, guiTop + 24, 176,81, 38,38);
-        if(tile.efficiency>0) {
-        	int h = (int) (51 * (tile.efficiency/2f));
-        	if(tile.isFoodRecipe)
-        		this.blit(transform, guiLeft + 52, guiTop + 16+(51-h), 198, 29+(51-h), 9,h);
-        	else
-        		this.blit(transform, guiLeft + 52, guiTop + 16+(51-h), 207, 29+(51-h), 9,h);
-        }else
-        	this.blit(transform, guiLeft + 52, guiTop + 16, 216, 29, 9,51);
+        if (tile.network.getPower() > 0) {
+            float v = tile.network.getPower() / tile.network.getMaxPower();
+            boolean a = false, b = false;
+            if (v > 0.75) {
+                a = b = true;
+            } else if (v > 0.5) {
+                b = true;
+            } else if (v > 0.25)
+                a = true;
+            this.blit(transform, guiLeft + 10, guiTop + 24, 176 + (a ? 38 : 0), 81 + (b ? 38 : 0), 38, 38);
+        } else this.blit(transform, guiLeft + 10, guiTop + 24, 176, 81, 38, 38);
+        if (tile.efficiency > 0) {
+            int h = (int) (51 * (tile.efficiency / 2f));
+            if (tile.isFoodRecipe)
+                this.blit(transform, guiLeft + 52, guiTop + 16 + (51 - h), 198, 29 + (51 - h), 9, h);
+            else
+                this.blit(transform, guiLeft + 52, guiTop + 16 + (51 - h), 207, 29 + (51 - h), 9, h);
+        } else
+            this.blit(transform, guiLeft + 52, guiTop + 16, 216, 29, 9, 51);
     }
 
     @Override

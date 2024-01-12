@@ -89,7 +89,6 @@ public class EffectItemReward extends Effect {
     }
 
 
-
     @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();

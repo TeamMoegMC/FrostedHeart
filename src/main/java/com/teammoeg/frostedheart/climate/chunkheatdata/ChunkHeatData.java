@@ -57,6 +57,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
     public static float getTemperature(IWorldReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
     }
+
     /**
      * Called to get temperature when a world context is available.
      * on server, will either query capability falling back to cache, or query
@@ -189,10 +190,10 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + range + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW >>4;
-        int chunkOffsetE = offsetE >>4;
-        int chunkOffsetN = offsetN >>4;
-        int chunkOffsetS = offsetS >>4;
+        int chunkOffsetW = offsetW >> 4;
+        int chunkOffsetE = offsetE >> 4;
+        int chunkOffsetN = offsetN >> 4;
+        int chunkOffsetS = offsetS >> 4;
         // add adjust to effected chunks
         ITemperatureAdjust adj = new CubicTemperatureAdjust(heatPos, range, tempMod);
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
@@ -219,10 +220,10 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + adj.getRadius() + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW >>4;
-        int chunkOffsetE = offsetE >>4;
-        int chunkOffsetN = offsetN >>4;
-        int chunkOffsetS = offsetS >>4;
+        int chunkOffsetW = offsetW >> 4;
+        int chunkOffsetE = offsetE >> 4;
+        int chunkOffsetN = offsetN >> 4;
+        int chunkOffsetS = offsetS >> 4;
         // add adjust to effected chunks
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++) {
@@ -237,11 +238,11 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
      * @param world   must be server side
      * @param heatPos the position of the heating block, at the center of the cube
      * @param range   the distance from the heatPos to the boundary
-     * @param up y range above the plane
-     * @param down y range below the plane
+     * @param up      y range above the plane
+     * @param down    y range below the plane
      * @param tempMod the temperature added
      */
-    public static void addPillarTempAdjust(IWorld world, BlockPos heatPos, int range,int up,int down, int tempMod) {
+    public static void addPillarTempAdjust(IWorld world, BlockPos heatPos, int range, int up, int down, int tempMod) {
         removeTempAdjust(world, heatPos);
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
 
@@ -252,10 +253,10 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + range + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW >>4;
-        int chunkOffsetE = offsetE >>4;
-        int chunkOffsetN = offsetN >>4;
-        int chunkOffsetS = offsetS >>4;
+        int chunkOffsetW = offsetW >> 4;
+        int chunkOffsetE = offsetE >> 4;
+        int chunkOffsetN = offsetN >> 4;
+        int chunkOffsetS = offsetS >> 4;
         // add adjust to effected chunks
         ITemperatureAdjust adj = new PillarTemperatureAdjust(heatPos, range, up, down, tempMod);
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
@@ -297,10 +298,10 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + range + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW >>4;
-        int chunkOffsetE = offsetE >>4;
-        int chunkOffsetN = offsetN >>4;
-        int chunkOffsetS = offsetS >>4;
+        int chunkOffsetW = offsetW >> 4;
+        int chunkOffsetE = offsetE >> 4;
+        int chunkOffsetN = offsetN >> 4;
+        int chunkOffsetS = offsetS >> 4;
 
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++)
@@ -323,10 +324,10 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         int offsetE = sourceX + adj.getRadius() + 1;
 
         // these are chunk position offset
-        int chunkOffsetW = offsetW >>4;
-        int chunkOffsetE = offsetE >>4;
-        int chunkOffsetN = offsetN >>4;
-        int chunkOffsetS = offsetS >>4;
+        int chunkOffsetW = offsetW >> 4;
+        int chunkOffsetE = offsetE >> 4;
+        int chunkOffsetN = offsetN >> 4;
+        int chunkOffsetS = offsetS >> 4;
         for (int x = chunkOffsetW; x <= chunkOffsetE; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetS; z++)
                 removeChunkAdjust(world, new ChunkPos(x, z), adj);
@@ -363,6 +364,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
     public ChunkPos getPos() {
         return pos;
     }
+
     /**
      * Get Temperature in a world at a location
      *
@@ -381,6 +383,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         }
         return ret;
     }
+
     /**
      * Get Temperature in a world at a location
      *

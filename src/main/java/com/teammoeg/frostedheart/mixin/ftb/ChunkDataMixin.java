@@ -33,20 +33,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(FTBChunksTeamData.class)
 public class ChunkDataMixin {
-	@Shadow(remap=false)
-	public ClaimedChunkManager manager;
-	@Shadow(remap=false)
-	private Team team;
-	public ChunkDataMixin() {
-	}
-	@Inject(at=@At("HEAD"),method="deserializeNBT",remap=false,cancellable=false)
-	public void fh$deserializeNBT(CompoundNBT tag,CallbackInfo cbi) {
-		if(team instanceof PlayerTeam) {
-			PlayerTeam pt=(PlayerTeam) team;
-			if(pt.actualTeam!=pt)
-				cbi.cancel();
-		}
-	}
+    @Shadow(remap = false)
+    public ClaimedChunkManager manager;
+    @Shadow(remap = false)
+    private Team team;
+
+    public ChunkDataMixin() {
+    }
+
+    @Inject(at = @At("HEAD"), method = "deserializeNBT", remap = false, cancellable = false)
+    public void fh$deserializeNBT(CompoundNBT tag, CallbackInfo cbi) {
+        if (team instanceof PlayerTeam) {
+            PlayerTeam pt = (PlayerTeam) team;
+            if (pt.actualTeam != pt)
+                cbi.cancel();
+        }
+    }
 
 
 }

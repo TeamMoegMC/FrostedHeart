@@ -46,30 +46,33 @@ public class GeologistsHammer extends FHLeveledTool {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
 
     public GeologistsHammer(String name, int lvl, Properties properties) {
-        super(name,lvl, properties);
+        super(name, lvl, properties);
 
     }
 
     public static int getHorizonalRange(ItemStack item) {
-        return getLevel(item)+4;
+        return getLevel(item) + 4;
     }
 
     public static int getVerticalRange(ItemStack item) {
-        return getLevel(item)+3;
+        return getLevel(item) + 3;
     }
+
     public static int getLevel(ItemStack item) {
-    	if(item.getItem() instanceof FHLeveledTool)
-    		return ((FHLeveledTool)item.getItem()).getLevel();
-    	
-    	return ((IToolProvider)item.getItem()).getToolLevel(item,TetraCompat.geoHammer);
+        if (item.getItem() instanceof FHLeveledTool)
+            return ((FHLeveledTool) item.getItem()).getLevel();
+
+        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.geoHammer);
     }
+
     public static float getCorrectness(ItemStack item) {
-    	if(item.getItem() instanceof FHLeveledTool)
-    		return 1;
-    	
-    	return ((IToolProvider)item.getItem()).getToolEfficiency(item,TetraCompat.geoHammer)+1;
+        if (item.getItem() instanceof FHLeveledTool)
+            return 1;
+
+        return ((IToolProvider) item.getItem()).getToolEfficiency(item, TetraCompat.geoHammer) + 1;
     }
-    public static ActionResultType doProspect(PlayerEntity player,World world,BlockPos blockpos,ItemStack is,Hand h) {
+
+    public static ActionResultType doProspect(PlayerEntity player, World world, BlockPos blockpos, ItemStack is, Hand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
             if (world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
                 player.sendStatusMessage(new TranslationTextComponent(world.getBlockState(blockpos).getBlock().getTranslationKey()).mergeStyle(TextFormatting.GOLD), false);
@@ -80,10 +83,10 @@ public class GeologistsHammer extends FHLeveledTool {
             int z = blockpos.getZ();
             is.damageItem(1, player, (player2) -> player2.sendBreakAnimation(h));
             if (!world.isRemote) {
-            	float corr=getCorrectness(is);
+                float corr = getCorrectness(is);
                 Random rnd = new Random(BlockPos.pack(x, y, z) ^ 0xebd763e5b71a0128L);//randomize
                 //This is predictable, but not any big problem. Cheaters can use x-ray or other things rather then hacking in this.
-                if (rnd.nextInt((int) (20*corr)) != 0) {//mistaken rate 5%
+                if (rnd.nextInt((int) (20 * corr)) != 0) {//mistaken rate 5%
                     BlockPos.Mutable mutable = new BlockPos.Mutable(x, y, z);
                     Block ore;
                     HashMap<String, Integer> founded = new HashMap<>();
@@ -105,12 +108,12 @@ public class GeologistsHammer extends FHLeveledTool {
                         int count = 0;
                         IFormattableTextComponent s = GuiUtils.translateMessage("vein_size.found");
                         for (Entry<String, Integer> f : founded.entrySet()) {
-                            if (rnd.nextInt((int) (f.getValue()*corr)) != 0) {
+                            if (rnd.nextInt((int) (f.getValue() * corr)) != 0) {
                                 int rval = f.getValue();
                                 if (rval >= 5) {
                                     int err = (int) (rval / 5 / corr);
-                                    if(err>0)
-                                    	rval += rnd.nextInt(err * 2) - err;
+                                    if (err > 0)
+                                        rval += rnd.nextInt(err * 2) - err;
                                 }
                                 s = s.appendSibling(GuiUtils.translateMessage("vein_size.count", rval).appendSibling(new TranslationTextComponent(f.getKey()).mergeStyle(TextFormatting.GREEN)).appendString(" "));
                                 count++;
@@ -127,9 +130,10 @@ public class GeologistsHammer extends FHLeveledTool {
         }
         return ActionResultType.SUCCESS;
     }
+
     @SuppressWarnings("resource")
     @Override
     public ActionResultType onItemUse(ItemUseContext context) {
-    	return doProspect(context.getPlayer(),context.getWorld(),context.getPos(),context.getItem(),context.getHand());
+        return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());
     }
 }

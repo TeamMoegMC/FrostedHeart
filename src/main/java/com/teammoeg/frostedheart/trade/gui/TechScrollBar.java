@@ -23,7 +23,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import dev.ftb.mods.ftblibrary.ui.*;
 
 public class TechScrollBar extends PanelScrollBar {
-	boolean isHidden=false;
+    boolean isHidden = false;
+
     public TechScrollBar(Panel parent, Panel panel) {
         super(parent, panel);
     }
@@ -34,7 +35,7 @@ public class TechScrollBar extends PanelScrollBar {
 
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-    	TradeIcons.SCROLLFRAME.draw(matrixStack, x-1, y-7, 15, 160);
+        TradeIcons.SCROLLFRAME.draw(matrixStack, x - 1, y - 7, 15, 160);
     }
 
     // Have to do this hack since FTBL fields are private.
@@ -49,23 +50,24 @@ public class TechScrollBar extends PanelScrollBar {
 
     @Override
     public void drawScrollBar(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-    	if(!isHidden)
-        super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
+        if (!isHidden)
+            super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
     }
 
     @Override
     public boolean canMouseScroll() {
-        return super.canMouseScroll() && panel.isEnabled()&&!isHidden;
+        return super.canMouseScroll() && panel.isEnabled() && !isHidden;
     }
 
-	public boolean isHidden() {
-		return isHidden;
-	}
+    public boolean isHidden() {
+        return isHidden;
+    }
 
-	public void hide() {
-		this.isHidden = true;
-	}
-	public void unhide() {
-		this.isHidden = false;
-	}
+    public void hide() {
+        this.isHidden = true;
+    }
+
+    public void unhide() {
+        this.isHidden = false;
+    }
 }

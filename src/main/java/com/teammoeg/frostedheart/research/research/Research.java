@@ -74,8 +74,10 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class Research extends FHRegisteredItem implements Writeable {
 
     private String id;// id of this research
-    
-    /** The icon for this research.<br> */
+
+    /**
+     * The icon for this research.<br>
+     */
     FHIcon icon;
     private ResearchCategory category;
     private HashSet<Supplier<Research>> parents = new HashSet<>();// parent researches
@@ -83,45 +85,65 @@ public class Research extends FHRegisteredItem implements Writeable {
     // should not set manually.
 
     private List<Clue> clues = new ArrayList<>();// research clues
-    
-    /** The required items.<br> */
+
+    /**
+     * The required items.<br>
+     */
     List<IngredientWithSize> requiredItems = new ArrayList<>();
-    List<IResearchNumber> requiredItemsCountOverride=new ArrayList<>();
+    List<IResearchNumber> requiredItemsCountOverride = new ArrayList<>();
     private List<Effect> effects = new ArrayList<>();// effects of this research
-    
-    /** The name.<br> */
+
+    /**
+     * The name.<br>
+     */
     String name = "";
-    
-    /** The desc.<br> */
+
+    /**
+     * The desc.<br>
+     */
     List<String> desc;
-    
-    /** The fdesc.<br> */
+
+    /**
+     * The fdesc.<br>
+     */
     List<String> fdesc;
-    
-    /** The showfdesc.<br> */
+
+    /**
+     * The showfdesc.<br>
+     */
     boolean showfdesc;
-    
-    /** The hide effects.<br> */
+
+    /**
+     * The hide effects.<br>
+     */
     boolean hideEffects;
-    private boolean inCompletable=false;
-    
-    /** The is hidden.<br> */
-    boolean isHidden=false;
-    
-    /** The always show.<br> */
-    boolean alwaysShow=false;
-    /** The points.<br> */
+    private boolean inCompletable = false;
+
+    /**
+     * The is hidden.<br>
+     */
+    boolean isHidden = false;
+
+    /**
+     * The always show.<br>
+     */
+    boolean alwaysShow = false;
+    /**
+     * The points.<br>
+     */
     long points = 1000;// research point
-    
-    /** The is infinite.<br> */
+
+    /**
+     * The is infinite.<br>
+     */
     boolean infinite;
-    
+
     /**
      * Instantiates a new Research.<br>
      *
-     * @param path the research id<br>
+     * @param path     the research id<br>
      * @param category the category<br>
-     * @param parents parents<br>
+     * @param parents  parents<br>
      */
     @SafeVarargs
     public Research(String path, ResearchCategory category, Supplier<Research>... parents) {
@@ -150,7 +172,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         load(jo);
 
     }
-    
+
     /**
      * Load from json
      *
@@ -169,42 +191,42 @@ public class Research extends FHRegisteredItem implements Writeable {
             fdesc = new ArrayList<>();
         icon = FHIcons.getIcon(jo.get("icon"));
         setCategory(ResearchCategory.ALL.get(new ResourceLocation(jo.get("category").getAsString())));
-        
+
         if (jo.has("parents"))
             parents.addAll(
                     SerializeUtil.parseJsonElmList(jo.get("parents"), p -> FHResearch.researches.get(p.getAsString())));
         else
-        	parents.clear();
-        clues=SerializeUtil.parseJsonList(jo.get("clues"), Clues::read);
+            parents.clear();
+        clues = SerializeUtil.parseJsonList(jo.get("clues"), Clues::read);
         requiredItems = SerializeUtil.parseJsonElmList(jo.get("ingredients"), IngredientWithSize::deserialize);
         effects = SerializeUtil.parseJsonList(jo.get("effects"), Effects::deserialize);
         points = jo.get("points").getAsInt();
         if (jo.has("showAltDesc"))
             showfdesc = jo.get("showAltDesc").getAsBoolean();
         else
-        	showfdesc=false;
+            showfdesc = false;
         if (jo.has("hideEffects"))
             hideEffects = jo.get("hideEffects").getAsBoolean();
         else
-        	hideEffects=false;
-        if(jo.has("hidden"))
-        	isHidden=jo.get("hidden").getAsBoolean();
+            hideEffects = false;
+        if (jo.has("hidden"))
+            isHidden = jo.get("hidden").getAsBoolean();
         else
-        	isHidden=false;
-        if(jo.has("locked"))
-        	inCompletable=jo.get("locked").getAsBoolean();
+            isHidden = false;
+        if (jo.has("locked"))
+            inCompletable = jo.get("locked").getAsBoolean();
         else
-        	inCompletable=false;
-        if(jo.has("keepShow"))
-        	alwaysShow=jo.get("keepShow").getAsBoolean();
+            inCompletable = false;
+        if (jo.has("keepShow"))
+            alwaysShow = jo.get("keepShow").getAsBoolean();
         else
-        	alwaysShow=false;
-        if(jo.has("infinite"))
-        	infinite=jo.get("infinite").getAsBoolean();
+            alwaysShow = false;
+        if (jo.has("infinite"))
+            infinite = jo.get("infinite").getAsBoolean();
         else
-        	infinite=false;
+            infinite = false;
     }
-    
+
     /**
      * Serialize to json.<br>
      *
@@ -231,25 +253,26 @@ public class Research extends FHRegisteredItem implements Writeable {
             jo.addProperty("showAltDesc", true);
         if (hideEffects)
             jo.addProperty("hideEffects", true);
-        if(isHidden)
-        	jo.addProperty("hidden", true);
-        if(inCompletable)
-        	jo.addProperty("locked", true);
-        if(alwaysShow)
-        	jo.addProperty("keepShow",true);
-        if(infinite)
-        	jo.addProperty("infinite", true);
+        if (isHidden)
+            jo.addProperty("hidden", true);
+        if (inCompletable)
+            jo.addProperty("locked", true);
+        if (alwaysShow)
+            jo.addProperty("keepShow", true);
+        if (infinite)
+            jo.addProperty("infinite", true);
         return jo;
     }
-    
+
     private ResourceLocation categoryRL;
-    
+
     private List<Integer> parentIds;
-    
+
     /**
      * Instantiates a new Research with a PacketBuffer object.<br>
      * This would be called before research registry and category init.
      * Shouldn't call methods provide by these in this method.
+     *
      * @param data the packet<br>
      */
     public Research(PacketBuffer data) {
@@ -260,29 +283,30 @@ public class Research extends FHRegisteredItem implements Writeable {
         fdesc = SerializeUtil.readList(data, PacketBuffer::readString);
         icon = FHIcons.readIcon(data);
         categoryRL = data.readResourceLocation();
-        parentIds=SerializeUtil.readList(data,PacketBuffer::readVarInt);
+        parentIds = SerializeUtil.readList(data, PacketBuffer::readVarInt);
         //System.out.println("category "+rl.toString());
-        
+
         clues.addAll(SerializeUtil.readList(data, Clues::read));
         requiredItems = SerializeUtil.readList(data, IngredientWithSize::read);
         effects = SerializeUtil.readList(data, Effects::deserialize);
         points = data.readVarLong();
-        boolean[] bools=SerializeUtil.readBooleans(data);
+        boolean[] bools = SerializeUtil.readBooleans(data);
         showfdesc = bools[0];
         hideEffects = bools[1];
-        isHidden=bools[2];
-        inCompletable=bools[3];
-        alwaysShow=bools[4];
-        infinite=bools[5];
+        isHidden = bools[2];
+        inCompletable = bools[3];
+        alwaysShow = bools[4];
+        infinite = bools[5];
     }
-    
+
     /**
      * Packet init, this would be call after everything is ready and packet is taking effect.
      */
     public void packetInit() {
-    	setCategory(ResearchCategory.ALL.get(categoryRL));
-    	parents.clear();
-    	parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);;
+        setCategory(ResearchCategory.ALL.get(categoryRL));
+        parents.clear();
+        parentIds.stream().map(FHResearch.researches::get).forEach(parents::add);
+        ;
     }
 
     /**
@@ -292,7 +316,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @Override
     public void write(PacketBuffer buffer) {
-    	SpecialResearch.writeId(this, buffer);
+        SpecialResearch.writeId(this, buffer);
         buffer.writeString(id);
         buffer.writeString(name);
         SerializeUtil.writeList2(buffer, desc, PacketBuffer::writeString);
@@ -304,7 +328,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         SerializeUtil.writeList(buffer, requiredItems, (e, p) -> e.write(p));
         SerializeUtil.writeList(buffer, effects, (e, p) -> e.write(p));
         buffer.writeVarLong(points);
-        SerializeUtil.writeBooleans(buffer,showfdesc,hideEffects,isHidden,inCompletable,alwaysShow,infinite);
+        SerializeUtil.writeBooleans(buffer, showfdesc, hideEffects, isHidden, inCompletable, alwaysShow, infinite);
     }
 
     /**
@@ -344,27 +368,27 @@ public class Research extends FHRegisteredItem implements Writeable {
             effects.add(effect);
         }
     }
-    
+
     /**
      * Grant effects.
      *
      * @param team the team<br>
-     * @param spe the spe<br>
+     * @param spe  the spe<br>
      */
-    public void grantEffects(TeamResearchData team,ServerPlayerEntity spe) {
-    	boolean granted=true;
-    	for (Effect e : getEffects()) {
+    public void grantEffects(TeamResearchData team, ServerPlayerEntity spe) {
+        boolean granted = true;
+        for (Effect e : getEffects()) {
             team.grantEffect(e, spe);
-            granted&=team.isEffectGranted(e);
-    	}
-    	if(infinite&&granted) {
-    		int lvl=team.getData(this).getLevel();
-    		team.resetData(this, true);
-    		team.getData(this).setLevel(lvl+1);
-    	}
-  
+            granted &= team.isEffectGranted(e);
+        }
+        if (infinite && granted) {
+            int lvl = team.getData(this).getLevel();
+            team.resetData(this, true);
+            team.getData(this).setLevel(lvl + 1);
+        }
+
     }
-    
+
     /**
      * Get required items.
      *
@@ -388,10 +412,10 @@ public class Research extends FHRegisteredItem implements Writeable {
     /**
      * Instantiates a new Research.<br>
      *
-     * @param id the id<br>
+     * @param id       the id<br>
      * @param category the category<br>
-     * @param icon the icon<br>
-     * @param parents the parents<br>
+     * @param icon     the icon<br>
+     * @param parents  the parents<br>
      */
     @SafeVarargs
     public Research(String id, ResearchCategory category, IItemProvider icon, Supplier<Research>... parents) {
@@ -401,10 +425,10 @@ public class Research extends FHRegisteredItem implements Writeable {
     /**
      * Instantiates a new Research.<br>
      *
-     * @param id the id<br>
+     * @param id       the id<br>
      * @param category the category<br>
-     * @param icon the icon<br>
-     * @param parents the parents<br>
+     * @param icon     the icon<br>
+     * @param parents  the parents<br>
      */
     @SafeVarargs
     public Research(String id, ResearchCategory category, ItemStack icon, Supplier<Research>... parents) {
@@ -448,28 +472,28 @@ public class Research extends FHRegisteredItem implements Writeable {
         return FHResearch.getResearch(this.getLId());
 
     }
-    
+
     /**
      * Do reindex.
      */
     public void doReindex() {
-    	children.clear();
+        children.clear();
     }
-    
+
     /**
      * Do index.
      */
     public void doIndex() {
         Supplier<Research> objthis = getSupplier();
-        
+
         for (Supplier<Research> r : this.parents) {
             Research rx = r.get();
             if (rx != null)
                 rx.populateChild(objthis);
         }
         int i = 0;
-        effects.removeIf(e->e==null);
-        clues.removeIf(c->c==null);
+        effects.removeIf(e -> e == null);
+        clues.removeIf(c -> c == null);
         for (Effect e : effects) {
             e.addID(this.getLId(), i);
             e.parent = getSupplier();
@@ -625,9 +649,9 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @OnlyIn(Dist.CLIENT)
     public ResearchData getData() {
-        ResearchData rd=TeamResearchData.getClientInstance().getData(this);
-        if(rd==null)
-        	return ResearchData.EMPTY;
+        ResearchData rd = TeamResearchData.getClientInstance().getData(this);
+        if (rd == null)
+            return ResearchData.EMPTY;
         return rd;
     }
 
@@ -636,9 +660,9 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @OnlyIn(Dist.CLIENT)
     public void resetData() {
-        TeamResearchData.getClientInstance().resetData(this,false);
+        TeamResearchData.getClientInstance().resetData(this, false);
     }
-    
+
     /**
      * Checks for unclaimed reward.<br>
      *
@@ -646,13 +670,13 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @OnlyIn(Dist.CLIENT)
     public boolean hasUnclaimedReward() {
-    	if(!this.isCompleted())return false;
-    	for(Effect e:this.getEffects())
-    		if(!e.isGranted())return true;
-    	return false;
+        if (!this.isCompleted()) return false;
+        for (Effect e : this.getEffects())
+            if (!e.isGranted()) return true;
+        return false;
     }
-    
-    
+
+
     /**
      * Send progress packet.
      *
@@ -666,13 +690,13 @@ public class Research extends FHRegisteredItem implements Writeable {
      * Send progress packet.
      *
      * @param team the team<br>
-     * @param rd the rd<br>
+     * @param rd   the rd<br>
      */
     public void sendProgressPacket(Team team, ResearchData rd) {
         FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
-        if(team!=null)
-        	for (ServerPlayerEntity spe : team.getOnlineMembers())
-        		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+        if (team != null)
+            for (ServerPlayerEntity spe : team.getOnlineMembers())
+                FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
     /**
@@ -743,7 +767,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
         return true;
     }
-    
+
     /**
      * Checks if is showable.<br>
      *
@@ -751,9 +775,9 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     @OnlyIn(Dist.CLIENT)
     public boolean isShowable() {
-    	if(alwaysShow)return true;
-    	Set<Research> rs=this.getParents();
-    	if(rs.isEmpty())return true;
+        if (alwaysShow) return true;
+        Set<Research> rs = this.getParents();
+        if (rs.isEmpty()) return true;
         for (Research parent : rs) {
             if (parent.getData().isUnlocked()) {
                 return true;
@@ -761,16 +785,16 @@ public class Research extends FHRegisteredItem implements Writeable {
         }
         return false;
     }
-    
+
     /**
      * Checks if is hidden.<br>
      *
      * @return if is hidden,true.
      */
     public boolean isHidden() {
-    	return isHidden;
+        return isHidden;
     }
-    
+
     /**
      * set category.
      *
@@ -792,7 +816,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         deleteInTree();
         this.effects.forEach(Effect::deleteSelf);
         this.clues.forEach(Clue::deleteSelf);
-        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this,false));
+        FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this, false));
 
         FHResearch.delete(this);
     }
@@ -832,15 +856,15 @@ public class Research extends FHRegisteredItem implements Writeable {
      */
     public void setNewId(String nid) {
         if (!id.equals(nid)) {
-            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this,false));
+            FHResearchDataManager.INSTANCE.getAllData().forEach(e -> e.resetData(this, false));
             deleteInTree();//clear all reference, hope this could work
             FHResearch.delete(this);
             this.setId(nid);
             FHResearch.register(this);
-            
+
             this.getChildren().forEach(e -> e.addParent(this.getSupplier()));
-            this.getEffects().forEach(e->e.setRId(0));
-            this.getClues().forEach(e->e.setRId(0));
+            this.getEffects().forEach(e -> e.setRId(0));
+            this.getClues().forEach(e -> e.setRId(0));
             this.doIndex();
         }
     }
@@ -854,25 +878,26 @@ public class Research extends FHRegisteredItem implements Writeable {
         return hideEffects;
     }
 
-	/**
-	 * Checks if is in completable.<br>
-	 *
-	 * @return if is in completable,true.
-	 */
-	public boolean isInCompletable() {
-		return inCompletable;
-	}
+    /**
+     * Checks if is in completable.<br>
+     *
+     * @return if is in completable,true.
+     */
+    public boolean isInCompletable() {
+        return inCompletable;
+    }
 
-	/**
-	 * set in completable.
-	 *
-	 * @param inCompletable value to set in completable to.
-	 */
-	public void setInCompletable(boolean inCompletable) {
-		this.inCompletable = inCompletable;
-	}
-	public void reload() {
-		for(Effect e:this.effects)
-			e.reload();
-	}
+    /**
+     * set in completable.
+     *
+     * @param inCompletable value to set in completable to.
+     */
+    public void setInCompletable(boolean inCompletable) {
+        this.inCompletable = inCompletable;
+    }
+
+    public void reload() {
+        for (Effect e : this.effects)
+            e.reload();
+    }
 }

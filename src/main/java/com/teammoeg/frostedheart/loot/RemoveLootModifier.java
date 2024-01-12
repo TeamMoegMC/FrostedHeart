@@ -51,7 +51,7 @@ public class RemoveLootModifier extends LootModifier {
     }
 
     private boolean shouldRemove(ItemStack orig) {
-    	if(removed.isEmpty())return true;
+        if (removed.isEmpty()) return true;
         for (Ingredient rp : removed) {
             if (rp.test(orig)) {
                 return true;

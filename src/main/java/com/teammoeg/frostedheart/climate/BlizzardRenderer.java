@@ -99,9 +99,9 @@ public class BlizzardRenderer {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         BlockPos.Mutable blockPos = new BlockPos.Mutable();
         Random random = new Random(
-        		cameraBlockPosX * cameraBlockPosX * 3121
+                cameraBlockPosX * cameraBlockPosX * 3121
                         + cameraBlockPosZ * 45238971 ^ cameraBlockPosZ * cameraBlockPosZ * 418711
-                        + (int)(ticksAndPartialTicks * 13761)
+                        + (int) (ticksAndPartialTicks * 13761)
         );
         for (int currentlyRenderingZ = cameraBlockPosZ - renderRadius;
              currentlyRenderingZ <= cameraBlockPosZ + renderRadius;
@@ -125,7 +125,7 @@ public class BlizzardRenderer {
                 // If the ``non-blocked'' block is out of render radius,
                 // nothing will be rendered.
                 if (renderingYLowerBound != renderingYUpperBound) {
-                    
+
                     blockPos.setPos(currentlyRenderingX, renderingYLowerBound, currentlyRenderingZ);
 
                     if (i1 != 1) {

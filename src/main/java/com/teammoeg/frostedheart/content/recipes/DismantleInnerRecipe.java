@@ -159,6 +159,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     public IRecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
+
     public static class Serializer extends IERecipeSerializer<DismantleInnerRecipe> {
         @Override
         public ItemStack getIcon() {

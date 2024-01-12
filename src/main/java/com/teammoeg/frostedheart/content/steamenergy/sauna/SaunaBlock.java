@@ -51,7 +51,7 @@ public class SaunaBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public SaunaBlock(String name, Properties blockProps,
-                        BiFunction<Block, Item.Properties, Item> createItemBlock) {
+                      BiFunction<Block, Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }

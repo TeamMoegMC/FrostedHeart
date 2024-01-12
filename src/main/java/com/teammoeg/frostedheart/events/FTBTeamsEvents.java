@@ -34,35 +34,40 @@ import java.util.UUID;
 
 public class FTBTeamsEvents {
 
-	public FTBTeamsEvents() {
-	}
-	public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
-    	FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
+    public FTBTeamsEvents() {
+    }
+
+    public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
+        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
                 new FHResearchDataSyncPacket(
                         FTBTeamsAPI.getPlayerTeam(event.getPlayer())));
     }
-	public static void syncDataWhenTeamCreated(TeamCreatedEvent event) {
-		if(FTBTeamsAPI.isManagerLoaded()) {
-			PlayerTeam orig=FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUniqueID());
 
-			FHResearchDataManager.INSTANCE.transfer(orig.getId(),event.getTeam());
-		}
-    	
-    }
-	public static void syncDataWhenTeamDeleted(TeamEvent event) {
-		if(FTBTeamsAPI.isManagerLoaded()) {
-			UUID owner=event.getTeam().getOwner();
-			PlayerTeam orig=FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
+    public static void syncDataWhenTeamCreated(TeamCreatedEvent event) {
+        if (FTBTeamsAPI.isManagerLoaded()) {
+            PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUniqueID());
 
-			FHResearchDataManager.INSTANCE.transfer(event.getTeam().getId(),orig);
-		}
-    	
+            FHResearchDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
+        }
+
     }
-	public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
-		if(FTBTeamsAPI.isManagerLoaded()) {
-			
-			FHResearchDataManager.INSTANCE.getData(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());;
-		}
-    	
+
+    public static void syncDataWhenTeamDeleted(TeamEvent event) {
+        if (FTBTeamsAPI.isManagerLoaded()) {
+            UUID owner = event.getTeam().getOwner();
+            PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
+
+            FHResearchDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
+        }
+
+    }
+
+    public static void syncDataWhenTeamTransfer(PlayerTransferredTeamOwnershipEvent event) {
+        if (FTBTeamsAPI.isManagerLoaded()) {
+
+            FHResearchDataManager.INSTANCE.getData(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
+            ;
+        }
+
     }
 }

@@ -7,18 +7,18 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 
 public class ToolTipWidget extends Widget {
-	Consumer<TooltipList> csm;
-	public ToolTipWidget(Panel p,Consumer<TooltipList> csm) {
-		super(p);
-		this.csm=csm;
-	}
+    Consumer<TooltipList> csm;
 
-	@Override
-	public void addMouseOverText(TooltipList list) {
-		super.addMouseOverText(list);
-		csm.accept(list);
-	}
+    public ToolTipWidget(Panel p, Consumer<TooltipList> csm) {
+        super(p);
+        this.csm = csm;
+    }
 
+    @Override
+    public void addMouseOverText(TooltipList list) {
+        super.addMouseOverText(list);
+        csm.accept(list);
+    }
 
 
 }

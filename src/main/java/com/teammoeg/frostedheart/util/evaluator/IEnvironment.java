@@ -19,7 +19,9 @@
 package com.teammoeg.frostedheart.util.evaluator;
 
 public interface IEnvironment {
-	double get(String key);
-	Double getOptional(String key);
-	void set(String key,double v);
+    double get(String key);
+
+    Double getOptional(String key);
+
+    void set(String key, double v);
 }

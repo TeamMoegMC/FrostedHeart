@@ -63,11 +63,12 @@ class MainGamePanel extends Panel {
                 rg.init();
                 refreshWidgets();
             }
+
             @Override
-			public void addMouseOverText(TooltipList list) {
-				super.addMouseOverText(list);
-				list.add(GuiUtils.translateGui("draw_desk.reset"));
-			}
+            public void addMouseOverText(TooltipList list) {
+                super.addMouseOverText(list);
+                list.add(GuiUtils.translateGui("draw_desk.reset"));
+            }
         };
         reset.setPosAndSize(157, 136, 27, 16);
         status = new TextField(this).addFlags(Theme.CENTERED).addFlags(Theme.CENTERED_V).setMaxWidth(108).setColor(TechIcons.text);
@@ -160,11 +161,11 @@ class MainGamePanel extends Panel {
                 ot.openHelp();
             }
 
-			@Override
-			public void addMouseOverText(TooltipList list) {
-				super.addMouseOverText(list);
-				list.add(GuiUtils.translateGui("draw_desk.help"));
-			}
+            @Override
+            public void addMouseOverText(TooltipList list) {
+                super.addMouseOverText(list);
+                list.add(GuiUtils.translateGui("draw_desk.help"));
+            }
         };
         help.setPosAndSize(157, 116, 27, 16);
         add(help);
@@ -197,9 +198,9 @@ class MainGamePanel extends Panel {
             }
             return;
         }
-		
 
-        if (((reset.isMouseOver()||rg.getLevel()==-1) && !EnergyCore.hasEnoughEnergy(ClientUtils.getPlayer(), DrawingDeskTileEntity.ENERGY_PER_PAPER)) || (!EnergyCore.hasEnoughEnergy(ClientUtils.getPlayer(), DrawingDeskTileEntity.ENERGY_PER_COMBINE))) {
+
+        if (((reset.isMouseOver() || rg.getLevel() == -1) && !EnergyCore.hasEnoughEnergy(ClientUtils.getPlayer(), DrawingDeskTileEntity.ENERGY_PER_PAPER)) || (!EnergyCore.hasEnoughEnergy(ClientUtils.getPlayer(), DrawingDeskTileEntity.ENERGY_PER_COMBINE))) {
 
             if (lstatus != 1) {
                 status.setText(GuiUtils.translateGui("minigame.tired_to_research"));
@@ -223,16 +224,16 @@ class MainGamePanel extends Panel {
                 lstatus = 3;
             }
             return;
-        }else if(rg.getLevel()==-1) {
-	        if (lstatus != 5) {
-	        	status.setText(GuiUtils.translateGui("minigame.can_start"));
-	            status.setPosAndSize(22, 54, 108, 50);
-	            lstatus = 5;
-	        }
-	        return;
+        } else if (rg.getLevel() == -1) {
+            if (lstatus != 5) {
+                status.setText(GuiUtils.translateGui("minigame.can_start"));
+                status.setPosAndSize(22, 54, 108, 50);
+                lstatus = 5;
+            }
+            return;
         }
         if (lstatus != 0) {
-        	status.setText(StringTextComponent.EMPTY);
+            status.setText(StringTextComponent.EMPTY);
             lstatus = 0;
         }
 

@@ -41,64 +41,64 @@ import java.util.Map;
 @Mixin(FTBChunks.class)
 public class ChunkEventsMixin {
 
-	public ChunkEventsMixin() {
-	}
+    public ChunkEventsMixin() {
+    }
 
-	/**
-	 * @author khjxiaogu
-	 * @reason TODO
-	 */
-	@Overwrite(remap=false)
-	private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
-		CommandSource sourceStack = event.getTeam().manager.server.getCommandSource();
-		FTBChunksTeamData oldData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
-		FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(event.getTeam());
-		newData.updateLimits(event.getPlayer());
+    /**
+     * @author khjxiaogu
+     * @reason TODO
+     */
+    @Overwrite(remap = false)
+    private void playerJoinedParty(PlayerJoinedPartyTeamEvent event) {
+        CommandSource sourceStack = event.getTeam().manager.server.getCommandSource();
+        FTBChunksTeamData oldData = FTBChunksAPI.getManager().getData(event.getPreviousTeam());
+        FTBChunksTeamData newData = FTBChunksAPI.getManager().getData(event.getTeam());
+        newData.updateLimits(event.getPlayer());
 
-		Map<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
-		Map<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
-		int chunks = 0;
-		long now = System.currentTimeMillis();
-		int total = newData.getClaimedChunks().size();
+        Map<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> chunksToSend = new HashMap<>();
+        Map<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> chunksToUnclaim = new HashMap<>();
+        int chunks = 0;
+        long now = System.currentTimeMillis();
+        int total = newData.getClaimedChunks().size();
 
-		for (ClaimedChunk chunk : oldData.getClaimedChunks()) {
-			if (total >= newData.maxClaimChunks) {
-				chunk.unclaim(sourceStack, false);
-				chunksToUnclaim.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, null));
-				chunks++;
-			} else {
-				oldData.manager.claimedChunks.remove(chunk.pos);
-				oldData.save();
-				chunk.teamData = newData;
-				newData.manager.claimedChunks.put(chunk.pos, chunk);
-				newData.save();
-				chunksToSend.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
-				chunks++;
-			}
+        for (ClaimedChunk chunk : oldData.getClaimedChunks()) {
+            if (total >= newData.maxClaimChunks) {
+                chunk.unclaim(sourceStack, false);
+                chunksToUnclaim.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, null));
+                chunks++;
+            } else {
+                oldData.manager.claimedChunks.remove(chunk.pos);
+                oldData.save();
+                chunk.teamData = newData;
+                newData.manager.claimedChunks.put(chunk.pos, chunk);
+                newData.save();
+                chunksToSend.computeIfAbsent(chunk.pos.dimension, s -> new ArrayList<>()).add(new SendChunkPacket.SingleChunk(now, chunk.pos.x, chunk.pos.z, chunk));
+                chunks++;
+            }
 
-			total++;
-		}
-		
-		if (chunks == 0) {
-			return;
-		}
+            total++;
+        }
 
-		for (Map.Entry<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
-			SendManyChunksPacket packet = new SendManyChunksPacket();
-			packet.dimension = entry.getKey();
-			packet.teamId = newData.getTeamId();
-			packet.chunks = entry.getValue();
-			packet.sendToAll(sourceStack.getServer());
-		}
+        if (chunks == 0) {
+            return;
+        }
 
-		for (Map.Entry<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
-			SendManyChunksPacket packet = new SendManyChunksPacket();
-			packet.dimension = entry.getKey();
-			packet.teamId = Util.DUMMY_UUID;
-			packet.chunks = entry.getValue();
-			packet.sendToAll(sourceStack.getServer());
-		}
+        for (Map.Entry<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> entry : chunksToSend.entrySet()) {
+            SendManyChunksPacket packet = new SendManyChunksPacket();
+            packet.dimension = entry.getKey();
+            packet.teamId = newData.getTeamId();
+            packet.chunks = entry.getValue();
+            packet.sendToAll(sourceStack.getServer());
+        }
 
-		FTBChunks.LOGGER.info("Transferred " + chunks + "/" + total + " chunks from " + oldData + " to " + newData);
-	}
+        for (Map.Entry<RegistryKey<World>, List<SendChunkPacket.SingleChunk>> entry : chunksToUnclaim.entrySet()) {
+            SendManyChunksPacket packet = new SendManyChunksPacket();
+            packet.dimension = entry.getKey();
+            packet.teamId = Util.DUMMY_UUID;
+            packet.chunks = entry.getValue();
+            packet.sendToAll(sourceStack.getServer());
+        }
+
+        FTBChunks.LOGGER.info("Transferred " + chunks + "/" + total + " chunks from " + oldData + " to " + newData);
+    }
 }

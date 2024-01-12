@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin({DataFixesManager.class})
 public class DataFixerMixin {
 
-    @Redirect(method = "createFixer", at = @At(value = "NEW", target = "com/mojang/datafixers/DataFixerBuilder",remap=false))
+    @Redirect(method = "createFixer", at = @At(value = "NEW", target = "com/mojang/datafixers/DataFixerBuilder", remap = false))
     private static DataFixerBuilder create$replaceBuilder(int dataVersion) {
         return new LazyDataFixerBuilder(dataVersion);
     }

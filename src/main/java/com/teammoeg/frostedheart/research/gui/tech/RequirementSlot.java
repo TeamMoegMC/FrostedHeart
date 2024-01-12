@@ -59,7 +59,7 @@ public class RequirementSlot extends Widget {
         if (isMouseOver()) {
             if (getWidgetType() != WidgetType.DISABLED) {
                 //TODO edit ingredient
-            	JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
+                JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
             }
 
             return true;

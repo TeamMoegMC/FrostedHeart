@@ -29,20 +29,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
-@Mixin({SaplingBlock.class,MushroomBlock.class})
-public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
-	
-	public SaplingBlockMixin(Properties properties) {
-		super(properties);
-	}
 
-	@Inject(at=@At("HEAD"),method="randomTick",remap=true,cancellable=true)
-	public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random,CallbackInfo cbi) {
-		if(FHUtils.isBlizzardHarming(worldIn, pos)) {
-			worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
-			cbi.cancel();
-		}else if(!FHUtils.canTreeGrow(worldIn, pos, random))
-			cbi.cancel();
-	}
+@Mixin({SaplingBlock.class, MushroomBlock.class})
+public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
+
+    public SaplingBlockMixin(Properties properties) {
+        super(properties);
+    }
+
+    @Inject(at = @At("HEAD"), method = "randomTick", remap = true, cancellable = true)
+    public void fh$randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random, CallbackInfo cbi) {
+        if (FHUtils.isBlizzardHarming(worldIn, pos)) {
+            worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
+            cbi.cancel();
+        } else if (!FHUtils.canTreeGrow(worldIn, pos, random))
+            cbi.cancel();
+    }
 
 }

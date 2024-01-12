@@ -56,28 +56,28 @@ public abstract class ResearchPanel extends Panel {
         researchListPanel = new ResearchListPanel(this);
         researchHierarchyPanel = new ResearchHierarchyPanel(this);
         progressPanel = new ResearchProgressPanel(this) {
-        	@Override
-        	public boolean mousePressed(MouseButton arg0) {
-        		if(super.mousePressed(arg0))
-        			return true;
-        		if(isMouseOver()) {
-	    			Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
-	    			if(inprog!=null) {
-	    				selectResearch(inprog);
-	    				return true;
-	    			}
-        		}
-        		return false;
-        	}
+            @Override
+            public boolean mousePressed(MouseButton arg0) {
+                if (super.mousePressed(arg0))
+                    return true;
+                if (isMouseOver()) {
+                    Research inprog = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+                    if (inprog != null) {
+                        selectResearch(inprog);
+                        return true;
+                    }
+                }
+                return false;
+            }
         };
         hierarchyBar = new TechScrollBar(this, Plane.HORIZONTAL, researchHierarchyPanel);
         detailframe = new ResearchDetailPanel(this);
         //TODO default select on progress research
-        Research cr=null;
-        if(ClientResearchData.last!=null&&ClientResearchData.last.getRId()>0)
-        	cr=ClientResearchData.last;
+        Research cr = null;
+        if (ClientResearchData.last != null && ClientResearchData.last.getRId() > 0)
+            cr = ClientResearchData.last;
         else
-        	cr= ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
+            cr = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
         selectedCategory = cr == null ? ResearchCategory.RESCUE : cr.getCategory();
         selectedResearch = cr == null ? FHResearch.getFirstResearchInCategory(selectedCategory) : cr;
     }
@@ -114,12 +114,12 @@ public abstract class ResearchPanel extends Panel {
 
     public void selectResearch(Research research) {
         if (selectedResearch != research) {
-        	ClientResearchData.last=research;
+            ClientResearchData.last = research;
             selectedResearch = research;
             if (selectedResearch != null)
                 selectCategory(selectedResearch.getCategory());
             researchHierarchyPanel.refreshWidgets();
-        } else if(FHResearch.isEditor()||(research.isUnlocked()&&!research.isHidden())){
+        } else if (FHResearch.isEditor() || (research.isUnlocked() && !research.isHidden())) {
             detailframe.open(research);
         }
     }

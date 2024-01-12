@@ -75,13 +75,13 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {
         int i = state.get(AGE);
         float temp = ChunkHeatData.getTemperature(worldIn, pos);
-        boolean bz=WorldClimate.isBlizzard(worldIn);
-        if (temp < this.growTemperature||bz) {
-            if ((bz||temp < this.growTemperature-5)&&worldIn.getRandom().nextInt(3) == 0) {
+        boolean bz = WorldClimate.isBlizzard(worldIn);
+        if (temp < this.growTemperature || bz) {
+            if ((bz || temp < this.growTemperature - 5) && worldIn.getRandom().nextInt(3) == 0) {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
-        }else if(temp>WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-        	if (worldIn.getRandom().nextInt(3) == 0) {
+        } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+            if (worldIn.getRandom().nextInt(3) == 0) {
                 worldIn.setBlockState(pos, this.getDefaultState(), 2);
             }
         } else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {

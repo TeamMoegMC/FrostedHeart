@@ -24,16 +24,18 @@ import dev.ftb.mods.ftbquests.client.ClientQuestFile;
 import dev.ftb.mods.ftbquests.gui.quests.QuestScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+
 @Mixin(QuestScreen.class)
 public abstract class QuestScreenMixin extends BaseScreen {
-	@Shadow(remap=false)
-	public ClientQuestFile file;
-	public QuestScreenMixin() {
-	}
+    @Shadow(remap = false)
+    public ClientQuestFile file;
 
-	@Override
-	public boolean doesGuiPauseGame() {
-		return file.pauseGame;
-	}
+    public QuestScreenMixin() {
+    }
+
+    @Override
+    public boolean doesGuiPauseGame() {
+        return file.pauseGame;
+    }
 
 }

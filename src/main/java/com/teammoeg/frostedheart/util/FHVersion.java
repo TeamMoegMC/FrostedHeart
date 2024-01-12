@@ -43,27 +43,29 @@ public class FHVersion {
         }
 
     }
+
     private enum SubType {//stable>hf>empty>rc>pre
         pre,
         rc,
         hf,
         stable;
-        public static EqualState compare(SubType v1,SubType v2){
-        	if(v1==null)
-        		return v2==stable||v2==hf?EqualState.lt:(v2==null?EqualState.eq:EqualState.gt);
-        	if(v2==null)
-        		return v1==stable||v1==hf?EqualState.gt:EqualState.lt;
-        	return EqualState.of(v1.ordinal() - v2.ordinal());
+
+        public static EqualState compare(SubType v1, SubType v2) {
+            if (v1 == null)
+                return v2 == stable || v2 == hf ? EqualState.lt : (v2 == null ? EqualState.eq : EqualState.gt);
+            if (v2 == null)
+                return v1 == stable || v1 == hf ? EqualState.gt : EqualState.lt;
+            return EqualState.of(v1.ordinal() - v2.ordinal());
         }
-        public static EqualState compareNoEq(SubType v1,SubType v2){
-        	if(v1==null)
-        		return v2==stable||v2==hf?EqualState.lt:EqualState.gt;
-        	if(v2==null)
-        		return v1==stable||v1==hf?EqualState.gt:EqualState.lt;
-        	return EqualState.of(v1.ordinal() - v2.ordinal());
+
+        public static EqualState compareNoEq(SubType v1, SubType v2) {
+            if (v1 == null)
+                return v2 == stable || v2 == hf ? EqualState.lt : EqualState.gt;
+            if (v2 == null)
+                return v1 == stable || v1 == hf ? EqualState.gt : EqualState.lt;
+            return EqualState.of(v1.ordinal() - v2.ordinal());
         }
     }
-
 
 
     private static class SubVersion {
@@ -232,6 +234,6 @@ public class FHVersion {
 
     @Override
     public String toString() {
-        return "ver " + String.valueOf(majors) + Arrays.toString(minors) ;
+        return "ver " + String.valueOf(majors) + Arrays.toString(minors);
     }
 }

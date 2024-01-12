@@ -42,17 +42,17 @@ public class MinecraftServerMixin {
         // scan the 16x16 area around the spawn point
         // find the minimum surface point that is above sea level.
         for (int x = xStart; x <= xEnd; x++) {
-			for (int z = zStart; z <= zEnd; z++) {
-				h = serverWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, x, z);
-				if (h >= seaLevel)
-					y = Math.min(h, y);
-			}
-		}
+            for (int z = zStart; z <= zEnd; z++) {
+                h = serverWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, x, z);
+                if (h >= seaLevel)
+                    y = Math.min(h, y);
+            }
+        }
         // in extreme case, that is a 16x16 valley below sea level around the spawn point,
         // we just generate the spacecraft at sea level.
         // this case should not happen because there is no known features that does so.
         if (y == 256)
-        	y = seaLevel;
+            y = seaLevel;
         info.setSpawnY(y - 1);
         FHFeatures.spacecraft_feature.generate(serverWorld, serverWorld.getChunkProvider().getChunkGenerator(), serverWorld.rand,
                 new BlockPos(info.getSpawnX(), info.getSpawnY(), info.getSpawnZ()));

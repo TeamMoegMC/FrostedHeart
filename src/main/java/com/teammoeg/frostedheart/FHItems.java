@@ -53,7 +53,8 @@ import net.minecraft.item.Item.Properties;
 import net.minecraft.item.Items;
 
 public class FHItems {
-	public static String[] colors=new String[]{"black","blue","brown","cyan","gray","green","light_blue","light_gray","lime","magenta","orange","pink","purple","red","white","yellow"};
+    public static String[] colors = new String[]{"black", "blue", "brown", "cyan", "gray", "green", "light_blue", "light_gray", "lime", "magenta", "orange", "pink", "purple", "red", "white", "yellow"};
+
     public static void init() {
     }
 
@@ -83,14 +84,14 @@ public class FHItems {
     public static Item military_rations = new CannedFoodItem("military_rations", createProps().food(new Food.Builder().hunger(6).saturation(0.6f).build()));
     public static Item compressed_biscuits_pack = new CannedFoodItem("compressed_biscuits_pack", createProps().food(Foods.BREAD));
     public static Item compressed_biscuits = new CannedFoodItem("compressed_biscuits", createProps().food(Foods.BREAD));
-    public static Item packed_nuts=new CannedFoodItem("packed_nuts",createProps().food((new Food.Builder()).hunger(2).saturation(0.8F).build()),false);
-    public static Item dried_vegetables=new CannedFoodItem("dried_vegetables",createProps().food((new Food.Builder()).hunger(4).saturation(0.6F).build()));
-    public static Item chocolate=new FHBaseItem("chocolate",createProps().food((new Food.Builder()).hunger(4).saturation(0.8F).meat().fastToEat().build()));
-    
+    public static Item packed_nuts = new CannedFoodItem("packed_nuts", createProps().food((new Food.Builder()).hunger(2).saturation(0.8F).build()), false);
+    public static Item dried_vegetables = new CannedFoodItem("dried_vegetables", createProps().food((new Food.Builder()).hunger(4).saturation(0.6F).build()));
+    public static Item chocolate = new FHBaseItem("chocolate", createProps().food((new Food.Builder()).hunger(4).saturation(0.8F).meat().fastToEat().build()));
+
     public static Item steam_bottle = new SteamBottleItem("steam_bottle", createProps().maxStackSize(1));
     public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
-    public static Item rubbing_tool=new RubbingTool("rubbing_tool",createProps().maxDamage(5).setNoRepair());
-    public static Item rubbing_pad=new FHBaseItem("rubbing_pad",createProps().maxStackSize(1));
+    public static Item rubbing_tool = new RubbingTool("rubbing_tool", createProps().maxDamage(5).setNoRepair());
+    public static Item rubbing_pad = new FHBaseItem("rubbing_pad", createProps().maxStackSize(1));
     public static Item buff_coat = new FHBaseItem("buff_coat", createProps().defaultMaxDamage(384)).setRepairItem(raw_hide);
     public static Item gambeson = new FHBaseItem("gambeson", createProps().defaultMaxDamage(384)).setRepairItem(Items.WHITE_WOOL);
     public static Item kelp_lining = new FHBaseItem("kelp_lining", createProps().defaultMaxDamage(256)).setRepairItem(Items.KELP);
@@ -108,28 +109,29 @@ public class FHItems {
     public static Item hide_jacket = new FHBaseArmorItem("hide_jacket", FHArmorMaterial.HIDE, EquipmentSlotType.CHEST, createProps());
     public static Item hide_pants = new FHBaseArmorItem("hide_pants", FHArmorMaterial.HIDE, EquipmentSlotType.LEGS, createProps());
     public static Item heater_vest = new HeaterVestItem("heater_vest", createProps().maxStackSize(1).setNoRepair());
-    public static List<Item> allthermos=new ArrayList<>();
-    public static List<Item> alladvthermos=new ArrayList<>();
-    public static Item thermos = new ThermosItem("thermos","item.frostedheart.thermos", 1500, 250,true);
-    public static Item advanced_thermos = new ThermosItem("advanced_thermos","item.frostedheart.advanced_thermos", 3000, 250,true);
-    public static Item generatorupgrader=new GeneratorUpgraderI("generator_upgrade_i",createProps().maxStackSize(0));
+    public static List<Item> allthermos = new ArrayList<>();
+    public static List<Item> alladvthermos = new ArrayList<>();
+    public static Item thermos = new ThermosItem("thermos", "item.frostedheart.thermos", 1500, 250, true);
+    public static Item advanced_thermos = new ThermosItem("advanced_thermos", "item.frostedheart.advanced_thermos", 3000, 250, true);
+    public static Item generatorupgrader = new GeneratorUpgraderI("generator_upgrade_i", createProps().maxStackSize(0));
+
     static {
-	    for(String s:FHItems.colors) {
-	    	allthermos.add(new ThermosItem(s+"_thermos","item.frostedheart.thermos", 1500, 250,false));
-		}
-	    for(String s:FHItems.colors) {
-	    	alladvthermos.add(new ThermosItem(s+"_advanced_thermos","item.frostedheart.advanced_thermos", 3000, 250,false));
-	    }
+        for (String s : FHItems.colors) {
+            allthermos.add(new ThermosItem(s + "_thermos", "item.frostedheart.thermos", 1500, 250, false));
+        }
+        for (String s : FHItems.colors) {
+            alladvthermos.add(new ThermosItem(s + "_advanced_thermos", "item.frostedheart.advanced_thermos", 3000, 250, false));
+        }
     }
-	
-    
-    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick",1, createProps().defaultMaxDamage(128));
+
+
+    public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", 1, createProps().defaultMaxDamage(128));
     public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 2, createProps().defaultMaxDamage(192));
     public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 3, createProps().defaultMaxDamage(256));
     public static Item copper_core_spade = new CoreSpade("copper_core_spade", 1, createProps().defaultMaxDamage(96));
     public static Item iron_core_spade = new CoreSpade("iron_core_spade", 2, createProps().defaultMaxDamage(128));
     public static Item steel_core_spade = new CoreSpade("steel_core_spade", 3, createProps().defaultMaxDamage(160));
-    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer",1, createProps().defaultMaxDamage(96));
+    public static Item copper_geologists_hammer = new GeologistsHammer("copper_geologists_hammer", 1, createProps().defaultMaxDamage(96));
     public static Item iron_geologists_hammer = new GeologistsHammer("iron_geologists_hammer", 2, createProps().defaultMaxDamage(128));
     public static Item steel_geologists_hammer = new GeologistsHammer("steel_geologists_hammer", 3, createProps().defaultMaxDamage(160));
     public static Item soil_thermometer = new SoilThermometer("soil_thermometer", createProps());

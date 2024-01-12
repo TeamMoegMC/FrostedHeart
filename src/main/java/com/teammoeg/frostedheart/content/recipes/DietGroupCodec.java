@@ -39,7 +39,8 @@ public class DietGroupCodec {
     public static void genCodec() {
         codecs.clear();
         Set<IDietGroup> idgs = DietGroups.get();
-        outer:for (int i = 0; i < groups.length; i++) {
+        outer:
+        for (int i = 0; i < groups.length; i++) {
             for (IDietGroup idg : idgs)
                 if (idg.getName().equalsIgnoreCase(groups[i])) {
                     codecs.add(idg);

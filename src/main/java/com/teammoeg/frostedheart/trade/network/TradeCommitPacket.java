@@ -12,30 +12,30 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class TradeCommitPacket {
-	private Map<String, Integer> offer;
+    private Map<String, Integer> offer;
 
-	public TradeCommitPacket(Map<String, Integer> offer) {
-		super();
-		this.offer = offer;
-	}
-
-	public TradeCommitPacket(PacketBuffer buffer) {
-		offer=SerializeUtil.readStringMap(buffer,new LinkedHashMap<>(),PacketBuffer::readVarInt);
+    public TradeCommitPacket(Map<String, Integer> offer) {
+        super();
+        this.offer = offer;
     }
 
-	public void encode(PacketBuffer buffer) {
-		SerializeUtil.writeStringMap(buffer, offer, (p, b) -> b.writeVarInt(p));
-	}
+    public TradeCommitPacket(PacketBuffer buffer) {
+        offer = SerializeUtil.readStringMap(buffer, new LinkedHashMap<>(), PacketBuffer::readVarInt);
+    }
 
-	public void handle(Supplier<NetworkEvent.Context> context) {
-		context.get().enqueueWork(() -> {
-			Container cont=context.get().getSender().openContainer;
-			if(cont instanceof TradeContainer) {
-				TradeContainer trade=(TradeContainer) cont;
-				trade.setOrder(offer);
-				trade.commitTrade(context.get().getSender());
-			}
-		});
-		context.get().setPacketHandled(true);
-	}
+    public void encode(PacketBuffer buffer) {
+        SerializeUtil.writeStringMap(buffer, offer, (p, b) -> b.writeVarInt(p));
+    }
+
+    public void handle(Supplier<NetworkEvent.Context> context) {
+        context.get().enqueueWork(() -> {
+            Container cont = context.get().getSender().openContainer;
+            if (cont instanceof TradeContainer) {
+                TradeContainer trade = (TradeContainer) cont;
+                trade.setOrder(offer);
+                trade.commitTrade(context.get().getSender());
+            }
+        });
+        context.get().setPacketHandled(true);
+    }
 }

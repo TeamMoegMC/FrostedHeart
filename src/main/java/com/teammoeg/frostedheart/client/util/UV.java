@@ -69,10 +69,12 @@ public class UV extends Rect {
     public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int w) {
         gui.blit(s, lx, ly, x, y, w, h);
     }
+
     // blit with height transition
     public void blitHeightTransition(AbstractGui gui, MatrixStack s, int lx, int ly, int h) {
         gui.blit(s, lx, ly, x, y, w, h);
     }
+
     //blit with width transition and  custom texture size
     public void blit(AbstractGui gui, MatrixStack s, int lx, int ly, int w, int textureW, int textureH) {
         gui.blit(s, lx, ly, x, y, w, h, textureW, textureH);

@@ -120,11 +120,10 @@ public class AdvancementClue extends TickListenerClue {
         buffer.writeString(criterion);
     }
 
-	@Override
-	public String getBrief() {
-		return "Advancement "+getDescriptionString();
-	}
-
+    @Override
+    public String getBrief() {
+        return "Advancement " + getDescriptionString();
+    }
 
 
 }

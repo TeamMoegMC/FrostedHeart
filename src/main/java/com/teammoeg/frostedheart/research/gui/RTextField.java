@@ -122,8 +122,8 @@ public class RTextField extends Widget {
 
     @Override
     public void addMouseOverText(TooltipList list) {
-    	if(parent.isEnabled())
-        list.add(component);
+        if (parent.isEnabled())
+            list.add(component);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class RTextField extends Widget {
                 matrixStack.scale(scale, scale, 1.0F);
 
                 for (i = 0; i < formattedText.length; ++i) {
-                
+
                     theme.drawString(matrixStack, formattedText[i], 0.0F, i * textSpacing, col, textFlags);
                 }
 

@@ -70,26 +70,32 @@ public class SerializeUtil {
             return obj.serialize();
         }
     }
-    public static class CompoundBuilder{
-    	CompoundNBT nbt=new CompoundNBT();
-    	public static CompoundBuilder create() {
-    		return new CompoundBuilder();
-    	}
-    	public CompoundBuilder put(String key,INBT val) {
-    		nbt.put(key, val);
-    		return this;
-    	}
-    	public CompoundBuilder put(String key,UUID val) {
-    		nbt.putUniqueId(key, val);
-    		return this;
-    	}
-    	public CompoundNBT build() {
-    		return nbt;
-    	}
-		public CompoundBuilder put(String key,int val) {
-			nbt.putInt(key, val);
-			return this;
-		}
+
+    public static class CompoundBuilder {
+        CompoundNBT nbt = new CompoundNBT();
+
+        public static CompoundBuilder create() {
+            return new CompoundBuilder();
+        }
+
+        public CompoundBuilder put(String key, INBT val) {
+            nbt.put(key, val);
+            return this;
+        }
+
+        public CompoundBuilder put(String key, UUID val) {
+            nbt.putUniqueId(key, val);
+            return this;
+        }
+
+        public CompoundNBT build() {
+            return nbt;
+        }
+
+        public CompoundBuilder put(String key, int val) {
+            nbt.putInt(key, val);
+            return this;
+        }
     }
 
 
@@ -120,33 +126,36 @@ public class SerializeUtil {
         }
         buffer.writeBoolean(false);
     }
+
     public static boolean[] readBooleans(PacketBuffer buffer) {
-        boolean[] ret=new boolean[8];
-        byte in=buffer.readByte();
-        for(int i=ret.length-1;i>=0;i--) {
-        	ret[i]=(in&1)!=0;
-        	in>>=1;
+        boolean[] ret = new boolean[8];
+        byte in = buffer.readByte();
+        for (int i = ret.length - 1; i >= 0; i--) {
+            ret[i] = (in & 1) != 0;
+            in >>= 1;
         }
         return ret;
     }
+
     /**
      * Write boolean as a byte into buffer
+     *
      * @param elms elements to write, 8 elements max
-     * */
-    public static void writeBooleans(PacketBuffer buffer,boolean...elms) {
-        if (elms.length>8) {
-        	throw new IllegalArgumentException("count of boolean must not excess 8");
+     */
+    public static void writeBooleans(PacketBuffer buffer, boolean... elms) {
+        if (elms.length > 8) {
+            throw new IllegalArgumentException("count of boolean must not excess 8");
         }
-        byte b=0;
-        for(int i=0;i<8;i++) {
-        	boolean bl=elms.length>i?elms[i]:false;
-        	b<<=1;
-        	b|=bl?1:0;
-        	
+        byte b = 0;
+        for (int i = 0; i < 8; i++) {
+            boolean bl = elms.length > i ? elms[i] : false;
+            b <<= 1;
+            b |= bl ? 1 : 0;
+
         }
         buffer.writeByte(b);
     }
-    
+
     public static <T> List<T> readList(PacketBuffer buffer, Function<PacketBuffer, T> func) {
         if (!buffer.readBoolean())
             return null;
@@ -156,25 +165,28 @@ public class SerializeUtil {
             nums.add(func.apply(buffer));
         return nums;
     }
+
     public static short[] readShortArray(PacketBuffer buffer) {
         if (!buffer.readBoolean())
             return null;
         int cnt = buffer.readVarInt();
         short[] nums = new short[cnt];
         for (int i = 0; i < cnt; i++)
-            nums[i]=buffer.readShort();
+            nums[i] = buffer.readShort();
         return nums;
     }
-    public static void writeShortArray(PacketBuffer buffer,short[] arr) {
-    	if (arr == null) {
+
+    public static void writeShortArray(PacketBuffer buffer, short[] arr) {
+        if (arr == null) {
             buffer.writeBoolean(false);
             return;
         }
         buffer.writeBoolean(true);
         buffer.writeVarInt(arr.length);
-        for(short s:arr)
-        	buffer.writeShort(s);
+        for (short s : arr)
+            buffer.writeShort(s);
     }
+
     public static <T> void writeList(PacketBuffer buffer, Collection<T> elms, BiConsumer<T, PacketBuffer> func) {
         if (elms == null) {
             buffer.writeBoolean(false);
@@ -194,27 +206,32 @@ public class SerializeUtil {
         buffer.writeVarInt(elms.size());
         elms.forEach(e -> func.accept(buffer, e));
     }
-    public static <K,V> void writeMap(PacketBuffer buffer,Map<K,V> elms, BiConsumer<K, PacketBuffer> keywriter, BiConsumer<V, PacketBuffer> valuewriter) {
-        writeList(buffer,elms.entrySet(),(p,b)->{
-        	keywriter.accept(p.getKey(),b);
-        	valuewriter.accept(p.getValue(), b);
+
+    public static <K, V> void writeMap(PacketBuffer buffer, Map<K, V> elms, BiConsumer<K, PacketBuffer> keywriter, BiConsumer<V, PacketBuffer> valuewriter) {
+        writeList(buffer, elms.entrySet(), (p, b) -> {
+            keywriter.accept(p.getKey(), b);
+            valuewriter.accept(p.getValue(), b);
         });
     }
-    public static <V> void writeStringMap(PacketBuffer buffer,Map<String,V> elms, BiConsumer<V, PacketBuffer> valuewriter) {
-        writeMap(buffer,elms,(p,b)->b.writeString(p),valuewriter);
+
+    public static <V> void writeStringMap(PacketBuffer buffer, Map<String, V> elms, BiConsumer<V, PacketBuffer> valuewriter) {
+        writeMap(buffer, elms, (p, b) -> b.writeString(p), valuewriter);
     }
-    public static <V> Map<String,V> readStringMap(PacketBuffer buffer,Map<String,V> map,Function<PacketBuffer, V> valuereader) {
-        return readMap(buffer,map,PacketBuffer::readString,valuereader);
+
+    public static <V> Map<String, V> readStringMap(PacketBuffer buffer, Map<String, V> map, Function<PacketBuffer, V> valuereader) {
+        return readMap(buffer, map, PacketBuffer::readString, valuereader);
     }
-    public static <K,V> Map<K,V> readMap(PacketBuffer buffer,Map<K,V> map, Function<PacketBuffer, K> keyreader,Function<PacketBuffer, V> valuereader) {
-    	map.clear(); 
-    	if (!buffer.readBoolean())
-             return map;
-         int cnt = buffer.readVarInt();
-         for (int i = 0; i < cnt; i++)
-             map.put(keyreader.apply(buffer),valuereader.apply(buffer));
-         return map;
+
+    public static <K, V> Map<K, V> readMap(PacketBuffer buffer, Map<K, V> map, Function<PacketBuffer, K> keyreader, Function<PacketBuffer, V> valuereader) {
+        map.clear();
+        if (!buffer.readBoolean())
+            return map;
+        int cnt = buffer.readVarInt();
+        for (int i = 0; i < cnt; i++)
+            map.put(keyreader.apply(buffer), valuereader.apply(buffer));
+        return map;
     }
+
     public static <T> List<T> parseJsonList(JsonElement elm, Function<JsonObject, T> mapper) {
         if (elm == null)
             return Lists.newArrayList();

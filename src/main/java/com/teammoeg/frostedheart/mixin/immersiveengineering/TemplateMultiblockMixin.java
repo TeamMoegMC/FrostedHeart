@@ -41,7 +41,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(TemplateMultiblock.class)
-public abstract class TemplateMultiblockMixin implements IMultiblock,MultiBlockAccess {
+public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlockAccess {
     private ServerPlayerEntity pe;
 
     public TemplateMultiblockMixin() {
@@ -54,8 +54,10 @@ public abstract class TemplateMultiblockMixin implements IMultiblock,MultiBlockA
         else
             pe = null;
     }
-    @Invoker(remap=false)
-    public abstract void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit) ;
+
+    @Invoker(remap = false)
+    public abstract void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
+
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
     public void fh$on$form(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
         if (pe != null)

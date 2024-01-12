@@ -79,6 +79,7 @@ import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
     private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
+
     /**
      * @param event
      */
@@ -89,12 +90,12 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
         ClientRegistryEvents.
-        registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
-        registerFTBScreen(FHContent.TRADE_GUI.get(),TradeScreen::new);
+                registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
+        registerFTBScreen(FHContent.TRADE_GUI.get(), TradeScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Screen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Screen::new);
-        
+
         // Register translucent render type
 
         RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutout());
@@ -123,35 +124,40 @@ public class ClientRegistryEvents {
         addManual();
         TetraClient.init();
     }
+
     @SubscribeEvent
     public static void provideTextures(final TextureStitchEvent.Pre event) {
         if (AtlasTexture.LOCATION_BLOCKS_TEXTURE.equals(event.getMap().getTextureLocation())) {
             Minecraft.getInstance().getResourceManager().getAllResourceLocations("textures/item/module", s -> s.endsWith(".png")).stream()
                     .filter(resourceLocation -> FHMain.MODID.equals(resourceLocation.getNamespace()))
                     // 9 is the length of "textures/" & 4 is the length of ".png"
-                   
+
                     .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
-                    .map(rl->{
-                    	FHMain.LOGGER.info("stitching texture"+rl.toString());
-                    	return rl;
+                    .map(rl -> {
+                        FHMain.LOGGER.info("stitching texture" + rl.toString());
+                        return rl;
                     })
                     .forEach(event::addSprite);
         }
     }
+
     public static <C extends Container, S extends Screen & IHasContainer<C>> void
     registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
         @SuppressWarnings("unchecked")
         ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
         ScreenManager.registerFactory(type, factory);
     }
+
     public static <C extends Container, S extends BaseScreen> void
     registerFTBScreen(ContainerType<C> type, Function<C, S> factory) {
-        ScreenManager.registerFactory(type,FTBScreenFactory(factory));
+        ScreenManager.registerFactory(type, FTBScreenFactory(factory));
     }
-    public static <C extends Container, S extends BaseScreen> ScreenManager.IScreenFactory<C,MenuScreenWrapper<C>>
+
+    public static <C extends Container, S extends BaseScreen> ScreenManager.IScreenFactory<C, MenuScreenWrapper<C>>
     FTBScreenFactory(Function<C, S> factory) {
         return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
     }
+
     /**
      * @param event
      */
@@ -203,6 +209,7 @@ public class ClientRegistryEvents {
             event.addSprite(LiningFinalizedModel.strawLiningTorsoTexture);
         }
     }
+
     public static void addManual() {
         ManualInstance man = ManualHelper.getManual();
         CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);

@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import team.chisel.common.init.ChiselWorldGen;
 
 @Mixin(ChiselWorldGen.class)
-public class MixinChiselWorldGen{
+public class MixinChiselWorldGen {
     @Inject(at = @At("HEAD"), method = "registerWorldGen", cancellable = true, remap = false)
     private static void init(BiomeLoadingEvent event, CallbackInfo ci) {
         ci.cancel();

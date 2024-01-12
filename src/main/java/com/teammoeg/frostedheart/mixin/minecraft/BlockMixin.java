@@ -47,7 +47,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("unused")
-@Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class,SaunaBlock.class})
+@Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class, SaunaBlock.class})
 public class BlockMixin extends Block {
 
 
@@ -60,13 +60,13 @@ public class BlockMixin extends Block {
     public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
-        if (placer != null && placer instanceof ServerPlayerEntity&&!(placer instanceof FakePlayer))
+        if (placer != null && placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
             IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) placer).getId());
     }
 
     @Inject(at = @At("HEAD"), method = "onBlockActivated(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/Hand;Lnet/minecraft/util/math/BlockRayTraceResult;)Lnet/minecraft/util/ActionResultType;")
     public void fh$on$onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit, CallbackInfoReturnable<ActionResultType> r) {
-        if (!worldIn.isRemote&&!(player instanceof FakePlayer)) {
+        if (!worldIn.isRemote && !(player instanceof FakePlayer)) {
             TileEntity te = Utils.getExistingTileEntity(worldIn, pos);
             if (te instanceof MultiblockPartTileEntity) {
                 te = ((MultiblockPartTileEntity) te).master();

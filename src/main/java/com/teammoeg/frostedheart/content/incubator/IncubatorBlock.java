@@ -43,7 +43,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.RegistryObject;
 
-public class IncubatorBlock extends FHGuiBlock{
+public class IncubatorBlock extends FHGuiBlock {
     static DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     static BooleanProperty LIT = BlockStateProperties.LIT;
     private RegistryObject<TileEntityType<?>> type;
@@ -55,12 +55,12 @@ public class IncubatorBlock extends FHGuiBlock{
 
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(HORIZONTAL_FACING,LIT);
+        builder.add(HORIZONTAL_FACING, LIT);
     }
 
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(HORIZONTAL_FACING, context.getPlacementHorizontalFacing()).with(LIT,false);
+        return this.getDefaultState().with(HORIZONTAL_FACING, context.getPlacementHorizontalFacing()).with(LIT, false);
     }
 
     @Nullable
@@ -74,14 +74,14 @@ public class IncubatorBlock extends FHGuiBlock{
         return true;
     }
 
-	@Override
-	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
-			Hand hand, BlockRayTraceResult hit) {
+    @Override
+    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
+                                             Hand hand, BlockRayTraceResult hit) {
 
-		if (FluidUtil.interactWithFluidHandler(player, hand,world, pos,hit.getFace()))
-			return ActionResultType.SUCCESS;
-		return super.onBlockActivated(state, world, pos, player, hand, hit);
-	}
+        if (FluidUtil.interactWithFluidHandler(player, hand, world, pos, hit.getFace()))
+            return ActionResultType.SUCCESS;
+        return super.onBlockActivated(state, world, pos, player, hand, hit);
+    }
 
 
 }

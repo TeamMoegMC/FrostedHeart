@@ -68,7 +68,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 BlockPos n = this.getPos().offset(d);
                 TileEntity te = Utils.getExistingTileEntity(this.getWorld(), n);
                 if (te instanceof INetworkConsumer) {
-                		((INetworkConsumer) te).tryConnectAt(d.getOpposite(), lengthx + 1);
+                    ((INetworkConsumer) te).tryConnectAt(d.getOpposite(), lengthx + 1);
                 }
             }
             return;

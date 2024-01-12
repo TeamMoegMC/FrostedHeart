@@ -43,47 +43,49 @@ import java.util.List;
 
 @Mixin(FlintWorkbenchTileEntity.class)
 public class FlintWorkbenchTileEntityMixin extends TileEntity {
-	@Shadow(remap = false)
-	private NonNullList<ItemStack> stacks;
-	@Shadow(remap = false)
-	private RecipeWrapper inventoryWrapper;
+    @Shadow(remap = false)
+    private NonNullList<ItemStack> stacks;
+    @Shadow(remap = false)
+    private RecipeWrapper inventoryWrapper;
 
-	public FlintWorkbenchTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
-		super(tileEntityTypeIn);
-	}
+    public FlintWorkbenchTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
+        super(tileEntityTypeIn);
+    }
 
-	PlayerEntity pe;
-	/**
-	 * @author khjxiaogu
-	 * @reason Make research can limit flint workbench
-	 * */
-	@Overwrite(remap = false)
-	private List<FlintWorkbenchRecipe> findMatchingRecipes(@Nonnull ItemStack heldItemMainhand) {
-		assert this.world != null;
+    PlayerEntity pe;
 
-		return findMatchingRecipes().stream()
-				.filter(flintWorkbenchRecipe -> flintWorkbenchRecipe.testTool(heldItemMainhand)).findFirst().map(ImmutableList::of).orElseGet(ImmutableList::of);
-	}
-	/**
-	 * @author khjxiaogu
-	 * @reason Make research can limit flint workbench
-	 * */
-	@Overwrite(remap = false)
-	private List<FlintWorkbenchRecipe> findMatchingRecipes() {
-		assert this.world != null;
+    /**
+     * @author khjxiaogu
+     * @reason Make research can limit flint workbench
+     */
+    @Overwrite(remap = false)
+    private List<FlintWorkbenchRecipe> findMatchingRecipes(@Nonnull ItemStack heldItemMainhand) {
+        assert this.world != null;
 
-		if (stacks.stream().allMatch(ItemStack::isEmpty))
-			return ImmutableList.of();
-		List<FlintWorkbenchRecipe> ret = this.world.getRecipeManager().getRecipes(FlintWorkbenchRecipe.flint_workbench,
-				inventoryWrapper, this.world);
-		ret.removeIf(r -> !ResearchListeners.canUseRecipe(pe, r));
+        return findMatchingRecipes().stream()
+                .filter(flintWorkbenchRecipe -> flintWorkbenchRecipe.testTool(heldItemMainhand)).findFirst().map(ImmutableList::of).orElseGet(ImmutableList::of);
+    }
 
-		return ret;
-	}
+    /**
+     * @author khjxiaogu
+     * @reason Make research can limit flint workbench
+     */
+    @Overwrite(remap = false)
+    private List<FlintWorkbenchRecipe> findMatchingRecipes() {
+        assert this.world != null;
 
-	@Inject(at = @At("HEAD"), method = "blockActivated", remap = false)
-	public void fh$blockActivated(@Nonnull PlayerEntity player, @Nonnull BlockRayTraceResult hit,
-			CallbackInfoReturnable<ActionResultType> cbi) {
-		pe = player;
-	}
+        if (stacks.stream().allMatch(ItemStack::isEmpty))
+            return ImmutableList.of();
+        List<FlintWorkbenchRecipe> ret = this.world.getRecipeManager().getRecipes(FlintWorkbenchRecipe.flint_workbench,
+                inventoryWrapper, this.world);
+        ret.removeIf(r -> !ResearchListeners.canUseRecipe(pe, r));
+
+        return ret;
+    }
+
+    @Inject(at = @At("HEAD"), method = "blockActivated", remap = false)
+    public void fh$blockActivated(@Nonnull PlayerEntity player, @Nonnull BlockRayTraceResult hit,
+                                  CallbackInfoReturnable<ActionResultType> cbi) {
+        pe = player;
+    }
 }

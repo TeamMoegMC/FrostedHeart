@@ -40,49 +40,56 @@ import net.minecraft.item.crafting.Ingredient;
 public class FakeSlot extends Widget {
     ItemStack[] i;
     int cnt;
-    int ovlw,ovlh;
+    int ovlw, ovlh;
     Icon overlay;
     Consumer<TooltipList> tooltip;
+
     public FakeSlot(Panel panel, Ingredient is) {
         super(panel);
         this.i = is.getMatchingStacks();
         this.setSize(16, 16);
     }
+
     public FakeSlot(Panel panel, ItemStack iss) {
         super(panel);
-        this.i = new ItemStack[] {iss};
+        this.i = new ItemStack[]{iss};
         this.setSize(16, 16);
     }
+
     public FakeSlot(Panel panel) {
-    	super(panel);
-    	this.setSize(16, 16);
-	}
-	public void setSlot(Ingredient is) {
-    	this.i=is.getMatchingStacks();
+        super(panel);
+        this.setSize(16, 16);
     }
+
+    public void setSlot(Ingredient is) {
+        this.i = is.getMatchingStacks();
+    }
+
     public void setSlot(ItemStack iss) {
-    	this.i=new ItemStack[] {iss};
+        this.i = new ItemStack[]{iss};
     }
+
     public void clear() {
-    	i=null;
-    	cnt=0;
+        i = null;
+        cnt = 0;
     }
+
     @Override
     public void addMouseOverText(TooltipList list) {
-    	if(i==null)return;
+        if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         //list.add(cur.getDisplayName());
         cur.getTooltip(ClientUtils.getPlayer(), ITooltipFlag.TooltipFlags.NORMAL).forEach(list::add);
-        if(tooltip!=null)
-        	tooltip.accept(list);
+        if (tooltip != null)
+            tooltip.accept(list);
     }
- 
+
     @Override
     public boolean mousePressed(MouseButton button) {
         if (isMouseOver()) {
-        	if(i==null)return false;
+            if (i == null) return false;
             if (getWidgetType() != WidgetType.DISABLED) {
-            	onClick(button);
+                onClick(button);
             }
 
             return true;
@@ -93,7 +100,7 @@ public class FakeSlot extends Widget {
 
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-    	if(i==null)return;
+        if (i == null) return;
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
         matrixStack.push();
@@ -109,32 +116,39 @@ public class FakeSlot extends Widget {
             matrixStack.pop();
         }
         matrixStack.translate(0, 0, 100);
-        if(overlay!=null)
-        	overlay.draw(matrixStack, x, y, ovlw, ovlh);
-        
+        if (overlay != null)
+            overlay.draw(matrixStack, x, y, ovlw, ovlh);
+
         matrixStack.pop();
     }
-	public void setCount(int store) {
-		cnt=store;
-	}
-	public Icon getOverlay() {
-		return overlay;
-	}
-	public void setOverlay(Icon overlay,int height,int width) {
-		this.overlay = overlay;
-		this.ovlh=height;
-		this.ovlw=width;
-	}
-	public void resetOverlay() {
-		this.overlay=null;
-	}
-	public Consumer<TooltipList> getTooltip() {
-		return tooltip;
-	}
-	public void setTooltip(Consumer<TooltipList> tooltip) {
-		this.tooltip = tooltip;
-	}
-	public void onClick(MouseButton btn) {
-	}
+
+    public void setCount(int store) {
+        cnt = store;
+    }
+
+    public Icon getOverlay() {
+        return overlay;
+    }
+
+    public void setOverlay(Icon overlay, int height, int width) {
+        this.overlay = overlay;
+        this.ovlh = height;
+        this.ovlw = width;
+    }
+
+    public void resetOverlay() {
+        this.overlay = null;
+    }
+
+    public Consumer<TooltipList> getTooltip() {
+        return tooltip;
+    }
+
+    public void setTooltip(Consumer<TooltipList> tooltip) {
+        this.tooltip = tooltip;
+    }
+
+    public void onClick(MouseButton btn) {
+    }
 
 }

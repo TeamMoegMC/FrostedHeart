@@ -29,33 +29,39 @@ import net.minecraft.util.ResourceLocation;
 import java.util.List;
 
 public class ExtendPolicyGroup extends PolicyGroup {
-	ResourceLocation ref;
-	public ExtendPolicyGroup(List<PolicyCondition> conditions, ResourceLocation ref) {
-		super(conditions);
-		this.ref = ref;
-	}
-	public ExtendPolicyGroup(JsonObject jo) {
-		super(jo);
-		ref=new ResourceLocation(jo.get("parent").getAsString());
-	}
-	public ExtendPolicyGroup(PacketBuffer pb) {
-		super(pb);
-		ref=pb.readResourceLocation();
-	}
-	@Override
-	public void CollectPoliciesNoCheck(PolicySnapshot policy,FHVillagerData ve) {
-		TradePolicy.policies.get(ref).CollectPolicies(policy,ve);
-	}
-	@Override
-	public JsonElement serialize() {
-		JsonObject jo=super.serialize().getAsJsonObject();
-		jo.addProperty("parent",ref.toString());
-		return jo;
-	}
-	@Override
-	public void write(PacketBuffer buffer) {
-		buffer.writeBoolean(true);
-		super.write(buffer);
-		buffer.writeResourceLocation(ref);
-	}
+    ResourceLocation ref;
+
+    public ExtendPolicyGroup(List<PolicyCondition> conditions, ResourceLocation ref) {
+        super(conditions);
+        this.ref = ref;
+    }
+
+    public ExtendPolicyGroup(JsonObject jo) {
+        super(jo);
+        ref = new ResourceLocation(jo.get("parent").getAsString());
+    }
+
+    public ExtendPolicyGroup(PacketBuffer pb) {
+        super(pb);
+        ref = pb.readResourceLocation();
+    }
+
+    @Override
+    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve) {
+        TradePolicy.policies.get(ref).CollectPolicies(policy, ve);
+    }
+
+    @Override
+    public JsonElement serialize() {
+        JsonObject jo = super.serialize().getAsJsonObject();
+        jo.addProperty("parent", ref.toString());
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        buffer.writeBoolean(true);
+        super.write(buffer);
+        buffer.writeResourceLocation(ref);
+    }
 }

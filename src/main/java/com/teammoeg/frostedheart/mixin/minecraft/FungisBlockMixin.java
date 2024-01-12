@@ -31,12 +31,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FungusBlock.class)
 public class FungisBlockMixin {
-	@Inject(at=@At("HEAD"),method="canGrow",remap=true,cancellable=true)
-	public void canGrow(IBlockReader worldIn, BlockPos pos, BlockState state, boolean isClient,
-			CallbackInfoReturnable<Boolean> cbi) {
-		if(!FHUtils.canNetherTreeGrow(worldIn,pos)) {
-			
-		}
-	}
+    @Inject(at = @At("HEAD"), method = "canGrow", remap = true, cancellable = true)
+    public void canGrow(IBlockReader worldIn, BlockPos pos, BlockState state, boolean isClient,
+                        CallbackInfoReturnable<Boolean> cbi) {
+        if (!FHUtils.canNetherTreeGrow(worldIn, pos)) {
+
+        }
+    }
 
 }

@@ -56,13 +56,13 @@ public class SpacecraftFeature extends Feature<NoFeatureConfig> {
 
         //if (reader.isAirBlock(blockpos$mutable) || reader.getBlockState(blockpos$mutable).getCollisionShapeUncached(reader, blockpos$mutable).isEmpty()) {
         Rotation rot = Rotation.randomRotation(rand);
-  
+
         PlacementSettings settings = (new PlacementSettings()).setCenterOffset(new BlockPos(/*9*/9, 2, 7/*8*/)).setRotation(rot).setMirror(Mirror.NONE).addProcessor(BlockIgnoreStructureProcessor.STRUCTURE_BLOCK);
-        settings.field_204765_h=false;
+        settings.field_204765_h = false;
         Template template = reader.getWorld().getStructureTemplateManager().getTemplate(new ResourceLocation(FHMain.MODID, "relic/spacecraft"));
         MutableBoundingBox boundingBox = template.getMutableBoundingBox(settings, start);
 
-        
+
         Vector3i vector3i = boundingBox.func_215126_f();
 
         if (template.func_237146_a_(reader, start, new BlockPos(vector3i.getX(), vector3i.getY(), vector3i.getZ()), settings, reader.getRandom(), 2)) {

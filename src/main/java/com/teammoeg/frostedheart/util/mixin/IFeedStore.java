@@ -1,5 +1,5 @@
 package com.teammoeg.frostedheart.util.mixin;
 
 public interface IFeedStore {
-	public boolean consumeFeed();
+    public boolean consumeFeed();
 }

@@ -61,11 +61,11 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/incubator.png");
         this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.incubator1));
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
-        IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 198,64, 14, 14);
+        IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 198, 64, 14, 14);
         this.FIRE = guiHelper.createAnimatedDrawable(tfire, 80, IDrawableAnimated.StartDirection.TOP, true);
-        IDrawableStatic tproc = guiHelper.createDrawable(guiMain, 176,0, 32, 29);
+        IDrawableStatic tproc = guiHelper.createDrawable(guiMain, 176, 0, 32, 29);
         this.PROC = guiHelper.createAnimatedDrawable(tproc, 240, IDrawableAnimated.StartDirection.LEFT, false);
-        IDrawableStatic teff = guiHelper.createDrawable(guiMain, 207,29,9, 35);
+        IDrawableStatic teff = guiHelper.createDrawable(guiMain, 207, 29, 9, 35);
         this.EFF = guiHelper.createAnimatedDrawable(teff, 240, IDrawableAnimated.StartDirection.BOTTOM, false);
     }
 
@@ -87,16 +87,16 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     @Override
     public void draw(IncubateRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 31, 31);
-        PROC.draw(transform,76,24);
-        EFF.draw(transform,15,31);
-        
+        PROC.draw(transform, 76, 24);
+        EFF.draw(transform, 15, 31);
+
         String burnTime;
-        if(recipe.time<1000||recipe.time%60!=0)
-        	burnTime= String.valueOf(recipe.time) + " s";
+        if (recipe.time < 1000 || recipe.time % 60 != 0)
+            burnTime = String.valueOf(recipe.time) + " s";
         else
-        	burnTime= String.valueOf(recipe.time/60) + " m";
-        int width=ClientUtils.mc().fontRenderer.getStringWidth(burnTime);
-        ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 162-width, 62, 0xFFFFFF);
+            burnTime = String.valueOf(recipe.time / 60) + " m";
+        int width = ClientUtils.mc().fontRenderer.getStringWidth(burnTime);
+        ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 162 - width, 62, 0xFFFFFF);
     }
 
     public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
@@ -122,12 +122,12 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     @Override
     public void setIngredients(IncubateRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(new FluidStack(Fluids.WATER,recipe.water))));
-        ingredients.setInputLists(VanillaTypes.ITEM,Arrays.asList(Arrays.asList(new ItemStack(RankineItems.QUICKLIME.get())),Arrays.asList(recipe.catalyst.getMatchingStacks()),Arrays.asList(recipe.input.getMatchingStacks())));
-        if(!recipe.output.isEmpty())
-        ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.output)));
-        if(!recipe.output_fluid.isEmpty())
-        ingredients.setOutputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(recipe.output_fluid)));
+        ingredients.setInputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(new FluidStack(Fluids.WATER, recipe.water))));
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(new ItemStack(RankineItems.QUICKLIME.get())), Arrays.asList(recipe.catalyst.getMatchingStacks()), Arrays.asList(recipe.input.getMatchingStacks())));
+        if (!recipe.output.isEmpty())
+            ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.output)));
+        if (!recipe.output_fluid.isEmpty())
+            ingredients.setOutputLists(VanillaTypes.FLUID, Arrays.asList(Arrays.asList(recipe.output_fluid)));
     }
 
 
@@ -135,31 +135,31 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     public void setRecipe(IRecipeLayout recipeLayout, IncubateRecipe recipe, IIngredients ingredients) {
         IGuiItemStackGroup guiItemStacks = recipeLayout.getItemStacks();
         IGuiFluidStackGroup guiFluidStacks = recipeLayout.getFluidStacks();
-        guiFluidStacks.init(0, true, 57, 16, 16, 46, recipe.water * 5, false,null);
-        guiFluidStacks.addTooltipCallback((s,o,i,t)->{
-        	if(s==0)
-        		t.add(GuiUtils.translateGui("mb_per_sec",recipe.water));
-        	if(recipe.isFood&&s==1)
-        		t.add(GuiUtils.translateGui("per_food_value",recipe.output_fluid.getAmount()));
+        guiFluidStacks.init(0, true, 57, 16, 16, 46, recipe.water * 5, false, null);
+        guiFluidStacks.addTooltipCallback((s, o, i, t) -> {
+            if (s == 0)
+                t.add(GuiUtils.translateGui("mb_per_sec", recipe.water));
+            if (recipe.isFood && s == 1)
+                t.add(GuiUtils.translateGui("per_food_value", recipe.output_fluid.getAmount()));
         });
-        guiFluidStacks.init(1, true, 113, 16, 16, 46, recipe.water* 5, false,null);
+        guiFluidStacks.init(1, true, 113, 16, 16, 46, recipe.water * 5, false, null);
         guiFluidStacks.set(ingredients);
-        if(!recipe.output_fluid.isEmpty())
-        guiFluidStacks.set(1, ingredients.getOutputs(VanillaTypes.FLUID).get(0));
+        if (!recipe.output_fluid.isEmpty())
+            guiFluidStacks.set(1, ingredients.getOutputs(VanillaTypes.FLUID).get(0));
         guiItemStacks.init(0, true, 29, 47);
-        
+
         guiItemStacks.init(1, true, 11, 12);
-        guiItemStacks.addTooltipCallback((s,o,i,t)->{
-        	if(s==1&&!recipe.consume_catalyst)
-        		t.add(GuiUtils.translateGui("not_consume"));
-        	else if(s==2&&recipe.isFood)
-        		t.add(GuiUtils.translateGui("any_food"));
+        guiItemStacks.addTooltipCallback((s, o, i, t) -> {
+            if (s == 1 && !recipe.consume_catalyst)
+                t.add(GuiUtils.translateGui("not_consume"));
+            else if (s == 2 && recipe.isFood)
+                t.add(GuiUtils.translateGui("any_food"));
         });
         guiItemStacks.init(2, true, 29, 12);
         guiItemStacks.init(3, false, 138, 31);
         guiItemStacks.set(ingredients);
-        if(!recipe.output.isEmpty())
-        	guiItemStacks.set(3, ingredients.getOutputs(VanillaTypes.ITEM).get(0));
-   
+        if (!recipe.output.isEmpty())
+            guiItemStacks.set(3, ingredients.getOutputs(VanillaTypes.ITEM).get(0));
+
     }
 }

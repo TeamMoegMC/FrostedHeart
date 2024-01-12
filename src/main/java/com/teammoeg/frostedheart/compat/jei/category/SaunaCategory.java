@@ -109,7 +109,7 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     @Override
     public List<ITextComponent> getTooltipStrings(SaunaRecipe recipe, double mouseX, double mouseY) {
         List<ITextComponent> tooltip = new ArrayList<>();
-        if (isMouseIn(mouseX, mouseY, 43+18, 4+18, 36, 36)) {
+        if (isMouseIn(mouseX, mouseY, 43 + 18, 4 + 18, 36, 36)) {
             tooltip.add(recipe.effect.getDisplayName());
         }
         return tooltip;

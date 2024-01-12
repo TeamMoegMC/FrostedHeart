@@ -31,32 +31,32 @@ import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ClientScenarioCommentPacket {
     private String commandName;
-    Map<String,String> params;
+    Map<String, String> params;
     CompoundNBT data;
 
     public ClientScenarioCommentPacket(String commandName, Map<String, String> params, CompoundNBT data) {
-		super();
-		this.commandName = commandName;
-		this.params = params;
-		this.data = data;
-	}
+        super();
+        this.commandName = commandName;
+        this.params = params;
+        this.data = data;
+    }
 
-	public ClientScenarioCommentPacket(PacketBuffer buffer) {
-		commandName=buffer.readString();
-		params=SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readString);
-		data=buffer.readCompoundTag();
+    public ClientScenarioCommentPacket(PacketBuffer buffer) {
+        commandName = buffer.readString();
+        params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readString);
+        data = buffer.readCompoundTag();
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeString(commandName);
-        SerializeUtil.writeStringMap(buffer,params, (v,p)->p.writeString(v));
+        SerializeUtil.writeStringMap(buffer, params, (v, p) -> p.writeString(v));
         buffer.writeCompoundTag(data);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-           FHScenarioClient.callCommand(commandName, null, params);
+            FHScenarioClient.callCommand(commandName, null, params);
         });
         context.get().setPacketHandled(true);
     }

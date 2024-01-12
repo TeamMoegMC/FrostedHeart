@@ -47,10 +47,11 @@ public class RecipeGridHandlerMixin {
     private static void fh$isRecipeAllowed(ICraftingRecipe recipe, CraftingInventory inventory, CallbackInfoReturnable<Boolean> cbi) {
         if (!ResearchListeners.canUseRecipe(ResearchListeners.te, recipe))
             cbi.setReturnValue(false);
-        
+
     }
+
     @Inject(at = @At("RETURN"), method = "tryToApplyRecipe", cancellable = true, remap = false)
     private static void fh$tryToApplyRecipe(World world, GroupedItems items, CallbackInfoReturnable<ItemStack> cbi) {
-		ResearchListeners.te=null;
-	}
+        ResearchListeners.te = null;
+    }
 }

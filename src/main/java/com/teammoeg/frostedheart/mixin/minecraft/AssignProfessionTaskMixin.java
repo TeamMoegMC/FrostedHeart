@@ -29,17 +29,19 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.Map;
+
 @Mixin(AssignProfessionTask.class)
 public abstract class AssignProfessionTaskMixin extends Task<VillagerEntity> {
-	public AssignProfessionTaskMixin(Map<MemoryModuleType<?>, MemoryModuleStatus> requiredMemoryStateIn) {
-		super(requiredMemoryStateIn);
-	}
-	/**
-	 * @author khjxiaogu
-	 * @reason Disable vanilla profession
-	 * */
-	@Overwrite
-	protected boolean shouldExecute(ServerWorld worldIn, VillagerEntity owner) {
-		return false;
-	}
+    public AssignProfessionTaskMixin(Map<MemoryModuleType<?>, MemoryModuleStatus> requiredMemoryStateIn) {
+        super(requiredMemoryStateIn);
+    }
+
+    /**
+     * @author khjxiaogu
+     * @reason Disable vanilla profession
+     */
+    @Overwrite
+    protected boolean shouldExecute(ServerWorld worldIn, VillagerEntity owner) {
+        return false;
+    }
 }

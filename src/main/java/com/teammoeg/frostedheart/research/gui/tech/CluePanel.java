@@ -46,6 +46,7 @@ public class CluePanel extends Panel {
     TextField desc;
     TextField contribute;
     TextField rq;
+
     public CluePanel(Panel panel, Clue c, Research r) {
         super(panel);
         this.c = c;
@@ -64,13 +65,13 @@ public class CluePanel extends Panel {
             desc.setMaxWidth(width).setText(itx).setColor(TechIcons.text).setPos(0, offset);
             offset += desc.height + 2;
         }
-        if(c.isRequired()) {
-        	rq=new TextField(this)
-        			.setMaxWidth(width)
+        if (c.isRequired()) {
+            rq = new TextField(this)
+                    .setMaxWidth(width)
                     .setText(GuiUtils.translateGui("research.required"))
                     .setColor(TechIcons.text_red);
-        	rq.setPos(0, offset);
-        	offset+=rq.height+2;
+            rq.setPos(0, offset);
+            offset += rq.height + 2;
         }
         contribute = new TextField(this)
                 .setMaxWidth(width)
@@ -88,8 +89,8 @@ public class CluePanel extends Panel {
         add(clueName);
         if (desc != null)
             add(desc);
-        if(rq!=null)
-        	add(rq);
+        if (rq != null)
+            add(rq);
         add(contribute);
     }
 

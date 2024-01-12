@@ -30,12 +30,12 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.Random;
 
-@Mixin({MagnoliaTree.class,SharingaTree.class,MapleTree.class,CorkOakTree.class,CinnamonTree.class})
+@Mixin({MagnoliaTree.class, SharingaTree.class, MapleTree.class, CorkOakTree.class, CinnamonTree.class})
 public abstract class MixinXSmallTree extends Tree {
     @Override
     public boolean attemptGrowTree(ServerWorld world, ChunkGenerator chunkGenerator, BlockPos pos, BlockState state,
                                    Random rand) {
-        if (FHUtils.canTreeGenerate(world, pos, rand,3))
+        if (FHUtils.canTreeGenerate(world, pos, rand, 3))
             return super.attemptGrowTree(world, chunkGenerator, pos, state, rand);
         return false;
     }

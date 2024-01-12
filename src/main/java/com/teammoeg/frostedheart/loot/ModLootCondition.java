@@ -33,15 +33,18 @@ import java.util.Set;
 
 public class ModLootCondition implements ILootCondition {
     public static LootConditionType TYPE;
-    private Set<String> mods=new HashSet<>();
+    private Set<String> mods = new HashSet<>();
+
     public ModLootCondition(String mod) {
-    	mods.add(mod);
-    	
+        mods.add(mod);
+
     }
+
     public ModLootCondition(Collection<String> mods) {
-    	mods.addAll(mods);
-    	
+        mods.addAll(mods);
+
     }
+
     @SuppressWarnings("resource")
     @Override
     public boolean test(LootContext t) {
@@ -57,19 +60,19 @@ public class ModLootCondition implements ILootCondition {
 
         @Override
         public void serialize(JsonObject jsonObject, ModLootCondition cond, JsonSerializationContext serializationContext) {
-        	if(cond.mods.size()==1)
-        		jsonObject.addProperty("mod",cond.mods.iterator().next());
-        	else
-        		jsonObject.add("mods",SerializeUtil.toJsonList(cond.mods,JsonPrimitive::new));
+            if (cond.mods.size() == 1)
+                jsonObject.addProperty("mod", cond.mods.iterator().next());
+            else
+                jsonObject.add("mods", SerializeUtil.toJsonList(cond.mods, JsonPrimitive::new));
         }
 
         @Nonnull
         @Override
         public ModLootCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
-        	if(jsonObject.has("mod")) {
-        		return new ModLootCondition(jsonObject.get("mod").getAsString());
-        	}
-			return new ModLootCondition(SerializeUtil.parseJsonElmList(jsonObject.get("mods"),JsonElement::getAsString));
+            if (jsonObject.has("mod")) {
+                return new ModLootCondition(jsonObject.get("mod").getAsString());
+            }
+            return new ModLootCondition(SerializeUtil.parseJsonElmList(jsonObject.get("mods"), JsonElement::getAsString));
         }
     }
 }

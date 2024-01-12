@@ -55,8 +55,9 @@ public class FHContent {
     public static List<Item> registeredFHItems = new ArrayList<>();
     public static List<Fluid> registeredFHFluids = new ArrayList<>();
     public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS,
-			FHMain.MODID);
-    public static final RegistryObject<ContainerType<TradeContainer>> TRADE_GUI=CONTAINERS.register("trade",()->IForgeContainerType.create(TradeContainer::new));
+            FHMain.MODID);
+    public static final RegistryObject<ContainerType<TradeContainer>> TRADE_GUI = CONTAINERS.register("trade", () -> IForgeContainerType.create(TradeContainer::new));
+
     public static void registerContainers() {
         GuiHandler.register(T1GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator"), T1GeneratorContainer::new);
         GuiHandler.register(T2GeneratorTileEntity.class, new ResourceLocation(FHMain.MODID, "generator_t2"), T2GeneratorContainer::new);
@@ -65,6 +66,6 @@ public class FHContent {
         GuiHandler.register(SaunaTileEntity.class, new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaContainer::new);
         GuiHandler.register(IncubatorTileEntity.class, new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Container::new);
         GuiHandler.register(HeatIncubatorTileEntity.class, new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Container::new);
-        
+
     }
 }

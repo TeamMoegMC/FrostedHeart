@@ -74,9 +74,9 @@ public class SaunaRecipe extends IESerializableRecipe {
                 return recipe;
         return null;
     }
+
     public static class Serializer extends IERecipeSerializer<SaunaRecipe> {
 
-       
 
         @Override
         public SaunaRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {

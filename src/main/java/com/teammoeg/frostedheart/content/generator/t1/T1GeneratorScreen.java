@@ -43,7 +43,7 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
         super(container, inv, title);
         this.tile = container.tile;
         this.clearIntArray(tile.guiData);
-        
+
     }
 
     @Override

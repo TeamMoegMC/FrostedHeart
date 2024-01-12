@@ -30,53 +30,65 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class RelationSlot extends Widget {
-	Supplier<Integer> toshow;
-	Consumer<TooltipList> tooltip;
+    Supplier<Integer> toshow;
+    Consumer<TooltipList> tooltip;
 
-	public RelationSlot(Panel panel, Supplier<Integer> is) {
-		super(panel);
-		this.toshow = is;
-		this.setSize(16, 16);
-	}
+    public RelationSlot(Panel panel, Supplier<Integer> is) {
+        super(panel);
+        this.toshow = is;
+        this.setSize(16, 16);
+    }
 
-	public RelationSlot(Panel panel) {
-		super(panel);
-		this.setSize(16, 16);
-	}
+    public RelationSlot(Panel panel) {
+        super(panel);
+        this.setSize(16, 16);
+    }
 
-	@Override
-	public void addMouseOverText(TooltipList list) {
-		if (tooltip != null)
-			tooltip.accept(list);
-	}
+    @Override
+    public void addMouseOverText(TooltipList list) {
+        if (tooltip != null)
+            tooltip.accept(list);
+    }
 
-	@Override
-	public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-		if (toshow == null)
-			return;
-		int val = toshow.get();
-		//System.out.println(val);
-		if(val==0)return;
-		val = Math.min(Math.max(-1000, val), 1000);
-		int show = (int) Math.ceil(Math.abs(val / 10f));
-		String str = (val < 0 ? "-" : "") + String.valueOf(show);
+    @Override
+    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        if (toshow == null)
+            return;
+        int val = toshow.get();
+        //System.out.println(val);
+        if (val == 0) return;
+        val = Math.min(Math.max(-1000, val), 1000);
+        int show = (int) Math.ceil(Math.abs(val / 10f));
+        String str = (val < 0 ? "-" : "") + String.valueOf(show);
 
-		int dx;
-		switch (str.length()) {
-		case 0:dx = 15;break;
-		case 1:dx = 15;break;
-		case 2:dx = 10;break;
-		case 3:dx = 5;break;
-		case 4:dx = 0;break;
-		default:dx = 0;break;
-		}
-		
-		theme.drawString(matrixStack, str,x+dx-2, y + 10,val<0?Color4I.LIGHT_GREEN:Color4I.LIGHT_RED, Theme.SHADOW);
+        int dx;
+        switch (str.length()) {
+            case 0:
+                dx = 15;
+                break;
+            case 1:
+                dx = 15;
+                break;
+            case 2:
+                dx = 10;
+                break;
+            case 3:
+                dx = 5;
+                break;
+            case 4:
+                dx = 0;
+                break;
+            default:
+                dx = 0;
+                break;
+        }
 
-	}
+        theme.drawString(matrixStack, str, x + dx - 2, y + 10, val < 0 ? Color4I.LIGHT_GREEN : Color4I.LIGHT_RED, Theme.SHADOW);
 
-	public void setTooltip(Consumer<TooltipList> tooltip) {
-		this.tooltip = tooltip;
-	}
+    }
+
+    public void setTooltip(Consumer<TooltipList> tooltip) {
+        this.tooltip = tooltip;
+    }
 
 }

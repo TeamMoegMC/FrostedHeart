@@ -27,29 +27,31 @@ import java.util.Map;
 
 public class NopData extends BaseData {
 
-	public NopData(JsonObject jo) {
-		super(jo);
-	}
+    public NopData(JsonObject jo) {
+        super(jo);
+    }
 
-	public NopData(PacketBuffer pb) {
-		super(pb);
-	}
+    public NopData(PacketBuffer pb) {
+        super(pb);
+    }
 
-	public NopData(String id, int maxstore, float recover, int price, PolicyAction... restock) {
-		super(id, maxstore, recover, price, restock);
-	}
+    public NopData(String id, int maxstore, float recover, int price, PolicyAction... restock) {
+        super(id, maxstore, recover, price, restock);
+    }
 
-	@Override
-	public String getType() {
-		return "n";
-	}
-	@Override
-	public void write(PacketBuffer buffer) {
-		buffer.writeVarInt(3);
-		super.write(buffer);
-	}
-	@Override
-	public void fetch(PolicySnapshot shot, Map<String, Float> data) {
-	}
+    @Override
+    public String getType() {
+        return "n";
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        buffer.writeVarInt(3);
+        super.write(buffer);
+    }
+
+    @Override
+    public void fetch(PolicySnapshot shot, Map<String, Float> data) {
+    }
 
 }

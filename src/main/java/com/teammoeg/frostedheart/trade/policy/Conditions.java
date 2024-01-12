@@ -27,31 +27,37 @@ import net.minecraft.network.PacketBuffer;
 import java.util.function.Function;
 
 public class Conditions {
-    private static JsonSerializerRegistry<PolicyCondition> registry=new JsonSerializerRegistry<>();
+    private static JsonSerializerRegistry<PolicyCondition> registry = new JsonSerializerRegistry<>();
 
     static {
-    	registerType(LevelCondition.class,"level",LevelCondition::new,LevelCondition::new);
-    	registerType(FlagValueCondition.class,"value",FlagValueCondition::new,FlagValueCondition::new);
-    	registerType(GreaterFlagCondition.class,"greater",GreaterFlagCondition::new,GreaterFlagCondition::new);
-    	registerType(NotCondition.class,"not",NotCondition::new,NotCondition::new);
-    	registerType(TotalTradeCondition.class,"total",TotalTradeCondition::new,TotalTradeCondition::new);
-    	registerType(WithFlagCondition.class,"has",WithFlagCondition::new,WithFlagCondition::new);
+        registerType(LevelCondition.class, "level", LevelCondition::new, LevelCondition::new);
+        registerType(FlagValueCondition.class, "value", FlagValueCondition::new, FlagValueCondition::new);
+        registerType(GreaterFlagCondition.class, "greater", GreaterFlagCondition::new, GreaterFlagCondition::new);
+        registerType(NotCondition.class, "not", NotCondition::new, NotCondition::new);
+        registerType(TotalTradeCondition.class, "total", TotalTradeCondition::new, TotalTradeCondition::new);
+        registerType(WithFlagCondition.class, "has", WithFlagCondition::new, WithFlagCondition::new);
     }
-    public static void registerType(Class<? extends PolicyCondition> cls,String type,Function<JsonObject, PolicyCondition> json,Function<PacketBuffer, PolicyCondition> packet) {
-    	registry.register(cls, type, json, packet);
+
+    public static void registerType(Class<? extends PolicyCondition> cls, String type, Function<JsonObject, PolicyCondition> json, Function<PacketBuffer, PolicyCondition> packet) {
+        registry.register(cls, type, json, packet);
     }
+
     private Conditions() {
     }
-    public static void writeId(PolicyCondition e,PacketBuffer pb) {
-    	registry.writeId(pb, e);
+
+    public static void writeId(PolicyCondition e, PacketBuffer pb) {
+        registry.writeId(pb, e);
     }
+
     public static PolicyCondition deserialize(JsonObject jo) {
         return registry.deserialize(jo);
     }
+
     public static PolicyCondition deserialize(PacketBuffer data) {
         return registry.read(data);
     }
-    public static void writeType(PolicyCondition e,JsonObject jo) {
-    	registry.writeType(jo, e);
+
+    public static void writeType(PolicyCondition e, JsonObject jo) {
+        registry.writeType(jo, e);
     }
 }

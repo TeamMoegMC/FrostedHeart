@@ -37,65 +37,70 @@ public class FHTemperatureDisplayPacket {
     private final String langKey;
     private final boolean isStatus;
     private final boolean isAction;
-    public FHTemperatureDisplayPacket(String format,int...data) {
-        this.langKey=format;
-        this.temp=data;
-        for(int i=0;i<temp.length;i++)
-        	temp[i]*=10;
-        isStatus=false;
-        isAction=false;
+
+    public FHTemperatureDisplayPacket(String format, int... data) {
+        this.langKey = format;
+        this.temp = data;
+        for (int i = 0; i < temp.length; i++)
+            temp[i] *= 10;
+        isStatus = false;
+        isAction = false;
     }
-    public FHTemperatureDisplayPacket(String format,float...data) {
-        this.langKey=format;
-        temp=new int[data.length];
-        for(int i=0;i<data.length;i++)
-        	temp[i]=(int) (data[i]*10);
-        isStatus=false;
-        isAction=false;
+
+    public FHTemperatureDisplayPacket(String format, float... data) {
+        this.langKey = format;
+        temp = new int[data.length];
+        for (int i = 0; i < data.length; i++)
+            temp[i] = (int) (data[i] * 10);
+        isStatus = false;
+        isAction = false;
     }
-    public FHTemperatureDisplayPacket(String format,boolean isAction,int...data) {
-        this.langKey=format;
-        this.temp=data;
-        for(int i=0;i<temp.length;i++)
-        	temp[i]*=10;
-        isStatus=true;
-        this.isAction=isAction;
+
+    public FHTemperatureDisplayPacket(String format, boolean isAction, int... data) {
+        this.langKey = format;
+        this.temp = data;
+        for (int i = 0; i < temp.length; i++)
+            temp[i] *= 10;
+        isStatus = true;
+        this.isAction = isAction;
     }
-    public FHTemperatureDisplayPacket(String format,boolean isAction,float...data) {
-        this.langKey=format;
-        temp=new int[data.length];
-        for(int i=0;i<data.length;i++)
-        	temp[i]=(int) (data[i]*10);
-        isStatus=true;
-        this.isAction=isAction;
+
+    public FHTemperatureDisplayPacket(String format, boolean isAction, float... data) {
+        this.langKey = format;
+        temp = new int[data.length];
+        for (int i = 0; i < data.length; i++)
+            temp[i] = (int) (data[i] * 10);
+        isStatus = true;
+        this.isAction = isAction;
     }
+
     public FHTemperatureDisplayPacket(PacketBuffer buffer) {
-        langKey=buffer.readString();
-        temp=buffer.readVarIntArray();
-        boolean[] bs=SerializeUtil.readBooleans(buffer);
-        isStatus=bs[0];
-        isAction=bs[1];
+        langKey = buffer.readString();
+        temp = buffer.readVarIntArray();
+        boolean[] bs = SerializeUtil.readBooleans(buffer);
+        isStatus = bs[0];
+        isAction = bs[1];
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeString(langKey);
         buffer.writeVarIntArray(temp);
-        SerializeUtil.writeBooleans(buffer,isStatus,isAction);
+        SerializeUtil.writeBooleans(buffer, isStatus, isAction);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
-            Object[] ss=new Object[temp.length];
-            for(int i=0;i<ss.length;i++) {
-            	ss[i]=TmeperatureDisplayHelper.toTemperatureIntString(temp[i]/10f);
+            Object[] ss = new Object[temp.length];
+            for (int i = 0; i < ss.length; i++) {
+                ss[i] = TmeperatureDisplayHelper.toTemperatureIntString(temp[i] / 10f);
             }
-            TranslationTextComponent tosend=new TranslationTextComponent("message." + FHMain.MODID + "."+langKey,ss);
-            if(isStatus)
-            	player.sendStatusMessage(tosend, false);
+            TranslationTextComponent tosend = new TranslationTextComponent("message." + FHMain.MODID + "." + langKey, ss);
+            if (isStatus)
+                player.sendStatusMessage(tosend, false);
             else
-            	player.sendMessage(tosend,player.getUniqueID());
-            
+                player.sendMessage(tosend, player.getUniqueID());
+
         });
         context.get().setPacketHandled(true);
     }

@@ -62,20 +62,25 @@ public class FHUtils {
             super(stack);
         }
     }
-    private static final ResourceLocation emptyLoot=new ResourceLocation("frostedheart:empty");
+
+    private static final ResourceLocation emptyLoot = new ResourceLocation("frostedheart:empty");
+
     public static ResourceLocation getEmptyLoot() {
-    	return emptyLoot;
+        return emptyLoot;
     }
+
     public static <T> T notNull() {
         return null;
     }
-    public static void applyEffectTo(EffectInstance effectinstance,PlayerEntity playerentity) {
-    	if (effectinstance.getPotion().isInstant()) {
+
+    public static void applyEffectTo(EffectInstance effectinstance, PlayerEntity playerentity) {
+        if (effectinstance.getPotion().isInstant()) {
             effectinstance.getPotion().affectEntity(playerentity, playerentity, playerentity, effectinstance.getAmplifier(), 1.0D);
-         } else {
-        	 playerentity.addPotionEffect(new EffectInstance(effectinstance));
-         }
+        } else {
+            playerentity.addPotionEffect(new EffectInstance(effectinstance));
+        }
     }
+
     public static Ingredient createIngredient(ItemStack is) {
         if (is.hasTag()) return new NBTIngredientAccess(is);
         return Ingredient.fromStacks(is);
@@ -112,7 +117,7 @@ public class FHUtils {
     }
 
     public static boolean isRainingAt(BlockPos pos, World world) {
-  
+
         if (!world.isRaining()) {
             return false;
         } else if (!world.canSeeSky(pos)) {
@@ -129,40 +134,44 @@ public class FHUtils {
             cr.setReturnValue(false);
     }
 
-    public static boolean canTreeGenerate(World w, BlockPos p, Random r,int chance) {
+    public static boolean canTreeGenerate(World w, BlockPos p, Random r, int chance) {
         return r.nextInt(chance) == 0;
 
     }
+
     public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
-    	if(WorldClimate.isBlizzard(iWorld)&&iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES,p.getX(),p.getZ())<=p.getY()) {
-    		return true;
-    	}
-    	return false;
+        if (WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY()) {
+            return true;
+        }
+        return false;
     }
+
     public static boolean canTreeGrow(World w, BlockPos p, Random r) {
-        float temp=ChunkHeatData.getTemperature(w, p);
-        if(temp<=-6||WorldClimate.isBlizzard(w))
-        	return false;
-        if(temp>WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-        	return false;
-        if(temp>0)
-        	return true;
-    	return r.nextInt(Math.max(1,MathHelper.ceil(-temp/2))) == 0;
+        float temp = ChunkHeatData.getTemperature(w, p);
+        if (temp <= -6 || WorldClimate.isBlizzard(w))
+            return false;
+        if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+            return false;
+        if (temp > 0)
+            return true;
+        return r.nextInt(Math.max(1, MathHelper.ceil(-temp / 2))) == 0;
     }
+
     public static boolean canNetherTreeGrow(IBlockReader w, BlockPos p) {
-    	if(!(w instanceof IWorld)) {
-    		return false;
-    	}
-        float temp=ChunkHeatData.getTemperature((IWorld) w, p);
-        if(temp<=300)
-        	return false;
-        if(temp>300+WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-        	return false;
+        if (!(w instanceof IWorld)) {
+            return false;
+        }
+        float temp = ChunkHeatData.getTemperature((IWorld) w, p);
+        if (temp <= 300)
+            return false;
+        if (temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+            return false;
         return true;
     }
+
     public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
 
-        return canTreeGenerate(w,p,r,7);
+        return canTreeGenerate(w, p, r, 7);
 
     }
 
@@ -209,8 +218,9 @@ public class FHUtils {
         float t = ChunkHeatData.getTemperature(world, pos);
         return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
     }
-    public static <O,T> Optional<T> ofMap(Map<O,T> map,O key){
-    	return Optional.ofNullable(map.get(key));
+
+    public static <O, T> Optional<T> ofMap(Map<O, T> map, O key) {
+        return Optional.ofNullable(map.get(key));
     }
 
 }

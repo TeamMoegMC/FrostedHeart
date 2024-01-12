@@ -61,7 +61,7 @@ public class FHDataManager {
                 try {
                     return dataCls.getConstructor(JsonObject.class).newInstance(jo);
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                        | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                         | InvocationTargetException | NoSuchMethodException | SecurityException e) {
                     // TODO Auto-generated catch block
                     throw new RuntimeException(e);
                 }
@@ -183,7 +183,7 @@ public class FHDataManager {
     }
 
     public static Float getBiomeTemp(Biome b) {
-    	if(b==null)return 0f;
+        if (b == null) return 0f;
         BiomeTempData data = FHDataManager.<BiomeTempData>get(FHDataType.Biome).get(b.getRegistryName());
         if (data != null)
             return data.getTemp();

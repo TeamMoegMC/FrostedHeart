@@ -40,11 +40,11 @@ public class FHResearchDataSyncPacket {
     }
 
     public FHResearchDataSyncPacket(CompoundNBT data) {
-		super();
-		this.data = data;
-	}
+        super();
+        this.data = data;
+    }
 
-	public FHResearchDataSyncPacket(PacketBuffer buffer) {
+    public FHResearchDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
     }
 

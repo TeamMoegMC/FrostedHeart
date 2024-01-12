@@ -40,6 +40,7 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
     Ingredient getIngredient();
 
     ItemStack[] getIss();
+
     public static class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
         @FunctionalInterface
         public interface DRFactory<T extends DefrostRecipe> {

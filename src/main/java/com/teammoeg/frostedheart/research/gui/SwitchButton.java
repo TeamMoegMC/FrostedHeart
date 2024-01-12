@@ -29,41 +29,41 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class SwitchButton extends Button {
     boolean state;
-    Icon state0,state1;
+    Icon state0, state1;
 
 
-
-	public SwitchButton(Panel panel, Icon state0, Icon state1, boolean state) {
-		super(panel);
-		this.state = state;
-		this.state0 = state0;
-		this.state1 = state1;
-	}
-
-	@Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        if(state)
-        	state1.draw(matrixStack, x, y, w, h);
-        else
-        	state0.draw(matrixStack, x, y, w, h);
+    public SwitchButton(Panel panel, Icon state0, Icon state1, boolean state) {
+        super(panel);
+        this.state = state;
+        this.state0 = state0;
+        this.state1 = state1;
     }
 
-	public boolean getState() {
-		return state;
-	}
+    @Override
+    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        if (state)
+            state1.draw(matrixStack, x, y, w, h);
+        else
+            state0.draw(matrixStack, x, y, w, h);
+    }
 
-	public void setState(boolean state) {
-		this.state = state;
-	}
+    public boolean getState() {
+        return state;
+    }
 
-	@Override
-	public void onClicked(MouseButton arg0) {
-		state=!state;
-		onSwitched();
-	}
-	public void onSwitched() {
-		
-	} 
+    public void setState(boolean state) {
+        this.state = state;
+    }
+
+    @Override
+    public void onClicked(MouseButton arg0) {
+        state = !state;
+        onSwitched();
+    }
+
+    public void onSwitched() {
+
+    }
 
 
 }

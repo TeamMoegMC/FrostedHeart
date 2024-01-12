@@ -77,7 +77,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
     private static final Direction[] HORIZONTALS =
-            new Direction[] { Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH };
+            new Direction[]{Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH};
 
     private float power = 0;
     private int remainTime = 0;
@@ -249,7 +249,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                 this.markContainingBlockForUpdate(null);
 
                 for (PlayerEntity p : this.getWorld().getPlayers()) {
-                    if (floor.contains(p.getPosition().down())||floor.contains(p.getPosition())) {
+                    if (floor.contains(p.getPosition().down()) || floor.contains(p.getPosition())) {
                         grantEffects((ServerPlayerEntity) p);
                     }
                 }
@@ -278,15 +278,15 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         if (p.getArmorCoverPercentage() > 0.0F) {
             return;
         }
-        UUID owner=IOwnerTile.getOwner(this);
-        if(owner==null)return;
-        Team t=FTBTeamsAPI.getPlayerTeam(p);
-        if(t==null||!t.getId().equals(owner))return;
+        UUID owner = IOwnerTile.getOwner(this);
+        if (owner == null) return;
+        Team t = FTBTeamsAPI.getPlayerTeam(p);
+        if (t == null || !t.getId().equals(owner)) return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {
             p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));
         }
-        
+
         // add sauna effect
         if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA)) {
             // initial reward

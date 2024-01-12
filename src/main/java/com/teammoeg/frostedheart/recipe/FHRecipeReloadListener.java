@@ -93,7 +93,7 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
         clientRecipeManager = event.getRecipeManager();
         if (!Minecraft.getInstance().isSingleplayer())
             buildRecipeLists(clientRecipeManager);
-        
+
     }
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
@@ -119,18 +119,18 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .filter(iRecipe -> iRecipe.getClass() == DietValueRecipe.class)
                 .map(e -> (DietValueRecipe) e)
                 .collect(Collectors.toMap(recipe -> recipe.item, recipe -> recipe));
-        InspireRecipe.recipes=filterRecipes(recipes, InspireRecipe.class, InspireRecipe.TYPE).values().stream().collect(Collectors.toList());
+        InspireRecipe.recipes = filterRecipes(recipes, InspireRecipe.class, InspireRecipe.TYPE).values().stream().collect(Collectors.toList());
         ResearchPaperRecipe.recipes = filterRecipes(recipes, ResearchPaperRecipe.class, ResearchPaperRecipe.TYPE).values().stream().collect(Collectors.toList());
         SaunaRecipe.recipeList = filterRecipes(recipes, SaunaRecipe.class, SaunaRecipe.TYPE);
-        IncubateRecipe.recipeList=filterRecipes(recipes, IncubateRecipe.class, IncubateRecipe.TYPE);
-        TradePolicy.policies=filterRecipes(recipes,TradePolicy.class,TradePolicy.TYPE).values().stream().collect(Collectors.toMap(t->t.getName(),t->t));
+        IncubateRecipe.recipeList = filterRecipes(recipes, IncubateRecipe.class, IncubateRecipe.TYPE);
+        TradePolicy.policies = filterRecipes(recipes, TradePolicy.class, TradePolicy.TYPE).values().stream().collect(Collectors.toMap(t -> t.getName(), t -> t));
         //System.out.println(TradePolicy.policies.size());
-        TradePolicy.items=TradePolicy.policies.values().stream().map(TradePolicy::asWeight).filter(Objects::nonNull).collect(Collectors.toList());
+        TradePolicy.items = TradePolicy.policies.values().stream().map(TradePolicy::asWeight).filter(Objects::nonNull).collect(Collectors.toList());
         //System.out.println(TradePolicy.items.size());
-        TradePolicy.totalW=TradePolicy.items.stream().mapToInt(w->w.itemWeight).sum();
+        TradePolicy.totalW = TradePolicy.items.stream().mapToInt(w -> w.itemWeight).sum();
         //System.out.println(TradePolicy.totalW);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::scheduleSyncJEI);
-        
+
     }
 
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {

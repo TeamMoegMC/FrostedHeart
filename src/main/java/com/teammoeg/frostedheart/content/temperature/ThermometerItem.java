@@ -54,7 +54,7 @@ public class ThermometerItem extends FHBaseItem {
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         if (worldIn.isRemote) return stack;
         if (entityLiving instanceof ServerPlayerEntity) {
-        	TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity)entityLiving,"info.thermometerbody",getTemperature((ServerPlayerEntity)entityLiving) / 10f + 37f);
+            TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity) entityLiving, "info.thermometerbody", getTemperature((ServerPlayerEntity) entityLiving) / 10f + 37f);
         }
 
         return stack;
@@ -62,7 +62,7 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-    	tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
         tooltip.add(GuiUtils.translateTooltip("meme.thermometerbody").mergeStyle(TextFormatting.GRAY));
     }
 
@@ -72,10 +72,10 @@ public class ThermometerItem extends FHBaseItem {
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-    	playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"),true);
+        playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"), true);
         playerIn.setActiveHand(handIn);
-        if (playerIn instanceof ServerPlayerEntity&&playerIn.abilities.isCreativeMode) {
-        	TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity)playerIn,"info.thermometerbody",getTemperature((ServerPlayerEntity) playerIn) / 10f + 37f);
+        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
+            TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity) playerIn, "info.thermometerbody", getTemperature((ServerPlayerEntity) playerIn) / 10f + 37f);
         }
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
     }

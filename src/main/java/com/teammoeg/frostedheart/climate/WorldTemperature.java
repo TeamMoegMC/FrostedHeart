@@ -66,17 +66,17 @@ public class WorldTemperature {
     public static final float COLD_PERIOD_BOTTOM_T8 = -70;
     public static final float COLD_PERIOD_BOTTOM_T9 = -80;
     public static final float COLD_PERIOD_BOTTOM_T10 = -90;
-    public static final float[] BOTTOMS=new float[] {
-    		COLD_PERIOD_BOTTOM_T1,
-    		COLD_PERIOD_BOTTOM_T2,
-    		COLD_PERIOD_BOTTOM_T3,
-    		COLD_PERIOD_BOTTOM_T4,
-    		COLD_PERIOD_BOTTOM_T5,
-    		COLD_PERIOD_BOTTOM_T6,
-    		COLD_PERIOD_BOTTOM_T7,
-    		COLD_PERIOD_BOTTOM_T8,
-    		COLD_PERIOD_BOTTOM_T9,
-    		COLD_PERIOD_BOTTOM_T10
+    public static final float[] BOTTOMS = new float[]{
+            COLD_PERIOD_BOTTOM_T1,
+            COLD_PERIOD_BOTTOM_T2,
+            COLD_PERIOD_BOTTOM_T3,
+            COLD_PERIOD_BOTTOM_T4,
+            COLD_PERIOD_BOTTOM_T5,
+            COLD_PERIOD_BOTTOM_T6,
+            COLD_PERIOD_BOTTOM_T7,
+            COLD_PERIOD_BOTTOM_T8,
+            COLD_PERIOD_BOTTOM_T9,
+            COLD_PERIOD_BOTTOM_T10
     };
     public static final float CO2_FREEZE_TEMP = -78;
     public static final float O2_FREEZE_TEMP = -218;
@@ -109,9 +109,8 @@ public class WorldTemperature {
     public static final int BONEMEAL_TEMPERATURE = 5;
 
 
-    
     public static final float ANIMAL_ALIVE_TEMPERATURE = -9f;
-    
+
     public static final float FEEDED_ANIMAL_ALIVE_TEMPERATURE = -30f;
 
     public static final float VANILLA_PLANT_GROW_TEMPERATURE_MAX = 50;
@@ -126,10 +125,10 @@ public class WorldTemperature {
      * @return world temperature<br>
      */
     public static float getTemperature(IWorldReader w, BlockPos pos) {
-    	Biome b=w.getBiome(pos);
-        Float temp =null;
-        if(b!=null)
-        	temp=biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+        Biome b = w.getBiome(pos);
+        Float temp = null;
+        if (b != null)
+            temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
         float wt = 0;
         if (w instanceof World) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
@@ -139,13 +138,14 @@ public class WorldTemperature {
             });
 
             // Add dynamic temperature baseline
-            wt += WorldClimate.getTemp((World) w)*0.25f;
+            wt += WorldClimate.getTemp((World) w) * 0.25f;
         }
 
         if (temp != null)
             return wt + temp;
         return wt;
     }
+
     /**
      * Get World temperature for a specific world, affected by weather and so on
      *
@@ -153,10 +153,10 @@ public class WorldTemperature {
      * @return world temperature<br>
      */
     public static float getBaseTemperature(IWorldReader w, BlockPos pos) {
-    	Biome b=w.getBiome(pos);
-        Float temp =null;
-        if(b!=null)
-        	temp=biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+        Biome b = w.getBiome(pos);
+        Float temp = null;
+        if (b != null)
+            temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
         float wt = 0;
         if (w instanceof World) {
             wt = worldbuffer.computeIfAbsent(w, (k) -> {
@@ -172,16 +172,18 @@ public class WorldTemperature {
 
     public static float getClimateTemperature(IWorldReader w) {
         if (w instanceof World) {
-        	return WorldClimate.getTemp((World) w)*0.25f;
+            return WorldClimate.getTemp((World) w) * 0.25f;
         }
         return 0;
     }
+
     public static boolean isWorldBlizzard(IWorldReader w) {
-    	if (w instanceof World) {
-    		return WorldClimate.isBlizzard((World) w);
-    	}
-    	return false;
+        if (w instanceof World) {
+            return WorldClimate.isBlizzard((World) w);
+        }
+        return false;
     }
+
     public static void clear() {
         worldbuffer.clear();
         biomebuffer.clear();

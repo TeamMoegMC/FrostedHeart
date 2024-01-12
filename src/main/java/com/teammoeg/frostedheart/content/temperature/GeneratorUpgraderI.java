@@ -47,7 +47,8 @@ import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.world.World;
 
 public class GeneratorUpgraderI extends FHBaseItem {
-	IETemplateMultiblock ietm=FHMultiblocks.GENERATOR_T2;
+    IETemplateMultiblock ietm = FHMultiblocks.GENERATOR_T2;
+
     public GeneratorUpgraderI(String name, Properties properties) {
         super(name, properties);
     }
@@ -55,8 +56,8 @@ public class GeneratorUpgraderI extends FHBaseItem {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         playerIn.setActiveHand(handIn);
-        if (playerIn instanceof ServerPlayerEntity&&playerIn.abilities.isCreativeMode) {
-        	createStructure(playerIn,worldIn);
+        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
+            createStructure(playerIn, worldIn);
         }
         return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
     }
@@ -65,38 +66,39 @@ public class GeneratorUpgraderI extends FHBaseItem {
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         if (worldIn.isRemote) return stack;
         PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
-        createStructure(entityplayer,worldIn);
+        createStructure(entityplayer, worldIn);
         return stack;
     }
-    public boolean createStructure(PlayerEntity entityplayer,World worldIn) {
-    	if (entityplayer instanceof ServerPlayerEntity) {
+
+    public boolean createStructure(PlayerEntity entityplayer, World worldIn) {
+        if (entityplayer instanceof ServerPlayerEntity) {
             BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.ANY);
             if (brtr.getType() == Type.MISS) return false;
-            if(brtr.getFace().getYOffset()!=0)return false;
-            TileEntity te=Utils.getExistingTileEntity(worldIn, brtr.getPos().offset(brtr.getFace().getOpposite(),1));
+            if (brtr.getFace().getYOffset() != 0) return false;
+            TileEntity te = Utils.getExistingTileEntity(worldIn, brtr.getPos().offset(brtr.getFace().getOpposite(), 1));
             System.out.println(te);
-            if(!(te instanceof T1GeneratorTileEntity))return false;
-            T1GeneratorTileEntity t1te=(T1GeneratorTileEntity) te;
+            if (!(te instanceof T1GeneratorTileEntity)) return false;
+            T1GeneratorTileEntity t1te = (T1GeneratorTileEntity) te;
             System.out.println(t1te);
-            if(t1te.isDummy())return false;
+            if (t1te.isDummy()) return false;
             Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, brtr.getFace().getOpposite());
-            ((MultiBlockAccess)(Object)ietm).callForm(worldIn,brtr.getPos().offset(Direction.DOWN).offset(brtr.getFace().rotateY()).offset(brtr.getFace().getOpposite(),2),rot,Mirror.NONE,brtr.getFace());
-            TileEntity nte=Utils.getExistingTileEntity(worldIn, brtr.getPos().offset(brtr.getFace(),1));
+            ((MultiBlockAccess) (Object) ietm).callForm(worldIn, brtr.getPos().offset(Direction.DOWN).offset(brtr.getFace().rotateY()).offset(brtr.getFace().getOpposite(), 2), rot, Mirror.NONE, brtr.getFace());
+            TileEntity nte = Utils.getExistingTileEntity(worldIn, brtr.getPos().offset(brtr.getFace(), 1));
             System.out.println(nte);
-            if(nte instanceof T2GeneratorTileEntity) {//bug: cannot get correct te
-            	((T2GeneratorTileEntity) nte).setWorking(t1te.isWorking());
-            	((T2GeneratorTileEntity) nte).setOverdrive(t1te.isOverdrive());
-            	((T2GeneratorTileEntity) nte).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)entityplayer).getId());
-            	NonNullList<ItemStack> nnl=((T2GeneratorTileEntity) nte).getInventory();
-            	for(int i=0;i<nnl.size();i++) {
-            		((T2GeneratorTileEntity) nte).getInventory().set(i,nnl.get(i));
-            	}
-            	((T2GeneratorTileEntity) nte).process=t1te.process;
-            	((T2GeneratorTileEntity) nte).processMax=t1te.processMax;
+            if (nte instanceof T2GeneratorTileEntity) {//bug: cannot get correct te
+                ((T2GeneratorTileEntity) nte).setWorking(t1te.isWorking());
+                ((T2GeneratorTileEntity) nte).setOverdrive(t1te.isOverdrive());
+                ((T2GeneratorTileEntity) nte).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) entityplayer).getId());
+                NonNullList<ItemStack> nnl = ((T2GeneratorTileEntity) nte).getInventory();
+                for (int i = 0; i < nnl.size(); i++) {
+                    ((T2GeneratorTileEntity) nte).getInventory().set(i, nnl.get(i));
+                }
+                ((T2GeneratorTileEntity) nte).process = t1te.process;
+                ((T2GeneratorTileEntity) nte).processMax = t1te.processMax;
             }
             return true;
         }
-    	return true;
+        return true;
     }
 
     @Override

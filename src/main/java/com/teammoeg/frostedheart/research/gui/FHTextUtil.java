@@ -36,14 +36,15 @@ public class FHTextUtil {
 
     private FHTextUtil() {
     }
+
     @Nonnull
     public static ITextComponent get(String orig, String type, Supplier<String> pid) {
-        if (orig==null||orig.length() == 0)
-            return ClientTextComponentUtils.parse("{"+type + "." + FHMain.MODID + "." + pid.get()+"}");
+        if (orig == null || orig.length() == 0)
+            return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return ClientTextComponentUtils.parse("{"+type + "." + FHMain.MODID + "." + pid.get()+"}");
-            return ClientTextComponentUtils.parse("{"+orig.substring(1)+"}");
+                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
+            return ClientTextComponentUtils.parse("{" + orig.substring(1) + "}");
         }
 
         return ClientTextComponentUtils.parse(orig);
@@ -51,16 +52,16 @@ public class FHTextUtil {
 
     @Nullable
     public static ITextComponent getOptional(String orig, String type, Supplier<String> pid) {
-        if (orig==null||orig.length() == 0) {
-        	String key=type + "." + FHMain.MODID + "." + pid.get();
-    		if(I18n.hasKey(key))
-    			return ClientTextComponentUtils.parse("{"+key+"}");
-    		return null;
+        if (orig == null || orig.length() == 0) {
+            String key = type + "." + FHMain.MODID + "." + pid.get();
+            if (I18n.hasKey(key))
+                return ClientTextComponentUtils.parse("{" + key + "}");
+            return null;
         }
         if (orig.startsWith("@")) {
             if (orig.length() == 1)
-                return ClientTextComponentUtils.parse("{"+type + "." + FHMain.MODID + "." + pid.get()+"}");
-            return ClientTextComponentUtils.parse("{"+orig.substring(1)+"}");
+                return ClientTextComponentUtils.parse("{" + type + "." + FHMain.MODID + "." + pid.get() + "}");
+            return ClientTextComponentUtils.parse("{" + orig.substring(1) + "}");
         }
 
         return ClientTextComponentUtils.parse(orig);
@@ -69,19 +70,19 @@ public class FHTextUtil {
     public static List<ITextComponent> get(List<String> orig, String type, Supplier<String> pid) {
         String s = pid.get();
         List<ITextComponent> li = new ArrayList<>();
-        if(orig.isEmpty()) {
-        	int i=0;
-        	while(true) {
-        		final int fi = i;
-        		i++;
-        		ITextComponent it=null;
-        		it=getOptional(null, type, () -> s + "." + fi);
-        		if(it!=null)
-        			li.add(it);
-        		else
-        			return li;
-        	}
-        	
+        if (orig.isEmpty()) {
+            int i = 0;
+            while (true) {
+                final int fi = i;
+                i++;
+                ITextComponent it = null;
+                it = getOptional(null, type, () -> s + "." + fi);
+                if (it != null)
+                    li.add(it);
+                else
+                    return li;
+            }
+
         }
         for (int i = 0; i < orig.size(); i++) {
             final int fi = i;

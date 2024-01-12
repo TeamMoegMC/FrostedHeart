@@ -67,14 +67,11 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
 
         if (powerFraction < 0.25) {
             clock1.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
-        }
-        else if (powerFraction < 0.5) {
+        } else if (powerFraction < 0.5) {
             clock2.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
-        }
-        else if (powerFraction < 0.75) {
+        } else if (powerFraction < 0.75) {
             clock3.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
-        }
-        else {
+        } else {
             clock4.blit(mc.ingameGUI, matrixStack, guiLeft, guiTop, clockPos);
         }
 
@@ -89,16 +86,13 @@ public class SaunaScreen extends IEContainerScreen<SaunaContainer> {
                 if (effect.getPotion() == Effects.HASTE) {
                     mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
                             flame2.getX(), flame2.getY() + offset, flame2.getW(), height);
-                }
-                else if (effect.getPotion() == Effects.ABSORPTION) {
+                } else if (effect.getPotion() == Effects.ABSORPTION) {
                     mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
                             flame3.getX(), flame3.getY() + offset, flame3.getW(), height);
-                }
-                else if (effect.getPotion() == Effects.SPEED) {
+                } else if (effect.getPotion() == Effects.SPEED) {
                     mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
                             flame4.getX(), flame4.getY() + offset, flame4.getW(), height);
-                }
-                else if (effect.getPotion() == Effects.JUMP_BOOST) {
+                } else if (effect.getPotion() == Effects.JUMP_BOOST) {
                     mc.ingameGUI.blit(matrixStack, guiLeft + flamePos.getX(), guiTop + flamePos.getY() + offset,
                             flame5.getX(), flame5.getY() + offset, flame5.getW(), height);
                 }

@@ -33,50 +33,51 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class BargainResponse {
-	boolean succeed;
-	int discount;
-	float rdiscount;
-	int bargained;
-	private RelationList relation;
-	public BargainResponse(TradeContainer trade,boolean state) {
-		super();
-		this.relation=trade.relations;
-		this.rdiscount=trade.discountRatio;
-		this.discount=trade.maxdiscount;
-		this.bargained=trade.bargained;
-		this.succeed=state;
-	}
+    boolean succeed;
+    int discount;
+    float rdiscount;
+    int bargained;
+    private RelationList relation;
 
-	public BargainResponse(PacketBuffer buffer) {
-		relation=new RelationList();
-		relation.read(buffer);
-		rdiscount=buffer.readFloat();
-		discount=buffer.readVarInt();
-		bargained=buffer.readVarInt();
-		succeed=buffer.readBoolean();
+    public BargainResponse(TradeContainer trade, boolean state) {
+        super();
+        this.relation = trade.relations;
+        this.rdiscount = trade.discountRatio;
+        this.discount = trade.maxdiscount;
+        this.bargained = trade.bargained;
+        this.succeed = state;
     }
 
-	public void encode(PacketBuffer buffer) {
-		relation.write(buffer);
-		buffer.writeFloat(rdiscount);
-		buffer.writeVarInt(discount);
-		buffer.writeVarInt(bargained);
-		buffer.writeBoolean(succeed);
-	}
-	
-	public void handle(Supplier<NetworkEvent.Context> context) {
-		context.get().enqueueWork(() -> {
-			PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
-			Container cont=player.openContainer;
-			if(cont instanceof TradeContainer) {
-				TradeContainer trade=(TradeContainer) cont;
-				trade.relations.copy(relation);
-				trade.maxdiscount=discount;
-				trade.discountRatio=rdiscount;
-				trade.bargained=bargained;
-				DistExecutor.safeRunWhenOn(Dist.CLIENT,()->ClientTradeHandler::updateBargain);
-			}
-		});
-		context.get().setPacketHandled(true);
-	}
+    public BargainResponse(PacketBuffer buffer) {
+        relation = new RelationList();
+        relation.read(buffer);
+        rdiscount = buffer.readFloat();
+        discount = buffer.readVarInt();
+        bargained = buffer.readVarInt();
+        succeed = buffer.readBoolean();
+    }
+
+    public void encode(PacketBuffer buffer) {
+        relation.write(buffer);
+        buffer.writeFloat(rdiscount);
+        buffer.writeVarInt(discount);
+        buffer.writeVarInt(bargained);
+        buffer.writeBoolean(succeed);
+    }
+
+    public void handle(Supplier<NetworkEvent.Context> context) {
+        context.get().enqueueWork(() -> {
+            PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
+            Container cont = player.openContainer;
+            if (cont instanceof TradeContainer) {
+                TradeContainer trade = (TradeContainer) cont;
+                trade.relations.copy(relation);
+                trade.maxdiscount = discount;
+                trade.discountRatio = rdiscount;
+                trade.bargained = bargained;
+                DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientTradeHandler::updateBargain);
+            }
+        });
+        context.get().setPacketHandled(true);
+    }
 }

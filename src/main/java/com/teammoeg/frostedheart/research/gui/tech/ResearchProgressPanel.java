@@ -71,12 +71,12 @@ public class ResearchProgressPanel extends Panel {
         if (inprog != null) {
             float prog = inprog.getProgressFraction();
             TechIcons.SLIDER_FRAME.draw(matrixStack, x + 40, y + 32, 70, 8);
-            if(prog>0)
-            	TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, (int) (68f * prog), 6, true);
-            if(inprog.getData().canComplete())
-            	theme.drawString(matrixStack, NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, 0);
+            if (prog > 0)
+                TechIcons.drawTexturedRect(matrixStack, x + 41, y + 33, (int) (68f * prog), 6, true);
+            if (inprog.getData().canComplete())
+                theme.drawString(matrixStack, NumberFormat.getPercentInstance().format(prog), x + 90, y + 40, TechIcons.text, 0);
             else
-            	theme.drawString(matrixStack,GuiUtils.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);
+                theme.drawString(matrixStack, GuiUtils.translateGui("research.required_clue"), x + 40, y + 40, TechIcons.text_red, 0);
             // research icon
 
             TechIcons.SHADOW.draw(matrixStack, x + 1, y + 38, 36, 9);

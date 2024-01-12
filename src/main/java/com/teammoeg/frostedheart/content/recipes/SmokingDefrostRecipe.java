@@ -80,6 +80,7 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
     public ItemStack[] getIss() {
         return iss;
     }
+
     public static class Serializer extends DefrostRecipe.Serializer<SmokingDefrostRecipe> {
 
         public Serializer() {

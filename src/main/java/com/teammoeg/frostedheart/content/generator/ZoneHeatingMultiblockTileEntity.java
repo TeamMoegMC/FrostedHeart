@@ -40,271 +40,274 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Consumer;
+
 /**
  * Common base class for any generator like block that maintains a heat area
- * 
- * */
+ */
 public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMultiblockTileEntity<T>> extends MultiblockPartTileEntity<T>
-		implements FHBlockInterfaces.IActiveState {
-	private float temperatureLevel;
-	private float rangeLevel;
-	private float lastTLevel;
-	private float lastRLevel;
-	private boolean initialized;
-	boolean isWorking;
-	boolean isOverdrive;
-	boolean isDirty;// mark if temperature change required
-	int heated = 0;
-	float heatAddInterval = 20;    //ticks
-	
-	public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
-		super(multiblockInstance, type, hasRSControl);
-	}
+        implements FHBlockInterfaces.IActiveState {
+    private float temperatureLevel;
+    private float rangeLevel;
+    private float lastTLevel;
+    private float lastRLevel;
+    private boolean initialized;
+    boolean isWorking;
+    boolean isOverdrive;
+    boolean isDirty;// mark if temperature change required
+    int heated = 0;
+    float heatAddInterval = 20;    //ticks
 
-	public int getActualRange() {
-		return (int) (8 + (getRangeLevel()) * 4);
-	}
+    public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
+        super(multiblockInstance, type, hasRSControl);
+    }
 
-	public int getUpperBound() {
-		return MathHelper.ceil(getRangeLevel() * 4);
-	}
+    public int getActualRange() {
+        return (int) (8 + (getRangeLevel()) * 4);
+    }
 
-	public int getLowerBound() {
-		return MathHelper.ceil(getRangeLevel());
-	}
+    public int getUpperBound() {
+        return MathHelper.ceil(getRangeLevel() * 4);
+    }
 
-	public int getActualTemp() {
-		return (int) (getTemperatureLevel() * 10);
-	}
+    public int getLowerBound() {
+        return MathHelper.ceil(getRangeLevel());
+    }
 
-	public int getHeated() {
-		return heated;
-	}
+    public int getActualTemp() {
+        return (int) (getTemperatureLevel() * 10);
+    }
 
-	public int getMaxHeated() {
-		if(isOverdrive()) {
-			return 200;
-		}
-		return 100;
-	}
+    public int getHeated() {
+        return heated;
+    }
 
-	@Override
-	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-		super.readCustomNBT(nbt, descPacket);
-		isWorking = nbt.getBoolean("isWorking");
-		isOverdrive = nbt.getBoolean("isOverdrive");
-		temperatureLevel=nbt.getFloat("temperatureLevel");
-		rangeLevel=nbt.getFloat("rangeLevel");
-		heated = nbt.getInt("heated");
-	}
+    public int getMaxHeated() {
+        if (isOverdrive()) {
+            return 200;
+        }
+        return 100;
+    }
 
-	@Override
-	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-		super.writeCustomNBT(nbt, descPacket);
-		nbt.putBoolean("isWorking", isWorking);
-		nbt.putBoolean("isOverdrive", isOverdrive);
-		nbt.putFloat("temperatureLevel", temperatureLevel);
-		nbt.putFloat("rangeLevel", rangeLevel);
-		nbt.putInt("heated", heated);
-	}
+    @Override
+    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.readCustomNBT(nbt, descPacket);
+        isWorking = nbt.getBoolean("isWorking");
+        isOverdrive = nbt.getBoolean("isOverdrive");
+        temperatureLevel = nbt.getFloat("temperatureLevel");
+        rangeLevel = nbt.getFloat("rangeLevel");
+        heated = nbt.getInt("heated");
+    }
 
-	@Override
-	public void disassemble() {
-		if(this==master())
-		ChunkHeatData.removeTempAdjust(world, getPos());
-		super.disassemble();
-	}
+    @Override
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.writeCustomNBT(nbt, descPacket);
+        nbt.putBoolean("isWorking", isWorking);
+        nbt.putBoolean("isOverdrive", isOverdrive);
+        nbt.putFloat("temperatureLevel", temperatureLevel);
+        nbt.putFloat("rangeLevel", rangeLevel);
+        nbt.putInt("heated", heated);
+    }
 
-
-	public void setOwner(UUID owner) {
-		forEachBlock(s -> IOwnerTile.setOwner(s, owner));
-	}
-
-	protected Optional<Team> getTeam() {
-		UUID owner = getOwner();
-		if (owner != null)
-			return Optional.ofNullable(TeamManager.INSTANCE.getTeamByID(owner));
-		return Optional.empty();
-	}
-
-	protected Optional<TeamResearchData> getTeamData() {
-		UUID owner = getOwner();
-		if (owner != null)
-			return Optional.of(ResearchDataAPI.getData(owner));
-		return Optional.empty();
-	}
+    @Override
+    public void disassemble() {
+        if (this == master())
+            ChunkHeatData.removeTempAdjust(world, getPos());
+        super.disassemble();
+    }
 
 
-	protected void tickControls() {
-	}
+    public void setOwner(UUID owner) {
+        forEachBlock(s -> IOwnerTile.setOwner(s, owner));
+    }
 
-	protected abstract void onShutDown();
+    protected Optional<Team> getTeam() {
+        UUID owner = getOwner();
+        if (owner != null)
+            return Optional.ofNullable(TeamManager.INSTANCE.getTeamByID(owner));
+        return Optional.empty();
+    }
 
-	protected abstract void tickFuel();
-
-	protected abstract void tickEffects(boolean isActive);
-
-	@Override
-	public void tick() {
-		checkForNeedlessTicking();
-		if (isDummy())
-			return;
-		// spawn smoke particle
-		if (world != null && world.isRemote && formed) {
-			tickEffects(getIsActive());
-		}
-
-		tickControls();
-
-		if (!world.isRemote && formed) {
-			
-			final boolean activeBeforeTick = getIsActive();
-			tickFuel();
-			tickHeat();
-			// set activity status
-			final boolean activeAfterTick = getIsActive();
-			int ntlevel=getActualTemp();
-			int nrlevel=getActualRange();
-			if (activeBeforeTick != activeAfterTick||lastTLevel!=ntlevel||lastRLevel!=nrlevel) {
-				this.isDirty=false;
-				lastTLevel=ntlevel;
-				lastRLevel=nrlevel;
-				this.markDirty();
-				if (nrlevel>0&&ntlevel>0) {
-					ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
-							getLowerBound(), ntlevel);
-				}
-			} else if (activeAfterTick) {
-				if (isChanged() || !initialized) {
-					initialized = true;
-					markChanged(false);
-				}
-			}
-
-		}
-	}
-	public void tickHeat() {
-		if (isWorking() && heated != getMaxHeated()) {
-			Random random = world.rand;
-			boolean needAdd = false;
-			float heatAddProbability = 1F / heatAddInterval;
-			if (isOverdrive()) {
-				heatAddProbability = 2F / heatAddInterval;
-			}
-			if (random.nextFloat() < heatAddProbability) {
-				needAdd = true;
-				markContainingBlockForUpdate(null);
-			}
-			if (heated < getMaxHeated() && needAdd) {
-				heated++;
-			} else if (heated > getMaxHeated() && needAdd) {
-				heated--;
-			}
-		} else if (!isWorking()) {
-			if (heated == 0) {
-				shutdownTick();
-				ChunkHeatData.removeTempAdjust(world, getPos());
-				setAllActive(false);
-			} else {
-				markContainingBlockForUpdate(null);
-				Random random = world.rand;
-				float heatAddProbability = 1F / heatAddInterval;
-				if (random.nextFloat() < heatAddProbability) {
-					heated--;
-				}
-			}
-		}
-	}
-
-	public void shutdownTick() {
-	}
-
-	public void setWorking(boolean working) {
-		if (master() != null) {
-			master().isWorking = working;
-		}
-	}
-
-	public boolean isWorking() {
-		if (master() != null)
-			return master().isWorking;
-		return false;
-	}
-
-	public boolean isOverdrive() {
-		if (master() != null)
-			return master().isOverdrive;
-		return false;
-	}
-
-	public void markChanged(boolean dirty) {
-		if (master() != null)
-			master().isDirty = dirty;
-	}
-
-	public boolean isChanged() {
-		if (master() != null)
-			return master().isDirty;
-		return false;
-	}
-
-	public void setOverdrive(boolean overdrive) {
-		if (master() != null) {
-			master().isOverdrive = overdrive;
-		}
-	}
+    protected Optional<TeamResearchData> getTeamData() {
+        UUID owner = getOwner();
+        if (owner != null)
+            return Optional.of(ResearchDataAPI.getData(owner));
+        return Optional.empty();
+    }
 
 
-	public final float getTemperatureLevel() {
-		T master=master();
-		if (master==this)
-			return temperatureLevel;
-		return master==null?1:master.getTemperatureLevel();
-	}
+    protected void tickControls() {
+    }
 
-	public final float getRangeLevel() {
-		T master=master();
-		if (master==this)
-			return rangeLevel;
-		return master==null?1:master.getRangeLevel();
-	}
+    protected abstract void onShutDown();
 
-	public final void setTemperatureLevel(float temperatureLevel) {
-		if (master()==this) {
-			if(this.temperatureLevel !=temperatureLevel)
-				isDirty = true;
-			this.temperatureLevel = temperatureLevel;
-		}else {
-			master().setTemperatureLevel(temperatureLevel);
-		}
-	}
+    protected abstract void tickFuel();
 
-	public final void setRangeLevel(float f) {
-		if (master()==this) {
-			if(this.rangeLevel !=f)
-				isDirty = true;
-			this.rangeLevel = f;
-		}else {
-			master().setTemperatureLevel(f);
-		}
-	}
+    protected abstract void tickEffects(boolean isActive);
 
-	protected void setAllActive(boolean state) {
-		forEachBlock(s -> s.setActive(state));
-	}
-	protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer,TileEntity te);
-	public final void forEachBlock(Consumer<T> consumer){
-		Vector3i vec=this.multiblockInstance.getSize(world);
-		for (int x = 0; x < vec.getX(); ++x)
-			for (int y = 0; y < vec.getY(); ++y)
-				for (int z = 0; z < vec.getZ(); ++z) {
-					BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
-					TileEntity te = Utils.getExistingTileEntity(world, actualPos);
-					callBlockConsumerWithTypeCheck(consumer,te);
-				}
-	}
+    @Override
+    public void tick() {
+        checkForNeedlessTicking();
+        if (isDummy())
+            return;
+        // spawn smoke particle
+        if (world != null && world.isRemote && formed) {
+            tickEffects(getIsActive());
+        }
 
-	UUID getOwner() {
-		return IOwnerTile.getOwner(this);
-	}
+        tickControls();
+
+        if (!world.isRemote && formed) {
+
+            final boolean activeBeforeTick = getIsActive();
+            tickFuel();
+            tickHeat();
+            // set activity status
+            final boolean activeAfterTick = getIsActive();
+            int ntlevel = getActualTemp();
+            int nrlevel = getActualRange();
+            if (activeBeforeTick != activeAfterTick || lastTLevel != ntlevel || lastRLevel != nrlevel) {
+                this.isDirty = false;
+                lastTLevel = ntlevel;
+                lastRLevel = nrlevel;
+                this.markDirty();
+                if (nrlevel > 0 && ntlevel > 0) {
+                    ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
+                            getLowerBound(), ntlevel);
+                }
+            } else if (activeAfterTick) {
+                if (isChanged() || !initialized) {
+                    initialized = true;
+                    markChanged(false);
+                }
+            }
+
+        }
+    }
+
+    public void tickHeat() {
+        if (isWorking() && heated != getMaxHeated()) {
+            Random random = world.rand;
+            boolean needAdd = false;
+            float heatAddProbability = 1F / heatAddInterval;
+            if (isOverdrive()) {
+                heatAddProbability = 2F / heatAddInterval;
+            }
+            if (random.nextFloat() < heatAddProbability) {
+                needAdd = true;
+                markContainingBlockForUpdate(null);
+            }
+            if (heated < getMaxHeated() && needAdd) {
+                heated++;
+            } else if (heated > getMaxHeated() && needAdd) {
+                heated--;
+            }
+        } else if (!isWorking()) {
+            if (heated == 0) {
+                shutdownTick();
+                ChunkHeatData.removeTempAdjust(world, getPos());
+                setAllActive(false);
+            } else {
+                markContainingBlockForUpdate(null);
+                Random random = world.rand;
+                float heatAddProbability = 1F / heatAddInterval;
+                if (random.nextFloat() < heatAddProbability) {
+                    heated--;
+                }
+            }
+        }
+    }
+
+    public void shutdownTick() {
+    }
+
+    public void setWorking(boolean working) {
+        if (master() != null) {
+            master().isWorking = working;
+        }
+    }
+
+    public boolean isWorking() {
+        if (master() != null)
+            return master().isWorking;
+        return false;
+    }
+
+    public boolean isOverdrive() {
+        if (master() != null)
+            return master().isOverdrive;
+        return false;
+    }
+
+    public void markChanged(boolean dirty) {
+        if (master() != null)
+            master().isDirty = dirty;
+    }
+
+    public boolean isChanged() {
+        if (master() != null)
+            return master().isDirty;
+        return false;
+    }
+
+    public void setOverdrive(boolean overdrive) {
+        if (master() != null) {
+            master().isOverdrive = overdrive;
+        }
+    }
+
+
+    public final float getTemperatureLevel() {
+        T master = master();
+        if (master == this)
+            return temperatureLevel;
+        return master == null ? 1 : master.getTemperatureLevel();
+    }
+
+    public final float getRangeLevel() {
+        T master = master();
+        if (master == this)
+            return rangeLevel;
+        return master == null ? 1 : master.getRangeLevel();
+    }
+
+    public final void setTemperatureLevel(float temperatureLevel) {
+        if (master() == this) {
+            if (this.temperatureLevel != temperatureLevel)
+                isDirty = true;
+            this.temperatureLevel = temperatureLevel;
+        } else {
+            master().setTemperatureLevel(temperatureLevel);
+        }
+    }
+
+    public final void setRangeLevel(float f) {
+        if (master() == this) {
+            if (this.rangeLevel != f)
+                isDirty = true;
+            this.rangeLevel = f;
+        } else {
+            master().setTemperatureLevel(f);
+        }
+    }
+
+    protected void setAllActive(boolean state) {
+        forEachBlock(s -> s.setActive(state));
+    }
+
+    protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer, TileEntity te);
+
+    public final void forEachBlock(Consumer<T> consumer) {
+        Vector3i vec = this.multiblockInstance.getSize(world);
+        for (int x = 0; x < vec.getX(); ++x)
+            for (int y = 0; y < vec.getY(); ++y)
+                for (int z = 0; z < vec.getZ(); ++z) {
+                    BlockPos actualPos = getBlockPosForPos(new BlockPos(x, y, z));
+                    TileEntity te = Utils.getExistingTileEntity(world, actualPos);
+                    callBlockConsumerWithTypeCheck(consumer, te);
+                }
+    }
+
+    UUID getOwner() {
+        return IOwnerTile.getOwner(this);
+    }
 }

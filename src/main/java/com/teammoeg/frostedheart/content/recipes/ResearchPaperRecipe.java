@@ -55,8 +55,8 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
     protected IERecipeSerializer getIESerializer() {
         return SERIALIZER.get();
     }
-    public static class Serializer extends IERecipeSerializer<ResearchPaperRecipe> {
 
+    public static class Serializer extends IERecipeSerializer<ResearchPaperRecipe> {
 
 
         @Override

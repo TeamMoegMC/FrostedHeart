@@ -33,11 +33,12 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
     }
 
     SteamEnergyNetwork network = new SteamEnergyNetwork(this);
-    HeatProviderManager manager=new HeatProviderManager(this,c->{
-    	for (Direction d : Direction.values()) {
-    		c.accept(pos.offset(d), d.getOpposite());
+    HeatProviderManager manager = new HeatProviderManager(this, c -> {
+        for (Direction d : Direction.values()) {
+            c.accept(pos.offset(d), d.getOpposite());
         }
     });
+
     @Override
     public SteamEnergyNetwork getNetwork() {
         return network;
@@ -79,7 +80,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
 
     @Override
     public void tick() {
-    	manager.tick();
+        manager.tick();
     }
 
     @Override
@@ -87,13 +88,13 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
         return null;
     }
 
-	@Override
-	public float fillHeat(float value) {
-		return value;
-	}
+    @Override
+    public float fillHeat(float value) {
+        return value;
+    }
 
-	@Override
-	public TileEntity getEntity() {
-		return this;
-	}
+    @Override
+    public TileEntity getEntity() {
+        return this;
+    }
 }

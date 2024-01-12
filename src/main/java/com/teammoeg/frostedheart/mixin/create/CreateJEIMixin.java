@@ -49,8 +49,8 @@ public abstract class CreateJEIMixin {
         if (outcopy.size() > 3)
             while (outcopy.size() % 3 != 0)
                 outcopy.add(Ingredient.EMPTY);
-        IRecipe<?> packed=new ShapedRecipe(r.getId(), r.getGroup(), Math.min(i.size(), 3), Math.max(1, (outcopy.size() + 2) / 3), outcopy, r.getRecipeOutput());
-        JEICompat.overrides.put(r.getId(),packed);
+        IRecipe<?> packed = new ShapedRecipe(r.getId(), r.getGroup(), Math.min(i.size(), 3), Math.max(1, (outcopy.size() + 2) / 3), outcopy, r.getRecipeOutput());
+        JEICompat.overrides.put(r.getId(), packed);
         return packed;
     }
 
@@ -64,7 +64,7 @@ public abstract class CreateJEIMixin {
             try {
                 this.getClass().getMethod("recipeList", Supplier.class, Function.class).invoke(this, (Supplier<List<IRecipe<?>>>) () -> CreateJEI.findRecipes(r -> r.getSerializer() == IRecipeSerializer.CRAFTING_SHAPELESS), (Function<ShapelessRecipe, IRecipe<?>>) CreateJEIMixin::fh$convert);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                    | NoSuchMethodException | SecurityException e) {
+                     | NoSuchMethodException | SecurityException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }

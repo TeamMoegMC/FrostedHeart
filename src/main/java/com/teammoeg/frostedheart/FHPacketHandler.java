@@ -44,7 +44,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 public class FHPacketHandler {
- 
+
     private static SimpleChannel CHANNEL;
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {
@@ -60,7 +60,7 @@ public class FHPacketHandler {
     }
 
     public static void register() {
-    	String VERSION=FHMain.local.fetchVersion().orElse(FHVersion.empty).getOriginal();
+        String VERSION = FHMain.local.fetchVersion().orElse(FHVersion.empty).getOriginal();
         System.out.println("[TWR Version Check] FH Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
                 VERSION::equals, VERSION::equals);
@@ -105,16 +105,16 @@ public class FHPacketHandler {
                 FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHEnergyDataSyncPacket.class, FHEnergyDataSyncPacket::encode,
                 FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class,FHTemperatureDisplayPacket::encode,
-        		FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
-        CHANNEL.registerMessage(id++, BargainRequestPacket.class,BargainRequestPacket::encode,
-        		BargainRequestPacket::new, BargainRequestPacket::handle);
-        CHANNEL.registerMessage(id++, BargainResponse.class,BargainResponse::encode,
-        		BargainResponse::new, BargainResponse::handle);
-        CHANNEL.registerMessage(id++, TradeCommitPacket.class,TradeCommitPacket::encode,
-        		TradeCommitPacket::new, TradeCommitPacket::handle);
-        CHANNEL.registerMessage(id++, TradeUpdatePacket.class,TradeUpdatePacket::encode,
-        		TradeUpdatePacket::new, TradeUpdatePacket::handle);
+        CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class, FHTemperatureDisplayPacket::encode,
+                FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
+        CHANNEL.registerMessage(id++, BargainRequestPacket.class, BargainRequestPacket::encode,
+                BargainRequestPacket::new, BargainRequestPacket::handle);
+        CHANNEL.registerMessage(id++, BargainResponse.class, BargainResponse::encode,
+                BargainResponse::new, BargainResponse::handle);
+        CHANNEL.registerMessage(id++, TradeCommitPacket.class, TradeCommitPacket::encode,
+                TradeCommitPacket::new, TradeCommitPacket::handle);
+        CHANNEL.registerMessage(id++, TradeUpdatePacket.class, TradeUpdatePacket::encode,
+                TradeUpdatePacket::new, TradeUpdatePacket::handle);
 
     }
 

@@ -230,7 +230,7 @@ public class ResearchListeners {
     public static CategoryUnlockList categories = new CategoryUnlockList();
     private static ListenerList<TickListenerClue> tickClues = new ListenerList<>();
     private static ListenerList<KillClue> killClues = new ListenerList<>();
-	public static UUID te;
+    public static UUID te;
 
     private ResearchListeners() {
 
@@ -245,39 +245,44 @@ public class ResearchListeners {
     public static ListenerList<TickListenerClue> getTickClues() {
         return tickClues;
     }
+
     public static void reload() {
-    	recipe.clear();
-    	multiblock.clear();
-    	block.clear();
-    	categories.clear();
-    	tickClues.clear();
-    	killClues.clear();
-    	te=null;
+        recipe.clear();
+        multiblock.clear();
+        block.clear();
+        categories.clear();
+        tickClues.clear();
+        killClues.clear();
+        te = null;
     }
+
     public static void ServerReload() {
-    	if(FHResearchDataManager.INSTANCE==null)return;
-    	FHMain.LOGGER.info("reloading research system");
-    	FHResearchDataManager.INSTANCE.save();
-    	FHResearchDataManager.INSTANCE.load();
-    	FHResearchRegistrtySyncPacket packet=new FHResearchRegistrtySyncPacket();
-    	FHPacketHandler.send(PacketDistributor.ALL.noArg(),packet);
-    	FHResearchDataManager.INSTANCE.getAllData().forEach(t->t.sendUpdate());
+        if (FHResearchDataManager.INSTANCE == null) return;
+        FHMain.LOGGER.info("reloading research system");
+        FHResearchDataManager.INSTANCE.save();
+        FHResearchDataManager.INSTANCE.load();
+        FHResearchRegistrtySyncPacket packet = new FHResearchRegistrtySyncPacket();
+        FHPacketHandler.send(PacketDistributor.ALL.noArg(), packet);
+        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.sendUpdate());
     }
+
     @OnlyIn(Dist.CLIENT)
     public static void reloadEditor() {
-    	if(!Minecraft.getInstance().isSingleplayer())
-    		FHResearch.editor=false;
+        if (!Minecraft.getInstance().isSingleplayer())
+            FHResearch.editor = false;
     }
+
     @OnlyIn(Dist.CLIENT)
     public static boolean canExamine(ItemStack i) {
-    	if(i.isEmpty())return false;
-    	for(InspireRecipe ir:InspireRecipe.recipes) {
-    		if(ir.item.test(i)) {
-    			return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(),ir.inspire);
-    		}
-    	}
-    	return true;
+        if (i.isEmpty()) return false;
+        for (InspireRecipe ir : InspireRecipe.recipes) {
+            if (ir.item.test(i)) {
+                return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(), ir.inspire);
+            }
+        }
+        return true;
     }
+
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
         LazyOptional<Research> cur = trd.getCurrentResearch();
@@ -285,32 +290,32 @@ public class ResearchListeners {
             for (Clue c : cur.orElse(null).getClues())
                 if (c instanceof ItemClue)
                     i.shrink(((ItemClue) c).test(trd, i));
-        if(!i.isEmpty()&&i.getCount()>0) {
-        	if(i.getItem() instanceof RubbingTool&&ResearchDataAPI.isResearchComplete(s,"rubbing_tool")) {
-        		if(RubbingTool.hasResearch(i)) {
-        			int pts=RubbingTool.getPoint(i);
-        			if(pts>0) {
-	        			Research rs=FHResearch.getResearch(RubbingTool.getResearch(i)).get();
-	        			if(rs!=null&&pts>0) {
-	        				ResearchData rd=trd.getData(rs);
-	        				rd.commitPoints(pts);
-	        				rd.sendProgressPacket();
-	        			}
-        			}
-        			return new ItemStack(FHItems.rubbing_pad);
-        		}
-				trd.getCurrentResearch().ifPresent(r->RubbingTool.setResearch(i,r.getLId()));
-        	}
-        	for(InspireRecipe ir:InspireRecipe.recipes) {
-        		if(ir.item.test(i)) {
-        			if(EnergyCore.useExtraEnergy(s,ir.inspire)) {
-        				i.shrink(1);
-        				EnergyCore.addPersistentEnergy(s, ir.inspire);
-        			}
-        			return i;
-        		}
-        	}
-        	
+        if (!i.isEmpty() && i.getCount() > 0) {
+            if (i.getItem() instanceof RubbingTool && ResearchDataAPI.isResearchComplete(s, "rubbing_tool")) {
+                if (RubbingTool.hasResearch(i)) {
+                    int pts = RubbingTool.getPoint(i);
+                    if (pts > 0) {
+                        Research rs = FHResearch.getResearch(RubbingTool.getResearch(i)).get();
+                        if (rs != null && pts > 0) {
+                            ResearchData rd = trd.getData(rs);
+                            rd.commitPoints(pts);
+                            rd.sendProgressPacket();
+                        }
+                    }
+                    return new ItemStack(FHItems.rubbing_pad);
+                }
+                trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getLId()));
+            }
+            for (InspireRecipe ir : InspireRecipe.recipes) {
+                if (ir.item.test(i)) {
+                    if (EnergyCore.useExtraEnergy(s, ir.inspire)) {
+                        i.shrink(1);
+                        EnergyCore.addPersistentEnergy(s, ir.inspire);
+                    }
+                    return i;
+                }
+            }
+
         }
         return i;
     }
@@ -372,8 +377,8 @@ public class ResearchListeners {
 
     @SuppressWarnings("resource")
     public static boolean canUseRecipe(PlayerEntity s, IRecipe<?> r) {
-    	if(s==null)
-    		return canUseRecipe(r);
+        if (s == null)
+            return canUseRecipe(r);
         if (recipe.has(r)) {
             if (s.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().crafting.has(r);
@@ -409,7 +414,7 @@ public class ResearchListeners {
 
     public static boolean canUseBlock(PlayerEntity player, Block b) {
         if (block.has(b)) {
-        	if(player instanceof FakePlayer)return false;
+            if (player instanceof FakePlayer) return false;
             if (player.getEntityWorld().isRemote)
                 return ClientResearchDataAPI.getData().block.has(b);
             return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);

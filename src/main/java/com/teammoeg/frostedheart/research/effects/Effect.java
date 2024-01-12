@@ -55,6 +55,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 // TODO: Auto-generated Javadoc
+
 /**
  * "Effect" of an research: how would it becomes when a research is completed ?.
  *
@@ -63,23 +64,35 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * @date 2022年9月2日
  */
 public abstract class Effect extends AutoIDItem implements Writeable {
-    
-    /** The name.<br> */
+
+    /**
+     * The name.<br>
+     */
     String name = "";
-    
-    /** The nonce.<br> */
+
+    /**
+     * The nonce.<br>
+     */
     String nonce;
-    
-    /** The tooltip.<br> */
+
+    /**
+     * The tooltip.<br>
+     */
     List<String> tooltip;
-    
-    /** The parent.<br> */
+
+    /**
+     * The parent.<br>
+     */
     public Supplier<Research> parent;
-    
-    /** The icon.<br> */
+
+    /**
+     * The icon.<br>
+     */
     FHIcon icon;
-    
-    /** The hidden.<br> */
+
+    /**
+     * The hidden.<br>
+     */
     boolean hidden;
 
     /**
@@ -91,16 +104,18 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Grant effect to a team.<br>
      * This would be call multiple times, especially when team data loaded from disk if this effect is marked granted.
-     * @param team the team<br>
+     *
+     * @param team          the team<br>
      * @param triggerPlayer the player trigger the grant, null if this is not triggered by player, typically press "claim" button.<br>
-     * @param isload true if this is run when loaded from disk<br>
+     * @param isload        true if this is run when loaded from disk<br>
      * @return true, if
      */
-    public abstract boolean grant(TeamResearchData team,@Nullable PlayerEntity triggerPlayer, boolean isload);
+    public abstract boolean grant(TeamResearchData team, @Nullable PlayerEntity triggerPlayer, boolean isload);
 
     /**
      * This is not necessary to implement as this is just for debugging propose.
      * Called only by research command or admin tools.
+     *
      * @param team the team<br>
      */
     public abstract void revoke(TeamResearchData team);
@@ -108,6 +123,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Send effect progress packet for current effect to players in team.
      * Useful for data sync. This would called automatically, Their's no need to call this in effect.
+     *
      * @param team the team<br>
      */
     public void sendProgressPacket(Team team) {
@@ -151,9 +167,9 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Instantiates a new Effect.<br>
      *
-     * @param name the name<br>
+     * @param name    the name<br>
      * @param tooltip the tooltip<br>
-     * @param icon the icon<br>
+     * @param icon    the icon<br>
      */
     public Effect(String name, List<String> tooltip, FHIcon icon) {
         super();
@@ -166,9 +182,9 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Instantiates a new Effect.<br>
      *
-     * @param name the name<br>
+     * @param name    the name<br>
      * @param tooltip the tooltip<br>
-     * @param icon the icon<br>
+     * @param icon    the icon<br>
      */
     public Effect(String name, List<String> tooltip, ItemStack icon) {
         this(name, tooltip, FHIcons.getIcon(icon));
@@ -177,9 +193,9 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Instantiates a new Effect.<br>
      *
-     * @param name the name<br>
+     * @param name    the name<br>
      * @param tooltip the tooltip<br>
-     * @param icon the icon<br>
+     * @param icon    the icon<br>
      */
     public Effect(String name, List<String> tooltip, IItemProvider icon) {
         this(name, tooltip, FHIcons.getIcon(icon));
@@ -188,7 +204,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Instantiates a new Effect.<br>
      *
-     * @param name the name<br>
+     * @param name    the name<br>
      * @param tooltip the tooltip<br>
      */
     public Effect(String name, List<String> tooltip) {
@@ -215,9 +231,11 @@ public abstract class Effect extends AutoIDItem implements Writeable {
             return getDefaultIcon();
         return icon;
     }
+
     public void reload() {
-    	
+
     }
+
     /**
      * Get name.
      *
@@ -243,6 +261,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Get default icon.
      * use this when no icon is set.
+     *
      * @return default icon<br>
      */
     public abstract FHIcon getDefaultIcon();
@@ -250,6 +269,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Get default name.
      * use this when no name is set.
+     *
      * @return default name<br>
      */
     public abstract IFormattableTextComponent getDefaultName();
@@ -257,6 +277,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     /**
      * Get default tooltip.
      * use this when no tooltip is set.
+     *
      * @return default tooltip<br>
      */
     public abstract List<ITextComponent> getDefaultTooltip();
@@ -309,10 +330,10 @@ public abstract class Effect extends AutoIDItem implements Writeable {
 
     private void deleteInTree() {
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
-            if(this.getRId()!=0) {
-	        	revoke(t);
-	            
-	            t.setGrant(this, false);
+            if (this.getRId() != 0) {
+                revoke(t);
+
+                t.setGrant(this, false);
             }
         });
     }
@@ -410,6 +431,8 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     public boolean isHidden() {
         return hidden;
     }
+
     @OnlyIn(Dist.CLIENT)
-    public void onClick() {}
+    public void onClick() {
+    }
 }

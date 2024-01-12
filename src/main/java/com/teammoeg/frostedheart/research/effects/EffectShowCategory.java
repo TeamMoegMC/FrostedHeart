@@ -63,7 +63,7 @@ public class EffectShowCategory extends Effect {
 
     public EffectShowCategory(PacketBuffer pb) {
         super(pb);
-        cate=pb.readResourceLocation();
+        cate = pb.readResourceLocation();
 
     }
 
@@ -82,8 +82,6 @@ public class EffectShowCategory extends Effect {
     public void revoke(TeamResearchData team) {
         team.categories.remove(cate);
     }
-
-
 
 
     @Override
@@ -120,10 +118,11 @@ public class EffectShowCategory extends Effect {
     public String getBrief() {
         return "JEI Category " + cate.toString();
     }
+
     @OnlyIn(Dist.CLIENT)
-	@Override
-	public void onClick() {
-		if(cate!=null)
-			JEICompat.showJEICategory(cate);
-	}
+    @Override
+    public void onClick() {
+        if (cate != null)
+            JEICompat.showJEICategory(cate);
+    }
 }

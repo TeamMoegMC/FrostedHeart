@@ -27,17 +27,17 @@ import net.minecraft.network.PacketBuffer;
 
 public abstract class AbstractAction implements PolicyAction {
 
-	@Override
-	public JsonElement serialize() {
-		JsonObject jo=new JsonObject();
-		Actions.writeType(this, jo);
-		return jo;
-	}
+    @Override
+    public JsonElement serialize() {
+        JsonObject jo = new JsonObject();
+        Actions.writeType(this, jo);
+        return jo;
+    }
 
-	@Override
-	public void write(PacketBuffer buffer) {
-		Actions.writeId(this, buffer);
-	}
+    @Override
+    public void write(PacketBuffer buffer) {
+        Actions.writeId(this, buffer);
+    }
 
 
 }

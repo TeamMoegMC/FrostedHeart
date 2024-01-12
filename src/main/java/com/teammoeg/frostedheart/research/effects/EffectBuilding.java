@@ -112,7 +112,6 @@ public class EffectBuilding extends Effect {
     }
 
 
-
     @Override
     public FHIcon getDefaultIcon() {
         return FHIcons.getIcon(IEItems.Tools.hammer);
@@ -128,7 +127,7 @@ public class EffectBuilding extends Effect {
         ArrayList<ITextComponent> ar = new ArrayList<>();
         String raw = multiblock.getUniqueName().toString();
         String namespace = raw.substring(0, raw.indexOf(':'));
-        String multiblock = raw.substring(raw.indexOf('/')+1);
+        String multiblock = raw.substring(raw.indexOf('/') + 1);
         String key = "block." + namespace + "." + multiblock;
         ar.add(new TranslationTextComponent(key));
         return ar;
@@ -138,28 +137,29 @@ public class EffectBuilding extends Effect {
     public String getBrief() {
         return "Build " + multiblock.getUniqueName();
     }
-    @OnlyIn(Dist.CLIENT)
-	@Override
-	public void onClick() {
-		if(this.isGranted()&&ClientUtils.getPlayer().inventory.hasAny(ImmutableSet.of(IEItems.Tools.manual))) {
-			ResourceLocation loc=multiblock.getUniqueName();
-			ResourceLocation manual=new ResourceLocation(loc.getNamespace(),loc.getPath().substring(loc.getPath().lastIndexOf("/")+1));
-			ManualScreen screen=ManualHelper.getManual().getGui();
-			ManualEntry entry=ManualHelper.getManual().getEntry(manual);
-			if(entry!=null) {
-				
-				ClientUtils.mc().displayGuiScreen(screen);
-				//System.out.println(manual);
-				screen.setCurrentNode(entry.getTreeNode());
-				screen.page=0;
-				screen.fullInit();
-			}
-		}
-	}
 
-	@Override
-	public void reload() {
-		multiblock = MultiblockHandler.getByUniqueName(multiblock.getUniqueName());
-	}
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public void onClick() {
+        if (this.isGranted() && ClientUtils.getPlayer().inventory.hasAny(ImmutableSet.of(IEItems.Tools.manual))) {
+            ResourceLocation loc = multiblock.getUniqueName();
+            ResourceLocation manual = new ResourceLocation(loc.getNamespace(), loc.getPath().substring(loc.getPath().lastIndexOf("/") + 1));
+            ManualScreen screen = ManualHelper.getManual().getGui();
+            ManualEntry entry = ManualHelper.getManual().getEntry(manual);
+            if (entry != null) {
+
+                ClientUtils.mc().displayGuiScreen(screen);
+                //System.out.println(manual);
+                screen.setCurrentNode(entry.getTreeNode());
+                screen.page = 0;
+                screen.fullInit();
+            }
+        }
+    }
+
+    @Override
+    public void reload() {
+        multiblock = MultiblockHandler.getByUniqueName(multiblock.getUniqueName());
+    }
 
 }

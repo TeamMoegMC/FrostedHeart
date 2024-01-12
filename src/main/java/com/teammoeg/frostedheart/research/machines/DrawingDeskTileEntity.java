@@ -181,7 +181,7 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     }
 
     public void submitItem(ServerPlayerEntity sender) {
-    	inventory.set(EXAMINE_SLOT,ResearchListeners.submitItem(sender, inventory.get(EXAMINE_SLOT)));
+        inventory.set(EXAMINE_SLOT, ResearchListeners.submitItem(sender, inventory.get(EXAMINE_SLOT)));
     }
 
 }

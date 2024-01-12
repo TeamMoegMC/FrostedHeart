@@ -40,113 +40,113 @@ import net.minecraft.util.registry.Registry;
 import net.minecraftforge.fml.RegistryObject;
 
 public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishedRecipe {
-	public final Ingredient tool;
-	public static RegistryObject<IERecipeSerializer<ShapelessCopyDataRecipe>> SERIALIZER;
+    public final Ingredient tool;
+    public static RegistryObject<IERecipeSerializer<ShapelessCopyDataRecipe>> SERIALIZER;
 
-	public ShapelessCopyDataRecipe(ResourceLocation idIn, ItemStack out, NonNullList<Ingredient> materials) {
-		super(idIn, "", out, materials);
-		tool = materials.get(0);
-	}
+    public ShapelessCopyDataRecipe(ResourceLocation idIn, ItemStack out, NonNullList<Ingredient> materials) {
+        super(idIn, "", out, materials);
+        tool = materials.get(0);
+    }
 
-	/**
-	 * Returns an Item that is the result of this recipe
-	 */
-	public ItemStack getCraftingResult(CraftingInventory inv) {
-		for (int j = 0; j < inv.getSizeInventory(); ++j) {
-			ItemStack in = inv.getStackInSlot(j);
-			if (tool.test(in)) {
-				ItemStack out = super.getCraftingResult(inv);
-				out.setTag(in.getTag());
-				return out;
-			}
-		}
+    /**
+     * Returns an Item that is the result of this recipe
+     */
+    public ItemStack getCraftingResult(CraftingInventory inv) {
+        for (int j = 0; j < inv.getSizeInventory(); ++j) {
+            ItemStack in = inv.getStackInSlot(j);
+            if (tool.test(in)) {
+                ItemStack out = super.getCraftingResult(inv);
+                out.setTag(in.getTag());
+                return out;
+            }
+        }
 
-		return ItemStack.EMPTY;
-	}
+        return ItemStack.EMPTY;
+    }
 
-	public IRecipeSerializer<?> getSerializer() {
-		return SERIALIZER.get();
-	}
+    public IRecipeSerializer<?> getSerializer() {
+        return SERIALIZER.get();
+    }
 
 
-	public static class Serializer extends IERecipeSerializer<ShapelessCopyDataRecipe> {
-		public ShapelessCopyDataRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-			NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
-			if (nonnulllist.isEmpty()) {
-				throw new JsonParseException("No ingredients for shapeless recipe");
-			} else if (nonnulllist.size() > 9) {
-				throw new JsonParseException("Too many ingredients for shapeless recipe the max is 9");
-			} else {
-				ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
-				return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
-			}
-		}
+    public static class Serializer extends IERecipeSerializer<ShapelessCopyDataRecipe> {
+        public ShapelessCopyDataRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
+            if (nonnulllist.isEmpty()) {
+                throw new JsonParseException("No ingredients for shapeless recipe");
+            } else if (nonnulllist.size() > 9) {
+                throw new JsonParseException("Too many ingredients for shapeless recipe the max is 9");
+            } else {
+                ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
+                return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
+            }
+        }
 
-		private static NonNullList<Ingredient> readIngredients(JsonArray ingredientArray) {
-			NonNullList<Ingredient> nonnulllist = NonNullList.create();
+        private static NonNullList<Ingredient> readIngredients(JsonArray ingredientArray) {
+            NonNullList<Ingredient> nonnulllist = NonNullList.create();
 
-			for (int i = 0; i < ingredientArray.size(); ++i) {
-				Ingredient ingredient = Ingredient.deserialize(ingredientArray.get(i));
-				if (!ingredient.hasNoMatchingItems()) {
-					nonnulllist.add(ingredient);
-				}
-			}
+            for (int i = 0; i < ingredientArray.size(); ++i) {
+                Ingredient ingredient = Ingredient.deserialize(ingredientArray.get(i));
+                if (!ingredient.hasNoMatchingItems()) {
+                    nonnulllist.add(ingredient);
+                }
+            }
 
-			return nonnulllist;
-		}
+            return nonnulllist;
+        }
 
-		public ShapelessCopyDataRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public ShapelessCopyDataRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
 
-			NonNullList<Ingredient> nonnulllist = NonNullList.from(Ingredient.EMPTY,
-					SerializeUtil.readList(buffer, Ingredient::read).toArray(new Ingredient[0]));
-			ItemStack itemstack = buffer.readItemStack();
-			return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
-		}
+            NonNullList<Ingredient> nonnulllist = NonNullList.from(Ingredient.EMPTY,
+                    SerializeUtil.readList(buffer, Ingredient::read).toArray(new Ingredient[0]));
+            ItemStack itemstack = buffer.readItemStack();
+            return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
+        }
 
-		public void write(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
+        public void write(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
 
-			SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::write);
-			buffer.writeItemStack(recipe.getRecipeOutput());
-		}
+            SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::write);
+            buffer.writeItemStack(recipe.getRecipeOutput());
+        }
 
-		@Override
-		public ItemStack getIcon() {
-			return new ItemStack(Blocks.CRAFTING_TABLE);
-		}
-	}
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(Blocks.CRAFTING_TABLE);
+        }
+    }
 
-	@Override
-	public void serialize(JsonObject json) {
+    @Override
+    public void serialize(JsonObject json) {
 
-		JsonArray jsonarray = new JsonArray();
+        JsonArray jsonarray = new JsonArray();
 
-		for (Ingredient ingredient : this.getIngredients()) {
-			jsonarray.add(ingredient.serialize());
-		}
+        for (Ingredient ingredient : this.getIngredients()) {
+            jsonarray.add(ingredient.serialize());
+        }
 
-		json.add("ingredients", jsonarray);
-		JsonObject jsonobject = new JsonObject();
-		jsonobject.addProperty("item", Registry.ITEM.getKey(this.getRecipeOutput().getItem()).toString());
-		if (this.getRecipeOutput().getCount() > 1) {
-			jsonobject.addProperty("count", this.getRecipeOutput().getCount());
-		}
+        json.add("ingredients", jsonarray);
+        JsonObject jsonobject = new JsonObject();
+        jsonobject.addProperty("item", Registry.ITEM.getKey(this.getRecipeOutput().getItem()).toString());
+        if (this.getRecipeOutput().getCount() > 1) {
+            jsonobject.addProperty("count", this.getRecipeOutput().getCount());
+        }
 
-		json.add("result", jsonobject);
-	}
+        json.add("result", jsonobject);
+    }
 
-	@Override
-	public ResourceLocation getID() {
-		return getId();
-	}
+    @Override
+    public ResourceLocation getID() {
+        return getId();
+    }
 
-	@Override
-	public JsonObject getAdvancementJson() {
-		return null;
-	}
+    @Override
+    public JsonObject getAdvancementJson() {
+        return null;
+    }
 
-	@Override
-	public ResourceLocation getAdvancementID() {
-		return null;
-	}
+    @Override
+    public ResourceLocation getAdvancementID() {
+        return null;
+    }
 
 }

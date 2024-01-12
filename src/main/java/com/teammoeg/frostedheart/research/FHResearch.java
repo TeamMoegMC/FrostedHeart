@@ -85,15 +85,16 @@ public class FHResearch {
     public static void clearCache() {
         allResearches = LazyOptional.of(() -> researches.all());
     }
+
     //called after reload
     public static void reindex() {
-    	allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
+        allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
         allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
     }
 
     //called after reload
     public static void finishReload() {
-    	reindex();
+        reindex();
         effects.all().forEach(Effect::init);
         clues.all().forEach(Clue::init);
     }
@@ -131,27 +132,30 @@ public class FHResearch {
         ArrayList<Research> unlocked = new ArrayList<>();
         ArrayList<Research> showed = new ArrayList<>();
         for (Research r : all) {
-        	if (r.getCategory() != cate) continue;
-        	if(r.isHidden()) {locked.add(r);continue;}
-            
+            if (r.getCategory() != cate) continue;
+            if (r.isHidden()) {
+                locked.add(r);
+                continue;
+            }
+
             if (r.isCompleted()) unlocked.add(r);
             else if (r.isUnlocked()) available.add(r);
-            else if(r.isShowable())showed.add(r);
+            else if (r.isShowable()) showed.add(r);
             else locked.add(r);
         }
-        
-        available.ensureCapacity(available.size() + unlocked.size() +showed.size());
+
+        available.ensureCapacity(available.size() + unlocked.size() + showed.size());
         available.addAll(showed);
-        
-        unlocked.removeIf(e->{
-        	if(e.hasUnclaimedReward()) {
-        		available.add(0, e);
-        		return true;
-        	}
-        	return false;
+
+        unlocked.removeIf(e -> {
+            if (e.hasUnclaimedReward()) {
+                available.add(0, e);
+                return true;
+            }
+            return false;
         });
         available.addAll(unlocked);
-        
+
         if (showLocked) available.addAll(locked);
         return available;
     }
@@ -161,7 +165,7 @@ public class FHResearch {
         Research unl = null;
         for (Research r : all) {
             if (r.getCategory() != cate) continue;
-            if(r.isHidden())continue;
+            if (r.isHidden()) continue;
             if (r.isCompleted() && unl == null) unl = r;
             else if (r.isUnlocked()) return r;
         }
@@ -182,14 +186,15 @@ public class FHResearch {
 
         }
     }
+
     public static Research load(Research r) {
         File folder = FMLPaths.CONFIGDIR.get().toFile();
         File rf = new File(folder, "fhresearches");
         rf.mkdirs();
         File f = new File(rf, r.getId() + ".json");
-        int iid=r.getRId();
+        int iid = r.getRId();
         try {
-        	JsonElement je = new JsonParser().parse(FileUtil.readString(f));
+            JsonElement je = new JsonParser().parse(FileUtil.readString(f));
             if (je.isJsonObject()) {
                 r.load(je.getAsJsonObject());
             }
@@ -197,6 +202,7 @@ public class FHResearch {
         }
         return researches.getById(iid);
     }
+
     public static void save(Research r) {
         File folder = FMLPaths.CONFIGDIR.get().toFile();
         File rf = new File(folder, "fhresearches");
@@ -224,7 +230,7 @@ public class FHResearch {
         File rf = new File(folder, "fhresearches");
         rf.mkdirs();
         JsonParser jp = new JsonParser();
-        
+
         for (File f : rf.listFiles((dir, name) -> name.endsWith(".json"))) {
             try {
                 JsonElement je = jp.parse(FileUtil.readString(f));
@@ -251,7 +257,7 @@ public class FHResearch {
     public static void readAll(List<Research> rss) {
 
         for (Research r : rss) {
-        	r.packetInit();
+            r.packetInit();
             researches.register(r);
         }
     }
@@ -264,40 +270,40 @@ public class FHResearch {
         return editor;
     }
 
-	public static void clearAll() {
-		clues.clear();
-		researches.clear();
-		effects.clear();
-	}
+    public static void clearAll() {
+        clues.clear();
+        researches.clear();
+        effects.clear();
+    }
 
-	public static void init() {
-		ClientResearchData.last=null;
-		ResearchListeners.reload();
-		//No need to clear all as data manager would handle this.
-		DistExecutor.safeRunWhenOn(Dist.CLIENT,()->TeamResearchData::resetClientInstance);
-	    prepareReload();
-	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
-	    loadAll();
-	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
-	    finishReload();
-	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
-	    //FHResearch.saveAll();
-	}
+    public static void init() {
+        ClientResearchData.last = null;
+        ResearchListeners.reload();
+        //No need to clear all as data manager would handle this.
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> TeamResearchData::resetClientInstance);
+        prepareReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
+        loadAll();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
+        finishReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
+        //FHResearch.saveAll();
+    }
 
-	public static void initFromPacket(CompoundNBT data,List<Research> rs) {
-		ClientResearchData.last=null;
-		ResearchListeners.reload();
-		//no need
-		FHResearch.clearAll();
-	    prepareReload();
-	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
-	    FHResearch.load(data);
-	    readAll(rs);
-	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
-	    finishReload();
-	    MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
-	    DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
+    public static void initFromPacket(CompoundNBT data, List<Research> rs) {
+        ClientResearchData.last = null;
+        ResearchListeners.reload();
+        //no need
+        FHResearch.clearAll();
+        prepareReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
+        FHResearch.load(data);
+        readAll(rs);
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
+        finishReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
-	    //FHResearch.saveAll();
-	}
+        //FHResearch.saveAll();
+    }
 }

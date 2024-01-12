@@ -35,34 +35,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TeamManager.class)
 public abstract class TeamManagerMixin {
-	@Inject(at=@At("HEAD"),method="sync(Lnet/minecraft/entity/player/ServerPlayerEntity;Ldev/ftb/mods/ftbteams/data/Team;)V", remap = false)
-	public void fh$sync(ServerPlayerEntity player, Team self,CallbackInfo cbi) {
-		FTBFixUtils.networkPlayer=player;
-	}
-	@Shadow(remap=false)
-	public abstract void save();
-	
-	@Shadow(remap=false)
-	MinecraftServer server;
-	
-	@Shadow(remap=false)
-	public abstract ClientTeamManager createClientTeamManager();
-	@Shadow(remap=false)
-	public abstract Team getPlayerTeam(ServerPlayerEntity player);
-	/**
-	 * @author khjxiao
-	 * @reason TODO
-	 */
-	@Overwrite(remap=false)
-	public void syncAll() {
-		save();
+    @Inject(at = @At("HEAD"), method = "sync(Lnet/minecraft/entity/player/ServerPlayerEntity;Ldev/ftb/mods/ftbteams/data/Team;)V", remap = false)
+    public void fh$sync(ServerPlayerEntity player, Team self, CallbackInfo cbi) {
+        FTBFixUtils.networkPlayer = player;
+    }
 
-		ClientTeamManager clientManager = createClientTeamManager();
+    @Shadow(remap = false)
+    public abstract void save();
 
-		for (ServerPlayerEntity player : server.getPlayerList().getPlayers()) {
-			FTBFixUtils.networkPlayer=player;
-			new SyncTeamsMessage(clientManager, getPlayerTeam(player)).sendTo(player);
-			server.getPlayerList().updatePermissionLevel(player);
-		}
-	}
+    @Shadow(remap = false)
+    MinecraftServer server;
+
+    @Shadow(remap = false)
+    public abstract ClientTeamManager createClientTeamManager();
+
+    @Shadow(remap = false)
+    public abstract Team getPlayerTeam(ServerPlayerEntity player);
+
+    /**
+     * @author khjxiao
+     * @reason TODO
+     */
+    @Overwrite(remap = false)
+    public void syncAll() {
+        save();
+
+        ClientTeamManager clientManager = createClientTeamManager();
+
+        for (ServerPlayerEntity player : server.getPlayerList().getPlayers()) {
+            FTBFixUtils.networkPlayer = player;
+            new SyncTeamsMessage(clientManager, getPlayerTeam(player)).sendTo(player);
+            server.getPlayerList().updatePermissionLevel(player);
+        }
+    }
 }

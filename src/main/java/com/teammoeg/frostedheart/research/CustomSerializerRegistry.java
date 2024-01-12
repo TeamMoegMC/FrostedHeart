@@ -32,77 +32,77 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.PacketBuffer;
 
 public class CustomSerializerRegistry<T, U> {
-	protected Map<Class<? extends T>, Pair<Integer, String>> typeInfo = new HashMap<>();
-	protected List<Function<PacketBuffer, T>> fromPacket = new ArrayList<>();
+    protected Map<Class<? extends T>, Pair<Integer, String>> typeInfo = new HashMap<>();
+    protected List<Function<PacketBuffer, T>> fromPacket = new ArrayList<>();
 
-	public void register(Class<? extends T> cls, String type, U json, Function<PacketBuffer, T> packet) {
-		putSerializer(type, json);
-		int id = fromPacket.size();
-		fromPacket.add(packet);
-		typeInfo.put(cls, Pair.of(id, type));
-	}
+    public void register(Class<? extends T> cls, String type, U json, Function<PacketBuffer, T> packet) {
+        putSerializer(type, json);
+        int id = fromPacket.size();
+        fromPacket.add(packet);
+        typeInfo.put(cls, Pair.of(id, type));
+    }
 
-	public T read(PacketBuffer pb) {
-		int id = pb.readVarInt();
-		if (id < 0 || id >= fromPacket.size())
-			throw new IllegalArgumentException("Packet Error");
-		return fromPacket.get(id).apply(pb);
-	}
+    public T read(PacketBuffer pb) {
+        int id = pb.readVarInt();
+        if (id < 0 || id >= fromPacket.size())
+            throw new IllegalArgumentException("Packet Error");
+        return fromPacket.get(id).apply(pb);
+    }
 
-	public T readOrDefault(PacketBuffer pb, T def) {
-		int id = pb.readVarInt();
-		if (id < 0 || id >= fromPacket.size())
-			return def;
-		return fromPacket.get(id).apply(pb);
-	}
+    public T readOrDefault(PacketBuffer pb, T def) {
+        int id = pb.readVarInt();
+        if (id < 0 || id >= fromPacket.size())
+            return def;
+        return fromPacket.get(id).apply(pb);
+    }
 
-	public int idOf(T obj) {
-		Pair<Integer, String> info = typeInfo.get(obj.getClass());
-		if (info == null)
-			return -1;
-		return info.getFirst();
-	}
+    public int idOf(T obj) {
+        Pair<Integer, String> info = typeInfo.get(obj.getClass());
+        if (info == null)
+            return -1;
+        return info.getFirst();
+    }
 
-	public String typeOf(T obj) {
-		Pair<Integer, String> info = typeInfo.get(obj.getClass());
-		if (info == null)
-			return "";
-		return info.getSecond();
-	}
+    public String typeOf(T obj) {
+        Pair<Integer, String> info = typeInfo.get(obj.getClass());
+        if (info == null)
+            return "";
+        return info.getSecond();
+    }
 
-	public void writeId(PacketBuffer pb, T obj) {
-		pb.writeVarInt(idOf(obj));
-	}
+    public void writeId(PacketBuffer pb, T obj) {
+        pb.writeVarInt(idOf(obj));
+    }
 
-	Map<String, U> fromJson = new HashMap<>();
+    Map<String, U> fromJson = new HashMap<>();
 
-	public CustomSerializerRegistry() {
-		super();
-	}
+    public CustomSerializerRegistry() {
+        super();
+    }
 
-	public void writeType(JsonObject jo, T obj) {
-		jo.addProperty("type", typeOf(obj));
-	}
+    public void writeType(JsonObject jo, T obj) {
+        jo.addProperty("type", typeOf(obj));
+    }
 
-	public U getDeserializer(JsonElement je) {
-		JsonObject jo = je.getAsJsonObject();
-		U func = fromJson.get(jo.get("type").getAsString());
-		if (func == null)
-			return null;
-		return func;
-	}
+    public U getDeserializer(JsonElement je) {
+        JsonObject jo = je.getAsJsonObject();
+        U func = fromJson.get(jo.get("type").getAsString());
+        if (func == null)
+            return null;
+        return func;
+    }
 
-	public U getDeserializeOrDefault(JsonElement je, U def) {
-		JsonObject jo = je.getAsJsonObject();
-		if(!jo.has("type"))
-			return def;
-		U func = fromJson.get(jo.get("type").getAsString());
-		if (func == null)
-			return def;
-		return func;
-	}
+    public U getDeserializeOrDefault(JsonElement je, U def) {
+        JsonObject jo = je.getAsJsonObject();
+        if (!jo.has("type"))
+            return def;
+        U func = fromJson.get(jo.get("type").getAsString());
+        if (func == null)
+            return def;
+        return func;
+    }
 
-	protected void putSerializer(String type, U s) {
-		fromJson.put(type, s);
-	}
+    protected void putSerializer(String type, U s) {
+        fromJson.put(type, s);
+    }
 }

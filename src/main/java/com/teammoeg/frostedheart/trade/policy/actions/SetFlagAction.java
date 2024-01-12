@@ -27,35 +27,37 @@ import com.teammoeg.frostedheart.trade.policy.PolicyAction;
 import net.minecraft.network.PacketBuffer;
 
 public class SetFlagAction implements PolicyAction {
-	String name;
-	public SetFlagAction(JsonObject jo) {
-		name=jo.get("name").getAsString();
-	}
+    String name;
 
-	public SetFlagAction(PacketBuffer buffer) {
-		name=buffer.readString();
-	}
+    public SetFlagAction(JsonObject jo) {
+        name = jo.get("name").getAsString();
+    }
 
-	public SetFlagAction(String name) {
-		this.name=name;
-	}
-	@Override
-	public JsonElement serialize() {
-		JsonObject jo=new JsonObject();
-		Actions.writeType(this, jo);
-		jo.addProperty("name",name);
-		return jo;
-	}
+    public SetFlagAction(PacketBuffer buffer) {
+        name = buffer.readString();
+    }
 
-	@Override
-	public void write(PacketBuffer buffer) {
-		Actions.writeId(this, buffer);
-		buffer.writeString(name);
-	}
+    public SetFlagAction(String name) {
+        this.name = name;
+    }
 
-	@Override
-	public void deal(FHVillagerData data, int num) {
-		data.flags.computeIfAbsent(name,k->1);
-	}
+    @Override
+    public JsonElement serialize() {
+        JsonObject jo = new JsonObject();
+        Actions.writeType(this, jo);
+        jo.addProperty("name", name);
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        Actions.writeId(this, buffer);
+        buffer.writeString(name);
+    }
+
+    @Override
+    public void deal(FHVillagerData data, int num) {
+        data.flags.computeIfAbsent(name, k -> 1);
+    }
 
 }

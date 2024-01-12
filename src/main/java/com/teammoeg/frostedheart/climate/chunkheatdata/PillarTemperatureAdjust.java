@@ -31,37 +31,38 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
     long r2;
     int upper;
     int lower;
-    public PillarTemperatureAdjust(int cx, int cy, int cz, int r,int upper,int lower, int value) {
+
+    public PillarTemperatureAdjust(int cx, int cy, int cz, int r, int upper, int lower, int value) {
         super(cx, cy, cz, r, value);
         r2 = r * r;
-        this.upper=upper;
-        this.lower=lower;
+        this.upper = upper;
+        this.lower = lower;
     }
 
     public PillarTemperatureAdjust(PacketBuffer buffer) {
         super(buffer);
         r2 = r * r;
-        this.upper=buffer.readVarInt();
-        this.lower=buffer.readVarInt();
+        this.upper = buffer.readVarInt();
+        this.lower = buffer.readVarInt();
     }
 
     public PillarTemperatureAdjust(CompoundNBT nc) {
         super(nc);
         r2 = r * r;
-        this.upper=nc.getInt("upper");
-        this.lower=nc.getInt("lower");
+        this.upper = nc.getInt("upper");
+        this.lower = nc.getInt("lower");
     }
 
-    public PillarTemperatureAdjust(BlockPos heatPos, int range,int u,int d, int tempMod) {
+    public PillarTemperatureAdjust(BlockPos heatPos, int range, int u, int d, int tempMod) {
         super(heatPos, range, tempMod);
         r2 = r * r;
-        this.upper=u;
-        this.lower=d;
+        this.upper = u;
+        this.lower = d;
     }
 
     @Override
     public boolean isEffective(int x, int y, int z) {
-    	if (y > upper + cy || y < cy - lower) return false;
+        if (y > upper + cy || y < cy - lower) return false;
         long l = (long) Math.pow(x - cx + 0.5, 2);
         l += (long) Math.pow(z - cz + 0.5, 2);
         return l <= r2;
@@ -82,11 +83,11 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
         serializeData(buffer);
     }
 
-	@Override
-	protected void serializeData(PacketBuffer buffer) {
-		super.serializeData(buffer);
-		buffer.writeVarInt(upper);
-		buffer.writeVarInt(lower);
-	}
+    @Override
+    protected void serializeData(PacketBuffer buffer) {
+        super.serializeData(buffer);
+        buffer.writeVarInt(upper);
+        buffer.writeVarInt(lower);
+    }
 
 }

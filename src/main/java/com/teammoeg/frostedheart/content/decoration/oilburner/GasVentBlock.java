@@ -44,12 +44,12 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidUtil;
 
-public class GasVentBlock extends FHBaseBlock{
+public class GasVentBlock extends FHBaseBlock {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public GasVentBlock(String name, Properties blockProps,
-                          BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
+                        BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
         super(name, blockProps, createItemBlock);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
@@ -74,18 +74,18 @@ public class GasVentBlock extends FHBaseBlock{
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.get(LIT)) {
-            for (int i = 0; i < rand.nextInt(2) + 2; ++i) 
+            for (int i = 0; i < rand.nextInt(2) + 2; ++i)
                 ClientUtils.spawnSmokeParticles(worldIn, pos.up());
-            
+
         }
     }
 
-	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
-			Hand handIn, BlockRayTraceResult hit) {
-		if (FluidUtil.interactWithFluidHandler(player, handIn,worldIn, pos,hit.getFace()))
-			return ActionResultType.SUCCESS;
-		return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
-	}
+    @Override
+    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
+                                             Hand handIn, BlockRayTraceResult hit) {
+        if (FluidUtil.interactWithFluidHandler(player, handIn, worldIn, pos, hit.getFace()))
+            return ActionResultType.SUCCESS;
+        return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+    }
 
 }

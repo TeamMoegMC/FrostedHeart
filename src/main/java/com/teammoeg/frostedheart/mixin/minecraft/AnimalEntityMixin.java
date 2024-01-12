@@ -44,11 +44,11 @@ public abstract class AnimalEntityMixin extends AgeableEntity {
         return 28800;
     }
 
-	@Inject(at = @At("HEAD"), method = "isBreedingItem",cancellable=true)
-    public void isBreedingItem(ItemStack itemStack,CallbackInfoReturnable<Boolean> cbi) {
+    @Inject(at = @At("HEAD"), method = "isBreedingItem", cancellable = true)
+    public void isBreedingItem(ItemStack itemStack, CallbackInfoReturnable<Boolean> cbi) {
         EntityType<?> type = getType();
-        boolean f=BreedUtil.isBreedingItem(type, itemStack);
-        if(f)
-        	cbi.setReturnValue(true);
-     }
+        boolean f = BreedUtil.isBreedingItem(type, itemStack);
+        if (f)
+            cbi.setReturnValue(true);
+    }
 }

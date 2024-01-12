@@ -44,7 +44,7 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidUtil;
 
-public class OilBurnerBlock extends FHBaseBlock{
+public class OilBurnerBlock extends FHBaseBlock {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
@@ -88,12 +88,12 @@ public class OilBurnerBlock extends FHBaseBlock{
         }
     }
 
-	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
-			Hand handIn, BlockRayTraceResult hit) {
-		if (FluidUtil.interactWithFluidHandler(player, handIn,worldIn, pos,hit.getFace()))
-			return ActionResultType.SUCCESS;
-		return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
-	}
+    @Override
+    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
+                                             Hand handIn, BlockRayTraceResult hit) {
+        if (FluidUtil.interactWithFluidHandler(player, handIn, worldIn, pos, hit.getFace()))
+            return ActionResultType.SUCCESS;
+        return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+    }
 
 }

@@ -32,17 +32,18 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 @Mixin(MechanicalCraftingRecipe.class)
-public class MixinMechanicalCraftingRecipe extends ShapedRecipe{
+public class MixinMechanicalCraftingRecipe extends ShapedRecipe {
 
 
-	public MixinMechanicalCraftingRecipe(ResourceLocation idIn, String groupIn, int recipeWidthIn, int recipeHeightIn,
-			NonNullList<Ingredient> recipeItemsIn, ItemStack recipeOutputIn) {
-		super(idIn, groupIn, recipeWidthIn, recipeHeightIn, recipeItemsIn, recipeOutputIn);
-	}
+    public MixinMechanicalCraftingRecipe(ResourceLocation idIn, String groupIn, int recipeWidthIn, int recipeHeightIn,
+                                         NonNullList<Ingredient> recipeItemsIn, ItemStack recipeOutputIn) {
+        super(idIn, groupIn, recipeWidthIn, recipeHeightIn, recipeItemsIn, recipeOutputIn);
+    }
 
-	@Inject(at=@At("HEAD"),method="matches", cancellable=true)
-	public void fh$matches(CraftingInventory inv, World worldIn,CallbackInfoReturnable<Boolean> cbi) {
-		if (!ResearchListeners.canUseRecipe(ResearchListeners.te, this))cbi.setReturnValue(false);
-	}
+    @Inject(at = @At("HEAD"), method = "matches", cancellable = true)
+    public void fh$matches(CraftingInventory inv, World worldIn, CallbackInfoReturnable<Boolean> cbi) {
+        if (!ResearchListeners.canUseRecipe(ResearchListeners.te, this)) cbi.setReturnValue(false);
+    }
 }

@@ -43,7 +43,7 @@ public interface IOwnerTile {
     }
 
     public static void trySetOwner(TileEntity te, UUID id) {
-        if (te instanceof IOwnerTile&&!(te instanceof ManagedOwnerTile)) {
+        if (te instanceof IOwnerTile && !(te instanceof ManagedOwnerTile)) {
             if (((IOwnerTile) te).getStoredOwner() == null) {
                 ((IOwnerTile) te).setStoredOwner(id);
             }

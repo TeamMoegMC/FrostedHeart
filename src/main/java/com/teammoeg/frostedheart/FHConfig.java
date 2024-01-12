@@ -44,6 +44,7 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue enableFrozenOverlay;
         public final ForgeConfigSpec.BooleanValue enableFrozenVignette;
         public final ForgeConfigSpec.BooleanValue enableHeatVignette;
+
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -52,8 +53,8 @@ public class FHConfig {
                     .comment("Enables the temperature orb overlay. ")
                     .define("enableTemperatureOrb", true);
 
-            useFahrenheit=builder.comment("Use Fahrenheit temperature instead of celsus.")
-            		.define("useFahrenheit", false);
+            useFahrenheit = builder.comment("Use Fahrenheit temperature instead of celsus.")
+                    .define("useFahrenheit", false);
             tempOrbPosition = builder
                     .comment("Position of the temperature orb in game screen. ")
                     .defineEnum("renderTempOrbAtCenter", TempOrbPos.MIDDLE);
@@ -80,13 +81,14 @@ public class FHConfig {
     public static class Common {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
+
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
                     .define("enablesTemperatureForecast", true);
-            blackmods= builder
+            blackmods = builder
                     .comment("BlackListed mods to kick player")
-                    .defineList("Mod Blacklist",new ArrayList<>(), s -> true);
+                    .defineList("Mod Blacklist", new ArrayList<>(), s -> true);
         }
     }
 
@@ -98,6 +100,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
         public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
+
         Server(ForgeConfigSpec.Builder builder) {
             alwaysKeepInventory = builder
                     .comment("Always keep inventory on death on every dimension and world")
@@ -107,8 +110,8 @@ public class FHConfig {
             fixEssJeiIssue = builder
                     .comment("Fixes JEI and Bukkit server compat issue, don't touch unless you know what you are doing.")
                     .define("fixEssJeiIssue", true);
-            taskPerTick =builder.comment("Range Detection tasks to execute per tick")
-            		.defineInRange("taskPerTick", 1, 0.005,Integer.MAX_VALUE);
+            taskPerTick = builder.comment("Range Detection tasks to execute per tick")
+                    .defineInRange("taskPerTick", 1, 0.005, Integer.MAX_VALUE);
             developers = builder
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
@@ -116,7 +119,7 @@ public class FHConfig {
                     .defineEnum("temperatureDifficulty", FHDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
-            
+
 
         }
     }

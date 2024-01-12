@@ -37,23 +37,23 @@ import java.util.Optional;
 
 @Mixin(RecipeManager.class)
 public abstract class RecipeManagerMixin {
-	/**
-	 * @author khjxiaogu
-	 * @reason TODO
-	 */
-	@Overwrite
-	public <C extends IInventory, T extends IRecipe<C>> Optional<T> getRecipe(IRecipeType<T> recipeTypeIn,
-			C inventoryIn, World worldIn) {
-		if(recipeTypeIn==IRecipeType.CRAFTING&&ForgeHooks.getCraftingPlayer()!=null) {
-			return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> {
-				return Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn));
-			}).filter(t->ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
-		}
-		return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> {
-			return Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn));
-		}).findFirst();
-	}
+    /**
+     * @author khjxiaogu
+     * @reason TODO
+     */
+    @Overwrite
+    public <C extends IInventory, T extends IRecipe<C>> Optional<T> getRecipe(IRecipeType<T> recipeTypeIn,
+                                                                              C inventoryIn, World worldIn) {
+        if (recipeTypeIn == IRecipeType.CRAFTING && ForgeHooks.getCraftingPlayer() != null) {
+            return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> {
+                return Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn));
+            }).filter(t -> ResearchListeners.canUseRecipe(ForgeHooks.getCraftingPlayer(), t)).findFirst();
+        }
+        return this.getRecipes(recipeTypeIn).values().stream().flatMap((recipe) -> {
+            return Util.streamOptional(recipeTypeIn.matches(recipe, worldIn, inventoryIn));
+        }).findFirst();
+    }
 
-	@Shadow
-	abstract <C extends IInventory, T extends IRecipe<C>> Map<ResourceLocation, IRecipe<C>> getRecipes(IRecipeType<T> recipeTypeIn);
+    @Shadow
+    abstract <C extends IInventory, T extends IRecipe<C>> Map<ResourceLocation, IRecipe<C>> getRecipes(IRecipeType<T> recipeTypeIn);
 }

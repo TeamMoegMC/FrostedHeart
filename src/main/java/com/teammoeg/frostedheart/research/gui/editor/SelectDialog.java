@@ -79,13 +79,13 @@ public class SelectDialog<T> extends EditDialog {
         ).open();
     };
     public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName,e->new String[] {e.getName().getString(),e.getRegistryName().toString()}
+        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName, e -> new String[]{e.getName().getString(), e.getRegistryName().toString()}
         ).open();
     };
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
-    
-    	
-        new SelectDialog<>(p, l, v, c,()->Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
+
+
+        new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
     };
     String lbl;
     T val;

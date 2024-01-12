@@ -64,9 +64,10 @@ public class CustomClue extends Clue {
     @Override
     public void end(Team team) {
     }
-	@Override
-	public String getBrief() {
-		return "Custom "+getDescriptionString();
-	}
+
+    @Override
+    public String getBrief() {
+        return "Custom " + getDescriptionString();
+    }
 
 }

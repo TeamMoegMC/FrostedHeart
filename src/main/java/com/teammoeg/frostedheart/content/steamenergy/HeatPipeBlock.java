@@ -62,7 +62,6 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
     }
 
 
-
     @Override
     public boolean hasTileEntity(BlockState state) {
         return true;

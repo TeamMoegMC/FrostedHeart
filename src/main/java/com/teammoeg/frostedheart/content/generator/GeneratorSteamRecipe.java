@@ -72,6 +72,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     public ItemStack getRecipeOutput() {
         return super.outputDummy;
     }
+
     public static class Serializer extends IERecipeSerializer<GeneratorSteamRecipe> {
         @Override
         public ItemStack getIcon() {

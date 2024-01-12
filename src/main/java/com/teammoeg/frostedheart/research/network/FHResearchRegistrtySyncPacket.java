@@ -45,7 +45,7 @@ public class FHResearchRegistrtySyncPacket {
 
     public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
-        rss = SerializeUtil.readList(buffer,SpecialResearch::deserialize);
+        rss = SerializeUtil.readList(buffer, SpecialResearch::deserialize);
     }
 
     public void encode(PacketBuffer buffer) {
@@ -55,7 +55,7 @@ public class FHResearchRegistrtySyncPacket {
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            FHResearch.initFromPacket(data,rss);
+            FHResearch.initFromPacket(data, rss);
         });
         context.get().setPacketHandled(true);
     }

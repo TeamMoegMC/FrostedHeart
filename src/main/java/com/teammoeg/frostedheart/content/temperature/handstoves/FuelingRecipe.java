@@ -119,6 +119,7 @@ public class FuelingRecipe extends SpecialRecipe {
     public IRecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
+
     public static class Serializer extends IERecipeSerializer<FuelingRecipe> {
         @Override
         public ItemStack getIcon() {

@@ -40,7 +40,7 @@ public interface HeatController extends EnergyNetworkProvider {
      * @return the heat drained
      */
     float drainHeat(float value);
-    
+
     /**
      * Fill heat into the network.
      *
@@ -55,11 +55,12 @@ public interface HeatController extends EnergyNetworkProvider {
      * @return the temperature level
      */
     float getTemperatureLevel();
+
     /**
      * get controller entity
      *
      * @return the controller entity
      */
     TileEntity getEntity();
-    
+
 }

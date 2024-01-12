@@ -33,19 +33,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Relief a performance issue in server
- * 
- * */
+ */
 @Mixin(ServerPlayerEntity.class)
-public abstract class ServerPlayerEntityMixin extends PlayerEntity{
+public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 
-	public ServerPlayerEntityMixin(World p_i241920_1_, BlockPos p_i241920_2_, float p_i241920_3_,
-			GameProfile p_i241920_4_) {
-		super(p_i241920_1_, p_i241920_2_, p_i241920_3_, p_i241920_4_);
-	}
+    public ServerPlayerEntityMixin(World p_i241920_1_, BlockPos p_i241920_2_, float p_i241920_3_,
+                                   GameProfile p_i241920_4_) {
+        super(p_i241920_1_, p_i241920_2_, p_i241920_3_, p_i241920_4_);
+    }
 
-	@Inject(at=@At(value="HEAD"),method="Lnet/minecraft/entity/player/ServerPlayerEntity;func_205734_a(Lnet/minecraft/world/server/ServerWorld;)V",remap=true,cancellable=true)
-	public void fh$init(ServerWorld worldIn,CallbackInfo cbi) {
-		if(((Object)this) instanceof FakePlayer)
-			cbi.cancel();
-	}
+    @Inject(at = @At(value = "HEAD"), method = "Lnet/minecraft/entity/player/ServerPlayerEntity;func_205734_a(Lnet/minecraft/world/server/ServerWorld;)V", remap = true, cancellable = true)
+    public void fh$init(ServerWorld worldIn, CallbackInfo cbi) {
+        if (((Object) this) instanceof FakePlayer)
+            cbi.cancel();
+    }
 }

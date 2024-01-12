@@ -49,160 +49,161 @@ import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraft.world.storage.FolderName;
 
 public class FHResearchDataManager {
-	public static MinecraftServer server;
-	Path local;
-	File regfile;
-	static final FolderName dataFolder = new FolderName("fhresearch");
-	public static FHResearchDataManager INSTANCE;
-	private Map<UUID, TeamResearchData> data = new HashMap<>();
+    public static MinecraftServer server;
+    Path local;
+    File regfile;
+    static final FolderName dataFolder = new FolderName("fhresearch");
+    public static FHResearchDataManager INSTANCE;
+    private Map<UUID, TeamResearchData> data = new HashMap<>();
 
-	public FHResearchDataManager(MinecraftServer s) {
-		server = s;
-		INSTANCE = this;
-	}
+    public FHResearchDataManager(MinecraftServer s) {
+        server = s;
+        INSTANCE = this;
+    }
 
-	public TeamResearchData getData(UUID id) {
-		
-		TeamResearchData cn = data.computeIfAbsent(id,
-				c -> new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(id)));
-		return cn;
+    public TeamResearchData getData(UUID id) {
 
-	}
-	/*
-	 * get Team data as well as check ownership.
-	 * 
-	 * */
-	public TeamResearchData getData(Team team) {
-		TeamResearchData cn = data.get(team.getId());
-		if(cn==null) {
-			GameProfile owner=server.getPlayerProfileCache().getProfileByUUID(team.getOwner());
-			if(owner!=null)
-				for(Entry<UUID, TeamResearchData> dat:data.entrySet()) {
-					if(owner.getName().equals(dat.getValue().getOwnerName())) {
-						this.transfer(dat.getKey(), team);
-						break;
-					}
-				}
-		}
-		cn = data.computeIfAbsent(team.getId(),
-				c -> new TeamResearchData(() -> team));
-		if(cn.getOwnerName()==null) {
-			PlayerProfileCache cache=server.getPlayerProfileCache();
-			if(cache!=null) {
-				GameProfile gp=cache.getProfileByUUID(team.getOwner());
-				if(gp!=null) {
-					cn.setOwnerName(gp.getName());
-				}
-			}
-		}
-		return cn;
+        TeamResearchData cn = data.computeIfAbsent(id,
+                c -> new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(id)));
+        return cn;
 
-	}
+    }
 
-	public static RecipeManager getRecipeManager() {
-		if (server != null)
-			return server.getRecipeManager();
-		return ClientUtils.mc().world.getRecipeManager();
-	}
+    /*
+     * get Team data as well as check ownership.
+     *
+     * */
+    public TeamResearchData getData(Team team) {
+        TeamResearchData cn = data.get(team.getId());
+        if (cn == null) {
+            GameProfile owner = server.getPlayerProfileCache().getProfileByUUID(team.getOwner());
+            if (owner != null)
+                for (Entry<UUID, TeamResearchData> dat : data.entrySet()) {
+                    if (owner.getName().equals(dat.getValue().getOwnerName())) {
+                        this.transfer(dat.getKey(), team);
+                        break;
+                    }
+                }
+        }
+        cn = data.computeIfAbsent(team.getId(),
+                c -> new TeamResearchData(() -> team));
+        if (cn.getOwnerName() == null) {
+            PlayerProfileCache cache = server.getPlayerProfileCache();
+            if (cache != null) {
+                GameProfile gp = cache.getProfileByUUID(team.getOwner());
+                if (gp != null) {
+                    cn.setOwnerName(gp.getName());
+                }
+            }
+        }
+        return cn;
 
-	public Collection<TeamResearchData> getAllData() {
-		return data.values();
-	}
+    }
 
-	public void load() {
-		FHResearch.editor=false;
-		local = server.func_240776_a_(dataFolder);
-		regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
-		FHResearch.clearAll();
-		if (regfile.exists()) {
-			try {
-				FHResearch.load(CompressedStreamTools.readCompressed(regfile));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				FHMain.LOGGER.fatal("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+    public static RecipeManager getRecipeManager() {
+        if (server != null)
+            return server.getRecipeManager();
+        return ClientUtils.mc().world.getRecipeManager();
+    }
 
-			}
-		}
-		data.clear();
-		FHResearch.init();
-		local.toFile().mkdirs();
-		for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {
-			UUID tud;
-			try {
-				try {
-					tud = UUID.fromString(f.getName().split("\\.")[0]);
-				} catch (IllegalArgumentException ex) {
-					FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-					continue;
-				}
-				CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
-				TeamResearchData trd = new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(tud));
-	
-				trd.deserialize(nbt, false);
-				data.put(tud, trd);
-			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
-				FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
-				continue;
-			} catch (IOException e) {
-				e.printStackTrace();
-				FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
-			}
-		}
-		
-		try {
-			File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
-			if (dbg.exists() && FileUtil.readString(dbg).equals("true"))
-				FHResearch.editor = true;
-		} catch (IOException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-	}
+    public Collection<TeamResearchData> getAllData() {
+        return data.values();
+    }
 
-	public void save() {
-		File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
-		try {
-			if (FHResearch.isEditor())
-				FileUtil.transfer("true", dbg);
-			else if (dbg.exists())
-				FileUtil.transfer("false", dbg);
-		} catch (IOException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		try {
-			CompressedStreamTools.writeCompressed(FHResearch.save(new CompoundNBT()), regfile);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
-		}
-		Set<String> files=new HashSet<>(Arrays.asList(local.toFile().list((d,s) -> s.endsWith(".nbt"))));
-		for (Entry<UUID, TeamResearchData> entry : data.entrySet()) {
-			String fn=entry.getKey().toString() + ".nbt";
-			File f = local.resolve(fn).toFile();
-			try {
-				CompressedStreamTools.writeCompressed(entry.getValue().serialize(false), f);
-				files.remove(fn);
-			} catch (IOException e) {
-				
-				e.printStackTrace();
-				FHMain.LOGGER.error("Unable to save data file for team " + entry.getKey().toString() + ", ignoring...");
-			}
-		}
-		for(String todel:files) {
-			local.resolve(todel).toFile().delete();
-		}
-	}
+    public void load() {
+        FHResearch.editor = false;
+        local = server.func_240776_a_(dataFolder);
+        regfile = new File(local.toFile().getParentFile(), "fhregistries.dat");
+        FHResearch.clearAll();
+        if (regfile.exists()) {
+            try {
+                FHResearch.load(CompressedStreamTools.readCompressed(regfile));
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                FHMain.LOGGER.fatal("CANNOT READ RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
 
-	public void transfer(UUID orig, Team team) {
-		TeamResearchData odata=data.remove(orig);
-		if(odata!=null) {
-			odata.setTeam(()->team);
-			data.put(team.getId(), odata);
-		}
-		
-	}
+            }
+        }
+        data.clear();
+        FHResearch.init();
+        local.toFile().mkdirs();
+        for (File f : local.toFile().listFiles((f) -> f.getName().endsWith(".nbt"))) {
+            UUID tud;
+            try {
+                try {
+                    tud = UUID.fromString(f.getName().split("\\.")[0]);
+                } catch (IllegalArgumentException ex) {
+                    FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
+                    continue;
+                }
+                CompoundNBT nbt = CompressedStreamTools.readCompressed(f);
+                TeamResearchData trd = new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(tud));
+
+                trd.deserialize(nbt, false);
+                data.put(tud, trd);
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+                FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");
+                continue;
+            } catch (IOException e) {
+                e.printStackTrace();
+                FHMain.LOGGER.error("Unable to read data file " + f.getName() + ", ignoring...");
+            }
+        }
+
+        try {
+            File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
+            if (dbg.exists() && FileUtil.readString(dbg).equals("true"))
+                FHResearch.editor = true;
+        } catch (IOException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+    }
+
+    public void save() {
+        File dbg = new File(local.toFile().getParentFile(), "fheditor.dat");
+        try {
+            if (FHResearch.isEditor())
+                FileUtil.transfer("true", dbg);
+            else if (dbg.exists())
+                FileUtil.transfer("false", dbg);
+        } catch (IOException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+        try {
+            CompressedStreamTools.writeCompressed(FHResearch.save(new CompoundNBT()), regfile);
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+            FHMain.LOGGER.fatal("CANNOT SAVE RESEARCH REGISTRIES, MAY CAUSE UNSYNC!");
+        }
+        Set<String> files = new HashSet<>(Arrays.asList(local.toFile().list((d, s) -> s.endsWith(".nbt"))));
+        for (Entry<UUID, TeamResearchData> entry : data.entrySet()) {
+            String fn = entry.getKey().toString() + ".nbt";
+            File f = local.resolve(fn).toFile();
+            try {
+                CompressedStreamTools.writeCompressed(entry.getValue().serialize(false), f);
+                files.remove(fn);
+            } catch (IOException e) {
+
+                e.printStackTrace();
+                FHMain.LOGGER.error("Unable to save data file for team " + entry.getKey().toString() + ", ignoring...");
+            }
+        }
+        for (String todel : files) {
+            local.resolve(todel).toFile().delete();
+        }
+    }
+
+    public void transfer(UUID orig, Team team) {
+        TeamResearchData odata = data.remove(orig);
+        if (odata != null) {
+            odata.setTeam(() -> team);
+            data.put(team.getId(), odata);
+        }
+
+    }
 }

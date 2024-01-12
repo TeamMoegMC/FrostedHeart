@@ -58,24 +58,24 @@ public class IncubatorT1Screen extends IEContainerScreen<IncubatorT1Container> {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
         GuiHelper.handleGuiTank(transform, tile.fluid[0], guiLeft + 61, guiTop + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
-        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 117, guiTop + 20, 16, 46, 177, 177, 20, 51, x,y, TEXTURE,null);
+        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 117, guiTop + 20, 16, 46, 177, 177, 20, 51, x, y, TEXTURE, null);
         // recipe progress icon
         if (tile.processMax > 0 && tile.process > 0) {
             int w = (int) (32 * (tile.process / (float) tile.processMax));
-            this.blit(transform, guiLeft + 80, guiTop + 28, 176,0,32-w,29);
+            this.blit(transform, guiLeft + 80, guiTop + 28, 176, 0, 32 - w, 29);
         }
-        if(tile.fuel>0&&tile.fuelMax>0) {
-        	int h = (int) (14 * (tile.fuel / (float) tile.fuelMax));
-        	this.blit(transform, guiLeft + 35, guiTop + 35+(14-h), 198, 64+(14-h), 14,h);
+        if (tile.fuel > 0 && tile.fuelMax > 0) {
+            int h = (int) (14 * (tile.fuel / (float) tile.fuelMax));
+            this.blit(transform, guiLeft + 35, guiTop + 35 + (14 - h), 198, 64 + (14 - h), 14, h);
         }
-        if(tile.efficiency>0) {
-        	int h = (int) (35 * (tile.efficiency));
-        	if(tile.isFoodRecipe)
-        		this.blit(transform, guiLeft + 19, guiTop + 35+(35-h), 198, 29+(35-h), 9,h);
-        	else
-        		this.blit(transform, guiLeft + 19, guiTop + 35+(35-h), 207, 29+(35-h), 9,h);
-        }else
-        	this.blit(transform, guiLeft + 19, guiTop + 35, 216, 29, 9,35);
+        if (tile.efficiency > 0) {
+            int h = (int) (35 * (tile.efficiency));
+            if (tile.isFoodRecipe)
+                this.blit(transform, guiLeft + 19, guiTop + 35 + (35 - h), 198, 29 + (35 - h), 9, h);
+            else
+                this.blit(transform, guiLeft + 19, guiTop + 35 + (35 - h), 207, 29 + (35 - h), 9, h);
+        } else
+            this.blit(transform, guiLeft + 19, guiTop + 35, 216, 29, 9, 35);
     }
 
     @Override

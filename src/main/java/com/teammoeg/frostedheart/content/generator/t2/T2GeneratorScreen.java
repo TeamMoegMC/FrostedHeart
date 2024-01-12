@@ -96,7 +96,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         }
 
         if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {
-                tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
         }
 
         if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54)) {

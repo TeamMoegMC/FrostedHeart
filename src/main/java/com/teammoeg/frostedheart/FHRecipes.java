@@ -59,10 +59,10 @@ public class FHRecipes {
         IncubateRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("incubate", IncubateRecipe.Serializer::new);
         ResearchPaperRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("paper", ResearchPaperRecipe.Serializer::new);
         SaunaRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("sauna", SaunaRecipe.Serializer::new);
-        ModifyDamageRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("modify_damage", ModifyDamageRecipe.Serializer::new);
-        InspireRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("inspire",InspireRecipe.Serializer::new);
-        ShapelessCopyDataRecipe.SERIALIZER=RECIPE_SERIALIZERS.register("shapless_copy_data",ShapelessCopyDataRecipe.Serializer::new);
-        TradePolicy.SERIALIZER=RECIPE_SERIALIZERS.register("trade",TradePolicy.Serializer::new);
+        ModifyDamageRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("modify_damage", ModifyDamageRecipe.Serializer::new);
+        InspireRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("inspire", InspireRecipe.Serializer::new);
+        ShapelessCopyDataRecipe.SERIALIZER = RECIPE_SERIALIZERS.register("shapless_copy_data", ShapelessCopyDataRecipe.Serializer::new);
+        TradePolicy.SERIALIZER = RECIPE_SERIALIZERS.register("trade", TradePolicy.Serializer::new);
     }
 
     public static void registerRecipeTypes() {
@@ -73,7 +73,7 @@ public class FHRecipes {
         IncubateRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":incubate");
         ResearchPaperRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":paper");
         SaunaRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":sauna");
-        InspireRecipe.TYPE=IRecipeType.register(FHMain.MODID + ":inspire");
-        TradePolicy.TYPE=IRecipeType.register(FHMain.MODID+":trade");
+        InspireRecipe.TYPE = IRecipeType.register(FHMain.MODID + ":inspire");
+        TradePolicy.TYPE = IRecipeType.register(FHMain.MODID + ":trade");
     }
 }

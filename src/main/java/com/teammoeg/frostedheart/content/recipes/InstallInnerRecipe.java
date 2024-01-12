@@ -158,6 +158,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
     public IRecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
+
     public static class Serializer extends IERecipeSerializer<InstallInnerRecipe> {
         @Override
         public ItemStack getIcon() {

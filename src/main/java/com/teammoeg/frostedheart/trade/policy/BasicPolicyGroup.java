@@ -28,37 +28,40 @@ import net.minecraft.network.PacketBuffer;
 
 import java.util.List;
 
-public class BasicPolicyGroup extends PolicyGroup{
-	List<BaseData> bdata;
-	public BasicPolicyGroup(List<PolicyCondition> conditions, List<BaseData> bdata) {
-		super(conditions);
-		this.bdata = bdata;
-	}
-	public BasicPolicyGroup(JsonObject jo) {
-		super(jo);
-		bdata=SerializeUtil.parseJsonList(jo.get("data"),BaseData::read);
-	}
+public class BasicPolicyGroup extends PolicyGroup {
+    List<BaseData> bdata;
 
-	public BasicPolicyGroup(PacketBuffer pb) {
-		super(pb);
-		bdata=SerializeUtil.readList(pb,BaseData::read);
-	}
-	
-	@Override
-	public void CollectPoliciesNoCheck(PolicySnapshot policy,FHVillagerData ve) {
-		bdata.forEach(policy::register);
-	}
+    public BasicPolicyGroup(List<PolicyCondition> conditions, List<BaseData> bdata) {
+        super(conditions);
+        this.bdata = bdata;
+    }
 
-	@Override
-	public JsonElement serialize() {
-		JsonObject jo=super.serialize().getAsJsonObject();
-		jo.add("data",SerializeUtil.toJsonList(bdata,BaseData::serialize));
-		return jo;
-	}
-	@Override
-	public void write(PacketBuffer buffer) {
-		buffer.writeBoolean(false);
-		super.write(buffer);
-		SerializeUtil.writeList(buffer,bdata,BaseData::write);
-	}
+    public BasicPolicyGroup(JsonObject jo) {
+        super(jo);
+        bdata = SerializeUtil.parseJsonList(jo.get("data"), BaseData::read);
+    }
+
+    public BasicPolicyGroup(PacketBuffer pb) {
+        super(pb);
+        bdata = SerializeUtil.readList(pb, BaseData::read);
+    }
+
+    @Override
+    public void CollectPoliciesNoCheck(PolicySnapshot policy, FHVillagerData ve) {
+        bdata.forEach(policy::register);
+    }
+
+    @Override
+    public JsonElement serialize() {
+        JsonObject jo = super.serialize().getAsJsonObject();
+        jo.add("data", SerializeUtil.toJsonList(bdata, BaseData::serialize));
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        buffer.writeBoolean(false);
+        super.write(buffer);
+        SerializeUtil.writeList(buffer, bdata, BaseData::write);
+    }
 }

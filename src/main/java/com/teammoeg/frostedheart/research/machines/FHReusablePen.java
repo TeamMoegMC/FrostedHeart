@@ -34,7 +34,8 @@ public class FHReusablePen extends FHBaseItem implements IPen {
 
     @Override
     public void doDamage(PlayerEntity e, ItemStack stack, int val) {
-        stack.damageItem(val, e, ex -> {});
+        stack.damageItem(val, e, ex -> {
+        });
     }
 
     @Override

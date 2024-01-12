@@ -33,22 +33,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerInventory.class)
 public abstract class PlayerInventoryMixin implements IInventory, INameable {
 
-	public PlayerInventoryMixin() {
-	}
+    public PlayerInventoryMixin() {
+    }
 
-	private PlayerInventory getThis() {
-		return (PlayerInventory) (Object) this;
-	}
+    private PlayerInventory getThis() {
+        return (PlayerInventory) (Object) this;
+    }
 
-	@Inject(at = @At("HEAD"), method = "dropAllItems", cancellable = true)
-	public void fh$dropAllItems(CallbackInfo cbi) {
-		if (getThis().player instanceof FakePlayer)
-			return;
-		DeathInventoryData dit = DeathInventoryData.get(getThis().player);
-		if (FHConfig.SERVER.keepEquipments.get()) {
-			if (dit != null)
-				dit.death(getThis());
-		}
-	}
+    @Inject(at = @At("HEAD"), method = "dropAllItems", cancellable = true)
+    public void fh$dropAllItems(CallbackInfo cbi) {
+        if (getThis().player instanceof FakePlayer)
+            return;
+        DeathInventoryData dit = DeathInventoryData.get(getThis().player);
+        if (FHConfig.SERVER.keepEquipments.get()) {
+            if (dit != null)
+                dit.death(getThis());
+        }
+    }
 
 }

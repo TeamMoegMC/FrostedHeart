@@ -30,7 +30,7 @@ public class MinigameClue extends CustomClue {
     private int level = 0;
 
     public MinigameClue(float contribution) {
-        super("",contribution);
+        super("", contribution);
     }
 
     public MinigameClue(JsonObject jo) {
@@ -51,7 +51,7 @@ public class MinigameClue extends CustomClue {
     public ITextComponent getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
-        return GuiUtils.translate("clue." + FHMain.MODID + ".minigame.t"+level);
+        return GuiUtils.translate("clue." + FHMain.MODID + ".minigame.t" + level);
     }
 
     @Override
@@ -81,8 +81,9 @@ public class MinigameClue extends CustomClue {
     public void setLevel(int level) {
         this.level = Math.min(Math.max(level, 0), 3);
     }
-	@Override
-	public String getBrief() {
-		return "Complete game level "+this.level;
-	}
+
+    @Override
+    public String getBrief() {
+        return "Complete game level " + this.level;
+    }
 }

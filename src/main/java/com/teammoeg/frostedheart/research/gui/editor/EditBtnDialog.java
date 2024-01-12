@@ -31,17 +31,18 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class EditBtnDialog extends BaseEditDialog {
-public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
-    
-    	
-        new EditBtnDialog(p, l, v,"Select Tag",c,SelectDialog.EDITOR_ITEM_TAGS).open();
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
+
+
+        new EditBtnDialog(p, l, v, "Select Tag", c, SelectDialog.EDITOR_ITEM_TAGS).open();
     };
-	LabeledTextBoxAndBtn box;
+    LabeledTextBoxAndBtn box;
     Button ok;
     Button cancel;
-	public EditBtnDialog(Widget panel, String label, String val,String sel, Consumer<String> onFinished,Editor<String> onbtn) {
-		super(panel);
-		box = new LabeledTextBoxAndBtn(this, label, val, sel, e->onbtn.open(panel,sel,box.getText(),e));
+
+    public EditBtnDialog(Widget panel, String label, String val, String sel, Consumer<String> onFinished, Editor<String> onbtn) {
+        super(panel);
+        box = new LabeledTextBoxAndBtn(this, label, val, sel, e -> onbtn.open(panel, sel, box.getText(), e));
         ok = new SimpleTextButton(this, GuiUtils.str("OK"), Icon.EMPTY) {
 
             @Override
@@ -65,25 +66,23 @@ public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
         };
         cancel.setSize(300, 20);
         ok.setSize(300, 20);
-	}
-	public EditBtnDialog(Widget panel, String label, String val,String sel, Consumer<String> onFinished,Function<String,String> onbtn) {
-		this(panel,label,val,sel,onFinished,(p,l,v,c)->c.accept(onbtn.apply(v)));
+    }
 
-	}
-	   
+    public EditBtnDialog(Widget panel, String label, String val, String sel, Consumer<String> onFinished, Function<String, String> onbtn) {
+        this(panel, label, val, sel, onFinished, (p, l, v, c) -> c.accept(onbtn.apply(v)));
 
-	
+    }
 
 
-	    @Override
-	    public void onClose() {
-	    }
+    @Override
+    public void onClose() {
+    }
 
-	    @Override
-	    public void addWidgets() {
+    @Override
+    public void addWidgets() {
 
-	        add(box);
-	        add(ok);
-	        add(cancel);
-	    }
+        add(box);
+        add(ok);
+        add(cancel);
+    }
 }

@@ -32,27 +32,28 @@ import java.util.List;
 
 public class CannedFoodItem extends FHBaseItem {
 
-	boolean showtt=true;
+    boolean showtt = true;
+
     public CannedFoodItem(String name, Properties properties) {
         super(name, properties);
     }
 
     public CannedFoodItem(String name, Properties properties, boolean showtt) {
-		super(name, properties);
-		this.showtt = showtt;
-	}
+        super(name, properties);
+        this.showtt = showtt;
+    }
 
-	@Override
+    @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
-        entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e->e.reduceLevel(this.getFood().getHealing()));
+        entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e -> e.reduceLevel(this.getFood().getHealing()));
         return itemstack;
     }
 
-	@Override
-	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-		if(showtt)
-			tooltip.add(GuiUtils.translateTooltip("canned_food"));
-	}
+    @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        if (showtt)
+            tooltip.add(GuiUtils.translateTooltip("canned_food"));
+    }
 
 }

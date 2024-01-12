@@ -29,22 +29,22 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntity {
 
-	protected PlayerEntityMixin(EntityType<? extends LivingEntity> type, World worldIn) {
-		super(type, worldIn);
-	}
+    protected PlayerEntityMixin(EntityType<? extends LivingEntity> type, World worldIn) {
+        super(type, worldIn);
+    }
 
-	@Inject(at = @At("HEAD"), method = "dropInventory")
-	public void fh$dropInventory(CallbackInfo cbi) {
-		super.dropInventory();
-		if (((Object)this) instanceof FakePlayer)
-			return;
-		DeathInventoryData dit = DeathInventoryData.get((PlayerEntity) ((Object)this));
-		dit.startClone();
-	}
-
+    @Inject(at = @At("HEAD"), method = "dropInventory")
+    public void fh$dropInventory(CallbackInfo cbi) {
+        super.dropInventory();
+        if (((Object) this) instanceof FakePlayer)
+            return;
+        DeathInventoryData dit = DeathInventoryData.get((PlayerEntity) ((Object) this));
+        dit.startClone();
+    }
 
 
 }

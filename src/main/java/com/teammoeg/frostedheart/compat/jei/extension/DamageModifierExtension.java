@@ -42,20 +42,20 @@ public class DamageModifierExtension implements ICraftingCategoryExtension {
 
     @Override
     public void setIngredients(IIngredients ingredients) {
-    	ItemStack[] orig=fuel.tool.getMatchingStacks();
-    	ItemStack[] copy=new ItemStack[orig.length];
-    	ItemStack[] out=new ItemStack[orig.length];
-    	for(int i=0;i<orig.length;i++) {
-    		copy[i]=orig[i].copy();
-    		out[i]=orig[i].copy();
-    		if(fuel.modify>0) {
-    			copy[i].setDamage(fuel.modify);
-    			out[i].setDamage(0);
-    		}else {
-    			copy[i].setDamage(0);
-    			out[i].setDamage(fuel.modify);
-    		}
-    	}
+        ItemStack[] orig = fuel.tool.getMatchingStacks();
+        ItemStack[] copy = new ItemStack[orig.length];
+        ItemStack[] out = new ItemStack[orig.length];
+        for (int i = 0; i < orig.length; i++) {
+            copy[i] = orig[i].copy();
+            out[i] = orig[i].copy();
+            if (fuel.modify > 0) {
+                copy[i].setDamage(fuel.modify);
+                out[i].setDamage(0);
+            } else {
+                copy[i].setDamage(0);
+                out[i].setDamage(fuel.modify);
+            }
+        }
         ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(copy), Arrays.asList(fuel.repair.getMatchingStacks())));
         ingredients.setOutputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(out)));
     }

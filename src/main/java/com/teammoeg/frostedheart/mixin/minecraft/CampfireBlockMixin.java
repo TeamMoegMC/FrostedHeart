@@ -77,27 +77,27 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
     @Inject(at = @At("HEAD"), method = "onEntityCollision")
     public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn, CallbackInfo callbackInfo) {
         if (entityIn instanceof ItemEntity) {
-        	ItemEntity item=(ItemEntity) entityIn;
+            ItemEntity item = (ItemEntity) entityIn;
             int rawBurnTime = ForgeHooks.getBurnTime(item.getItem());
             if (worldIn.isRemote && isLit(state) && rawBurnTime > 0)
                 worldIn.addParticle(ParticleTypes.SMOKE, entityIn.getPosX(), entityIn.getPosY() + 0.25D, entityIn.getPosZ(), 0, 0.05D, 0);
             if (!worldIn.isRemote) {
                 if (rawBurnTime > 0) {
                     if (item.getThrowerId() != null && ((ICampfireExtra) worldIn.getTileEntity(pos)).getLifeTime() != -1337) {
-                    	ItemStack is=item.getItem();
-                    	CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
-                    	ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
-                    	int maxcs=(19200-lifeTime.getLifeTime())/rawBurnTime/3;
-                    	int rcs=Math.min(maxcs,is.getCount());
+                        ItemStack is = item.getItem();
+                        CampfireTileEntity tileEntity = (CampfireTileEntity) worldIn.getTileEntity(pos);
+                        ICampfireExtra lifeTime = ((ICampfireExtra) tileEntity);
+                        int maxcs = (19200 - lifeTime.getLifeTime()) / rawBurnTime / 3;
+                        int rcs = Math.min(maxcs, is.getCount());
                         int burnTime = rawBurnTime * 3 * rcs;
-                        ItemStack container=is.getContainerItem();
+                        ItemStack container = is.getContainerItem();
                         is.shrink(rcs);
                         lifeTime.addLifeTime(burnTime);
-                        
-                        if (rcs>0&&!container.isEmpty())
+
+                        if (rcs > 0 && !container.isEmpty())
                             InventoryHelper.spawnItemStack(worldIn, pos.getX(), pos.getY(), pos.getZ(), ItemHandlerHelper.copyStackWithSize(container, rcs));
-                        if(is.getCount()<=0)
-                        	entityIn.remove();
+                        if (is.getCount() <= 0)
+                            entityIn.remove();
                     }
                 }
             }
@@ -116,47 +116,47 @@ public abstract class CampfireBlockMixin extends ContainerBlock {
                 CampfireTileEntity campfiretileentity = (CampfireTileEntity) tileentity;
                 ItemStack itemstack = player.getHeldItem(handIn);
                 Random rand = worldIn.rand;
-                if (!worldIn.isRemote){
-                if (!player.getHeldItemMainhand().isEmpty()) {
-                    if (CampfireBlock.canBeLit(state)) {
-                        if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
-                            player.swingArm(Hand.MAIN_HAND);
-                            if (rand.nextFloat() < 0.33) {
-                                worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
-                            }
-
-                            worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
-
-                            return ActionResultType.SUCCESS;
-                        }
-                    }
-                    Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
-                    if (optional.isPresent()) {
-                        if (ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
-                            player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
-                            return ActionResultType.CONSUME;
-                        }
-                    }
-
-                } else {
-                    ICampfireExtra info = (ICampfireExtra) campfiretileentity;
-                    if (state.get(CampfireBlock.LIT)) {
-                        player.sendStatusMessage(GuiUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
-                    } else if (info.getLifeTime() > 0) {
-                        player.sendStatusMessage(GuiUtils.translateMessage("campfire.ignition"), true);
-                    } else {
-                        player.sendStatusMessage(GuiUtils.translateMessage("campfire.fuel"), true);
-                    }
-                    return ActionResultType.SUCCESS;
-                   }
-            }else {
+                if (!worldIn.isRemote) {
                     if (!player.getHeldItemMainhand().isEmpty()) {
                         if (CampfireBlock.canBeLit(state)) {
                             if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
-                                    for (int i = 0; i < 5; i++) {
-                                        worldIn.addParticle(ParticleTypes.SMOKE, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
-                                    }
-                                    worldIn.addParticle(ParticleTypes.FLAME, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                                player.swingArm(Hand.MAIN_HAND);
+                                if (rand.nextFloat() < 0.33) {
+                                    worldIn.setBlockState(pos, state.with(BlockStateProperties.LIT, Boolean.valueOf(true)), 3);
+                                }
+
+                                worldIn.playSound(null, pos, SoundEvents.BLOCK_STONE_STEP, SoundCategory.BLOCKS, 1.0F, 2F + rand.nextFloat() * 0.4F);
+
+                                return ActionResultType.SUCCESS;
+                            }
+                        }
+                        Optional<CampfireCookingRecipe> optional = campfiretileentity.findMatchingRecipe(itemstack);
+                        if (optional.isPresent()) {
+                            if (ResearchListeners.canUseRecipe(player, optional.get()) && campfiretileentity.addItem(player.abilities.isCreativeMode ? itemstack.copy() : itemstack, optional.get().getCookTime())) {
+                                player.addStat(Stats.INTERACT_WITH_CAMPFIRE);
+                                return ActionResultType.CONSUME;
+                            }
+                        }
+
+                    } else {
+                        ICampfireExtra info = (ICampfireExtra) campfiretileentity;
+                        if (state.get(CampfireBlock.LIT)) {
+                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.remaining", Integer.toString(info.getLifeTime() / 20)), true);
+                        } else if (info.getLifeTime() > 0) {
+                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.ignition"), true);
+                        } else {
+                            player.sendStatusMessage(GuiUtils.translateMessage("campfire.fuel"), true);
+                        }
+                        return ActionResultType.SUCCESS;
+                    }
+                } else {
+                    if (!player.getHeldItemMainhand().isEmpty()) {
+                        if (CampfireBlock.canBeLit(state)) {
+                            if (itemstack.getItem() == Items.FLINT && player.getHeldItemOffhand().getItem() == Items.FLINT) {
+                                for (int i = 0; i < 5; i++) {
+                                    worldIn.addParticle(ParticleTypes.SMOKE, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
+                                }
+                                worldIn.addParticle(ParticleTypes.FLAME, player.getPosX() + player.getLookVec().getX() + rand.nextFloat() * 0.25, player.getPosY() + 0.5f + rand.nextFloat() * 0.25, player.getPosZ() + player.getLookVec().getZ() + rand.nextFloat() * 0.25, 0, 0.01, 0);
                                 return ActionResultType.SUCCESS;
                             }
                         }

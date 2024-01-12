@@ -71,7 +71,7 @@ public class TemperatureUpdate {
 
     /**
      * Perform temperature tick logic
-     *
+     * <p>
      * Updated every 10 ticks (0.5s)
      *
      * @param event fired every tick on player

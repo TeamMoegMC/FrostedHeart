@@ -86,21 +86,21 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
             USE.open(p, l, (EffectUse) v, e -> c.accept(e));
         else if (v instanceof EffectShowCategory)
             CAT.open(p, l, (EffectShowCategory) v, e -> c.accept(e));
-        else if(v instanceof EffectCommand)
-        	COMMAND.open(p,l,(EffectCommand) v,e->c.accept(e));
-        else if(v instanceof EffectExperience)
-        	EXP.open(p,l,(EffectExperience) v,e->c.accept(e));
+        else if (v instanceof EffectCommand)
+            COMMAND.open(p, l, (EffectCommand) v, e -> c.accept(e));
+        else if (v instanceof EffectExperience)
+            EXP.open(p, l, (EffectExperience) v, e -> c.accept(e));
         else
             new EditorSelector<>(p, l, c)
-            	.addEditor("Building", BUILD)
-            	.addEditor("Craft", CRAFT)
-            	.addEditor("Item Reward", ITEM)
-            	.addEditor("Add Stats", STATS)
-            	.addEditor("Add Usage", USE)
-            	.addEditor("Recipe Category", CAT)
-            	.addEditor("Add Command",COMMAND)
-            	.addEditor("Add Experience", EXP)
-            .open();
+                    .addEditor("Building", BUILD)
+                    .addEditor("Craft", CRAFT)
+                    .addEditor("Item Reward", ITEM)
+                    .addEditor("Add Stats", STATS)
+                    .addEditor("Add Usage", USE)
+                    .addEditor("Recipe Category", CAT)
+                    .addEditor("Add Command", COMMAND)
+                    .addEditor("Add Experience", EXP)
+                    .open();
 
     };
 
@@ -321,6 +321,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+
     private static class Command extends EffectEditor<EffectCommand> {
         public Command(Widget panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
             super(panel, lbl, e, cb);
@@ -344,6 +345,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+
     private static class Exp extends EffectEditor<EffectExperience> {
         NumberBox val;
 
@@ -367,7 +369,7 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
 
         @Override
         public void onClose() {
-            e.exp=(int) val.getNum();
+            e.exp = (int) val.getNum();
             super.onClose();
         }
 

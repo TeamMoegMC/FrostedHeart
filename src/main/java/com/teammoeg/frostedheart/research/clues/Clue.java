@@ -54,7 +54,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     String nonce;
     boolean showContribute;
     public Supplier<Research> parent;
-    boolean required=false;
+    boolean required = false;
+
     public float getResearchContribution() {
         return contribution;
     }
@@ -82,8 +83,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             this.hint = jo.get("hint").getAsString();
         this.contribution = jo.get("value").getAsFloat();
         this.nonce = jo.get("id").getAsString();
-        if(jo.has("required"))
-        	this.required=jo.get("required").getAsBoolean();
+        if (jo.has("required"))
+            this.required = jo.get("required").getAsBoolean();
     }
 
     public Clue(PacketBuffer pb) {
@@ -93,7 +94,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
         this.hint = pb.readString();
         this.contribution = pb.readFloat();
         this.nonce = pb.readString();
-        this.required=pb.readBoolean();
+        this.required = pb.readBoolean();
     }
 
     public Clue() {
@@ -160,11 +161,13 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     public ITextComponent getDescription() {
         return FHTextUtil.getOptional(desc, "clue", () -> this.getLId() + ".desc");
     }
-    public String getDescriptionString() {
-    	ITextComponent tc=getDescription();
 
-    	return tc!=null?tc.getString():"";
+    public String getDescriptionString() {
+        ITextComponent tc = getDescription();
+
+        return tc != null ? tc.getString() : "";
     }
+
     public ITextComponent getHint() {
         return FHTextUtil.getOptional(hint, "clue", () -> this.getLId() + ".hint");
     }
@@ -181,8 +184,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             jo.addProperty("hint", hint);
         jo.addProperty("value", contribution);
         jo.addProperty("id", nonce);
-        if(required)
-        	jo.addProperty("required", required);
+        if (required)
+            jo.addProperty("required", required);
         return jo;
     }
 
@@ -258,16 +261,21 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             this.sendProgressPacket(team);
         });
     }
+
     /**
      * Get brief string describe this clue for show in editor.
      *
      * @return brief<br>
      */
     public abstract String getBrief();
+
     public String getBriefDesc() {
-    	return "   "+(this.required?"required ":"")+"+"+(int)(this.contribution*100)+"%";
-    };
-	public boolean isRequired() {
-		return required;
-	}
+        return "   " + (this.required ? "required " : "") + "+" + (int) (this.contribution * 100) + "%";
+    }
+
+    ;
+
+    public boolean isRequired() {
+        return required;
+    }
 }

@@ -36,17 +36,19 @@ public class FileUtil {
             throw e;
         }
     }
+
     public static void transfer(File i, File o) throws IOException {
-    	if(!i.isDirectory()) {
-	        try (FileInputStream fis = new FileInputStream(i)) {
-	            transfer(fis, o);
-	        }
-    	}else {
-    		for(File f:i.listFiles()) {
-    			transfer(i,new File(o,f.getName()));
-    		}
-    	}
+        if (!i.isDirectory()) {
+            try (FileInputStream fis = new FileInputStream(i)) {
+                transfer(fis, o);
+            }
+        } else {
+            for (File f : i.listFiles()) {
+                transfer(i, new File(o, f.getName()));
+            }
+        }
     }
+
     public static void transfer(File i, OutputStream os) throws IOException {
         try (FileInputStream fis = new FileInputStream(i)) {
             transfer(fis, os);

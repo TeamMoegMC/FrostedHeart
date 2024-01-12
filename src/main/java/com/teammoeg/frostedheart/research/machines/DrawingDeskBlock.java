@@ -181,21 +181,19 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
         if (!worldIn.isRemote && handIn == Hand.MAIN_HAND && !player.isSneaking()) {
             if (!player.isCreative() && worldIn.getLight(pos) < 8) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_dark"), true);
-            }
-            else if (!player.isCreative() && Temperature.getBodySmoothed(player) < -0.2) {
+            } else if (!player.isCreative() && Temperature.getBodySmoothed(player) < -0.2) {
                 player.sendStatusMessage(GuiUtils.translateMessage("research.too_cold"), true);
-            }
-            else {
+            } else {
                 if (state.get(IS_NOT_MAIN)) {
                     pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
                 }
                 TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
-                UUID crid=FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity)player).getId();
-                IOwnerTile.trySetOwner(ii,crid);
-                if(crid!=null&&crid.equals(IOwnerTile.getOwner(ii)))
-                	NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
-                else 
-                	player.sendStatusMessage(GuiUtils.translateMessage("research.not_owned"), true);
+                UUID crid = FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) player).getId();
+                IOwnerTile.trySetOwner(ii, crid);
+                if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
+                    NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());
+                else
+                    player.sendStatusMessage(GuiUtils.translateMessage("research.not_owned"), true);
             }
         }
         return ActionResultType.SUCCESS;

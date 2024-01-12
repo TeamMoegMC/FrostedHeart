@@ -26,31 +26,36 @@ import java.util.function.Function;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class JsonSerializerRegistry<U> extends SerializerRegistry<U,JsonObject> {
-	
-	Map<String, Function<JsonObject,U>> fromJson = new HashMap<>();
-	public JsonSerializerRegistry() {
-		super();
-	}
-	public void writeType(JsonObject jo,U obj) {
-		jo.addProperty("type", typeOf(obj));
-	}
-	public U deserialize(JsonElement je) {
-		JsonObject jo = je.getAsJsonObject();
-		Function<JsonObject, U> func=fromJson.get(jo.get("type").getAsString());
-		if(func==null)
-			return null;
-		return func.apply(jo);
-	}
-	public U deserializeOrDefault(JsonElement je,U def) {
-		JsonObject jo = je.getAsJsonObject();
-		Function<JsonObject, U> func=fromJson.get(jo.get("type").getAsString());
-		if(func==null)
-			return def;
-		return func.apply(jo);
-	}
-	@Override
-	protected void putSerializer(String type, Function<JsonObject,U> s) {
-		fromJson.put(type, s);
-	}
+public class JsonSerializerRegistry<U> extends SerializerRegistry<U, JsonObject> {
+
+    Map<String, Function<JsonObject, U>> fromJson = new HashMap<>();
+
+    public JsonSerializerRegistry() {
+        super();
+    }
+
+    public void writeType(JsonObject jo, U obj) {
+        jo.addProperty("type", typeOf(obj));
+    }
+
+    public U deserialize(JsonElement je) {
+        JsonObject jo = je.getAsJsonObject();
+        Function<JsonObject, U> func = fromJson.get(jo.get("type").getAsString());
+        if (func == null)
+            return null;
+        return func.apply(jo);
+    }
+
+    public U deserializeOrDefault(JsonElement je, U def) {
+        JsonObject jo = je.getAsJsonObject();
+        Function<JsonObject, U> func = fromJson.get(jo.get("type").getAsString());
+        if (func == null)
+            return def;
+        return func.apply(jo);
+    }
+
+    @Override
+    protected void putSerializer(String type, Function<JsonObject, U> s) {
+        fromJson.put(type, s);
+    }
 }

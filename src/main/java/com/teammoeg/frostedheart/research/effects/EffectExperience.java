@@ -49,75 +49,76 @@ import net.minecraft.util.text.ITextComponent;
  */
 public class EffectExperience extends Effect {
 
-	int exp;
+    int exp;
 
-	public EffectExperience(int xp) {
-		super();
-		exp=xp;
-	}
+    public EffectExperience(int xp) {
+        super();
+        exp = xp;
+    }
 
-	public EffectExperience(JsonObject jo) {
-		super(jo);
-		exp=jo.get("experience").getAsInt();
-	}
+    public EffectExperience(JsonObject jo) {
+        super(jo);
+        exp = jo.get("experience").getAsInt();
+    }
 
-	public EffectExperience(PacketBuffer pb) {
-		super(pb);
-		exp=pb.readVarInt();
-	}
+    public EffectExperience(PacketBuffer pb) {
+        super(pb);
+        exp = pb.readVarInt();
+    }
 
-	@Override
-	public void init() {
+    @Override
+    public void init() {
 
-	}
+    }
 
-	@Override
-	public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-		if (triggerPlayer == null || isload)
-			return false;
+    @Override
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        if (triggerPlayer == null || isload)
+            return false;
 
-		triggerPlayer.giveExperiencePoints(getRId());
+        triggerPlayer.giveExperiencePoints(getRId());
 
-		return true;
-	}
-	@Override
-	public void revoke(TeamResearchData team) {
+        return true;
+    }
 
-	}
+    @Override
+    public void revoke(TeamResearchData team) {
 
-	@Override
-	public JsonObject serialize() {
-		JsonObject jo = super.serialize();
-		jo.addProperty("experience", exp);
-		return jo;
-	}
+    }
 
-	@Override
-	public void write(PacketBuffer buffer) {
-		super.write(buffer);
-		buffer.writeVarInt(exp);
-	}
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.addProperty("experience", exp);
+        return jo;
+    }
 
-	@Override
-	public FHIcon getDefaultIcon() {
-		return FHIcons.getIcon(Items.EXPERIENCE_BOTTLE);
-	}
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        buffer.writeVarInt(exp);
+    }
 
-	@Override
-	public IFormattableTextComponent getDefaultName() {
-		return GuiUtils.translateGui("effect.exp");
-	}
+    @Override
+    public FHIcon getDefaultIcon() {
+        return FHIcons.getIcon(Items.EXPERIENCE_BOTTLE);
+    }
 
-	@Override
-	public List<ITextComponent> getDefaultTooltip() {
-		List<ITextComponent> tooltip = new ArrayList<>();
-		tooltip.add(GuiUtils.str("+"+exp));
-		return tooltip;
-	}
+    @Override
+    public IFormattableTextComponent getDefaultName() {
+        return GuiUtils.translateGui("effect.exp");
+    }
 
-	@Override
-	public String getBrief() {
-	
-		return "Experience " + exp;
-	}
+    @Override
+    public List<ITextComponent> getDefaultTooltip() {
+        List<ITextComponent> tooltip = new ArrayList<>();
+        tooltip.add(GuiUtils.str("+" + exp));
+        return tooltip;
+    }
+
+    @Override
+    public String getBrief() {
+
+        return "Experience " + exp;
+    }
 }

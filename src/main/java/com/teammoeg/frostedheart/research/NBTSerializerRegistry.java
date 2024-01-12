@@ -27,29 +27,34 @@ import com.google.gson.JsonObject;
 
 import net.minecraft.nbt.CompoundNBT;
 
-public class NBTSerializerRegistry<U> extends SerializerRegistry<U,CompoundNBT> {
-	
-	Map<String, Function<CompoundNBT,U>> fromJson = new HashMap<>();
-	public NBTSerializerRegistry() {
-		super();
-	}
-	public void writeType(JsonObject jo,U obj) {
-		jo.addProperty("type", typeOf(obj));
-	}
-	public U deserialize(CompoundNBT je) {
-		Function<CompoundNBT, U> func=fromJson.get(je.getString("type"));
-		if(func==null)
-			return null;
-		return func.apply(je);
-	}
-	public U deserializeOrDefault(CompoundNBT je,U def) {
-		Function<CompoundNBT, U> func=fromJson.get(je.getString("type"));
-		if(func==null)
-			return def;
-		return func.apply(je);
-	}
-	@Override
-	protected void putSerializer(String type, Function<CompoundNBT,U> s) {
-		fromJson.put(type, s);
-	}
+public class NBTSerializerRegistry<U> extends SerializerRegistry<U, CompoundNBT> {
+
+    Map<String, Function<CompoundNBT, U>> fromJson = new HashMap<>();
+
+    public NBTSerializerRegistry() {
+        super();
+    }
+
+    public void writeType(JsonObject jo, U obj) {
+        jo.addProperty("type", typeOf(obj));
+    }
+
+    public U deserialize(CompoundNBT je) {
+        Function<CompoundNBT, U> func = fromJson.get(je.getString("type"));
+        if (func == null)
+            return null;
+        return func.apply(je);
+    }
+
+    public U deserializeOrDefault(CompoundNBT je, U def) {
+        Function<CompoundNBT, U> func = fromJson.get(je.getString("type"));
+        if (func == null)
+            return def;
+        return func.apply(je);
+    }
+
+    @Override
+    protected void putSerializer(String type, Function<CompoundNBT, U> s) {
+        fromJson.put(type, s);
+    }
 }

@@ -342,9 +342,11 @@ public class ResearchGame {
     public boolean isFinished() {
         return finished;
     }
+
     public boolean isEmpty() {
-        return finished||lvl==-1;
+        return finished || lvl == -1;
     }
+
     public int getLvl() {
         return lvl;
     }

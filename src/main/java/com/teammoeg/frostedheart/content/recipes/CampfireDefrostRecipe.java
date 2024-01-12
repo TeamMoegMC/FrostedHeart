@@ -76,6 +76,7 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
     public IRecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
+
     public static class Serializer extends DefrostRecipe.Serializer<CampfireDefrostRecipe> {
 
         public Serializer() {

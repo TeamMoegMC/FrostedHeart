@@ -22,6 +22,6 @@ package com.teammoeg.frostedheart.trade.policy;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.util.Writeable;
 
-public interface PolicyCondition extends Writeable{
-	boolean test(FHVillagerData ve);
+public interface PolicyCondition extends Writeable {
+    boolean test(FHVillagerData ve);
 }

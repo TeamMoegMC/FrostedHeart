@@ -61,8 +61,8 @@ public class ItemClue extends Clue {
     public ITextComponent getName() {
         if (name != null && !name.isEmpty())
             return super.getName();
-        if(consume)
-        	return GuiUtils.translate("clue." + FHMain.MODID + ".consume_item");
+        if (consume)
+            return GuiUtils.translate("clue." + FHMain.MODID + ".consume_item");
         return GuiUtils.translate("clue." + FHMain.MODID + ".item");
     }
 
@@ -83,12 +83,12 @@ public class ItemClue extends Clue {
     }
 
     public int test(TeamResearchData t, ItemStack stack) {
-    	if(!this.isCompleted(t))
-	        if (this.stack.test(stack)) {
-	            this.setCompleted(t, true);
-	            if (consume)
-	                return this.stack.getCount();
-	        }
+        if (!this.isCompleted(t))
+            if (this.stack.test(stack)) {
+                this.setCompleted(t, true);
+                if (consume)
+                    return this.stack.getCount();
+            }
         return 0;
     }
 
@@ -113,17 +113,18 @@ public class ItemClue extends Clue {
     @Override
     public ITextComponent getDescription() {
         ITextComponent itc = super.getDescription();
-        if (itc != null||stack == null)
+        if (itc != null || stack == null)
             return itc;
         if (stack.hasNoMatchingItems())
             return null;
         return stack.getMatchingStacks()[0].getDisplayName().copyRaw()
                 .appendSibling(new StringTextComponent(" x" + stack.getCount()));
     }
-	@Override
-	public String getBrief() {
-		if(consume)
-			return "Submit item "+getDescriptionString();
-		return "Inspect item "+getDescriptionString();
-	}
+
+    @Override
+    public String getBrief() {
+        if (consume)
+            return "Submit item " + getDescriptionString();
+        return "Inspect item " + getDescriptionString();
+    }
 }

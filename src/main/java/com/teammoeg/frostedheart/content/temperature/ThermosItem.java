@@ -81,13 +81,14 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     final int unit;
     final boolean doAddItems;
     final String lang;
-    public ThermosItem(String name,String lang, int capacity, int unit,boolean add) {
+
+    public ThermosItem(String name, String lang, int capacity, int unit, boolean add) {
         super(new Properties().maxStackSize(1).setNoRepair().maxDamage(capacity).group(FHMain.itemGroup).food(new Food.Builder().hunger(1).saturation(1).build()), capacity);
         this.unit = unit;
         setRegistryName(FHMain.MODID, name);
         FHContent.registeredFHItems.add(this);
-        doAddItems=add;
-        this.lang=lang;
+        doAddItems = add;
+        this.lang = lang;
     }
 
     @Override
@@ -113,10 +114,10 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
                 Fluid f = fs.getFluid();
                 if (f instanceof com.simibubi.create.content.contraptions.fluids.potion.PotionFluid) {
                     for (EffectInstance ei : PotionUtils.getEffectsFromTag(fs.getOrCreateTag()))
-                    	FHUtils.applyEffectTo(ei, entityplayer);
+                        FHUtils.applyEffectTo(ei, entityplayer);
                 } else if (f instanceof PotionFluid) {
                     for (EffectInstance ei : PotionFluid.getType(fs).getEffects())
-                    	FHUtils.applyEffectTo(ei, entityplayer);
+                        FHUtils.applyEffectTo(ei, entityplayer);
                 }
             }
         });
@@ -170,10 +171,10 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     @Override
     public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
         if (this.isInGroup(group)) {
-        	if(!doAddItems) {
-        		super.fillItemGroup(group, items);
-        		return;
-        	}
+            if (!doAddItems) {
+                super.fillItemGroup(group, items);
+                return;
+            }
             ITag<Fluid> tag = FluidTags.getCollection().get(new ResourceLocation(FHMain.MODID, "drink"));
             ResourceLocation hidden = new ResourceLocation(FHMain.MODID, "hidden_drink");
             items.add(new ItemStack(this));
@@ -274,7 +275,7 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
     }
 
     @Override
-    public float getHeat(ItemStack is,float env) {
+    public float getHeat(ItemStack is, float env) {
         LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
         if (ih.isPresent()) {
             IFluidHandlerItem f = ih.resolve().get();
@@ -297,10 +298,10 @@ public class ThermosItem extends ItemFluidContainer implements ITempAdjustFood {
         return -1;
     }
 
-	@Override
-	public String getTranslationKey() {
-		return lang;
-	}
+    @Override
+    public String getTranslationKey() {
+        return lang;
+    }
 
 
 }

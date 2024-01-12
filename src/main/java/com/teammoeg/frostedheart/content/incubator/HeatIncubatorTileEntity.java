@@ -29,76 +29,76 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 
 public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INetworkConsumer {
-	SteamNetworkConsumer network = new SteamNetworkConsumer(80,5);
-	public HeatIncubatorTileEntity() {
-		super(FHTileTypes.INCUBATOR2.get());
-	}
+    SteamNetworkConsumer network = new SteamNetworkConsumer(80, 5);
+
+    public HeatIncubatorTileEntity() {
+        super(FHTileTypes.INCUBATOR2.get());
+    }
 
 
-	@Override
-	public boolean connect(Direction to, int dist) {
-		return network.reciveConnection(world, pos, to,dist);
-	}
+    @Override
+    public boolean connect(Direction to, int dist) {
+        return network.reciveConnection(world, pos, to, dist);
+    }
 
-	@Override
-	public boolean canConnectAt(Direction to) {
-		return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
-	}
+    @Override
+    public boolean canConnectAt(Direction to) {
+        return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
+    }
 
-	@Override
-	public SteamNetworkHolder getHolder() {
-		return network;
-	}
+    @Override
+    public SteamNetworkHolder getHolder() {
+        return network;
+    }
 
-	@Override
-	public void tick() {
-		
-		if(network.tick()) {
-			this.markDirty();
-			this.markContainingBlockForUpdate(null);
-		}
-		super.tick();
-		
-	}
+    @Override
+    public void tick() {
 
-	@Override
-	protected boolean fetchFuel() {
-		
-		
-		if(network.tryDrainHeat(10)) {
-			fuel=fuelMax=400;
-			return true;
-		}
-		
-		return false;
-	}
+        if (network.tick()) {
+            this.markDirty();
+            this.markContainingBlockForUpdate(null);
+        }
+        super.tick();
 
-	@Override
-	protected float getMaxEfficiency() {
-		return 2f;
-	}
+    }
+
+    @Override
+    protected boolean fetchFuel() {
 
 
-	@Override
-	public boolean isStackValid(int i, ItemStack itemStack) {
-		if(i==0)return false;
-		return super.isStackValid(i, itemStack);
-	}
+        if (network.tryDrainHeat(10)) {
+            fuel = fuelMax = 400;
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    protected float getMaxEfficiency() {
+        return 2f;
+    }
 
 
-	@Override
-	public void readCustomNBT(CompoundNBT compound, boolean client) {
-		super.readCustomNBT(compound, client);
-		network.load(compound);
-	}
+    @Override
+    public boolean isStackValid(int i, ItemStack itemStack) {
+        if (i == 0) return false;
+        return super.isStackValid(i, itemStack);
+    }
 
 
-	@Override
-	public void writeCustomNBT(CompoundNBT compound, boolean client) {
-		super.writeCustomNBT(compound, client);
-		network.save(compound);
-	}
+    @Override
+    public void readCustomNBT(CompoundNBT compound, boolean client) {
+        super.readCustomNBT(compound, client);
+        network.load(compound);
+    }
 
+
+    @Override
+    public void writeCustomNBT(CompoundNBT compound, boolean client) {
+        super.writeCustomNBT(compound, client);
+        network.save(compound);
+    }
 
 
 }

@@ -61,18 +61,18 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         new Minigame(p, l, v, c).open();
     };
     public static final Editor<Research> RESEARCH_GAME = (p, l, v, c) -> {
-    	MinigameClue ex=null;
-    	List<Clue> clues=v.getClues();
-    	for(Clue cl:clues) {
-    		if(cl instanceof MinigameClue) {
-    			ex=(MinigameClue) cl;
-    			break;
-    		}
-    	}
-    	final MinigameClue fex=ex;
-        new Minigame(p, l, ex,e->{
-        	if(fex==null)
-        		clues.add(e);
+        MinigameClue ex = null;
+        List<Clue> clues = v.getClues();
+        for (Clue cl : clues) {
+            if (cl instanceof MinigameClue) {
+                ex = (MinigameClue) cl;
+                break;
+            }
+        }
+        final MinigameClue fex = ex;
+        new Minigame(p, l, ex, e -> {
+            if (fex == null)
+                clues.add(e);
         }).open();
     };
     public static final Editor<Clue> EDITOR = (p, l, v, c) -> {
@@ -107,7 +107,8 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     protected LabeledTextBox desc;
     protected LabeledTextBox hint;
     protected RealBox cont;
-    protected  LabeledSelection<Boolean> req;
+    protected LabeledSelection<Boolean> req;
+
     public ClueEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
         super(panel);
 
@@ -140,7 +141,7 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         } else {
             e.nonce = nonce.getText();
         }
-        e.required=req.getSelection();
+        e.required = req.getSelection();
         cb.accept(e);
 
     }

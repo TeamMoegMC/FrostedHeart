@@ -27,14 +27,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Minecraft.class)
 public class MinecraftMPFixMixin {
-	@Inject(at = @At("HEAD"), method = "isMultiplayerEnabled", cancellable = true)
-	public void allowMP(CallbackInfoReturnable<Boolean> callbackInfo) {
-		callbackInfo.setReturnValue(true);
-	}
+    @Inject(at = @At("HEAD"), method = "isMultiplayerEnabled", cancellable = true)
+    public void allowMP(CallbackInfoReturnable<Boolean> callbackInfo) {
+        callbackInfo.setReturnValue(true);
+    }
 
-	@Inject(at = @At("HEAD"), method = "isChatEnabled", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "isChatEnabled", cancellable = true)
 
-	public void allowChat(CallbackInfoReturnable<Boolean> callbackInfo) {
-		callbackInfo.setReturnValue(true);
-	}
+    public void allowChat(CallbackInfoReturnable<Boolean> callbackInfo) {
+        callbackInfo.setReturnValue(true);
+    }
 }

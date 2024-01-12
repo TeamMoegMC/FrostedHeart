@@ -48,102 +48,102 @@ import net.minecraft.util.text.ITextComponent;
  */
 public class EffectCommand extends Effect {
 
-	List<String> rewards;
+    List<String> rewards;
 
-	public EffectCommand(String... cmds) {
-		super();
-		rewards = new ArrayList<>();
+    public EffectCommand(String... cmds) {
+        super();
+        rewards = new ArrayList<>();
 
-		for (String stack : cmds) {
-			rewards.add(stack);
-		}
-	}
+        for (String stack : cmds) {
+            rewards.add(stack);
+        }
+    }
 
-	public EffectCommand(JsonObject jo) {
-		super(jo);
-		rewards = SerializeUtil.parseJsonElmList(jo.get("rewards"), JsonElement::getAsString);
-	}
+    public EffectCommand(JsonObject jo) {
+        super(jo);
+        rewards = SerializeUtil.parseJsonElmList(jo.get("rewards"), JsonElement::getAsString);
+    }
 
-	public EffectCommand(PacketBuffer pb) {
-		super(pb);
-		rewards = SerializeUtil.readList(pb, PacketBuffer::readString);
-	}
+    public EffectCommand(PacketBuffer pb) {
+        super(pb);
+        rewards = SerializeUtil.readList(pb, PacketBuffer::readString);
+    }
 
-	@Override
-	public void init() {
+    @Override
+    public void init() {
 
-	}
+    }
 
-	@Override
-	public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-		if (triggerPlayer == null || isload)
-			return false;
+    @Override
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        if (triggerPlayer == null || isload)
+            return false;
 
-		Map<String, Object> overrides = new HashMap<>();
-		overrides.put("p", triggerPlayer.getGameProfile().getName());
+        Map<String, Object> overrides = new HashMap<>();
+        overrides.put("p", triggerPlayer.getGameProfile().getName());
 
-		BlockPos pos = triggerPlayer.getPosition();
-		overrides.put("x", pos.getX());
-		overrides.put("y", pos.getY());
-		overrides.put("z", pos.getZ());
+        BlockPos pos = triggerPlayer.getPosition();
+        overrides.put("x", pos.getX());
+        overrides.put("y", pos.getY());
+        overrides.put("z", pos.getZ());
 
-		overrides.put("t", team.getTeam().get().getStringID());
-		Commands cmds = FHResearchDataManager.server.getCommandManager();
-		CommandSource source = FHResearchDataManager.server.getCommandSource();
-		for (String s : rewards) {
+        overrides.put("t", team.getTeam().get().getStringID());
+        Commands cmds = FHResearchDataManager.server.getCommandManager();
+        CommandSource source = FHResearchDataManager.server.getCommandSource();
+        for (String s : rewards) {
 
-			for (Map.Entry<String, Object> entry : overrides.entrySet()) {
-				if (entry.getValue() != null) {
-					s = s.replace("@" + entry.getKey(), entry.getValue().toString());
-				}
-			}
+            for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+                if (entry.getValue() != null) {
+                    s = s.replace("@" + entry.getKey(), entry.getValue().toString());
+                }
+            }
 
-			cmds.handleCommand(source, s);
-		}
+            cmds.handleCommand(source, s);
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	// We dont redo command, it's not possible
-	@Override
-	public void revoke(TeamResearchData team) {
+    // We dont redo command, it's not possible
+    @Override
+    public void revoke(TeamResearchData team) {
 
-	}
+    }
 
-	@Override
-	public JsonObject serialize() {
-		JsonObject jo = super.serialize();
-		jo.add("rewards", SerializeUtil.toJsonList(rewards,JsonPrimitive::new));
-		return jo;
-	}
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.add("rewards", SerializeUtil.toJsonList(rewards, JsonPrimitive::new));
+        return jo;
+    }
 
-	@Override
-	public void write(PacketBuffer buffer) {
-		super.write(buffer);
-		SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeString);
-	}
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeString);
+    }
 
-	@Override
-	public FHIcon getDefaultIcon() {
-		return FHIcons.getIcon(Blocks.COMMAND_BLOCK);
-	}
+    @Override
+    public FHIcon getDefaultIcon() {
+        return FHIcons.getIcon(Blocks.COMMAND_BLOCK);
+    }
 
-	@Override
-	public IFormattableTextComponent getDefaultName() {
-		return GuiUtils.translateGui("effect.command");
-	}
+    @Override
+    public IFormattableTextComponent getDefaultName() {
+        return GuiUtils.translateGui("effect.command");
+    }
 
-	@Override
-	public List<ITextComponent> getDefaultTooltip() {
-		List<ITextComponent> tooltip = new ArrayList<>();
-		return tooltip;
-	}
+    @Override
+    public List<ITextComponent> getDefaultTooltip() {
+        List<ITextComponent> tooltip = new ArrayList<>();
+        return tooltip;
+    }
 
-	@Override
-	public String getBrief() {
-		if (rewards.isEmpty())
-			return "No Command";
+    @Override
+    public String getBrief() {
+        if (rewards.isEmpty())
+            return "No Command";
 
-		return "Command " + rewards.get(0) + (rewards.size() > 1 ? " ..." : "");
-	}
+        return "Command " + rewards.get(0) + (rewards.size() > 1 ? " ..." : "");
+    }
 }

@@ -56,16 +56,16 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     @Override
     public void tick() {
         if (this.world != null && !this.world.isRemote) {
-        	int val=input.drain(1000, FluidAction.EXECUTE).getAmount();
-        	if(val>0) {
-            	if(!this.getIsActive()) {
-                	this.setActive(true);
+            int val = input.drain(1000, FluidAction.EXECUTE).getAmount();
+            if (val > 0) {
+                if (!this.getIsActive()) {
+                    this.setActive(true);
                 }
-            	this.markContainingBlockForUpdate(null);
-            	this.markDirty();
-            }else if(this.getIsActive())
+                this.markContainingBlockForUpdate(null);
+                this.markDirty();
+            } else if (this.getIsActive())
                 this.setActive(false);
-            
+
         }
     }
 

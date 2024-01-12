@@ -35,27 +35,30 @@ import java.util.function.Consumer;
 public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
     public T1GeneratorTileEntity.GeneratorUIData guiData = new T1GeneratorTileEntity.GeneratorUIData();
     public boolean hasFuel;
+
     public T1GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false);
     }
 
 
+    @Override
+    protected void tickFuel() {
+        this.hasFuel = !this.getInventory().get(INPUT_SLOT).isEmpty();
+        super.tickFuel();
+    }
 
-	@Override
-	protected void tickFuel() {
-		this.hasFuel=!this.getInventory().get(INPUT_SLOT).isEmpty();
-		super.tickFuel();
-	}
-	@Override
-	public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-		super.readCustomNBT(nbt, descPacket);
-		hasFuel=nbt.getBoolean("hasFuel");
-	}
-	@Override
-	public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-		super.writeCustomNBT(nbt, descPacket);
-		nbt.putBoolean("hasFuel", hasFuel);
-	}
+    @Override
+    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.readCustomNBT(nbt, descPacket);
+        hasFuel = nbt.getBoolean("hasFuel");
+    }
+
+    @Override
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.writeCustomNBT(nbt, descPacket);
+        nbt.putBoolean("hasFuel", hasFuel);
+    }
+
     @Override
     protected void tickEffects(boolean isActive) {
         if (isActive) {
@@ -63,33 +66,35 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
             Random random = world.rand;
             if (random.nextFloat() < 0.2F) {
                 //for (int i = 0; i < random.nextInt(2) + 2; ++i) {
-                    ClientUtils.spawnSmokeParticles(world, blockpos.offset(Direction.UP, 1));
-                    ClientUtils.spawnSmokeParticles(world, blockpos);
-                    ClientUtils.spawnFireParticles(world, blockpos);
+                ClientUtils.spawnSmokeParticles(world, blockpos.offset(Direction.UP, 1));
+                ClientUtils.spawnSmokeParticles(world, blockpos);
+                ClientUtils.spawnFireParticles(world, blockpos);
                 //}
             }
         }
     }
 
-	@Override
-	public void shutdownTick() {
-		boolean invState=!this.getInventory().get(INPUT_SLOT).isEmpty();
-		if(invState!=hasFuel) {
-			hasFuel=invState;
-			this.markContainingBlockForUpdate(null);
-		}
-		
-	}
     @Override
-	public void tickHeat() {
-		super.tickHeat();
-		this.setTemperatureLevel(getHeated()/100F);
-    	this.setRangeLevel(1);
-	}
+    public void shutdownTick() {
+        boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty();
+        if (invState != hasFuel) {
+            hasFuel = invState;
+            this.markContainingBlockForUpdate(null);
+        }
+
+    }
+
+    @Override
+    public void tickHeat() {
+        super.tickHeat();
+        this.setTemperatureLevel(getHeated() / 100F);
+        this.setRangeLevel(1);
+    }
+
     @Override
     public int getUpperBound() {
         int distanceToTowerTop = 2;
-        int extra = MathHelper.ceil (getRangeLevel()*2);
+        int extra = MathHelper.ceil(getRangeLevel() * 2);
         return distanceToTowerTop + extra;
     }
 
@@ -101,10 +106,9 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     }
 
 
-
-	@Override
-	protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
-		if (te instanceof T1GeneratorTileEntity)
-			consumer.accept((T1GeneratorTileEntity) te);
-	}
+    @Override
+    protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
+        if (te instanceof T1GeneratorTileEntity)
+            consumer.accept((T1GeneratorTileEntity) te);
+    }
 }

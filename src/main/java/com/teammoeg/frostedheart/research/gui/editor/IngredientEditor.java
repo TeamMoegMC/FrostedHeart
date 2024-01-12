@@ -155,6 +155,7 @@ public class IngredientEditor extends BaseEditDialog {
         new EditListDialog<>(p, l, v, null, EDITOR, IngredientEditor::getDesc, FHIcons::getIcon, e -> c.accept(new ArrayList<>(e))).open();
 
     };
+
     private static String getText(IItemList li) {
         if (li instanceof TagList) {
             try {

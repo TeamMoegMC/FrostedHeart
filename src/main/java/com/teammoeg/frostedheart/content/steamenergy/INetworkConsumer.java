@@ -25,19 +25,19 @@ import net.minecraft.util.Direction;
 /**
  * Interface INetworkConsumer.
  * For any heat powered device
- * 
  */
 public interface INetworkConsumer {
-    
+
     /**
      * Recived Connection from any heat provider.<br>
      * Usually you should call reciveConnection of your holder
-     * @param d the direction connection from<br>
+     *
+     * @param d        the direction connection from<br>
      * @param distance the distance<br>
      * @return true, if connected
      */
     boolean connect(Direction d, int distance);
-    
+
 
     /**
      * Check can recive connect from direction.<br>
@@ -46,18 +46,19 @@ public interface INetworkConsumer {
      * @return true, if can recive connect from direction
      */
     boolean canConnectAt(Direction to);
-    
+
     /**
      * Try to connect at.<br>
      * Provider should use this to connect to devices
-     * @param d the d<br>
+     *
+     * @param d        the d<br>
      * @param distance the distance<br>
      * @return true, if
      */
     default boolean tryConnectAt(Direction d, int distance) {
-    	if(canConnectAt(d))
-    		return connect(d,distance);
-    	return false;
+        if (canConnectAt(d))
+            return connect(d, distance);
+        return false;
     }
 
     /**

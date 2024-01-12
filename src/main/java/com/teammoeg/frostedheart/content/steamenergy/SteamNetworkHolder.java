@@ -27,18 +27,24 @@ import net.minecraft.world.World;
 
 /**
  * Class SteamNetworkHolder.
- *
+ * <p>
  * Power network connector interface.
  */
 public class SteamNetworkHolder {
-    
-    /** The main network.<br> */
+
+    /**
+     * The main network.<br>
+     */
     SteamEnergyNetwork sen;
-    
-    /** The distance.<br> */
+
+    /**
+     * The distance.<br>
+     */
     protected int dist;
-    
-    /** The counter.<br> */
+
+    /**
+     * The counter.<br>
+     */
     protected int counter;
 
     /**
@@ -46,29 +52,29 @@ public class SteamNetworkHolder {
      */
     public SteamNetworkHolder() {
     }
-    
+
     /**
      * Recive connection from specific direction.<br>
      *
-     * @param w the world of reciver<br>
-     * @param pos the position of reciver<br>
+     * @param w    the world of reciver<br>
+     * @param pos  the position of reciver<br>
      * @param from the direction connection from<br>
      * @param dist the distance<br>
      * @return true, if connected
      */
-    public boolean reciveConnection(World w,BlockPos pos,Direction from,int dist) {
-    	TileEntity te = Utils.getExistingTileEntity(w, pos.offset(from));
+    public boolean reciveConnection(World w, BlockPos pos, Direction from, int dist) {
+        TileEntity te = Utils.getExistingTileEntity(w, pos.offset(from));
         if (te instanceof EnergyNetworkProvider) {
             this.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
             return true;
         }
         return false;
     }
-    
+
     /**
      * Recive Connection.
      *
-     * @param sen the network<br>
+     * @param sen  the network<br>
      * @param dist the distance to master<br>
      */
     void connect(SteamEnergyNetwork sen, int dist) {
@@ -81,32 +87,33 @@ public class SteamNetworkHolder {
      * Tick for revalidate network.
      */
     public boolean tick() {
-    	if(!isValid())return false;
-    	if(counter>0)
-    		counter--;
-    	else{
-        	counter=0;
+        if (!isValid()) return false;
+        if (counter > 0)
+            counter--;
+        else {
+            counter = 0;
             this.sen = null;
             this.dist = Integer.MAX_VALUE;
         }
-    	return false;
+        return false;
     }
-    
+
     /**
      * Try drain heat from network.<br>
      * If no such power to drain, nothing would be drained
+     *
      * @param val the power to drain<br>
      * @return true, if the power actually drained
      */
     public boolean tryDrainHeat(float val) {
-    	if (!isValid())return false;
-    	if(sen.hasEnoughHeat(val)) {
-    		sen.drainHeat(val);
-    		return true;
-    	}
-    	return false;
+        if (!isValid()) return false;
+        if (sen.hasEnoughHeat(val)) {
+            sen.drainHeat(val);
+            return true;
+        }
+        return false;
     }
-    
+
     /**
      * Drain heat from network.<br>
      *
@@ -154,15 +161,17 @@ public class SteamNetworkHolder {
     public int getDistance() {
         return dist;
     }
+
     /**
      * get Heat network controller(Generator etc)
+     *
      * @return heat controller
-     * */
+     */
     public HeatController getController() {
-		return sen.getController();
-	}
+        return sen.getController();
+    }
 
-	/**
+    /**
      * To string.<br>
      *
      * @return returns to string

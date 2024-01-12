@@ -62,7 +62,8 @@ public class TechIcons {
     public static final Icon Background = ALL.withUV(0, 0, 387, 203, 512, 512);
     public static final Color4I text = Color4I.rgb(0x474139);
     public static final Color4I text_red = Color4I.rgb(0xa92b0d);
-    public static final Map<String,Icon> internals=new HashMap<>();
+    public static final Map<String, Icon> internals = new HashMap<>();
+
     static {
         BUTTON_FRAME.updateParts();
         SLIDER_FRAME.updateParts();

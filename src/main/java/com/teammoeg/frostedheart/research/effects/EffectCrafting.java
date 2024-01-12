@@ -75,7 +75,7 @@ public class EffectCrafting extends Effect {
     }
 
     private void initItem() {
-    	unlocks.clear();
+        unlocks.clear();
         for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
             if (r.getRecipeOutput().getItem().equals(this.item)) {
                 unlocks.add(r);
@@ -84,24 +84,26 @@ public class EffectCrafting extends Effect {
     }
 
     private void initStack() {
-    	unlocks.clear();
+        unlocks.clear();
         for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
             if (r.getRecipeOutput().equals(item)) {
                 unlocks.add(r);
             }
         }
     }
-	@Override
-	public void reload() {
-		if(item!=null) {
-			initItem();
-		}else if(itemStack!=null) {
-			initStack();
-		}else {
-			unlocks.replaceAll(o->FHResearchDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
-			unlocks.removeIf(o->o==null);
-		}
-	}
+
+    @Override
+    public void reload() {
+        if (item != null) {
+            initItem();
+        } else if (itemStack != null) {
+            initStack();
+        } else {
+            unlocks.replaceAll(o -> FHResearchDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
+            unlocks.removeIf(o -> o == null);
+        }
+    }
+
     public EffectCrafting(ResourceLocation recipe) {
         super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
         Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(recipe);
@@ -256,14 +258,15 @@ public class EffectCrafting extends Effect {
             return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
         return "Craft nothing";
     }
+
     @OnlyIn(Dist.CLIENT)
-	@Override
-	public void onClick() {
-		if(!this.isGranted())return;
-		if(item!=null)
-			JEICompat.showJEIFor(new ItemStack(item));
-		else if(itemStack!=null)
-			JEICompat.showJEIFor(itemStack);
-	}
+    @Override
+    public void onClick() {
+        if (!this.isGranted()) return;
+        if (item != null)
+            JEICompat.showJEIFor(new ItemStack(item));
+        else if (itemStack != null)
+            JEICompat.showJEIFor(itemStack);
+    }
 
 }

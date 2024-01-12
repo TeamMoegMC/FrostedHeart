@@ -105,10 +105,11 @@ public class KillClue extends ListenerClue {
         super.write(buffer);
         buffer.writeRegistryIdUnsafe(ForgeRegistries.ENTITIES, type);
     }
-	@Override
-	public String getBrief() {
-		return "Kill "+getDescriptionString();
-	}
+
+    @Override
+    public String getBrief() {
+        return "Kill " + getDescriptionString();
+    }
 
 
 }

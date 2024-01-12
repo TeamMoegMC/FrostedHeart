@@ -23,15 +23,16 @@ import com.cannolicatfish.rankine.events.handlers.common.EntityInteractHandler;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+
 @Mixin(EntityInteractHandler.class)
 public class EntityInteractHandlerMixin {
-	/**
-	 * @author khjxiaogu
-	 * @param event 
-	 * @reason cancel rankine breed
-	 * */
-	@Overwrite(remap=false)
-	public static void onBreedEvent( PlayerInteractEvent.EntityInteract event) {
-		
-	}
+    /**
+     * @param event
+     * @author khjxiaogu
+     * @reason cancel rankine breed
+     */
+    @Overwrite(remap = false)
+    public static void onBreedEvent(PlayerInteractEvent.EntityInteract event) {
+
+    }
 }

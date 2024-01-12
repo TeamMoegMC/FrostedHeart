@@ -33,49 +33,50 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 @Mixin(PigEntity.class)
-public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedStore{
-	protected RabbitEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
-		super(type, worldIn);
-	}
+public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedStore {
+    protected RabbitEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
+        super(type, worldIn);
+    }
 
 
-	byte feeded = 0;
+    byte feeded = 0;
 
 
-	@Inject(at = @At("HEAD"), method = "writeAdditional")
-	public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-		compound.putByte("feed_stored", feeded);
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        compound.putByte("feed_stored", feeded);
 
-	}
+    }
 
-	@Inject(at = @At("HEAD"), method = "writeAdditional")
-	public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
-		feeded = compound.getByte("feed_stored");
-	}
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        feeded = compound.getByte("feed_stored");
+    }
 
 
-	@Override
-	public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
-		ItemStack itemstack = playerIn.getHeldItem(hand);
+    @Override
+    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
+        ItemStack itemstack = playerIn.getHeldItem(hand);
 
-		if (!this.isChild() && !itemstack.isEmpty() && isBreedingItem(itemstack)) {
-			if (feeded < 2) {
-				feeded++;
-				if (!this.world.isRemote)
-					this.consumeItemFromStack(playerIn, itemstack);
-				return ActionResultType.func_233537_a_(this.world.isRemote);
-			}
-		}
-		return super.getEntityInteractionResult(playerIn, hand);
-	}
+        if (!this.isChild() && !itemstack.isEmpty() && isBreedingItem(itemstack)) {
+            if (feeded < 2) {
+                feeded++;
+                if (!this.world.isRemote)
+                    this.consumeItemFromStack(playerIn, itemstack);
+                return ActionResultType.func_233537_a_(this.world.isRemote);
+            }
+        }
+        return super.getEntityInteractionResult(playerIn, hand);
+    }
 
-	@Override
-	public boolean consumeFeed() {
-		if(feeded>0) {
-			feeded--;
-			return true;
-		}
-		return false;
-	}
+    @Override
+    public boolean consumeFeed() {
+        if (feeded > 0) {
+            feeded--;
+            return true;
+        }
+        return false;
+    }
 }

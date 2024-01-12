@@ -42,7 +42,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
 
-public class ResearchData implements VariantProvider{
+public class ResearchData implements VariantProvider {
 
     boolean active;// is all items fulfilled?
     boolean finished;
@@ -50,13 +50,15 @@ public class ResearchData implements VariantProvider{
     int level;
     private long committed;// points committed
     final TeamResearchData parent;
-    private Map<Integer,IClueData> data=new HashMap<>();
-	@Override
-	public Double get(String k) {
-		if(k.equals("level"))
-			return (double) level;
-		return null;
-	}
+    private Map<Integer, IClueData> data = new HashMap<>();
+
+    @Override
+    public Double get(String k) {
+        if (k.equals("level"))
+            return (double) level;
+        return null;
+    }
+
     public ResearchData(Supplier<Research> r, TeamResearchData parent) {
         this.rs = r;
         this.parent = parent;
@@ -76,43 +78,45 @@ public class ResearchData implements VariantProvider{
         for (Clue ac : r.getClues())
             if (ac.isCompleted(parent))
                 contribution += ac.getResearchContribution();
-        if(contribution>=0.999)
-        	return r.getRequiredPoints();
+        if (contribution >= 0.999)
+            return r.getRequiredPoints();
         currentProgress += contribution * r.getRequiredPoints();
-        return Math.min(currentProgress,r.getRequiredPoints());
+        return Math.min(currentProgress, r.getRequiredPoints());
     }
 
     public long commitPoints(long pts) {
-        if (!active||finished)
+        if (!active || finished)
             return pts;
         long tocommit = Math.min(pts, getResearch().getRequiredPoints() - committed);
-        if(tocommit>0) {
-	        committed += tocommit;
-	        checkComplete();
-	        return pts - tocommit;
+        if (tocommit > 0) {
+            committed += tocommit;
+            checkComplete();
+            return pts - tocommit;
         }
-		return pts;
+        return pts;
     }
+
     public boolean canComplete() {
-    	for(Clue cl:getResearch().getClues()) {
-        	if(cl.isRequired()&&!cl.isCompleted(parent)) {
-        		return false;
-        	}
+        for (Clue cl : getResearch().getClues()) {
+            if (cl.isRequired() && !cl.isCompleted(parent)) {
+                return false;
+            }
         }
-    	return true;
+        return true;
     }
+
     public void checkComplete() {
         if (finished)
             return;
         Research r = getResearch();
-        boolean flag=true;
-        for(Clue cl:r.getClues()) {
-        	if(cl.isRequired()&&!cl.isCompleted(parent)) {
-        		flag=false;
-        		break;
-        	}
+        boolean flag = true;
+        for (Clue cl : r.getClues()) {
+            if (cl.isRequired() && !cl.isCompleted(parent)) {
+                flag = false;
+                break;
+            }
         }
-        if (getTotalCommitted() >= r.getRequiredPoints()&&flag) {
+        if (getTotalCommitted() >= r.getRequiredPoints() && flag) {
             setFinished(true);
             this.announceCompletion();
 
@@ -129,11 +133,11 @@ public class ResearchData implements VariantProvider{
     public void setFinished(boolean finished) {
         this.finished = finished;
         if (finished) {
-        	data.clear();
+            data.clear();
             Research r = rs.get();
             parent.clearCurrentResearch(r);
             r.grantEffects(parent, null);
-            
+
         }
     }
 
@@ -155,12 +159,12 @@ public class ResearchData implements VariantProvider{
 
     public void write(PacketBuffer pb) {
         pb.writeVarLong(committed);
-        SerializeUtil.writeBooleans(pb, active,finished);
+        SerializeUtil.writeBooleans(pb, active, finished);
     }
 
     public void read(PacketBuffer pb) {
         committed = pb.readVarLong();
-        boolean[] bs=SerializeUtil.readBooleans(pb);
+        boolean[] bs = SerializeUtil.readBooleans(pb);
         active = bs[0];
         finished = bs[1];
     }
@@ -170,9 +174,9 @@ public class ResearchData implements VariantProvider{
         cnbt.putLong("committed", committed);
         cnbt.putBoolean("active", active);
         cnbt.putBoolean("finished", finished);
-        if(level>0)
-        	cnbt.putInt("level", level);
-        cnbt.put("clues",SerializeUtil.toNBTList(data.entrySet(),t->CompoundBuilder.create().put("id",t.getKey()).put("data",t.getValue().serialize()).build()));
+        if (level > 0)
+            cnbt.putInt("level", level);
+        cnbt.put("clues", SerializeUtil.toNBTList(data.entrySet(), t -> CompoundBuilder.create().put("id", t.getKey()).put("data", t.getValue().serialize()).build()));
         // cnbt.putInt("research",getResearch().getRId());
         return cnbt;
 
@@ -182,11 +186,11 @@ public class ResearchData implements VariantProvider{
         committed = cn.getLong("committed");
         active = cn.getBoolean("active");
         finished = cn.getBoolean("finished");
-        if(cn.contains("level"))
-        	level=cn.getInt("level");
+        if (cn.contains("level"))
+            level = cn.getInt("level");
         data.clear();
-        cn.getList("clues",10).stream().map(t->(CompoundNBT)t).forEach(e->{
-        	data.put(e.getInt("id"),ClueDatas.serializers.deserialize(e.getCompound("data")));
+        cn.getList("clues", 10).stream().map(t -> (CompoundNBT) t).forEach(e -> {
+            data.put(e.getInt("id"), ClueDatas.serializers.deserialize(e.getCompound("data")));
         });
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
@@ -226,7 +230,7 @@ public class ResearchData implements VariantProvider{
 
     public boolean commitItem(ServerPlayerEntity player) {
         Research research = getResearch();
-        if(research.isInCompletable())return false;
+        if (research.isInCompletable()) return false;
         for (Research par : research.getParents()) {
             if (!parent.getData(par).isCompleted()) {
                 return false;
@@ -288,120 +292,121 @@ public class ResearchData implements VariantProvider{
         return getTotalCommitted() * 1f / getResearch().getRequiredPoints();
     }
 
-	public int getLevel() {
-		return level;
-	}
+    public int getLevel() {
+        return level;
+    }
 
-	public void setLevel(int level) {
-		this.level = level;
-	}
-	public static final ResearchData EMPTY=new ResearchData(null,null) {
+    public void setLevel(int level) {
+        this.level = level;
+    }
 
-		@Override
-		public long getCommitted() {
-			return 0;
-		}
+    public static final ResearchData EMPTY = new ResearchData(null, null) {
 
-		@Override
-		public long getTotalCommitted() {
-			return 0;
-		}
+        @Override
+        public long getCommitted() {
+            return 0;
+        }
 
-		@Override
-		public long commitPoints(long pts) {
-			return pts;
-		}
+        @Override
+        public long getTotalCommitted() {
+            return 0;
+        }
 
-		@Override
-		public boolean canComplete() {
-			return false;
-		}
+        @Override
+        public long commitPoints(long pts) {
+            return pts;
+        }
 
-		@Override
-		public void checkComplete() {
-		}
+        @Override
+        public boolean canComplete() {
+            return false;
+        }
 
-		@Override
-		public void announceCompletion() {
-		}
+        @Override
+        public void checkComplete() {
+        }
 
-		@Override
-		public void setFinished(boolean finished) {
-		}
+        @Override
+        public void announceCompletion() {
+        }
 
-		@Override
-		public void sendProgressPacket() {
-		}
+        @Override
+        public void setFinished(boolean finished) {
+        }
 
-		@Override
-		public Research getResearch() {
-			return null;
-		}
+        @Override
+        public void sendProgressPacket() {
+        }
 
-		@Override
-		public void write(PacketBuffer pb) {
-			super.write(pb);
-		}
+        @Override
+        public Research getResearch() {
+            return null;
+        }
 
-		@Override
-		public void read(PacketBuffer pb) {
-			super.read(pb);
-		}
+        @Override
+        public void write(PacketBuffer pb) {
+            super.write(pb);
+        }
 
-		@Override
-		public CompoundNBT serialize() {
-			return super.serialize();
-		}
+        @Override
+        public void read(PacketBuffer pb) {
+            super.read(pb);
+        }
 
-		@Override
-		public void deserialize(CompoundNBT cn) {
-			super.deserialize(cn);
-		}
+        @Override
+        public CompoundNBT serialize() {
+            return super.serialize();
+        }
 
-		@Override
-		public boolean isCompleted() {
-			return false;
-		}
+        @Override
+        public void deserialize(CompoundNBT cn) {
+            super.deserialize(cn);
+        }
 
-		@Override
-		public boolean isInProgress() {
-			return false;
-		}
+        @Override
+        public boolean isCompleted() {
+            return false;
+        }
 
-		@Override
-		public boolean canResearch() {
-			return false;
-		}
+        @Override
+        public boolean isInProgress() {
+            return false;
+        }
 
-		@Override
-		public boolean isUnlocked() {
-			return false;
-		}
+        @Override
+        public boolean canResearch() {
+            return false;
+        }
 
-		@Override
-		public boolean commitItem(ServerPlayerEntity player) {
-			return false;
-		}
+        @Override
+        public boolean isUnlocked() {
+            return false;
+        }
 
-		@Override
-		public void setActive() {
-		}
+        @Override
+        public boolean commitItem(ServerPlayerEntity player) {
+            return false;
+        }
 
-		@Override
-		public float getProgress() {
-			return 0;
-		}
+        @Override
+        public void setActive() {
+        }
 
-		@Override
-		public int getLevel() {
-			return 0;
-		}
+        @Override
+        public float getProgress() {
+            return 0;
+        }
 
-		@Override
-		public void setLevel(int level) {
-		}
-		
-	};
+        @Override
+        public int getLevel() {
+            return 0;
+        }
+
+        @Override
+        public void setLevel(int level) {
+        }
+
+    };
 
 
 }

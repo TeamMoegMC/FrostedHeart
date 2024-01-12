@@ -80,16 +80,16 @@ public class FHCropBlock extends CropsBlock {
         if (worldIn.getLightSubtracted(pos, 0) >= 9) {
             int i = this.getAge(state);
             float temp = ChunkHeatData.getTemperature(worldIn, pos);
-            boolean bz=WorldClimate.isBlizzard(worldIn);
-            if (temp < growTemperature||bz) {
-                if ((bz||temp < growTemperature-10)&&worldIn.getRandom().nextInt(3) == 0) {
+            boolean bz = WorldClimate.isBlizzard(worldIn);
+            if (temp < growTemperature || bz) {
+                if ((bz || temp < growTemperature - 10) && worldIn.getRandom().nextInt(3) == 0) {
                     worldIn.setBlockState(pos, this.getDefaultState(), 2);
                 }
-            }else if(temp>WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
-            	if (worldIn.getRandom().nextInt(3) == 0) {
+            } else if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX) {
+                if (worldIn.getRandom().nextInt(3) == 0) {
                     worldIn.setBlockState(pos, this.getDefaultState(), 2);
                 }
-            }else  if (i < this.getMaxAge()) {
+            } else if (i < this.getMaxAge()) {
                 float f = getGrowthChance(this, worldIn, pos);
                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt((int) (25.0F / f) + 1) == 0)) {
                     worldIn.setBlockState(pos, this.withAge(i + 1), 2);

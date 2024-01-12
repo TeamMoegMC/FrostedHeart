@@ -25,30 +25,30 @@ import net.minecraft.block.Block;
 
 public class FHStress implements IStressValueProvider {
 
-	public FHStress() {
-	}
+    public FHStress() {
+    }
 
-	@Override
-	public double getCapacity(Block arg0) {
-		
-		return 0;
-	}
+    @Override
+    public double getCapacity(Block arg0) {
 
-	@Override
-	public double getImpact(Block arg0) {
-		if(arg0==FHBlocks.mech_calc)return 64;
-		return 0;
-	}
+        return 0;
+    }
 
-	@Override
-	public boolean hasCapacity(Block arg0) {
-		return false;
-	}
+    @Override
+    public double getImpact(Block arg0) {
+        if (arg0 == FHBlocks.mech_calc) return 64;
+        return 0;
+    }
 
-	@Override
-	public boolean hasImpact(Block arg0) {
-		if(arg0==FHBlocks.mech_calc)return true;
-		return false;
-	}
+    @Override
+    public boolean hasCapacity(Block arg0) {
+        return false;
+    }
+
+    @Override
+    public boolean hasImpact(Block arg0) {
+        if (arg0 == FHBlocks.mech_calc) return true;
+        return false;
+    }
 
 }

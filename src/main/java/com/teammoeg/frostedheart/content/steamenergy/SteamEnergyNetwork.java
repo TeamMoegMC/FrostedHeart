@@ -23,25 +23,27 @@ import net.minecraft.tileentity.TileEntity;
 public class SteamEnergyNetwork {
     private HeatController provider;
     private boolean isValid = true;
-    
+
     public HeatController getController() {
-    	return provider;
+        return provider;
     }
+
     public SteamEnergyNetwork(HeatController provider) {
         this.provider = provider;
     }
-    
+
     public boolean hasEnoughHeat(float val) {
-    	return provider.getMaxHeat()>=val;
+        return provider.getMaxHeat() >= val;
     }
+
     public float drainHeat(float val) {
         return provider.drainHeat(val);
     }
-    
+
     public float fillHeat(float val) {
-    	return provider.fillHeat(val);
+        return provider.fillHeat(val);
     }
-    
+
     public float getTemperatureLevel() {
         return provider.getTemperatureLevel();
     }

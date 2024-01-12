@@ -50,7 +50,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean dp) {
         input.readFromNBT(nbt.getCompound("in"));
-        vals=nbt.getInt("burntick");
+        vals = nbt.getInt("burntick");
     }
 
     @Override
@@ -86,16 +86,16 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
                     }
                 }
             }
-            int drained=input.drain(1000, FluidAction.EXECUTE).getAmount();
+            int drained = input.drain(1000, FluidAction.EXECUTE).getAmount();
             if (drained >= 5) {
-            	vals=Math.min(vals+drained/5, 100);
+                vals = Math.min(vals + drained / 5, 100);
             }
-            if(this.getIsActive()) {
-            	vals--;
-            }else if(vals>20){
-            	this.setActive(true);
+            if (this.getIsActive()) {
+                vals--;
+            } else if (vals > 20) {
+                this.setActive(true);
             }
-            if(vals<=0)
+            if (vals <= 0)
                 this.setActive(false);
             this.markContainingBlockForUpdate(null);
         }
