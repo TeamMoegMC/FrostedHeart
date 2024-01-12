@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,21 +14,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.compat.jei;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHBlocks;
@@ -36,20 +25,10 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
-import com.teammoeg.frostedheart.compat.jei.category.ChargerDefrostCategory;
-import com.teammoeg.frostedheart.compat.jei.category.CuttingCategory;
-import com.teammoeg.frostedheart.compat.jei.category.GeneratorFuelCategory;
-import com.teammoeg.frostedheart.compat.jei.category.GeneratorSteamCategory;
-import com.teammoeg.frostedheart.compat.jei.category.IncubatorCategory;
-import com.teammoeg.frostedheart.compat.jei.category.SaunaCategory;
-import com.teammoeg.frostedheart.compat.jei.category.SmokingDefrostCategory;
+import com.teammoeg.frostedheart.compat.jei.category.*;
 import com.teammoeg.frostedheart.compat.jei.extension.DamageModifierExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
-import com.teammoeg.frostedheart.compat.jei.extension.ShapelessCopyDataExtension;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
@@ -60,7 +39,6 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
-import com.teammoeg.frostedheart.content.recipes.ShapelessCopyDataRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
@@ -68,7 +46,6 @@ import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHNBT;
-
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
@@ -77,11 +54,7 @@ import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocus.Mode;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.api.registration.IGuiHandlerRegistration;
-import mezz.jei.api.registration.IRecipeCatalystRegistration;
-import mezz.jei.api.registration.IRecipeCategoryRegistration;
-import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
+import mezz.jei.api.registration.*;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.plugins.jei.info.IngredientInfoRecipe;
 import net.minecraft.block.Blocks;
@@ -97,6 +70,11 @@ import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {

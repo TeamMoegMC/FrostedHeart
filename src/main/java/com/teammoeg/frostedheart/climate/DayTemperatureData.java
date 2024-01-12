@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,10 +19,9 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import java.util.Arrays;
-import java.util.BitSet;
-
 import net.minecraft.nbt.CompoundNBT;
+
+import java.util.Arrays;
 
 public class DayTemperatureData {
 	public static class HourData{

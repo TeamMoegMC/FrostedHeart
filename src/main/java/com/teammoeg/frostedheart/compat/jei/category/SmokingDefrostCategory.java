@@ -1,24 +1,23 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
- * This file is part of Immersive Industry.
+ * This file is part of Frosted Heart.
  *
- * Immersive Industry is free software: you can redistribute it and/or modify
+ * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * Immersive Industry is distributed in the hope that it will be useful,
+ * Frosted Heart is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Immersive Industry. If not, see <https://www.gnu.org/licenses/>.
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.compat.jei.category;
-
-import java.util.Arrays;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -28,7 +27,6 @@ import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -45,6 +43,8 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+
+import java.util.Arrays;
 
 public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_smoking");

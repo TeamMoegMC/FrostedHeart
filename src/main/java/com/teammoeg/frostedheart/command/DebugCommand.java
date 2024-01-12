@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -18,20 +18,6 @@
  */
 
 package com.teammoeg.frostedheart.command;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,7 +38,6 @@ import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.thermopolium.items.StewItem;
-
 import dev.ftb.mods.ftbchunks.data.FTBChunksAPI;
 import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
 import dev.ftb.mods.ftbchunks.net.SendChunkPacket;
@@ -78,6 +63,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class DebugCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {

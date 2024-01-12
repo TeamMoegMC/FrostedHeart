@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,22 +19,15 @@
 
 package com.teammoeg.frostedheart.trade.gui;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class RelationSlot extends Widget {
 	Supplier<Integer> toshow;

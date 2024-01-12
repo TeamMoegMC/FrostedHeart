@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,21 +19,11 @@
 
 package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Invoker;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
-import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
-
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -42,6 +32,13 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(TemplateMultiblock.class)
 public abstract class TemplateMultiblockMixin implements IMultiblock,MultiBlockAccess {

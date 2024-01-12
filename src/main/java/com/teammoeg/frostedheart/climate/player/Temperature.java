@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.climate.player;
 
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 

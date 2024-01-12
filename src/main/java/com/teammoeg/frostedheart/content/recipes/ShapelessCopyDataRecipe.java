@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,12 +19,11 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.teammoeg.frostedheart.util.SerializeUtil;
-
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.block.Blocks;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.inventory.CraftingInventory;

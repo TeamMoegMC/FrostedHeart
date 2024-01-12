@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.util;
 
-import java.util.concurrent.Executor;
-
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.DataFixerBuilder;
+
+import java.util.concurrent.Executor;
 
 public class LazyDataFixerBuilder extends DataFixerBuilder {
     private static final Executor NO_OP_EXECUTOR = command -> {};

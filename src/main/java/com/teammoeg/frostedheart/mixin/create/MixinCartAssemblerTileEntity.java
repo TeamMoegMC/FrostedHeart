@@ -1,36 +1,35 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
- * This file is part of Steam Powered.
+ * This file is part of Frosted Heart.
  *
- * Steam Powered is free software: you can redistribute it and/or modify
+ * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * Steam Powered is distributed in the hope that it will be useful,
+ * Frosted Heart is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Steam Powered. If not, see <https://www.gnu.org/licenses/>.
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.mixin.create;
 
+import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity;
+import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
+import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity;
-import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
-
-import net.minecraft.entity.item.minecart.AbstractMinecartEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 @Mixin(CartAssemblerTileEntity.class)
 public abstract class MixinCartAssemblerTileEntity extends SmartTileEntity {

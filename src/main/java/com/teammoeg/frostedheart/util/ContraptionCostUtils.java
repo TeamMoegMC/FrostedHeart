@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,17 +19,15 @@
 
 package com.teammoeg.frostedheart.util;
 
-import org.apache.commons.lang3.tuple.MutablePair;
-
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
 import com.simibubi.create.foundation.block.BlockStressValues;
 import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
 import com.teammoeg.frostedheart.util.mixin.IStressContraption;
-
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.gen.feature.template.Template.BlockInfo;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 public class ContraptionCostUtils {
     public static float calculateStressApply(Contraption cont) {

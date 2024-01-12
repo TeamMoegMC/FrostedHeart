@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,17 +14,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.recipe;
 
-import javax.annotation.Nonnull;
-
 import com.teammoeg.frostedheart.research.ResearchListeners;
-
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
+
+import javax.annotation.Nonnull;
 
 public class FHRecipeCachingReloadListener implements IResourceManagerReloadListener {
     private final DataPackRegistries dataPackRegistries;

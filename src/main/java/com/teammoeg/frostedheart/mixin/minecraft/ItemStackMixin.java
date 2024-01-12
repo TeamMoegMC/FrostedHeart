@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,19 +19,17 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import java.util.function.Consumer;
-
+import com.teammoeg.frostedheart.content.recipes.DismantleInnerRecipe;
+import com.teammoeg.frostedheart.util.FHUtils;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.content.recipes.DismantleInnerRecipe;
-import com.teammoeg.frostedheart.util.FHUtils;
-
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import java.util.function.Consumer;
 
 @Mixin(ItemStack.class)
 public class ItemStackMixin {

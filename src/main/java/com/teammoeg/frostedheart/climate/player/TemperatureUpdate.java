@@ -19,8 +19,7 @@
 
 package com.teammoeg.frostedheart.climate.player;
 
-import java.util.ArrayList;
-
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
@@ -31,8 +30,6 @@ import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.util.FHUtils;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -50,6 +47,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.network.PacketDistributor;
+
+import java.util.ArrayList;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {

@@ -19,21 +19,14 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
-import java.util.function.Consumer;
-
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
-
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
@@ -42,6 +35,11 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3i;
+
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
+import java.util.function.Consumer;
 /**
  * Common base class for any generator like block that maintains a heat area
  * 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,13 +19,10 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import java.util.List;
-
-import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonObject;
-
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeType;
@@ -33,6 +30,8 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
+
+import java.util.List;
 
 public class InspireRecipe extends IESerializableRecipe {
     public static IRecipeType<InspireRecipe> TYPE;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,10 +19,6 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Random;
-
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CampfireCookingRecipe;
@@ -31,6 +27,10 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Random;
 
 public class CampfireDefrostRecipe extends CampfireCookingRecipe implements DefrostRecipe {
 

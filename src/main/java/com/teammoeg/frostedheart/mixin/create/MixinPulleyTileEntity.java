@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,19 +19,17 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
+import com.simibubi.create.content.contraptions.base.KineticTileEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.piston.LinearActuatorTileEntity;
+import com.teammoeg.frostedheart.util.ContraptionCostUtils;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.math.vector.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.piston.LinearActuatorTileEntity;
-import com.teammoeg.frostedheart.util.ContraptionCostUtils;
-
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.vector.Vector3d;
 
 @Mixin({LinearActuatorTileEntity.class})
 public abstract class MixinPulleyTileEntity extends KineticTileEntity {

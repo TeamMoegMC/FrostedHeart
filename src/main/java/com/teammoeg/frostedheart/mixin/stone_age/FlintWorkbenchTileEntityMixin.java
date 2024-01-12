@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,22 +19,10 @@
 
 package com.teammoeg.frostedheart.mixin.stone_age;
 
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.yanny.age.stone.blocks.FlintWorkbenchTileEntity;
 import com.yanny.age.stone.recipes.FlintWorkbenchRecipe;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -43,6 +31,15 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import javax.annotation.Nonnull;
+import java.util.List;
 
 @Mixin(FlintWorkbenchTileEntity.class)
 public class FlintWorkbenchTileEntityMixin extends TileEntity {

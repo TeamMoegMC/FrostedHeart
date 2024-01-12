@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,16 +19,8 @@
 
 package com.teammoeg.frostedheart.client.model;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import javax.annotation.Nullable;
-
 import com.google.common.primitives.Ints;
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.model.BakedQuad;
@@ -40,6 +32,12 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
+
+import javax.annotation.Nullable;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class LiningFinalizedModel implements IBakedModel {
 

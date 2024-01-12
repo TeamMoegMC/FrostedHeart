@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,18 +19,16 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
+import com.simibubi.create.content.contraptions.base.KineticTileEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.bearing.ClockworkBearingTileEntity;
+import com.teammoeg.frostedheart.util.ContraptionCostUtils;
+import net.minecraft.tileentity.TileEntityType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.simibubi.create.content.contraptions.base.KineticTileEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.bearing.ClockworkBearingTileEntity;
-import com.teammoeg.frostedheart.util.ContraptionCostUtils;
-
-import net.minecraft.tileentity.TileEntityType;
 
 @Mixin(ClockworkBearingTileEntity.class)
 public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity {

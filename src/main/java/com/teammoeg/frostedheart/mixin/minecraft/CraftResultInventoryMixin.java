@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,16 +19,14 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import org.spongepowered.asm.mixin.Mixin;
-
 import com.teammoeg.frostedheart.research.ResearchListeners;
-
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.CraftResultInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.IRecipeHolder;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(CraftResultInventory.class)
 public abstract class CraftResultInventoryMixin implements IRecipeHolder, IInventory {

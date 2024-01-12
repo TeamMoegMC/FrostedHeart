@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,22 +19,17 @@
 
 package com.teammoeg.frostedheart.mixin.rankine;
 
-import java.util.Random;
-
-import org.spongepowered.asm.mixin.Mixin;
-
-import com.cannolicatfish.rankine.world.trees.BlackBirchTree;
 import com.cannolicatfish.rankine.world.trees.BlackWalnutTree;
-import com.cannolicatfish.rankine.world.trees.CoconutPalmTree;
-import com.cannolicatfish.rankine.world.trees.PinyonPineTree;
 import com.cannolicatfish.rankine.world.trees.YellowBirchTree;
 import com.teammoeg.frostedheart.util.FHUtils;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.trees.Tree;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
+import org.spongepowered.asm.mixin.Mixin;
+
+import java.util.Random;
 
 @Mixin({YellowBirchTree.class,BlackWalnutTree.class})
 public abstract class MixinXMediumTree extends Tree {

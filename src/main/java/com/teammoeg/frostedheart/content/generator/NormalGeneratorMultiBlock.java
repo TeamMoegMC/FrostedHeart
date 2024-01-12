@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,16 +14,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.generator;
 
-import java.util.Random;
-
-import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
-
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
+import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -41,6 +39,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.RegistryObject;
+
+import java.util.Random;
 
 public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends FHStoneMultiblockBlock<T> {
     public NormalGeneratorMultiBlock(String name, RegistryObject type) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,15 +14,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.events;
-
-import static com.teammoeg.frostedheart.FHContent.registeredFHBlocks;
-import static com.teammoeg.frostedheart.FHContent.registeredFHFluids;
-import static com.teammoeg.frostedheart.FHContent.registeredFHItems;
-
-import javax.annotation.Nonnull;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.teammoeg.frostedheart.FHBlocks;
@@ -30,21 +25,11 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
-import com.teammoeg.frostedheart.loot.AddLootModifier;
-import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
-import com.teammoeg.frostedheart.loot.BlizzardDamageCondition;
-import com.teammoeg.frostedheart.loot.DechantLootModifier;
-import com.teammoeg.frostedheart.loot.ModLootCondition;
-import com.teammoeg.frostedheart.loot.RemoveLootModifier;
-import com.teammoeg.frostedheart.loot.ReplaceLootModifier;
-import com.teammoeg.frostedheart.loot.TagLootCondition;
-import com.teammoeg.frostedheart.loot.TemperatureLootCondition;
-import com.teammoeg.frostedheart.loot.TreasureLootCondition;
+import com.teammoeg.frostedheart.loot.*;
 import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
-
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
@@ -59,6 +44,10 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
+
+import javax.annotation.Nonnull;
+
+import static com.teammoeg.frostedheart.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonRegistryEvents {

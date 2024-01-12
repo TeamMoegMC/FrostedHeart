@@ -21,14 +21,9 @@ package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
-
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHDamageSources;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
@@ -38,8 +33,8 @@ import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.DebugCommand;
@@ -67,7 +62,6 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
-
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.*;
 import net.minecraft.command.CommandSource;
@@ -139,14 +133,10 @@ import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
 import javax.annotation.Nonnull;
-
-import static net.minecraft.entity.EntityType.CHICKEN;
-import static net.minecraft.entity.EntityType.COW;
-import static net.minecraft.entity.EntityType.PIG;
-import static net.minecraft.entity.EntityType.SHEEP;
-import static net.minecraft.world.biome.Biome.Category.*;
-
 import java.util.Set;
+
+import static net.minecraft.entity.EntityType.*;
+import static net.minecraft.world.biome.Biome.Category.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,19 +19,16 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
+import com.teammoeg.frostedheart.util.StructureUtils;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.gen.feature.template.Template;
+import net.minecraft.world.gen.feature.template.TemplateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.util.StructureUtils;
-
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.gen.feature.template.Template;
-import net.minecraft.world.gen.feature.template.TemplateManager;
+import javax.annotation.Nullable;
+import java.util.Map;
 
 @Mixin(TemplateManager.class)
 public abstract class TemplateManagerMixin {

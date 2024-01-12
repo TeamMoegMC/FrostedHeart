@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,16 +14,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
-
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -38,6 +36,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import javax.annotation.Nullable;
 
 public class DismantleInnerRecipe extends SpecialRecipe {
     public static RegistryObject<IERecipeSerializer<DismantleInnerRecipe>> SERIALIZER;

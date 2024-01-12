@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,26 +14,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
-import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.GROWTH;
-
-import java.util.Random;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-
 import blusunrize.immersiveengineering.common.blocks.plant.EnumHempGrowth;
 import blusunrize.immersiveengineering.common.blocks.plant.HempBlock;
+import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+
+import java.util.Random;
+
+import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.GROWTH;
 
 @Mixin(HempBlock.class)
 public class HempBlockMixin {

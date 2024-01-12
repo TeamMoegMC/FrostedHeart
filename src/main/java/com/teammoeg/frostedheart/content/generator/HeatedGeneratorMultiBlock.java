@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,23 +14,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.generator;
 
-import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
-
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.Random;
 
 public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends NormalGeneratorMultiBlock<T> implements ISteamEnergyBlock {
 

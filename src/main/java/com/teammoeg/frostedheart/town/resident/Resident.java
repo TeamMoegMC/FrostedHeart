@@ -19,9 +19,6 @@
 
 package com.teammoeg.frostedheart.town.resident;
 
-import com.teammoeg.frostedheart.town.TownWorker;
-import com.teammoeg.frostedheart.town.TownWorkerType;
-
 /**
  * A resident of the town.
  */

@@ -1,24 +1,23 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
- * This file is part of Immersive Industry.
+ * This file is part of Frosted Heart.
  *
- * Immersive Industry is free software: you can redistribute it and/or modify
+ * Frosted Heart is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * Immersive Industry is distributed in the hope that it will be useful,
+ * Frosted Heart is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Immersive Industry. If not, see <https://www.gnu.org/licenses/>.
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.compat.jei.category;
-
-import java.util.Arrays;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.EmptyBackground;
@@ -27,7 +26,6 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -40,6 +38,8 @@ import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
+
+import java.util.Arrays;
 
 public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge");

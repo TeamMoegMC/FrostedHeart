@@ -19,10 +19,7 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.util.text.TextFormatting.GRAY;
-
-import java.util.List;
-
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
@@ -34,10 +31,10 @@ import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
@@ -50,8 +47,6 @@ import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -72,11 +67,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.*;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
@@ -93,6 +84,10 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
+
+import java.util.List;
+
+import static net.minecraft.util.text.TextFormatting.GRAY;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {

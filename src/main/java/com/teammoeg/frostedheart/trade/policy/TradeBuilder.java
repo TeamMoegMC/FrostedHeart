@@ -1,11 +1,23 @@
-package com.teammoeg.frostedheart.trade.policy;
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Spliterators;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+package com.teammoeg.frostedheart.trade.policy;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -14,14 +26,8 @@ import com.teammoeg.frostedheart.trade.policy.actions.AddFlagValueAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagValueAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetLevelAction;
-import com.teammoeg.frostedheart.trade.policy.conditions.FlagValueCondition;
-import com.teammoeg.frostedheart.trade.policy.conditions.GreaterFlagCondition;
-import com.teammoeg.frostedheart.trade.policy.conditions.LevelCondition;
-import com.teammoeg.frostedheart.trade.policy.conditions.NotCondition;
-import com.teammoeg.frostedheart.trade.policy.conditions.TotalTradeCondition;
-import com.teammoeg.frostedheart.trade.policy.conditions.WithFlagCondition;
+import com.teammoeg.frostedheart.trade.policy.conditions.*;
 import com.teammoeg.frostedheart.util.SerializeUtil;
-
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;
@@ -29,6 +35,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ResourceLocation;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Class TradeBuilder.

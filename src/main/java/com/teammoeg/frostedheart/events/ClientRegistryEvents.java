@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,20 +14,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
-
-import java.util.Map;
-import java.util.function.Function;
-
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.FHTileTypes;
+import blusunrize.immersiveengineering.api.ManualHelper;
+import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import blusunrize.lib.manual.ManualEntry;
+import blusunrize.lib.manual.ManualInstance;
+import blusunrize.lib.manual.Tree;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
@@ -44,18 +42,9 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.util.FHLogger;
-
-import blusunrize.immersiveengineering.api.ManualHelper;
-import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import blusunrize.lib.manual.ManualEntry;
-import blusunrize.lib.manual.ManualInstance;
-import blusunrize.lib.manual.Tree;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
@@ -77,11 +66,15 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.Map;
+import java.util.function.Function;
+
+import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {

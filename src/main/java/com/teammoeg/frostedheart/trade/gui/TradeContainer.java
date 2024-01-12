@@ -1,10 +1,23 @@
-package com.teammoeg.frostedheart.trade.gui;
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+package com.teammoeg.frostedheart.trade.gui;
 
 import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHPacketHandler;
@@ -18,8 +31,6 @@ import com.teammoeg.frostedheart.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.trade.policy.snapshot.SellData;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.VillagerDataHolder;
-
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -37,6 +48,12 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class TradeContainer extends Container {
 	public FHVillagerData data;

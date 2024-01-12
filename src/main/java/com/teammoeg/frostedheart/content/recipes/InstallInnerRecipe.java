@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,22 +14,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import java.util.Collections;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.google.common.base.Optional;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.climate.data.JsonHelper;
-
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -43,6 +38,10 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
+
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.Map;
 
 public class InstallInnerRecipe extends SpecialRecipe {
     public static RegistryObject<IERecipeSerializer<InstallInnerRecipe>> SERIALIZER;

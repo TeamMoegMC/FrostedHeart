@@ -1,29 +1,39 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.mixin.ftb;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
-
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.util.FTBFixUtils;
+import dev.ftb.mods.ftbteams.data.ClientTeam;
+import dev.ftb.mods.ftbteams.data.ClientTeamManager;
+import dev.ftb.mods.ftbteams.data.KnownClientPlayer;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.FTBFixUtils;
-import com.teammoeg.frostedheart.util.IFTBSecondWritable;
-
-import dev.ftb.mods.ftbteams.data.ClientTeam;
-import dev.ftb.mods.ftbteams.data.ClientTeamManager;
-import dev.ftb.mods.ftbteams.data.KnownClientPlayer;
-import dev.ftb.mods.ftbteams.data.TeamRank;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Mixin(ClientTeamManager.class)
 public abstract class ClientTeamManagerMixin {

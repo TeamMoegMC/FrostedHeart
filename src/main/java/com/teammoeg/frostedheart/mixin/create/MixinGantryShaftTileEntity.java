@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,20 +19,18 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
-import org.spongepowered.asm.mixin.Mixin;
-
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
 import com.teammoeg.frostedheart.util.ContraptionCostUtils;
 import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
-
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(GantryShaftTileEntity.class)
 public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements ITickableTileEntity, IGantryShaft {

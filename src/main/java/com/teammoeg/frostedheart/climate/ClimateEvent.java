@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,23 +19,12 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T1;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T2;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T3;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T4;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T5;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T6;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T7;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_BOTTOM_T8;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.COLD_PERIOD_PEAK;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.WARM_PERIOD_PEAK;
-import static com.teammoeg.frostedheart.climate.WorldTemperature.BLIZZARD_WARM_PEAK;
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.nbt.CompoundNBT;
 
 import java.util.Random;
 
-import com.mojang.datafixers.util.Pair;
-
-import net.minecraft.nbt.CompoundNBT;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.*;
 
 /**
  * A climate event defined by a set of timestamps and temperature

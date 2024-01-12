@@ -23,7 +23,6 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.town.ITownBlockTE;
 import com.teammoeg.frostedheart.town.TownWorkerType;
 import com.teammoeg.frostedheart.town.resident.Resident;
-import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;

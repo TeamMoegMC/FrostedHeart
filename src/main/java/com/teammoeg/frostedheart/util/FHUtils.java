@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,30 +14,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.util;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.ToIntFunction;
-
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.*;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -60,6 +49,12 @@ import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.crafting.NBTIngredient;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.function.ToIntFunction;
 
 public class FHUtils {
     private static class NBTIngredientAccess extends NBTIngredient {

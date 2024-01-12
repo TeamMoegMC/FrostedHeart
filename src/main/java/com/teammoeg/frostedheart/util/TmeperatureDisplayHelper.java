@@ -1,13 +1,31 @@
-package com.teammoeg.frostedheart.util;
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
-import java.util.Collection;
+package com.teammoeg.frostedheart.util;
 
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
-
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.network.PacketDistributor;
+
+import java.util.Collection;
 /**
  * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting
  * 

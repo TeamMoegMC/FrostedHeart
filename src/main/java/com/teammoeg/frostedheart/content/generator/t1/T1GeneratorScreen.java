@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,26 +14,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.generator.t1;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHPacketHandler;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
     private static final ResourceLocation TEXTURE = GuiUtils.makeTextureLocation("generator_t1");

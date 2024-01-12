@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,19 +14,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.tools.oredetect;
 
 
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.Random;
-
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
-
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -41,6 +37,10 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
+
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.Random;
 
 public class GeologistsHammer extends FHLeveledTool {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");

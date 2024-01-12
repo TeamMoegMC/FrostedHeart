@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.compat.jei;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.category.animations.AnimatedKinetics;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.vector.Vector3f;
 

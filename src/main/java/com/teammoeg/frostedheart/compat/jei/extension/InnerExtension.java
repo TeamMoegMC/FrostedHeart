@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,19 +19,18 @@
 
 package com.teammoeg.frostedheart.compat.jei.extension;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
-
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class InnerExtension implements ICraftingCategoryExtension {
     InstallInnerRecipe inner;

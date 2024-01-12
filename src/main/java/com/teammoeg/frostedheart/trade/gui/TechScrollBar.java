@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -20,12 +20,7 @@
 package com.teammoeg.frostedheart.trade.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-
-import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import dev.ftb.mods.ftblibrary.ui.Panel;
-import dev.ftb.mods.ftblibrary.ui.PanelScrollBar;
-import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.WidgetType;
+import dev.ftb.mods.ftblibrary.ui.*;
 
 public class TechScrollBar extends PanelScrollBar {
 	boolean isHidden=false;

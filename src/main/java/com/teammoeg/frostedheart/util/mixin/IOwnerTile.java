@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,11 +19,10 @@
 
 package com.teammoeg.frostedheart.util.mixin;
 
-import java.util.UUID;
-
 import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
-
 import net.minecraft.tileentity.TileEntity;
+
+import java.util.UUID;
 
 public interface IOwnerTile {
     public UUID getStoredOwner();

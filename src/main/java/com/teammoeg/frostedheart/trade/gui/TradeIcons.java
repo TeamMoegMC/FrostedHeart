@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.trade.gui;
 
 import com.teammoeg.frostedheart.FHMain;
-
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import net.minecraft.util.ResourceLocation;

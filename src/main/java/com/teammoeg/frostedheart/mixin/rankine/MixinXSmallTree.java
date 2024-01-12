@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,22 +19,16 @@
 
 package com.teammoeg.frostedheart.mixin.rankine;
 
-import java.util.Random;
-
-import org.spongepowered.asm.mixin.Mixin;
-
-import com.cannolicatfish.rankine.world.trees.CinnamonTree;
-import com.cannolicatfish.rankine.world.trees.CorkOakTree;
-import com.cannolicatfish.rankine.world.trees.MagnoliaTree;
-import com.cannolicatfish.rankine.world.trees.MapleTree;
-import com.cannolicatfish.rankine.world.trees.SharingaTree;
+import com.cannolicatfish.rankine.world.trees.*;
 import com.teammoeg.frostedheart.util.FHUtils;
-
 import net.minecraft.block.BlockState;
 import net.minecraft.block.trees.Tree;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
+import org.spongepowered.asm.mixin.Mixin;
+
+import java.util.Random;
 
 @Mixin({MagnoliaTree.class,SharingaTree.class,MapleTree.class,CorkOakTree.class,CinnamonTree.class})
 public abstract class MixinXSmallTree extends Tree {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,14 +19,9 @@
 
 package com.teammoeg.frostedheart.events;
 
-import java.util.UUID;
-
 import com.teammoeg.frostedheart.FHPacketHandler;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
-
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
@@ -34,6 +29,8 @@ import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
+
+import java.util.UUID;
 
 public class FTBTeamsEvents {
 

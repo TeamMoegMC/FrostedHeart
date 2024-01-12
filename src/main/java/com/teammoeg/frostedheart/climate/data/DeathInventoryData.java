@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.climate.data;
 
-import javax.annotation.Nullable;
-
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -38,6 +36,8 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+
+import javax.annotation.Nullable;
 
 public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> {
     @CapabilityInject(DeathInventoryData.class)

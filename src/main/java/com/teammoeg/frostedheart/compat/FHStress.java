@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.compat;
 
 import com.simibubi.create.foundation.block.BlockStressValues.IStressValueProvider;
 import com.teammoeg.frostedheart.FHBlocks;
-
 import net.minecraft.block.Block;
 
 public class FHStress implements IStressValueProvider {

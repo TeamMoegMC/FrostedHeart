@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,12 +19,9 @@
 
 package com.teammoeg.frostedheart.loot;
 
-import javax.annotation.Nonnull;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.loot.ILootSerializer;
@@ -39,6 +36,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.Tags;
+
+import javax.annotation.Nonnull;
 
 public class TagLootCondition implements ILootCondition {
     public static LootConditionType TYPE;

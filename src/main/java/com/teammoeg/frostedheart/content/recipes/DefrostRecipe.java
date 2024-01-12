@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,13 +19,11 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import javax.annotation.Nullable;
-
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
@@ -35,6 +33,8 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
+
+import javax.annotation.Nullable;
 
 public interface DefrostRecipe extends IRecipe<IInventory> {
     Ingredient getIngredient();

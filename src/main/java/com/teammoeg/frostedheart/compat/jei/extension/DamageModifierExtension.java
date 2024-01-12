@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,15 +19,14 @@
 
 package com.teammoeg.frostedheart.compat.jei.extension;
 
-import java.util.Arrays;
-
 import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
-
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+
+import java.util.Arrays;
 
 public class DamageModifierExtension implements ICraftingCategoryExtension {
     ModifyDamageRecipe fuel;

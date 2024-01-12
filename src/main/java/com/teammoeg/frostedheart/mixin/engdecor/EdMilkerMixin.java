@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,17 +19,15 @@
 
 package com.teammoeg.frostedheart.mixin.engdecor;
 
+import com.teammoeg.frostedheart.util.mixin.IMilkable;
+import net.minecraft.entity.passive.CowEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.vector.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import com.teammoeg.frostedheart.util.mixin.IMilkable;
-
-import net.minecraft.entity.passive.CowEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.vector.Vector3d;
 import wile.engineersdecor.blocks.EdMilker.MilkerTileEntity;
 
 @Mixin(MilkerTileEntity.class)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,20 +14,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.climate.network;
-
-import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.climate.ClimateType;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.util.SerializeUtil;
-
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 public class FHClimatePacket {
     private final short[] data;

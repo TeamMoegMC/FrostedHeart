@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,11 +19,15 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import static com.teammoeg.frostedheart.climate.WorldTemperature.SNOW_TEMPERATURE;
-
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
-
+import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.util.FHGameRule;
+import net.minecraft.profiler.IProfiler;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.DimensionType;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.IServerWorldInfo;
+import net.minecraft.world.storage.ISpawnWorldInfo;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -32,17 +36,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.util.FHGameRule;
-
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.IServerWorldInfo;
-import net.minecraft.world.storage.ISpawnWorldInfo;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -23,7 +23,6 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.block.BlockStressDefaults;
 import com.simibubi.create.foundation.block.BlockStressValues;
 import com.teammoeg.frostedheart.FHMain;
-
 import net.minecraft.block.Blocks;
 
 public class CreateCompat {
