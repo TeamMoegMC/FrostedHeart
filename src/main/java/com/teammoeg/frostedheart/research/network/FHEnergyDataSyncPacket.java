@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.research.network;
@@ -21,7 +22,7 @@ package com.teammoeg.frostedheart.research.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.climate.player.BodyTemperature;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -54,10 +55,10 @@ public class FHEnergyDataSyncPacket {
             // Update client-side nbt
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (player != null) {
-                CompoundNBT data = BodyTemperature.getFHData(player);
+                CompoundNBT data = Temperature.getFHData(player);
                 data.putLong("energy", energy);
                 data.putLong("penergy", penergy);
-                BodyTemperature.setFHData(player, data);
+                Temperature.setFHData(player, data);
             }
         });
         context.get().setPacketHandled(true);

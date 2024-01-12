@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.content.temperature;
@@ -22,7 +23,7 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.player.BodyTemperature;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import net.minecraft.client.util.ITooltipFlag;
@@ -66,7 +67,7 @@ public class ThermometerItem extends FHBaseItem {
     }
 
     public int getTemperature(ServerPlayerEntity p) {
-        return (int) (BodyTemperature.getBodyTemperature(p) * 10);
+        return (int) (Temperature.getBodySmoothed(p) * 10);
     }
 
     @Override
