@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.player.BodyTemperature;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
@@ -63,7 +63,7 @@ public class EnergyCore {
 
     public static void dT(ServerPlayerEntity player) {
         //System.out.println("dt");
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long oenergy=data.getLong("energy");
         final long tenergy = oenergy+10000;
         double utbody = data.getDouble("utbody");
@@ -126,12 +126,12 @@ public class EnergyCore {
             data.putLong("cenergy",Math.min(data.getLong("cenergy")+adcenergy,12000));
         }
         data.putLong("energy",oenergy+adenergy);
-        BodyTemperature.setFHData(player, data);
+        Temperature.setFHData(player, data);
     }
 
     public static void applySleep(float tenv, ServerPlayerEntity player) {
         float nkeep = 0;
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long lsd = data.getLong("lastsleepdate");
         long csd = (player.world.getDayTime() + 12000L) / 24000L;
         //System.out.println("slept");
@@ -176,7 +176,7 @@ public class EnergyCore {
         data.putDouble("utbody", out);
         data.putLong("lastsleep", 0);
         data.putLong("lastsleepdate", csd);
-        BodyTemperature.setFHData(player, data);
+        Temperature.setFHData(player, data);
 		/*if(tbody>=60) {
 			int str=(int) ((tbody-50)/10);
 			player.addPotionEffect(new EffectInstance)
@@ -187,12 +187,12 @@ public class EnergyCore {
 
     public static boolean consumeEnergy(ServerPlayerEntity player, int val) {
         if (player.abilities.isCreativeMode) return true;
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long energy = data.getLong("energy");
         if (energy  >= val) {
             energy -= val;
             data.putLong("energy", energy);
-            BodyTemperature.setFHData(player, data);
+            Temperature.setFHData(player, data);
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
         }
@@ -203,7 +203,7 @@ public class EnergyCore {
             penergy -= val;
             data.putLong("penergy", penergy);
             data.putLong("energy", 0);
-            BodyTemperature.setFHData(player, data);
+            Temperature.setFHData(player, data);
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
         }
@@ -211,33 +211,33 @@ public class EnergyCore {
     }
 
     public static void addPersistentEnergy(ServerPlayerEntity player, int val) {
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long energy = data.getLong("penergy") + val;
         data.putLong("penergy", energy);
-        BodyTemperature.setFHData(player, data);
+        Temperature.setFHData(player, data);
         FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
     }
     public static void addExtraEnergy(ServerPlayerEntity player, int val) {
     	
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long energy = data.getLong("cenergy") + val;
         data.putLong("cenergy", energy);
-        BodyTemperature.setFHData(player, data);
+        Temperature.setFHData(player, data);
     }
     public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {
     	if (player.abilities.isCreativeMode) return true;
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long energy = data.getLong("cenergy");
         if(energy>=val) {
 	        data.putLong("cenergy", energy-val);
-	        BodyTemperature.setFHData(player, data);
+	        Temperature.setFHData(player, data);
 	        return true;
         }
         return false;
     }
     public static boolean hasExtraEnergy(PlayerEntity player, int val) {
     	if (player.abilities.isCreativeMode) return true;
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long energy = data.getLong("cenergy");
         return energy>=val;
     }
@@ -247,7 +247,7 @@ public class EnergyCore {
         M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
         double n = trd.getTeam().get().getOnlineMembers().size();
         n = 1 + 0.8 * (n - 1);
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         if (val > 0) {
         	double rv=val/n;
             double frac = MathHelper.frac(rv);
@@ -258,22 +258,22 @@ public class EnergyCore {
         }
         long energy = Math.min(data.getLong("energy") + val,M);
         data.putLong("energy", energy);
-        BodyTemperature.setFHData(player, data);
+        Temperature.setFHData(player, data);
         FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
     }
 
     public static boolean hasEnoughEnergy(PlayerEntity player, int val) {
         if (player.abilities.isCreativeMode) return true;
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         long touse=data.getLong("energy")+data.getLong("penergy");
         return touse >= val;
     }
     public static long getEnergy(PlayerEntity player) {
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         return data.getLong("energy");
     }
     public static void reportEnergy(PlayerEntity player) {
-        CompoundNBT data = BodyTemperature.getFHData(player);
+        CompoundNBT data = Temperature.getFHData(player);
         player.sendMessage(new StringTextComponent("Energy:" + data.getLong("energy") + ",Persist Energy: " + data.getLong("penergy")+",Extra Energy: "+data.getLong("cenergy")), player.getUniqueID());
     }
 

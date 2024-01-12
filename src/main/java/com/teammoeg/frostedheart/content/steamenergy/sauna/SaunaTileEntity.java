@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.player.BodyTemperature;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
@@ -43,7 +43,6 @@ import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteract
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.FTBTeamsCommon;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -296,9 +295,9 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             p.addPotionEffect(new EffectInstance(FHEffects.SAUNA, 23000, 0, true, false));
         }
         // add temperature
-        float lenvtemp = BodyTemperature.getEnvTemperature(p);//get a smooth change in display
-        float lbodytemp = BodyTemperature.getBodyTemperature(p);
-        BodyTemperature.setTemperature(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
+        float lenvtemp = Temperature.getEnv(p);//get a smooth change in display
+        float lbodytemp = Temperature.getBodySmoothed(p);
+        Temperature.set(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
         // add medical effect
         if (hasMedicine() && remainTime == 1) {
             p.addPotionEffect(getEffectInstance());

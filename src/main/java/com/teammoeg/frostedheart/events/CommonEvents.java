@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.events;
@@ -37,7 +38,7 @@ import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
-import com.teammoeg.frostedheart.climate.player.BodyTemperature;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
@@ -66,7 +67,6 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
-import com.yanny.age.stone.config.Config;
 
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.*;
@@ -77,12 +77,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -102,7 +99,6 @@ import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
-import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
@@ -138,8 +134,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
-import se.mickelus.tetra.effect.ItemEffect;
-import se.mickelus.tetra.effect.ItemEffectHandler;
 import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
@@ -662,10 +656,10 @@ public class CommonEvents {
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
         CompoundNBT cnbt = new CompoundNBT();
-        CompoundNBT olddata=BodyTemperature.getFHData(ev.getOriginal());
+        CompoundNBT olddata= Temperature.getFHData(ev.getOriginal());
         cnbt.putLong("penergy", olddata.getLong("penergy"));
         cnbt.putLong("cenergy", olddata.getLong("cenergy"));
-        BodyTemperature.setFHData(ev.getPlayer(), cnbt);
+        Temperature.setFHData(ev.getPlayer(), cnbt);
         //FHMain.LOGGER.info("clone");
         if(!ev.getPlayer().world.isRemote) {
 	        DeathInventoryData orig=DeathInventoryData.get(ev.getOriginal());
@@ -710,11 +704,11 @@ public class CommonEvents {
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
             CompoundNBT cnbt = new CompoundNBT();
-            cnbt.putLong("penergy", BodyTemperature.getFHData(event.getPlayer()).getLong("penergy"));
+            cnbt.putLong("penergy", Temperature.getFHData(event.getPlayer()).getLong("penergy"));
             cnbt.putDouble("utbody", 1);
             cnbt.putLong("lastsleep", 0);
             cnbt.putLong("lastsleepdate", 0);
-            BodyTemperature.setFHData(event.getPlayer(), cnbt);
+            Temperature.setFHData(event.getPlayer(), cnbt);
         }
     }
 
@@ -740,10 +734,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = BodyTemperature.getBodyTemperature((ServerPlayerEntity) event.getEntityLiving());
+                float current = Temperature.getBodySmoothed((ServerPlayerEntity) event.getEntityLiving());
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(),BodyTemperature.getEnvTemperature((ServerPlayerEntity) event.getEntityLiving()));
+                float heat = adj.getHeat(event.getItem(), Temperature.getEnv((ServerPlayerEntity) event.getEntityLiving()));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -761,7 +755,7 @@ public class CommonEvents {
                     if (current <= min)
                         return;
                 }
-                BodyTemperature.setBodyTemperature((ServerPlayerEntity) event.getEntityLiving(), current);
+                Temperature.setBody((ServerPlayerEntity) event.getEntityLiving(), current);
             }
         }
     }

@@ -34,7 +34,7 @@ import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.player.BodyTemperature;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
@@ -353,7 +353,7 @@ public class ClientEvents {
 		}
 		if (itf != null) {
 			float temp = itf.getHeat(stack,
-					event.getPlayer() == null ? 37 : BodyTemperature.getEnvTemperature(event.getPlayer())) * tspeed;
+					event.getPlayer() == null ? 37 : Temperature.getEnv(event.getPlayer())) * tspeed;
 			temp = (Math.round(temp * 1000)) / 1000.0F;// round
 			if (temp != 0)
 				if (temp > 0)
