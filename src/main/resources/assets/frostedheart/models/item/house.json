@@ -1,4 +1,4 @@
 {
-  "parent": "frostedheart:block/sauna_vent",
+  "parent": "frostedheart:block/house",
   "flip-v": true
 }
