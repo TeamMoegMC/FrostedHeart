@@ -30,18 +30,18 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class ClientScenarioCommentPacket {
+public class ServerScenarioCommandPacket {
     private String commandName;
     Map<String, String> params;
     CompoundNBT data;
 
-    public ClientScenarioCommentPacket(PacketBuffer buffer) {
+    public ServerScenarioCommandPacket(PacketBuffer buffer) {
         commandName = buffer.readString();
         params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readString);
         data = buffer.readCompoundTag();
     }
 
-    public ClientScenarioCommentPacket(String commandName, Map<String, String> params, CompoundNBT data) {
+    public ServerScenarioCommandPacket(String commandName, Map<String, String> params, CompoundNBT data) {
         super();
         this.commandName = commandName;
         this.params = params;

@@ -92,6 +92,7 @@
     "minecraft.AssignProfessionTaskMixin",
     "minecraft.ChangeJobTaskMixin",
     "minecraft.ServerPlayNetHandlerMixin",
+    "minecraft.NewChatGuiAccessor",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

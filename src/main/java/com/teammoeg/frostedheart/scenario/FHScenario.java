@@ -25,7 +25,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
-import com.teammoeg.frostedheart.scenario.network.ClientScenarioCommentPacket;
+import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -47,7 +47,7 @@ public class FHScenario {
             if (Modifier.isPublic(met.getModifiers())) {
                 final String name = met.getName();
                 registerCommand(name, (r, p) -> {
-                    FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) r.getPlayer()), new ClientScenarioCommentPacket(name, p, r.getExecutionData()));
+                    FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) r.getPlayer()), new ServerScenarioCommandPacket(name, p, r.getExecutionData()));
                 });
             }
         }
