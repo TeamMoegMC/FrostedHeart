@@ -36,21 +36,25 @@ public class SellData {
         this.data = data;
     }
 
-    public ItemStack getItem() {
-        return data.item;
+    public boolean canRestock(FHVillagerData data) {
+
+        return this.data.canRestock(data);
     }
 
-    public int getStore() {
-        return store;
+    public String getId() {
+        return id;
+    }
+
+    public ItemStack getItem() {
+        return data.item;
     }
 
     public int getPrice() {
         return data.price;
     }
 
-    public boolean canRestock(FHVillagerData data) {
-
-        return this.data.canRestock(data);
+    public int getStore() {
+        return store;
     }
 
     public boolean isFullStock() {
@@ -60,10 +64,6 @@ public class SellData {
     public void reduceStock(FHVillagerData data, int count) {
         data.storage.computeIfPresent(getId(), (k, v) -> v - count);
         this.data.soldactions.forEach(c -> c.deal(data, count));
-    }
-
-    public String getId() {
-        return id;
     }
 
 }

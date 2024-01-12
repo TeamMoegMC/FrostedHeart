@@ -29,6 +29,10 @@ import net.minecraft.util.text.ITextComponent;
 public class MinigameClue extends CustomClue {
     private int level = 0;
 
+    MinigameClue() {
+        super();
+    }
+
     public MinigameClue(float contribution) {
         super("", contribution);
     }
@@ -43,8 +47,19 @@ public class MinigameClue extends CustomClue {
         setLevel(pb.readVarInt());
     }
 
-    MinigameClue() {
-        super();
+    @Override
+    public String getBrief() {
+        return "Complete game level " + this.level;
+    }
+
+    @Override
+    public String getId() {
+        return "game";
+    }
+
+
+    public int getLevel() {
+        return level;
     }
 
     @Override
@@ -55,27 +70,10 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public String getId() {
-        return "game";
-    }
-
-
-    @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
         jo.addProperty("level", getLevel());
         return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeVarInt(getLevel());
-
-    }
-
-    public int getLevel() {
-        return level;
     }
 
     public void setLevel(int level) {
@@ -83,7 +81,9 @@ public class MinigameClue extends CustomClue {
     }
 
     @Override
-    public String getBrief() {
-        return "Complete game level " + this.level;
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        buffer.writeVarInt(getLevel());
+
     }
 }

@@ -46,8 +46,16 @@ public class WhiteTurnipBlock extends FHCropBlock {
         super(name, growTemp, properties, createItemBlock);
     }
 
+    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+        builder.add(WhiteTurnip_AGE);
+    }
+
     public IntegerProperty getAgeProperty() {
         return WhiteTurnip_AGE;
+    }
+
+    protected int getBonemealAgeIncrease(World worldIn) {
+        return MathHelper.nextInt(worldIn.rand, 0, 1);
     }
 
     public int getMaxAge() {
@@ -56,14 +64,6 @@ public class WhiteTurnipBlock extends FHCropBlock {
 
     protected IItemProvider getSeedsItem() {
         return FHBlocks.white_turnip_block.asItem();
-    }
-
-    protected int getBonemealAgeIncrease(World worldIn) {
-        return MathHelper.nextInt(worldIn.rand, 0, 1);
-    }
-
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(WhiteTurnip_AGE);
     }
 
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {

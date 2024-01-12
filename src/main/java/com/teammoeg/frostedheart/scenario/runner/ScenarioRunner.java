@@ -35,36 +35,12 @@ public class ScenarioRunner implements IEnvironment {
     ParagraphRunner current;
     ArrayList<CallStackElement> callStack = new ArrayList<>();
 
-    public int getNodeNum() {
-        return nodeNum;
+    public boolean containsPath(String path) {
+        return current.containsPath(path);
     }
 
-    public void setNodeNum(int nodeNum) {
-        this.nodeNum = nodeNum;
-    }
-
-    public ParagraphRunner getCurrentParagraph() {
-        return current;
-    }
-
-    public CompoundNBT getExecutionData() {
-        return null;
-    }
-
-    public ServerPlayerEntity getPlayer() {
-        return null;
-    }
-
-    public void setPath(String path, INBT val) {
-        current.setPath(path, val);
-    }
-
-    public void setPathString(String path, String val) {
-        current.setPathString(path, val);
-    }
-
-    public void setPathNumber(String path, Number val) {
-        current.setPathNumber(path, val);
+    public double eval(String exp) {
+        return Evaluator.eval(exp).eval(this);
     }
 
     public INBT evalPath(String path) {
@@ -79,8 +55,50 @@ public class ScenarioRunner implements IEnvironment {
         return current.evalPathString(path);
     }
 
-    public boolean containsPath(String path) {
-        return current.containsPath(path);
+    @Override
+    public double get(String key) {
+
+        return evalPathDouble(key);
+    }
+
+    public CallStackElement getByCaller(int caller) {
+        for (int i = callStack.size() - 1; i >= 0; i--) {
+            CallStackElement cur = callStack.get(i);
+            if (cur.getCaller() == caller)
+                return cur;
+        }
+        return null;
+    }
+
+    public ParagraphRunner getCurrentParagraph() {
+        return current;
+    }
+
+    public CompoundNBT getExecutionData() {
+        return null;
+    }
+
+    public CallStackElement getLast() {
+        return callStack.get(callStack.size() - 1);
+    }
+
+    public int getNodeNum() {
+        return nodeNum;
+    }
+
+    @Override
+    public Double getOptional(String key) {
+        if (!containsPath(key))
+            return null;
+        return get(key);
+    }
+
+    public ServerPlayerEntity getPlayer() {
+        return null;
+    }
+
+    public void jump(int target) {
+        nodeNum = target;
     }
 
     public boolean popCall() {
@@ -101,6 +119,10 @@ public class ScenarioRunner implements IEnvironment {
         return false;
     }
 
+    public void pushCall(int caller, int target) {
+        callStack.add(new CallStackElement(caller, target));
+    }
+
     public boolean removeCall() {
         if (callStack.size() > 0) {
             callStack.remove(callStack.size() - 1).getTarget();
@@ -119,46 +141,24 @@ public class ScenarioRunner implements IEnvironment {
         return false;
     }
 
-    public void pushCall(int caller, int target) {
-        callStack.add(new CallStackElement(caller, target));
-    }
-
-    public CallStackElement getLast() {
-        return callStack.get(callStack.size() - 1);
-    }
-
-    public CallStackElement getByCaller(int caller) {
-        for (int i = callStack.size() - 1; i >= 0; i--) {
-            CallStackElement cur = callStack.get(i);
-            if (cur.getCaller() == caller)
-                return cur;
-        }
-        return null;
-    }
-
-    public void jump(int target) {
-        nodeNum = target;
-    }
-
-    @Override
-    public double get(String key) {
-
-        return evalPathDouble(key);
-    }
-
-    @Override
-    public Double getOptional(String key) {
-        if (!containsPath(key))
-            return null;
-        return get(key);
-    }
-
     @Override
     public void set(String key, double v) {
         setPathNumber(key, v);
     }
 
-    public double eval(String exp) {
-        return Evaluator.eval(exp).eval(this);
+    public void setNodeNum(int nodeNum) {
+        this.nodeNum = nodeNum;
+    }
+
+    public void setPath(String path, INBT val) {
+        current.setPath(path, val);
+    }
+
+    public void setPathNumber(String path, Number val) {
+        current.setPathNumber(path, val);
+    }
+
+    public void setPathString(String path, String val) {
+        current.setPathString(path, val);
     }
 }

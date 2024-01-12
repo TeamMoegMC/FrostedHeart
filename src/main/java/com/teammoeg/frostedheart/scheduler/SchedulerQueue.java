@@ -40,6 +40,18 @@ public class SchedulerQueue {
     int lastpos;
     double tasksPerTick = FHConfig.SERVER.taskPerTick.get();
 
+    public static void add(TileEntity te) {
+        queues.computeIfAbsent(te.getWorld().getDimensionKey(), e -> new SchedulerQueue())
+                .add(te.getPos());
+
+    }
+
+    public static void tickAll(ServerWorld serverWorld) {
+        SchedulerQueue q = queues.get(serverWorld.getDimensionKey());
+        if (q != null)
+            q.tick(serverWorld);
+    }
+
     public void add(BlockPos pos) {
         for (int i = 0; i < tasks.size(); i++) {
             if (tasks.get(i).pos.equals(pos)) {
@@ -47,12 +59,6 @@ public class SchedulerQueue {
             }
         }
         tasks.add(new ScheduledData(pos));
-    }
-
-    public static void add(TileEntity te) {
-        queues.computeIfAbsent(te.getWorld().getDimensionKey(), e -> new SchedulerQueue())
-                .add(te.getPos());
-
     }
 
     public void remove(BlockPos pos) {
@@ -103,11 +109,5 @@ public class SchedulerQueue {
                 i--;
             }
         }
-    }
-
-    public static void tickAll(ServerWorld serverWorld) {
-        SchedulerQueue q = queues.get(serverWorld.getDimensionKey());
-        if (q != null)
-            q.tick(serverWorld);
     }
 }

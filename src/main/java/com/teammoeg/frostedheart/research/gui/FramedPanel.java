@@ -53,10 +53,6 @@ public class FramedPanel extends Panel {
 
     }
 
-    public void setTitle(ITextComponent title) {
-        this.title = title;
-    }
-
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         theme.drawString(matrixStack, title, x, y, TechIcons.text, 0);
@@ -68,6 +64,10 @@ public class FramedPanel extends Panel {
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
 
+    }
+
+    public void setTitle(ITextComponent title) {
+        this.title = title;
     }
 
 }

@@ -30,60 +30,21 @@ import net.minecraftforge.common.util.INBTSerializable;
 public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
 
     /**
-     * Get temperature at location, would check if it is in range.
+     * Factory construct temperature adjust from NBT<br>
      *
-     * @param x the locate x<br>
-     * @param y the locate y<br>
-     * @param z the locate z<br>
-     * @return temperature value at location<br>
+     * @param nc the nbt compound<br>
+     * @return returns adjust
      */
-    int getTemperatureAt(int x, int y, int z);
-
-    /**
-     * Get temperature at location, would check if it is in range.
-     *
-     * @param pos the location<br>
-     * @return temperature value at location<br>
-     */
-    default int getTemperatureAt(BlockPos pos) {
-        return getTemperatureAt(pos.getX(), pos.getY(), pos.getZ());
+    static ITemperatureAdjust valueOf(CompoundNBT nc) {
+        switch (nc.getInt("type")) {
+            case 1:
+                return new CubicTemperatureAdjust(nc);
+            case 2:
+                return new PillarTemperatureAdjust(nc);
+            default:
+                return new CubicTemperatureAdjust(nc);
+        }
     }
-
-    ;
-
-    /**
-     * Checks if location is in range(or, this adjust is effective for this location).<br>
-     *
-     * @param x the x<br>
-     * @param y the y<br>
-     * @param z the z<br>
-     * @return if this adjust is effective for location, true.
-     */
-    boolean isEffective(int x, int y, int z);
-
-    /**
-     * Checks if location is in range(or, this adjust is effective for this location).<br>
-     *
-     * @param bp the location<br>
-     * @return if this adjust is effective for location, true.
-     */
-    default boolean isEffective(BlockPos pos) {
-        return isEffective(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    /**
-     * Serialize.
-     *
-     * @param buffer the buffer<br>
-     */
-    void serialize(PacketBuffer buffer);
-
-    /**
-     * Deserialize.
-     *
-     * @param buffer the buffer<br>
-     */
-    void deserialize(PacketBuffer buffer);
 
     /**
      * Factory construct temperature adjust from packet buffer.<br>
@@ -103,22 +64,14 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
         }
     }
 
+    ;
+
     /**
-     * Factory construct temperature adjust from NBT<br>
+     * Deserialize.
      *
-     * @param nc the nbt compound<br>
-     * @return returns adjust
+     * @param buffer the buffer<br>
      */
-    static ITemperatureAdjust valueOf(CompoundNBT nc) {
-        switch (nc.getInt("type")) {
-            case 1:
-                return new CubicTemperatureAdjust(nc);
-            case 2:
-                return new PillarTemperatureAdjust(nc);
-            default:
-                return new CubicTemperatureAdjust(nc);
-        }
-    }
+    void deserialize(PacketBuffer buffer);
 
     /**
      * Get center X.
@@ -144,12 +97,59 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
     int getRadius();
 
     /**
+     * Get temperature at location, would check if it is in range.
+     *
+     * @param pos the location<br>
+     * @return temperature value at location<br>
+     */
+    default int getTemperatureAt(BlockPos pos) {
+        return getTemperatureAt(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    /**
+     * Get temperature at location, would check if it is in range.
+     *
+     * @param x the locate x<br>
+     * @param y the locate y<br>
+     * @param z the locate z<br>
+     * @return temperature value at location<br>
+     */
+    int getTemperatureAt(int x, int y, int z);
+
+    /**
      * Get value at location, wont do range check.
      *
      * @param pos the location<br>
      * @return value for that location<br>
      */
     float getValueAt(BlockPos pos);
+
+    /**
+     * Checks if location is in range(or, this adjust is effective for this location).<br>
+     *
+     * @param bp the location<br>
+     * @return if this adjust is effective for location, true.
+     */
+    default boolean isEffective(BlockPos pos) {
+        return isEffective(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    /**
+     * Checks if location is in range(or, this adjust is effective for this location).<br>
+     *
+     * @param x the x<br>
+     * @param y the y<br>
+     * @param z the z<br>
+     * @return if this adjust is effective for location, true.
+     */
+    boolean isEffective(int x, int y, int z);
+
+    /**
+     * Serialize.
+     *
+     * @param buffer the buffer<br>
+     */
+    void serialize(PacketBuffer buffer);
 
     void setValue(int value);
 }

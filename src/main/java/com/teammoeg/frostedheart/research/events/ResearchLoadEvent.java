@@ -32,12 +32,12 @@ import net.minecraftforge.eventbus.api.Event;
 public class ResearchLoadEvent extends Event {
 
     /**
-     * Class ResearchLoadEvent.Pre.
-     * Post before research data is loading in server.
+     * Class ResearchLoadEvent.Finish.
+     * Post after research data is loaded and prepared to work in server.
      *
      * @author khjxiaogu
      */
-    public static class Pre extends ResearchLoadEvent {
+    public static class Finish extends ResearchLoadEvent {
 
     }
 
@@ -52,12 +52,12 @@ public class ResearchLoadEvent extends Event {
     }
 
     /**
-     * Class ResearchLoadEvent.Finish.
-     * Post after research data is loaded and prepared to work in server.
+     * Class ResearchLoadEvent.Pre.
+     * Post before research data is loading in server.
      *
      * @author khjxiaogu
      */
-    public static class Finish extends ResearchLoadEvent {
+    public static class Pre extends ResearchLoadEvent {
 
     }
 }

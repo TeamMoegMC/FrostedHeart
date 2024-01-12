@@ -35,15 +35,15 @@ public class FHClueProgressSyncPacket {
     private final boolean data;
     private final int id;
 
+    public FHClueProgressSyncPacket(PacketBuffer buffer) {
+        data = buffer.readBoolean();
+        id = buffer.readVarInt();
+    }
+
     public FHClueProgressSyncPacket(UUID team, Clue rs) {
         TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isClueTriggered(rs);
         this.id = rs.getRId();
-    }
-
-    public FHClueProgressSyncPacket(PacketBuffer buffer) {
-        data = buffer.readBoolean();
-        id = buffer.readVarInt();
     }
 
     public void encode(PacketBuffer buffer) {

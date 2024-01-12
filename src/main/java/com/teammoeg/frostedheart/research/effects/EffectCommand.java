@@ -50,15 +50,6 @@ public class EffectCommand extends Effect {
 
     List<String> rewards;
 
-    public EffectCommand(String... cmds) {
-        super();
-        rewards = new ArrayList<>();
-
-        for (String stack : cmds) {
-            rewards.add(stack);
-        }
-    }
-
     public EffectCommand(JsonObject jo) {
         super(jo);
         rewards = SerializeUtil.parseJsonElmList(jo.get("rewards"), JsonElement::getAsString);
@@ -69,9 +60,37 @@ public class EffectCommand extends Effect {
         rewards = SerializeUtil.readList(pb, PacketBuffer::readString);
     }
 
-    @Override
-    public void init() {
+    public EffectCommand(String... cmds) {
+        super();
+        rewards = new ArrayList<>();
 
+        for (String stack : cmds) {
+            rewards.add(stack);
+        }
+    }
+
+    @Override
+    public String getBrief() {
+        if (rewards.isEmpty())
+            return "No Command";
+
+        return "Command " + rewards.get(0) + (rewards.size() > 1 ? " ..." : "");
+    }
+
+    @Override
+    public FHIcon getDefaultIcon() {
+        return FHIcons.getIcon(Blocks.COMMAND_BLOCK);
+    }
+
+    @Override
+    public IFormattableTextComponent getDefaultName() {
+        return GuiUtils.translateGui("effect.command");
+    }
+
+    @Override
+    public List<ITextComponent> getDefaultTooltip() {
+        List<ITextComponent> tooltip = new ArrayList<>();
+        return tooltip;
     }
 
     @Override
@@ -104,6 +123,11 @@ public class EffectCommand extends Effect {
         return true;
     }
 
+    @Override
+    public void init() {
+
+    }
+
     // We dont redo command, it's not possible
     @Override
     public void revoke(TeamResearchData team) {
@@ -121,29 +145,5 @@ public class EffectCommand extends Effect {
     public void write(PacketBuffer buffer) {
         super.write(buffer);
         SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeString);
-    }
-
-    @Override
-    public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(Blocks.COMMAND_BLOCK);
-    }
-
-    @Override
-    public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.command");
-    }
-
-    @Override
-    public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
-    }
-
-    @Override
-    public String getBrief() {
-        if (rewards.isEmpty())
-            return "No Command";
-
-        return "Command " + rewards.get(0) + (rewards.size() > 1 ? " ..." : "");
     }
 }

@@ -36,8 +36,8 @@ public class IonEffect extends Effect {
     }
 
     @Override
-    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
-        entityLivingBaseIn.attackEntityFrom(FHDamageSources.RAD, (float) (1 + (amplifier) * 0.5));
+    public List<ItemStack> getCurativeItems() {
+        return ImmutableList.of();
     }
 
     @Override
@@ -46,8 +46,8 @@ public class IonEffect extends Effect {
     }
 
     @Override
-    public List<ItemStack> getCurativeItems() {
-        return ImmutableList.of();
+    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
+        entityLivingBaseIn.attackEntityFrom(FHDamageSources.RAD, (float) (1 + (amplifier) * 0.5));
     }
 
 }

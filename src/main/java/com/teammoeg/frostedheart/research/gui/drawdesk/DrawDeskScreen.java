@@ -42,8 +42,55 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui {
 
     }
 
+    @Override
+    public void addWidgets() {
+        if (p != null && p.isEnabled())
+            add(p);
+        if (r != null && r.isEnabled())
+            add(r);
+        if (getDialog() != null)
+            add(getDialog());
+    }
+
+    public void closeDialog(boolean refresh) {
+        this.dialog = null;
+        r.setEnabled(true);
+        if (refresh)
+            this.refreshWidgets();
+    }
+
+    @Override
+    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+    }
+
+    public EditDialog getDialog() {
+        return dialog;
+    }
+
     public DrawingDeskTileEntity getTile() {
         return cx.tile;
+    }
+
+    public void hideTechTree() {
+        p.setEnabled(true);
+        r.setEnabled(false);
+        cx.setEnabled(true);
+        this.refreshWidgets();
+    }
+
+    @Override
+    public boolean onInit() {
+        int sw = 387;
+        int sh = 203;
+        this.setSize(sw, sh);
+        return super.onInit();
+    }
+
+    public void openDialog(EditDialog dialog, boolean refresh) {
+        this.dialog = dialog;
+        r.setEnabled(false);
+        if (refresh)
+            this.refreshWidgets();
     }
 
     public void showTechTree() {
@@ -61,53 +108,6 @@ public class DrawDeskScreen extends BaseScreen implements ResearchGui {
         cx.setEnabled(false);
         this.refreshWidgets();
 
-    }
-
-    public void hideTechTree() {
-        p.setEnabled(true);
-        r.setEnabled(false);
-        cx.setEnabled(true);
-        this.refreshWidgets();
-    }
-
-    public void openDialog(EditDialog dialog, boolean refresh) {
-        this.dialog = dialog;
-        r.setEnabled(false);
-        if (refresh)
-            this.refreshWidgets();
-    }
-
-    public void closeDialog(boolean refresh) {
-        this.dialog = null;
-        r.setEnabled(true);
-        if (refresh)
-            this.refreshWidgets();
-    }
-
-    @Override
-    public void addWidgets() {
-        if (p != null && p.isEnabled())
-            add(p);
-        if (r != null && r.isEnabled())
-            add(r);
-        if (getDialog() != null)
-            add(getDialog());
-    }
-
-    @Override
-    public boolean onInit() {
-        int sw = 387;
-        int sh = 203;
-        this.setSize(sw, sh);
-        return super.onInit();
-    }
-
-    @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-    }
-
-    public EditDialog getDialog() {
-        return dialog;
     }
 
 }

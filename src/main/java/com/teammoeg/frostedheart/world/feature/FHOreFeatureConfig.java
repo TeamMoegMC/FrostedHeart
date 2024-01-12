@@ -30,25 +30,6 @@ import net.minecraft.world.gen.feature.IFeatureConfig;
 import net.minecraft.world.gen.feature.template.RuleTest;
 
 public class FHOreFeatureConfig implements IFeatureConfig {
-    public static final Codec<FHOreFeatureConfig> CODEC = RecordCodecBuilder.create((p_236568_0_) -> {
-        return p_236568_0_.group(RuleTest.CODEC.fieldOf("target").forGetter((config) -> {
-            return config.target;
-        }), BlockState.CODEC.fieldOf("state").forGetter((config) -> {
-            return config.state;
-        }), Codec.intRange(0, 64).fieldOf("size").forGetter((config) -> {
-            return config.size;
-        })).apply(p_236568_0_, FHOreFeatureConfig::new);
-    });
-    public final RuleTest target;
-    public final int size;
-    public final BlockState state;
-
-    public FHOreFeatureConfig(RuleTest p_i241989_1_, BlockState state, int size) {
-        this.size = size;
-        this.state = state;
-        this.target = p_i241989_1_;
-    }
-
     public static final class FillerBlockType {
         public static final FHRuleTest magnetite = new FHRuleTest(new Block[]{RankineBlocks.DOLOSTONE.get(), RankineBlocks.CHALK.get(), RankineBlocks.SILTSTONE.get(), RankineBlocks.LIMESTONE.get(), RankineBlocks.SHALE.get()});
         public static final FHRuleTest pyrite = new FHRuleTest(new Block[]{RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), RankineBlocks.RED_DACITE.get(), RankineBlocks.BLACK_DACITE.get()});
@@ -66,5 +47,24 @@ public class FHOreFeatureConfig implements IFeatureConfig {
         public static final FHRuleTest gold = new FHRuleTest(new Block[]{Blocks.DIORITE, RankineBlocks.MICA_SCHIST.get(), RankineBlocks.RHYOLITE.get(), RankineBlocks.KOMATIITE.get(), RankineBlocks.THOLEIITIC_BASALT.get(), Blocks.GRANITE, RankineBlocks.PEGMATITE.get()});
         public static final FHRuleTest anthracite = new FHRuleTest(new Block[]{RankineBlocks.WHITE_MARBLE.get(), RankineBlocks.SLATE.get()});
         public static final FHRuleTest graphite = new FHRuleTest(new Block[]{RankineBlocks.BLACK_MARBLE.get(), RankineBlocks.MICA_SCHIST.get(), RankineBlocks.SLATE.get(), RankineBlocks.SKARN.get(), RankineBlocks.PEGMATITE.get(), RankineBlocks.GNEISS.get()});
+    }
+    public static final Codec<FHOreFeatureConfig> CODEC = RecordCodecBuilder.create((p_236568_0_) -> {
+        return p_236568_0_.group(RuleTest.CODEC.fieldOf("target").forGetter((config) -> {
+            return config.target;
+        }), BlockState.CODEC.fieldOf("state").forGetter((config) -> {
+            return config.state;
+        }), Codec.intRange(0, 64).fieldOf("size").forGetter((config) -> {
+            return config.size;
+        })).apply(p_236568_0_, FHOreFeatureConfig::new);
+    });
+    public final RuleTest target;
+    public final int size;
+
+    public final BlockState state;
+
+    public FHOreFeatureConfig(RuleTest p_i241989_1_, BlockState state, int size) {
+        this.size = size;
+        this.state = state;
+        this.target = p_i241989_1_;
     }
 }

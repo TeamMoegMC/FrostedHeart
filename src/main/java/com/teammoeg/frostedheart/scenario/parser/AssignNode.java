@@ -38,14 +38,8 @@ public class AssignNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
-        if (pat2 != null) {
-            runner.setPath(pat, runner.evalPath(pat2));
-        } else if (str != null) {
-            runner.setPathString(pat, str);
-        } else {
-            runner.setPathNumber(pat, runner.eval(exp));
-        }
+    public String getDisplay(ScenarioRunner runner) {
+        return "";
     }
 
     @Override
@@ -59,8 +53,14 @@ public class AssignNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
-        return "";
+    public void run(ScenarioRunner runner) {
+        if (pat2 != null) {
+            runner.setPath(pat, runner.evalPath(pat2));
+        } else if (str != null) {
+            runner.setPathString(pat, str);
+        } else {
+            runner.setPathNumber(pat, runner.eval(exp));
+        }
     }
 
 }

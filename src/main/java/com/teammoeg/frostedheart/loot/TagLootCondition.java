@@ -40,11 +40,31 @@ import net.minecraftforge.common.Tags;
 import javax.annotation.Nonnull;
 
 public class TagLootCondition implements ILootCondition {
+    public static class Serializer implements ILootSerializer<TagLootCondition> {
+
+        @Nonnull
+        @Override
+        public TagLootCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
+            Tags.IOptionalNamedTag<Block> optional = BlockTags.createOptional(new ResourceLocation(JSONUtils.getString(jsonObject, "tag")));
+            return new TagLootCondition(optional);
+        }
+
+        @Override
+        public void serialize(JsonObject jsonObject, TagLootCondition matchTagCondition, JsonSerializationContext serializationContext) {
+            jsonObject.addProperty("tag", matchTagCondition.tag.getName().toString());
+        }
+    }
     public static LootConditionType TYPE;
+
     private Tags.IOptionalNamedTag<Block> tag;
 
     public TagLootCondition(Tags.IOptionalNamedTag<Block> tag) {
         this.tag = tag;
+    }
+
+    @Override
+    public LootConditionType getConditionType() {
+        return TYPE;
     }
 
     @SuppressWarnings("resource")
@@ -59,25 +79,5 @@ public class TagLootCondition implements ILootCondition {
             return bs != null && tag.contains(bs.getBlock());
         }
         return false;
-    }
-
-    @Override
-    public LootConditionType getConditionType() {
-        return TYPE;
-    }
-
-    public static class Serializer implements ILootSerializer<TagLootCondition> {
-
-        @Override
-        public void serialize(JsonObject jsonObject, TagLootCondition matchTagCondition, JsonSerializationContext serializationContext) {
-            jsonObject.addProperty("tag", matchTagCondition.tag.getName().toString());
-        }
-
-        @Nonnull
-        @Override
-        public TagLootCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
-            Tags.IOptionalNamedTag<Block> optional = BlockTags.createOptional(new ResourceLocation(JSONUtils.getString(jsonObject, "tag")));
-            return new TagLootCondition(optional);
-        }
     }
 }

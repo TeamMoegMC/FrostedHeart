@@ -37,11 +37,11 @@ public class FHBiomes {
 
 //    public static RegistryObject<Biome> RELIC = BIOME_REGISTER.register("relic", () -> new VolcanicBiome().build());
 
-    public static RegistryKey<Biome> makeKey(Biome biome) {
-        return RegistryKey.getOrCreateKey(Registry.BIOME_KEY, biome.getRegistryName());
-    }
-
     public static void Biomes() {
         BiomeManager.addBiome(BiomeManager.BiomeType.COOL, new BiomeManager.BiomeEntry(makeKey(VOLCANIC.get()), 5));
+    }
+
+    public static RegistryKey<Biome> makeKey(Biome biome) {
+        return RegistryKey.getOrCreateKey(Registry.BIOME_KEY, biome.getRegistryName());
     }
 }

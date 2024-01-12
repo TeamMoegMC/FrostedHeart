@@ -42,21 +42,6 @@ public class LazyTickWorker {
         isStaticMax = false;
     }
 
-    public boolean tick() {
-        if (tMax != 0) {
-            tCur++;
-            if (tCur >= tMax) {
-                tCur = 0;
-                return work.get();
-            }
-        }
-        return false;
-    }
-
-    public void rewind() {
-        tCur = 0;
-    }
-
     public void enqueue() {
         tCur = tMax;
     }
@@ -71,6 +56,21 @@ public class LazyTickWorker {
         if (!isStaticMax)
             tMax = cnbt.getInt(key + "max");
         tCur = cnbt.getInt(key);
+    }
+
+    public void rewind() {
+        tCur = 0;
+    }
+
+    public boolean tick() {
+        if (tMax != 0) {
+            tCur++;
+            if (tCur >= tMax) {
+                tCur = 0;
+                return work.get();
+            }
+        }
+        return false;
     }
 
     public CompoundNBT write(CompoundNBT cnbt) {

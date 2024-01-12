@@ -31,6 +31,10 @@ import net.minecraft.item.ItemStack;
  */
 public interface IHeatingEquipment {
 
+    default boolean canHandHeld() {
+        return false;
+    }
+
     /**
      * Compute new body temperature.<br>
      *
@@ -48,8 +52,4 @@ public interface IHeatingEquipment {
      * @return returns max temperature delta
      */
     float getMax(ItemStack stack);
-
-    default boolean canHandHeld() {
-        return false;
-    }
 }

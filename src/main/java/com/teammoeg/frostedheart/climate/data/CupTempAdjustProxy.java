@@ -36,20 +36,6 @@ public class CupTempAdjustProxy implements ITempAdjustFood {
     }
 
     @Override
-    public float getMaxTemp(ItemStack is) {
-        if (defData != null)
-            return defData.getMaxTemp(is);
-        return ITempAdjustFood.super.getMaxTemp(is);
-    }
-
-    @Override
-    public float getMinTemp(ItemStack is) {
-        if (defData != null)
-            return defData.getMinTemp(is);
-        return ITempAdjustFood.super.getMinTemp(is);
-    }
-
-    @Override
     public float getHeat(ItemStack is, float env) {
         LazyOptional<IFluidHandlerItem> ih = FluidUtil.getFluidHandler(is);
         if (ih.isPresent()) {
@@ -68,6 +54,20 @@ public class CupTempAdjustProxy implements ITempAdjustFood {
         if (defData != null)
             return defData.getHeat(is, env);
         return 0;
+    }
+
+    @Override
+    public float getMaxTemp(ItemStack is) {
+        if (defData != null)
+            return defData.getMaxTemp(is);
+        return ITempAdjustFood.super.getMaxTemp(is);
+    }
+
+    @Override
+    public float getMinTemp(ItemStack is) {
+        if (defData != null)
+            return defData.getMinTemp(is);
+        return ITempAdjustFood.super.getMinTemp(is);
     }
 
 }

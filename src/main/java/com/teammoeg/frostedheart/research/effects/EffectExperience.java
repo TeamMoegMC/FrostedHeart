@@ -67,36 +67,9 @@ public class EffectExperience extends Effect {
     }
 
     @Override
-    public void init() {
+    public String getBrief() {
 
-    }
-
-    @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        if (triggerPlayer == null || isload)
-            return false;
-
-        triggerPlayer.giveExperiencePoints(getRId());
-
-        return true;
-    }
-
-    @Override
-    public void revoke(TeamResearchData team) {
-
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("experience", exp);
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeVarInt(exp);
+        return "Experience " + exp;
     }
 
     @Override
@@ -117,8 +90,35 @@ public class EffectExperience extends Effect {
     }
 
     @Override
-    public String getBrief() {
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        if (triggerPlayer == null || isload)
+            return false;
 
-        return "Experience " + exp;
+        triggerPlayer.giveExperiencePoints(getRId());
+
+        return true;
+    }
+
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public void revoke(TeamResearchData team) {
+
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.addProperty("experience", exp);
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        buffer.writeVarInt(exp);
     }
 }

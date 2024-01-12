@@ -27,6 +27,34 @@ import net.minecraft.util.math.MathHelper;
  */
 @FunctionalInterface
 public interface INoise2D {
+    /**
+     * Takes the absolute value of a noise function. Does not scale the result
+     *
+     * @return a new noise function
+     */
+    default INoise2D abs() {
+        return (x, y) -> Math.abs(INoise2D.this.noise(x, y));
+    }
+
+    default INoise2D add(INoise2D other) {
+        return (x, y) -> INoise2D.this.noise(x, y) + other.noise(x, y);
+    }
+
+    /**
+     * Creates flattened noise by cutting off values above or below a threshold
+     *
+     * @param min the minimum noise value
+     * @param max the maximum noise value
+     * @return a new noise function
+     */
+    default INoise2D flattened(float min, float max) {
+        return (x, y) -> MathHelper.clamp(INoise2D.this.noise(x, y), min, max);
+    }
+
+    default INoise2D map(FloatUnaryFunction mappingFunction) {
+        return (x, y) -> mappingFunction.applyAsFloat(INoise2D.this.noise(x, y));
+    }
+
     float noise(float x, float z);
 
     default INoise2D octaves(int octaves) {
@@ -69,40 +97,6 @@ public interface INoise2D {
         };
     }
 
-    /**
-     * Takes the absolute value of a noise function. Does not scale the result
-     *
-     * @return a new noise function
-     */
-    default INoise2D abs() {
-        return (x, y) -> Math.abs(INoise2D.this.noise(x, y));
-    }
-
-    /**
-     * Creates "terraces" by taking the nearest level and rounding
-     * Input must be in range [-1, 1]
-     *
-     * @param levels The number of levels to round to
-     * @return a new noise function
-     */
-    default INoise2D terraces(int levels) {
-        return (x, y) -> {
-            float value = 0.5f * INoise2D.this.noise(x, y) + 0.5f;
-            float rounded = (int) (value * levels); // In range [0, levels)
-            return (rounded * 2f) / levels - 1f;
-        };
-    }
-
-    /**
-     * Spreads out the noise via the input parameters
-     *
-     * @param scaleFactor The scale for the input params
-     * @return a new noise function
-     */
-    default INoise2D spread(float scaleFactor) {
-        return (x, y) -> INoise2D.this.noise(x * scaleFactor, y * scaleFactor);
-    }
-
     default INoise2D scaled(float min, float max) {
         return scaled(-1, 1, min, max);
     }
@@ -123,14 +117,28 @@ public interface INoise2D {
     }
 
     /**
-     * Applies domain warping to each input coordinate using the two input noise functions
+     * Spreads out the noise via the input parameters
      *
-     * @param warpX the x warp noise
-     * @param warpY the y warp noise
+     * @param scaleFactor The scale for the input params
      * @return a new noise function
      */
-    default INoise2D warped(INoise2D warpX, INoise2D warpY) {
-        return (x, y) -> INoise2D.this.noise(x + warpX.noise(x, y), y + warpY.noise(x, y));
+    default INoise2D spread(float scaleFactor) {
+        return (x, y) -> INoise2D.this.noise(x * scaleFactor, y * scaleFactor);
+    }
+
+    /**
+     * Creates "terraces" by taking the nearest level and rounding
+     * Input must be in range [-1, 1]
+     *
+     * @param levels The number of levels to round to
+     * @return a new noise function
+     */
+    default INoise2D terraces(int levels) {
+        return (x, y) -> {
+            float value = 0.5f * INoise2D.this.noise(x, y) + 0.5f;
+            float rounded = (int) (value * levels); // In range [0, levels)
+            return (rounded * 2f) / levels - 1f;
+        };
     }
 
     /**
@@ -145,21 +153,13 @@ public interface INoise2D {
     }
 
     /**
-     * Creates flattened noise by cutting off values above or below a threshold
+     * Applies domain warping to each input coordinate using the two input noise functions
      *
-     * @param min the minimum noise value
-     * @param max the maximum noise value
+     * @param warpX the x warp noise
+     * @param warpY the y warp noise
      * @return a new noise function
      */
-    default INoise2D flattened(float min, float max) {
-        return (x, y) -> MathHelper.clamp(INoise2D.this.noise(x, y), min, max);
-    }
-
-    default INoise2D add(INoise2D other) {
-        return (x, y) -> INoise2D.this.noise(x, y) + other.noise(x, y);
-    }
-
-    default INoise2D map(FloatUnaryFunction mappingFunction) {
-        return (x, y) -> mappingFunction.applyAsFloat(INoise2D.this.noise(x, y));
+    default INoise2D warped(INoise2D warpX, INoise2D warpY) {
+        return (x, y) -> INoise2D.this.noise(x + warpX.noise(x, y), y + warpY.noise(x, y));
     }
 }

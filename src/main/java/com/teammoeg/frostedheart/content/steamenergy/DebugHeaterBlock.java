@@ -52,6 +52,11 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     }
 
 
+    @Override
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
+        return true;
+    }
+
     @Nullable
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
@@ -63,6 +68,13 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
         super.fillStateContainer(builder);
         builder.add(BlockStateProperties.LEVEL_1_8);
     }
+
+
+    @Override
+    public boolean hasTileEntity(BlockState state) {
+        return true;
+    }
+
 
     @Override
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player,
@@ -78,17 +90,5 @@ public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
             return ActionResultType.SUCCESS;
         }
         return superResult;
-    }
-
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-
-    @Override
-    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-        return true;
     }
 }

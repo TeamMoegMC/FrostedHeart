@@ -43,16 +43,16 @@ public class Cellular2D implements INoise2D {
         this.frequency = 1;
     }
 
+    public float get(CellularNoiseType alternateType) {
+        return alternateType.calculate(distance0, distance1, closestHash);
+    }
+
     public float getCenterX() {
         return centerX;
     }
 
     public float getCenterY() {
         return centerY;
-    }
-
-    public float get(CellularNoiseType alternateType) {
-        return alternateType.calculate(distance0, distance1, closestHash);
     }
 
     @Override

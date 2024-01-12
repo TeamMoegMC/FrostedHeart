@@ -30,8 +30,8 @@ public class FHDamageSources {
     public static final DamageSource HYPOTHERMIA_INSTANT = (new DamageSource("hypothermia_instant")).setDamageBypassesArmor();
     public static final DamageSource HYPERTHERMIA_INSTANT = (new DamageSource("hyperthermia_instant")).setDamageBypassesArmor();
 
-    public static DamageSource hypothermiaFrom(Entity e) {
-        return (new DamageSource("hypothermia") {
+    public static DamageSource hyperthermiaFrom(Entity e) {
+        return (new DamageSource("hyperthermia") {
 
             @Override
             public Entity getTrueSource() {
@@ -41,8 +41,8 @@ public class FHDamageSources {
         }).setDamageBypassesArmor();
     }
 
-    public static DamageSource hyperthermiaFrom(Entity e) {
-        return (new DamageSource("hyperthermia") {
+    public static DamageSource hypothermiaFrom(Entity e) {
+        return (new DamageSource("hypothermia") {
 
             @Override
             public Entity getTrueSource() {

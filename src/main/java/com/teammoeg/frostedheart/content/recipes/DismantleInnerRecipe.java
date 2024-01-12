@@ -40,47 +40,29 @@ import net.minecraftforge.registries.ForgeRegistries;
 import javax.annotation.Nullable;
 
 public class DismantleInnerRecipe extends SpecialRecipe {
+    public static class Serializer extends IERecipeSerializer<DismantleInnerRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHItems.buff_coat);
+        }
+
+        @Nullable
+        @Override
+        public DismantleInnerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            return new DismantleInnerRecipe(recipeId);
+        }
+
+        @Override
+        public DismantleInnerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            return new DismantleInnerRecipe(recipeId);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, DismantleInnerRecipe recipe) {
+        }
+    }
+
     public static RegistryObject<IERecipeSerializer<DismantleInnerRecipe>> SERIALIZER;
-
-    protected DismantleInnerRecipe(ResourceLocation id) {
-        super(id);
-    }
-
-    /**
-     * Used to check if a recipe matches current crafting inventory
-     */
-    public boolean matches(CraftingInventory inv, World worldIn) {
-        boolean hasArmor = false;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
-            if (itemstack == null || itemstack.isEmpty()) {
-                continue;
-            }
-            if (hasArmor)
-                return false;
-            EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
-            if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
-                if (itemstack.hasTag()) {
-                    CompoundNBT cnbt = itemstack.getTag();
-                    if (!cnbt.getBoolean("inner_bounded") && !cnbt.getString("inner_cover").isEmpty())
-                        hasArmor = true;
-                    else
-                        return false;
-                }
-            } else
-                return false;
-        }
-        return hasArmor;
-    }
-
-    public static ItemStack tryDismantle(ItemStack item) {
-        EquipmentSlotType type = MobEntity.getSlotForItemStack(item);
-        if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
-            if (item.hasTag() && !item.getTag().getString("inner_cover").isEmpty())
-                return DismantleInnerRecipe.getDismantledResult(item);
-        }
-        return ItemStack.EMPTY;
-    }
 
     public static ItemStack getDismantledResult(ItemStack armoritem) {
         if (armoritem.hasTag()) {
@@ -98,6 +80,26 @@ public class DismantleInnerRecipe extends SpecialRecipe {
             }
         }
         return ItemStack.EMPTY;
+    }
+
+    public static ItemStack tryDismantle(ItemStack item) {
+        EquipmentSlotType type = MobEntity.getSlotForItemStack(item);
+        if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
+            if (item.hasTag() && !item.getTag().getString("inner_cover").isEmpty())
+                return DismantleInnerRecipe.getDismantledResult(item);
+        }
+        return ItemStack.EMPTY;
+    }
+
+    protected DismantleInnerRecipe(ResourceLocation id) {
+        super(id);
+    }
+
+    /**
+     * Used to determine if this recipe can fit in a grid of the given width/height
+     */
+    public boolean canFit(int width, int height) {
+        return width * height >= 1;
     }
 
     /**
@@ -148,37 +150,35 @@ public class DismantleInnerRecipe extends SpecialRecipe {
         return nonnulllist;
     }
 
-    /**
-     * Used to determine if this recipe can fit in a grid of the given width/height
-     */
-    public boolean canFit(int width, int height) {
-        return width * height >= 1;
-    }
-
     @Override
     public IRecipeSerializer<?> getSerializer() {
         return SERIALIZER.get();
     }
 
-    public static class Serializer extends IERecipeSerializer<DismantleInnerRecipe> {
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+    /**
+     * Used to check if a recipe matches current crafting inventory
+     */
+    public boolean matches(CraftingInventory inv, World worldIn) {
+        boolean hasArmor = false;
+        for (int i = 0; i < inv.getSizeInventory(); ++i) {
+            ItemStack itemstack = inv.getStackInSlot(i);
+            if (itemstack == null || itemstack.isEmpty()) {
+                continue;
+            }
+            if (hasArmor)
+                return false;
+            EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+            if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND) {
+                if (itemstack.hasTag()) {
+                    CompoundNBT cnbt = itemstack.getTag();
+                    if (!cnbt.getBoolean("inner_bounded") && !cnbt.getString("inner_cover").isEmpty())
+                        hasArmor = true;
+                    else
+                        return false;
+                }
+            } else
+                return false;
         }
-
-        @Override
-        public DismantleInnerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            return new DismantleInnerRecipe(recipeId);
-        }
-
-        @Nullable
-        @Override
-        public DismantleInnerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new DismantleInnerRecipe(recipeId);
-        }
-
-        @Override
-        public void write(PacketBuffer buffer, DismantleInnerRecipe recipe) {
-        }
+        return hasArmor;
     }
 }

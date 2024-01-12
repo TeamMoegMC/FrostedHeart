@@ -28,6 +28,16 @@ import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 
 public class TechScrollBar extends PanelScrollBar {
+    // Have to do this hack since FTBL fields are private.
+    private static final Theme dtheme = new Theme() {
+        @Override
+        public void drawScrollBar(MatrixStack matrixStack, int x, int y, int w, int h, WidgetType type,
+                                  boolean vertical) {
+            GuiHelper.setupDrawing();
+            TechIcons.drawTexturedRect(matrixStack, x, y, w, h, type != WidgetType.MOUSE_OVER);
+        }
+    };
+
     boolean isHidden = false;
 
     public TechScrollBar(Panel parent, Panel panel) {
@@ -39,6 +49,11 @@ public class TechScrollBar extends PanelScrollBar {
     }
 
     @Override
+    public boolean canMouseScroll() {
+        return super.canMouseScroll() && panel.isEnabled() && !isHidden;
+    }
+
+    @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         if (!isHidden) {
             GuiHelper.setupDrawing();
@@ -46,33 +61,18 @@ public class TechScrollBar extends PanelScrollBar {
         }
     }
 
-    // Have to do this hack since FTBL fields are private.
-    private static final Theme dtheme = new Theme() {
-        @Override
-        public void drawScrollBar(MatrixStack matrixStack, int x, int y, int w, int h, WidgetType type,
-                                  boolean vertical) {
-            GuiHelper.setupDrawing();
-            TechIcons.drawTexturedRect(matrixStack, x, y, w, h, type != WidgetType.MOUSE_OVER);
-        }
-    };
-
     @Override
     public void drawScrollBar(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         if (!isHidden)
             super.drawScrollBar(matrixStack, dtheme, x + 1, y + 1, w - 2, h - 2);
     }
 
-    @Override
-    public boolean canMouseScroll() {
-        return super.canMouseScroll() && panel.isEnabled() && !isHidden;
+    public void hide() {
+        this.isHidden = true;
     }
 
     public boolean isHidden() {
         return isHidden;
-    }
-
-    public void hide() {
-        this.isHidden = true;
     }
 
     public void unhide() {

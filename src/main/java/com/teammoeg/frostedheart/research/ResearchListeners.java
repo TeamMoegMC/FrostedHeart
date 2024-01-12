@@ -65,51 +65,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class ResearchListeners {
-    public static class RecipeUnlockList extends UnlockList<IRecipe<?>> {
-
-        public RecipeUnlockList() {
-            super();
-        }
-
-        public RecipeUnlockList(ListNBT nbt) {
-            super(nbt);
-        }
-
-        @Override
-        public String getString(IRecipe<?> item) {
-            return item.getId().toString();
-        }
-
-        @Override
-        public IRecipe<?> getObject(String s) {
-            return FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
-        }
-
-    }
-
-    public static class MultiblockUnlockList extends UnlockList<IMultiblock> {
-
-        public MultiblockUnlockList() {
-            super();
-        }
-
-        public MultiblockUnlockList(ListNBT nbt) {
-            super(nbt);
-        }
-
-        @Override
-        public String getString(IMultiblock item) {
-            return item.getUniqueName().toString();
-        }
-
-        @Override
-        public IMultiblock getObject(String s) {
-            return MultiblockHandler.getByUniqueName(new ResourceLocation(s));
-        }
-
-
-    }
-
     public static class BlockUnlockList extends UnlockList<Block> {
         public BlockUnlockList() {
             super();
@@ -120,13 +75,13 @@ public class ResearchListeners {
         }
 
         @Override
-        public String getString(Block item) {
-            return item.getRegistryName().toString();
+        public Block getObject(String s) {
+            return ForgeRegistries.BLOCKS.getValue(new ResourceLocation(s));
         }
 
         @Override
-        public Block getObject(String s) {
-            return ForgeRegistries.BLOCKS.getValue(new ResourceLocation(s));
+        public String getString(Block item) {
+            return item.getRegistryName().toString();
         }
     }
 
@@ -140,13 +95,13 @@ public class ResearchListeners {
         }
 
         @Override
-        public String getString(ResourceLocation item) {
-            return item.toString();
+        public ResourceLocation getObject(String s) {
+            return new ResourceLocation(s);
         }
 
         @Override
-        public ResourceLocation getObject(String s) {
-            return new ResourceLocation(s);
+        public String getString(ResourceLocation item) {
+            return item.toString();
         }
 
     }
@@ -169,6 +124,10 @@ public class ResearchListeners {
             return trigger.add(t);
         }
 
+        public T getListener() {
+            return listener;
+        }
+
         public boolean remove(Team t) {
             if (trigger == null) return false;
             return trigger.remove(t);
@@ -180,10 +139,6 @@ public class ResearchListeners {
                 if (t.equals(t2))
                     return true;
             return false;
-        }
-
-        public T getListener() {
-            return listener;
         }
     }
 
@@ -205,6 +160,13 @@ public class ResearchListeners {
             return super.add(new ListenerInfo<T>(c, t));
         }
 
+        public void call(Team t, Consumer<T> c) {
+            for (ListenerInfo<T> cl : this) {
+                if (cl.shouldCall(t))
+                    c.accept(cl.getListener());
+            }
+        }
+
         public boolean remove(T c, Team t) {
             if (t != null)
                 for (ListenerInfo<T> cl : this) {
@@ -215,13 +177,51 @@ public class ResearchListeners {
                 this.removeIf(cl -> cl.getListener() == c);
             return false;
         }
+    }
 
-        public void call(Team t, Consumer<T> c) {
-            for (ListenerInfo<T> cl : this) {
-                if (cl.shouldCall(t))
-                    c.accept(cl.getListener());
-            }
+    public static class MultiblockUnlockList extends UnlockList<IMultiblock> {
+
+        public MultiblockUnlockList() {
+            super();
         }
+
+        public MultiblockUnlockList(ListNBT nbt) {
+            super(nbt);
+        }
+
+        @Override
+        public IMultiblock getObject(String s) {
+            return MultiblockHandler.getByUniqueName(new ResourceLocation(s));
+        }
+
+        @Override
+        public String getString(IMultiblock item) {
+            return item.getUniqueName().toString();
+        }
+
+
+    }
+
+    public static class RecipeUnlockList extends UnlockList<IRecipe<?>> {
+
+        public RecipeUnlockList() {
+            super();
+        }
+
+        public RecipeUnlockList(ListNBT nbt) {
+            super(nbt);
+        }
+
+        @Override
+        public IRecipe<?> getObject(String s) {
+            return FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s)).orElse(null);
+        }
+
+        @Override
+        public String getString(IRecipe<?> item) {
+            return item.getId().toString();
+        }
+
     }
 
     public static RecipeUnlockList recipe = new RecipeUnlockList();
@@ -232,18 +232,122 @@ public class ResearchListeners {
     private static ListenerList<KillClue> killClues = new ListenerList<>();
     public static UUID te;
 
-    private ResearchListeners() {
+    @OnlyIn(Dist.CLIENT)
+    public static boolean canExamine(ItemStack i) {
+        if (i.isEmpty()) return false;
+        for (InspireRecipe ir : InspireRecipe.recipes) {
+            if (ir.item.test(i)) {
+                return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(), ir.inspire);
+            }
+        }
+        return true;
+    }
+
+    public static boolean canUseBlock(PlayerEntity player, Block b) {
+        if (block.has(b)) {
+            if (player instanceof FakePlayer) return false;
+            if (player.getEntityWorld().isRemote)
+                return ClientResearchDataAPI.getData().block.has(b);
+            return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
+        }
+        return true;
 
     }
 
-    public static void tick(ServerPlayerEntity s) {
-        Team t = FTBTeamsAPI.getPlayerTeam(s);
+    public static boolean canUseRecipe(IRecipe<?> r) {
+        if (recipe.has(r)) {
+            return ClientResearchDataAPI.getData().crafting.has(r);
+        }
+        return true;
+    }
+
+    @SuppressWarnings("resource")
+    public static boolean canUseRecipe(PlayerEntity s, IRecipe<?> r) {
+        if (s == null)
+            return canUseRecipe(r);
+        if (recipe.has(r)) {
+            if (s.getEntityWorld().isRemote)
+                return ClientResearchDataAPI.getData().crafting.has(r);
+            return ResearchDataAPI.getData((ServerPlayerEntity) s).crafting.has(r);
+        }
+        return true;
+    }
+
+    public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
+        if (recipe.has(r)) {
+            if (team == null) return false;
+            return ResearchDataAPI.getData(team).crafting.has(r);
+        }
+        return true;
+    }
+
+    public static boolean commitGameLevel(ServerPlayerEntity s, int lvl) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
-        tickClues.call(t, e -> e.tick(trd, s));
+        LazyOptional<Research> cur = trd.getCurrentResearch();
+        if (cur.isPresent()) {
+            Research rs = cur.orElse(null);
+            if (rs != null) {
+                for (Clue cl : rs.getClues()) {
+                    if (trd.isClueTriggered(cl)) continue;
+                    if (cl instanceof MinigameClue) {
+                        if (((MinigameClue) cl).getLevel() <= lvl) {
+                            cl.setCompleted(trd, true);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static int fetchGameLevel() {
+        TeamResearchData trd = ClientResearchDataAPI.getData();
+        LazyOptional<Research> cur = trd.getCurrentResearch();
+        if (cur.isPresent()) {
+            Research rs = cur.orElse(null);
+            if (rs != null) {
+                for (Clue cl : rs.getClues()) {
+                    if (trd.isClueTriggered(cl)) continue;
+                    if (cl instanceof MinigameClue) {
+                        return ((MinigameClue) cl).getLevel();
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static int fetchGameLevel(ServerPlayerEntity s) {
+        TeamResearchData trd = ResearchDataAPI.getData(s);
+        LazyOptional<Research> cur = trd.getCurrentResearch();
+        if (cur.isPresent()) {
+            Research rs = cur.orElse(null);
+            if (rs != null) {
+                for (Clue cl : rs.getClues()) {
+                    if (trd.isClueTriggered(cl)) continue;
+                    if (cl instanceof MinigameClue) {
+                        return ((MinigameClue) cl).getLevel();
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static ListenerList<KillClue> getKillClues() {
+        return killClues;
     }
 
     public static ListenerList<TickListenerClue> getTickClues() {
         return tickClues;
+    }
+
+    public static void kill(ServerPlayerEntity s, LivingEntity e) {
+        Team t = FTBTeamsAPI.getPlayerTeam(s);
+        TeamResearchData trd = ResearchDataAPI.getData(s);
+        killClues.call(t, c -> c.isCompleted(trd, e));
     }
 
     public static void reload() {
@@ -256,6 +360,12 @@ public class ResearchListeners {
         te = null;
     }
 
+    @OnlyIn(Dist.CLIENT)
+    public static void reloadEditor() {
+        if (!Minecraft.getInstance().isSingleplayer())
+            FHResearch.editor = false;
+    }
+
     public static void ServerReload() {
         if (FHResearchDataManager.INSTANCE == null) return;
         FHMain.LOGGER.info("reloading research system");
@@ -264,23 +374,6 @@ public class ResearchListeners {
         FHResearchRegistrtySyncPacket packet = new FHResearchRegistrtySyncPacket();
         FHPacketHandler.send(PacketDistributor.ALL.noArg(), packet);
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.sendUpdate());
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static void reloadEditor() {
-        if (!Minecraft.getInstance().isSingleplayer())
-            FHResearch.editor = false;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static boolean canExamine(ItemStack i) {
-        if (i.isEmpty()) return false;
-        for (InspireRecipe ir : InspireRecipe.recipes) {
-            if (ir.item.test(i)) {
-                return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(), ir.inspire);
-            }
-        }
-        return true;
     }
 
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
@@ -320,106 +413,13 @@ public class ResearchListeners {
         return i;
     }
 
-    public static int fetchGameLevel(ServerPlayerEntity s) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        LazyOptional<Research> cur = trd.getCurrentResearch();
-        if (cur.isPresent()) {
-            Research rs = cur.orElse(null);
-            if (rs != null) {
-                for (Clue cl : rs.getClues()) {
-                    if (trd.isClueTriggered(cl)) continue;
-                    if (cl instanceof MinigameClue) {
-                        return ((MinigameClue) cl).getLevel();
-                    }
-                }
-            }
-        }
-        return -1;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public static int fetchGameLevel() {
-        TeamResearchData trd = ClientResearchDataAPI.getData();
-        LazyOptional<Research> cur = trd.getCurrentResearch();
-        if (cur.isPresent()) {
-            Research rs = cur.orElse(null);
-            if (rs != null) {
-                for (Clue cl : rs.getClues()) {
-                    if (trd.isClueTriggered(cl)) continue;
-                    if (cl instanceof MinigameClue) {
-                        return ((MinigameClue) cl).getLevel();
-                    }
-                }
-            }
-        }
-        return -1;
-    }
-
-    public static boolean commitGameLevel(ServerPlayerEntity s, int lvl) {
-        TeamResearchData trd = ResearchDataAPI.getData(s);
-        LazyOptional<Research> cur = trd.getCurrentResearch();
-        if (cur.isPresent()) {
-            Research rs = cur.orElse(null);
-            if (rs != null) {
-                for (Clue cl : rs.getClues()) {
-                    if (trd.isClueTriggered(cl)) continue;
-                    if (cl instanceof MinigameClue) {
-                        if (((MinigameClue) cl).getLevel() <= lvl) {
-                            cl.setCompleted(trd, true);
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    @SuppressWarnings("resource")
-    public static boolean canUseRecipe(PlayerEntity s, IRecipe<?> r) {
-        if (s == null)
-            return canUseRecipe(r);
-        if (recipe.has(r)) {
-            if (s.getEntityWorld().isRemote)
-                return ClientResearchDataAPI.getData().crafting.has(r);
-            return ResearchDataAPI.getData((ServerPlayerEntity) s).crafting.has(r);
-        }
-        return true;
-    }
-
-    public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
-        if (recipe.has(r)) {
-            if (team == null) return false;
-            return ResearchDataAPI.getData(team).crafting.has(r);
-        }
-        return true;
-    }
-
-    public static ListenerList<KillClue> getKillClues() {
-        return killClues;
-    }
-
-    public static void kill(ServerPlayerEntity s, LivingEntity e) {
+    public static void tick(ServerPlayerEntity s) {
         Team t = FTBTeamsAPI.getPlayerTeam(s);
         TeamResearchData trd = ResearchDataAPI.getData(s);
-        killClues.call(t, c -> c.isCompleted(trd, e));
+        tickClues.call(t, e -> e.tick(trd, s));
     }
 
-    public static boolean canUseRecipe(IRecipe<?> r) {
-        if (recipe.has(r)) {
-            return ClientResearchDataAPI.getData().crafting.has(r);
-        }
-        return true;
-    }
-
-    public static boolean canUseBlock(PlayerEntity player, Block b) {
-        if (block.has(b)) {
-            if (player instanceof FakePlayer) return false;
-            if (player.getEntityWorld().isRemote)
-                return ClientResearchDataAPI.getData().block.has(b);
-            return ResearchDataAPI.getData((ServerPlayerEntity) player).block.has(b);
-        }
-        return true;
+    private ResearchListeners() {
 
     }
 }

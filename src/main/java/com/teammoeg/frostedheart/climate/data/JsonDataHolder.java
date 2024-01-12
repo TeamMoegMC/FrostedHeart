@@ -29,6 +29,26 @@ public class JsonDataHolder {
         this.data = data;
     }
 
+    public Boolean getBoolean(String mem) {
+        return JsonHelper.getBoolean(data, mem);
+    }
+
+    public Boolean getBooleanOrDefault(String mem, Boolean def) {
+        return JsonHelper.getBooleanOrDefault(data, mem, def);
+    }
+
+    public JsonObject getData() {
+        return data;
+    }
+
+    public Float getFloat(String mem) {
+        return JsonHelper.getFloat(data, mem);
+    }
+
+    public Float getFloatOrDefault(String mem, Float def) {
+        return JsonHelper.getFloatOrDefault(data, mem, def);
+    }
+
     public ResourceLocation getId() {
         return this.getResourceLocation("id");
     }
@@ -41,20 +61,8 @@ public class JsonDataHolder {
         return JsonHelper.getIntOrDefault(data, mem, def);
     }
 
-    public Float getFloat(String mem) {
-        return JsonHelper.getFloat(data, mem);
-    }
-
-    public Float getFloatOrDefault(String mem, Float def) {
-        return JsonHelper.getFloatOrDefault(data, mem, def);
-    }
-
-    public Boolean getBoolean(String mem) {
-        return JsonHelper.getBoolean(data, mem);
-    }
-
-    public Boolean getBooleanOrDefault(String mem, Boolean def) {
-        return JsonHelper.getBooleanOrDefault(data, mem, def);
+    public ResourceLocation getResourceLocation(String mem) {
+        return JsonHelper.getResourceLocation(data, mem);
     }
 
     public String getString(String mem) {
@@ -63,13 +71,5 @@ public class JsonDataHolder {
 
     public String getStringOrDefault(String mem, String def) {
         return JsonHelper.getStringOrDefault(data, mem, def);
-    }
-
-    public ResourceLocation getResourceLocation(String mem) {
-        return JsonHelper.getResourceLocation(data, mem);
-    }
-
-    public JsonObject getData() {
-        return data;
     }
 }

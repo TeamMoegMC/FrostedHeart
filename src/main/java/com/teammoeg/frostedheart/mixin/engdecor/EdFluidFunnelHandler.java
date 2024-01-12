@@ -48,30 +48,37 @@ public abstract class EdFluidFunnelHandler extends TileEntity
 
     public FluxStorageAdvanced energyStorage = new FluxStorageAdvanced(1000);
 
+    EnergyHelper.IEForgeEnergyWrapper wrapper = null;
+
     public EdFluidFunnelHandler(TileEntityType<?> tileEntityTypeIn) {
         super(tileEntityTypeIn);
     }
 
-    EnergyHelper.IEForgeEnergyWrapper wrapper = null;
-
-    @Inject(at = @At("HEAD"), method = "getCapability", remap = false, cancellable = true)
-    public void getCapability(net.minecraftforge.common.capabilities.Capability capability, @Nullable Direction facing,
-                              CallbackInfoReturnable<LazyOptional> cbi) {
-        if (capability == CapabilityEnergy.ENERGY && facing != Direction.UP) {
-
-            cbi.setReturnValue(LazyOptional.of(() -> this));
-        }
+    @Override
+    public boolean canExtract() {
+        return false;
     }
 
+
+    @Override
+    public boolean canReceive() {
+        return true;
+    }
+
+    @Override
+    public int extractEnergy(int maxExtract, boolean simulate) {
+        return 0;
+    }
 
     @Inject(at = @At("HEAD"), method = "readnbt", remap = false)
     public void fh$readnbt(CompoundNBT nbt, CallbackInfo cbi) {
         energyStorage.readFromNBT(nbt);
     }
 
-    @Inject(at = @At("HEAD"), method = "writenbt", remap = false)
-    public void fh$writenbt(CompoundNBT nbt, CallbackInfo cbi) {
-        energyStorage.writeToNBT(nbt);
+    @Inject(at = @At("HEAD"), method = "try_collect", remap = false, cancellable = true)
+    public void fh$try_collect(BlockPos collection_pos, CallbackInfoReturnable<Boolean> cbi) {
+        if (energyStorage.getEnergyStored() < 150)
+            cbi.setReturnValue(false);
     }
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraftforge/fluids/FluidUtil;getFluidHandler(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/Direction;)Lnet/minecraftforge/common/util/LazyOptional;"), method = "try_pick", remap = false, cancellable = true)
@@ -82,20 +89,18 @@ public abstract class EdFluidFunnelHandler extends TileEntity
             cbi.setReturnValue(false);
     }
 
-    @Inject(at = @At("HEAD"), method = "try_collect", remap = false, cancellable = true)
-    public void fh$try_collect(BlockPos collection_pos, CallbackInfoReturnable<Boolean> cbi) {
-        if (energyStorage.getEnergyStored() < 150)
-            cbi.setReturnValue(false);
+    @Inject(at = @At("HEAD"), method = "writenbt", remap = false)
+    public void fh$writenbt(CompoundNBT nbt, CallbackInfo cbi) {
+        energyStorage.writeToNBT(nbt);
     }
 
-    @Override
-    public int receiveEnergy(int maxReceive, boolean simulate) {
-        return energyStorage.receiveEnergy(maxReceive, simulate);
-    }
+    @Inject(at = @At("HEAD"), method = "getCapability", remap = false, cancellable = true)
+    public void getCapability(net.minecraftforge.common.capabilities.Capability capability, @Nullable Direction facing,
+                              CallbackInfoReturnable<LazyOptional> cbi) {
+        if (capability == CapabilityEnergy.ENERGY && facing != Direction.UP) {
 
-    @Override
-    public int extractEnergy(int maxExtract, boolean simulate) {
-        return 0;
+            cbi.setReturnValue(LazyOptional.of(() -> this));
+        }
     }
 
     @Override
@@ -109,12 +114,7 @@ public abstract class EdFluidFunnelHandler extends TileEntity
     }
 
     @Override
-    public boolean canExtract() {
-        return false;
-    }
-
-    @Override
-    public boolean canReceive() {
-        return true;
+    public int receiveEnergy(int maxReceive, boolean simulate) {
+        return energyStorage.receiveEnergy(maxReceive, simulate);
     }
 }

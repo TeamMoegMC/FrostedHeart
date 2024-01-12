@@ -45,55 +45,14 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
         this.calculateCardNum();
     }
 
-    public void reset() {
-        lastSelect = null;
-    }
-
-    public void init() {
-        FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp));
-    }
-
-    public void deinit() {
-        rg.listener = null;
+    @Override
+    public void accept(ResearchGame t) {
+        this.calculateCardNum();
+        ClientUtils.refreshResearchGui();
     }
 
     public void attach() {
         rg.listener = this;
-    }
-
-    public boolean tryCombine(CardPos c1, CardPos c2) {
-        if (c2 == null) {
-            if (rg.addcur == rg.addmax && isTouchable(c1)) {
-                Card c = get(c1);
-                if (c.ct == CardType.ADDING && c.card == 8) {
-                    FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1));
-                    return true;
-                }
-            }
-        } else {
-            if (rg.canCombine(c1, c2)) {
-                FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1, c2));
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void select(CardPos pos) {
-        if (!rg.isTouchable(pos)) return;
-        if (!pos.equals(lastSelect) && tryCombine(pos, lastSelect)) {
-            lastSelect = null;
-            return;
-        }
-        if (lastSelect == null) {
-            lastSelect = pos;
-        } else
-            lastSelect = null;
-
-    }
-
-    public CardPos getLastSelect() {
-        return lastSelect;
     }
 
     public void calculateCardNum() {
@@ -113,16 +72,8 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
 
     }
 
-    public Map<Integer, CardStat> getStats() {
-        return stats;
-    }
-
-    public ResearchGame getGame() {
-        return rg;
-    }
-
-    public boolean isTouchable(CardPos card) {
-        return rg.isTouchable(card);
+    public void deinit() {
+        rg.listener = null;
     }
 
     public Card get(CardPos card) {
@@ -133,13 +84,62 @@ public class ClientResearchGame implements Consumer<ResearchGame> {
         return rg.get(x, y);
     }
 
-    @Override
-    public void accept(ResearchGame t) {
-        this.calculateCardNum();
-        ClientUtils.refreshResearchGui();
+    public ResearchGame getGame() {
+        return rg;
+    }
+
+    public CardPos getLastSelect() {
+        return lastSelect;
     }
 
     public int getLevel() {
         return rg.lvl;
+    }
+
+    public Map<Integer, CardStat> getStats() {
+        return stats;
+    }
+
+    public void init() {
+        FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp));
+    }
+
+    public boolean isTouchable(CardPos card) {
+        return rg.isTouchable(card);
+    }
+
+    public void reset() {
+        lastSelect = null;
+    }
+
+    public void select(CardPos pos) {
+        if (!rg.isTouchable(pos)) return;
+        if (!pos.equals(lastSelect) && tryCombine(pos, lastSelect)) {
+            lastSelect = null;
+            return;
+        }
+        if (lastSelect == null) {
+            lastSelect = pos;
+        } else
+            lastSelect = null;
+
+    }
+
+    public boolean tryCombine(CardPos c1, CardPos c2) {
+        if (c2 == null) {
+            if (rg.addcur == rg.addmax && isTouchable(c1)) {
+                Card c = get(c1);
+                if (c.ct == CardType.ADDING && c.card == 8) {
+                    FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1));
+                    return true;
+                }
+            }
+        } else {
+            if (rg.canCombine(c1, c2)) {
+                FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(bp, c1, c2));
+                return true;
+            }
+        }
+        return false;
     }
 }

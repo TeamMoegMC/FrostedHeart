@@ -71,24 +71,20 @@ public enum FHArmorMaterial implements IArmorMaterial {
         this.repairMaterial = new LazyValue<>(repairMaterial);
     }
 
-    public int getDurability(EquipmentSlotType slotIn) {
-        return MAX_DAMAGE_ARRAY[slotIn.getIndex()] * this.maxDamageFactor;
-    }
-
     public int getDamageReductionAmount(EquipmentSlotType slotIn) {
         return this.damageReductionAmountArray[slotIn.getIndex()];
+    }
+
+    public int getDurability(EquipmentSlotType slotIn) {
+        return MAX_DAMAGE_ARRAY[slotIn.getIndex()] * this.maxDamageFactor;
     }
 
     public int getEnchantability() {
         return this.enchantability;
     }
 
-    public SoundEvent getSoundEvent() {
-        return this.soundEvent;
-    }
-
-    public Ingredient getRepairMaterial() {
-        return this.repairMaterial.getValue();
+    public float getKnockbackResistance() {
+        return this.knockbackResistance;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -96,11 +92,15 @@ public enum FHArmorMaterial implements IArmorMaterial {
         return FHMain.MODID + ":" + this.name;
     }
 
-    public float getToughness() {
-        return this.toughness;
+    public Ingredient getRepairMaterial() {
+        return this.repairMaterial.getValue();
     }
 
-    public float getKnockbackResistance() {
-        return this.knockbackResistance;
+    public SoundEvent getSoundEvent() {
+        return this.soundEvent;
+    }
+
+    public float getToughness() {
+        return this.toughness;
     }
 }

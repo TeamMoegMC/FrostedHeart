@@ -45,6 +45,135 @@ import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
+    private static class Advancement extends Listener<AdvancementClue> {
+
+        public Advancement(Widget panel, String lbl, AdvancementClue e, Consumer<AdvancementClue> cb) {
+            super(panel, lbl, e, cb);
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(new LabeledOpenEditorButton<>(this, e.advancement.toString(), "Select Advancement", SelectDialog.EDITOR_ADVANCEMENT, e.advancement, c -> {
+
+                e.advancement = c;
+            }));
+            add(LabeledSelection.createCriterion(this, "Select Criterion", e.advancement, e.criterion, c -> e.criterion = c));
+
+        }
+
+        @Override
+        public AdvancementClue createClue() {
+            return new AdvancementClue();
+        }
+    }
+    private static class Custom extends ClueEditor<CustomClue> {
+
+        public Custom(Widget panel, String lbl, CustomClue e, Consumer<CustomClue> cb) {
+            super(panel, lbl, e, cb);
+        }
+
+        @Override
+        public CustomClue createClue() {
+            return new CustomClue();
+        }
+    }
+    private static class Item extends ClueEditor<ItemClue> {
+        LabeledSelection<Boolean> cons;
+
+        public Item(Widget panel, String lbl, ItemClue e, Consumer<ItemClue> cb) {
+            super(panel, lbl, e, cb);
+            cons = LabeledSelection.createBool(this, "Consumes item", this.e.consume);
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(new OpenEditorButton<>(this, "Select Ingredient", IngredientEditor.EDITOR, e.stack, e.stack == null ? Icon.EMPTY : FHIcons.getIcon(e.stack), c -> e.stack = c));
+            add(cons);
+        }
+
+        @Override
+        public ItemClue createClue() {
+            return new ItemClue();
+        }
+
+        @Override
+        public void onClose() {
+            e.consume = cons.getSelection();
+            super.onClose();
+        }
+    }
+    private static class Kill extends Listener<KillClue> {
+
+        public Kill(Widget panel, String lbl, KillClue e, Consumer<KillClue> cb) {
+            super(panel, lbl, e, cb);
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(new LabeledOpenEditorButton<>(this, e.type == null ? "" : e.type.getName().getString(), "Select Entity", SelectDialog.EDITOR_ENTITY, e.type, c -> {
+                e.type = c;
+                desc.setText("@" + c.getTranslationKey());
+            }));
+        }
+
+        @Override
+        public KillClue createClue() {
+            return new KillClue();
+        }
+
+    }
+    private static abstract class Listener<U extends ListenerClue> extends ClueEditor<U> {
+        LabeledSelection<Boolean> aa;
+
+        public Listener(Widget panel, String lbl, U e, Consumer<U> cb) {
+            super(panel, lbl, e, cb);
+            aa = LabeledSelection.createBool(this, "Listen even not active", this.e.alwaysOn);
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(aa);
+        }
+
+        @Override
+        public void onClose() {
+            e.alwaysOn = aa.getSelection();
+            super.onClose();
+        }
+
+
+    }
+    private static class Minigame extends ClueEditor<MinigameClue> {
+        LabeledSelection<Integer> lvl;
+
+        public Minigame(Widget panel, String lbl, MinigameClue e, Consumer<MinigameClue> cb) {
+            super(panel, lbl, e, cb);
+            lvl = new LabeledSelection<>(this, "Level", this.e.getLevel(), Arrays.asList(0, 1, 2, 3), String::valueOf);
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(lvl);
+        }
+
+        @Override
+        public MinigameClue createClue() {
+            return new MinigameClue();
+        }
+
+        @Override
+        public void onClose() {
+            e.setLevel(lvl.getSelection());
+            super.onClose();
+        }
+
+
+    }
     public static final Editor<ItemClue> ITEM = (p, l, v, c) -> {
         new Item(p, l, v, c).open();
     };
@@ -102,11 +231,17 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
     String lbl;
     T e;
     Consumer<T> cb;
+
     protected LabeledTextBoxAndBtn nonce;
+
     protected LabeledTextBox name;
+
     protected LabeledTextBox desc;
+
     protected LabeledTextBox hint;
+
     protected RealBox cont;
+
     protected LabeledSelection<Boolean> req;
 
     public ClueEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
@@ -128,6 +263,17 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         this.cb = cb;
     }
 
+    @Override
+    public void addWidgets() {
+        add(EditUtils.getTitle(this, lbl));
+        add(nonce);
+        add(name);
+        add(desc);
+        add(hint);
+        add(cont);
+        add(req);
+    }
+
     public abstract T createClue();
 
     @Override
@@ -143,152 +289,6 @@ public abstract class ClueEditor<T extends Clue> extends BaseEditDialog {
         }
         e.required = req.getSelection();
         cb.accept(e);
-
-    }
-
-    @Override
-    public void addWidgets() {
-        add(EditUtils.getTitle(this, lbl));
-        add(nonce);
-        add(name);
-        add(desc);
-        add(hint);
-        add(cont);
-        add(req);
-    }
-
-    private static class Item extends ClueEditor<ItemClue> {
-        LabeledSelection<Boolean> cons;
-
-        public Item(Widget panel, String lbl, ItemClue e, Consumer<ItemClue> cb) {
-            super(panel, lbl, e, cb);
-            cons = LabeledSelection.createBool(this, "Consumes item", this.e.consume);
-        }
-
-        @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(new OpenEditorButton<>(this, "Select Ingredient", IngredientEditor.EDITOR, e.stack, e.stack == null ? Icon.EMPTY : FHIcons.getIcon(e.stack), c -> e.stack = c));
-            add(cons);
-        }
-
-        @Override
-        public ItemClue createClue() {
-            return new ItemClue();
-        }
-
-        @Override
-        public void onClose() {
-            e.consume = cons.getSelection();
-            super.onClose();
-        }
-    }
-
-    private static class Custom extends ClueEditor<CustomClue> {
-
-        public Custom(Widget panel, String lbl, CustomClue e, Consumer<CustomClue> cb) {
-            super(panel, lbl, e, cb);
-        }
-
-        @Override
-        public CustomClue createClue() {
-            return new CustomClue();
-        }
-    }
-
-    private static abstract class Listener<U extends ListenerClue> extends ClueEditor<U> {
-        LabeledSelection<Boolean> aa;
-
-        public Listener(Widget panel, String lbl, U e, Consumer<U> cb) {
-            super(panel, lbl, e, cb);
-            aa = LabeledSelection.createBool(this, "Listen even not active", this.e.alwaysOn);
-        }
-
-        @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(aa);
-        }
-
-        @Override
-        public void onClose() {
-            e.alwaysOn = aa.getSelection();
-            super.onClose();
-        }
-
-
-    }
-
-    private static class Advancement extends Listener<AdvancementClue> {
-
-        public Advancement(Widget panel, String lbl, AdvancementClue e, Consumer<AdvancementClue> cb) {
-            super(panel, lbl, e, cb);
-        }
-
-        @Override
-        public AdvancementClue createClue() {
-            return new AdvancementClue();
-        }
-
-        @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.advancement.toString(), "Select Advancement", SelectDialog.EDITOR_ADVANCEMENT, e.advancement, c -> {
-
-                e.advancement = c;
-            }));
-            add(LabeledSelection.createCriterion(this, "Select Criterion", e.advancement, e.criterion, c -> e.criterion = c));
-
-        }
-    }
-
-    private static class Kill extends Listener<KillClue> {
-
-        public Kill(Widget panel, String lbl, KillClue e, Consumer<KillClue> cb) {
-            super(panel, lbl, e, cb);
-        }
-
-        @Override
-        public KillClue createClue() {
-            return new KillClue();
-        }
-
-        @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(new LabeledOpenEditorButton<>(this, e.type == null ? "" : e.type.getName().getString(), "Select Entity", SelectDialog.EDITOR_ENTITY, e.type, c -> {
-                e.type = c;
-                desc.setText("@" + c.getTranslationKey());
-            }));
-        }
-
-    }
-
-    private static class Minigame extends ClueEditor<MinigameClue> {
-        LabeledSelection<Integer> lvl;
-
-        public Minigame(Widget panel, String lbl, MinigameClue e, Consumer<MinigameClue> cb) {
-            super(panel, lbl, e, cb);
-            lvl = new LabeledSelection<>(this, "Level", this.e.getLevel(), Arrays.asList(0, 1, 2, 3), String::valueOf);
-        }
-
-        @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(lvl);
-        }
-
-        @Override
-        public void onClose() {
-            e.setLevel(lvl.getSelection());
-            super.onClose();
-        }
-
-        @Override
-        public MinigameClue createClue() {
-            return new MinigameClue();
-        }
-
 
     }
 }

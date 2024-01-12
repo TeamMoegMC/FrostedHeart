@@ -32,14 +32,22 @@ public class SetFlagValueAction extends SetFlagAction {
         value = jo.get("value").getAsInt();
     }
 
+    public SetFlagValueAction(PacketBuffer buffer) {
+        super(buffer);
+        value = buffer.readVarInt();
+    }
+
     public SetFlagValueAction(String name, int value) {
         super(name);
         this.value = value;
     }
 
-    public SetFlagValueAction(PacketBuffer buffer) {
-        super(buffer);
-        value = buffer.readVarInt();
+    @Override
+    public void deal(FHVillagerData data, int num) {
+        if (value != 0)
+            data.flags.put(name, value);
+        else
+            data.flags.remove(name);
     }
 
     @Override
@@ -53,14 +61,6 @@ public class SetFlagValueAction extends SetFlagAction {
     public void write(PacketBuffer buffer) {
         super.write(buffer);
         buffer.writeVarInt(value);
-    }
-
-    @Override
-    public void deal(FHVillagerData data, int num) {
-        if (value != 0)
-            data.flags.put(name, value);
-        else
-            data.flags.remove(name);
     }
 
 

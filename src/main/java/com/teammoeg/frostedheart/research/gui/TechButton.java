@@ -43,10 +43,6 @@ public abstract class TechButton extends Button {
         super(panel, t, i);
     }
 
-    public boolean hasIcon() {
-        return icon != null && !icon.isEmpty();
-    }
-
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
@@ -56,6 +52,10 @@ public abstract class TechButton extends Button {
         if (hasIcon()) {
             drawIcon(matrixStack, theme, x + (w - 16) / 2, y + (h - 16) / 2, 16, 16);
         }
+    }
+
+    public boolean hasIcon() {
+        return icon != null && !icon.isEmpty();
     }
 
 }

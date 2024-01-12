@@ -55,16 +55,16 @@ public class EffectBuilding extends Effect {
 
     IMultiblock multiblock;
 
+    EffectBuilding() {
+        super();
+    }
+
     public EffectBuilding(IETemplateMultiblock s, Block b) {
         super();
         super.icon = FHIcons.getIcon(b);
         tooltip.add("@" + b.getTranslationKey());
         multiblock = s;
 
-    }
-
-    EffectBuilding() {
-        super();
     }
 
     public EffectBuilding(JsonObject jo) {
@@ -77,40 +77,10 @@ public class EffectBuilding extends Effect {
         multiblock = MultiblockHandler.getByUniqueName(pb.readResourceLocation());
     }
 
-    public IMultiblock getMultiblock() {
-        return multiblock;
-    }
-
     @Override
-    public void init() {
-        ResearchListeners.multiblock.add(multiblock);
+    public String getBrief() {
+        return "Build " + multiblock.getUniqueName();
     }
-
-    @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        team.building.add(multiblock);
-        return true;
-
-    }
-
-    @Override
-    public void revoke(TeamResearchData team) {
-        team.building.remove(multiblock);
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("multiblock", multiblock.getUniqueName().toString());
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeResourceLocation(multiblock.getUniqueName());
-    }
-
 
     @Override
     public FHIcon getDefaultIcon() {
@@ -133,9 +103,21 @@ public class EffectBuilding extends Effect {
         return ar;
     }
 
+    public IMultiblock getMultiblock() {
+        return multiblock;
+    }
+
     @Override
-    public String getBrief() {
-        return "Build " + multiblock.getUniqueName();
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        team.building.add(multiblock);
+        return true;
+
+    }
+
+
+    @Override
+    public void init() {
+        ResearchListeners.multiblock.add(multiblock);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -160,6 +142,24 @@ public class EffectBuilding extends Effect {
     @Override
     public void reload() {
         multiblock = MultiblockHandler.getByUniqueName(multiblock.getUniqueName());
+    }
+
+    @Override
+    public void revoke(TeamResearchData team) {
+        team.building.remove(multiblock);
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.addProperty("multiblock", multiblock.getUniqueName().toString());
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        buffer.writeResourceLocation(multiblock.getUniqueName());
     }
 
 }

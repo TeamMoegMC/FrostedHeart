@@ -39,11 +39,8 @@ public class AnemiaEffect extends Effect {
     }
 
     @Override
-    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.SLOWNESS, 100, amplifier)));
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, amplifier)));
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS, 100, amplifier * 2)));
-        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST, 100, amplifier * 2)));
+    public List<ItemStack> getCurativeItems() {
+        return ImmutableList.of();
     }
 
     @Override
@@ -52,7 +49,10 @@ public class AnemiaEffect extends Effect {
     }
 
     @Override
-    public List<ItemStack> getCurativeItems() {
-        return ImmutableList.of();
+    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
+        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.SLOWNESS, 100, amplifier)));
+        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.MINING_FATIGUE, 100, amplifier)));
+        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(Effects.WEAKNESS, 100, amplifier * 2)));
+        entityLivingBaseIn.addPotionEffect(FHUtils.noHeal(new EffectInstance(EffectRegistry.THIRST, 100, amplifier * 2)));
     }
 }

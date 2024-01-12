@@ -40,6 +40,8 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 public abstract class ResearchPanel extends Panel {
 
     public static final int PADDING = 2;
+    public static final int IN_PROGRESS_HEIGHT = 80;
+    public static final int RESEARCH_LIST_WIDTH = 210;
     public ResearchCategoryPanel researchCategoryPanel;
     public ResearchListPanel researchListPanel;
     public ResearchHierarchyPanel researchHierarchyPanel;
@@ -47,8 +49,13 @@ public abstract class ResearchPanel extends Panel {
     public ResearchCategory selectedCategory;
     public Research selectedResearch;
     public ResearchDetailPanel detailframe;
+
     public Panel modalPanel = null;
+
     public TechScrollBar hierarchyBar;
+
+
+    boolean enabled;
 
     public ResearchPanel(Panel p) {
         super(p);
@@ -82,6 +89,13 @@ public abstract class ResearchPanel extends Panel {
         selectedResearch = cr == null ? FHResearch.getFirstResearchInCategory(selectedCategory) : cr;
     }
 
+
+    @Override
+    public void addMouseOverText(TooltipList list) {
+        list.zOffset = 950;
+        list.zOffsetItemTooltip = 500;
+        super.addMouseOverText(list);
+    }
     @Override
     public void addWidgets() {
         int sw = 387;
@@ -102,6 +116,58 @@ public abstract class ResearchPanel extends Panel {
         add(hierarchyBar);
     }
 
+    @Override
+    public void alignWidgets() {
+    }
+
+    public boolean canEnable(Panel p) {
+        return modalPanel == null || modalPanel == p;
+    }
+
+    public void closeModal(Panel p) {
+        if (p == modalPanel)
+            modalPanel = null;
+    }
+
+    @Override
+    public void draw(MatrixStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
+        if (enabled)
+            super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
+    }
+
+    @Override
+    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        TechIcons.Background.draw(matrixStack, x, y, w, h);
+    }
+
+    @Override
+    public void drawWidget(MatrixStack arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6,
+                           int arg7) {
+        GuiHelper.setupDrawing();
+        super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+    }
+
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public boolean keyPressed(Key key) {
+        if (key.esc()) {
+            if (modalPanel != null) {
+                detailframe.close();
+                return true;
+            }
+            this.onDisabled();
+            //this.closeGui(true);
+            return true;
+        }
+        return super.keyPressed(key);
+    }
+
+    public abstract void onDisabled();
 
     public void selectCategory(ResearchCategory category) {
         if (selectedCategory != category) {
@@ -124,78 +190,12 @@ public abstract class ResearchPanel extends Panel {
         }
     }
 
-
-    public static final int IN_PROGRESS_HEIGHT = 80;
-    public static final int RESEARCH_LIST_WIDTH = 210;
-
-    @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        TechIcons.Background.draw(matrixStack, x, y, w, h);
-    }
-
-    @Override
-    public void addMouseOverText(TooltipList list) {
-        list.zOffset = 950;
-        list.zOffsetItemTooltip = 500;
-        super.addMouseOverText(list);
-    }
-
-    public void setModal(Panel p) {
-        modalPanel = p;
-    }
-
-    public void closeModal(Panel p) {
-        if (p == modalPanel)
-            modalPanel = null;
-    }
-
-    public boolean canEnable(Panel p) {
-        return modalPanel == null || modalPanel == p;
-    }
-
-    @Override
-    public void drawWidget(MatrixStack arg0, Theme arg1, Widget arg2, int arg3, int arg4, int arg5, int arg6,
-                           int arg7) {
-        GuiHelper.setupDrawing();
-        super.drawWidget(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-    }
-
-
-    @Override
-    public boolean keyPressed(Key key) {
-        if (key.esc()) {
-            if (modalPanel != null) {
-                detailframe.close();
-                return true;
-            }
-            this.onDisabled();
-            //this.closeGui(true);
-            return true;
-        }
-        return super.keyPressed(key);
-    }
-
-    public abstract void onDisabled();
-
-    @Override
-    public void alignWidgets() {
-    }
-
-    boolean enabled;
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
-    @Override
-    public void draw(MatrixStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
-        if (enabled)
-            super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
+    public void setModal(Panel p) {
+        modalPanel = p;
     }
 
 

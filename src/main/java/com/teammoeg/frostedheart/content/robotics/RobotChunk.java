@@ -32,6 +32,14 @@ import java.util.List;
 public class RobotChunk implements ICapabilitySerializable<CompoundNBT> {
     List<BlockPos> poss = new ArrayList<>();
 
+    public void addContent() {
+
+    }
+
+    @Override
+    public void deserializeNBT(CompoundNBT nbt) {
+    }
+
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
         return null;
@@ -41,17 +49,9 @@ public class RobotChunk implements ICapabilitySerializable<CompoundNBT> {
         return bp.getY() << 56 + bp.getX() << 28 + bp.getZ();
     }
 
-    public void addContent() {
-
-    }
-
     @Override
     public CompoundNBT serializeNBT() {
         return null;
-    }
-
-    @Override
-    public void deserializeNBT(CompoundNBT nbt) {
     }
 
 }

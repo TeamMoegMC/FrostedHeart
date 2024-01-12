@@ -34,6 +34,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class T1GeneratorMultiblock extends FHBaseMultiblock {
+    @OnlyIn(Dist.CLIENT)
+    private static ItemStack renderStack;
+
     public T1GeneratorMultiblock() {
         super(new ResourceLocation(FHMain.MODID, "multiblocks/generator"),
                 new BlockPos(1, 1, 1), new BlockPos(1, 1, 2), new BlockPos(3, 4, 3),
@@ -46,8 +49,10 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
         return true;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    private static ItemStack renderStack;
+    @Override
+    public float getManualScale() {
+        return 16;
+    }
 
     @Override
     @OnlyIn(Dist.CLIENT)
@@ -61,10 +66,5 @@ public class T1GeneratorMultiblock extends FHBaseMultiblock {
                 0xf000f0,
                 OverlayTexture.NO_OVERLAY,
                 transform, buffer);
-    }
-
-    @Override
-    public float getManualScale() {
-        return 16;
     }
 }

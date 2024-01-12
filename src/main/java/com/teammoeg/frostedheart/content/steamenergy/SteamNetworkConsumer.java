@@ -51,6 +51,40 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
         this.maxIntake = maxIntake;
     }
 
+    @Override
+    public float drainHeat(float val) {
+        float drained = Math.min(power, val);
+        power -= drained;
+        return drained;
+    }
+
+    /**
+     * Get max power.
+     *
+     * @return max power<br>
+     */
+    public float getMaxPower() {
+        return maxPower;
+    }
+
+    /**
+     * Get power stored.
+     *
+     * @return power<br>
+     */
+    public float getPower() {
+        return power;
+    }
+
+    /**
+     * Load.
+     *
+     * @param nbt the nbt<br>
+     */
+    public void load(CompoundNBT nbt) {
+        power = nbt.getFloat("power");
+    }
+
     /**
      * Save.
      *
@@ -61,12 +95,12 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
     }
 
     /**
-     * Load.
+     * set power stored.
      *
-     * @param nbt the nbt<br>
+     * @param power value to set power to.
      */
-    public void load(CompoundNBT nbt) {
-        power = nbt.getFloat("power");
+    public void setPower(float power) {
+        this.power = power;
     }
 
     /**
@@ -88,51 +122,17 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
     }
 
     @Override
+    public String toString() {
+        return "SteamNetworkConsumer [maxPower=" + maxPower + ", maxIntake=" + maxIntake + ", power=" + power + ", sen="
+                + sen + ", dist=" + dist + ", counter=" + counter + "]";
+    }
+
+    @Override
     public boolean tryDrainHeat(float val) {
         if (power >= val) {
             power -= val;
             return true;
         }
         return false;
-    }
-
-    @Override
-    public float drainHeat(float val) {
-        float drained = Math.min(power, val);
-        power -= drained;
-        return drained;
-    }
-
-    /**
-     * Get power stored.
-     *
-     * @return power<br>
-     */
-    public float getPower() {
-        return power;
-    }
-
-    /**
-     * set power stored.
-     *
-     * @param power value to set power to.
-     */
-    public void setPower(float power) {
-        this.power = power;
-    }
-
-    /**
-     * Get max power.
-     *
-     * @return max power<br>
-     */
-    public float getMaxPower() {
-        return maxPower;
-    }
-
-    @Override
-    public String toString() {
-        return "SteamNetworkConsumer [maxPower=" + maxPower + ", maxIntake=" + maxIntake + ", power=" + power + ", sen="
-                + sen + ", dist=" + dist + ", counter=" + counter + "]";
     }
 }

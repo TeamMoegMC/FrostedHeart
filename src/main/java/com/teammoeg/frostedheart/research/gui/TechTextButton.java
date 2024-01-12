@@ -37,23 +37,6 @@ public abstract class TechTextButton extends TechButton {
     }
 
     @Override
-    public TechTextButton setTitle(ITextComponent txt) {
-        super.setTitle(txt);
-        setWidth(getGui().getTheme().getStringWidth(getTitle()) + (hasIcon() ? 28 : 8));
-        return this;
-    }
-
-    public boolean renderTitleInCenter() {
-        return false;
-    }
-
-    @Override
-    public Object getIngredientUnderMouse() {
-        return icon.getIngredient();
-    }
-
-
-    @Override
     public void addMouseOverText(TooltipList list) {
         if (getGui().getTheme().getStringWidth(getTitle()) + (hasIcon() ? 28 : 8) > width) {
             list.add(getTitle());
@@ -89,6 +72,23 @@ public abstract class TechTextButton extends TechButton {
         }
 
         theme.drawString(matrixStack, title, textX, textY, TechIcons.text, 0);
+    }
+
+    @Override
+    public Object getIngredientUnderMouse() {
+        return icon.getIngredient();
+    }
+
+
+    public boolean renderTitleInCenter() {
+        return false;
+    }
+
+    @Override
+    public TechTextButton setTitle(ITextComponent txt) {
+        super.setTitle(txt);
+        setWidth(getGui().getTheme().getStringWidth(getTitle()) + (hasIcon() ? 28 : 8));
+        return this;
     }
 
 }

@@ -26,29 +26,13 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class Calculator {
-    public interface Node {
-        double eval(VariantProvider env);
-    }
-
-    static abstract class BiNode implements Node {
-        Node left;
-        Node right;
-
-        public BiNode(Node left, Node right) {
-            super();
-            this.left = left;
-            this.right = right;
-        }
-
-    }
-
     static class BiCalcNode extends BiNode {
-        BiFunction<Double, Double, Double> calc;
         public static BiFunction<Double, Double, Double> add = (v1, v2) -> v1 + v2;
         public static BiFunction<Double, Double, Double> min = (v1, v2) -> v1 - v2;
         public static BiFunction<Double, Double, Double> mul = (v1, v2) -> v1 * v2;
         public static BiFunction<Double, Double, Double> div = (v1, v2) -> v1 / v2;
         public static BiFunction<Double, Double, Double> pow = (v1, v2) -> Math.pow(v1, v2);
+        BiFunction<Double, Double, Double> calc;
 
         public BiCalcNode(Node left, Node right, BiFunction<Double, Double, Double> calc) {
             super(left, right);
@@ -65,6 +49,60 @@ public class Calculator {
             return "BiCalcNode [calc=" + calc + ", left=" + left + ", right=" + right + "]";
         }
 
+    }
+
+    static abstract class BiNode implements Node {
+        Node left;
+        Node right;
+
+        public BiNode(Node left, Node right) {
+            super();
+            this.left = left;
+            this.right = right;
+        }
+
+    }
+
+    static class CalcNode implements Node {
+        Function<Double, Double> calc;
+        Node nested;
+
+        public CalcNode(Node nested, Function<Double, Double> calc) {
+            this.calc = calc;
+            this.nested = nested;
+        }
+
+        @Override
+        public double eval(VariantProvider env) {
+            return calc.apply(nested.eval(env));
+        }
+
+        @Override
+        public String toString() {
+            return "CalcNode [calc=" + calc + ", nested=" + nested + "]";
+        }
+    }
+
+    static class ConstNode implements Node {
+        double val;
+
+        public ConstNode(double val) {
+            this.val = val;
+        }
+
+        @Override
+        public double eval(VariantProvider env) {
+            return val;
+        }
+
+        @Override
+        public String toString() {
+            return "ConstNode [val=" + val + "]";
+        }
+    }
+
+    public interface Node {
+        double eval(VariantProvider env);
     }
 
     static class TermNode implements Node {
@@ -110,44 +148,6 @@ public class Calculator {
 
     }
 
-    static class CalcNode implements Node {
-        Function<Double, Double> calc;
-        Node nested;
-
-        public CalcNode(Node nested, Function<Double, Double> calc) {
-            this.calc = calc;
-            this.nested = nested;
-        }
-
-        @Override
-        public double eval(VariantProvider env) {
-            return calc.apply(nested.eval(env));
-        }
-
-        @Override
-        public String toString() {
-            return "CalcNode [calc=" + calc + ", nested=" + nested + "]";
-        }
-    }
-
-    static class ConstNode implements Node {
-        double val;
-
-        @Override
-        public String toString() {
-            return "ConstNode [val=" + val + "]";
-        }
-
-        public ConstNode(double val) {
-            this.val = val;
-        }
-
-        @Override
-        public double eval(VariantProvider env) {
-            return val;
-        }
-    }
-
     static class VarNode implements Node {
         String token;
 
@@ -169,12 +169,21 @@ public class Calculator {
     int pos = -1, ch;
     String str;
 
-    public Calculator(String str) {
-        this.str = str;
+    public static Node eval(String exp) {
+        return new Calculator(exp).parse();
+    }
+    // Grammar:
+    // expression = term | expression `+` term | expression `-` term
+    // term = factor | term `*` factor | term `/` factor
+    // factor = `+` factor | `-` factor | `(` expression `)`
+    // | number | functionName factor | factor `^` factor
+
+    public static void main(String[] args) {
+        System.out.println(eval("1+1"));
     }
 
-    void nextChar() {
-        ch = (++pos < str.length()) ? str.charAt(pos) : -1;
+    public Calculator(String str) {
+        this.str = str;
     }
 
     boolean eat(int charToEat) {
@@ -187,6 +196,10 @@ public class Calculator {
         return false;
     }
 
+    void nextChar() {
+        ch = (++pos < str.length()) ? str.charAt(pos) : -1;
+    }
+
     public Node parse() {
         nextChar();
         Node x = parseExpression();
@@ -195,15 +208,6 @@ public class Calculator {
         return x;
     }
 
-    public static Node eval(String exp) {
-        return new Calculator(exp).parse();
-    }
-    // Grammar:
-    // expression = term | expression `+` term | expression `-` term
-    // term = factor | term `*` factor | term `/` factor
-    // factor = `+` factor | `-` factor | `(` expression `)`
-    // | number | functionName factor | factor `^` factor
-
     Node parseExpression() {
         Node x = parseTerm();
         for (; ; ) {
@@ -211,18 +215,6 @@ public class Calculator {
                 x = new BiCalcNode(x, parseTerm(), BiCalcNode.add); // addition
             else if (eat('-'))
                 x = new BiCalcNode(x, parseTerm(), BiCalcNode.min); // subtraction
-            else
-                return x;
-        }
-    }
-
-    Node parseTerm() {
-        Node x = parseFactor();
-        for (; ; ) {
-            if (eat('*'))
-                x = new BiCalcNode(x, parseFactor(), BiCalcNode.mul); // multiplication
-            else if (eat('/'))
-                x = new BiCalcNode(x, parseFactor(), BiCalcNode.div); // division
             else
                 return x;
         }
@@ -275,8 +267,16 @@ public class Calculator {
         return x;
     }
 
-    public static void main(String[] args) {
-        System.out.println(eval("1+1"));
+    Node parseTerm() {
+        Node x = parseFactor();
+        for (; ; ) {
+            if (eat('*'))
+                x = new BiCalcNode(x, parseFactor(), BiCalcNode.mul); // multiplication
+            else if (eat('/'))
+                x = new BiCalcNode(x, parseFactor(), BiCalcNode.div); // division
+            else
+                return x;
+        }
     }
 
 }

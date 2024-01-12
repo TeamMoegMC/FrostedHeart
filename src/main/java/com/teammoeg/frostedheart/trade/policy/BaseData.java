@@ -42,13 +42,24 @@ public abstract class BaseData implements Writeable {
     public List<PolicyCondition> restockconditions = new ArrayList<>();
     boolean hideStockout;
 
-    public BaseData(String id, int maxstore, float recover, int price, PolicyAction... restock) {
-        super();
-        this.id = id;
-        this.maxstore = maxstore;
-        this.recover = recover;
-        this.price = price;
-        this.actions = new ArrayList<>(Arrays.asList(restock));
+    public static BaseData read(JsonObject jo) {
+        if (jo.has("produce"))
+            return new ProductionData(jo);
+        else if (jo.has("demand"))
+            return new DemandData(jo);
+        return new NopData(jo);
+
+    }
+
+    public static BaseData read(PacketBuffer pb) {
+        switch (pb.readVarInt()) {
+            case 1:
+                return new ProductionData(pb);
+            case 2:
+                return new DemandData(pb);
+            default:
+                return new NopData(pb);
+        }
     }
 
     public BaseData(JsonObject jo) {
@@ -74,15 +85,13 @@ public abstract class BaseData implements Writeable {
         hideStockout = pb.readBoolean();
     }
 
-    public void tick(int deltaDay, FHVillagerData data) {
-        //System.out.println("try recover for "+id+" : "+deltaDay);
-        if (deltaDay > 0 && canRestock(data)) {
-            float curstore = data.storage.getOrDefault(getId(), 0f);
-            int recDay = Math.min((int) Math.ceil((maxstore - curstore) / recover), deltaDay);
-            float val = Math.min(recover * recDay + curstore, maxstore);
-            data.storage.put(getId(), val);
-            actions.forEach(c -> c.deal(data, recDay));
-        }
+    public BaseData(String id, int maxstore, float recover, int price, PolicyAction... restock) {
+        super();
+        this.id = id;
+        this.maxstore = maxstore;
+        this.recover = recover;
+        this.price = price;
+        this.actions = new ArrayList<>(Arrays.asList(restock));
     }
 
     public boolean canRestock(FHVillagerData fhvd) {
@@ -93,13 +102,17 @@ public abstract class BaseData implements Writeable {
         return res;
     }
 
-    public abstract String getType();
+    public void execute(FHVillagerData data, int count) {
+        soldactions.forEach(c -> c.deal(data, count));
+    }
+
+    public abstract void fetch(PolicySnapshot shot, Map<String, Float> data);
 
     public String getId() {
         return id + "_" + getType();
     }
 
-    public abstract void fetch(PolicySnapshot shot, Map<String, Float> data);
+    public abstract String getType();
 
     @Override
     public JsonElement serialize() {
@@ -116,6 +129,22 @@ public abstract class BaseData implements Writeable {
         return jo;
     }
 
+    public void tick(int deltaDay, FHVillagerData data) {
+        //System.out.println("try recover for "+id+" : "+deltaDay);
+        if (deltaDay > 0 && canRestock(data)) {
+            float curstore = data.storage.getOrDefault(getId(), 0f);
+            int recDay = Math.min((int) Math.ceil((maxstore - curstore) / recover), deltaDay);
+            float val = Math.min(recover * recDay + curstore, maxstore);
+            data.storage.put(getId(), val);
+            actions.forEach(c -> c.deal(data, recDay));
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "BaseData [id=" + id + ", maxstore=" + maxstore + ", recover=" + recover + ", price=" + price + "]";
+    }
+
     @Override
     public void write(PacketBuffer buffer) {
         buffer.writeString(id);
@@ -126,34 +155,5 @@ public abstract class BaseData implements Writeable {
         SerializeUtil.writeList(buffer, soldactions, PolicyAction::write);
         SerializeUtil.writeList(buffer, restockconditions, PolicyCondition::write);
         buffer.writeBoolean(hideStockout);
-    }
-
-    public static BaseData read(PacketBuffer pb) {
-        switch (pb.readVarInt()) {
-            case 1:
-                return new ProductionData(pb);
-            case 2:
-                return new DemandData(pb);
-            default:
-                return new NopData(pb);
-        }
-    }
-
-    public static BaseData read(JsonObject jo) {
-        if (jo.has("produce"))
-            return new ProductionData(jo);
-        else if (jo.has("demand"))
-            return new DemandData(jo);
-        return new NopData(jo);
-
-    }
-
-    public void execute(FHVillagerData data, int count) {
-        soldactions.forEach(c -> c.deal(data, count));
-    }
-
-    @Override
-    public String toString() {
-        return "BaseData [id=" + id + ", maxstore=" + maxstore + ", recover=" + recover + ", price=" + price + "]";
     }
 }

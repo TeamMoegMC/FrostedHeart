@@ -66,132 +66,61 @@ import net.minecraft.util.ResourceLocation;
 
 public class FHIcons {
 
-    public static abstract class FHIcon extends Icon implements Writeable, Cloneable {
-        public FHIcon() {
-            super();
+    private static class FHAnimatedIcon extends FHIcon {
+        List<FHIcon> icons;
+
+        public FHAnimatedIcon() {
+            icons = new ArrayList<>();
         }
 
-        @Override
-        public void write(PacketBuffer buffer) {
-            serializers.writeId(buffer, this);
+        public FHAnimatedIcon(FHIcon[] icons2) {
+            this();
+            for (FHIcon i : icons2)
+                icons.add(i);
         }
 
-        public JsonElement serialize() {
-            JsonObject jo = new JsonObject();
-            serializers.writeType(jo, this);
-            return jo;
-        }
-    }
-
-    private static JsonSerializerRegistry<FHIcon> serializers = new JsonSerializerRegistry<>();
-
-    private static class FHNopIcon extends FHIcon {
-        public static final FHNopIcon INSTANCE = new FHNopIcon();
-
-        /**
-         * @param e
-         */
-        public static FHNopIcon get(JsonElement e) {
-            return INSTANCE;
+        public FHAnimatedIcon(JsonElement elm) {
+            if (elm.isJsonObject()) {
+                JsonObject jo = elm.getAsJsonObject();
+                icons = SerializeUtil.parseJsonElmList(jo.get("icons"), FHIcons::getIcon);
+            } else if (elm.isJsonArray()) {
+                icons = SerializeUtil.parseJsonElmList(elm, FHIcons::getIcon);
+            }
         }
 
-        /**
-         * @param e
-         */
-        public static FHNopIcon get(PacketBuffer e) {
-            return INSTANCE;
-        }
-
-        private FHNopIcon() {
-        }
-
-        @Override
-        public JsonElement serialize() {
-            return JsonNull.INSTANCE;
+        public FHAnimatedIcon(PacketBuffer buffer) {
+            icons = SerializeUtil.readList(buffer, FHIcons::readIcon);
         }
 
         @Override
         public void draw(MatrixStack ms, int x, int y, int w, int h) {
-        }
-
-    }
-
-    private static class FHItemIcon extends FHIcon {
-        Icon nested;
-        ItemStack stack;
-
-        public FHItemIcon(JsonElement elm) {
-            if (elm.isJsonPrimitive()) {
-                stack = SerializeUtil.fromJson(elm);
-
-            } else if (elm.isJsonObject()) {
-                if (elm.getAsJsonObject().has("item")) {
-                    JsonElement it = elm.getAsJsonObject().get("item");
-                    stack = SerializeUtil.fromJson(it);
-                } else
-                    stack = SerializeUtil.fromJson(elm);
-            }
-            init();
-        }
-
-        public FHItemIcon(PacketBuffer buffer) {
-            stack = SerializeUtil.readOptional(buffer, PacketBuffer::readItemStack).orElse(null);
-            init();
-        }
-
-        public FHItemIcon(ItemStack stack) {
-            this.stack = stack;
-            init();
-        }
-
-        public FHItemIcon(IItemProvider item2) {
-            this(new ItemStack(item2));
-        }
-
-        private void init() {
-            if (stack != null)
-                nested = ItemIcon.getItemIcon(stack);
-        }
-
-        @Override
-        public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
-            nested.draw(matrixStack, x, y, w, h);
-            if (stack != null && stack.getCount() > 1) {
-                matrixStack.push();
-                matrixStack.translate(x + w - 8, y + h - 7, 199);
-                matrixStack.push();
-                matrixStack.scale(w / 16f, h / 16f, 0);
-                ClientUtils.mc().fontRenderer.drawStringWithShadow(matrixStack, String.valueOf(stack.getCount()), 0, 0,
-                        0xffffffff);
-                matrixStack.pop();
-                matrixStack.pop();
+            if (icons.size() > 0) {
+                GuiHelper.setupDrawing();
+                icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
             }
         }
 
         @Override
         public JsonElement serialize() {
-            JsonElement je = SerializeUtil.toJson(stack);
-            if (je.isJsonPrimitive())
-                return je;
-            JsonObject jo = super.serialize().getAsJsonObject();
-            jo.add("item", je);
-            return jo;
+
+            return SerializeUtil.toJsonList(icons, FHIcon::serialize);
         }
 
         @Override
         public void write(PacketBuffer buffer) {
             super.write(buffer);
-            SerializeUtil.writeOptional2(buffer, stack, PacketBuffer::writeItemStack);
-        }
-
-        public ItemStack getStack() {
-            return stack;
+            SerializeUtil.writeList(buffer, icons, FHIcon::write);
         }
     }
 
     private static class FHCombinedIcon extends FHIcon {
         FHIcon large;
         FHIcon small;
+
+        public FHCombinedIcon(FHIcon base, FHIcon small) {
+            this.large = base;
+            this.small = small;
+        }
 
         public FHCombinedIcon(JsonElement elm) {
             if (elm.isJsonObject()) {
@@ -203,11 +132,6 @@ public class FHIcons {
         public FHCombinedIcon(PacketBuffer buffer) {
             large = FHIcons.readIcon(buffer);
             small = FHIcons.readIcon(buffer);
-        }
-
-        public FHCombinedIcon(FHIcon base, FHIcon small) {
-            this.large = base;
-            this.small = small;
         }
 
         @Override
@@ -239,55 +163,67 @@ public class FHIcons {
         }
     }
 
-    private static class FHAnimatedIcon extends FHIcon {
-        List<FHIcon> icons;
+    private static class FHDelegateIcon extends FHIcon {
+        String name;
 
-        public FHAnimatedIcon(JsonElement elm) {
-            if (elm.isJsonObject()) {
-                JsonObject jo = elm.getAsJsonObject();
-                icons = SerializeUtil.parseJsonElmList(jo.get("icons"), FHIcons::getIcon);
-            } else if (elm.isJsonArray()) {
-                icons = SerializeUtil.parseJsonElmList(elm, FHIcons::getIcon);
-            }
+        public FHDelegateIcon(JsonElement elm) {
+            this(elm.getAsJsonObject().get("name").getAsString());
         }
 
-        public FHAnimatedIcon(PacketBuffer buffer) {
-            icons = SerializeUtil.readList(buffer, FHIcons::readIcon);
+        public FHDelegateIcon(PacketBuffer buffer) {
+            this(buffer.readString());
         }
 
-        public FHAnimatedIcon() {
-            icons = new ArrayList<>();
-        }
-
-        public FHAnimatedIcon(FHIcon[] icons2) {
-            this();
-            for (FHIcon i : icons2)
-                icons.add(i);
+        public FHDelegateIcon(String name) {
+            super();
+            this.name = name;
         }
 
         @Override
         public void draw(MatrixStack ms, int x, int y, int w, int h) {
-            if (icons.size() > 0) {
-                GuiHelper.setupDrawing();
-                icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
-            }
+            GuiHelper.setupDrawing();
+            TechIcons.internals.get(name).draw(ms, x, y, w, h);
         }
 
         @Override
         public JsonElement serialize() {
-
-            return SerializeUtil.toJsonList(icons, FHIcon::serialize);
+            JsonObject jo = super.serialize().getAsJsonObject();
+            jo.addProperty("name", name);
+            return jo;
         }
 
         @Override
         public void write(PacketBuffer buffer) {
             super.write(buffer);
-            SerializeUtil.writeList(buffer, icons, FHIcon::write);
+            buffer.writeString(name);
+        }
+    }
+
+    public static abstract class FHIcon extends Icon implements Writeable, Cloneable {
+        public FHIcon() {
+            super();
+        }
+
+        public JsonElement serialize() {
+            JsonObject jo = new JsonObject();
+            serializers.writeType(jo, this);
+            return jo;
+        }
+
+        @Override
+        public void write(PacketBuffer buffer) {
+            serializers.writeId(buffer, this);
         }
     }
 
     private static class FHIngredientIcon extends FHAnimatedIcon {
         Ingredient igd;
+
+        public FHIngredientIcon(Ingredient i) {
+            igd = i;
+            for (ItemStack stack : igd.getMatchingStacks())
+                icons.add(new FHItemIcon(stack));
+        }
 
         public FHIngredientIcon(JsonElement elm) {
             this(Ingredient.deserialize(elm.getAsJsonObject().get("ingredient")));
@@ -296,12 +232,6 @@ public class FHIcons {
         public FHIngredientIcon(PacketBuffer buffer) {
             this(Ingredient.read(buffer));
 
-        }
-
-        public FHIngredientIcon(Ingredient i) {
-            igd = i;
-            for (ItemStack stack : igd.getMatchingStacks())
-                icons.add(new FHItemIcon(stack));
         }
 
         @Override
@@ -315,6 +245,156 @@ public class FHIcons {
         public void write(PacketBuffer buffer) {
             super.write(buffer);
             igd.write(buffer);
+        }
+    }
+
+    private static class FHItemIcon extends FHIcon {
+        Icon nested;
+        ItemStack stack;
+
+        public FHItemIcon(IItemProvider item2) {
+            this(new ItemStack(item2));
+        }
+
+        public FHItemIcon(ItemStack stack) {
+            this.stack = stack;
+            init();
+        }
+
+        public FHItemIcon(JsonElement elm) {
+            if (elm.isJsonPrimitive()) {
+                stack = SerializeUtil.fromJson(elm);
+
+            } else if (elm.isJsonObject()) {
+                if (elm.getAsJsonObject().has("item")) {
+                    JsonElement it = elm.getAsJsonObject().get("item");
+                    stack = SerializeUtil.fromJson(it);
+                } else
+                    stack = SerializeUtil.fromJson(elm);
+            }
+            init();
+        }
+
+        public FHItemIcon(PacketBuffer buffer) {
+            stack = SerializeUtil.readOptional(buffer, PacketBuffer::readItemStack).orElse(null);
+            init();
+        }
+
+        @Override
+        public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
+            nested.draw(matrixStack, x, y, w, h);
+            if (stack != null && stack.getCount() > 1) {
+                matrixStack.push();
+                matrixStack.translate(x + w - 8, y + h - 7, 199);
+                matrixStack.push();
+                matrixStack.scale(w / 16f, h / 16f, 0);
+                ClientUtils.mc().fontRenderer.drawStringWithShadow(matrixStack, String.valueOf(stack.getCount()), 0, 0,
+                        0xffffffff);
+                matrixStack.pop();
+                matrixStack.pop();
+            }
+        }
+
+        public ItemStack getStack() {
+            return stack;
+        }
+
+        private void init() {
+            if (stack != null)
+                nested = ItemIcon.getItemIcon(stack);
+        }
+
+        @Override
+        public JsonElement serialize() {
+            JsonElement je = SerializeUtil.toJson(stack);
+            if (je.isJsonPrimitive())
+                return je;
+            JsonObject jo = super.serialize().getAsJsonObject();
+            jo.add("item", je);
+            return jo;
+        }
+
+        @Override
+        public void write(PacketBuffer buffer) {
+            super.write(buffer);
+            SerializeUtil.writeOptional2(buffer, stack, PacketBuffer::writeItemStack);
+        }
+    }
+
+    private static class FHNopIcon extends FHIcon {
+        public static final FHNopIcon INSTANCE = new FHNopIcon();
+
+        /**
+         * @param e
+         */
+        public static FHNopIcon get(JsonElement e) {
+            return INSTANCE;
+        }
+
+        /**
+         * @param e
+         */
+        public static FHNopIcon get(PacketBuffer e) {
+            return INSTANCE;
+        }
+
+        private FHNopIcon() {
+        }
+
+        @Override
+        public void draw(MatrixStack ms, int x, int y, int w, int h) {
+        }
+
+        @Override
+        public JsonElement serialize() {
+            return JsonNull.INSTANCE;
+        }
+
+    }
+
+    private static class FHTextIcon extends FHIcon {
+        String text;
+
+        public FHTextIcon(JsonElement elm) {
+            this(elm.getAsJsonObject().get("text").getAsString());
+        }
+
+        public FHTextIcon(PacketBuffer buffer) {
+            this(buffer.readString());
+        }
+
+        public FHTextIcon(String text) {
+            super();
+            this.text = text;
+        }
+
+        @Override
+        public void draw(MatrixStack ms, int x, int y, int w, int h) {
+
+            ms.push();
+            ms.translate(x, y, 0);
+            ms.scale(w / 16f, h / 16f, 0);
+
+            ms.push();
+
+            ms.scale(2.286f, 2.286f, 0);// scale font height 7 to height 16
+            ClientUtils.mc().fontRenderer.drawStringWithShadow(ms, text, 0, 0, 0xFFFFFFFF);
+            ms.pop();
+            ms.pop();
+            GuiHelper.setupDrawing();
+        }
+
+        @Override
+        public JsonElement serialize() {
+            JsonObject jo = super.serialize().getAsJsonObject();
+            jo.addProperty("text", text);
+            return jo;
+        }
+
+        @Override
+        public void write(PacketBuffer buffer) {
+            super.write(buffer);
+            buffer.writeString(text);
         }
     }
 
@@ -360,6 +440,9 @@ public class FHIcons {
         ResourceLocation rl;
         int x, y, w, h, tw, th;
 
+        public FHTextureUVIcon() {
+        }
+
         public FHTextureUVIcon(JsonElement elm) {
             this(new ResourceLocation(elm.getAsJsonObject().get("location").getAsString()),
                     elm.getAsJsonObject().get("x").getAsInt(), elm.getAsJsonObject().get("y").getAsInt(),
@@ -385,18 +468,15 @@ public class FHIcons {
             init();
         }
 
-        public FHTextureUVIcon() {
-        }
-
-        public void init() {
-            nested = ImageIcon.getIcon(rl).withUV(x, y, w, h, tw, th);
-        }
-
         @Override
         public void draw(MatrixStack ms, int x, int y, int w, int h) {
             GuiHelper.setupDrawing();
             if (nested != null)
                 nested.draw(ms, x, y, w, h);
+        }
+
+        public void init() {
+            nested = ImageIcon.getIcon(rl).withUV(x, y, w, h, tw, th);
         }
 
         @Override
@@ -425,90 +505,101 @@ public class FHIcons {
         }
     }
 
-    private static class FHDelegateIcon extends FHIcon {
-        String name;
-
-        public FHDelegateIcon(String name) {
-            super();
-            this.name = name;
-        }
-
-        public FHDelegateIcon(JsonElement elm) {
-            this(elm.getAsJsonObject().get("name").getAsString());
-        }
-
-        public FHDelegateIcon(PacketBuffer buffer) {
-            this(buffer.readString());
-        }
-
-        @Override
-        public void draw(MatrixStack ms, int x, int y, int w, int h) {
-            GuiHelper.setupDrawing();
-            TechIcons.internals.get(name).draw(ms, x, y, w, h);
-        }
-
-        @Override
-        public JsonElement serialize() {
-            JsonObject jo = super.serialize().getAsJsonObject();
-            jo.addProperty("name", name);
-            return jo;
-        }
-
-        @Override
-        public void write(PacketBuffer buffer) {
-            super.write(buffer);
-            buffer.writeString(name);
-        }
-    }
-
-    private static class FHTextIcon extends FHIcon {
-        String text;
-
-        public FHTextIcon(String text) {
-            super();
-            this.text = text;
-        }
-
-        public FHTextIcon(JsonElement elm) {
-            this(elm.getAsJsonObject().get("text").getAsString());
-        }
-
-        public FHTextIcon(PacketBuffer buffer) {
-            this(buffer.readString());
-        }
-
-        @Override
-        public void draw(MatrixStack ms, int x, int y, int w, int h) {
-
-            ms.push();
-            ms.translate(x, y, 0);
-            ms.scale(w / 16f, h / 16f, 0);
-
-            ms.push();
-
-            ms.scale(2.286f, 2.286f, 0);// scale font height 7 to height 16
-            ClientUtils.mc().fontRenderer.drawStringWithShadow(ms, text, 0, 0, 0xFFFFFFFF);
-            ms.pop();
-            ms.pop();
-            GuiHelper.setupDrawing();
-        }
-
-        @Override
-        public JsonElement serialize() {
-            JsonObject jo = super.serialize().getAsJsonObject();
-            jo.addProperty("text", text);
-            return jo;
-        }
-
-        @Override
-        public void write(PacketBuffer buffer) {
-            super.write(buffer);
-            buffer.writeString(text);
-        }
-    }
-
     public static abstract class IconEditor<T extends FHIcon> extends BaseEditDialog {
 
+        private static class Combined extends IconEditor<FHCombinedIcon> {
+            String label;
+            Consumer<FHCombinedIcon> i;
+
+            public Combined(Widget panel, String label, FHCombinedIcon v, Consumer<FHCombinedIcon> i) {
+                super(panel, v == null ? new FHCombinedIcon(null, null) : v);
+                this.label = label;
+                this.i = i;
+            }
+
+            @Override
+            public void addWidgets() {
+                add(EditUtils.getTitle(this, label));
+                add(new OpenEditorButton<>(this, "Edit base icon", EDITOR, v.large, e -> v.large = e));
+                add(new OpenEditorButton<>(this, "Edit corner icon", EDITOR, v.small, e -> v.small = e));
+            }
+
+            @Override
+            public void onClose() {
+                i.accept(v);
+
+            }
+
+        }
+
+        private static class UV extends IconEditor<FHTextureUVIcon> {
+            String label;
+            Consumer<FHTextureUVIcon> i;
+            LabeledTextBox rl;
+            NumberBox x;
+            NumberBox y;
+            NumberBox w;
+            NumberBox h;
+            NumberBox tw;
+            NumberBox th;
+
+            public UV(Widget panel, String label, FHTextureUVIcon v, Consumer<FHTextureUVIcon> i) {
+                super(panel, v == null ? new FHTextureUVIcon() : v);
+                this.label = label;
+                this.i = i;
+                v = this.v;
+                rl = new LabeledTextBox(this, "Texture", this.v.rl == null ? "" : this.v.rl.toString());
+                x = new NumberBox(this, "X", (v.x));
+                y = new NumberBox(this, "Y", (v.y));
+                w = new NumberBox(this, "Width", (v.w));
+                h = new NumberBox(this, "Height", (v.h));
+                tw = new NumberBox(this, "Texture Width", (v.tw));
+                th = new NumberBox(this, "Texture Height", (v.th));
+            }
+
+            @Override
+            public void addWidgets() {
+                add(EditUtils.getTitle(this, label));
+                add(rl);
+                add(x);
+                add(y);
+                add(w);
+                add(h);
+                add(tw);
+                add(th);
+                add(new SimpleTextButton(this, GuiUtils.str("Commit"), Icon.EMPTY) {
+                    @Override
+                    public void onClicked(MouseButton arg0) {
+                        v.rl = new ResourceLocation(rl.getText());
+                        v.x = (int) x.getNum();
+                        v.y = (int) y.getNum();
+                        v.w = (int) w.getNum();
+                        v.h = (int) h.getNum();
+                        v.tw = (int) tw.getNum();
+                        v.th = (int) th.getNum();
+                        v.init();
+
+                    }
+
+                });
+            }
+
+            @Override
+            public void onClose() {
+
+                v.rl = new ResourceLocation(rl.getText());
+                v.x = (int) x.getNum();
+                v.y = (int) y.getNum();
+                v.w = (int) w.getNum();
+                v.h = (int) h.getNum();
+                v.tw = (int) tw.getNum();
+                v.th = (int) th.getNum();
+                v.init();
+                i.accept(v);
+
+            }
+
+        }
         public static final Editor<FHIcon> EDITOR = (p, l, v, c) -> {
             if (v == null || v instanceof FHNopIcon) {
                 new EditorSelector<>(p, l, c).addEditor("Empty", IconEditor.NOP_EDITOR)
@@ -523,7 +614,6 @@ public class FHIcons {
                 new EditorSelector<>(p, l, (o, t) -> true, v, c).addEditor("Edit", IconEditor.CHANGE_EDITOR)
                         .addEditor("New", IconEditor.NOP_CHANGE_EDITOR).open();
         };
-
         public static final Editor<FHIcon> CHANGE_EDITOR = (p, l, v, c) -> {
             if (v instanceof FHItemIcon) {
                 IconEditor.ITEM_EDITOR.open(p, l, (FHItemIcon) v, e -> c.accept(e));
@@ -555,13 +645,13 @@ public class FHIcons {
             IngredientEditor.EDITOR_INGREDIENT_EXTERN.open(p, l, v == null ? null : v.igd,
                     e -> c.accept(new FHIngredientIcon(e)));
         };
+
         public static final Editor<FHIcon> INGREDIENT_SIZE_EDITOR = (p, l, v, c) -> {
             IngredientEditor.EDITOR.open(p, l, null, e -> c.accept(FHIcons.getIcon(e)));
         };
         public static final Editor<FHTextIcon> TEXT_EDITOR = (p, l, v, c) -> {
             EditPrompt.TEXT_EDITOR.open(p, l, v == null ? null : v.text, e -> c.accept(new FHTextIcon(e)));
         };
-
         public static final Editor<FHIcon> NOP_EDITOR = (p, l, v, c) -> {
             c.accept(FHNopIcon.INSTANCE);
             p.getGui().refreshWidgets();
@@ -576,11 +666,13 @@ public class FHIcons {
         public static final Editor<FHCombinedIcon> COMBINED_EDITOR = (p, l, v, c) -> {
             new Combined(p, l, v, c).open();
         };
+
         public static final Editor<FHDelegateIcon> INTERNAL_EDITOR = (p, l, v, c) -> {
             new SelectDialog<String>(p, l, v == null ? null : v.name, o -> {
                 c.accept(new FHDelegateIcon(o));
             }, TechIcons.internals::keySet, GuiUtils::str, e -> new String[]{e}, TechIcons.internals::get).open();
         };
+
         public static final Editor<FHTextureUVIcon> UV_EDITOR = (p, l, v, c) -> {
             new UV(p, l, v, c).open();
         };
@@ -592,100 +684,6 @@ public class FHIcons {
             this.v = v;
         }
 
-        private static class Combined extends IconEditor<FHCombinedIcon> {
-            String label;
-            Consumer<FHCombinedIcon> i;
-
-            public Combined(Widget panel, String label, FHCombinedIcon v, Consumer<FHCombinedIcon> i) {
-                super(panel, v == null ? new FHCombinedIcon(null, null) : v);
-                this.label = label;
-                this.i = i;
-            }
-
-            @Override
-            public void onClose() {
-                i.accept(v);
-
-            }
-
-            @Override
-            public void addWidgets() {
-                add(EditUtils.getTitle(this, label));
-                add(new OpenEditorButton<>(this, "Edit base icon", EDITOR, v.large, e -> v.large = e));
-                add(new OpenEditorButton<>(this, "Edit corner icon", EDITOR, v.small, e -> v.small = e));
-            }
-
-        }
-
-        private static class UV extends IconEditor<FHTextureUVIcon> {
-            String label;
-            Consumer<FHTextureUVIcon> i;
-            LabeledTextBox rl;
-            NumberBox x;
-            NumberBox y;
-            NumberBox w;
-            NumberBox h;
-            NumberBox tw;
-            NumberBox th;
-
-            public UV(Widget panel, String label, FHTextureUVIcon v, Consumer<FHTextureUVIcon> i) {
-                super(panel, v == null ? new FHTextureUVIcon() : v);
-                this.label = label;
-                this.i = i;
-                v = this.v;
-                rl = new LabeledTextBox(this, "Texture", this.v.rl == null ? "" : this.v.rl.toString());
-                x = new NumberBox(this, "X", (v.x));
-                y = new NumberBox(this, "Y", (v.y));
-                w = new NumberBox(this, "Width", (v.w));
-                h = new NumberBox(this, "Height", (v.h));
-                tw = new NumberBox(this, "Texture Width", (v.tw));
-                th = new NumberBox(this, "Texture Height", (v.th));
-            }
-
-            @Override
-            public void onClose() {
-
-                v.rl = new ResourceLocation(rl.getText());
-                v.x = (int) x.getNum();
-                v.y = (int) y.getNum();
-                v.w = (int) w.getNum();
-                v.h = (int) h.getNum();
-                v.tw = (int) tw.getNum();
-                v.th = (int) th.getNum();
-                v.init();
-                i.accept(v);
-
-            }
-
-            @Override
-            public void addWidgets() {
-                add(EditUtils.getTitle(this, label));
-                add(rl);
-                add(x);
-                add(y);
-                add(w);
-                add(h);
-                add(tw);
-                add(th);
-                add(new SimpleTextButton(this, GuiUtils.str("Commit"), Icon.EMPTY) {
-                    @Override
-                    public void onClicked(MouseButton arg0) {
-                        v.rl = new ResourceLocation(rl.getText());
-                        v.x = (int) x.getNum();
-                        v.y = (int) y.getNum();
-                        v.w = (int) w.getNum();
-                        v.h = (int) h.getNum();
-                        v.tw = (int) tw.getNum();
-                        v.th = (int) th.getNum();
-                        v.init();
-
-                    }
-
-                });
-            }
-
-        }
-
         @Override
         public void draw(MatrixStack arg0, Theme arg1, int arg2, int arg3, int arg4, int arg5) {
             super.draw(arg0, arg1, arg2, arg3, arg4, arg5);
@@ -693,6 +691,8 @@ public class FHIcons {
         }
 
     }
+
+    private static JsonSerializerRegistry<FHIcon> serializers = new JsonSerializerRegistry<>();
 
     static {
         serializers.register(FHNopIcon.class, "nop", FHNopIcon::get, FHNopIcon::get);
@@ -706,40 +706,8 @@ public class FHIcons {
         serializers.register(FHDelegateIcon.class, "internal", FHDelegateIcon::new, FHDelegateIcon::new);
     }
 
-    public static FHIcon getIcon(ItemStack item) {
-        return new FHItemIcon(item);
-    }
-
-    public static FHIcon getIcon(IItemProvider item) {
-        return new FHItemIcon(item);
-    }
-
-    public static FHIcon getIcon(FHIcon base, FHIcon small) {
-        return new FHCombinedIcon(base, small);
-    }
-
-    public static FHIcon getIcon(String text) {
-        return new FHTextIcon(text);
-    }
-
-    public static FHIcon getIcon(IngredientWithSize i) {
-        if (i.getCount() == 1)
-            return getIcon(i.getBaseIngredient());
-        if (i.getCount() < 10)
-            return getIcon(getIcon(i.getBaseIngredient()), getIcon(" " + String.valueOf(i.getCount())));
-        return getIcon(getIcon(i.getBaseIngredient()), getIcon(String.valueOf(i.getCount())));
-    }
-
-    public static FHIcon getIcon(Ingredient i) {
-        return new FHIngredientIcon(i);
-    }
-
-    public static FHIcon getIcon(ResourceLocation texture) {
-        return new FHTextureIcon(texture);
-    }
-
-    public static FHIcon getIcon(ResourceLocation texture, int x, int y, int w, int h, int tw, int th) {
-        return new FHTextureUVIcon(texture, x, y, w, h, tw, th);
+    public static FHIcon getAnimatedIcon(FHIcon... icons) {
+        return new FHAnimatedIcon(icons);
     }
 
     /**
@@ -750,15 +718,43 @@ public class FHIcons {
         return new FHDelegateIcon(name);
     }
 
-    public static FHIcon getAnimatedIcon(FHIcon... icons) {
-        return new FHAnimatedIcon(icons);
+    public static FHIcon getIcon(Collection<IItemProvider> items) {
+        return new FHIngredientIcon(Ingredient.fromItems(items.toArray(new IItemProvider[0])));
     }
 
-    /**
-     * This does not preserve nbt on save
-     */
-    public static FHIcon getStackIcons(Collection<ItemStack> rewards) {
-        return new FHIngredientIcon(Ingredient.fromStacks(rewards.stream()));
+    public static FHIcon getIcon(FHIcon base, FHIcon small) {
+        return new FHCombinedIcon(base, small);
+    }
+
+    public static FHIcon getIcon(IItemProvider item) {
+        return new FHItemIcon(item);
+    }
+
+    public static FHIcon getIcon(IItemProvider[] items) {
+        return new FHIngredientIcon(Ingredient.fromItems(items));
+    }
+
+    public static FHIcon getIcon(Ingredient i) {
+        return new FHIngredientIcon(i);
+    }
+
+    public static FHIcon getIcon(IngredientWithSize i) {
+        if (i.getCount() == 1)
+            return getIcon(i.getBaseIngredient());
+        if (i.getCount() < 10)
+            return getIcon(getIcon(i.getBaseIngredient()), getIcon(" " + String.valueOf(i.getCount())));
+        return getIcon(getIcon(i.getBaseIngredient()), getIcon(String.valueOf(i.getCount())));
+    }
+
+    public static FHIcon getIcon(ItemStack item) {
+        return new FHItemIcon(item);
+    }
+
+    public static FHIcon getIcon(ItemStack[] stacks) {
+        FHIcon[] icons = new FHIcon[stacks.length];
+        for (int i = 0; i < stacks.length; i++)
+            icons[i] = FHIcons.getIcon(stacks[i]);
+        return getAnimatedIcon(icons);
     }
 
     public static FHIcon getIcon(JsonElement elm) {
@@ -779,27 +775,31 @@ public class FHIcons {
         return FHNopIcon.INSTANCE;
     }
 
-    public static FHIcon readIcon(PacketBuffer elm) {
-        return serializers.readOrDefault(elm, FHNopIcon.INSTANCE);
+    public static FHIcon getIcon(ResourceLocation texture) {
+        return new FHTextureIcon(texture);
+    }
+
+    public static FHIcon getIcon(ResourceLocation texture, int x, int y, int w, int h, int tw, int th) {
+        return new FHTextureUVIcon(texture, x, y, w, h, tw, th);
+    }
+
+    public static FHIcon getIcon(String text) {
+        return new FHTextIcon(text);
+    }
+
+    /**
+     * This does not preserve nbt on save
+     */
+    public static FHIcon getStackIcons(Collection<ItemStack> rewards) {
+        return new FHIngredientIcon(Ingredient.fromStacks(rewards.stream()));
     }
 
     public static FHIcon nop() {
         return FHNopIcon.INSTANCE;
     }
 
-    public static FHIcon getIcon(ItemStack[] stacks) {
-        FHIcon[] icons = new FHIcon[stacks.length];
-        for (int i = 0; i < stacks.length; i++)
-            icons[i] = FHIcons.getIcon(stacks[i]);
-        return getAnimatedIcon(icons);
-    }
-
-    public static FHIcon getIcon(IItemProvider[] items) {
-        return new FHIngredientIcon(Ingredient.fromItems(items));
-    }
-
-    public static FHIcon getIcon(Collection<IItemProvider> items) {
-        return new FHIngredientIcon(Ingredient.fromItems(items.toArray(new IItemProvider[0])));
+    public static FHIcon readIcon(PacketBuffer elm) {
+        return serializers.readOrDefault(elm, FHNopIcon.INSTANCE);
     }
 
 }

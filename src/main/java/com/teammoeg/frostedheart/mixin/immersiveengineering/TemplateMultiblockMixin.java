@@ -47,6 +47,9 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
     public TemplateMultiblockMixin() {
     }
 
+    @Invoker(remap = false)
+    public abstract void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
+
     @Inject(at = @At(value = "INVOKE", target = "Lblusunrize/immersiveengineering/api/multiblocks/TemplateMultiblock;form"), method = "createStructure", remap = false)
     public void fh$on$createStructure(World world, BlockPos pos, Direction side, PlayerEntity player, CallbackInfoReturnable<Boolean> cbi) {
         if (!world.isRemote)
@@ -54,9 +57,6 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
         else
             pe = null;
     }
-
-    @Invoker(remap = false)
-    public abstract void callForm(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit);
 
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
     public void fh$on$form(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {

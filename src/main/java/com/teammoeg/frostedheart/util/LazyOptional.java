@@ -38,13 +38,20 @@ import java.util.function.Supplier;
  * An modified version for LazyOptional by forge, compatibilities for null return
  */
 public class LazyOptional<T> {
+    private static final @Nonnull
+    LazyOptional<Void> EMPTY = new LazyOptional<>(null);
     private final Supplier<T> supplier;
     private final Object lock = new Object();
     private Mutable<T> resolved;
     private Set<NonNullConsumer<LazyOptional<T>>> listeners = new HashSet<>();
     private boolean isValid = true;
-    private static final @Nonnull
-    LazyOptional<Void> EMPTY = new LazyOptional<>(null);
+
+    /**
+     * @return The singleton empty instance
+     */
+    public static <T> LazyOptional<T> empty() {
+        return EMPTY.cast();
+    }
 
     /**
      * Construct a new {@link LazyOptional} that wraps the given
@@ -58,11 +65,19 @@ public class LazyOptional<T> {
         return instanceSupplier == null ? empty() : new LazyOptional<>(instanceSupplier);
     }
 
+    private LazyOptional(@Nullable Supplier<T> instanceSupplier) {
+        this.supplier = instanceSupplier;
+    }
+
     /**
-     * @return The singleton empty instance
+     * Register a {@link NonNullConsumer listener} that will be called when this {@link LazyOptional} becomes resolved
      */
-    public static <T> LazyOptional<T> empty() {
-        return EMPTY.cast();
+    public void addListener(NonNullConsumer<LazyOptional<T>> listener) {
+        if (!isPresent()) {
+            this.listeners.add(listener);
+        } else {
+            listener.accept(this);
+        }
     }
 
     /**
@@ -77,8 +92,26 @@ public class LazyOptional<T> {
         return (LazyOptional<X>) this;
     }
 
-    private LazyOptional(@Nullable Supplier<T> instanceSupplier) {
-        this.supplier = instanceSupplier;
+    /**
+     * Resolve the contained supplier if non-empty, and filter it by the given
+     * {@link NonNullPredicate}, returning empty if false.
+     * <p>
+     * <em>It is important to note that this method is <strong>not</strong> lazy, as
+     * it must resolve the value of the supplier to validate it with the
+     * predicate.</em>
+     *
+     * @param predicate A {@link NonNullPredicate} to apply to the result of the
+     *                  contained supplier, if non-empty
+     * @return An {@link Optional} containing the result of the contained
+     * supplier, if and only if the passed {@link NonNullPredicate} returns
+     * true, otherwise an empty {@link Optional}
+     * @throws NullPointerException If {@code predicate} is null and this
+     *                              {@link Optional} is non-empty
+     */
+    public Optional<T> filter(NonNullPredicate<? super T> predicate) {
+        Objects.requireNonNull(predicate);
+        final T value = getValue(); // To keep the non-null contract we have to evaluate right now. Should we allow this function at all?
+        return value != null && predicate.test(value) ? Optional.of(value) : Optional.empty();
     }
 
     private @Nullable
@@ -102,17 +135,6 @@ public class LazyOptional<T> {
     }
 
     /**
-     * Check if this {@link LazyOptional} is non-empty.
-     *
-     * @return {@code true} if this {@link LazyOptional} is non-empty, i.e. holds a
-     * non-null supplier
-     */
-    public boolean isPresent() {
-        if (supplier == null || !isValid) return false;
-        return getValue() != null;
-    }
-
-    /**
      * If non-empty, invoke the specified {@link NonNullConsumer} with the object,
      * otherwise do nothing.
      *
@@ -124,6 +146,17 @@ public class LazyOptional<T> {
         T val = getValue();
         if (isValid && val != null)
             consumer.accept(val);
+    }
+
+    /**
+     * Check if this {@link LazyOptional} is non-empty.
+     *
+     * @return {@code true} if this {@link LazyOptional} is non-empty, i.e. holds a
+     * non-null supplier
+     */
+    public boolean isPresent() {
+        if (supplier == null || !isValid) return false;
+        return getValue() != null;
     }
 
     /**
@@ -164,37 +197,6 @@ public class LazyOptional<T> {
     public <U> Optional<U> map(NonNullFunction<? super T, ? extends U> mapper) {
         Objects.requireNonNull(mapper);
         return isPresent() ? Optional.of(mapper.apply(getValue())) : Optional.empty();
-    }
-
-    /**
-     * Resolve the contained supplier if non-empty, and filter it by the given
-     * {@link NonNullPredicate}, returning empty if false.
-     * <p>
-     * <em>It is important to note that this method is <strong>not</strong> lazy, as
-     * it must resolve the value of the supplier to validate it with the
-     * predicate.</em>
-     *
-     * @param predicate A {@link NonNullPredicate} to apply to the result of the
-     *                  contained supplier, if non-empty
-     * @return An {@link Optional} containing the result of the contained
-     * supplier, if and only if the passed {@link NonNullPredicate} returns
-     * true, otherwise an empty {@link Optional}
-     * @throws NullPointerException If {@code predicate} is null and this
-     *                              {@link Optional} is non-empty
-     */
-    public Optional<T> filter(NonNullPredicate<? super T> predicate) {
-        Objects.requireNonNull(predicate);
-        final T value = getValue(); // To keep the non-null contract we have to evaluate right now. Should we allow this function at all?
-        return value != null && predicate.test(value) ? Optional.of(value) : Optional.empty();
-    }
-
-    /**
-     * Resolves the value of this LazyOptional, turning it into a standard non-lazy {@link Optional<T>}
-     *
-     * @return The resolved optional.
-     */
-    public Optional<T> resolve() {
-        return isPresent() ? Optional.ofNullable(getValue()) : Optional.empty();
     }
 
     /**
@@ -248,13 +250,11 @@ public class LazyOptional<T> {
     }
 
     /**
-     * Register a {@link NonNullConsumer listener} that will be called when this {@link LazyOptional} becomes resolved
+     * Resolves the value of this LazyOptional, turning it into a standard non-lazy {@link Optional<T>}
+     *
+     * @return The resolved optional.
      */
-    public void addListener(NonNullConsumer<LazyOptional<T>> listener) {
-        if (!isPresent()) {
-            this.listeners.add(listener);
-        } else {
-            listener.accept(this);
-        }
+    public Optional<T> resolve() {
+        return isPresent() ? Optional.ofNullable(getValue()) : Optional.empty();
     }
 }

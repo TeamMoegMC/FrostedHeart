@@ -56,9 +56,13 @@ public class GasVentBlock extends FHBaseBlock {
     }
 
     @Override
-    protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
-        builder.add(LIT);
+    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+        super.animateTick(stateIn, worldIn, pos, rand);
+        if (stateIn.get(LIT)) {
+            for (int i = 0; i < rand.nextInt(2) + 2; ++i)
+                ClientUtils.spawnSmokeParticles(worldIn, pos.up());
+
+        }
     }
 
     @Override
@@ -67,18 +71,14 @@ public class GasVentBlock extends FHBaseBlock {
     }
 
     @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
+    protected void fillStateContainer(Builder<Block, BlockState> builder) {
+        super.fillStateContainer(builder);
+        builder.add(LIT);
     }
 
     @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-        super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(LIT)) {
-            for (int i = 0; i < rand.nextInt(2) + 2; ++i)
-                ClientUtils.spawnSmokeParticles(worldIn, pos.up());
-
-        }
+    public boolean hasTileEntity(BlockState state) {
+        return true;
     }
 
     @Override

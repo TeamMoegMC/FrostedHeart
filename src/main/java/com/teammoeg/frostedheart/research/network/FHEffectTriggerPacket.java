@@ -33,13 +33,13 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class FHEffectTriggerPacket {
     private final int researchID;
 
-    public FHEffectTriggerPacket(Research r) {
-        this.researchID = r.getRId();
-    }
-
     public FHEffectTriggerPacket(PacketBuffer buffer) {
         researchID = buffer.readVarInt();
 
+    }
+
+    public FHEffectTriggerPacket(Research r) {
+        this.researchID = r.getRId();
     }
 
     public void encode(PacketBuffer buffer) {

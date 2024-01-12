@@ -46,29 +46,14 @@ import java.util.stream.Collectors;
 
 public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "knife_cutting");
-    private IDrawable BACKGROUND;
-    private IDrawable ICON;
     public static List<Item> matching;
     public static final ResourceLocation ktag = new ResourceLocation(FHMain.MODID, "knife");
+    private IDrawable BACKGROUND;
+    private IDrawable ICON;
 
     public CuttingCategory(IGuiHelper guiHelper) {
         this.ICON = new DoubleItemIcon(() -> new ItemStack(Items.IRON_SWORD), () -> new ItemStack(FHItems.brown_mushroombed));
         this.BACKGROUND = new EmptyBackground(120, 50);
-    }
-
-    @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends CuttingRecipe> getRecipeClass() {
-        return CuttingRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".knife_cutting").getString());
     }
 
     @Override
@@ -85,9 +70,24 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
         return BACKGROUND;
     }
 
+
     @Override
     public IDrawable getIcon() {
         return ICON;
+    }
+
+    @Override
+    public Class<? extends CuttingRecipe> getRecipeClass() {
+        return CuttingRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".knife_cutting").getString());
+    }
+
+    @Override
+    public ResourceLocation getUid() {
+        return UID;
     }
 
     @Override

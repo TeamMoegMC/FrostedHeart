@@ -64,11 +64,10 @@ public class RelicChestBlock extends FHBaseBlock {
                 .harvestTool(ToolType.PICKAXE).hardnessAndResistance(35, 600).notSolid(), FHBlockItem::new);
     }
 
+    @Nullable
     @Override
-    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        if (state.get(HORIZONTAL_AXIS) == Direction.Axis.X)
-            return X_SHAPE;
-        return Z_SHAPE;
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+        return FHTileTypes.RELIC_CHEST.get().create();
     }
 
     @Override
@@ -77,14 +76,15 @@ public class RelicChestBlock extends FHBaseBlock {
     }
 
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(HORIZONTAL_AXIS, context.getPlacementHorizontalFacing().rotateY().getAxis());
+    public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
+        if (state.get(HORIZONTAL_AXIS) == Direction.Axis.X)
+            return X_SHAPE;
+        return Z_SHAPE;
     }
 
-    @Nullable
     @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return FHTileTypes.RELIC_CHEST.get().create();
+    public BlockState getStateForPlacement(BlockItemUseContext context) {
+        return this.getDefaultState().with(HORIZONTAL_AXIS, context.getPlacementHorizontalFacing().rotateY().getAxis());
     }
 
     @Override

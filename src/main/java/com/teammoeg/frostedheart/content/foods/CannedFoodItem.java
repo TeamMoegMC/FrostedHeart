@@ -44,16 +44,16 @@ public class CannedFoodItem extends FHBaseItem {
     }
 
     @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        if (showtt)
+            tooltip.add(GuiUtils.translateTooltip("canned_food"));
+    }
+
+    @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
         entityLiving.getCapability(WaterLevelCapability.PLAYER_WATER_LEVEL).ifPresent(e -> e.reduceLevel(this.getFood().getHealing()));
         return itemstack;
-    }
-
-    @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        if (showtt)
-            tooltip.add(GuiUtils.translateTooltip("canned_food"));
     }
 
 }

@@ -57,69 +57,6 @@ public class RTextField extends Widget {
         return this;
     }
 
-    public RTextField setMinWidth(int width) {
-        minWidth = width;
-        return this;
-    }
-
-    public RTextField setMaxWidth(int width) {
-        maxWidth = width;
-        return this;
-    }
-
-    public RTextField setMaxLine(int line) {
-        maxLine = line;
-        return this;
-    }
-
-    public RTextField setColor(Color4I color) {
-        textColor = color;
-        return this;
-    }
-
-    public RTextField setScale(float s) {
-        scale = s;
-        return this;
-    }
-
-    public RTextField setSpacing(int s) {
-        textSpacing = s;
-        return this;
-    }
-
-    public RTextField setText(String txt) {
-        return setText(new StringTextComponent(txt));
-    }
-
-    public RTextField setText(ITextComponent txt) {
-        component = txt;
-        Theme theme = getGui().getTheme();
-
-        if (maxLine > 0) {
-            List<ITextProperties> ls = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt),
-                    (int) (maxWidth / scale));
-            formattedText = ls.subList(0, Math.min(ls.size(), (int) (maxLine / scale))).toArray(new ITextProperties[0]);
-        } else {
-            formattedText = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), (int) (maxWidth / scale))
-                    .toArray(new ITextProperties[0]);
-        }
-
-        return resize(theme);
-    }
-
-    public RTextField resize(Theme theme) {
-        setWidth(0);
-
-        for (ITextProperties s : formattedText) {
-            setWidth(Math.max(width, (int) (theme.getStringWidth(s) * scale)));
-        }
-
-        setWidth(MathHelper.clamp(width, minWidth, maxWidth));
-        setHeight((int) ((Math.max(1, formattedText.length) * textSpacing - (textSpacing - theme.getFontHeight() + 1))
-                * scale));
-        return this;
-    }
-
     @Override
     public void addMouseOverText(TooltipList list) {
         if (parent.isEnabled())
@@ -159,5 +96,68 @@ public class RTextField extends Widget {
                 matrixStack.pop();
             }
         }
+    }
+
+    public RTextField resize(Theme theme) {
+        setWidth(0);
+
+        for (ITextProperties s : formattedText) {
+            setWidth(Math.max(width, (int) (theme.getStringWidth(s) * scale)));
+        }
+
+        setWidth(MathHelper.clamp(width, minWidth, maxWidth));
+        setHeight((int) ((Math.max(1, formattedText.length) * textSpacing - (textSpacing - theme.getFontHeight() + 1))
+                * scale));
+        return this;
+    }
+
+    public RTextField setColor(Color4I color) {
+        textColor = color;
+        return this;
+    }
+
+    public RTextField setMaxLine(int line) {
+        maxLine = line;
+        return this;
+    }
+
+    public RTextField setMaxWidth(int width) {
+        maxWidth = width;
+        return this;
+    }
+
+    public RTextField setMinWidth(int width) {
+        minWidth = width;
+        return this;
+    }
+
+    public RTextField setScale(float s) {
+        scale = s;
+        return this;
+    }
+
+    public RTextField setSpacing(int s) {
+        textSpacing = s;
+        return this;
+    }
+
+    public RTextField setText(ITextComponent txt) {
+        component = txt;
+        Theme theme = getGui().getTheme();
+
+        if (maxLine > 0) {
+            List<ITextProperties> ls = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt),
+                    (int) (maxWidth / scale));
+            formattedText = ls.subList(0, Math.min(ls.size(), (int) (maxLine / scale))).toArray(new ITextProperties[0]);
+        } else {
+            formattedText = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), (int) (maxWidth / scale))
+                    .toArray(new ITextProperties[0]);
+        }
+
+        return resize(theme);
+    }
+
+    public RTextField setText(String txt) {
+        return setText(new StringTextComponent(txt));
     }
 }

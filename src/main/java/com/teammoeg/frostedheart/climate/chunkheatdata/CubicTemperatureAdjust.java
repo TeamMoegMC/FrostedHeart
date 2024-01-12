@@ -33,6 +33,14 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
     int r;
     int value;
 
+    public CubicTemperatureAdjust(BlockPos heatPos, int range, int tempMod) {
+        this(heatPos.getX(), heatPos.getY(), heatPos.getZ(), range, tempMod);
+    }
+
+    public CubicTemperatureAdjust(CompoundNBT nc) {
+        deserializeNBT(nc);
+    }
+
     public CubicTemperatureAdjust(int cx, int cy, int cz, int r, int value) {
         this.cx = cx;
         this.cy = cy;
@@ -45,28 +53,24 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
         deserialize(buffer);
     }
 
-    public CubicTemperatureAdjust(CompoundNBT nc) {
-        deserializeNBT(nc);
-    }
-
-    public CubicTemperatureAdjust(BlockPos heatPos, int range, int tempMod) {
-        this(heatPos.getX(), heatPos.getY(), heatPos.getZ(), range, tempMod);
-    }
-
 
     @Override
-    public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = serializeNBTData();
-        nbt.putInt("type", 1);
-        return nbt;
+    public void deserialize(PacketBuffer buffer) {
+        cx = buffer.readVarInt();
+        cy = buffer.readVarInt();
+        cz = buffer.readVarInt();
+        r = buffer.readVarInt();
+        value = buffer.readByte();
     }
 
-    protected CompoundNBT serializeNBTData() {
-        CompoundNBT nbt = new CompoundNBT();
-        nbt.putIntArray("location", new int[]{cx, cy, cz});
-        nbt.putInt("range", r);
-        nbt.putInt("value", value);
-        return nbt;
+    @Override
+    public void deserializeNBT(CompoundNBT nbt) {
+        int[] loc = nbt.getIntArray("location");
+        cx = loc[0];
+        cy = loc[1];
+        cz = loc[2];
+        r = nbt.getInt("range");
+        value = nbt.getInt("value");
     }
 
     public int getCenterX() {
@@ -85,25 +89,20 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
         return r;
     }
 
-    public int getValue() {
-        return value;
-    }
-
-    @Override
-    public void deserializeNBT(CompoundNBT nbt) {
-        int[] loc = nbt.getIntArray("location");
-        cx = loc[0];
-        cy = loc[1];
-        cz = loc[2];
-        r = nbt.getInt("range");
-        value = nbt.getInt("value");
-    }
-
     @Override
     public int getTemperatureAt(int x, int y, int z) {
         if (isEffective(x, y, z))
             return value;
         return 0;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    @Override
+    public float getValueAt(BlockPos pos) {
+        return value;
     }
 
     @Override
@@ -128,17 +127,18 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
     }
 
     @Override
-    public void deserialize(PacketBuffer buffer) {
-        cx = buffer.readVarInt();
-        cy = buffer.readVarInt();
-        cz = buffer.readVarInt();
-        r = buffer.readVarInt();
-        value = buffer.readByte();
+    public CompoundNBT serializeNBT() {
+        CompoundNBT nbt = serializeNBTData();
+        nbt.putInt("type", 1);
+        return nbt;
     }
 
-    @Override
-    public float getValueAt(BlockPos pos) {
-        return value;
+    protected CompoundNBT serializeNBTData() {
+        CompoundNBT nbt = new CompoundNBT();
+        nbt.putIntArray("location", new int[]{cx, cy, cz});
+        nbt.putInt("range", r);
+        nbt.putInt("value", value);
+        return nbt;
     }
 
     @Override

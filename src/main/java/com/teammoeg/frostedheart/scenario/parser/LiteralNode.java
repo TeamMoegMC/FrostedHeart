@@ -31,9 +31,15 @@ public class LiteralNode implements Node {
 
 
     @Override
+    public String getDisplay(ScenarioRunner runner) {
+        return text;
+    }
+
+    @Override
     public String getText() {
         return text;
     }
+
 
     @Override
     public boolean isLiteral() {
@@ -43,12 +49,6 @@ public class LiteralNode implements Node {
 
     @Override
     public void run(ScenarioRunner runner) {
-    }
-
-
-    @Override
-    public String getDisplay(ScenarioRunner runner) {
-        return text;
     }
 
 

@@ -35,17 +35,17 @@ public class BlackListPredicate extends ItemPredicate {
         white = ItemPredicate.deserialize(intern);
     }
 
-    @Override
-    public boolean test(ItemStack item) {
-        boolean rs = !white.test(item);
-        return rs;
-    }
-
     public JsonElement serialize() {
         new Exception().printStackTrace();
 
         JsonElement je = white.serialize();
         je.getAsJsonObject().addProperty("type", FHMain.MODID + ":blacklist");
         return je;
+    }
+
+    @Override
+    public boolean test(ItemStack item) {
+        boolean rs = !white.test(item);
+        return rs;
     }
 }

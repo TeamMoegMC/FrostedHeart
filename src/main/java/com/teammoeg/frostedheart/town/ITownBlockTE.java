@@ -22,13 +22,13 @@ package com.teammoeg.frostedheart.town;
 import net.minecraft.nbt.CompoundNBT;
 
 public interface ITownBlockTE {
-    boolean isWorkValid();
-
-    TownWorkerType getWorker();
+    int getPriority();
 
     CompoundNBT getWorkData();
 
-    void setWorkData(CompoundNBT data);
+    TownWorkerType getWorker();
 
-    int getPriority();
+    boolean isWorkValid();
+
+    void setWorkData(CompoundNBT data);
 }

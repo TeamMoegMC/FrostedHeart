@@ -34,9 +34,6 @@ import java.util.UUID;
 
 public class FTBTeamsEvents {
 
-    public FTBTeamsEvents() {
-    }
-
     public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
         FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
                 new FHResearchDataSyncPacket(
@@ -69,5 +66,8 @@ public class FTBTeamsEvents {
             ;
         }
 
+    }
+
+    public FTBTeamsEvents() {
     }
 }

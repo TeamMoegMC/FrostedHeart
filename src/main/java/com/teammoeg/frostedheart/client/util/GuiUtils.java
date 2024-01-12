@@ -36,35 +36,35 @@ public class GuiUtils {
         return new StringTextComponent(s);
     }
 
+    public static ITextComponent translate(String string) {
+        return new TranslationTextComponent(string);
+    }
+
     public static TranslationTextComponent translateGui(String name, Object... args) {
         return new TranslationTextComponent("gui." + FHMain.MODID + "." + name, args);
-    }
-
-    public static TranslationTextComponent translateTooltip(String name, Object... args) {
-        return new TranslationTextComponent("tooltip." + FHMain.MODID + "." + name, args);
-    }
-
-    public static TranslationTextComponent translateMessage(String name, Object... args) {
-        return new TranslationTextComponent("message." + FHMain.MODID + "." + name, args);
     }
 
     public static TranslationTextComponent translateJeiCategory(String name, Object... args) {
         return new TranslationTextComponent("gui.jei.category." + FHMain.MODID + "." + name, args);
     }
 
-    public static TranslationTextComponent translateResearchLevel(String name, Object... args) {
-        return new TranslationTextComponent("research.level." + FHMain.MODID + "." + name, args);
-    }
-
-    public static TranslationTextComponent translateResearchCategoryName(String name, Object... args) {
-        return new TranslationTextComponent("research.category." + FHMain.MODID + "." + name, args);
+    public static TranslationTextComponent translateMessage(String name, Object... args) {
+        return new TranslationTextComponent("message." + FHMain.MODID + "." + name, args);
     }
 
     public static TranslationTextComponent translateResearchCategoryDesc(String name, Object... args) {
         return new TranslationTextComponent("research.category.desc." + FHMain.MODID + "." + name, args);
     }
 
-    public static ITextComponent translate(String string) {
-        return new TranslationTextComponent(string);
+    public static TranslationTextComponent translateResearchCategoryName(String name, Object... args) {
+        return new TranslationTextComponent("research.category." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateResearchLevel(String name, Object... args) {
+        return new TranslationTextComponent("research.level." + FHMain.MODID + "." + name, args);
+    }
+
+    public static TranslationTextComponent translateTooltip(String name, Object... args) {
+        return new TranslationTextComponent("tooltip." + FHMain.MODID + "." + name, args);
     }
 }

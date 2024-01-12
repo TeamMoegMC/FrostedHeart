@@ -55,6 +55,60 @@ public class CeramicBucket extends FHBaseItem {
     }
 
 
+    private boolean canBlockContainFluid(World worldIn, BlockPos posIn, BlockState blockstate, Fluid fluid) {
+        return blockstate.getBlock() instanceof ILiquidContainer && ((ILiquidContainer) blockstate.getBlock()).canContainFluid(worldIn, posIn, blockstate, fluid);
+    }
+
+    private ItemStack emptyBucket(ItemStack stack, PlayerEntity playerIn) {
+        if (playerIn.abilities.isCreativeMode) {
+            return stack;
+        }
+        ItemStack emptyStack = stack.copy();
+        emptyStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE));
+        return emptyStack;
+    }
+
+    private ItemStack fillBucket(ItemStack emptyBuckets, PlayerEntity player, Fluid fillFluid) {
+        if (player.abilities.isCreativeMode) {
+            return emptyBuckets;
+        }
+        ItemStack filledStack = emptyBuckets.split(1);
+        filledStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.fill(new FluidStack(fillFluid, 1000), IFluidHandler.FluidAction.EXECUTE));
+        if (emptyBuckets.isEmpty()) {
+            return filledStack;
+        }
+        if (!player.inventory.addItemStackToInventory(filledStack)) {
+            player.dropItem(filledStack, false);
+        }
+        return emptyBuckets;
+    }
+
+    private Fluid getFluid(ItemStack stack) {
+        return stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).map(handler -> handler.getFluidInTank(0).getFluid()).orElse(Fluids.EMPTY);
+    }
+
+    @Override
+    public int getItemStackLimit(ItemStack stack) {
+        return this.getFluid(stack) == Fluids.EMPTY ? 16 : 1;
+    }
+
+    @Override
+    public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, @Nullable net.minecraft.nbt.CompoundNBT nbt) {
+        return new FluidHandlerItemStackSimple(stack, 1000) {
+            @Override
+            public boolean canFillFluidType(FluidStack fluid) {
+                return isFluidValid(0, fluid);
+            }
+
+            @Override
+            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+                if (stack.getFluid().getAttributes().isGaseous()) return false;
+                return true;
+            }
+
+        };
+    }
+
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
@@ -108,6 +162,13 @@ public class CeramicBucket extends FHBaseItem {
         }
     }
 
+    protected void playEmptySound(@Nullable PlayerEntity player, IWorld worldIn, BlockPos pos, Fluid fluid) {
+        SoundEvent soundevent = fluid.getAttributes().getEmptySound();
+        if (soundevent == null)
+            soundevent = fluid.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_EMPTY_LAVA : SoundEvents.ITEM_BUCKET_EMPTY;
+        worldIn.playSound(player, pos, soundevent, SoundCategory.BLOCKS, 1.0F, 1.0F);
+    }
+
     public boolean tryPlaceContainedLiquid(@Nullable PlayerEntity player, World worldIn, BlockPos posIn, @Nullable BlockRayTraceResult rayTrace, Fluid fluid) {
         if (!(fluid instanceof FlowingFluid)) {
             return false;
@@ -145,66 +206,5 @@ public class CeramicBucket extends FHBaseItem {
             this.playEmptySound(player, worldIn, posIn, fluid);
             return true;
         }
-    }
-
-    @Override
-    public int getItemStackLimit(ItemStack stack) {
-        return this.getFluid(stack) == Fluids.EMPTY ? 16 : 1;
-    }
-
-    private ItemStack emptyBucket(ItemStack stack, PlayerEntity playerIn) {
-        if (playerIn.abilities.isCreativeMode) {
-            return stack;
-        }
-        ItemStack emptyStack = stack.copy();
-        emptyStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE));
-        return emptyStack;
-    }
-
-    protected void playEmptySound(@Nullable PlayerEntity player, IWorld worldIn, BlockPos pos, Fluid fluid) {
-        SoundEvent soundevent = fluid.getAttributes().getEmptySound();
-        if (soundevent == null)
-            soundevent = fluid.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_EMPTY_LAVA : SoundEvents.ITEM_BUCKET_EMPTY;
-        worldIn.playSound(player, pos, soundevent, SoundCategory.BLOCKS, 1.0F, 1.0F);
-    }
-
-    private ItemStack fillBucket(ItemStack emptyBuckets, PlayerEntity player, Fluid fillFluid) {
-        if (player.abilities.isCreativeMode) {
-            return emptyBuckets;
-        }
-        ItemStack filledStack = emptyBuckets.split(1);
-        filledStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).ifPresent(handler -> handler.fill(new FluidStack(fillFluid, 1000), IFluidHandler.FluidAction.EXECUTE));
-        if (emptyBuckets.isEmpty()) {
-            return filledStack;
-        }
-        if (!player.inventory.addItemStackToInventory(filledStack)) {
-            player.dropItem(filledStack, false);
-        }
-        return emptyBuckets;
-    }
-
-    @Override
-    public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(ItemStack stack, @Nullable net.minecraft.nbt.CompoundNBT nbt) {
-        return new FluidHandlerItemStackSimple(stack, 1000) {
-            @Override
-            public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
-                if (stack.getFluid().getAttributes().isGaseous()) return false;
-                return true;
-            }
-
-            @Override
-            public boolean canFillFluidType(FluidStack fluid) {
-                return isFluidValid(0, fluid);
-            }
-
-        };
-    }
-
-    private Fluid getFluid(ItemStack stack) {
-        return stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY).map(handler -> handler.getFluidInTank(0).getFluid()).orElse(Fluids.EMPTY);
-    }
-
-    private boolean canBlockContainFluid(World worldIn, BlockPos posIn, BlockState blockstate, Fluid fluid) {
-        return blockstate.getBlock() instanceof ILiquidContainer && ((ILiquidContainer) blockstate.getBlock()).canContainFluid(worldIn, posIn, blockstate, fluid);
     }
 }

@@ -42,6 +42,12 @@ public class FHRuleTest extends RuleTest {
 
 
     @Override
+    protected IRuleTestType<?> getType() {
+        return IRuleTestType.ALWAYS_TRUE;
+    }
+
+
+    @Override
     public boolean test(BlockState blockState, Random random) {
         for (RuleTest test : list) {
             if (test.test(blockState, random)) {
@@ -49,11 +55,5 @@ public class FHRuleTest extends RuleTest {
             }
         }
         return list.isEmpty();
-    }
-
-
-    @Override
-    protected IRuleTestType<?> getType() {
-        return IRuleTestType.ALWAYS_TRUE;
     }
 }

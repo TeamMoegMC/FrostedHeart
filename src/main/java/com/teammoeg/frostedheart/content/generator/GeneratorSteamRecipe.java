@@ -37,54 +37,10 @@ import java.util.Collections;
 import java.util.Map;
 
 public class GeneratorSteamRecipe extends IESerializableRecipe {
-    public static IRecipeType<GeneratorSteamRecipe> TYPE;
-    public static RegistryObject<IERecipeSerializer<GeneratorSteamRecipe>> SERIALIZER;
-
-    public GeneratorSteamRecipe(ResourceLocation id, FluidTagInput input,
-                                float power, float tempMod) {
-        super(ItemStack.EMPTY, TYPE, id);
-        this.input = input;
-        this.power = power;
-        this.level = tempMod;
-    }
-
-    public final FluidTagInput input;
-    public final float power;
-    public final float level;
-
-
-    @Override
-    protected IERecipeSerializer getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    // Initialized by reload listener
-    public static Map<ResourceLocation, GeneratorSteamRecipe> recipeList = Collections.emptyMap();
-
-    public static GeneratorSteamRecipe findRecipe(FluidStack input) {
-        for (GeneratorSteamRecipe recipe : recipeList.values())
-            if (recipe.input.testIgnoringAmount(input))
-                return recipe;
-        return null;
-    }
-
-    @Override
-    public ItemStack getRecipeOutput() {
-        return super.outputDummy;
-    }
-
     public static class Serializer extends IERecipeSerializer<GeneratorSteamRecipe> {
         @Override
         public ItemStack getIcon() {
             return new ItemStack(FHMultiblocks.generator);
-        }
-
-        @Override
-        public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
-            float power = JSONUtils.getFloat(json, "energy");
-            float tempMod = JSONUtils.getFloat(json, "temp_multiplier");
-            return new GeneratorSteamRecipe(recipeId, input, power, tempMod);
         }
 
         @Nullable
@@ -97,10 +53,54 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
         }
 
         @Override
+        public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
+            float power = JSONUtils.getFloat(json, "energy");
+            float tempMod = JSONUtils.getFloat(json, "temp_multiplier");
+            return new GeneratorSteamRecipe(recipeId, input, power, tempMod);
+        }
+
+        @Override
         public void write(PacketBuffer buffer, GeneratorSteamRecipe recipe) {
             recipe.input.write(buffer);
             buffer.writeFloat(recipe.power);
             buffer.writeFloat(recipe.level);
         }
+    }
+    public static IRecipeType<GeneratorSteamRecipe> TYPE;
+
+    public static RegistryObject<IERecipeSerializer<GeneratorSteamRecipe>> SERIALIZER;
+
+    // Initialized by reload listener
+    public static Map<ResourceLocation, GeneratorSteamRecipe> recipeList = Collections.emptyMap();
+    public final FluidTagInput input;
+    public final float power;
+
+
+    public final float level;
+
+    public static GeneratorSteamRecipe findRecipe(FluidStack input) {
+        for (GeneratorSteamRecipe recipe : recipeList.values())
+            if (recipe.input.testIgnoringAmount(input))
+                return recipe;
+        return null;
+    }
+
+    public GeneratorSteamRecipe(ResourceLocation id, FluidTagInput input,
+                                float power, float tempMod) {
+        super(ItemStack.EMPTY, TYPE, id);
+        this.input = input;
+        this.power = power;
+        this.level = tempMod;
+    }
+
+    @Override
+    protected IERecipeSerializer getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getRecipeOutput() {
+        return super.outputDummy;
     }
 }

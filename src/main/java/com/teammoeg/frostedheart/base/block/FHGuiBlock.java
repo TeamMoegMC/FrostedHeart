@@ -52,6 +52,11 @@ public class FHGuiBlock extends FHBaseBlock {
     }
 
     @Override
+    public boolean hasTileEntity(BlockState state) {
+        return true;
+    }
+
+    @Override
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
         if (superResult.isSuccessOrConsume())
@@ -103,11 +108,6 @@ public class FHGuiBlock extends FHBaseBlock {
             return ActionResultType.SUCCESS;
         }
         return superResult;
-    }
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
     }
 
 }

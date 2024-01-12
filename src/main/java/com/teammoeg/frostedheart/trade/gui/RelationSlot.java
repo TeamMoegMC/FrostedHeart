@@ -33,14 +33,14 @@ public class RelationSlot extends Widget {
     Supplier<Integer> toshow;
     Consumer<TooltipList> tooltip;
 
-    public RelationSlot(Panel panel, Supplier<Integer> is) {
+    public RelationSlot(Panel panel) {
         super(panel);
-        this.toshow = is;
         this.setSize(16, 16);
     }
 
-    public RelationSlot(Panel panel) {
+    public RelationSlot(Panel panel, Supplier<Integer> is) {
         super(panel);
+        this.toshow = is;
         this.setSize(16, 16);
     }
 

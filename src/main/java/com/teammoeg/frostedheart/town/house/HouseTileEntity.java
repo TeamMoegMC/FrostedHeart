@@ -48,6 +48,11 @@ public class HouseTileEntity extends TileEntity implements ITownBlockTE {
         super(FHTileTypes.HOUSE.get());
     }
 
+    @Override
+    public int getPriority() {
+        return 0;
+    }
+
     /**
      * Get the rating based on house status
      * TODO: this is now a very crude numerical experiment.
@@ -60,6 +65,22 @@ public class HouseTileEntity extends TileEntity implements ITownBlockTE {
         double decoRating = (double) decoration / BEST_DECORATION;
         double volumeRating = (double) volume / OPTIMAL_VOLUME;
         return (decoRating + volumeRating + tempRating) / 3;
+    }
+
+    @Override
+    public CompoundNBT getWorkData() {
+        CompoundNBT data = new CompoundNBT();
+        // TODO: Serialize resident
+        data.putInt("size", size);
+        data.putDouble("temperature", temperature);
+        data.putInt("volume", volume);
+        data.putInt("decoration", decoration);
+        return data;
+    }
+
+    @Override
+    public TownWorkerType getWorker() {
+        return TownWorkerType.HOUSE;
     }
 
     /**
@@ -87,31 +108,10 @@ public class HouseTileEntity extends TileEntity implements ITownBlockTE {
     }
 
     @Override
-    public TownWorkerType getWorker() {
-        return TownWorkerType.HOUSE;
-    }
-
-    @Override
-    public CompoundNBT getWorkData() {
-        CompoundNBT data = new CompoundNBT();
-        // TODO: Serialize resident
-        data.putInt("size", size);
-        data.putDouble("temperature", temperature);
-        data.putInt("volume", volume);
-        data.putInt("decoration", decoration);
-        return data;
-    }
-
-    @Override
     public void setWorkData(CompoundNBT data) {
         size = data.getInt("size");
         temperature = data.getDouble("temperature");
         volume = data.getInt("volume");
         decoration = data.getInt("decoration");
-    }
-
-    @Override
-    public int getPriority() {
-        return 0;
     }
 }

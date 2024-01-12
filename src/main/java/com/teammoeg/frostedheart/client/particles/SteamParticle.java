@@ -27,14 +27,6 @@ import net.minecraft.particles.BasicParticleType;
 
 public class SteamParticle extends FHParticle {
 
-    public SteamParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
-        super(world, x, y, z, motionX, motionY, motionZ);
-        this.particleGravity = -0.05F;
-        this.particleRed = this.particleGreen = this.particleBlue = (float) (Math.random() * 0.2) + 0.8f;
-        this.originalScale = 0.25F;
-        this.maxAge = (int) (80.0D / (Math.random() * 0.2D + 0.8D));
-    }
-
     public static class Factory implements IParticleFactory<BasicParticleType> {
         private final IAnimatedSprite spriteSet;
 
@@ -48,5 +40,13 @@ public class SteamParticle extends FHParticle {
             steamParticle.selectSpriteRandomly(this.spriteSet);
             return steamParticle;
         }
+    }
+
+    public SteamParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
+        super(world, x, y, z, motionX, motionY, motionZ);
+        this.particleGravity = -0.05F;
+        this.particleRed = this.particleGreen = this.particleBlue = (float) (Math.random() * 0.2) + 0.8f;
+        this.originalScale = 0.25F;
+        this.maxAge = (int) (80.0D / (Math.random() * 0.2D + 0.8D));
     }
 }

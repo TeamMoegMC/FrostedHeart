@@ -38,12 +38,12 @@ import java.util.Random;
 @Mixin(IglooPieces.Piece.class)
 public abstract class MixinIglooPiece extends TemplateStructurePiece {
 
-    public MixinIglooPiece(IStructurePieceType structurePieceTypeIn, int componentTypeIn) {
-        super(structurePieceTypeIn, componentTypeIn);
-    }
-
     public MixinIglooPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
         super(structurePieceTypeIn, nbt);
+    }
+
+    public MixinIglooPiece(IStructurePieceType structurePieceTypeIn, int componentTypeIn) {
+        super(structurePieceTypeIn, componentTypeIn);
     }
 
     /**

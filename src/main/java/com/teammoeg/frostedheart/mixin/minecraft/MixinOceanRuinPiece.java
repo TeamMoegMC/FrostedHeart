@@ -49,12 +49,12 @@ public abstract class MixinOceanRuinPiece extends TemplateStructurePiece {
     @Shadow
     boolean isLarge;
 
-    public MixinOceanRuinPiece(IStructurePieceType structurePieceTypeIn, int componentTypeIn) {
-        super(structurePieceTypeIn, componentTypeIn);
-    }
-
     public MixinOceanRuinPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
         super(structurePieceTypeIn, nbt);
+    }
+
+    public MixinOceanRuinPiece(IStructurePieceType structurePieceTypeIn, int componentTypeIn) {
+        super(structurePieceTypeIn, componentTypeIn);
     }
 
     /**

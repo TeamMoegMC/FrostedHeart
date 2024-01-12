@@ -36,10 +36,6 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
     public PlayerInventoryMixin() {
     }
 
-    private PlayerInventory getThis() {
-        return (PlayerInventory) (Object) this;
-    }
-
     @Inject(at = @At("HEAD"), method = "dropAllItems", cancellable = true)
     public void fh$dropAllItems(CallbackInfo cbi) {
         if (getThis().player instanceof FakePlayer)
@@ -49,6 +45,10 @@ public abstract class PlayerInventoryMixin implements IInventory, INameable {
             if (dit != null)
                 dit.death(getThis());
         }
+    }
+
+    private PlayerInventory getThis() {
+        return (PlayerInventory) (Object) this;
     }
 
 }

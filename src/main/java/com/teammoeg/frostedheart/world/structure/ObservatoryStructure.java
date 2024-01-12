@@ -40,35 +40,6 @@ import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 
 public class ObservatoryStructure extends Structure<NoFeatureConfig> {
-    public ObservatoryStructure(Codec<NoFeatureConfig> codec) {
-        super(codec);
-    }
-
-
-    public Structure.IStartFactory<NoFeatureConfig> getStartFactory() {
-        return ObservatoryStructure.Start::new;
-    }
-
-    @Override
-    public GenerationStage.Decoration getDecorationStage() {
-        return GenerationStage.Decoration.SURFACE_STRUCTURES;
-    }
-
-
-    @Override
-    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long seed, SharedSeedRandom random, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
-        BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
-
-        int landHeight = generator.getNoiseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
-        if (landHeight < 100 || landHeight > 200) return false;
-        IBlockReader columnOfBlocks = generator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
-
-        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
-
-        return topBlock.getFluidState().isEmpty();
-
-    }
-
     public static class Start extends StructureStart<NoFeatureConfig> {
         public Start(Structure<NoFeatureConfig> p_i225819_1_, int p_i225819_2_, int p_i225819_3_, MutableBoundingBox boundingBox, int p_i225819_5_, long p_i225819_6_) {
             super(p_i225819_1_, p_i225819_2_, p_i225819_3_, boundingBox, p_i225819_5_, p_i225819_6_);
@@ -89,5 +60,34 @@ public class ObservatoryStructure extends Structure<NoFeatureConfig> {
             this.recalculateStructureSize();
 //            FHMain.LOGGER.log(Level.DEBUG, "Observatory at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
+    }
+
+
+    public ObservatoryStructure(Codec<NoFeatureConfig> codec) {
+        super(codec);
+    }
+
+    @Override
+    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long seed, SharedSeedRandom random, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
+        BlockPos centerOfChunk = new BlockPos(chunkX * 16, 0, chunkZ * 16);
+
+        int landHeight = generator.getNoiseHeight(centerOfChunk.getX(), centerOfChunk.getZ(), Heightmap.Type.WORLD_SURFACE_WG);
+        if (landHeight < 100 || landHeight > 200) return false;
+        IBlockReader columnOfBlocks = generator.func_230348_a_(centerOfChunk.getX(), centerOfChunk.getZ());
+
+        BlockState topBlock = columnOfBlocks.getBlockState(centerOfChunk.up(landHeight));
+
+        return topBlock.getFluidState().isEmpty();
+
+    }
+
+
+    @Override
+    public GenerationStage.Decoration getDecorationStage() {
+        return GenerationStage.Decoration.SURFACE_STRUCTURES;
+    }
+
+    public Structure.IStartFactory<NoFeatureConfig> getStartFactory() {
+        return ObservatoryStructure.Start::new;
     }
 }

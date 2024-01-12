@@ -34,13 +34,28 @@ import java.util.List;
 public class AddLootModifier extends LootModifier {
 
 
+    public static class Serializer extends GlobalLootModifierSerializer<AddLootModifier> {
+        @Override
+        public AddLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+            return new AddLootModifier(conditions, new ResourceLocation(object.get("loot_table").getAsString()));
+        }
+
+        @Override
+        public JsonObject write(AddLootModifier instance) {
+            JsonObject object = new JsonObject();
+            object.addProperty("loot_table", instance.lt.toString());
+            return object;
+        }
+    }
     ResourceLocation lt;
+
     boolean isAdding;
 
     private AddLootModifier(ILootCondition[] conditionsIn, ResourceLocation lt) {
         super(conditionsIn);
         this.lt = lt;
     }
+
 
     @Nonnull
     @Override
@@ -58,20 +73,5 @@ public class AddLootModifier extends LootModifier {
         }
         //}
         return generatedLoot;
-    }
-
-
-    public static class Serializer extends GlobalLootModifierSerializer<AddLootModifier> {
-        @Override
-        public AddLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
-            return new AddLootModifier(conditions, new ResourceLocation(object.get("loot_table").getAsString()));
-        }
-
-        @Override
-        public JsonObject write(AddLootModifier instance) {
-            JsonObject object = new JsonObject();
-            object.addProperty("loot_table", instance.lt.toString());
-            return object;
-        }
     }
 }

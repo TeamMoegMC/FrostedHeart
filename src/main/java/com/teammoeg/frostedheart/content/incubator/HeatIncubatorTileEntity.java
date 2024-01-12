@@ -37,29 +37,13 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
 
     @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
-    }
-
-    @Override
     public boolean canConnectAt(Direction to) {
         return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
     }
 
     @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
-    }
-
-    @Override
-    public void tick() {
-
-        if (network.tick()) {
-            this.markDirty();
-            this.markContainingBlockForUpdate(null);
-        }
-        super.tick();
-
+    public boolean connect(Direction to, int dist) {
+        return network.reciveConnection(world, pos, to, dist);
     }
 
     @Override
@@ -75,10 +59,14 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
     }
 
     @Override
+    public SteamNetworkHolder getHolder() {
+        return network;
+    }
+
+    @Override
     protected float getMaxEfficiency() {
         return 2f;
     }
-
 
     @Override
     public boolean isStackValid(int i, ItemStack itemStack) {
@@ -91,6 +79,18 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
     public void readCustomNBT(CompoundNBT compound, boolean client) {
         super.readCustomNBT(compound, client);
         network.load(compound);
+    }
+
+
+    @Override
+    public void tick() {
+
+        if (network.tick()) {
+            this.markDirty();
+            this.markContainingBlockForUpdate(null);
+        }
+        super.tick();
+
     }
 
 

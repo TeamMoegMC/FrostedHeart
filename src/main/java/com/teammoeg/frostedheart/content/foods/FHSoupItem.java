@@ -35,6 +35,10 @@ public class FHSoupItem extends FHBaseItem {
         isPoor = isPoorlyMade;
     }
 
+    public boolean isPoor() {
+        return isPoor;
+    }
+
     @Override
     public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
         ItemStack itemstack = super.onItemUseFinish(stack, worldIn, entityLiving);
@@ -52,9 +56,5 @@ public class FHSoupItem extends FHBaseItem {
         }*/
 
         return entityLiving instanceof PlayerEntity && ((PlayerEntity) entityLiving).abilities.isCreativeMode ? itemstack : new ItemStack(Items.BOWL);
-    }
-
-    public boolean isPoor() {
-        return isPoor;
     }
 }

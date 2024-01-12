@@ -96,40 +96,10 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     boolean hidden;
 
     /**
-     * Inits this effect globally.
-     * Runs when research is loaded.
+     * Instantiates a new Effect.<br>
      */
-    public abstract void init();
-
-    /**
-     * Grant effect to a team.<br>
-     * This would be call multiple times, especially when team data loaded from disk if this effect is marked granted.
-     *
-     * @param team          the team<br>
-     * @param triggerPlayer the player trigger the grant, null if this is not triggered by player, typically press "claim" button.<br>
-     * @param isload        true if this is run when loaded from disk<br>
-     * @return true, if
-     */
-    public abstract boolean grant(TeamResearchData team, @Nullable PlayerEntity triggerPlayer, boolean isload);
-
-    /**
-     * This is not necessary to implement as this is just for debugging propose.
-     * Called only by research command or admin tools.
-     *
-     * @param team the team<br>
-     */
-    public abstract void revoke(TeamResearchData team);
-
-    /**
-     * Send effect progress packet for current effect to players in team.
-     * Useful for data sync. This would called automatically, Their's no need to call this in effect.
-     *
-     * @param team the team<br>
-     */
-    public void sendProgressPacket(Team team) {
-        FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team.getId(), this);
-        for (ServerPlayerEntity spe : team.getOnlineMembers())
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+    public Effect() {
+        this("", new ArrayList<>());
     }
 
     /**
@@ -169,13 +139,11 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      *
      * @param name    the name<br>
      * @param tooltip the tooltip<br>
-     * @param icon    the icon<br>
      */
-    public Effect(String name, List<String> tooltip, FHIcon icon) {
+    public Effect(String name, List<String> tooltip) {
         super();
         this.name = name;
         this.tooltip = tooltip;
-        this.icon = icon;
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
 
@@ -186,8 +154,12 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      * @param tooltip the tooltip<br>
      * @param icon    the icon<br>
      */
-    public Effect(String name, List<String> tooltip, ItemStack icon) {
-        this(name, tooltip, FHIcons.getIcon(icon));
+    public Effect(String name, List<String> tooltip, FHIcon icon) {
+        super();
+        this.name = name;
+        this.tooltip = tooltip;
+        this.icon = icon;
+        this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
 
     /**
@@ -206,57 +178,56 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      *
      * @param name    the name<br>
      * @param tooltip the tooltip<br>
+     * @param icon    the icon<br>
      */
-    public Effect(String name, List<String> tooltip) {
-        super();
-        this.name = name;
-        this.tooltip = tooltip;
-        this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
+    public Effect(String name, List<String> tooltip, ItemStack icon) {
+        this(name, tooltip, FHIcons.getIcon(icon));
     }
 
     /**
-     * Instantiates a new Effect.<br>
+     * Delete from the registry and research
      */
-    public Effect() {
-        this("", new ArrayList<>());
+    public void delete() {
+        deleteSelf();
+        if (parent != null) {
+            Research r = parent.get();
+            if (r != null) {
+                r.getEffects().remove(this);
+            }
+        }
+    }
+
+    private void deleteInTree() {
+        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
+            if (this.getRId() != 0) {
+                revoke(t);
+
+                t.setGrant(this, false);
+            }
+        });
     }
 
     /**
-     * Get icon.
+     * Delete from the registry.
+     */
+    public void deleteSelf() {
+        deleteInTree();
+        FHResearch.effects.remove(this);
+    }
+
+    /**
+     * Called when effect is edited.
+     */
+    public void edit() {
+        deleteInTree();
+    }
+
+    /**
+     * Get brief string describe this effect for show in editor.
      *
-     * @return icon<br>
+     * @return brief<br>
      */
-    public final FHIcon getIcon() {
-        if (icon == null)
-            return getDefaultIcon();
-        return icon;
-    }
-
-    public void reload() {
-
-    }
-
-    /**
-     * Get name.
-     *
-     * @return name<br>
-     */
-    public final IFormattableTextComponent getName() {
-        if (name.isEmpty())
-            return getDefaultName();
-        return (IFormattableTextComponent) FHTextUtil.get(name, "effect", this::getLId);
-    }
-
-    /**
-     * Get tooltip.
-     *
-     * @return tooltip<br>
-     */
-    public final List<ITextComponent> getTooltip() {
-        if (tooltip.isEmpty())
-            return getDefaultTooltip();
-        return FHTextUtil.get(tooltip, "effect", this::getLId);
-    }
+    public abstract String getBrief();
 
     /**
      * Get default icon.
@@ -283,6 +254,123 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     public abstract List<ITextComponent> getDefaultTooltip();
 
     /**
+     * Get icon.
+     *
+     * @return icon<br>
+     */
+    public final FHIcon getIcon() {
+        if (icon == null)
+            return getDefaultIcon();
+        return icon;
+    }
+
+    /**
+     * Get name.
+     *
+     * @return name<br>
+     */
+    public final IFormattableTextComponent getName() {
+        if (name.isEmpty())
+            return getDefaultName();
+        return (IFormattableTextComponent) FHTextUtil.get(name, "effect", this::getLId);
+    }
+
+    /**
+     * Get nonce.
+     *
+     * @return nonce<br>
+     */
+    @Override
+    public String getNonce() {
+        return nonce;
+    }
+
+    /**
+     * Get tooltip.
+     *
+     * @return tooltip<br>
+     */
+    public final List<ITextComponent> getTooltip() {
+        if (tooltip.isEmpty())
+            return getDefaultTooltip();
+        return FHTextUtil.get(tooltip, "effect", this::getLId);
+    }
+
+    /**
+     * Get type of this effect.
+     *
+     * @return type<br>
+     */
+    @Override
+    public final String getType() {
+        return "effects";
+    }
+
+    /**
+     * Grant effect to a team.<br>
+     * This would be call multiple times, especially when team data loaded from disk if this effect is marked granted.
+     *
+     * @param team          the team<br>
+     * @param triggerPlayer the player trigger the grant, null if this is not triggered by player, typically press "claim" button.<br>
+     * @param isload        true if this is run when loaded from disk<br>
+     * @return true, if
+     */
+    public abstract boolean grant(TeamResearchData team, @Nullable PlayerEntity triggerPlayer, boolean isload);
+
+    /**
+     * Inits this effect globally.
+     * Runs when research is loaded.
+     */
+    public abstract void init();
+
+    /**
+     * Checks if is granted for client.<br>
+     *
+     * @return if is granted,true.
+     */
+    @OnlyIn(Dist.CLIENT)
+    public boolean isGranted() {
+        return ClientResearchDataAPI.getData().isEffectGranted(this);
+    }
+
+    /**
+     * Checks if is hidden.<br>
+     *
+     * @return if is hidden,true.
+     */
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public void onClick() {
+    }
+
+    public void reload() {
+
+    }
+
+    /**
+     * This is not necessary to implement as this is just for debugging propose.
+     * Called only by research command or admin tools.
+     *
+     * @param team the team<br>
+     */
+    public abstract void revoke(TeamResearchData team);
+
+    /**
+     * Send effect progress packet for current effect to players in team.
+     * Useful for data sync. This would called automatically, Their's no need to call this in effect.
+     *
+     * @param team the team<br>
+     */
+    public void sendProgressPacket(Team team) {
+        FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team.getId(), this);
+        for (ServerPlayerEntity spe : team.getOnlineMembers())
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+    }
+
+    /**
      * Serialize.<br>
      *
      * @return returns serialize
@@ -304,66 +392,13 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     }
 
     /**
-     * Write.
+     * set granted.
      *
-     * @param buffer the buffer<br>
+     * @param b value to set granted to.
      */
-    @Override
-    public void write(PacketBuffer buffer) {
-        Effects.writeId(this, buffer);
-        buffer.writeString(name);
-        SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
-        SerializeUtil.writeOptional(buffer, icon, FHIcon::write);
-        buffer.writeString(nonce);
-        buffer.writeBoolean(isHidden());
-    }
-
-    /**
-     * Get type of this effect.
-     *
-     * @return type<br>
-     */
-    @Override
-    public final String getType() {
-        return "effects";
-    }
-
-    private void deleteInTree() {
-        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> {
-            if (this.getRId() != 0) {
-                revoke(t);
-
-                t.setGrant(this, false);
-            }
-        });
-    }
-
-    /**
-     * Called when effect is edited.
-     */
-    public void edit() {
-        deleteInTree();
-    }
-
-    /**
-     * Delete from the registry.
-     */
-    public void deleteSelf() {
-        deleteInTree();
-        FHResearch.effects.remove(this);
-    }
-
-    /**
-     * Delete from the registry and research
-     */
-    public void delete() {
-        deleteSelf();
-        if (parent != null) {
-            Research r = parent.get();
-            if (r != null) {
-                r.getEffects().remove(this);
-            }
-        }
+    @OnlyIn(Dist.CLIENT)
+    public void setGranted(boolean b) {
+        ClientResearchDataAPI.getData().setGrant(this, b);
     }
 
     /**
@@ -387,52 +422,17 @@ public abstract class Effect extends AutoIDItem implements Writeable {
     }
 
     /**
-     * Checks if is granted for client.<br>
+     * Write.
      *
-     * @return if is granted,true.
-     */
-    @OnlyIn(Dist.CLIENT)
-    public boolean isGranted() {
-        return ClientResearchDataAPI.getData().isEffectGranted(this);
-    }
-
-    /**
-     * set granted.
-     *
-     * @param b value to set granted to.
-     */
-    @OnlyIn(Dist.CLIENT)
-    public void setGranted(boolean b) {
-        ClientResearchDataAPI.getData().setGrant(this, b);
-    }
-
-    /**
-     * Get brief string describe this effect for show in editor.
-     *
-     * @return brief<br>
-     */
-    public abstract String getBrief();
-
-    /**
-     * Get nonce.
-     *
-     * @return nonce<br>
+     * @param buffer the buffer<br>
      */
     @Override
-    public String getNonce() {
-        return nonce;
-    }
-
-    /**
-     * Checks if is hidden.<br>
-     *
-     * @return if is hidden,true.
-     */
-    public boolean isHidden() {
-        return hidden;
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public void onClick() {
+    public void write(PacketBuffer buffer) {
+        Effects.writeId(this, buffer);
+        buffer.writeString(name);
+        SerializeUtil.writeList2(buffer, tooltip, PacketBuffer::writeString);
+        SerializeUtil.writeOptional(buffer, icon, FHIcon::write);
+        buffer.writeString(nonce);
+        buffer.writeBoolean(isHidden());
     }
 }

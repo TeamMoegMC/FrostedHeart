@@ -51,10 +51,6 @@ public class SwitchButton extends Button {
         return state;
     }
 
-    public void setState(boolean state) {
-        this.state = state;
-    }
-
     @Override
     public void onClicked(MouseButton arg0) {
         state = !state;
@@ -63,6 +59,10 @@ public class SwitchButton extends Button {
 
     public void onSwitched() {
 
+    }
+
+    public void setState(boolean state) {
+        this.state = state;
     }
 
 

@@ -32,13 +32,13 @@ public class LabelNode implements Node {
     }
 
     @Override
-    public String getText() {
-        return "@label name=\"" + name + "\"";
+    public String getDisplay(ScenarioRunner runner) {
+        return "";
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
-        return "";
+    public String getText() {
+        return "@label name=\"" + name + "\"";
     }
 
     @Override

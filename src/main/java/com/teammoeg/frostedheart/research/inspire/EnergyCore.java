@@ -58,7 +58,129 @@ import top.theillusivec4.diet.api.IDietTracker;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class EnergyCore {
-    public EnergyCore() {
+    public static void addEnergy(ServerPlayerEntity player, int val) {
+        TeamResearchData trd = ResearchDataAPI.getData(player);
+        long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
+        M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
+        double n = trd.getTeam().get().getOnlineMembers().size();
+        n = 1 + 0.8 * (n - 1);
+        CompoundNBT data = Temperature.getFHData(player);
+        if (val > 0) {
+            double rv = val / n;
+            double frac = MathHelper.frac(rv);
+            val = (int) rv;
+            if (frac > 0 && Math.random() < frac)
+                val++;
+
+        }
+        long energy = Math.min(data.getLong("energy") + val, M);
+        data.putLong("energy", energy);
+        Temperature.setFHData(player, data);
+        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+    }
+
+    public static void addExtraEnergy(ServerPlayerEntity player, int val) {
+
+        CompoundNBT data = Temperature.getFHData(player);
+        long energy = data.getLong("cenergy") + val;
+        data.putLong("cenergy", energy);
+        Temperature.setFHData(player, data);
+    }
+
+    public static void addPersistentEnergy(ServerPlayerEntity player, int val) {
+        CompoundNBT data = Temperature.getFHData(player);
+        long energy = data.getLong("penergy") + val;
+        data.putLong("penergy", energy);
+        Temperature.setFHData(player, data);
+        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+    }
+
+    public static void applySleep(float tenv, ServerPlayerEntity player) {
+        float nkeep = 0;
+        CompoundNBT data = Temperature.getFHData(player);
+        long lsd = data.getLong("lastsleepdate");
+        long csd = (player.world.getDayTime() + 12000L) / 24000L;
+        //System.out.println("slept");
+        if (csd == lsd) return;
+        //System.out.println("sleptx");
+        for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
+            if (is == null)
+                continue;
+            Item it = is.getItem();
+            if (it instanceof IWarmKeepingEquipment) {//only for direct warm keeping
+                nkeep += ((IWarmKeepingEquipment) it).getFactor(player, is);
+            } else {
+                IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
+                if (iw != null)
+                    nkeep += iw.getFactor(player, is);
+            }
+        }
+        for (ItemStack is : player.getArmorInventoryList()) {
+            if (is.isEmpty())
+                continue;
+            Item it = is.getItem();
+            if (it instanceof IWarmKeepingEquipment) {
+                nkeep += ((IWarmKeepingEquipment) it).getFactor(player, is);
+            } else {//include inner
+                String s = ItemNBTHelper.getString(is, "inner_cover");
+                IWarmKeepingEquipment iw = null;
+                EquipmentSlotType aes = MobEntity.getSlotForItemStack(is);
+                if (s.length() > 0 && aes != null) {
+                    iw = FHDataManager.getArmor(s + "_" + aes.getName());
+                } else
+                    iw = FHDataManager.getArmor(is);
+                if (iw != null)
+                    nkeep += iw.getFactor(player, is);
+            }
+        }
+        if (nkeep > 1)
+            nkeep = 1;
+        float nta = (1 - nkeep) + 0.5f;
+        float tbody = 30 / nta + tenv;
+        double out = Math.pow(10, 4 - Math.abs(tbody - 40) / 10);
+        //System.out.println(out);
+        data.putDouble("utbody", out);
+        data.putLong("lastsleep", 0);
+        data.putLong("lastsleepdate", csd);
+        Temperature.setFHData(player, data);
+		/*if(tbody>=60) {
+			int str=(int) ((tbody-50)/10);
+			player.addPotionEffect(new EffectInstance)
+		}else if(tbody<10) {
+			
+		}*/
+    }
+
+    @SubscribeEvent
+    public static void checkSleep(SleepingTimeCheckEvent event) {
+        if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
+            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+        }
+    }
+
+    public static boolean consumeEnergy(ServerPlayerEntity player, int val) {
+        if (player.abilities.isCreativeMode) return true;
+        CompoundNBT data = Temperature.getFHData(player);
+        long energy = data.getLong("energy");
+        if (energy >= val) {
+            energy -= val;
+            data.putLong("energy", energy);
+            Temperature.setFHData(player, data);
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+            return true;
+        }
+
+        long penergy = data.getLong("penergy");
+        if (penergy + energy >= val) {
+            val -= energy;
+            penergy -= val;
+            data.putLong("penergy", penergy);
+            data.putLong("energy", 0);
+            Temperature.setFHData(player, data);
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+            return true;
+        }
+        return false;
     }
 
     public static void dT(ServerPlayerEntity player) {
@@ -129,141 +251,9 @@ public class EnergyCore {
         Temperature.setFHData(player, data);
     }
 
-    public static void applySleep(float tenv, ServerPlayerEntity player) {
-        float nkeep = 0;
+    public static long getEnergy(PlayerEntity player) {
         CompoundNBT data = Temperature.getFHData(player);
-        long lsd = data.getLong("lastsleepdate");
-        long csd = (player.world.getDayTime() + 12000L) / 24000L;
-        //System.out.println("slept");
-        if (csd == lsd) return;
-        //System.out.println("sleptx");
-        for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
-            if (is == null)
-                continue;
-            Item it = is.getItem();
-            if (it instanceof IWarmKeepingEquipment) {//only for direct warm keeping
-                nkeep += ((IWarmKeepingEquipment) it).getFactor(player, is);
-            } else {
-                IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
-                if (iw != null)
-                    nkeep += iw.getFactor(player, is);
-            }
-        }
-        for (ItemStack is : player.getArmorInventoryList()) {
-            if (is.isEmpty())
-                continue;
-            Item it = is.getItem();
-            if (it instanceof IWarmKeepingEquipment) {
-                nkeep += ((IWarmKeepingEquipment) it).getFactor(player, is);
-            } else {//include inner
-                String s = ItemNBTHelper.getString(is, "inner_cover");
-                IWarmKeepingEquipment iw = null;
-                EquipmentSlotType aes = MobEntity.getSlotForItemStack(is);
-                if (s.length() > 0 && aes != null) {
-                    iw = FHDataManager.getArmor(s + "_" + aes.getName());
-                } else
-                    iw = FHDataManager.getArmor(is);
-                if (iw != null)
-                    nkeep += iw.getFactor(player, is);
-            }
-        }
-        if (nkeep > 1)
-            nkeep = 1;
-        float nta = (1 - nkeep) + 0.5f;
-        float tbody = 30 / nta + tenv;
-        double out = Math.pow(10, 4 - Math.abs(tbody - 40) / 10);
-        //System.out.println(out);
-        data.putDouble("utbody", out);
-        data.putLong("lastsleep", 0);
-        data.putLong("lastsleepdate", csd);
-        Temperature.setFHData(player, data);
-		/*if(tbody>=60) {
-			int str=(int) ((tbody-50)/10);
-			player.addPotionEffect(new EffectInstance)
-		}else if(tbody<10) {
-			
-		}*/
-    }
-
-    public static boolean consumeEnergy(ServerPlayerEntity player, int val) {
-        if (player.abilities.isCreativeMode) return true;
-        CompoundNBT data = Temperature.getFHData(player);
-        long energy = data.getLong("energy");
-        if (energy >= val) {
-            energy -= val;
-            data.putLong("energy", energy);
-            Temperature.setFHData(player, data);
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
-            return true;
-        }
-
-        long penergy = data.getLong("penergy");
-        if (penergy + energy >= val) {
-            val -= energy;
-            penergy -= val;
-            data.putLong("penergy", penergy);
-            data.putLong("energy", 0);
-            Temperature.setFHData(player, data);
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
-            return true;
-        }
-        return false;
-    }
-
-    public static void addPersistentEnergy(ServerPlayerEntity player, int val) {
-        CompoundNBT data = Temperature.getFHData(player);
-        long energy = data.getLong("penergy") + val;
-        data.putLong("penergy", energy);
-        Temperature.setFHData(player, data);
-        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
-    }
-
-    public static void addExtraEnergy(ServerPlayerEntity player, int val) {
-
-        CompoundNBT data = Temperature.getFHData(player);
-        long energy = data.getLong("cenergy") + val;
-        data.putLong("cenergy", energy);
-        Temperature.setFHData(player, data);
-    }
-
-    public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {
-        if (player.abilities.isCreativeMode) return true;
-        CompoundNBT data = Temperature.getFHData(player);
-        long energy = data.getLong("cenergy");
-        if (energy >= val) {
-            data.putLong("cenergy", energy - val);
-            Temperature.setFHData(player, data);
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean hasExtraEnergy(PlayerEntity player, int val) {
-        if (player.abilities.isCreativeMode) return true;
-        CompoundNBT data = Temperature.getFHData(player);
-        long energy = data.getLong("cenergy");
-        return energy >= val;
-    }
-
-    public static void addEnergy(ServerPlayerEntity player, int val) {
-        TeamResearchData trd = ResearchDataAPI.getData(player);
-        long M = (long) trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY.getToken()) + 30000;
-        M *= (1 + trd.getVariants().getDouble(ResearchVariant.MAX_ENERGY_MULT.getToken()));
-        double n = trd.getTeam().get().getOnlineMembers().size();
-        n = 1 + 0.8 * (n - 1);
-        CompoundNBT data = Temperature.getFHData(player);
-        if (val > 0) {
-            double rv = val / n;
-            double frac = MathHelper.frac(rv);
-            val = (int) rv;
-            if (frac > 0 && Math.random() < frac)
-                val++;
-
-        }
-        long energy = Math.min(data.getLong("energy") + val, M);
-        data.putLong("energy", energy);
-        Temperature.setFHData(player, data);
-        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+        return data.getLong("energy");
     }
 
     public static boolean hasEnoughEnergy(PlayerEntity player, int val) {
@@ -273,9 +263,11 @@ public class EnergyCore {
         return touse >= val;
     }
 
-    public static long getEnergy(PlayerEntity player) {
+    public static boolean hasExtraEnergy(PlayerEntity player, int val) {
+        if (player.abilities.isCreativeMode) return true;
         CompoundNBT data = Temperature.getFHData(player);
-        return data.getLong("energy");
+        long energy = data.getLong("cenergy");
+        return energy >= val;
     }
 
     public static void reportEnergy(PlayerEntity player) {
@@ -304,10 +296,18 @@ public class EnergyCore {
         
     }*/
 
-    @SubscribeEvent
-    public static void checkSleep(SleepingTimeCheckEvent event) {
-        if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
-            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+    public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {
+        if (player.abilities.isCreativeMode) return true;
+        CompoundNBT data = Temperature.getFHData(player);
+        long energy = data.getLong("cenergy");
+        if (energy >= val) {
+            data.putLong("cenergy", energy - val);
+            Temperature.setFHData(player, data);
+            return true;
         }
+        return false;
+    }
+
+    public EnergyCore() {
     }
 }

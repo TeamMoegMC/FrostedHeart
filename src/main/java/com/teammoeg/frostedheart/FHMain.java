@@ -171,6 +171,35 @@ public class FHMain {
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
+    @SuppressWarnings("unused")
+    private void enqueueIMC(final InterModEnqueueEvent event) {
+        CuriosCompat.sendIMCS();
+    }
+
+    private void missingMapping(MissingMappings<Fluid> miss) {
+        ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
+        for (Mapping<Fluid> i : miss.getAllMappings()) {
+            if (i.key.equals(hw))
+                i.remap(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("thermopolium", "nail_soup")));
+        }
+    }
+
+    private void missingMappingB(MissingMappings<Block> miss) {
+        for (Mapping<Block> i : miss.getAllMappings()) {
+            ResourceLocation rl = VersionRemap.remaps.get(i.key);
+            if (rl != null)
+                i.remap(ForgeRegistries.BLOCKS.getValue(rl));
+        }
+    }
+
+    private void missingMappingR(MissingMappings<Item> miss) {
+        for (Mapping<Item> i : miss.getAllMappings()) {
+            ResourceLocation rl = VersionRemap.remaps.get(i.key);
+            if (rl != null)
+                i.remap(ForgeRegistries.ITEMS.getValue(rl));
+        }
+    }
+
     public void modification(FMLLoadCompleteEvent event) {
         for (Item i : ForgeRegistries.ITEMS.getValues()) {
             if (i.isFood()) {
@@ -179,6 +208,30 @@ public class FHMain {
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unused")
+    private void processIMC(final InterModProcessEvent event) {
+
+    }
+
+    @SuppressWarnings("unused")
+    private void serverSave(final WorldEvent.Save event) {
+        if (FHResearchDataManager.INSTANCE != null)
+            FHResearchDataManager.INSTANCE.save();
+    }
+
+    private void serverStart(final FMLServerAboutToStartEvent event) {
+        new FHResearchDataManager(event.getServer());
+
+        FHResearchDataManager.INSTANCE.load();
+
+    }
+
+    @SuppressWarnings("unused")
+    private void serverStop(final FMLServerStoppedEvent event) {
+        FHResearchDataManager.server = null;
+        FHResearchDataManager.INSTANCE = null;
     }
 
     @SuppressWarnings("unused")
@@ -212,58 +265,5 @@ public class FHMain {
         // modify default value
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
 
-    }
-
-    @SuppressWarnings("unused")
-    private void enqueueIMC(final InterModEnqueueEvent event) {
-        CuriosCompat.sendIMCS();
-    }
-
-    private void serverStart(final FMLServerAboutToStartEvent event) {
-        new FHResearchDataManager(event.getServer());
-
-        FHResearchDataManager.INSTANCE.load();
-
-    }
-
-    @SuppressWarnings("unused")
-    private void serverStop(final FMLServerStoppedEvent event) {
-        FHResearchDataManager.server = null;
-        FHResearchDataManager.INSTANCE = null;
-    }
-
-    @SuppressWarnings("unused")
-    private void serverSave(final WorldEvent.Save event) {
-        if (FHResearchDataManager.INSTANCE != null)
-            FHResearchDataManager.INSTANCE.save();
-    }
-
-    @SuppressWarnings("unused")
-    private void processIMC(final InterModProcessEvent event) {
-
-    }
-
-    private void missingMappingR(MissingMappings<Item> miss) {
-        for (Mapping<Item> i : miss.getAllMappings()) {
-            ResourceLocation rl = VersionRemap.remaps.get(i.key);
-            if (rl != null)
-                i.remap(ForgeRegistries.ITEMS.getValue(rl));
-        }
-    }
-
-    private void missingMappingB(MissingMappings<Block> miss) {
-        for (Mapping<Block> i : miss.getAllMappings()) {
-            ResourceLocation rl = VersionRemap.remaps.get(i.key);
-            if (rl != null)
-                i.remap(ForgeRegistries.BLOCKS.getValue(rl));
-        }
-    }
-
-    private void missingMapping(MissingMappings<Fluid> miss) {
-        ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
-        for (Mapping<Fluid> i : miss.getAllMappings()) {
-            if (i.key.equals(hw))
-                i.remap(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("thermopolium", "nail_soup")));
-        }
     }
 }

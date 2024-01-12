@@ -37,6 +37,8 @@ import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class GeneratorData {
+    public static final int INPUT_SLOT = 0;
+    public static final int OUTPUT_SLOT = 1;
     public int process = 0;
     public int processMax = 0;
     public int overdriveLevel = 0;
@@ -46,87 +48,14 @@ public class GeneratorData {
     public boolean isWorking;
     public boolean isOverdrive;
     public boolean isActive;
-    public static final int INPUT_SLOT = 0;
-    public static final int OUTPUT_SLOT = 1;
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public ItemStack currentItem;
     private TeamResearchData teamData;
     public BlockPos actualPos = BlockPos.ZERO;
     public RegistryKey<World> dimension;
 
-    public CompoundNBT serialize(boolean update) {
-        CompoundNBT result = new CompoundNBT();
-        result.putInt("process", process);
-        result.putInt("processMax", processMax);
-        result.putInt("overdriveLevel", overdriveLevel);
-        result.putBoolean("isWorking", isWorking);
-        result.putBoolean("isOverdrive", isOverdrive);
-        result.putBoolean("isActive", isActive);
-        result.putFloat("power", power);
-        if (fluid != null)
-            result.putString("steamFluid", fluid.getRegistryName().toString());
-        if (!update) {
-            CompoundNBT inv = new CompoundNBT();
-            ItemStackHelper.saveAllItems(inv, inventory);
-            result.put("inv", inv);
-            if (currentItem != null)
-                result.put("res", currentItem.serializeNBT());
-            result.putLong("actualPos", actualPos.toLong());
-            if (dimension != null)
-                result.putString("dim", dimension.getLocation().toString());
-        }
-        return result;
-    }
-
-    public void deserialize(CompoundNBT data, boolean update) {
-        process = data.getInt("process");
-        processMax = data.getInt("processMax");
-        overdriveLevel = data.getInt("overdriveLevel");
-        isWorking = data.getBoolean("isWorking");
-        isOverdrive = data.getBoolean("isOverdrive");
-        isActive = data.getBoolean("isActive");
-        steamLevel = data.getInt("steamLevel");
-        power = data.getFloat("power");
-        if (data.contains("steamFluid"))
-            fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(data.getString("steamFluid")));
-        else
-            fluid = null;
-        if (!update) {
-            ItemStackHelper.loadAllItems(data.getCompound("inv"), inventory);
-            if (data.contains("res"))
-                currentItem = ItemStack.read(data.getCompound("res"));
-            else
-                currentItem = null;
-            actualPos = BlockPos.fromLong(data.getLong("actualPos"));
-            if (data.contains("dim")) {
-                dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(data.getString("dim")));
-            }
-        }
-    }
-
-    public NonNullList<ItemStack> getInventory() {
-        return inventory;
-    }
-
     public GeneratorData(TeamResearchData teamResearchData) {
         teamData = teamResearchData;
-    }
-
-    public int getSlotLimit(int slot) {
-        return 64;
-    }
-
-    public GeneratorRecipe getRecipe() {
-        if (inventory.get(INPUT_SLOT).isEmpty())
-            return null;
-        GeneratorRecipe recipe = GeneratorRecipe.findRecipe(inventory.get(INPUT_SLOT));
-        if (recipe == null)
-            return null;
-        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output)
-                && inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
-            return recipe;
-        }
-        return null;
     }
 
     public boolean consumesFuel() {
@@ -155,6 +84,85 @@ public class GeneratorData {
         return false;
     }
 
+    public void deserialize(CompoundNBT data, boolean update) {
+        process = data.getInt("process");
+        processMax = data.getInt("processMax");
+        overdriveLevel = data.getInt("overdriveLevel");
+        isWorking = data.getBoolean("isWorking");
+        isOverdrive = data.getBoolean("isOverdrive");
+        isActive = data.getBoolean("isActive");
+        steamLevel = data.getInt("steamLevel");
+        power = data.getFloat("power");
+        if (data.contains("steamFluid"))
+            fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(data.getString("steamFluid")));
+        else
+            fluid = null;
+        if (!update) {
+            ItemStackHelper.loadAllItems(data.getCompound("inv"), inventory);
+            if (data.contains("res"))
+                currentItem = ItemStack.read(data.getCompound("res"));
+            else
+                currentItem = null;
+            actualPos = BlockPos.fromLong(data.getLong("actualPos"));
+            if (data.contains("dim")) {
+                dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(data.getString("dim")));
+            }
+        }
+    }
+
+    protected double getEfficiency() {
+        return teamData.getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
+    }
+
+    public NonNullList<ItemStack> getInventory() {
+        return inventory;
+    }
+
+    public GeneratorRecipe getRecipe() {
+        if (inventory.get(INPUT_SLOT).isEmpty())
+            return null;
+        GeneratorRecipe recipe = GeneratorRecipe.findRecipe(inventory.get(INPUT_SLOT));
+        if (recipe == null)
+            return null;
+        if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output)
+                && inventory.get(OUTPUT_SLOT).getCount() + recipe.output.getCount() <= getSlotLimit(OUTPUT_SLOT))) {
+            return recipe;
+        }
+        return null;
+    }
+
+    public int getSlotLimit(int slot) {
+        return 64;
+    }
+
+    public CompoundNBT serialize(boolean update) {
+        CompoundNBT result = new CompoundNBT();
+        result.putInt("process", process);
+        result.putInt("processMax", processMax);
+        result.putInt("overdriveLevel", overdriveLevel);
+        result.putBoolean("isWorking", isWorking);
+        result.putBoolean("isOverdrive", isOverdrive);
+        result.putBoolean("isActive", isActive);
+        result.putFloat("power", power);
+        if (fluid != null)
+            result.putString("steamFluid", fluid.getRegistryName().toString());
+        if (!update) {
+            CompoundNBT inv = new CompoundNBT();
+            ItemStackHelper.saveAllItems(inv, inventory);
+            result.put("inv", inv);
+            if (currentItem != null)
+                result.put("res", currentItem.serializeNBT());
+            result.putLong("actualPos", actualPos.toLong());
+            if (dimension != null)
+                result.putString("dim", dimension.getLocation().toString());
+        }
+        return result;
+    }
+
+    public void tick() {
+        isActive = tickFuelProcess();
+    }
+
     public boolean tickFuelProcess() {
         if (!isWorking)
             return false;
@@ -177,13 +185,5 @@ public class GeneratorData {
             }
         }
         return false;
-    }
-
-    protected double getEfficiency() {
-        return teamData.getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
-    }
-
-    public void tick() {
-        isActive = tickFuelProcess();
     }
 }

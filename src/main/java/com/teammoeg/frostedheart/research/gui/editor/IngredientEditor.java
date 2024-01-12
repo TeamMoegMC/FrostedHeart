@@ -156,66 +156,16 @@ public class IngredientEditor extends BaseEditDialog {
 
     };
 
-    private static String getText(IItemList li) {
-        if (li instanceof TagList) {
-            try {
-                return "Tag:" + TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(((TagList) li).tag).toString();
-            } catch (Exception ex) {
-                return "Unknown tag list";
-            }
-        } else if (li instanceof SingleItemList)
-            return "Item: " + ((SingleItemList) li).stack.getDisplayName().getString();
-        else
-            return "Unknown item list";
-    }
-
     String label;
+
     Consumer<IngredientWithSize> callback;
     int cnt;
     Ingredient orig;
     NumberBox count;
-
-
-    public IngredientEditor(Widget panel, String label, IngredientWithSize i, Consumer<IngredientWithSize> callback) {
-        super(panel);
-        this.label = label;
-        if (i != null) {
-            this.cnt = i.getCount();
-            this.orig = i.getBaseIngredient();
-        } else {
-            this.cnt = 1;
-        }
-        this.callback = callback;
-        count = new NumberBox(this, "Count", cnt);
-    }
-
-    @Override
-    public void onClose() {
-        cnt = (int) count.getNum();
-        if (orig != null)
-            callback.accept(new IngredientWithSize(orig, cnt));
-    }
-
-    @Override
-    public void addWidgets() {
-        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.EMPTY : FHIcons.getIcon(orig), e -> orig = e));
-        if (orig != null) {
-            if (orig.acceptedItems.length == 1)
-                add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));
-            else
-                add(new OpenEditorButton<>(this, "Change to Single", EDITOR_SIMPLE, orig, e -> orig = e));
-            if (!(orig instanceof NBTIngredient))
-                add(new OpenEditorButton<>(this, "Add NBT", NBT_EDITOR, orig, e -> orig = e));
-        }
-
-        add(new OpenEditorButton<>(this, "Edit as JSON", EDITOR_JSON, orig, e -> orig = e));
-        add(count);
-    }
-
-
     public static String getDesc(IngredientWithSize w) {
         return getODesc(w.getBaseIngredient()) + " x " + w.getCount();
     }
+
 
     public static String getODesc(Ingredient i) {
         if (i instanceof NBTIngredient) {
@@ -234,6 +184,56 @@ public class IngredientEditor extends BaseEditDialog {
         } else
             return "Custom Ingredient";
 
+    }
+
+    private static String getText(IItemList li) {
+        if (li instanceof TagList) {
+            try {
+                return "Tag:" + TagCollectionManager.getManager().getItemTags().getValidatedIdFromTag(((TagList) li).tag).toString();
+            } catch (Exception ex) {
+                return "Unknown tag list";
+            }
+        } else if (li instanceof SingleItemList)
+            return "Item: " + ((SingleItemList) li).stack.getDisplayName().getString();
+        else
+            return "Unknown item list";
+    }
+
+    public IngredientEditor(Widget panel, String label, IngredientWithSize i, Consumer<IngredientWithSize> callback) {
+        super(panel);
+        this.label = label;
+        if (i != null) {
+            this.cnt = i.getCount();
+            this.orig = i.getBaseIngredient();
+        } else {
+            this.cnt = 1;
+        }
+        this.callback = callback;
+        count = new NumberBox(this, "Count", cnt);
+    }
+
+
+    @Override
+    public void addWidgets() {
+        add(new OpenEditorButton<>(this, "Edit Ingredient", EDITOR_INGREDIENT, orig, orig == null ? Icon.EMPTY : FHIcons.getIcon(orig), e -> orig = e));
+        if (orig != null) {
+            if (orig.acceptedItems.length == 1)
+                add(new OpenEditorButton<>(this, "Change to Multiple", EDITOR_MULTIPLE, orig, e -> orig = e));
+            else
+                add(new OpenEditorButton<>(this, "Change to Single", EDITOR_SIMPLE, orig, e -> orig = e));
+            if (!(orig instanceof NBTIngredient))
+                add(new OpenEditorButton<>(this, "Add NBT", NBT_EDITOR, orig, e -> orig = e));
+        }
+
+        add(new OpenEditorButton<>(this, "Edit as JSON", EDITOR_JSON, orig, e -> orig = e));
+        add(count);
+    }
+
+    @Override
+    public void onClose() {
+        cnt = (int) count.getNum();
+        if (orig != null)
+            callback.accept(new IngredientWithSize(orig, cnt));
     }
 
 

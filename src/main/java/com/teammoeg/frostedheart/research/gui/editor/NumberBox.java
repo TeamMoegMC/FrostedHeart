@@ -27,12 +27,6 @@ public class NumberBox extends LabeledTextBox {
         super(panel, lab, String.valueOf(val));
     }
 
-    public void setNum(long number) {
-        super.setText(String.valueOf(number));
-    }
-
-    ;
-
     public long getNum() {
         try {
             return Long.parseLong(getText());
@@ -40,6 +34,12 @@ public class NumberBox extends LabeledTextBox {
 
         }
         return Long.parseLong(orig);
+    }
+
+    ;
+
+    public void setNum(long number) {
+        super.setText(String.valueOf(number));
     }
 
     ;

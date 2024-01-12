@@ -36,6 +36,10 @@ public class BuyData {
         this.bd = bd;
     }
 
+    public boolean canRestock(FHVillagerData data) {
+        return bd.canRestock(data);
+    }
+
     public Ingredient getItem() {
         return bd.item;
     }
@@ -44,16 +48,12 @@ public class BuyData {
         return bd.price;
     }
 
-    public boolean isFullStock() {
-        return store >= bd.maxstore;
-    }
-
-    public boolean canRestock(FHVillagerData data) {
-        return bd.canRestock(data);
-    }
-
     public int getStore() {
         return store;
+    }
+
+    public boolean isFullStock() {
+        return store >= bd.maxstore;
     }
 
     public void reduceStock(FHVillagerData data, int count) {

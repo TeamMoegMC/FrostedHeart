@@ -60,6 +60,27 @@ public class ScenarioParser {
         }
     }
 
+    private Node createCommand(String command, Map<String, String> params) {
+        switch (command) {
+            case "eval":
+                return new AssignNode(command, params);
+            case "if":
+            case "elsif":
+                return new IfNode(command, params);
+            case "else":
+            case "endif":
+                return new ElsEndifNode(command, params);
+            case "emb":
+                return new EmbNode(command, params);
+            case "label":
+                return new LabelNode(command, params);
+            case "p":
+                return new ParagraphNode(command, params);
+        }
+        return new CommandNode(command, params);
+
+    }
+
     public ScenarioPiece parse(File file) throws IOException {
         List<Node> nodes = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(file);
@@ -94,21 +115,6 @@ public class ScenarioParser {
             }
         }
         return new ScenarioPiece(file.getName(), nodes);
-    }
-
-    public List<Node> parseLine(String line) throws IOException {
-        StringParseReader reader = new StringParseReader(line);
-        List<Node> nodes = new ArrayList<>();
-        while (reader.hasNext()) {
-            if (reader.peekLast() == '@') {
-                nodes.add(parseAtCommand(reader));
-            } else if (reader.peekLast() == '[') {
-                nodes.add(parseBarackCommand(reader));
-            } else {
-                nodes.add(new LiteralNode(parseLiteral(reader)));
-            }
-        }
-        return nodes;
     }
 
     public Node parseAtCommand(StringParseReader reader) throws IOException {
@@ -153,25 +159,19 @@ public class ScenarioParser {
         return new LiteralNode(reader.fromStart());
     }
 
-    private Node createCommand(String command, Map<String, String> params) {
-        switch (command) {
-            case "eval":
-                return new AssignNode(command, params);
-            case "if":
-            case "elsif":
-                return new IfNode(command, params);
-            case "else":
-            case "endif":
-                return new ElsEndifNode(command, params);
-            case "emb":
-                return new EmbNode(command, params);
-            case "label":
-                return new LabelNode(command, params);
-            case "p":
-                return new ParagraphNode(command, params);
+    public List<Node> parseLine(String line) throws IOException {
+        StringParseReader reader = new StringParseReader(line);
+        List<Node> nodes = new ArrayList<>();
+        while (reader.hasNext()) {
+            if (reader.peekLast() == '@') {
+                nodes.add(parseAtCommand(reader));
+            } else if (reader.peekLast() == '[') {
+                nodes.add(parseBarackCommand(reader));
+            } else {
+                nodes.add(new LiteralNode(parseLiteral(reader)));
+            }
         }
-        return new CommandNode(command, params);
-
+        return nodes;
     }
 
     public String parseLiteral(StringParseReader reader) throws IOException {

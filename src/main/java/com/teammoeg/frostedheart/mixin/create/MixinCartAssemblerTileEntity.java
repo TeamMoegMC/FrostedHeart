@@ -37,6 +37,15 @@ public abstract class MixinCartAssemblerTileEntity extends SmartTileEntity {
         super(tileEntityTypeIn);
     }
 
+    @Shadow(remap = false)
+    protected abstract void disassemble(World world, BlockPos pos, AbstractMinecartEntity cart);
+
+    @Shadow(remap = false)
+    public abstract boolean isMinecartUpdateValid();
+
+    @Shadow(remap = false)
+    public abstract void resetTicksSinceMinecartUpdate();
+
     /**
      * @author khjxiaogu
      * @reason config disable cart assembly
@@ -57,13 +66,4 @@ public abstract class MixinCartAssemblerTileEntity extends SmartTileEntity {
         }
 
     }
-
-    @Shadow(remap = false)
-    protected abstract void disassemble(World world, BlockPos pos, AbstractMinecartEntity cart);
-
-    @Shadow(remap = false)
-    public abstract void resetTicksSinceMinecartUpdate();
-
-    @Shadow(remap = false)
-    public abstract boolean isMinecartUpdateValid();
 }

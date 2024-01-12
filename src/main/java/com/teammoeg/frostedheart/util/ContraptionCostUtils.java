@@ -30,21 +30,6 @@ import net.minecraft.world.gen.feature.template.Template.BlockInfo;
 import org.apache.commons.lang3.tuple.MutablePair;
 
 public class ContraptionCostUtils {
-    public static float calculateStressApply(Contraption cont) {
-        float movecost = 0;
-        for (BlockInfo bi : cont.getBlocks().values()) {
-            try {
-                if (!bi.state.getCollisionShape(cont.getContraptionWorld(), bi.pos).isEmpty()) {
-                    movecost += 0.125F;
-                } else
-                    movecost += 0.075F;
-            } catch (Throwable t) {
-                movecost += 0.125F;
-            }
-        }
-        return movecost;
-    }
-
     public static float calculateActorStressApply(Contraption cont) {
         float movecost = 0;
         for (MutablePair<BlockInfo, MovementContext> i : cont.getActors())
@@ -72,13 +57,30 @@ public class ContraptionCostUtils {
         return movecost;
     }
 
-    public static void setSpeedAndCollect(AbstractContraptionEntity ace, float speed) {
-        Contraption c = ace.getContraption();
-        if (c instanceof ISpeedContraption) {
-            ISpeedContraption isc = (ISpeedContraption) c;
-            isc.setSpeed(speed);
-            isc.contributeSpeed(speed);
+    public static float calculateStressApply(Contraption cont) {
+        float movecost = 0;
+        for (BlockInfo bi : cont.getBlocks().values()) {
+            try {
+                if (!bi.state.getCollisionShape(cont.getContraptionWorld(), bi.pos).isEmpty()) {
+                    movecost += 0.125F;
+                } else
+                    movecost += 0.075F;
+            } catch (Throwable t) {
+                movecost += 0.125F;
+            }
         }
+        return movecost;
+    }
+
+    public static float getActorCost(AbstractContraptionEntity ace) {
+        try {
+            if (ace instanceof IStressContraption)
+                return ((IStressContraption) ace).getActorCost();
+        } catch (Throwable e) {//may we ignore and just calculate?
+            if (ace.isAlive())
+                return calculateActorStressApply(ace.getContraption());
+        }
+        return 0;
     }
 
     public static float getCost(AbstractContraptionEntity ace) {
@@ -103,14 +105,12 @@ public class ContraptionCostUtils {
         return 0;
     }
 
-    public static float getActorCost(AbstractContraptionEntity ace) {
-        try {
-            if (ace instanceof IStressContraption)
-                return ((IStressContraption) ace).getActorCost();
-        } catch (Throwable e) {//may we ignore and just calculate?
-            if (ace.isAlive())
-                return calculateActorStressApply(ace.getContraption());
+    public static void setSpeedAndCollect(AbstractContraptionEntity ace, float speed) {
+        Contraption c = ace.getContraption();
+        if (c instanceof ISpeedContraption) {
+            ISpeedContraption isc = (ISpeedContraption) c;
+            isc.setSpeed(speed);
+            isc.contributeSpeed(speed);
         }
-        return 0;
     }
 }

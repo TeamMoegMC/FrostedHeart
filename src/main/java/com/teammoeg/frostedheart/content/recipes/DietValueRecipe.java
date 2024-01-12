@@ -38,22 +38,56 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DietValueRecipe extends IESerializableRecipe {
+    public static class Serializer extends IERecipeSerializer<DietValueRecipe> {
+
+        @Override
+        public ItemStack getIcon() {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public DietValueRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            return new DietValueRecipe(recipeId, DietGroupCodec.read(buffer), buffer.readRegistryId());
+        }
+
+        @Override
+        public DietValueRecipe readFromJson(ResourceLocation id, JsonObject json) {
+            Map<String, Float> m = json.get("groups").getAsJsonObject().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getAsFloat()));
+            Item i = ForgeRegistries.ITEMS.getValue(new ResourceLocation(json.get("item").getAsString()));
+            if (i == null || i == Items.AIR)
+                return null;
+            return new DietValueRecipe(id, m, i);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, DietValueRecipe recipe) {
+            DietGroupCodec.write(buffer, recipe.groups);
+            buffer.writeRegistryId(recipe.item);
+        }
+
+    }
     public static IRecipeType<DietValueRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<DietValueRecipe>> SERIALIZER;
+    public static Map<Item, DietValueRecipe> recipeList = Collections.emptyMap();
     final Map<String, Float> groups;
+
     Map<IDietGroup, Float> cache;
+
     public final Item item;
 
     public DietValueRecipe(ResourceLocation id, Item it) {
         this(id, new HashMap<>(), it);
     }
 
-    public static Map<Item, DietValueRecipe> recipeList = Collections.emptyMap();
-
     public DietValueRecipe(ResourceLocation id, Map<String, Float> groups, Item it) {
         super(ItemStack.EMPTY, TYPE, id);
         this.groups = groups;
         this.item = it;
+    }
+
+    @Override
+    protected IERecipeSerializer getIESerializer() {
+        return SERIALIZER.get();
     }
 
     @Override
@@ -68,42 +102,8 @@ public class DietValueRecipe extends IESerializableRecipe {
     }
 
     @Override
-    protected IERecipeSerializer getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
     public String toString() {
         return "DietValueRecipe [groups=" + groups + ", item=" + item + "]";
-    }
-
-    public static class Serializer extends IERecipeSerializer<DietValueRecipe> {
-
-        @Override
-        public DietValueRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new DietValueRecipe(recipeId, DietGroupCodec.read(buffer), buffer.readRegistryId());
-        }
-
-        @Override
-        public void write(PacketBuffer buffer, DietValueRecipe recipe) {
-            DietGroupCodec.write(buffer, recipe.groups);
-            buffer.writeRegistryId(recipe.item);
-        }
-
-        @Override
-        public ItemStack getIcon() {
-            return ItemStack.EMPTY;
-        }
-
-        @Override
-        public DietValueRecipe readFromJson(ResourceLocation id, JsonObject json) {
-            Map<String, Float> m = json.get("groups").getAsJsonObject().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getAsFloat()));
-            Item i = ForgeRegistries.ITEMS.getValue(new ResourceLocation(json.get("item").getAsString()));
-            if (i == null || i == Items.AIR)
-                return null;
-            return new DietValueRecipe(id, m, i);
-        }
-
     }
 
 }

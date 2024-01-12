@@ -40,30 +40,30 @@ public class FHDrawingDeskOperationPacket {
     private final CardPos pos1;
     private final CardPos pos2;
 
-    protected FHDrawingDeskOperationPacket(BlockPos pos, int op, CardPos pos1, CardPos pos2) {
-        super();
-        this.pos = pos;
-        this.op = (byte) op;
-        this.pos1 = pos1;
-        this.pos2 = pos2;
-    }
+    public FHDrawingDeskOperationPacket(BlockPos pos) {
+        this(pos, 0, null, null);
 
-    public FHDrawingDeskOperationPacket(BlockPos pos, CardPos p1, CardPos p2) {
-        this(pos, 2, p1, p2);
     }
 
     public FHDrawingDeskOperationPacket(BlockPos pos, CardPos p1) {
         this(pos, 1, p1, null);
     }
 
-    public FHDrawingDeskOperationPacket(BlockPos pos) {
-        this(pos, 0, null, null);
-
+    public FHDrawingDeskOperationPacket(BlockPos pos, CardPos p1, CardPos p2) {
+        this(pos, 2, p1, p2);
     }
 
     public FHDrawingDeskOperationPacket(BlockPos pos, int op) {
         this(pos, op, null, null);
 
+    }
+
+    protected FHDrawingDeskOperationPacket(BlockPos pos, int op, CardPos pos1, CardPos pos2) {
+        super();
+        this.pos = pos;
+        this.op = (byte) op;
+        this.pos1 = pos1;
+        this.pos2 = pos2;
     }
 
     public FHDrawingDeskOperationPacket(PacketBuffer buffer) {

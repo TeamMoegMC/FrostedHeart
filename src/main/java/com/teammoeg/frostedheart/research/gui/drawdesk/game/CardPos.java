@@ -22,17 +22,17 @@ package com.teammoeg.frostedheart.research.gui.drawdesk.game;
 import net.minecraft.network.PacketBuffer;
 
 public class CardPos {
-    final int x;
-    final int y;
-    private int hash = 0;
     private static CardPos[][] cache = new CardPos[11][11];
-
     static {
         for (int i = 0; i < 11; i++)
             for (int j = 0; j < 11; j++)
                 cache[i][j] = new CardPos(i - 1, j - 1);
 
     }
+    final int x;
+    final int y;
+
+    private int hash = 0;
 
     public static CardPos valueOf(int x, int y) {
         int i = x + 1;
@@ -46,28 +46,10 @@ public class CardPos {
         return valueOf(pb.readVarInt(), pb.readVarInt());
     }
 
-    public void write(PacketBuffer pb) {
-        pb.writeVarInt(x);
-        pb.writeVarInt(y);
-    }
-
     private CardPos(int x, int y) {
         super();
         this.x = x;
         this.y = y;
-    }
-
-    @Override
-    public int hashCode() {
-        if (hash == 0) {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + x;
-            result = prime * result + y;
-            hash = result;
-        }
-        return hash;
-
     }
 
     @Override
@@ -87,8 +69,26 @@ public class CardPos {
     }
 
     @Override
+    public int hashCode() {
+        if (hash == 0) {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + x;
+            result = prime * result + y;
+            hash = result;
+        }
+        return hash;
+
+    }
+
+    @Override
     public String toString() {
         return "CardPos [x=" + x + ", y=" + y + ", hash=" + hash + "]";
+    }
+
+    public void write(PacketBuffer pb) {
+        pb.writeVarInt(x);
+        pb.writeVarInt(y);
     }
 
 }

@@ -77,148 +77,45 @@ import net.minecraftforge.registries.ForgeRegistries;
  * @author LatvianModder, khjxiaogu
  */
 public class SelectItemStackDialog extends EditDialog {
-    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> {
-        new SelectItemStackDialog(p, l, v, c).open();
-    };
-    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> {
-        new SelectItemStackDialog(p, l + " (Blocks only)", new ItemStack(v), e -> {
-            Block b = Block.getBlockFromItem(e.getItem());
-            if (b != Blocks.AIR)
-                c.accept(b);
-        }).open();
-    };
-
-    private static final String fromNBT(INBT nbt) {
-        if (nbt == null)
-            return "";
-        return nbt.toString();
-    }
-
-    public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(task -> {
-        Thread thread = new Thread(task, "FH-ItemSearch");
-        thread.setDaemon(true);
-        return thread;
-    });
-
-    public static final List<ItemSearchMode> modes = new ArrayList<>();
-
-    static {
-        modes.add(ItemSearchMode.ALL_ITEMS);
-        modes.add(ItemSearchMode.INVENTORY);
-        modes.add(new ItemSearchMode() {
-
-            @Override
-            public Collection<ItemStack> getAllItems() {
-                return ForgeRegistries.BLOCKS.getValues().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
-            }
-
-            @Override
-            public IFormattableTextComponent getDisplayName() {
-                return GuiUtils.str("Blocks");
-            }
-
-            @Override
-            public Icon getIcon() {
-                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
-            }
-        });
-    }
-
-    private static ItemSearchMode activeMode = null;
-
-    private class ItemStackButton extends Button {
-        private final ItemStack stack;
-
-        private ItemStackButton(Panel panel, ItemStack is) {
-            super(panel, StringTextComponent.EMPTY, Icons.BARRIER);
-            setSize(18, 18);
-            stack = is;
-            title = null;
-            icon = ItemIcon.getItemIcon(is);
-        }
-
-        public boolean shouldAdd(String search, String mod) {
-            if (search.isEmpty()) {
-                return true;
-            }
-
-            if (!mod.isEmpty()) {
-                return Registries.getId(stack.getItem(), Registry.ITEM).getNamespace().contains(mod);
-            }
-
-            return stack.getDisplayName().getString().toLowerCase().contains(search);
-        }
-
-        @Override
-        public ITextComponent getTitle() {
-            if (title == null) {
-                title = stack.getDisplayName();
-            }
-
-            return title;
-        }
-
-        @Override
-        public void addMouseOverText(TooltipList list) {
-        }
-
-        @Override
-        public WidgetType getWidgetType() {
-            return stack.getItem() == current.getItem() && Objects.equals(stack.getTag(), current.getTag()) ? WidgetType.MOUSE_OVER : super.getWidgetType();
-        }
-
-        @Override
-        public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            (getWidgetType() == WidgetType.MOUSE_OVER ? Color4I.LIGHT_GREEN.withAlpha(70) : Color4I.BLACK.withAlpha(50)).draw(matrixStack, x, y, w, h);
+    private class ButtonCaps extends ButtonStackConfig {
+        public ButtonCaps(Panel panel) {
+            super(panel, new TranslationTextComponent("ftblibrary.select_item.caps"), ItemIcon.getItemIcon(Items.ANVIL));
         }
 
         @Override
         public void onClicked(MouseButton button) {
             playClickSound();
-            current = stack.copy();
+
+            final CompoundNBT nbt = current.write(new CompoundNBT());
+
+
+            EditPrompt.open(this, "caps", fromNBT(nbt.get("ForgeCaps")), s -> {
+                if (s == null || s.isEmpty() || s.equals("null")) {
+                    nbt.remove("ForgeCaps");
+                } else {
+                    try {
+                        nbt.put("ForgeCaps", JsonToNBT.getTagFromJson(s));
+                    } catch (CommandSyntaxException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+                current = ItemStack.read(nbt);
+            });
         }
     }
-
-    private class ButtonSwitchMode extends Button {
-        private final Iterator<ItemSearchMode> modeIterator = Iterators.cycle(modes);
-
-        public ButtonSwitchMode(Panel panel) {
-            super(panel);
-            activeMode = modeIterator.next();
-        }
-
-        @Override
-        public void drawIcon(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            activeMode.getIcon().draw(matrixStack, x, y, w, h);
-        }
-
-        @Override
-        public ITextComponent getTitle() {
-            return new TranslationTextComponent("ftblibrary.select_item.list_mode");
-        }
-
-        @Override
-        public void addMouseOverText(TooltipList list) {
-            super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(new StringTextComponent(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
+    private class ButtonCount extends ButtonStackConfig {
+        public ButtonCount(Panel panel) {
+            super(panel, new TranslationTextComponent("ftblibrary.select_item.count"), ItemIcon.getItemIcon(Items.PAPER));
         }
 
         @Override
         public void onClicked(MouseButton button) {
             playClickSound();
-            activeMode = modeIterator.next();
-            panelStacks.refreshWidgets();
-        }
-    }
+            EditPrompt.open(this, "count", String.valueOf(current.getCount()), val -> {
+                current.setCount(Integer.parseInt(val));
 
-    private abstract class ButtonStackConfig extends Button {
-        public ButtonStackConfig(Panel panel, ITextComponent title, Icon icon) {
-            super(panel, title, icon);
-        }
-
-        @Override
-        public WidgetType getWidgetType() {
-            return current.isEmpty() ? WidgetType.DISABLED : super.getWidgetType();
+            });
         }
     }
 
@@ -254,21 +151,6 @@ public class SelectItemStackDialog extends EditDialog {
         }
     }
 
-    private class ButtonCount extends ButtonStackConfig {
-        public ButtonCount(Panel panel) {
-            super(panel, new TranslationTextComponent("ftblibrary.select_item.count"), ItemIcon.getItemIcon(Items.PAPER));
-        }
-
-        @Override
-        public void onClicked(MouseButton button) {
-            playClickSound();
-            EditPrompt.open(this, "count", String.valueOf(current.getCount()), val -> {
-                current.setCount(Integer.parseInt(val));
-
-            });
-        }
-    }
-
     private class ButtonNBT extends ButtonStackConfig {
         public ButtonNBT(Panel panel) {
             super(panel, new TranslationTextComponent("ftblibrary.select_item.nbt"), ItemIcon.getItemIcon(Items.NAME_TAG));
@@ -288,69 +170,153 @@ public class SelectItemStackDialog extends EditDialog {
         }
     }
 
-    private class ButtonCaps extends ButtonStackConfig {
-        public ButtonCaps(Panel panel) {
-            super(panel, new TranslationTextComponent("ftblibrary.select_item.caps"), ItemIcon.getItemIcon(Items.ANVIL));
+    private abstract class ButtonStackConfig extends Button {
+        public ButtonStackConfig(Panel panel, ITextComponent title, Icon icon) {
+            super(panel, title, icon);
+        }
+
+        @Override
+        public WidgetType getWidgetType() {
+            return current.isEmpty() ? WidgetType.DISABLED : super.getWidgetType();
+        }
+    }
+
+    private class ButtonSwitchMode extends Button {
+        private final Iterator<ItemSearchMode> modeIterator = Iterators.cycle(modes);
+
+        public ButtonSwitchMode(Panel panel) {
+            super(panel);
+            activeMode = modeIterator.next();
+        }
+
+        @Override
+        public void addMouseOverText(TooltipList list) {
+            super.addMouseOverText(list);
+            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(new StringTextComponent(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
+        }
+
+        @Override
+        public void drawIcon(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            activeMode.getIcon().draw(matrixStack, x, y, w, h);
+        }
+
+        @Override
+        public ITextComponent getTitle() {
+            return new TranslationTextComponent("ftblibrary.select_item.list_mode");
         }
 
         @Override
         public void onClicked(MouseButton button) {
             playClickSound();
-
-            final CompoundNBT nbt = current.write(new CompoundNBT());
-
-
-            EditPrompt.open(this, "caps", fromNBT(nbt.get("ForgeCaps")), s -> {
-                if (s == null || s.isEmpty() || s.equals("null")) {
-                    nbt.remove("ForgeCaps");
-                } else {
-                    try {
-                        nbt.put("ForgeCaps", JsonToNBT.getTagFromJson(s));
-                    } catch (CommandSyntaxException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-                current = ItemStack.read(nbt);
-            });
+            activeMode = modeIterator.next();
+            panelStacks.refreshWidgets();
         }
     }
 
-    public List<Widget> getItems(String search, Panel panel) {
+    private class ItemStackButton extends Button {
+        private final ItemStack stack;
 
-        if (activeMode == null) {
-            return Collections.emptyList();
+        private ItemStackButton(Panel panel, ItemStack is) {
+            super(panel, StringTextComponent.EMPTY, Icons.BARRIER);
+            setSize(18, 18);
+            stack = is;
+            title = null;
+            icon = ItemIcon.getItemIcon(is);
         }
 
-        Collection<ItemStack> items = activeMode.getAllItems();
-        List<Widget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
-
-        String mod = "";
-
-        if (search.startsWith("@")) {
-            mod = search.substring(1);
+        @Override
+        public void addMouseOverText(TooltipList list) {
         }
 
-        ItemStackButton button = new ItemStackButton(panel, ItemStack.EMPTY);
-
-        if (button.shouldAdd(search, mod)) {
-            widgets.add(new ItemStackButton(panel, ItemStack.EMPTY));
+        @Override
+        public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            (getWidgetType() == WidgetType.MOUSE_OVER ? Color4I.LIGHT_GREEN.withAlpha(70) : Color4I.BLACK.withAlpha(50)).draw(matrixStack, x, y, w, h);
         }
 
-        for (ItemStack stack : items) {
-            if (!stack.isEmpty()) {
-                button = new ItemStackButton(panel, stack);
-
-                if (button.shouldAdd(search, mod)) {
-                    widgets.add(button);
-                    int j = widgets.size() - 1;
-                    button.setPos(1 + (j % 9) * 19, 1 + (j / 9) * 19);
-                }
+        @Override
+        public ITextComponent getTitle() {
+            if (title == null) {
+                title = stack.getDisplayName();
             }
+
+            return title;
         }
 
-        return widgets;
+        @Override
+        public WidgetType getWidgetType() {
+            return stack.getItem() == current.getItem() && Objects.equals(stack.getTag(), current.getTag()) ? WidgetType.MOUSE_OVER : super.getWidgetType();
+        }
+
+        @Override
+        public void onClicked(MouseButton button) {
+            playClickSound();
+            current = stack.copy();
+        }
+
+        public boolean shouldAdd(String search, String mod) {
+            if (search.isEmpty()) {
+                return true;
+            }
+
+            if (!mod.isEmpty()) {
+                return Registries.getId(stack.getItem(), Registry.ITEM).getNamespace().contains(mod);
+            }
+
+            return stack.getDisplayName().getString().toLowerCase().contains(search);
+        }
     }
+
+    public static Editor<ItemStack> EDITOR = (p, l, v, c) -> {
+        new SelectItemStackDialog(p, l, v, c).open();
+    };
+
+    public static Editor<Block> EDITOR_BLOCK = (p, l, v, c) -> {
+        new SelectItemStackDialog(p, l + " (Blocks only)", new ItemStack(v), e -> {
+            Block b = Block.getBlockFromItem(e.getItem());
+            if (b != Blocks.AIR)
+                c.accept(b);
+        }).open();
+    };
+
+    public static final ExecutorService ITEM_SEARCH = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "FH-ItemSearch");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    public static final List<ItemSearchMode> modes = new ArrayList<>();
+
+    static {
+        modes.add(ItemSearchMode.ALL_ITEMS);
+        modes.add(ItemSearchMode.INVENTORY);
+        modes.add(new ItemSearchMode() {
+
+            @Override
+            public Collection<ItemStack> getAllItems() {
+                return ForgeRegistries.BLOCKS.getValues().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
+            }
+
+            @Override
+            public IFormattableTextComponent getDisplayName() {
+                return GuiUtils.str("Blocks");
+            }
+
+            @Override
+            public Icon getIcon() {
+                return ItemIcon.getItemIcon(Blocks.STONE.asItem());
+            }
+        });
+    }
+
+    private static ItemSearchMode activeMode = null;
+
+    public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> {
+        new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
+    };
+
+    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> {
+        new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getTranslatedName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
+    };
 
     private final Consumer<ItemStack> callback;
     private ItemStack current;
@@ -361,15 +327,13 @@ public class SelectItemStackDialog extends EditDialog {
     private final Panel tabs;
     public long update = Long.MAX_VALUE;
 
-    public static final Editor<Collection<ItemStack>> STACK_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, new ItemStack(Items.AIR), EDITOR, SelectItemStackDialog::fromItemStack, ItemIcon::getItemIcon, c).open();
-    };
-    public static final Editor<Collection<Block>> BLOCK_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, Blocks.AIR, EDITOR_BLOCK, e -> e.getTranslatedName().getString(), e -> ItemIcon.getItemIcon(e.asItem()), c).open();
-    };
-
     private static String fromItemStack(ItemStack s) {
         return s.getDisplayName().getString() + " x " + s.getCount();
+    }
+    private static final String fromNBT(INBT nbt) {
+        if (nbt == null)
+            return "";
+        return nbt.toString();
     }
 
     public SelectItemStackDialog(Widget p, String label, ItemStack orig, Consumer<ItemStack> cb) {
@@ -468,14 +432,6 @@ public class SelectItemStackDialog extends EditDialog {
         updateItemWidgets(Collections.emptyList());
     }
 
-    private void updateItemWidgets(List<Widget> items) {
-        panelStacks.widgets.clear();
-        panelStacks.addAll(items);
-        scrollBar.setPosAndSize(panelStacks.posX + panelStacks.width + 25, panelStacks.posY - 1, 16, panelStacks.height + 2);
-        scrollBar.setValue(0);
-        scrollBar.setMaxValue(1 + MathHelper.ceil(panelStacks.widgets.size() / 9F) * 19);
-    }
-
     @Override
     public void addWidgets() {
         add(tabs);
@@ -487,11 +443,8 @@ public class SelectItemStackDialog extends EditDialog {
     }
 
     @Override
-    public void onClosed() {
-
-
+    public void alignWidgets() {
     }
-
 
     @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
@@ -506,11 +459,58 @@ public class SelectItemStackDialog extends EditDialog {
         }
     }
 
-    @Override
-    public void alignWidgets() {
+    public List<Widget> getItems(String search, Panel panel) {
+
+        if (activeMode == null) {
+            return Collections.emptyList();
+        }
+
+        Collection<ItemStack> items = activeMode.getAllItems();
+        List<Widget> widgets = new ArrayList<>(search.isEmpty() ? items.size() + 1 : 64);
+
+        String mod = "";
+
+        if (search.startsWith("@")) {
+            mod = search.substring(1);
+        }
+
+        ItemStackButton button = new ItemStackButton(panel, ItemStack.EMPTY);
+
+        if (button.shouldAdd(search, mod)) {
+            widgets.add(new ItemStackButton(panel, ItemStack.EMPTY));
+        }
+
+        for (ItemStack stack : items) {
+            if (!stack.isEmpty()) {
+                button = new ItemStackButton(panel, stack);
+
+                if (button.shouldAdd(search, mod)) {
+                    widgets.add(button);
+                    int j = widgets.size() - 1;
+                    button.setPos(1 + (j % 9) * 19, 1 + (j / 9) * 19);
+                }
+            }
+        }
+
+        return widgets;
     }
+
 
     @Override
     public void onClose() {
+    }
+
+    @Override
+    public void onClosed() {
+
+
+    }
+
+    private void updateItemWidgets(List<Widget> items) {
+        panelStacks.widgets.clear();
+        panelStacks.addAll(items);
+        scrollBar.setPosAndSize(panelStacks.posX + panelStacks.width + 25, panelStacks.posY - 1, 16, panelStacks.height + 2);
+        scrollBar.setValue(0);
+        scrollBar.setMaxValue(1 + MathHelper.ceil(panelStacks.widgets.size() / 9F) * 19);
     }
 }

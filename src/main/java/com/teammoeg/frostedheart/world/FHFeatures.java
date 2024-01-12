@@ -155,13 +155,13 @@ public class FHFeatures {
         registerFHDisk("fh_disk_sand", Feature.DISK.withConfiguration(new SphereReplaceConfig(SAND, FeatureSpread.create(2, 4), 2, disk_target)).withPlacement(Features.Placements.SEAGRASS_DISK_PLACEMENT).count(3));
     }
 
-    private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> registerFHOre(String key, ConfiguredFeature<FC, ?> configuredFeature) {
-        FH_ORES.add(configuredFeature);
+    private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> registerFHDisk(String key, ConfiguredFeature<FC, ?> configuredFeature) {
+        FH_DISK.add(configuredFeature);
         return Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, key, configuredFeature);
     }
 
-    private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> registerFHDisk(String key, ConfiguredFeature<FC, ?> configuredFeature) {
-        FH_DISK.add(configuredFeature);
+    private static <FC extends IFeatureConfig> ConfiguredFeature<FC, ?> registerFHOre(String key, ConfiguredFeature<FC, ?> configuredFeature) {
+        FH_ORES.add(configuredFeature);
         return Registry.register(WorldGenRegistries.CONFIGURED_FEATURE, key, configuredFeature);
     }
 }

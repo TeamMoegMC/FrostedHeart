@@ -31,13 +31,13 @@ public class ParagraphNode implements Node {
     }
 
     @Override
-    public String getText() {
-        return "@p";
+    public String getDisplay(ScenarioRunner runner) {
+        return "";
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
-        return "";
+    public String getText() {
+        return "@p";
     }
 
     @Override

@@ -63,12 +63,33 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         this.growSpeed = growSpeed;
     }
 
+    @Override
+    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
+        float temp = ChunkHeatData.getTemperature(worldIn, pos);
+        return temp >= growTemperature;
+    }
+
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
     }
 
     public int getGrowTemperature() {
         return growTemperature;
+    }
+
+    @Override
+    public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn) {
+        if (entityIn instanceof LivingEntity && entityIn.getType() != EntityType.FOX && entityIn.getType() != EntityType.BEE) {
+            entityIn.setMotionMultiplier(state, new Vector3d((double) 0.8F, 0.75D, (double) 0.8F));
+            if (!worldIn.isRemote && state.get(AGE) > 0 && (entityIn.lastTickPosX != entityIn.getPosX() || entityIn.lastTickPosZ != entityIn.getPosZ())) {
+                double d0 = Math.abs(entityIn.getPosX() - entityIn.lastTickPosX);
+                double d1 = Math.abs(entityIn.getPosZ() - entityIn.lastTickPosZ);
+                if (d0 >= (double) 0.003F || d1 >= (double) 0.003F) {
+                    entityIn.attackEntityFrom(DamageSource.SWEET_BERRY_BUSH, 0.0F);//remove damage
+                }
+            }
+
+        }
     }
 
     @Override
@@ -87,27 +108,6 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         } else if (i < 3 && worldIn.getLightSubtracted(pos.up(), 0) >= 9 && net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, random.nextInt(50) < this.growSpeed)) {
             worldIn.setBlockState(pos, state.with(AGE, i + 1), 2);
             net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state);
-        }
-    }
-
-    @Override
-    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
-        float temp = ChunkHeatData.getTemperature(worldIn, pos);
-        return temp >= growTemperature;
-    }
-
-    @Override
-    public void onEntityCollision(BlockState state, World worldIn, BlockPos pos, Entity entityIn) {
-        if (entityIn instanceof LivingEntity && entityIn.getType() != EntityType.FOX && entityIn.getType() != EntityType.BEE) {
-            entityIn.setMotionMultiplier(state, new Vector3d((double) 0.8F, 0.75D, (double) 0.8F));
-            if (!worldIn.isRemote && state.get(AGE) > 0 && (entityIn.lastTickPosX != entityIn.getPosX() || entityIn.lastTickPosZ != entityIn.getPosZ())) {
-                double d0 = Math.abs(entityIn.getPosX() - entityIn.lastTickPosX);
-                double d1 = Math.abs(entityIn.getPosZ() - entityIn.lastTickPosZ);
-                if (d0 >= (double) 0.003F || d1 >= (double) 0.003F) {
-                    entityIn.attackEntityFrom(DamageSource.SWEET_BERRY_BUSH, 0.0F);//remove damage
-                }
-            }
-
         }
     }
 

@@ -44,15 +44,62 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     }
 
     @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+        if (!this.holder.isPresent()) {
+            this.refreshCapability();
+        }
+        return cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY ? holder.cast() : super.getCapability(cap, side);
+    }
+
+    @Override
     public void readCustomNBT(CompoundNBT nbt, boolean dp) {
         input.readFromNBT(nbt.getCompound("in"));
     }
 
-    @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
-        nbt.put("in", input.writeToNBT(new CompoundNBT()));
-    }
 
+    private void refreshCapability() {
+        LazyOptional<IFluidHandler> oldCap = this.holder;
+        this.holder = LazyOptional.of(() -> new IFluidHandler() {
+                    @Override
+                    public FluidStack drain(FluidStack resource, FluidAction action) {
+                        return FluidStack.EMPTY;
+                    }
+
+                    @Override
+                    public FluidStack drain(int maxDrain, FluidAction action) {
+                        return FluidStack.EMPTY;
+                    }
+
+                    @Override
+                    public int fill(FluidStack resource, FluidAction action) {
+                        return input.fill(resource, action);
+                    }
+
+                    @Override
+                    public FluidStack getFluidInTank(int tank) {
+                        return input.getFluidInTank(tank);
+                    }
+
+                    @Override
+                    public int getTankCapacity(int tank) {
+                        return input.getCapacity();
+                    }
+
+                    @Override
+                    public int getTanks() {
+                        return input.getTanks();
+                    }
+
+                    @Override
+                    public boolean isFluidValid(int tank, FluidStack stack) {
+                        return input.isFluidValid(tank, stack);
+                    }
+
+                }
+
+        );
+        oldCap.invalidate();
+    }
 
     @Override
     public void tick() {
@@ -71,54 +118,7 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
     }
 
     @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-        if (!this.holder.isPresent()) {
-            this.refreshCapability();
-        }
-        return cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY ? holder.cast() : super.getCapability(cap, side);
-    }
-
-    private void refreshCapability() {
-        LazyOptional<IFluidHandler> oldCap = this.holder;
-        this.holder = LazyOptional.of(() -> new IFluidHandler() {
-                    @Override
-                    public int fill(FluidStack resource, FluidAction action) {
-                        return input.fill(resource, action);
-                    }
-
-                    @Override
-                    public FluidStack drain(int maxDrain, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public FluidStack drain(FluidStack resource, FluidAction action) {
-                        return FluidStack.EMPTY;
-                    }
-
-                    @Override
-                    public int getTanks() {
-                        return input.getTanks();
-                    }
-
-                    @Override
-                    public FluidStack getFluidInTank(int tank) {
-                        return input.getFluidInTank(tank);
-                    }
-
-                    @Override
-                    public int getTankCapacity(int tank) {
-                        return input.getCapacity();
-                    }
-
-                    @Override
-                    public boolean isFluidValid(int tank, FluidStack stack) {
-                        return input.isFluidValid(tank, stack);
-                    }
-
-                }
-
-        );
-        oldCap.invalidate();
+    public void writeCustomNBT(CompoundNBT nbt, boolean dp) {
+        nbt.put("in", input.writeToNBT(new CompoundNBT()));
     }
 }

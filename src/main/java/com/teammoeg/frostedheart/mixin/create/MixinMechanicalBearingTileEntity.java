@@ -34,13 +34,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MechanicalBearingTileEntity.class)
 public abstract class MixinMechanicalBearingTileEntity extends GeneratingKineticTileEntity
         implements IBearingTileEntity {
+    @Shadow(remap = false)
+    protected ControlledContraptionEntity movedContraption;
+
+    private int fh$cooldown;
     public MixinMechanicalBearingTileEntity(TileEntityType<?> typeIn) {
         super(typeIn);
     }
-
-    @Shadow(remap = false)
-    protected ControlledContraptionEntity movedContraption;
-    private int fh$cooldown;
 
     @Override
     public float calculateStressApplied() {

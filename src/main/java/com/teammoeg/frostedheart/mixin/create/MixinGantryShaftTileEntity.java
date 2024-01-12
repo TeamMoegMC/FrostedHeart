@@ -34,18 +34,13 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(GantryShaftTileEntity.class)
 public abstract class MixinGantryShaftTileEntity extends KineticTileEntity implements ITickableTileEntity, IGantryShaft {
-    @Override
-    public void setEntity(AbstractContraptionEntity comp) {
-        currentComp = comp;
-    }
+    private int fh$cooldown;
+
+    public AbstractContraptionEntity currentComp;
 
     public MixinGantryShaftTileEntity(TileEntityType<?> typeIn) {
         super(typeIn);
     }
-
-    private int fh$cooldown;
-    public AbstractContraptionEntity currentComp;
-
     @Override
     public float calculateStressApplied() {
         if (currentComp != null) {
@@ -70,6 +65,11 @@ public abstract class MixinGantryShaftTileEntity extends KineticTileEntity imple
         }
 
         return lastStressApplied;
+    }
+
+    @Override
+    public void setEntity(AbstractContraptionEntity comp) {
+        currentComp = comp;
     }
 
     @Override

@@ -45,52 +45,15 @@ public class ParagraphRunner {
         this.player = player;
     }
 
-    public void setPath(String path, INBT val) {
+    public boolean containsPath(String path) {
         String[] paths = path.split("\\.");
         CompoundNBT nbt = parVars;
         for (int i = 0; i < paths.length - 1; i++) {
-            if (nbt.contains(paths[i], 10)) {
-                nbt = nbt.getCompound(paths[i]);
-            } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
-                nbt.put(paths[i], cnbt);
-                nbt = cnbt;
-            } else
-                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
+            if (!nbt.contains(paths[i], 10))
+                return false;
+            nbt = nbt.getCompound(paths[i]);
         }
-        nbt.put(paths[paths.length - 1], val);
-    }
-
-    public void setPathString(String path, String val) {
-        String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
-        for (int i = 0; i < paths.length - 1; i++) {
-            if (nbt.contains(paths[i], 10)) {
-                nbt = nbt.getCompound(paths[i]);
-            } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
-                nbt.put(paths[i], cnbt);
-                nbt = cnbt;
-            } else
-                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
-        }
-        nbt.putString(paths[paths.length - 1], val);
-    }
-
-    public void setPathNumber(String path, Number val) {
-        String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
-        for (int i = 0; i < paths.length - 1; i++) {
-            if (nbt.contains(paths[i], 10)) {
-                nbt = nbt.getCompound(paths[i]);
-            } else if (!nbt.contains(paths[i])) {
-                CompoundNBT cnbt = new CompoundNBT();
-                nbt.put(paths[i], cnbt);
-                nbt = cnbt;
-            } else
-                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
-        }
-        nbt.putDouble(paths[paths.length - 1], val.doubleValue());
+        return nbt.contains(paths[paths.length - 1]);
     }
 
     public INBT evalPath(String path) {
@@ -111,17 +74,6 @@ public class ParagraphRunner {
         return nbt.getDouble(paths[paths.length - 1]);
     }
 
-    public boolean containsPath(String path) {
-        String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
-        for (int i = 0; i < paths.length - 1; i++) {
-            if (!nbt.contains(paths[i], 10))
-                return false;
-            nbt = nbt.getCompound(paths[i]);
-        }
-        return nbt.contains(paths[paths.length - 1]);
-    }
-
     public String evalPathString(String path) {
         return evalPath(path).getString();
     }
@@ -132,5 +84,53 @@ public class ParagraphRunner {
 
     public PlayerEntity getPlayer() {
         return player;
+    }
+
+    public void setPath(String path, INBT val) {
+        String[] paths = path.split("\\.");
+        CompoundNBT nbt = parVars;
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (nbt.contains(paths[i], 10)) {
+                nbt = nbt.getCompound(paths[i]);
+            } else if (!nbt.contains(paths[i])) {
+                CompoundNBT cnbt = new CompoundNBT();
+                nbt.put(paths[i], cnbt);
+                nbt = cnbt;
+            } else
+                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
+        }
+        nbt.put(paths[paths.length - 1], val);
+    }
+
+    public void setPathNumber(String path, Number val) {
+        String[] paths = path.split("\\.");
+        CompoundNBT nbt = parVars;
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (nbt.contains(paths[i], 10)) {
+                nbt = nbt.getCompound(paths[i]);
+            } else if (!nbt.contains(paths[i])) {
+                CompoundNBT cnbt = new CompoundNBT();
+                nbt.put(paths[i], cnbt);
+                nbt = cnbt;
+            } else
+                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
+        }
+        nbt.putDouble(paths[paths.length - 1], val.doubleValue());
+    }
+
+    public void setPathString(String path, String val) {
+        String[] paths = path.split("\\.");
+        CompoundNBT nbt = parVars;
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (nbt.contains(paths[i], 10)) {
+                nbt = nbt.getCompound(paths[i]);
+            } else if (!nbt.contains(paths[i])) {
+                CompoundNBT cnbt = new CompoundNBT();
+                nbt.put(paths[i], cnbt);
+                nbt = cnbt;
+            } else
+                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
+        }
+        nbt.putString(paths[paths.length - 1], val);
     }
 }

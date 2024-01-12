@@ -45,16 +45,13 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
+    public static final ResourceLocation ktag = new ResourceLocation(FHMain.MODID, "knife");
+
     Item resultType;
 
     public MushroomBed(String name, Item resultType, Properties properties) {
         super(name, properties);
         this.resultType = resultType;
-    }
-
-    @Override
-    public boolean isEnchantable(ItemStack stack) {
-        return false;
     }
 
     @Override
@@ -88,11 +85,25 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
     }
 
     @Override
+    public float getMax(ItemStack stack) {
+        return stack.getDamage() > 0 ? 0.001F : 0;
+    }
+
+    @Override
     public UseAction getUseAction(ItemStack stack) {
         return UseAction.EAT;
     }
 
-    public static final ResourceLocation ktag = new ResourceLocation(FHMain.MODID, "knife");
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 32;
+    }
+
+    @Override
+    public boolean isEnchantable(ItemStack stack) {
+        return false;
+    }
+
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
@@ -120,17 +131,6 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 
         }
         return stack;
-    }
-
-
-    @Override
-    public int getUseDuration(ItemStack stack) {
-        return 32;
-    }
-
-    @Override
-    public float getMax(ItemStack stack) {
-        return stack.getDamage() > 0 ? 0.001F : 0;
     }
 
 }

@@ -46,20 +46,6 @@ public class ThermometerItem extends FHBaseItem {
         super(name, properties);
     }
 
-    /**
-     * Called when the player finishes using this Item (E.g. finishes eating.). Not called when the player stops using
-     * the Item before the action is complete.
-     */
-    @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-        if (worldIn.isRemote) return stack;
-        if (entityLiving instanceof ServerPlayerEntity) {
-            TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity) entityLiving, "info.thermometerbody", getTemperature((ServerPlayerEntity) entityLiving) / 10f + 37f);
-        }
-
-        return stack;
-    }
-
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
@@ -68,6 +54,22 @@ public class ThermometerItem extends FHBaseItem {
 
     public int getTemperature(ServerPlayerEntity p) {
         return (int) (Temperature.getBodySmoothed(p) * 10);
+    }
+
+    /**
+     * returns the action that specifies what animation to play when the items is being used
+     */
+    @Override
+    public UseAction getUseAction(ItemStack stack) {
+        return UseAction.DRINK;
+    }
+
+    /**
+     * How long it takes to use or consume an item
+     */
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 100;
     }
 
     @Override
@@ -81,19 +83,17 @@ public class ThermometerItem extends FHBaseItem {
     }
 
     /**
-     * How long it takes to use or consume an item
+     * Called when the player finishes using this Item (E.g. finishes eating.). Not called when the player stops using
+     * the Item before the action is complete.
      */
     @Override
-    public int getUseDuration(ItemStack stack) {
-        return 100;
-    }
+    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+        if (worldIn.isRemote) return stack;
+        if (entityLiving instanceof ServerPlayerEntity) {
+            TmeperatureDisplayHelper.sendTemperature((ServerPlayerEntity) entityLiving, "info.thermometerbody", getTemperature((ServerPlayerEntity) entityLiving) / 10f + 37f);
+        }
 
-    /**
-     * returns the action that specifies what animation to play when the items is being used
-     */
-    @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.DRINK;
+        return stack;
     }
 
 }

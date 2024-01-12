@@ -46,6 +46,10 @@ public enum TownResourceType {
     PREP_FOOD(t -> 250D + 100 * t.get(STORAGE));
     Function<Town, Double> maxStorage;
 
+    public static TownResourceType from(String t) {
+        return TownResourceType.valueOf(t.toUpperCase());
+    }
+
     /**
      * Create a new type
      *
@@ -55,21 +59,17 @@ public enum TownResourceType {
         this.maxStorage = maxStorage;
     }
 
-    public String getKey() {
-        return this.name().toLowerCase();
+    public int getIntMaxStorage(Town rc) {
+        if (maxStorage == null) return 0;
+        return (int) (maxStorage.apply(rc) * 1000);
     }
 
-    public static TownResourceType from(String t) {
-        return TownResourceType.valueOf(t.toUpperCase());
+    public String getKey() {
+        return this.name().toLowerCase();
     }
 
     public double getMaxStorage(Town rc) {
         if (maxStorage == null) return 0;
         return maxStorage.apply(rc);
-    }
-
-    public int getIntMaxStorage(Town rc) {
-        if (maxStorage == null) return 0;
-        return (int) (maxStorage.apply(rc) * 1000);
     }
 }

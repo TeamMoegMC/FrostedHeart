@@ -39,6 +39,19 @@ public class ForgeIngameGuiMixin extends IngameGui {
 
     /**
      * @author yuesha-yc
+     * @reason change style
+     */
+    @Overwrite(remap = false)
+    public void renderAir(int width, int height, MatrixStack stack) {
+        PlayerEntity player = FrostedHud.getRenderViewPlayer();
+        if (player == null) return;
+        int x = width / 2;
+        int y = height;
+        FrostedHud.renderAirBar(stack, x, y, mc, player);
+    }
+
+    /**
+     * @author yuesha-yc
      * @reason change text position
      */
     @Overwrite(remap = false)
@@ -65,19 +78,6 @@ public class ForgeIngameGuiMixin extends IngameGui {
 
             mc.getProfiler().endSection();
         }
-    }
-
-    /**
-     * @author yuesha-yc
-     * @reason change style
-     */
-    @Overwrite(remap = false)
-    public void renderAir(int width, int height, MatrixStack stack) {
-        PlayerEntity player = FrostedHud.getRenderViewPlayer();
-        if (player == null) return;
-        int x = width / 2;
-        int y = height;
-        FrostedHud.renderAirBar(stack, x, y, mc, player);
     }
 
 }

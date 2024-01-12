@@ -50,9 +50,42 @@ import net.minecraft.util.text.TranslationTextComponent;
  * @author LatvianModder, khjxiaogu
  */
 public class EditListDialog<T> extends EditDialog {
-    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
-    };
+    public class ButtonAddValue extends Button {
+        public ButtonAddValue(Panel panel) {
+            super(panel);
+            setHeight(12);
+            setTitle(new StringTextComponent("+ ").appendSibling(new TranslationTextComponent("gui.add")));
+        }
+
+        @Override
+        public void addMouseOverText(TooltipList list) {
+        }
+
+        @Override
+        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            boolean mouseOver = getMouseY() >= 20 && isMouseOver();
+
+            if (mouseOver) {
+                Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
+            }
+
+            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.BLACK, 0);
+            RenderSystem.color4f(1F, 1F, 1F, 1F);
+        }
+
+        @Override
+        public void onClicked(MouseButton button) {
+            playClickSound();
+            editor.open(this, "New", def, s -> {
+                if (s != null) {
+                    modified = true;
+                    list.add(s);
+                    parent.refreshWidgets();
+                }
+            });
+
+        }
+    }
 
     public class ButtonConfigValue extends Button {
         public final int index;
@@ -61,6 +94,15 @@ public class EditListDialog<T> extends EditDialog {
             super(panel);
             index = i;
             setHeight(12);
+        }
+
+        @Override
+        public void addMouseOverText(TooltipList l) {
+            if (getMouseX() >= getX() + width - 19) {
+                l.translate("selectServer.delete");
+            } else {
+                l.add(new StringTextComponent(read.apply(list.get(index))));
+            }
         }
 
         @Override
@@ -106,53 +148,11 @@ public class EditListDialog<T> extends EditDialog {
                 });
             }
         }
-
-        @Override
-        public void addMouseOverText(TooltipList l) {
-            if (getMouseX() >= getX() + width - 19) {
-                l.translate("selectServer.delete");
-            } else {
-                l.add(new StringTextComponent(read.apply(list.get(index))));
-            }
-        }
     }
 
-    public class ButtonAddValue extends Button {
-        public ButtonAddValue(Panel panel) {
-            super(panel);
-            setHeight(12);
-            setTitle(new StringTextComponent("+ ").appendSibling(new TranslationTextComponent("gui.add")));
-        }
-
-        @Override
-        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            boolean mouseOver = getMouseY() >= 20 && isMouseOver();
-
-            if (mouseOver) {
-                Color4I.WHITE.withAlpha(33).draw(matrixStack, x, y, w, h);
-            }
-
-            theme.drawString(matrixStack, getTitle(), x + 4, y + 2, Color4I.BLACK, 0);
-            RenderSystem.color4f(1F, 1F, 1F, 1F);
-        }
-
-        @Override
-        public void onClicked(MouseButton button) {
-            playClickSound();
-            editor.open(this, "New", def, s -> {
-                if (s != null) {
-                    modified = true;
-                    list.add(s);
-                    parent.refreshWidgets();
-                }
-            });
-
-        }
-
-        @Override
-        public void addMouseOverText(TooltipList list) {
-        }
-    }
+    public static final Editor<Collection<String>> STRING_LIST = (p, l, v, c) -> {
+        new EditListDialog<>(p, l, v, "", EditPrompt.TEXT_EDITOR, e -> e, c).open();
+    };
 
     private final Consumer<Collection<T>> callback;
 
@@ -166,6 +166,14 @@ public class EditListDialog<T> extends EditDialog {
     private final Function<T, String> read;
     private final Function<T, Icon> toicon;
     boolean modified;
+
+    public EditListDialog(Widget p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+        this(p, label, vx, null, editor, toread, null, li);
+    }
+
+    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
+        this(p, label, vx, def, editor, toread, null, li);
+    }
 
     public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Function<T, Icon> icon, Consumer<Collection<T>> li) {
         super(p);
@@ -210,14 +218,6 @@ public class EditListDialog<T> extends EditDialog {
         buttonCancel = new SimpleButton(this, new TranslationTextComponent("gui.cancel"), Icons.CANCEL, (widget, button) -> close());
     }
 
-    public EditListDialog(Widget p, String label, Collection<T> vx, T def, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
-        this(p, label, vx, def, editor, toread, null, li);
-    }
-
-    public EditListDialog(Widget p, String label, Collection<T> vx, Editor<T> editor, Function<T, String> toread, Consumer<Collection<T>> li) {
-        this(p, label, vx, null, editor, toread, null, li);
-    }
-
     @Override
     public void addWidgets() {
         add(buttonAccept);
@@ -249,15 +249,15 @@ public class EditListDialog<T> extends EditDialog {
     }
 
     @Override
+    public void onClose() {
+    }
+
+    @Override
     public void onClosed() {
         if (modified) {
             ConfirmDialog.EDITOR.open(this, "Unsaved changes, discard?", true, e -> {
                 if (!e) open();
             });
         }
-    }
-
-    @Override
-    public void onClose() {
     }
 }

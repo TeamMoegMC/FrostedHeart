@@ -26,9 +26,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(IngameGui.class)
 public interface IngameGuiAccess {
-    @Accessor("remainingHighlightTicks")
-    int getRemainingHighlightTicks();
-
     @Accessor("highlightingItemStack")
     ItemStack getHighlightingItemStack();
+
+    @Accessor("remainingHighlightTicks")
+    int getRemainingHighlightTicks();
 }

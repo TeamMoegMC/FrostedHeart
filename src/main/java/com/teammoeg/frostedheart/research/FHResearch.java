@@ -60,25 +60,10 @@ public class FHResearch {
     private static LazyOptional<List<Research>> allResearches = LazyOptional.of(() -> researches.all());
     public static boolean editor = false;
 
-    public static CompoundNBT save(CompoundNBT cnbt) {
-        cnbt.put("clues", clues.serialize());
-        cnbt.put("researches", researches.serialize());
-        cnbt.put("effects", effects.serialize());
-        return cnbt;
-    }
-
-    //register for after init
-    public static void register(Research t) {
-        researches.register(t);
-        clearCache();
-    }
-
-    //called before reload
-    public static void prepareReload() {
-        researches.prepareReload();
-        clues.prepareReload();
-        effects.prepareReload();
-        clearCache();
+    public static void clearAll() {
+        clues.clear();
+        researches.clear();
+        effects.clear();
     }
 
     //clear cache when modification applied
@@ -86,10 +71,14 @@ public class FHResearch {
         allResearches = LazyOptional.of(() -> researches.all());
     }
 
-    //called after reload
-    public static void reindex() {
-        allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
-        allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
+    public static void delete(Research r) {
+        researches.remove(r);
+        clearCache();
+        File folder = FMLPaths.CONFIGDIR.get().toFile();
+        File rf = new File(folder, "fhresearches");
+        rf.mkdirs();
+        new File(rf, r.getId() + ".json").delete();
+
     }
 
     //called after reload
@@ -99,30 +88,36 @@ public class FHResearch {
         clues.all().forEach(Clue::init);
     }
 
-    public static void load(CompoundNBT cnbt) {
-        clues.deserialize(cnbt.getList("clues", 8));
-        researches.deserialize(cnbt.getList("researches", 8));
-        effects.deserialize(cnbt.getList("effects", 8));
-    }
-
-    public static Supplier<Research> getResearch(String id) {
-        return researches.get(id);
-    }
-
-    public static Supplier<Clue> getClue(String id) {
-        return clues.get(id);
-    }
-
-    public static Supplier<Research> getResearch(int id) {
-        return researches.get(id);
+    public static List<Research> getAllResearch() {
+        return allResearches.resolve().get();
     }
 
     public static Supplier<Clue> getClue(int id) {
         return clues.get(id);
     }
 
-    public static List<Research> getAllResearch() {
-        return allResearches.resolve().get();
+    public static Supplier<Clue> getClue(String id) {
+        return clues.get(id);
+    }
+
+    public static Research getFirstResearchInCategory(ResearchCategory cate) {
+        List<Research> all = getAllResearch();
+        Research unl = null;
+        for (Research r : all) {
+            if (r.getCategory() != cate) continue;
+            if (r.isHidden()) continue;
+            if (r.isCompleted() && unl == null) unl = r;
+            else if (r.isUnlocked()) return r;
+        }
+        return unl;
+    }
+
+    public static Supplier<Research> getResearch(int id) {
+        return researches.get(id);
+    }
+
+    public static Supplier<Research> getResearch(String id) {
+        return researches.get(id);
     }
 
     public static List<Research> getResearchesForRender(ResearchCategory cate, boolean showLocked) {
@@ -160,122 +155,6 @@ public class FHResearch {
         return available;
     }
 
-    public static Research getFirstResearchInCategory(ResearchCategory cate) {
-        List<Research> all = getAllResearch();
-        Research unl = null;
-        for (Research r : all) {
-            if (r.getCategory() != cate) continue;
-            if (r.isHidden()) continue;
-            if (r.isCompleted() && unl == null) unl = r;
-            else if (r.isUnlocked()) return r;
-        }
-        return unl;
-    }
-
-    public static void saveAll() {
-        File folder = FMLPaths.CONFIGDIR.get().toFile();
-        File rf = new File(folder, "fhresearches");
-        rf.mkdirs();
-        Gson gs = new GsonBuilder().setPrettyPrinting().create();
-        for (Research r : getAllResearch()) {
-            File out = new File(rf, r.getId() + ".json");
-            try {
-                FileUtil.transfer(gs.toJson(r.serialize()), out);
-            } catch (IOException e) {
-            }
-
-        }
-    }
-
-    public static Research load(Research r) {
-        File folder = FMLPaths.CONFIGDIR.get().toFile();
-        File rf = new File(folder, "fhresearches");
-        rf.mkdirs();
-        File f = new File(rf, r.getId() + ".json");
-        int iid = r.getRId();
-        try {
-            JsonElement je = new JsonParser().parse(FileUtil.readString(f));
-            if (je.isJsonObject()) {
-                r.load(je.getAsJsonObject());
-            }
-        } catch (IOException e) {
-        }
-        return researches.getById(iid);
-    }
-
-    public static void save(Research r) {
-        File folder = FMLPaths.CONFIGDIR.get().toFile();
-        File rf = new File(folder, "fhresearches");
-        rf.mkdirs();
-        Gson gs = new GsonBuilder().setPrettyPrinting().create();
-        File out = new File(rf, r.getId() + ".json");
-        try {
-            FileUtil.transfer(gs.toJson(r.serialize()), out);
-        } catch (IOException e) {
-        }
-    }
-
-    public static void delete(Research r) {
-        researches.remove(r);
-        clearCache();
-        File folder = FMLPaths.CONFIGDIR.get().toFile();
-        File rf = new File(folder, "fhresearches");
-        rf.mkdirs();
-        new File(rf, r.getId() + ".json").delete();
-
-    }
-
-    public static void loadAll() {
-        File folder = FMLPaths.CONFIGDIR.get().toFile();
-        File rf = new File(folder, "fhresearches");
-        rf.mkdirs();
-        JsonParser jp = new JsonParser();
-
-        for (File f : rf.listFiles((dir, name) -> name.endsWith(".json"))) {
-            try {
-                JsonElement je = jp.parse(FileUtil.readString(f));
-                if (je.isJsonObject()) {
-                    String id = f.getName();
-                    researches.register(SpecialResearch.deserialize(id.substring(0, id.length() - 5), je.getAsJsonObject()));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                FHMain.LOGGER.warn("Cannot load research " + f.getName() + ": " + e.getMessage());
-            }
-
-        }
-    }
-
-    public static void readAll(PacketBuffer pb) {
-        List<Research> rss = SerializeUtil.readList(pb, SpecialResearch::deserialize);
-
-        for (Research r : rss) {
-            researches.register(r);
-        }
-    }
-
-    public static void readAll(List<Research> rss) {
-
-        for (Research r : rss) {
-            r.packetInit();
-            researches.register(r);
-        }
-    }
-
-    public static void saveAll(PacketBuffer pb) {
-        SerializeUtil.writeList(pb, getAllResearch(), Research::write);
-    }
-
-    public static boolean isEditor() {
-        return editor;
-    }
-
-    public static void clearAll() {
-        clues.clear();
-        researches.clear();
-        effects.clear();
-    }
-
     public static void init() {
         ClientResearchData.last = null;
         ResearchListeners.reload();
@@ -305,5 +184,126 @@ public class FHResearch {
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
         //FHResearch.saveAll();
+    }
+
+    public static boolean isEditor() {
+        return editor;
+    }
+
+    public static void load(CompoundNBT cnbt) {
+        clues.deserialize(cnbt.getList("clues", 8));
+        researches.deserialize(cnbt.getList("researches", 8));
+        effects.deserialize(cnbt.getList("effects", 8));
+    }
+
+    public static Research load(Research r) {
+        File folder = FMLPaths.CONFIGDIR.get().toFile();
+        File rf = new File(folder, "fhresearches");
+        rf.mkdirs();
+        File f = new File(rf, r.getId() + ".json");
+        int iid = r.getRId();
+        try {
+            JsonElement je = new JsonParser().parse(FileUtil.readString(f));
+            if (je.isJsonObject()) {
+                r.load(je.getAsJsonObject());
+            }
+        } catch (IOException e) {
+        }
+        return researches.getById(iid);
+    }
+
+    public static void loadAll() {
+        File folder = FMLPaths.CONFIGDIR.get().toFile();
+        File rf = new File(folder, "fhresearches");
+        rf.mkdirs();
+        JsonParser jp = new JsonParser();
+
+        for (File f : rf.listFiles((dir, name) -> name.endsWith(".json"))) {
+            try {
+                JsonElement je = jp.parse(FileUtil.readString(f));
+                if (je.isJsonObject()) {
+                    String id = f.getName();
+                    researches.register(SpecialResearch.deserialize(id.substring(0, id.length() - 5), je.getAsJsonObject()));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                FHMain.LOGGER.warn("Cannot load research " + f.getName() + ": " + e.getMessage());
+            }
+
+        }
+    }
+
+    //called before reload
+    public static void prepareReload() {
+        researches.prepareReload();
+        clues.prepareReload();
+        effects.prepareReload();
+        clearCache();
+    }
+
+    public static void readAll(List<Research> rss) {
+
+        for (Research r : rss) {
+            r.packetInit();
+            researches.register(r);
+        }
+    }
+
+    public static void readAll(PacketBuffer pb) {
+        List<Research> rss = SerializeUtil.readList(pb, SpecialResearch::deserialize);
+
+        for (Research r : rss) {
+            researches.register(r);
+        }
+    }
+
+    //register for after init
+    public static void register(Research t) {
+        researches.register(t);
+        clearCache();
+    }
+
+    //called after reload
+    public static void reindex() {
+        allResearches.orElse(Collections.emptyList()).forEach(Research::doReindex);
+        allResearches.orElse(Collections.emptyList()).forEach(Research::doIndex);
+    }
+
+    public static CompoundNBT save(CompoundNBT cnbt) {
+        cnbt.put("clues", clues.serialize());
+        cnbt.put("researches", researches.serialize());
+        cnbt.put("effects", effects.serialize());
+        return cnbt;
+    }
+
+    public static void save(Research r) {
+        File folder = FMLPaths.CONFIGDIR.get().toFile();
+        File rf = new File(folder, "fhresearches");
+        rf.mkdirs();
+        Gson gs = new GsonBuilder().setPrettyPrinting().create();
+        File out = new File(rf, r.getId() + ".json");
+        try {
+            FileUtil.transfer(gs.toJson(r.serialize()), out);
+        } catch (IOException e) {
+        }
+    }
+
+    public static void saveAll() {
+        File folder = FMLPaths.CONFIGDIR.get().toFile();
+        File rf = new File(folder, "fhresearches");
+        rf.mkdirs();
+        Gson gs = new GsonBuilder().setPrettyPrinting().create();
+        for (Research r : getAllResearch()) {
+            File out = new File(rf, r.getId() + ".json");
+            try {
+                FileUtil.transfer(gs.toJson(r.serialize()), out);
+            } catch (IOException e) {
+            }
+
+        }
+    }
+
+    public static void saveAll(PacketBuffer pb) {
+        SerializeUtil.writeList(pb, getAllResearch(), Research::write);
     }
 }

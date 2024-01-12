@@ -32,7 +32,8 @@ public class ElsEndifNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
+    public String getDisplay(ScenarioRunner runner) {
+        return "";
     }
 
     @Override
@@ -46,8 +47,7 @@ public class ElsEndifNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
-        return "";
+    public void run(ScenarioRunner runner) {
     }
 
 }

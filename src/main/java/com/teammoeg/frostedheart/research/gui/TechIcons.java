@@ -75,9 +75,6 @@ public class TechIcons {
         internals.put("inf", INF);
     }
 
-    public TechIcons() {
-    }
-
     public static void drawTexturedRect(MatrixStack matrixStack, int x, int y, int w, int h, boolean hl) {
         int vw = w / 4;
         int vwr = w % 4;
@@ -112,5 +109,8 @@ public class TechIcons {
 
         BUTTON_FRAME.draw(matrixStack, x, y, w, h);
 
+    }
+
+    public TechIcons() {
     }
 }

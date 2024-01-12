@@ -32,20 +32,20 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class FHChangeActiveResearchPacket {
     private final int id;
 
-    public FHChangeActiveResearchPacket(Research rs) {
-        this.id = rs.getRId();
+    public FHChangeActiveResearchPacket() {
+        this.id = 0;
     }
 
     public FHChangeActiveResearchPacket(int rid) {
         this.id = rid;
     }
 
-    public FHChangeActiveResearchPacket() {
-        this.id = 0;
-    }
-
     public FHChangeActiveResearchPacket(PacketBuffer buffer) {
         id = buffer.readVarInt();
+    }
+
+    public FHChangeActiveResearchPacket(Research rs) {
+        this.id = rs.getRId();
     }
 
     public void encode(PacketBuffer buffer) {

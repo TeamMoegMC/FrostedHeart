@@ -58,12 +58,6 @@ public class VolcanicVentPiece extends StructurePiece {
         this.centerZ = nbt.getInt("z");
     }
 
-    protected void readAdditional(CompoundNBT nbt) {
-        nbt.putInt("x", this.centerX);
-        nbt.putInt("y", this.centerY);
-        nbt.putInt("z", this.centerZ);
-    }
-
     @Override
     public boolean func_230383_a_(ISeedReader reader, StructureManager structureManager, ChunkGenerator generator, Random seed, MutableBoundingBox boundingBox, ChunkPos chunkPos, BlockPos pos) {
         BlockPos.Mutable mutablePos = new BlockPos.Mutable();
@@ -83,5 +77,11 @@ public class VolcanicVentPiece extends StructurePiece {
             }
         }
         return true;
+    }
+
+    protected void readAdditional(CompoundNBT nbt) {
+        nbt.putInt("x", this.centerX);
+        nbt.putInt("y", this.centerY);
+        nbt.putInt("z", this.centerZ);
     }
 }

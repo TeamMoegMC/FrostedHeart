@@ -37,123 +37,6 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
 
 public class ResearchDetailPanel extends Panel {
-    Research research;
-    FHIcon icon;
-    ResearchDashboardPanel dashboardPanel;
-    ResearchInfoPanel infoPanel;
-    DescPanel descPanel;
-    ResearchPanel researchScreen;
-
-    public PanelScrollBar scrollInfo;
-    public TechScrollBar scrolldetail;
-
-    public ResearchDetailPanel(ResearchPanel panel) {
-        super(panel);
-        this.setOnlyInteractWithWidgetsInside(true);
-        this.setOnlyRenderWidgetsInside(true);
-        descPanel = new DescPanel(this);
-        infoPanel = new ResearchInfoPanel(this);
-        scrollInfo = new TechScrollBar(this, infoPanel);
-        scrolldetail = new TechScrollBar(this, descPanel);
-        dashboardPanel = new ResearchDashboardPanel(this);
-        researchScreen = panel;
-
-    }
-
-    @Override
-    public void addWidgets() {
-        if (research == null)
-            return;
-        icon = research.getIcon();
-
-        add(dashboardPanel);
-        dashboardPanel.setPosAndSize(4, 11, 140, 51);
-
-        add(descPanel);
-        descPanel.setPosAndSize(8, 64, 132, 100);
-        add(scrolldetail);
-        scrolldetail.setPosAndSize(142, 64, 8, 100);
-
-        add(infoPanel);
-        infoPanel.setPosAndSize(150, 15, 135, 151);
-        Button closePanel = new Button(this) {
-            @Override
-            public void onClicked(MouseButton mouseButton) {
-                close();
-            }
-
-            @Override
-            public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            }
-        };
-        closePanel.setPosAndSize(284, 7, 9, 8);
-        add(closePanel);
-
-        scrollInfo.setPosAndSize(285, 18, 8, 146);
-        //scrollInfo.setMaxValue(height);
-        add(scrollInfo);
-        // already committed items
-        //ResearchData rd = research.getData();
-        TextField status = new TextField(this);
-        status.setMaxWidth(135);
-		/*if (research.getData().isInProgress()) {
-			status.setText(GuiUtils.translateGui("research.in_progress").mergeStyle(TextFormatting.BOLD)
-					.mergeStyle(TextFormatting.BLUE));
-		} else if (rd.canResearch()) {
-			status.setText(GuiUtils.translateGui("research.can_research").mergeStyle(TextFormatting.BOLD)
-					.mergeStyle(TextFormatting.GREEN));
-
-		}*/
-        status.setPos(0, 6);
-        add(status);
-
-    }
-
-    @Override
-    public void alignWidgets() {
-    }
-
-    @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        if (research == null) {
-            return;
-        }
-        matrixStack.push();
-        matrixStack.translate(0, 0, 500);
-        super.draw(matrixStack, theme, x, y, w, h);
-        matrixStack.pop();
-    }
-
-    public void open(Research r) {
-        this.research = r;
-        this.refreshWidgets();
-        researchScreen.setModal(this);
-        ;
-        //researchScreen.refreshWidgets();
-
-    }
-
-    public void close() {
-        this.research = null;
-        this.refreshWidgets();
-        researchScreen.closeModal(this);
-        //researchScreen.refreshWidgets();
-    }
-
-    @Override
-    public void addMouseOverText(TooltipList list) {
-        list.zOffset = 950;
-        list.zOffsetItemTooltip = 500;
-        super.addMouseOverText(list);
-    }
-
-    @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        // drawBackground(matrixStack, theme, x, y, w, h);
-        // theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
-        TechIcons.DIALOG.draw(matrixStack, x, y, w, h);
-    }
-
     public static class DescPanel extends Panel {
         ResearchDetailPanel detailPanel;
 
@@ -189,9 +72,126 @@ public class ResearchDetailPanel extends Panel {
 
         }
     }
+    Research research;
+    FHIcon icon;
+    ResearchDashboardPanel dashboardPanel;
+    ResearchInfoPanel infoPanel;
+    DescPanel descPanel;
+
+    ResearchPanel researchScreen;
+    public PanelScrollBar scrollInfo;
+
+    public TechScrollBar scrolldetail;
+
+    public ResearchDetailPanel(ResearchPanel panel) {
+        super(panel);
+        this.setOnlyInteractWithWidgetsInside(true);
+        this.setOnlyRenderWidgetsInside(true);
+        descPanel = new DescPanel(this);
+        infoPanel = new ResearchInfoPanel(this);
+        scrollInfo = new TechScrollBar(this, infoPanel);
+        scrolldetail = new TechScrollBar(this, descPanel);
+        dashboardPanel = new ResearchDashboardPanel(this);
+        researchScreen = panel;
+
+    }
+
+    @Override
+    public void addMouseOverText(TooltipList list) {
+        list.zOffset = 950;
+        list.zOffsetItemTooltip = 500;
+        super.addMouseOverText(list);
+    }
+
+    @Override
+    public void addWidgets() {
+        if (research == null)
+            return;
+        icon = research.getIcon();
+
+        add(dashboardPanel);
+        dashboardPanel.setPosAndSize(4, 11, 140, 51);
+
+        add(descPanel);
+        descPanel.setPosAndSize(8, 64, 132, 100);
+        add(scrolldetail);
+        scrolldetail.setPosAndSize(142, 64, 8, 100);
+
+        add(infoPanel);
+        infoPanel.setPosAndSize(150, 15, 135, 151);
+        Button closePanel = new Button(this) {
+            @Override
+            public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            }
+
+            @Override
+            public void onClicked(MouseButton mouseButton) {
+                close();
+            }
+        };
+        closePanel.setPosAndSize(284, 7, 9, 8);
+        add(closePanel);
+
+        scrollInfo.setPosAndSize(285, 18, 8, 146);
+        //scrollInfo.setMaxValue(height);
+        add(scrollInfo);
+        // already committed items
+        //ResearchData rd = research.getData();
+        TextField status = new TextField(this);
+        status.setMaxWidth(135);
+		/*if (research.getData().isInProgress()) {
+			status.setText(GuiUtils.translateGui("research.in_progress").mergeStyle(TextFormatting.BOLD)
+					.mergeStyle(TextFormatting.BLUE));
+		} else if (rd.canResearch()) {
+			status.setText(GuiUtils.translateGui("research.can_research").mergeStyle(TextFormatting.BOLD)
+					.mergeStyle(TextFormatting.GREEN));
+
+		}*/
+        status.setPos(0, 6);
+        add(status);
+
+    }
+
+    @Override
+    public void alignWidgets() {
+    }
+
+    public void close() {
+        this.research = null;
+        this.refreshWidgets();
+        researchScreen.closeModal(this);
+        //researchScreen.refreshWidgets();
+    }
+
+    @Override
+    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        if (research == null) {
+            return;
+        }
+        matrixStack.push();
+        matrixStack.translate(0, 0, 500);
+        super.draw(matrixStack, theme, x, y, w, h);
+        matrixStack.pop();
+    }
+
+    @Override
+    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        // drawBackground(matrixStack, theme, x, y, w, h);
+        // theme.drawGui(matrixStack, x, y, w, h,WidgetType.NORMAL);
+        TechIcons.DIALOG.draw(matrixStack, x, y, w, h);
+    }
 
     @Override
     public boolean isEnabled() {
         return researchScreen.canEnable(this) && research != null;
+    }
+
+    public void open(Research r) {
+        this.research = r;
+        this.refreshWidgets();
+        researchScreen.setModal(this);
+        ;
+        //researchScreen.refreshWidgets();
+
     }
 }

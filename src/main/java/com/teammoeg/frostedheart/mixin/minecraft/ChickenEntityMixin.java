@@ -47,16 +47,29 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedStore {
     private final static ResourceLocation chicken_feed = new ResourceLocation(FHMain.MODID, "chicken_feed");
 
-    protected ChickenEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
-        super(type, worldIn);
-    }
-
     @Shadow
     public int timeUntilNextEgg;
+
     byte feeded;
     int digestTimer;
     byte egg;
     short hxteTimer;
+    protected ChickenEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
+        super(type, worldIn);
+    }
+
+    @Override
+    public boolean consumeFeed() {
+        if (feeded > 0) {
+            feeded--;
+            return true;
+        }
+        if (egg > 0) {
+            egg--;
+            return true;
+        }
+        return false;
+    }
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/passive/ChickenEntity;playSound(Lnet/minecraft/util/SoundEvent;FF)V"), method = "livingTick", cancellable = true)
     public void fh$layegg(CallbackInfo cbi) {
@@ -74,6 +87,14 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        egg = compound.getByte("egg_stored");
+        feeded = compound.getByte("feed_stored");
+        digestTimer = compound.getInt("feed_digest");
+        hxteTimer = compound.getShort("hxthermia");
+    }
+
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
     public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
         compound.putByte("egg_stored", egg);
         compound.putByte("feed_stored", feeded);
@@ -82,12 +103,24 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
 
     }
 
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        egg = compound.getByte("egg_stored");
-        feeded = compound.getByte("feed_stored");
-        digestTimer = compound.getInt("feed_digest");
-        hxteTimer = compound.getShort("hxthermia");
+    /**
+     * @author khjxiaogu
+     * @reason change to our own milk logic
+     */
+    @Override
+    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
+        ItemStack itemstack = playerIn.getHeldItem(hand);
+
+        if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(chicken_feed)) {
+            if (feeded < 4) {
+
+                if (!this.world.isRemote)
+                    this.consumeItemFromStack(playerIn, itemstack);
+                feeded++;
+                return ActionResultType.func_233537_a_(this.world.isRemote);
+            }
+        }
+        return super.getEntityInteractionResult(playerIn, hand);
     }
 
     @Override
@@ -133,38 +166,5 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
                     hxteTimer--;
             }
         }
-    }
-
-    /**
-     * @author khjxiaogu
-     * @reason change to our own milk logic
-     */
-    @Override
-    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
-
-        if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(chicken_feed)) {
-            if (feeded < 4) {
-
-                if (!this.world.isRemote)
-                    this.consumeItemFromStack(playerIn, itemstack);
-                feeded++;
-                return ActionResultType.func_233537_a_(this.world.isRemote);
-            }
-        }
-        return super.getEntityInteractionResult(playerIn, hand);
-    }
-
-    @Override
-    public boolean consumeFeed() {
-        if (feeded > 0) {
-            feeded--;
-            return true;
-        }
-        if (egg > 0) {
-            egg--;
-            return true;
-        }
-        return false;
     }
 }

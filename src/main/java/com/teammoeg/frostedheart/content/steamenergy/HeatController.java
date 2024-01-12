@@ -28,13 +28,6 @@ import net.minecraft.tileentity.TileEntity;
 public interface HeatController extends EnergyNetworkProvider {
 
     /**
-     * Gets max heat storage value.
-     *
-     * @return the max heat
-     */
-    float getMaxHeat();
-
-    /**
      * Drain heat from the network.
      *
      * @param value the value
@@ -51,17 +44,24 @@ public interface HeatController extends EnergyNetworkProvider {
     float fillHeat(float value);
 
     /**
-     * get temperature level for the network.
-     *
-     * @return the temperature level
-     */
-    float getTemperatureLevel();
-
-    /**
      * get controller entity
      *
      * @return the controller entity
      */
     TileEntity getEntity();
+
+    /**
+     * Gets max heat storage value.
+     *
+     * @return the max heat
+     */
+    float getMaxHeat();
+
+    /**
+     * get temperature level for the network.
+     *
+     * @return the temperature level
+     */
+    float getTemperatureLevel();
 
 }

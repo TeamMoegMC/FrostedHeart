@@ -32,9 +32,6 @@ import net.minecraft.nbt.CompoundNBT;
 
 public class ResearchDataAPI {
 
-    private ResearchDataAPI() {
-    }
-
     public static TeamResearchData getData(PlayerEntity id) {
         if (id instanceof ServerPlayerEntity)
             return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id));
@@ -42,15 +39,31 @@ public class ResearchDataAPI {
 
     }
 
-    public static boolean isResearchComplete(PlayerEntity id, String research) {
-        if (id instanceof ServerPlayerEntity)
-            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(research).isCompleted();
-        return TeamResearchData.getClientInstance().getData(research).isCompleted();
-    }
-
     public static TeamResearchData getData(UUID id) {
         return FHResearchDataManager.INSTANCE.getData(id);
 
+    }
+
+    public static double getVariantDouble(PlayerEntity id, ResearchVariant name) {
+        if (id instanceof ServerPlayerEntity)
+            return getVariantDouble(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id).getId(), name);
+        return TeamResearchData.getClientInstance().getVariants().getDouble(name.getToken());
+
+    }
+
+    public static double getVariantDouble(UUID id, ResearchVariant name) {
+        return getVariants(id).getDouble(name.getToken());
+    }
+
+    public static long getVariantLong(PlayerEntity id, ResearchVariant name) {
+        if (id instanceof ServerPlayerEntity)
+            return getVariantLong(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id).getId(), name);
+        return TeamResearchData.getClientInstance().getVariants().getLong(name.getToken());
+
+    }
+
+    public static long getVariantLong(UUID id, ResearchVariant name) {
+        return getVariants(id).getLong(name.getToken());
     }
 
     public static CompoundNBT getVariants(PlayerEntity id) {
@@ -65,26 +78,18 @@ public class ResearchDataAPI {
 
     }
 
-    public static long getVariantLong(PlayerEntity id, ResearchVariant name) {
+    public static boolean isResearchComplete(PlayerEntity id, String research) {
         if (id instanceof ServerPlayerEntity)
-            return getVariantLong(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id).getId(), name);
-        return TeamResearchData.getClientInstance().getVariants().getLong(name.getToken());
-
+            return FHResearchDataManager.INSTANCE.getData(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id)).getData(research).isCompleted();
+        return TeamResearchData.getClientInstance().getData(research).isCompleted();
     }
 
-    public static long getVariantLong(UUID id, ResearchVariant name) {
-        return getVariants(id).getLong(name.getToken());
+    public static void putVariantDouble(ServerPlayerEntity id, ResearchVariant name, double val) {
+        putVariantDouble(FTBTeamsAPI.getPlayerTeam(id).getId(), name, val);
     }
 
-    public static double getVariantDouble(PlayerEntity id, ResearchVariant name) {
-        if (id instanceof ServerPlayerEntity)
-            return getVariantDouble(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id).getId(), name);
-        return TeamResearchData.getClientInstance().getVariants().getDouble(name.getToken());
-
-    }
-
-    public static double getVariantDouble(UUID id, ResearchVariant name) {
-        return getVariants(id).getDouble(name.getToken());
+    public static void putVariantDouble(UUID id, ResearchVariant name, double val) {
+        getVariants(id).putDouble(name.getToken(), val);
     }
 
     public static void putVariantLong(ServerPlayerEntity id, ResearchVariant name, long val) {
@@ -95,11 +100,6 @@ public class ResearchDataAPI {
         getVariants(id).putLong(name.getToken(), val);
     }
 
-    public static void putVariantDouble(ServerPlayerEntity id, ResearchVariant name, double val) {
-        putVariantDouble(FTBTeamsAPI.getPlayerTeam(id).getId(), name, val);
-    }
-
-    public static void putVariantDouble(UUID id, ResearchVariant name, double val) {
-        getVariants(id).putDouble(name.getToken(), val);
+    private ResearchDataAPI() {
     }
 }

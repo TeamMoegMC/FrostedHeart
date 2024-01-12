@@ -59,24 +59,6 @@ public class FHArmorBaseModel<T extends LivingEntity> extends BipedModel<T> {
             super.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
     }
 
-    public void setRotationAnglesZombie(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        super.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-        float f6 = MathHelper.sin(this.swingProgress * 3.141593F);
-        float f7 = MathHelper.sin((1.0F - (1.0F - this.swingProgress) * (1.0F - this.swingProgress)) * 3.141593F);
-        this.bipedRightArm.rotateAngleZ = 0.0F;
-        this.bipedLeftArm.rotateAngleZ = 0.0F;
-        this.bipedRightArm.rotateAngleY = (-(0.1F - f6 * 0.6F));
-        this.bipedLeftArm.rotateAngleY = (0.1F - f6 * 0.6F);
-        this.bipedRightArm.rotateAngleX = -1.570796F;
-        this.bipedLeftArm.rotateAngleX = -1.570796F;
-        this.bipedRightArm.rotateAngleX -= f6 * 1.2F - f7 * 0.4F;
-        this.bipedLeftArm.rotateAngleX -= f6 * 1.2F - f7 * 0.4F;
-        this.bipedRightArm.rotateAngleZ += MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
-        this.bipedLeftArm.rotateAngleZ -= MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
-        this.bipedRightArm.rotateAngleX += MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
-        this.bipedLeftArm.rotateAngleX -= MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
-    }
-
     public void setRotationAnglesStand(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         if (entity instanceof ArmorStandEntity) {
             ArmorStandEntity entityarmorstand = (ArmorStandEntity) entity;
@@ -103,5 +85,23 @@ public class FHArmorBaseModel<T extends LivingEntity> extends BipedModel<T> {
             this.bipedRightLeg.setRotationPoint(-1.9F, 11.0F, 0.0F);
             this.bipedHeadwear.copyModelAngles(this.bipedHead);
         }
+    }
+
+    public void setRotationAnglesZombie(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        super.setRotationAngles(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+        float f6 = MathHelper.sin(this.swingProgress * 3.141593F);
+        float f7 = MathHelper.sin((1.0F - (1.0F - this.swingProgress) * (1.0F - this.swingProgress)) * 3.141593F);
+        this.bipedRightArm.rotateAngleZ = 0.0F;
+        this.bipedLeftArm.rotateAngleZ = 0.0F;
+        this.bipedRightArm.rotateAngleY = (-(0.1F - f6 * 0.6F));
+        this.bipedLeftArm.rotateAngleY = (0.1F - f6 * 0.6F);
+        this.bipedRightArm.rotateAngleX = -1.570796F;
+        this.bipedLeftArm.rotateAngleX = -1.570796F;
+        this.bipedRightArm.rotateAngleX -= f6 * 1.2F - f7 * 0.4F;
+        this.bipedLeftArm.rotateAngleX -= f6 * 1.2F - f7 * 0.4F;
+        this.bipedRightArm.rotateAngleZ += MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
+        this.bipedLeftArm.rotateAngleZ -= MathHelper.cos(ageInTicks * 0.09F) * 0.05F + 0.05F;
+        this.bipedRightArm.rotateAngleX += MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
+        this.bipedLeftArm.rotateAngleX -= MathHelper.sin(ageInTicks * 0.067F) * 0.05F;
     }
 }

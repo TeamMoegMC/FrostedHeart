@@ -34,15 +34,8 @@ public class SpecialResearch {
         SpecialResearch.register(Research.class, "default", Research::new, Research::new);
     }
 
-    public static void register(Class<? extends Research> cls, String type, BiFunction<String, JsonObject, Research> json, Function<PacketBuffer, Research> packet) {
-        registry.register(cls, type, json, packet);
-    }
-
-    private SpecialResearch() {
-    }
-
-    public static void writeId(Research e, PacketBuffer pb) {
-        registry.writeId(pb, e);
+    public static Research deserialize(PacketBuffer data) {
+        return registry.read(data);
     }
 
     public static Research deserialize(String id, JsonObject jo) {
@@ -51,12 +44,19 @@ public class SpecialResearch {
         return i.apply(id, jo);
     }
 
-    public static Research deserialize(PacketBuffer data) {
-        return registry.read(data);
+    public static void register(Class<? extends Research> cls, String type, BiFunction<String, JsonObject, Research> json, Function<PacketBuffer, Research> packet) {
+        registry.register(cls, type, json, packet);
+    }
+
+    public static void writeId(Research e, PacketBuffer pb) {
+        registry.writeId(pb, e);
     }
 
     public static void writeType(Research e, JsonObject jo) {
         if (e.getClass() != Research.class)
             registry.writeType(jo, e);
+    }
+
+    private SpecialResearch() {
     }
 }

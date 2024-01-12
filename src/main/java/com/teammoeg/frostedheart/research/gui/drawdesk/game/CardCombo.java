@@ -24,6 +24,22 @@ class CardCombo {
     final int c1;
     final int c2;
 
+    static CardCombo add(int t) {
+        return new CardCombo(CardType.ADDING, 0, t);
+    }
+
+    static CardCombo pair(int t) {
+        return new CardCombo(CardType.PAIR, t * 2, t * 2 + 1);
+    }
+
+    static CardCombo simple(int t) {
+        return new CardCombo(CardType.SIMPLE, t, t);
+    }
+
+    static CardCombo simpleW(int t) {
+        return new CardCombo(CardType.SIMPLE, 0, t);
+    }
+
     CardCombo(CardType ct, int c1, int c2) {
         super();
         this.ct = ct;
@@ -36,21 +52,5 @@ class CardCombo {
         c1.show();
         c2.setType(ct, this.c2);
         c2.show();
-    }
-
-    static CardCombo simple(int t) {
-        return new CardCombo(CardType.SIMPLE, t, t);
-    }
-
-    static CardCombo simpleW(int t) {
-        return new CardCombo(CardType.SIMPLE, 0, t);
-    }
-
-    static CardCombo add(int t) {
-        return new CardCombo(CardType.ADDING, 0, t);
-    }
-
-    static CardCombo pair(int t) {
-        return new CardCombo(CardType.PAIR, t * 2, t * 2 + 1);
     }
 }

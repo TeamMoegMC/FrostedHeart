@@ -40,43 +40,13 @@ import net.minecraft.util.registry.Registry;
 import net.minecraftforge.fml.RegistryObject;
 
 public class SaunaRecipe extends IESerializableRecipe {
-    public static IRecipeType<SaunaRecipe> TYPE;
-    public static RegistryObject<IERecipeSerializer<SaunaRecipe>> SERIALIZER;
-    public final Ingredient input;
-    public final int time;
-    public final Effect effect;
-    public final int duration;
-    public final int amplifier;
-    public static Map<ResourceLocation, SaunaRecipe> recipeList = Collections.emptyMap();
-
-    public SaunaRecipe(ResourceLocation id, Ingredient input, int time, Effect effect, int duration, int amplifier) {
-        super(ItemStack.EMPTY, TYPE, id);
-        this.input = input;
-        this.time = time;
-        this.effect = effect;
-        this.duration = duration;
-        this.amplifier = amplifier;
-    }
-
-    @Override
-    protected IERecipeSerializer getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
-    public ItemStack getRecipeOutput() {
-        return ItemStack.EMPTY;
-    }
-
-    public static SaunaRecipe findRecipe(ItemStack input) {
-        for (SaunaRecipe recipe : recipeList.values())
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
-                return recipe;
-        return null;
-    }
-
     public static class Serializer extends IERecipeSerializer<SaunaRecipe> {
 
+
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHBlocks.sauna.asItem());
+        }
 
         @Override
         public SaunaRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
@@ -98,27 +68,6 @@ public class SaunaRecipe extends IESerializableRecipe {
         }
 
         @Override
-        public void write(PacketBuffer buffer, SaunaRecipe recipe) {
-            // write effect to buffer
-            CompoundNBT effectNBT = new CompoundNBT();
-            if (recipe.effect != null) {
-                effectNBT.putInt("Id", Effect.getId(recipe.effect));
-                effectNBT.putInt("Duration", recipe.duration);
-                effectNBT.putInt("Amplifier", recipe.amplifier);
-            }
-            buffer.writeCompoundTag(effectNBT);
-            // write time to buffer
-            buffer.writeInt(recipe.time);
-            // write ingredient to buffer
-            recipe.input.write(buffer);
-        }
-
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.sauna.asItem());
-        }
-
-        @Override
         public SaunaRecipe readFromJson(ResourceLocation id, JsonObject json) {
             // read effect from json
             Effect effect = null;
@@ -137,5 +86,56 @@ public class SaunaRecipe extends IESerializableRecipe {
                     effect, duration, amplifier);
         }
 
+        @Override
+        public void write(PacketBuffer buffer, SaunaRecipe recipe) {
+            // write effect to buffer
+            CompoundNBT effectNBT = new CompoundNBT();
+            if (recipe.effect != null) {
+                effectNBT.putInt("Id", Effect.getId(recipe.effect));
+                effectNBT.putInt("Duration", recipe.duration);
+                effectNBT.putInt("Amplifier", recipe.amplifier);
+            }
+            buffer.writeCompoundTag(effectNBT);
+            // write time to buffer
+            buffer.writeInt(recipe.time);
+            // write ingredient to buffer
+            recipe.input.write(buffer);
+        }
+
+    }
+    public static IRecipeType<SaunaRecipe> TYPE;
+    public static RegistryObject<IERecipeSerializer<SaunaRecipe>> SERIALIZER;
+    public static Map<ResourceLocation, SaunaRecipe> recipeList = Collections.emptyMap();
+    public final Ingredient input;
+    public final int time;
+    public final Effect effect;
+    public final int duration;
+
+    public final int amplifier;
+
+    public static SaunaRecipe findRecipe(ItemStack input) {
+        for (SaunaRecipe recipe : recipeList.values())
+            if (ItemUtils.stackMatchesObject(input, recipe.input))
+                return recipe;
+        return null;
+    }
+
+    public SaunaRecipe(ResourceLocation id, Ingredient input, int time, Effect effect, int duration, int amplifier) {
+        super(ItemStack.EMPTY, TYPE, id);
+        this.input = input;
+        this.time = time;
+        this.effect = effect;
+        this.duration = duration;
+        this.amplifier = amplifier;
+    }
+
+    @Override
+    protected IERecipeSerializer getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getRecipeOutput() {
+        return ItemStack.EMPTY;
     }
 }

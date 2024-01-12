@@ -44,12 +44,12 @@ public class RadiatorMultiblock extends FHBaseMultiblock {
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
-    public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
+    public float getManualScale() {
+        return 16;
     }
 
     @Override
-    public float getManualScale() {
-        return 16;
+    @OnlyIn(Dist.CLIENT)
+    public void renderFormedStructure(MatrixStack transform, IRenderTypeBuffer buffer) {
     }
 }

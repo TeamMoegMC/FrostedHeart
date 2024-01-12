@@ -39,6 +39,15 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BlockBreakingMovementBehaviour.class)
 public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehaviour {
+    @Shadow(remap = false)
+    public abstract boolean canBreak(World world, BlockPos breakingPos, BlockState state);
+
+    @Shadow(remap = false)
+    protected abstract void onBlockBroken(MovementContext context, BlockPos pos, BlockState brokenState);
+
+    @Shadow(remap = false)
+    protected abstract boolean shouldDestroyStartBlock(BlockState stateToBreak);
+
     /**
      * @author khjxiaogu
      * @reason further repair breaking speed
@@ -115,13 +124,4 @@ public abstract class MixinBlockBreakingMovementBehaviour extends MovementBehavi
         data.putInt("TicksUntilNextProgress", ticksUntilNextProgress);
         data.putInt("Progress", destroyProgress);
     }
-
-    @Shadow(remap = false)
-    protected abstract boolean shouldDestroyStartBlock(BlockState stateToBreak);
-
-    @Shadow(remap = false)
-    public abstract boolean canBreak(World world, BlockPos breakingPos, BlockState state);
-
-    @Shadow(remap = false)
-    protected abstract void onBlockBroken(MovementContext context, BlockPos pos, BlockState brokenState);
 }

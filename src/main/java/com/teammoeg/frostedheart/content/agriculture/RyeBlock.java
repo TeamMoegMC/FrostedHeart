@@ -46,8 +46,16 @@ public class RyeBlock extends FHCropBlock {
         super(name, growTemp, properties, createItemBlock);
     }
 
+    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+        builder.add(Rye_AGE);
+    }
+
     public IntegerProperty getAgeProperty() {
         return Rye_AGE;
+    }
+
+    protected int getBonemealAgeIncrease(World worldIn) {
+        return MathHelper.nextInt(worldIn.rand, 0, 1);
     }
 
     public int getMaxAge() {
@@ -56,14 +64,6 @@ public class RyeBlock extends FHCropBlock {
 
     protected IItemProvider getSeedsItem() {
         return FHBlocks.rye_block.asItem();
-    }
-
-    protected int getBonemealAgeIncrease(World worldIn) {
-        return MathHelper.nextInt(worldIn.rand, 0, 1);
-    }
-
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(Rye_AGE);
     }
 
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {

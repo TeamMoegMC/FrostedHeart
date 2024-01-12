@@ -37,10 +37,6 @@ import net.minecraft.util.registry.Registry;
 import javax.annotation.Nullable;
 
 public interface DefrostRecipe extends IRecipe<IInventory> {
-    Ingredient getIngredient();
-
-    ItemStack[] getIss();
-
     public static class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
         @FunctionalInterface
         public interface DRFactory<T extends DefrostRecipe> {
@@ -58,14 +54,18 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
             return new ItemStack(FHItems.frozen_seeds);
         }
 
-        public ItemStack readOutput(JsonElement json) {
-            if (json.isJsonObject())
-                return ShapedRecipe.deserializeItem(json.getAsJsonObject());
-            String s1 = json.getAsString();
-            ResourceLocation resourcelocation = new ResourceLocation(s1);
-            return new ItemStack(Registry.ITEM.getOptional(resourcelocation).orElseThrow(() -> {
-                return new IllegalStateException("Item: " + s1 + " does not exist");
-            }));
+        @Nullable
+        @Override
+        public T read(ResourceLocation recipeId, PacketBuffer buffer) {
+            String s = buffer.readString();
+            Ingredient ingredient = Ingredient.read(buffer);
+            int itemlen = buffer.readVarInt();
+            ItemStack[] itemstacks = new ItemStack[itemlen];
+            for (int i = 0; i < itemlen; i++)
+                itemstacks[i] = buffer.readItemStack();
+            float f = buffer.readFloat();
+            int i = buffer.readVarInt();
+            return factory.create(recipeId, s, ingredient, itemstacks, f, i);
         }
 
         @Override
@@ -92,18 +92,14 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
             return factory.create(recipeId, s, ingredient, itemstacks != null ? itemstacks : new ItemStack[0], f, i);
         }
 
-        @Nullable
-        @Override
-        public T read(ResourceLocation recipeId, PacketBuffer buffer) {
-            String s = buffer.readString();
-            Ingredient ingredient = Ingredient.read(buffer);
-            int itemlen = buffer.readVarInt();
-            ItemStack[] itemstacks = new ItemStack[itemlen];
-            for (int i = 0; i < itemlen; i++)
-                itemstacks[i] = buffer.readItemStack();
-            float f = buffer.readFloat();
-            int i = buffer.readVarInt();
-            return factory.create(recipeId, s, ingredient, itemstacks, f, i);
+        public ItemStack readOutput(JsonElement json) {
+            if (json.isJsonObject())
+                return ShapedRecipe.deserializeItem(json.getAsJsonObject());
+            String s1 = json.getAsString();
+            ResourceLocation resourcelocation = new ResourceLocation(s1);
+            return new ItemStack(Registry.ITEM.getOptional(resourcelocation).orElseThrow(() -> {
+                return new IllegalStateException("Item: " + s1 + " does not exist");
+            }));
         }
 
         @Override
@@ -116,4 +112,8 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
 
         }
     }
+
+    Ingredient getIngredient();
+
+    ItemStack[] getIss();
 }

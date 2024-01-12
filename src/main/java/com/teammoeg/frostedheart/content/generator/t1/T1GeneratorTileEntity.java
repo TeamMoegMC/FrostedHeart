@@ -42,9 +42,23 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
 
 
     @Override
-    protected void tickFuel() {
-        this.hasFuel = !this.getInventory().get(INPUT_SLOT).isEmpty();
-        super.tickFuel();
+    protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
+        if (te instanceof T1GeneratorTileEntity)
+            consumer.accept((T1GeneratorTileEntity) te);
+    }
+
+    @Override
+    public int getLowerBound() {
+        int distanceToGround = 2;
+        int extra = MathHelper.ceil(getRangeLevel());
+        return distanceToGround + extra;
+    }
+
+    @Override
+    public int getUpperBound() {
+        int distanceToTowerTop = 2;
+        int extra = MathHelper.ceil(getRangeLevel() * 2);
+        return distanceToTowerTop + extra;
     }
 
     @Override
@@ -54,9 +68,13 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        nbt.putBoolean("hasFuel", hasFuel);
+    public void shutdownTick() {
+        boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty();
+        if (invState != hasFuel) {
+            hasFuel = invState;
+            this.markContainingBlockForUpdate(null);
+        }
+
     }
 
     @Override
@@ -75,13 +93,9 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     }
 
     @Override
-    public void shutdownTick() {
-        boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty();
-        if (invState != hasFuel) {
-            hasFuel = invState;
-            this.markContainingBlockForUpdate(null);
-        }
-
+    protected void tickFuel() {
+        this.hasFuel = !this.getInventory().get(INPUT_SLOT).isEmpty();
+        super.tickFuel();
     }
 
     @Override
@@ -91,24 +105,10 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         this.setRangeLevel(1);
     }
 
-    @Override
-    public int getUpperBound() {
-        int distanceToTowerTop = 2;
-        int extra = MathHelper.ceil(getRangeLevel() * 2);
-        return distanceToTowerTop + extra;
-    }
 
     @Override
-    public int getLowerBound() {
-        int distanceToGround = 2;
-        int extra = MathHelper.ceil(getRangeLevel());
-        return distanceToGround + extra;
-    }
-
-
-    @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<T1GeneratorTileEntity> consumer, TileEntity te) {
-        if (te instanceof T1GeneratorTileEntity)
-            consumer.accept((T1GeneratorTileEntity) te);
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.writeCustomNBT(nbt, descPacket);
+        nbt.putBoolean("hasFuel", hasFuel);
     }
 }

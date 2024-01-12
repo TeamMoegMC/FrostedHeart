@@ -36,6 +36,27 @@ import java.util.Collection;
 import java.util.List;
 
 public class RemoveLootModifier extends LootModifier {
+    public static class Serializer extends GlobalLootModifierSerializer<RemoveLootModifier> {
+        @Override
+        public RemoveLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+            JsonArray ja = object.get("removed").getAsJsonArray();
+            List<Ingredient> changes = new ArrayList<>();
+            for (JsonElement je : ja) {
+                changes.add(Ingredient.deserialize(je));
+            }
+            return new RemoveLootModifier(conditions, changes);
+        }
+
+        @Override
+        public JsonObject write(RemoveLootModifier instance) {
+            JsonObject object = new JsonObject();
+            JsonArray removed = new JsonArray();
+            instance.removed.stream().map(Ingredient::serialize).forEach(removed::add);
+            object.add("removed", removed);
+            return object;
+        }
+    }
+
     List<Ingredient> removed = new ArrayList<>();
 
     private RemoveLootModifier(ILootCondition[] conditionsIn, Collection<Ingredient> pairsin) {
@@ -58,26 +79,5 @@ public class RemoveLootModifier extends LootModifier {
             }
         }
         return false;
-    }
-
-    public static class Serializer extends GlobalLootModifierSerializer<RemoveLootModifier> {
-        @Override
-        public RemoveLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
-            JsonArray ja = object.get("removed").getAsJsonArray();
-            List<Ingredient> changes = new ArrayList<>();
-            for (JsonElement je : ja) {
-                changes.add(Ingredient.deserialize(je));
-            }
-            return new RemoveLootModifier(conditions, changes);
-        }
-
-        @Override
-        public JsonObject write(RemoveLootModifier instance) {
-            JsonObject object = new JsonObject();
-            JsonArray removed = new JsonArray();
-            instance.removed.stream().map(Ingredient::serialize).forEach(removed::add);
-            object.add("removed", removed);
-            return object;
-        }
     }
 }

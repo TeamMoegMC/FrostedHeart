@@ -36,10 +36,6 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class FHResearchDataSyncPacket {
     private final CompoundNBT data;
 
-    public FHResearchDataSyncPacket(Team team) {
-        this.data = FHResearchDataManager.INSTANCE.getData(team).serialize(true);
-    }
-
     public FHResearchDataSyncPacket(CompoundNBT data) {
         super();
         this.data = data;
@@ -47,6 +43,10 @@ public class FHResearchDataSyncPacket {
 
     public FHResearchDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
+    }
+
+    public FHResearchDataSyncPacket(Team team) {
+        this.data = FHResearchDataManager.INSTANCE.getData(team).serialize(true);
     }
 
     public void encode(PacketBuffer buffer) {

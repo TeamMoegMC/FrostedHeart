@@ -59,20 +59,22 @@ public abstract class MixinContraption implements ISpeedContraption {
     float speed;
     float sc = 0;
 
-    @Override
-    public float getSpeed() {
-        return speed;
-    }
+    @Shadow(remap = false)
+    protected Map<BlockPos, BlockInfo> blocks;
+
+    @Shadow(remap = false)
+    protected abstract void addBlock(BlockPos pos, Pair<BlockInfo, TileEntity> pair);
+
+    @Shadow(remap = false)
+    protected abstract void addGlue(SuperGlueEntity entity);
+
+    @Shadow(remap = false)
+    protected abstract Pair<BlockInfo, TileEntity> capture(World world, BlockPos pos);
 
     @Override
     public void contributeSpeed(float s) {
         if (sc < 20480)
             sc += Math.abs(s);
-    }
-
-    @Override
-    public void setSpeed(float spd) {
-        speed = spd;
     }
 
     /**
@@ -100,34 +102,6 @@ public abstract class MixinContraption implements ISpeedContraption {
             }
         return false;
     }
-
-    @Inject(at = @At("RETURN"), method = "writeNBT", remap = false, locals = LocalCapture.CAPTURE_FAILHARD)
-    public void fh$writeNBT(boolean spawnPacket, CallbackInfoReturnable<CompoundNBT> cbi, CompoundNBT cnbt) {
-        cnbt.putFloat("speedCollected", sc);
-    }
-
-    @Inject(at = @At("HEAD"), method = "readNBT", remap = false)
-    public void fh$readNBT(World world, CompoundNBT nbt, boolean spawnData, CallbackInfo cbi) {
-        sc = nbt.getFloat("speedCollected");
-    }
-
-    @Shadow(remap = false)
-    protected abstract boolean isAnchoringBlockAt(BlockPos pos);
-
-    @Shadow(remap = false)
-    protected abstract boolean movementAllowed(BlockState state, World world, BlockPos pos);
-
-    @Shadow(remap = false)
-    protected abstract void addGlue(SuperGlueEntity entity);
-
-    @Shadow(remap = false)
-    protected abstract Pair<BlockInfo, TileEntity> capture(World world, BlockPos pos);
-
-    @Shadow(remap = false)
-    protected abstract void addBlock(BlockPos pos, Pair<BlockInfo, TileEntity> pair);
-
-    @Shadow(remap = false)
-    protected Map<BlockPos, BlockInfo> blocks;
 
     /**
      * @author khjxiaogu
@@ -187,8 +161,34 @@ public abstract class MixinContraption implements ISpeedContraption {
             throw AssemblyException.structureTooLarge();
     }
 
+    @Inject(at = @At("HEAD"), method = "readNBT", remap = false)
+    public void fh$readNBT(World world, CompoundNBT nbt, boolean spawnData, CallbackInfo cbi) {
+        sc = nbt.getFloat("speedCollected");
+    }
+
+    @Inject(at = @At("RETURN"), method = "writeNBT", remap = false, locals = LocalCapture.CAPTURE_FAILHARD)
+    public void fh$writeNBT(boolean spawnPacket, CallbackInfoReturnable<CompoundNBT> cbi, CompoundNBT cnbt) {
+        cnbt.putFloat("speedCollected", sc);
+    }
+
+    @Override
+    public float getSpeed() {
+        return speed;
+    }
+
+    @Shadow(remap = false)
+    protected abstract boolean isAnchoringBlockAt(BlockPos pos);
+
     private boolean isSupportive(BlockState s1, BlockState s2, World w, BlockPos p1, BlockPos p2, Direction offset) {
 
         return VoxelShapes.compare(s1.getShape(w, p1).project(offset), s2.getShape(w, p2).project(offset.getOpposite()), IBooleanFunction.AND);
+    }
+
+    @Shadow(remap = false)
+    protected abstract boolean movementAllowed(BlockState state, World world, BlockPos pos);
+
+    @Override
+    public void setSpeed(float spd) {
+        speed = spd;
     }
 }

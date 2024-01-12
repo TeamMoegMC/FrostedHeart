@@ -34,12 +34,25 @@ public class ReferenceValue<T> {
         this.val = val;
     }
 
-    public T getVal() {
-        return val;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ReferenceValue other = (ReferenceValue) obj;
+        if (val == null) {
+            if (other.val != null)
+                return false;
+        } else if (!val.equals(other.val))
+            return false;
+        return true;
     }
 
-    public void setVal(T val) {
-        this.val = val;
+    public T getVal() {
+        return val;
     }
 
     @Override
@@ -64,21 +77,8 @@ public class ReferenceValue<T> {
             val = s.get();
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ReferenceValue other = (ReferenceValue) obj;
-        if (val == null) {
-            if (other.val != null)
-                return false;
-        } else if (!val.equals(other.val))
-            return false;
-        return true;
+    public void setVal(T val) {
+        this.val = val;
     }
 
 }

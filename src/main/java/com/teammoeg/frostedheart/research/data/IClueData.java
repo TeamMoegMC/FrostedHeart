@@ -33,8 +33,8 @@ public abstract class IClueData {
         this.clue = clue;
     }
 
-    public abstract CompoundNBT serialize();
-
     public abstract void deserialize(CompoundNBT nbt);
+
+    public abstract CompoundNBT serialize();
 
 }

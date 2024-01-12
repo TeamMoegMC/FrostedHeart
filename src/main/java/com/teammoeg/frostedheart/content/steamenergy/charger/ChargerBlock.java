@@ -60,25 +60,32 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     }
 
 
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
-        return FHTileTypes.CHARGER.get().create();
-    }
-
-    @Override
-    protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
-        builder.add(BlockStateProperties.FACING);
-        builder.add(LIT);
-    }
-
     @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.get(LIT)) {
             ClientUtils.spawnSteamParticles(worldIn, pos);
         }
+    }
+
+    @Override
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
+        Direction bd = state.get(BlockStateProperties.FACING);
+        return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
+    }
+
+    @Nullable
+    @Override
+    public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
+        return FHTileTypes.CHARGER.get().create();
+    }
+
+
+    @Override
+    protected void fillStateContainer(Builder<Block, BlockState> builder) {
+        super.fillStateContainer(builder);
+        builder.add(BlockStateProperties.FACING);
+        builder.add(LIT);
     }
 
 
@@ -88,6 +95,12 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
             return this.getDefaultState().with(BlockStateProperties.FACING, context.getNearestLookingDirection());
         }
         return this.getDefaultState().with(BlockStateProperties.FACING, context.getFace().getOpposite());
+    }
+
+
+    @Override
+    public boolean hasTileEntity(BlockState state) {
+        return true;
     }
 
 
@@ -103,19 +116,6 @@ public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
             return ((ChargerTileEntity) te).onClick(player, item);
         }
         return superResult;
-    }
-
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-
-    @Override
-    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-        Direction bd = state.get(BlockStateProperties.FACING);
-        return dir == bd.getOpposite() || (bd != Direction.DOWN && dir == Direction.UP) || (bd == Direction.UP && dir == Direction.SOUTH) || (bd == Direction.DOWN && dir == Direction.NORTH);
     }
 
 

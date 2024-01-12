@@ -51,64 +51,6 @@ import static com.teammoeg.frostedheart.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonRegistryEvents {
-    @SubscribeEvent
-    public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
-        FHBlocks.halite_ore = new FHOreBlock("halite_ore", RankineBlocks.DEF_ORE.harvestLevel(2), FHBlockItem::new);
-        for (Block block : registeredFHBlocks) {
-            try {
-                event.getRegistry().register(block);
-            } catch (Throwable e) {
-                FHLogger.error("Failed to register a block. ({})", block);
-                throw e;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
-        IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();
-        registry.register(new RemoveLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "remove_loot")));
-        registry.register(new ReplaceLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "replace_loot")));
-        registry.register(new DechantLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "dechant")));
-        registry.register(new ApplyDamageLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "damage")));
-        registry.register(new AddLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "add_loot")));
-        TemperatureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "temperature"), new LootConditionType(new TemperatureLootCondition.Serializer()));
-        TagLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "block_tag"), new LootConditionType(new TagLootCondition.Serializer()));
-        TreasureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "treasure"), new LootConditionType(new TreasureLootCondition.Serializer()));
-        ModLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootConditionType(new ModLootCondition.Serializer()));
-        BlizzardDamageCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "blizzard_damage"), new LootConditionType(new BlizzardDamageCondition.Serializer()));
-    }
-
-    @SubscribeEvent
-    public static void registerItems(RegistryEvent.Register<Item> event) {
-        for (Item item : registeredFHItems) {
-            try {
-                event.getRegistry().register(item);
-            } catch (Throwable e) {
-                FHLogger.error("Failed to register an item. ({}, {})", item, item.getRegistryName());
-                throw e;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void registerFluids(RegistryEvent.Register<Fluid> event) {
-        for (Fluid fluid : registeredFHFluids) {
-            try {
-                event.getRegistry().register(fluid);
-            } catch (Throwable e) {
-                FHLogger.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
-                throw e;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void registerEffects(final RegistryEvent.Register<Effect> event) {
-        FHEffects.registerAll(event.getRegistry());
-    }
-
     /**
      * @param event
      */
@@ -131,5 +73,63 @@ public class CommonRegistryEvents {
         event.getRegistry().registerAll(FHStructures.OBSERVATORY.setRegistryName(FHMain.MODID, "observatory"));
 
         FHStructureFeatures.registerStructureFeatures();
+    }
+
+    @SubscribeEvent
+    public static void registerBlocks(RegistryEvent.Register<Block> event) {
+        FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
+        FHBlocks.halite_ore = new FHOreBlock("halite_ore", RankineBlocks.DEF_ORE.harvestLevel(2), FHBlockItem::new);
+        for (Block block : registeredFHBlocks) {
+            try {
+                event.getRegistry().register(block);
+            } catch (Throwable e) {
+                FHLogger.error("Failed to register a block. ({})", block);
+                throw e;
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void registerEffects(final RegistryEvent.Register<Effect> event) {
+        FHEffects.registerAll(event.getRegistry());
+    }
+
+    @SubscribeEvent
+    public static void registerFluids(RegistryEvent.Register<Fluid> event) {
+        for (Fluid fluid : registeredFHFluids) {
+            try {
+                event.getRegistry().register(fluid);
+            } catch (Throwable e) {
+                FHLogger.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
+                throw e;
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void registerItems(RegistryEvent.Register<Item> event) {
+        for (Item item : registeredFHItems) {
+            try {
+                event.getRegistry().register(item);
+            } catch (Throwable e) {
+                FHLogger.error("Failed to register an item. ({}, {})", item, item.getRegistryName());
+                throw e;
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
+        IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();
+        registry.register(new RemoveLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "remove_loot")));
+        registry.register(new ReplaceLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "replace_loot")));
+        registry.register(new DechantLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "dechant")));
+        registry.register(new ApplyDamageLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "damage")));
+        registry.register(new AddLootModifier.Serializer().setRegistryName(new ResourceLocation(FHMain.MODID, "add_loot")));
+        TemperatureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "temperature"), new LootConditionType(new TemperatureLootCondition.Serializer()));
+        TagLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "block_tag"), new LootConditionType(new TagLootCondition.Serializer()));
+        TreasureLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "treasure"), new LootConditionType(new TreasureLootCondition.Serializer()));
+        ModLootCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "modids"), new LootConditionType(new ModLootCondition.Serializer()));
+        BlizzardDamageCondition.TYPE = Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(FHMain.MODID, "blizzard_damage"), new LootConditionType(new BlizzardDamageCondition.Serializer()));
     }
 }

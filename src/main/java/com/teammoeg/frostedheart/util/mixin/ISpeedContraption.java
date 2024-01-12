@@ -20,9 +20,9 @@
 package com.teammoeg.frostedheart.util.mixin;
 
 public interface ISpeedContraption {
+    void contributeSpeed(float s);
+
     float getSpeed();
 
     void setSpeed(float spd);
-
-    void contributeSpeed(float s);
 }

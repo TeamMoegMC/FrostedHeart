@@ -29,8 +29,20 @@ public class StringParseReader {
         this.str = str;
     }
 
+    String fromStart() {
+        return str.substring(srecord, idx);
+    }
+
     boolean hasNext() {
         return idx < str.length() - 1;
+    }
+
+    char last() {
+        return str.charAt(idx - 1);
+    }
+
+    void loadIndex() {
+        idx = srecord;
     }
 
     char next() {
@@ -41,26 +53,14 @@ public class StringParseReader {
         return str.charAt(idx + 1);
     }
 
-    void saveIndex() {
-        srecord = idx;
-    }
-
-    void loadIndex() {
-        idx = srecord;
-    }
-
-    String fromStart() {
-        return str.substring(srecord, idx);
-    }
-
     char peekLast() {
         if (idx < 0)
             return str.charAt(0);
         return str.charAt(idx - 1);
     }
 
-    char last() {
-        return str.charAt(idx - 1);
+    void saveIndex() {
+        srecord = idx;
     }
 
     void skipWhitespace() {

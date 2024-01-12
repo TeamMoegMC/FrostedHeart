@@ -51,14 +51,14 @@ public class LevelCondition implements PolicyCondition {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
-        Conditions.writeId(this, buffer);
-        buffer.writeVarInt(level);
+    public boolean test(FHVillagerData ve) {
+        return ve.getTradeLevel() >= level;
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.getTradeLevel() >= level;
+    public void write(PacketBuffer buffer) {
+        Conditions.writeId(this, buffer);
+        buffer.writeVarInt(level);
     }
 
 }

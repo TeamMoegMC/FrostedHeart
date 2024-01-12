@@ -34,34 +34,22 @@ import net.minecraftforge.fml.RegistryObject;
 import java.util.List;
 
 public class ResearchPaperRecipe extends IESerializableRecipe {
-    public static IRecipeType<ResearchPaperRecipe> TYPE;
-    public static RegistryObject<IERecipeSerializer<ResearchPaperRecipe>> SERIALIZER;
-    public Ingredient paper;
-    public int maxlevel;
-    public static List<ResearchPaperRecipe> recipes = ImmutableList.of();
-
-    public ResearchPaperRecipe(ResourceLocation id, Ingredient paper, int maxlevel) {
-        super(ItemStack.EMPTY, TYPE, id);
-        this.paper = paper;
-        this.maxlevel = maxlevel;
-    }
-
-    @Override
-    public ItemStack getRecipeOutput() {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    protected IERecipeSerializer getIESerializer() {
-        return SERIALIZER.get();
-    }
-
     public static class Serializer extends IERecipeSerializer<ResearchPaperRecipe> {
 
 
         @Override
+        public ItemStack getIcon() {
+            return new ItemStack(Items.PAPER);
+        }
+
+        @Override
         public ResearchPaperRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
             return new ResearchPaperRecipe(recipeId, Ingredient.read(buffer), buffer.readVarInt());
+        }
+
+        @Override
+        public ResearchPaperRecipe readFromJson(ResourceLocation arg0, JsonObject arg1) {
+            return new ResearchPaperRecipe(arg0, Ingredient.deserialize(arg1.get("item")), arg1.get("level").getAsInt());
         }
 
         @Override
@@ -70,15 +58,27 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
             buffer.writeVarInt(recipe.maxlevel);
         }
 
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(Items.PAPER);
-        }
+    }
+    public static IRecipeType<ResearchPaperRecipe> TYPE;
+    public static RegistryObject<IERecipeSerializer<ResearchPaperRecipe>> SERIALIZER;
+    public static List<ResearchPaperRecipe> recipes = ImmutableList.of();
+    public Ingredient paper;
 
-        @Override
-        public ResearchPaperRecipe readFromJson(ResourceLocation arg0, JsonObject arg1) {
-            return new ResearchPaperRecipe(arg0, Ingredient.deserialize(arg1.get("item")), arg1.get("level").getAsInt());
-        }
+    public int maxlevel;
 
+    public ResearchPaperRecipe(ResourceLocation id, Ingredient paper, int maxlevel) {
+        super(ItemStack.EMPTY, TYPE, id);
+        this.paper = paper;
+        this.maxlevel = maxlevel;
+    }
+
+    @Override
+    protected IERecipeSerializer getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getRecipeOutput() {
+        return ItemStack.EMPTY;
     }
 }

@@ -58,21 +58,6 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends SmokingRecipe> getRecipeClass() {
-        return SmokingRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger_cooking").getString());
-    }
-
-    @Override
     public void draw(SmokingRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
         AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
@@ -90,9 +75,24 @@ public class ChargerCookingCategory implements IRecipeCategory<SmokingRecipe> {
         return BACKGROUND;
     }
 
+
     @Override
     public IDrawable getIcon() {
         return ICON;
+    }
+
+    @Override
+    public Class<? extends SmokingRecipe> getRecipeClass() {
+        return SmokingRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger_cooking").getString());
+    }
+
+    @Override
+    public ResourceLocation getUid() {
+        return UID;
     }
 
     @Override

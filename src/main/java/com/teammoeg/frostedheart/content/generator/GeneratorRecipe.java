@@ -39,32 +39,46 @@ import java.util.List;
 import java.util.Map;
 
 public class GeneratorRecipe extends IESerializableRecipe {
+    public static class Serializer extends IERecipeSerializer<GeneratorRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHMultiblocks.generator);
+        }
+
+        @Nullable
+        @Override
+        public GeneratorRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            ItemStack output = buffer.readItemStack();
+            IngredientWithSize input = IngredientWithSize.read(buffer);
+            int time = buffer.readInt();
+            return new GeneratorRecipe(recipeId, output, input, time);
+        }
+
+        @Override
+        public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            ItemStack output = readOutput(json.get("result"));
+            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
+            int time = JSONUtils.getInt(json, "time");
+            return new GeneratorRecipe(recipeId, output, input, time);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, GeneratorRecipe recipe) {
+            buffer.writeItemStack(recipe.output);
+            recipe.input.write(buffer);
+            buffer.writeInt(recipe.time);
+        }
+    }
     public static IRecipeType<GeneratorRecipe> TYPE;
+
     public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
-
-    public final IngredientWithSize input;
-    public final ItemStack output;
-    public final int time;
-
-    public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
-        super(output, TYPE, id);
-        this.output = output;
-        this.input = input;
-        this.time = time;
-    }
-
-    @Override
-    protected IERecipeSerializer getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
-    public ItemStack getRecipeOutput() {
-        return this.output;
-    }
-
     // Initialized by reload listener
     public static Map<ResourceLocation, GeneratorRecipe> recipeList = Collections.emptyMap();
+    public final IngredientWithSize input;
+
+    public final ItemStack output;
+
+    public final int time;
 
     public static GeneratorRecipe findRecipe(ItemStack input) {
         for (GeneratorRecipe recipe : recipeList.values())
@@ -89,34 +103,20 @@ public class GeneratorRecipe extends IESerializableRecipe {
         return all;
     }
 
-    public static class Serializer extends IERecipeSerializer<GeneratorRecipe> {
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(FHMultiblocks.generator);
-        }
+    public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
+        super(output, TYPE, id);
+        this.output = output;
+        this.input = input;
+        this.time = time;
+    }
 
-        @Override
-        public GeneratorRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            ItemStack output = readOutput(json.get("result"));
-            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
-            int time = JSONUtils.getInt(json, "time");
-            return new GeneratorRecipe(recipeId, output, input, time);
-        }
+    @Override
+    protected IERecipeSerializer getIESerializer() {
+        return SERIALIZER.get();
+    }
 
-        @Nullable
-        @Override
-        public GeneratorRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            ItemStack output = buffer.readItemStack();
-            IngredientWithSize input = IngredientWithSize.read(buffer);
-            int time = buffer.readInt();
-            return new GeneratorRecipe(recipeId, output, input, time);
-        }
-
-        @Override
-        public void write(PacketBuffer buffer, GeneratorRecipe recipe) {
-            buffer.writeItemStack(recipe.output);
-            recipe.input.write(buffer);
-            buffer.writeInt(recipe.time);
-        }
+    @Override
+    public ItemStack getRecipeOutput() {
+        return this.output;
     }
 }

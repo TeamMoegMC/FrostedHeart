@@ -53,6 +53,34 @@ public class TeamTownData {
         this.team = team;
     }
 
+    public void deserialize(CompoundNBT data, boolean updatePacket) {
+        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
+            CompoundNBT nbt = (CompoundNBT) i;
+            TownWorkerData t = new TownWorkerData(nbt);
+            blocks.put(t.getPos(), t);
+        }
+        CompoundNBT rec = data.getCompound("resource");
+        for (String i : rec.keySet()) {
+            resources.put(TownResourceType.from(i), rec.getInt(i));
+        }
+    }
+
+    public CompoundNBT getTownBlockData(BlockPos pos) {
+        TownWorkerData twd = blocks.get(pos);
+        if (twd == null)
+            return null;
+        return twd.getWorkData();
+    }
+
+    public void registerTownBlock(BlockPos pos, ITownBlockTE tile) {
+        TownWorkerData data = blocks.computeIfAbsent(pos, TownWorkerData::new);
+        data.fromBlock(tile);
+    }
+
+    public void removeTownBlock(BlockPos pos) {
+        blocks.remove(pos);
+    }
+
     public CompoundNBT serialize(boolean updatePacket) {
         CompoundNBT nbt = new CompoundNBT();
         if (!updatePacket) {
@@ -76,34 +104,6 @@ public class TeamTownData {
         }
         nbt.put("backupResource", list2);
         return nbt;
-    }
-
-    public void deserialize(CompoundNBT data, boolean updatePacket) {
-        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
-            CompoundNBT nbt = (CompoundNBT) i;
-            TownWorkerData t = new TownWorkerData(nbt);
-            blocks.put(t.getPos(), t);
-        }
-        CompoundNBT rec = data.getCompound("resource");
-        for (String i : rec.keySet()) {
-            resources.put(TownResourceType.from(i), rec.getInt(i));
-        }
-    }
-
-    public void registerTownBlock(BlockPos pos, ITownBlockTE tile) {
-        TownWorkerData data = blocks.computeIfAbsent(pos, TownWorkerData::new);
-        data.fromBlock(tile);
-    }
-
-    public void removeTownBlock(BlockPos pos) {
-        blocks.remove(pos);
-    }
-
-    public CompoundNBT getTownBlockData(BlockPos pos) {
-        TownWorkerData twd = blocks.get(pos);
-        if (twd == null)
-            return null;
-        return twd.getWorkData();
     }
 
     /**

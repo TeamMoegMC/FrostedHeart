@@ -159,16 +159,16 @@ public class GenerateInfo {
         return this;
     }
 
+    public Collection<CardCombo> getExtraCombo(Random rnd) {
+        return Collections.EMPTY_LIST;
+
+    }
+
     public void setUnplacable(Card[][] cards, Random rnd) {
         for (int i = 0; i < 9; i++)
             for (int j = 0; j < 9; j++)
                 cards[i][j].unplacable = false;
         if (generators != null)
             generators[rnd.nextInt(generators.length)].accept(cards, rnd);
-    }
-
-    public Collection<CardCombo> getExtraCombo(Random rnd) {
-        return Collections.EMPTY_LIST;
-
     }
 }

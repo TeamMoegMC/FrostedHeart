@@ -76,34 +76,11 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends CampfireDefrostRecipe> getRecipeClass() {
-        return CampfireDefrostRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_campfire").getString());
-    }
-
-    @Override
     public void draw(CampfireDefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         animatedFlame.draw(transform, 1, 20);
         IDrawableAnimated arrow = getArrow(recipe);
         arrow.draw(transform, 24, 8);
         drawCookTime(recipe, transform, 35);
-    }
-
-    protected IDrawableAnimated getArrow(CampfireDefrostRecipe recipe) {
-        int cookTime = recipe.getCookTime();
-        if (cookTime <= 0) {
-            cookTime = 100;
-        }
-        return this.cachedArrows.getUnchecked(cookTime);
     }
 
     protected void drawCookTime(CampfireDefrostRecipe recipe, MatrixStack matrixStack, int y) {
@@ -118,6 +95,15 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
         }
     }
 
+
+    protected IDrawableAnimated getArrow(CampfireDefrostRecipe recipe) {
+        int cookTime = recipe.getCookTime();
+        if (cookTime <= 0) {
+            cookTime = 100;
+        }
+        return this.cachedArrows.getUnchecked(cookTime);
+    }
+
     @Override
     public IDrawable getBackground() {
         return BACKGROUND;
@@ -126,6 +112,20 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
     @Override
     public IDrawable getIcon() {
         return ICON;
+    }
+
+    @Override
+    public Class<? extends CampfireDefrostRecipe> getRecipeClass() {
+        return CampfireDefrostRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_campfire").getString());
+    }
+
+    @Override
+    public ResourceLocation getUid() {
+        return UID;
     }
 
     @Override

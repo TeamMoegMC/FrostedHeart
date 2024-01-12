@@ -32,11 +32,6 @@ class VarNode implements Node {
     }
 
     @Override
-    public String toString() {
-        return token;
-    }
-
-    @Override
     public boolean isPrimary() {
         return false;
     }
@@ -44,5 +39,10 @@ class VarNode implements Node {
     @Override
     public Node simplify() {
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return token;
     }
 }

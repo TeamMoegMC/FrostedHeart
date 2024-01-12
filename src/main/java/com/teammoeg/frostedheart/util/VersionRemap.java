@@ -25,9 +25,6 @@ import java.util.HashMap;
 
 public class VersionRemap {
 
-    public VersionRemap() {
-    }
-
     public static HashMap<ResourceLocation, ResourceLocation> remaps = new HashMap<>();
 
     static {
@@ -180,5 +177,8 @@ public class VersionRemap {
         remaps.put(new ResourceLocation("rankine:skarn_bricks_slab"), new ResourceLocation("rankine:skarn_slab"));
         remaps.put(new ResourceLocation("modularrouters:item_router"), new ResourceLocation("immersiveengineering:storage_aluminum"));
         remaps.put(new ResourceLocation("charcoal_pit:chocolate"), new ResourceLocation("frostedheart:chocolate"));
+    }
+
+    public VersionRemap() {
     }
 }

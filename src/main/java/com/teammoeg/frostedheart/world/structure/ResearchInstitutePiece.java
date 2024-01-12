@@ -56,10 +56,8 @@ public class ResearchInstitutePiece extends TemplateStructurePiece {
         this.loadTemplate(templateManager);
     }
 
-    protected void readAdditional(CompoundNBT tagCompound) {
-        super.readAdditional(tagCompound);
-        tagCompound.putString("Template", this.resource.toString());
-        tagCompound.putString("Rot", this.rotation.name());
+    @Override
+    protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
     }
 
     private void loadTemplate(TemplateManager manager) {
@@ -68,7 +66,9 @@ public class ResearchInstitutePiece extends TemplateStructurePiece {
         this.setup(template, this.templatePosition, placementsettings);
     }
 
-    @Override
-    protected void handleDataMarker(String function, BlockPos pos, IServerWorld worldIn, Random rand, MutableBoundingBox sbb) {
+    protected void readAdditional(CompoundNBT tagCompound) {
+        super.readAdditional(tagCompound);
+        tagCompound.putString("Template", this.resource.toString());
+        tagCompound.putString("Rot", this.rotation.name());
     }
 }

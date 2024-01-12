@@ -25,21 +25,6 @@ package com.teammoeg.frostedheart.research;
 public abstract class FHRegisteredItem {
     private int id = 0;
 
-    public int getRId() {
-        return id;
-    }
-
-    protected void setRId(int id) {
-        this.id = id;
-    }
-
-    public abstract String getLId();
-
-    @Override
-    public int hashCode() {
-        return id;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -52,5 +37,20 @@ public abstract class FHRegisteredItem {
         if (id != other.id)
             return false;
         return true;
+    }
+
+    public abstract String getLId();
+
+    public int getRId() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    protected void setRId(int id) {
+        this.id = id;
     }
 }

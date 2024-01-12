@@ -67,21 +67,6 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends GeneratorSteamRecipe> getRecipeClass() {
-        return GeneratorSteamRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_steam").getString());
-    }
-
-    @Override
     public void draw(GeneratorSteamRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 80, 28);
         SWITCH.draw(transform, 52, 31);
@@ -92,9 +77,24 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         BAR.draw(transform, 142, 9, offset3, 0, 0, 0);
     }
 
-    public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
-        return mouseX >= x && mouseY >= y
-                && mouseX < x + w && mouseY < y + h;
+    @Override
+    public IDrawable getBackground() {
+        return BACKGROUND;
+    }
+
+
+    @Override
+    public IDrawable getIcon() {
+        return ICON;
+    }
+
+    @Override
+    public Class<? extends GeneratorSteamRecipe> getRecipeClass() {
+        return GeneratorSteamRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_steam").getString());
     }
 
     @Override
@@ -113,13 +113,13 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
     }
 
     @Override
-    public IDrawable getBackground() {
-        return BACKGROUND;
+    public ResourceLocation getUid() {
+        return UID;
     }
 
-    @Override
-    public IDrawable getIcon() {
-        return ICON;
+    public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
+        return mouseX >= x && mouseY >= y
+                && mouseX < x + w && mouseY < y + h;
     }
 
     @Override

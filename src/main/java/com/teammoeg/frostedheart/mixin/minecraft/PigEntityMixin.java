@@ -37,25 +37,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PigEntity.class)
 public abstract class PigEntityMixin extends AnimalEntity implements IFeedStore {
+    byte feeded = 0;
+
+
     protected PigEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
         super(type, worldIn);
     }
 
 
-    byte feeded = 0;
-
-
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        compound.putByte("feed_stored", feeded);
-
+    @Override
+    public boolean consumeFeed() {
+        if (feeded > 0) {
+            feeded--;
+            return true;
+        }
+        return false;
     }
-
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        feeded = compound.getByte("feed_stored");
-    }
-
 
     @Inject(at = @At("HEAD"), method = "getEntityInteractionResult", cancellable = true)
     public void fh$getEntityInteractionResult(PlayerEntity playerIn, Hand hand, CallbackInfoReturnable<ActionResultType> cbi) {
@@ -71,12 +68,15 @@ public abstract class PigEntityMixin extends AnimalEntity implements IFeedStore 
         }
     }
 
-    @Override
-    public boolean consumeFeed() {
-        if (feeded > 0) {
-            feeded--;
-            return true;
-        }
-        return false;
+
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        feeded = compound.getByte("feed_stored");
+    }
+
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        compound.putByte("feed_stored", feeded);
+
     }
 }

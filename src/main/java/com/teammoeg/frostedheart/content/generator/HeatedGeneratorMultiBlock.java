@@ -25,13 +25,13 @@ import net.minecraftforge.fml.RegistryObject;
 
 public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends NormalGeneratorMultiBlock<T> implements ISteamEnergyBlock {
 
-    public HeatedGeneratorMultiBlock(String name, RegistryObject type) {
-        super(name, type);
+    public HeatedGeneratorMultiBlock(String name, Properties props, RegistryObject type) {
+        super(name, props, type);
     }
 
 
-    public HeatedGeneratorMultiBlock(String name, Properties props, RegistryObject type) {
-        super(name, props, type);
+    public HeatedGeneratorMultiBlock(String name, RegistryObject type) {
+        super(name, type);
     }
 
 //    @OnlyIn(Dist.CLIENT)

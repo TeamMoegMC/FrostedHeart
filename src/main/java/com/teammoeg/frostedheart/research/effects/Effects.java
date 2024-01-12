@@ -40,17 +40,6 @@ public class Effects {
         registry.register(EffectExperience.class, "experience", EffectExperience::new, EffectExperience::new);
     }
 
-    public static void registerEffectType(Class<? extends Effect> cls, String type, Function<JsonObject, Effect> json, Function<PacketBuffer, Effect> packet) {
-        registry.register(cls, type, json, packet);
-    }
-
-    private Effects() {
-    }
-
-    public static void writeId(Effect e, PacketBuffer pb) {
-        registry.writeId(pb, e);
-    }
-
     public static Effect deserialize(JsonObject jo) {
         return registry.deserialize(jo);
     }
@@ -59,7 +48,18 @@ public class Effects {
         return registry.read(data);
     }
 
+    public static void registerEffectType(Class<? extends Effect> cls, String type, Function<JsonObject, Effect> json, Function<PacketBuffer, Effect> packet) {
+        registry.register(cls, type, json, packet);
+    }
+
+    public static void writeId(Effect e, PacketBuffer pb) {
+        registry.writeId(pb, e);
+    }
+
     public static void writeType(Effect e, JsonObject jo) {
         registry.writeType(jo, e);
+    }
+
+    private Effects() {
     }
 }

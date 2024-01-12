@@ -34,16 +34,12 @@ public class Card {
         unplacable = false;
     }
 
-    public void setType(CardType ct, int card) {
-        this.ct = ct;
-        this.card = card;
+    public int getCard() {
+        return card;
     }
 
-    public boolean match(Card other) {
-        if (ct == other.ct) {
-            return ct.match(card, other.card);
-        }
-        return false;
+    public CardType getCt() {
+        return ct;
     }
 
     public boolean isEmpty() {
@@ -54,12 +50,31 @@ public class Card {
         return !(unplacable || show);
     }
 
-    public void show() {
-        show = true;
+    public boolean isShow() {
+        return show;
+    }
+
+    public boolean isUnplacable() {
+        return unplacable;
+    }
+
+    public boolean match(Card other) {
+        if (ct == other.ct) {
+            return ct.match(card, other.card);
+        }
+        return false;
     }
 
     public int pack() {
         return card + (ct.ordinal() << 16);
+    }
+
+    public void read(int state) {
+        show = (state & 0x01) > 0;
+        //sel=(state&0x02)>0;
+        unplacable = (state & 0x04) > 0;
+        ct = CardType.values()[(state >> 4) & 0xf];
+        card = (state >> 8) & 0xf;
     }
 
     public int serialize() {
@@ -75,28 +90,13 @@ public class Card {
         return state;
     }
 
-    public void read(int state) {
-        show = (state & 0x01) > 0;
-        //sel=(state&0x02)>0;
-        unplacable = (state & 0x04) > 0;
-        ct = CardType.values()[(state >> 4) & 0xf];
-        card = (state >> 8) & 0xf;
+    public void setType(CardType ct, int card) {
+        this.ct = ct;
+        this.card = card;
     }
 
-    public CardType getCt() {
-        return ct;
-    }
-
-    public int getCard() {
-        return card;
-    }
-
-    public boolean isShow() {
-        return show;
-    }
-
-    public boolean isUnplacable() {
-        return unplacable;
+    public void show() {
+        show = true;
     }
 
     public String toString() {

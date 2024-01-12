@@ -34,17 +34,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin({LinearActuatorTileEntity.class})
 public abstract class MixinPulleyTileEntity extends KineticTileEntity {
 
-    public MixinPulleyTileEntity(TileEntityType<?> typeIn) {
-        super(typeIn);
-    }
-
     @Shadow(remap = false)
     public AbstractContraptionEntity movedContraption;
 
-    @Shadow(remap = false)
-    public abstract Vector3d getMotionVector();
-
     private int fh$cooldown;
+
+    public MixinPulleyTileEntity(TileEntityType<?> typeIn) {
+        super(typeIn);
+    }
 
     @Override
     public float calculateStressApplied() {
@@ -70,4 +67,7 @@ public abstract class MixinPulleyTileEntity extends KineticTileEntity {
         if ((!world.isRemote) && super.hasNetwork())
             getOrCreateNetwork().updateStressFor(this, calculateStressApplied());
     }
+
+    @Shadow(remap = false)
+    public abstract Vector3d getMotionVector();
 }

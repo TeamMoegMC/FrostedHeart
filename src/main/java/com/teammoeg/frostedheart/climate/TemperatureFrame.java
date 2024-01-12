@@ -34,12 +34,12 @@ public class TemperatureFrame {
         RETREATING,
         CLOUDY;
 
-        public boolean isIncresingEvent() {
-            return this == INCRESING;
-        }
-
         public boolean isDecresingEvent() {
             return this == DECREASING;
+        }
+
+        public boolean isIncresingEvent() {
+            return this == INCRESING;
         }
 
         public boolean isWeatherEvent() {
@@ -51,31 +51,37 @@ public class TemperatureFrame {
     public final short dhours;
     public final byte toState;
 
-    public TemperatureFrame(TemperatureFrame.FrameType type, int dhours, byte toState) {
-        super();
-        this.type = type;
-        this.dhours = (short) dhours;
-        this.toState = toState;
+    public static TemperatureFrame blizzard(int hour, int to) {
+        return new TemperatureFrame(FrameType.STORMING, hour, (byte) to);
     }
 
-    public static TemperatureFrame unpack(int val) {
-        if (val == 0) return null;
-        return new TemperatureFrame(val);
+    public static TemperatureFrame calm(int hour, int to) {
+        return new TemperatureFrame(FrameType.NOP, hour, (byte) to);
     }
 
-    private TemperatureFrame(int packed) {
-        super();
-        this.type = FrameType.values()[packed & 0x7F];
-        this.dhours = (short) ((packed >> 16) & 0xFFFF);
-        this.toState = (byte) ((packed >> 8) & 0xFF);
+    public static TemperatureFrame cloud(int hour, int to) {
+        return new TemperatureFrame(FrameType.CLOUDY, hour, (byte) to);
+    }
+
+    public static TemperatureFrame decrease(int hour, int to) {
+        return new TemperatureFrame(FrameType.DECREASING, hour, (byte) to);
     }
 
     public static TemperatureFrame increase(int hour, int to) {
         return new TemperatureFrame(FrameType.INCRESING, hour, (byte) to);
     }
 
-    public static TemperatureFrame decrease(int hour, int to) {
-        return new TemperatureFrame(FrameType.DECREASING, hour, (byte) to);
+    public static TemperatureFrame snow(int hour, int to) {
+        return new TemperatureFrame(FrameType.SNOWING, hour, (byte) to);
+    }
+
+    public static TemperatureFrame sun(int hour, int to) {
+        return new TemperatureFrame(FrameType.RETREATING, hour, (byte) to);
+    }
+
+    public static TemperatureFrame unpack(int val) {
+        if (val == 0) return null;
+        return new TemperatureFrame(val);
     }
 
     public static TemperatureFrame weather(int hour, ClimateType type, int to) {
@@ -95,24 +101,18 @@ public class TemperatureFrame {
 
     }
 
-    public static TemperatureFrame blizzard(int hour, int to) {
-        return new TemperatureFrame(FrameType.STORMING, hour, (byte) to);
+    private TemperatureFrame(int packed) {
+        super();
+        this.type = FrameType.values()[packed & 0x7F];
+        this.dhours = (short) ((packed >> 16) & 0xFFFF);
+        this.toState = (byte) ((packed >> 8) & 0xFF);
     }
 
-    public static TemperatureFrame snow(int hour, int to) {
-        return new TemperatureFrame(FrameType.SNOWING, hour, (byte) to);
-    }
-
-    public static TemperatureFrame cloud(int hour, int to) {
-        return new TemperatureFrame(FrameType.CLOUDY, hour, (byte) to);
-    }
-
-    public static TemperatureFrame sun(int hour, int to) {
-        return new TemperatureFrame(FrameType.RETREATING, hour, (byte) to);
-    }
-
-    public static TemperatureFrame calm(int hour, int to) {
-        return new TemperatureFrame(FrameType.NOP, hour, (byte) to);
+    public TemperatureFrame(TemperatureFrame.FrameType type, int dhours, byte toState) {
+        super();
+        this.type = type;
+        this.dhours = (short) dhours;
+        this.toState = toState;
     }
 
     public int pack() {

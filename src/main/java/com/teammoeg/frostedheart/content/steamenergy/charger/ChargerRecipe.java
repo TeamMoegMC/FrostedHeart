@@ -39,12 +39,53 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
 
 public class ChargerRecipe extends IESerializableRecipe {
-    public static IRecipeType<ChargerRecipe> TYPE;
-    public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
+    public static class Serializer extends IERecipeSerializer<ChargerRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHBlocks.charger);
+        }
 
+        @Nullable
+        @Override
+        public ChargerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            ItemStack output = buffer.readItemStack();
+            IngredientWithSize input = IngredientWithSize.read(buffer);
+            float cost = buffer.readFloat();
+            return new ChargerRecipe(recipeId, output, input, cost);
+        }
+
+        @Override
+        public ChargerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            ItemStack output = readOutput(json.get("result"));
+            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
+            float cost = JSONUtils.getInt(json, "cost");
+            return new ChargerRecipe(recipeId, output, input, cost);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, ChargerRecipe recipe) {
+            buffer.writeItemStack(recipe.output);
+            recipe.input.write(buffer);
+            buffer.writeFloat(recipe.cost);
+        }
+    }
+    public static IRecipeType<ChargerRecipe> TYPE;
+
+    public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
+    // Initialized by reload listener
+    public static Map<ResourceLocation, ChargerRecipe> recipeList = Collections.emptyMap();
     public final IngredientWithSize input;
+
     public final ItemStack output;
+
     public final float cost;
+
+    public static ChargerRecipe findRecipe(ItemStack input) {
+        for (ChargerRecipe recipe : recipeList.values())
+            if (ItemUtils.stackMatchesObject(input, recipe.input))
+                return recipe;
+        return null;
+    }
 
     public ChargerRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, float cost2) {
         super(output, TYPE, id);
@@ -61,47 +102,6 @@ public class ChargerRecipe extends IESerializableRecipe {
     @Override
     public ItemStack getRecipeOutput() {
         return this.output;
-    }
-
-    // Initialized by reload listener
-    public static Map<ResourceLocation, ChargerRecipe> recipeList = Collections.emptyMap();
-
-    public static ChargerRecipe findRecipe(ItemStack input) {
-        for (ChargerRecipe recipe : recipeList.values())
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
-                return recipe;
-        return null;
-    }
-
-    public static class Serializer extends IERecipeSerializer<ChargerRecipe> {
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.charger);
-        }
-
-        @Override
-        public ChargerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            ItemStack output = readOutput(json.get("result"));
-            IngredientWithSize input = IngredientWithSize.deserialize(json.get("input"));
-            float cost = JSONUtils.getInt(json, "cost");
-            return new ChargerRecipe(recipeId, output, input, cost);
-        }
-
-        @Nullable
-        @Override
-        public ChargerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            ItemStack output = buffer.readItemStack();
-            IngredientWithSize input = IngredientWithSize.read(buffer);
-            float cost = buffer.readFloat();
-            return new ChargerRecipe(recipeId, output, input, cost);
-        }
-
-        @Override
-        public void write(PacketBuffer buffer, ChargerRecipe recipe) {
-            buffer.writeItemStack(recipe.output);
-            recipe.input.write(buffer);
-            buffer.writeFloat(recipe.cost);
-        }
     }
 
 }

@@ -65,14 +65,6 @@ public class FHUtils {
 
     private static final ResourceLocation emptyLoot = new ResourceLocation("frostedheart:empty");
 
-    public static ResourceLocation getEmptyLoot() {
-        return emptyLoot;
-    }
-
-    public static <T> T notNull() {
-        return null;
-    }
-
     public static void applyEffectTo(EffectInstance effectinstance, PlayerEntity playerentity) {
         if (effectinstance.getPotion().isInstant()) {
             effectinstance.getPotion().affectEntity(playerentity, playerentity, playerentity, effectinstance.getAmplifier(), 1.0D);
@@ -81,13 +73,57 @@ public class FHUtils {
         }
     }
 
+    public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
+
+        return canTreeGenerate(w, p, r, 7);
+
+    }
+
+    public static void canBigTreeGenerate(World w, BlockPos p, Random r, CallbackInfoReturnable<Boolean> cr) {
+        if (!canBigTreeGenerate(w, p, r))
+            cr.setReturnValue(false);
+    }
+
+    public static boolean canGrassSurvive(IWorldReader world, BlockPos pos) {
+        float t = ChunkHeatData.getTemperature(world, pos);
+        return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
+    }
+
+    public static boolean canNetherTreeGrow(IBlockReader w, BlockPos p) {
+        if (!(w instanceof IWorld)) {
+            return false;
+        }
+        float temp = ChunkHeatData.getTemperature((IWorld) w, p);
+        if (temp <= 300)
+            return false;
+        if (temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+            return false;
+        return true;
+    }
+
+    public static boolean canTreeGenerate(World w, BlockPos p, Random r, int chance) {
+        return r.nextInt(chance) == 0;
+
+    }
+
+    public static boolean canTreeGrow(World w, BlockPos p, Random r) {
+        float temp = ChunkHeatData.getTemperature(w, p);
+        if (temp <= -6 || WorldClimate.isBlizzard(w))
+            return false;
+        if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
+            return false;
+        if (temp > 0)
+            return true;
+        return r.nextInt(Math.max(1, MathHelper.ceil(-temp / 2))) == 0;
+    }
+
     public static Ingredient createIngredient(ItemStack is) {
         if (is.hasTag()) return new NBTIngredientAccess(is);
         return Ingredient.fromStacks(is);
     }
 
-    public static IngredientWithSize createIngredientWithSize(ResourceLocation tag, int count) {
-        return new IngredientWithSize(Ingredient.fromTag(ItemTags.getCollection().get(tag)), count);
+    public static Ingredient createIngredient(ResourceLocation tag) {
+        return Ingredient.fromTag(ItemTags.getCollection().get(tag));
     }
 
     public static IngredientWithSize createIngredientWithSize(ItemStack is) {
@@ -95,8 +131,33 @@ public class FHUtils {
         return new IngredientWithSize(Ingredient.fromStacks(is), is.getCount());
     }
 
-    public static Ingredient createIngredient(ResourceLocation tag) {
-        return Ingredient.fromTag(ItemTags.getCollection().get(tag));
+    public static IngredientWithSize createIngredientWithSize(ResourceLocation tag, int count) {
+        return new IngredientWithSize(Ingredient.fromTag(ItemTags.getCollection().get(tag)), count);
+    }
+
+    public static ResourceLocation getEmptyLoot() {
+        return emptyLoot;
+    }
+
+    public static int getEnchantmentLevel(Enchantment enchID, CompoundNBT tags) {
+        ResourceLocation resourcelocation = Registry.ENCHANTMENT.getKey(enchID);
+        ListNBT listnbt = tags.getList("Enchantments", 10);
+
+        for (int i = 0; i < listnbt.size(); ++i) {
+            CompoundNBT compoundnbt = listnbt.getCompound(i);
+            ResourceLocation resourcelocation1 = ResourceLocation.tryCreate(compoundnbt.getString("id"));
+            if (resourcelocation1 != null && resourcelocation1.equals(resourcelocation)) {
+                return MathHelper.clamp(compoundnbt.getInt("lvl"), 0, 255);
+            }
+        }
+
+        return 0;
+    }
+
+    public static ToIntFunction<BlockState> getLightValueLit(int lightValue) {
+        return (state) -> {
+            return state.get(BlockStateProperties.LIT) ? lightValue : 0;
+        };
     }
 
     public static void giveItem(PlayerEntity pe, ItemStack is) {
@@ -104,16 +165,11 @@ public class FHUtils {
             pe.world.addEntity(new ItemEntity(pe.world, pe.getPosition().getX(), pe.getPosition().getY(), pe.getPosition().getZ(), is));
     }
 
-    public static void registerSimpleCapability(Class<?> clazz) {
-        CapabilityManager.INSTANCE.register(clazz, new NoopStorage<>(), () -> {
-            throw new UnsupportedOperationException("Creating default instances is not supported. Why would you ever do this");
-        });
-    }
-
-    public static ToIntFunction<BlockState> getLightValueLit(int lightValue) {
-        return (state) -> {
-            return state.get(BlockStateProperties.LIT) ? lightValue : 0;
-        };
+    public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
+        if (WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY()) {
+            return true;
+        }
+        return false;
     }
 
     public static boolean isRainingAt(BlockPos pos, World world) {
@@ -129,50 +185,23 @@ public class FHUtils {
         }
     }
 
-    public static void canBigTreeGenerate(World w, BlockPos p, Random r, CallbackInfoReturnable<Boolean> cr) {
-        if (!canBigTreeGenerate(w, p, r))
-            cr.setReturnValue(false);
+    public static EffectInstance noHeal(EffectInstance ei) {
+        ei.setCurativeItems(ImmutableList.of());
+        return ei;
     }
 
-    public static boolean canTreeGenerate(World w, BlockPos p, Random r, int chance) {
-        return r.nextInt(chance) == 0;
-
+    public static <T> T notNull() {
+        return null;
     }
 
-    public static boolean isBlizzardHarming(IWorld iWorld, BlockPos p) {
-        if (WorldClimate.isBlizzard(iWorld) && iWorld.getHeight(Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) <= p.getY()) {
-            return true;
-        }
-        return false;
+    public static <O, T> Optional<T> ofMap(Map<O, T> map, O key) {
+        return Optional.ofNullable(map.get(key));
     }
 
-    public static boolean canTreeGrow(World w, BlockPos p, Random r) {
-        float temp = ChunkHeatData.getTemperature(w, p);
-        if (temp <= -6 || WorldClimate.isBlizzard(w))
-            return false;
-        if (temp > WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-            return false;
-        if (temp > 0)
-            return true;
-        return r.nextInt(Math.max(1, MathHelper.ceil(-temp / 2))) == 0;
-    }
-
-    public static boolean canNetherTreeGrow(IBlockReader w, BlockPos p) {
-        if (!(w instanceof IWorld)) {
-            return false;
-        }
-        float temp = ChunkHeatData.getTemperature((IWorld) w, p);
-        if (temp <= 300)
-            return false;
-        if (temp > 300 + WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX)
-            return false;
-        return true;
-    }
-
-    public static boolean canBigTreeGenerate(World w, BlockPos p, Random r) {
-
-        return canTreeGenerate(w, p, r, 7);
-
+    public static void registerSimpleCapability(Class<?> clazz) {
+        CapabilityManager.INSTANCE.register(clazz, new NoopStorage<>(), () -> {
+            throw new UnsupportedOperationException("Creating default instances is not supported. Why would you ever do this");
+        });
     }
 
     public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
@@ -192,35 +221,6 @@ public class FHUtils {
                 }
             }
         }
-    }
-
-    public static int getEnchantmentLevel(Enchantment enchID, CompoundNBT tags) {
-        ResourceLocation resourcelocation = Registry.ENCHANTMENT.getKey(enchID);
-        ListNBT listnbt = tags.getList("Enchantments", 10);
-
-        for (int i = 0; i < listnbt.size(); ++i) {
-            CompoundNBT compoundnbt = listnbt.getCompound(i);
-            ResourceLocation resourcelocation1 = ResourceLocation.tryCreate(compoundnbt.getString("id"));
-            if (resourcelocation1 != null && resourcelocation1.equals(resourcelocation)) {
-                return MathHelper.clamp(compoundnbt.getInt("lvl"), 0, 255);
-            }
-        }
-
-        return 0;
-    }
-
-    public static EffectInstance noHeal(EffectInstance ei) {
-        ei.setCurativeItems(ImmutableList.of());
-        return ei;
-    }
-
-    public static boolean canGrassSurvive(IWorldReader world, BlockPos pos) {
-        float t = ChunkHeatData.getTemperature(world, pos);
-        return t >= WorldTemperature.HEMP_GROW_TEMPERATURE && t <= WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE_MAX;
-    }
-
-    public static <O, T> Optional<T> ofMap(Map<O, T> map, O key) {
-        return Optional.ofNullable(map.get(key));
     }
 
 }

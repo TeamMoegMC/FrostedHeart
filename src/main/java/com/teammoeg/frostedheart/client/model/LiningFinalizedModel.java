@@ -41,83 +41,84 @@ import java.util.Random;
 
 public class LiningFinalizedModel implements IBakedModel {
 
+    public static ResourceLocation buffCoatFeetTexture = FHMain.rl("item/lining_overlay/buff_coat_feet");
+    public static ResourceLocation buffCoatHelmetTexture = FHMain.rl("item/lining_overlay/buff_coat_helmet");
+
+    public static ResourceLocation buffCoatLegsTexture = FHMain.rl("item/lining_overlay/buff_coat_legs");
+
+    public static ResourceLocation buffCoatTorsoTexture = FHMain.rl("item/lining_overlay/buff_coat_torso");
+
+    public static ResourceLocation gambesonFeetTexture = FHMain.rl("item/lining_overlay/gambeson_feet");
+
+    public static ResourceLocation gambesonHelmetTexture = FHMain.rl("item/lining_overlay/gambeson_helmet");
+
+    public static ResourceLocation gambesonLegsTexture = FHMain.rl("item/lining_overlay/gambeson_legs");
+
+    public static ResourceLocation gambesonTorsoTexture = FHMain.rl("item/lining_overlay/gambeson_torso");
+
+    public static ResourceLocation kelpLiningFeetTexture = FHMain.rl("item/lining_overlay/kelp_lining_feet");
+
+    public static ResourceLocation kelpLiningHelmetTexture = FHMain.rl("item/lining_overlay/kelp_lining_helmet");
+
+    public static ResourceLocation kelpLiningLegsTexture = FHMain.rl("item/lining_overlay/kelp_lining_legs");
+
+    public static ResourceLocation kelpLiningTorsoTexture = FHMain.rl("item/lining_overlay/kelp_lining_torso");
+
+    public static ResourceLocation strawLiningFeetTexture = FHMain.rl("item/lining_overlay/straw_lining_feet");
+
+    public static ResourceLocation strawLiningHelmetTexture = FHMain.rl("item/lining_overlay/straw_lining_helmet");
+
+    public static ResourceLocation strawLiningLegsTexture = FHMain.rl("item/lining_overlay/straw_lining_legs");
+
+    public static ResourceLocation strawLiningTorsoTexture = FHMain.rl("item/lining_overlay/straw_lining_torso");
+
     private IBakedModel parentModel;
     private ResourceLocation overlay;
-
     public LiningFinalizedModel(IBakedModel i_parentModel, ResourceLocation texture) {
         parentModel = i_parentModel;
         overlay = texture;
     }
-
     /**
-     * We return a list of quads here which is used to draw the chessboard.
-     * We do this by getting the list of quads for the base model (the chessboard itself), then adding an extra quad for
-     * every piece on the chessboard.  The number of pieces was provided to the constructor of the finalised model.
+     * Calculate the normal vector based on four input coordinates
+     * Follows minecraft convention that the coordinates are given in anticlockwise direction from the point of view of
+     * someone looking at the front of the face
+     * assumes that the quad is coplanar but should produce a 'reasonable' answer even if not.
      *
-     * @param state
-     * @param side  which side: north, east, south, west, up, down, or null.  NULL is a different kind to the others
-     *              see here for more information: http://minecraft.gamepedia.com/Block_models#Item_models
-     * @param rand
-     * @return the list of quads to be rendered
+     * @return the packed normal, ZZYYXX
      */
+    private int calculatePackedNormal(
+            float x1, float y1, float z1,
+            float x2, float y2, float z2,
+            float x3, float y3, float z3,
+            float x4, float y4, float z4) {
 
-    @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
-        // our texture are only drawn when side is NULL.
-        if (side != null) {
-            return parentModel.getQuads(state, side, rand);
-        }
-        List<BakedQuad> combinedQuadsList = new ArrayList(parentModel.getQuads(state, side, rand));
-        combinedQuadsList.addAll(getLiningQuads());
-        return combinedQuadsList;
-    }
+        float xp = x4 - x2;
+        float yp = y4 - y2;
+        float zp = z4 - z2;
 
-    private List<BakedQuad> getLiningQuads() {
-        List<BakedQuad> returnList = new ArrayList<BakedQuad>(1);
-        TextureAtlasSprite liningOverlayTexture = getItemSprite(overlay);
-        BakedQuad liningQuad = createBakedQuadForFace(0.5F, 1.0F, 0.5F, 1.0F, -0.4375F, 0, liningOverlayTexture, Direction.SOUTH);
-        returnList.add(liningQuad);
-        return returnList;
-    }
+        float xq = x3 - x1;
+        float yq = y3 - y1;
+        float zq = z3 - z1;
 
-    private TextureAtlasSprite getItemSprite(ResourceLocation modelLocation) {
-        AtlasTexture blocksStitchedTextures = ModelLoader.instance().getSpriteMap().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-        return blocksStitchedTextures.getSprite(modelLocation);
-    }
+        //Cross Product
+        float xn = yq * zp - zq * yp;
+        float yn = zq * xp - xq * zp;
+        float zn = xq * yp - yq * xp;
 
-    @Override
-    public boolean isAmbientOcclusion() {
-        return parentModel.isAmbientOcclusion();
-    }
+        //Normalize
+        float norm = (float) Math.sqrt(xn * xn + yn * yn + zn * zn);
+        final float SMALL_LENGTH = 1.0E-4F;  //Vec3d.normalise() uses this
+        if (norm < SMALL_LENGTH) norm = 1.0F;  // protect against degenerate quad
 
-    @Override
-    public boolean isGui3d() {
-        return parentModel.isGui3d();
-    }
+        norm = 1.0F / norm;
+        xn *= norm;
+        yn *= norm;
+        zn *= norm;
 
-    @Override
-    public boolean isSideLit() {
-        return false;
-    }
-
-    @Override
-    public boolean isBuiltInRenderer() {
-        return parentModel.isBuiltInRenderer();
-    }
-
-    @Override
-    public TextureAtlasSprite getParticleTexture() {
-        return parentModel.getParticleTexture();
-    }
-
-    @Override
-    public ItemCameraTransforms getItemCameraTransforms() {
-        return parentModel.getItemCameraTransforms();
-    }
-
-    @Override
-    public ItemOverrideList getOverrides() {
-        throw new UnsupportedOperationException("The finalised model does not have an override list.");
+        int x = ((byte) (xn * 127)) & 0xFF;
+        int y = ((byte) (yn * 127)) & 0xFF;
+        int z = ((byte) (zn * 127)) & 0xFF;
+        return x | (y << 0x08) | (z << 0x10);
     }
 
     /**
@@ -228,7 +229,69 @@ public class LiningFinalizedModel implements IBakedModel {
         final boolean APPLY_DIFFUSE_LIGHTING = true;
         return new BakedQuad(vertexDataAll, itemRenderLayer, face, texture, APPLY_DIFFUSE_LIGHTING);
     }
+    @Override
+    public ItemCameraTransforms getItemCameraTransforms() {
+        return parentModel.getItemCameraTransforms();
+    }
+    private TextureAtlasSprite getItemSprite(ResourceLocation modelLocation) {
+        AtlasTexture blocksStitchedTextures = ModelLoader.instance().getSpriteMap().getAtlasTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+        return blocksStitchedTextures.getSprite(modelLocation);
+    }
+    private List<BakedQuad> getLiningQuads() {
+        List<BakedQuad> returnList = new ArrayList<BakedQuad>(1);
+        TextureAtlasSprite liningOverlayTexture = getItemSprite(overlay);
+        BakedQuad liningQuad = createBakedQuadForFace(0.5F, 1.0F, 0.5F, 1.0F, -0.4375F, 0, liningOverlayTexture, Direction.SOUTH);
+        returnList.add(liningQuad);
+        return returnList;
+    }
 
+    @Override
+    public ItemOverrideList getOverrides() {
+        throw new UnsupportedOperationException("The finalised model does not have an override list.");
+    }
+    @Override
+    public TextureAtlasSprite getParticleTexture() {
+        return parentModel.getParticleTexture();
+    }
+    /**
+     * We return a list of quads here which is used to draw the chessboard.
+     * We do this by getting the list of quads for the base model (the chessboard itself), then adding an extra quad for
+     * every piece on the chessboard.  The number of pieces was provided to the constructor of the finalised model.
+     *
+     * @param state
+     * @param side  which side: north, east, south, west, up, down, or null.  NULL is a different kind to the others
+     *              see here for more information: http://minecraft.gamepedia.com/Block_models#Item_models
+     * @param rand
+     * @return the list of quads to be rendered
+     */
+
+    @Override
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
+        // our texture are only drawn when side is NULL.
+        if (side != null) {
+            return parentModel.getQuads(state, side, rand);
+        }
+        List<BakedQuad> combinedQuadsList = new ArrayList(parentModel.getQuads(state, side, rand));
+        combinedQuadsList.addAll(getLiningQuads());
+        return combinedQuadsList;
+    }
+    @Override
+    public boolean isAmbientOcclusion() {
+        return parentModel.isAmbientOcclusion();
+    }
+
+    @Override
+    public boolean isBuiltInRenderer() {
+        return parentModel.isBuiltInRenderer();
+    }
+    @Override
+    public boolean isGui3d() {
+        return parentModel.isGui3d();
+    }
+    @Override
+    public boolean isSideLit() {
+        return false;
+    }
     /**
      * Converts the vertex information to the int array format expected by BakedQuads.  Useful if you don't know
      * in advance what it should be.
@@ -261,68 +324,5 @@ public class LiningFinalizedModel implements IBakedModel {
                 normal
         };
     }
-
-    /**
-     * Calculate the normal vector based on four input coordinates
-     * Follows minecraft convention that the coordinates are given in anticlockwise direction from the point of view of
-     * someone looking at the front of the face
-     * assumes that the quad is coplanar but should produce a 'reasonable' answer even if not.
-     *
-     * @return the packed normal, ZZYYXX
-     */
-    private int calculatePackedNormal(
-            float x1, float y1, float z1,
-            float x2, float y2, float z2,
-            float x3, float y3, float z3,
-            float x4, float y4, float z4) {
-
-        float xp = x4 - x2;
-        float yp = y4 - y2;
-        float zp = z4 - z2;
-
-        float xq = x3 - x1;
-        float yq = y3 - y1;
-        float zq = z3 - z1;
-
-        //Cross Product
-        float xn = yq * zp - zq * yp;
-        float yn = zq * xp - xq * zp;
-        float zn = xq * yp - yq * xp;
-
-        //Normalize
-        float norm = (float) Math.sqrt(xn * xn + yn * yn + zn * zn);
-        final float SMALL_LENGTH = 1.0E-4F;  //Vec3d.normalise() uses this
-        if (norm < SMALL_LENGTH) norm = 1.0F;  // protect against degenerate quad
-
-        norm = 1.0F / norm;
-        xn *= norm;
-        yn *= norm;
-        zn *= norm;
-
-        int x = ((byte) (xn * 127)) & 0xFF;
-        int y = ((byte) (yn * 127)) & 0xFF;
-        int z = ((byte) (zn * 127)) & 0xFF;
-        return x | (y << 0x08) | (z << 0x10);
-    }
-
-    public static ResourceLocation buffCoatFeetTexture = FHMain.rl("item/lining_overlay/buff_coat_feet");
-    public static ResourceLocation buffCoatHelmetTexture = FHMain.rl("item/lining_overlay/buff_coat_helmet");
-    public static ResourceLocation buffCoatLegsTexture = FHMain.rl("item/lining_overlay/buff_coat_legs");
-    public static ResourceLocation buffCoatTorsoTexture = FHMain.rl("item/lining_overlay/buff_coat_torso");
-
-    public static ResourceLocation gambesonFeetTexture = FHMain.rl("item/lining_overlay/gambeson_feet");
-    public static ResourceLocation gambesonHelmetTexture = FHMain.rl("item/lining_overlay/gambeson_helmet");
-    public static ResourceLocation gambesonLegsTexture = FHMain.rl("item/lining_overlay/gambeson_legs");
-    public static ResourceLocation gambesonTorsoTexture = FHMain.rl("item/lining_overlay/gambeson_torso");
-
-    public static ResourceLocation kelpLiningFeetTexture = FHMain.rl("item/lining_overlay/kelp_lining_feet");
-    public static ResourceLocation kelpLiningHelmetTexture = FHMain.rl("item/lining_overlay/kelp_lining_helmet");
-    public static ResourceLocation kelpLiningLegsTexture = FHMain.rl("item/lining_overlay/kelp_lining_legs");
-    public static ResourceLocation kelpLiningTorsoTexture = FHMain.rl("item/lining_overlay/kelp_lining_torso");
-
-    public static ResourceLocation strawLiningFeetTexture = FHMain.rl("item/lining_overlay/straw_lining_feet");
-    public static ResourceLocation strawLiningHelmetTexture = FHMain.rl("item/lining_overlay/straw_lining_helmet");
-    public static ResourceLocation strawLiningLegsTexture = FHMain.rl("item/lining_overlay/straw_lining_legs");
-    public static ResourceLocation strawLiningTorsoTexture = FHMain.rl("item/lining_overlay/straw_lining_torso");
 
 }

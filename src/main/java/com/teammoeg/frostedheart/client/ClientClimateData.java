@@ -29,9 +29,6 @@ public class ClientClimateData {
     public static long climateChange;//store climate change time for transition
     public static long secs = 0;
 
-    public ClientClimateData() {
-    }
-
     public static void clear() {
         secs = 0;
         for (int i = 0; i < forecastData.length; i++)
@@ -41,23 +38,26 @@ public class ClientClimateData {
         climateChange = -1;
     }
 
-    public static int getHourInDay() {
-        return (int) ((secs / 50) % 24);
-    }
-
     public static long getDate() {
         return (secs / 50) / 24;
     }
 
-    public static long getMonth() {
-        return (secs / 50) / 24 / 30;
+    public static int getHourInDay() {
+        return (int) ((secs / 50) % 24);
     }
 
     public static long getHours() {
         return (secs / 50);
     }
 
+    public static long getMonth() {
+        return (secs / 50) / 24 / 30;
+    }
+
     public static long getTimeSecs() {
         return secs;
+    }
+
+    public ClientClimateData() {
     }
 }

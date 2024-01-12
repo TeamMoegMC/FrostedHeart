@@ -29,17 +29,17 @@ import net.minecraft.network.PacketBuffer;
 public class WithFlagCondition implements PolicyCondition {
     String name;
 
-    public WithFlagCondition(String name) {
-        super();
-        this.name = name;
-    }
-
     public WithFlagCondition(JsonObject jo) {
         this(jo.get("name").getAsString());
     }
 
     public WithFlagCondition(PacketBuffer buffer) {
         this(buffer.readString());
+    }
+
+    public WithFlagCondition(String name) {
+        super();
+        this.name = name;
     }
 
     @Override
@@ -51,14 +51,14 @@ public class WithFlagCondition implements PolicyCondition {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
-        Conditions.writeId(this, buffer);
-        buffer.writeString(name);
+    public boolean test(FHVillagerData ve) {
+        return ve.flags.containsKey(name);
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.flags.containsKey(name);
+    public void write(PacketBuffer buffer) {
+        Conditions.writeId(this, buffer);
+        buffer.writeString(name);
     }
 
 }

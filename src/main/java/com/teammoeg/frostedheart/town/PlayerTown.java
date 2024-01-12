@@ -40,19 +40,6 @@ public class PlayerTown implements Town {
         this.town = td;
     }
 
-    private int getIntMaxStorage(TownResourceType name) {
-        return maxStorage.computeIfAbsent(name, t -> t.getIntMaxStorage(this));
-    }
-
-    @Override
-    public double get(TownResourceType name) {
-        int val = storage.getOrDefault(name, 0);
-        val += backupStorage.getOrDefault(name, 0);
-        val += service.getOrDefault(name, 0);
-
-        return val / 1000d;
-    }
-
     @Override
     public double add(TownResourceType name, double val, boolean simulate) {
         int newVal = storage.getOrDefault(name, 0);
@@ -183,11 +170,6 @@ public class PlayerTown implements Town {
         return val - remain / 1000d;
     }
 
-    @Override
-    public Optional<TeamTownData> getTownData() {
-        return Optional.of(town);
-    }
-
     public void finishWork() {
         costedService.forEach((k, v) -> storage.put(k, v));
         for (Entry<TownResourceType, Integer> ent : storage.entrySet()) {
@@ -196,5 +178,23 @@ public class PlayerTown implements Town {
                 ent.setValue(max);
             }
         }
+    }
+
+    @Override
+    public double get(TownResourceType name) {
+        int val = storage.getOrDefault(name, 0);
+        val += backupStorage.getOrDefault(name, 0);
+        val += service.getOrDefault(name, 0);
+
+        return val / 1000d;
+    }
+
+    private int getIntMaxStorage(TownResourceType name) {
+        return maxStorage.computeIfAbsent(name, t -> t.getIntMaxStorage(this));
+    }
+
+    @Override
+    public Optional<TeamTownData> getTownData() {
+        return Optional.of(town);
     }
 }

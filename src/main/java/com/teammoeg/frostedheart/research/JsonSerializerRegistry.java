@@ -34,10 +34,6 @@ public class JsonSerializerRegistry<U> extends SerializerRegistry<U, JsonObject>
         super();
     }
 
-    public void writeType(JsonObject jo, U obj) {
-        jo.addProperty("type", typeOf(obj));
-    }
-
     public U deserialize(JsonElement je) {
         JsonObject jo = je.getAsJsonObject();
         Function<JsonObject, U> func = fromJson.get(jo.get("type").getAsString());
@@ -57,5 +53,9 @@ public class JsonSerializerRegistry<U> extends SerializerRegistry<U, JsonObject>
     @Override
     protected void putSerializer(String type, Function<JsonObject, U> s) {
         fromJson.put(type, s);
+    }
+
+    public void writeType(JsonObject jo, U obj) {
+        jo.addProperty("type", typeOf(obj));
     }
 }

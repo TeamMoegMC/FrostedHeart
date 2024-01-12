@@ -24,9 +24,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.state.properties.BlockStateProperties;
 
 public class FHBlockInterfaces {
-    public FHBlockInterfaces() {
-    }
-
     public interface IActiveState extends IEBlockInterfaces.BlockstateProvider {
         default boolean getIsActive() {
             BlockState state = this.getState();
@@ -40,5 +37,8 @@ public class FHBlockInterfaces {
                 this.setState(newState);
             }
         }
+    }
+
+    public FHBlockInterfaces() {
     }
 }

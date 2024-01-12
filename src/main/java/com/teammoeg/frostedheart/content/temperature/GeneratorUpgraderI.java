@@ -54,23 +54,6 @@ public class GeneratorUpgraderI extends FHBaseItem {
         super(name, properties);
     }
 
-    @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        playerIn.setActiveHand(handIn);
-        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
-            createStructure(playerIn, worldIn);
-        }
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
-    }
-
-    @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
-        if (worldIn.isRemote) return stack;
-        PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
-        createStructure(entityplayer, worldIn);
-        return stack;
-    }
-
     public boolean createStructure(PlayerEntity entityplayer, World worldIn) {
         if (entityplayer instanceof ServerPlayerEntity) {
             BlockRayTraceResult brtr = rayTrace(worldIn, entityplayer, FluidMode.ANY);
@@ -102,16 +85,33 @@ public class GeneratorUpgraderI extends FHBaseItem {
         return true;
     }
 
-    @Override
-    public int getUseDuration(ItemStack stack) {
-        return 400;
-    }
-
     /**
      * returns the action that specifies what animation to play when the items is being used
      */
     @Override
     public UseAction getUseAction(ItemStack stack) {
         return UseAction.SPEAR;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 400;
+    }
+
+    @Override
+    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+        playerIn.setActiveHand(handIn);
+        if (playerIn instanceof ServerPlayerEntity && playerIn.abilities.isCreativeMode) {
+            createStructure(playerIn, worldIn);
+        }
+        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
+    }
+
+    @Override
+    public ItemStack onItemUseFinish(ItemStack stack, World worldIn, LivingEntity entityLiving) {
+        if (worldIn.isRemote) return stack;
+        PlayerEntity entityplayer = entityLiving instanceof PlayerEntity ? (PlayerEntity) entityLiving : null;
+        createStructure(entityplayer, worldIn);
+        return stack;
     }
 }

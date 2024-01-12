@@ -41,6 +41,16 @@ public class FHCropBlock extends CropsBlock {
     public final String name;
     private int growTemperature;
 
+    public FHCropBlock(String name, int growTemperature, Properties builder) {
+        super(builder);
+        this.name = name;
+        this.growTemperature = growTemperature;
+        FHContent.registeredFHBlocks.add(this);
+        ResourceLocation registryName = createRegistryName();
+        setRegistryName(registryName);
+        //custom BlockItem
+    }
+
     public FHCropBlock(String name, int growTemperature, Properties builder, BiFunction<Block, Item.Properties, Item> createItemBlock) {
         super(builder);
         this.name = name;
@@ -55,16 +65,12 @@ public class FHCropBlock extends CropsBlock {
         }
     }
 
-    public FHCropBlock(String name, int growTemperature, Properties builder) {
-        super(builder);
-        this.name = name;
-        this.growTemperature = growTemperature;
-        FHContent.registeredFHBlocks.add(this);
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
-        //custom BlockItem
-    }
 
+    @Override
+    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
+        float temp = ChunkHeatData.getTemperature(worldIn, pos);
+        return temp >= growTemperature;
+    }
 
     public ResourceLocation createRegistryName() {
         return new ResourceLocation(FHMain.MODID, name);
@@ -98,11 +104,5 @@ public class FHCropBlock extends CropsBlock {
                 }
             }
         }
-    }
-
-    @Override
-    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
-        float temp = ChunkHeatData.getTemperature(worldIn, pos);
-        return temp >= growTemperature;
     }
 }

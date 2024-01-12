@@ -53,6 +53,12 @@ public class IncubatorBlock extends FHGuiBlock {
         this.type = type;
     }
 
+    @Nullable
+    @Override
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+        return type.get().create();
+    }
+
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(HORIZONTAL_FACING, LIT);
@@ -61,12 +67,6 @@ public class IncubatorBlock extends FHGuiBlock {
     @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
         return this.getDefaultState().with(HORIZONTAL_FACING, context.getPlacementHorizontalFacing()).with(LIT, false);
-    }
-
-    @Nullable
-    @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return type.get().create();
     }
 
     @Override

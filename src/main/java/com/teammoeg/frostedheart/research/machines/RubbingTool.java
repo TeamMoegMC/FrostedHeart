@@ -46,8 +46,66 @@ import net.minecraft.world.World;
 
 public class RubbingTool extends FHBaseItem {
 
+    public static int getPoint(ItemStack stack) {
+        return stack.getOrCreateTag().getInt("points");
+    }
+
+    public static String getResearch(ItemStack stack) {
+        return stack.getOrCreateTag().getString("research");
+    }
+
+    public static boolean hasResearch(ItemStack stack) {
+        return stack.getOrCreateTag().contains("research");
+    }
+
+    public static void setPoint(ItemStack stack, int val) {
+        if (val <= 0)
+            stack.getOrCreateTag().remove("points");
+        else
+            stack.getOrCreateTag().putInt("points", val);
+    }
+
+    public static void setResearch(ItemStack stack, String rs) {
+        if (rs == null)
+            stack.getOrCreateTag().remove("research");
+        else
+            stack.getOrCreateTag().putString("research", rs);
+    }
+
     public RubbingTool(String name, Properties properties) {
         super(name, properties);
+    }
+
+    @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        if (hasResearch(stack)) {
+            Research rs = FHResearch.getResearch(getResearch(stack)).get();
+            if (rs != null)
+                tooltip.add(GuiUtils.translateTooltip("rubbing.current", rs.getName()).mergeStyle(TextFormatting.GOLD));
+            else
+                tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+        } else
+            tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
+        int points = getPoint(stack);
+        if (points > 0) {
+            tooltip.add(GuiUtils.translateTooltip("rubbing.points", points));
+            tooltip.add(GuiUtils.translateTooltip("rubbing.points.hint").mergeStyle(TextFormatting.YELLOW));
+        }
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+
+    }
+
+    /**
+     * returns the action that specifies what animation to play when the items is being used
+     */
+    @Override
+    public UseAction getUseAction(ItemStack stack) {
+        return UseAction.BLOCK;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 20;
     }
 
     @Override
@@ -80,64 +138,6 @@ public class RubbingTool extends FHBaseItem {
             }
         }
         return stack;
-    }
-
-    public static int getPoint(ItemStack stack) {
-        return stack.getOrCreateTag().getInt("points");
-    }
-
-    public static void setPoint(ItemStack stack, int val) {
-        if (val <= 0)
-            stack.getOrCreateTag().remove("points");
-        else
-            stack.getOrCreateTag().putInt("points", val);
-    }
-
-    public static void setResearch(ItemStack stack, String rs) {
-        if (rs == null)
-            stack.getOrCreateTag().remove("research");
-        else
-            stack.getOrCreateTag().putString("research", rs);
-    }
-
-    public static boolean hasResearch(ItemStack stack) {
-        return stack.getOrCreateTag().contains("research");
-    }
-
-    public static String getResearch(ItemStack stack) {
-        return stack.getOrCreateTag().getString("research");
-    }
-
-    @Override
-    public int getUseDuration(ItemStack stack) {
-        return 20;
-    }
-
-    /**
-     * returns the action that specifies what animation to play when the items is being used
-     */
-    @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.BLOCK;
-    }
-
-    @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        if (hasResearch(stack)) {
-            Research rs = FHResearch.getResearch(getResearch(stack)).get();
-            if (rs != null)
-                tooltip.add(GuiUtils.translateTooltip("rubbing.current", rs.getName()).mergeStyle(TextFormatting.GOLD));
-            else
-                tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
-        } else
-            tooltip.add(GuiUtils.translateTooltip("rubbing.current.empty").mergeStyle(TextFormatting.GRAY));
-        int points = getPoint(stack);
-        if (points > 0) {
-            tooltip.add(GuiUtils.translateTooltip("rubbing.points", points));
-            tooltip.add(GuiUtils.translateTooltip("rubbing.points.hint").mergeStyle(TextFormatting.YELLOW));
-        }
-        super.addInformation(stack, worldIn, tooltip, flagIn);
-
     }
 
 }

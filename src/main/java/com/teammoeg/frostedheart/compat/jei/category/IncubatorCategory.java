@@ -70,21 +70,6 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends IncubateRecipe> getRecipeClass() {
-        return IncubateRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".incubator").getString());
-    }
-
-    @Override
     public void draw(IncubateRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 31, 31);
         PROC.draw(transform, 76, 24);
@@ -99,9 +84,24 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
         ClientUtils.mc().fontRenderer.drawString(transform, burnTime, 162 - width, 62, 0xFFFFFF);
     }
 
-    public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
-        return mouseX >= x && mouseY >= y
-                && mouseX < x + w && mouseY < y + h;
+    @Override
+    public IDrawable getBackground() {
+        return BACKGROUND;
+    }
+
+
+    @Override
+    public IDrawable getIcon() {
+        return ICON;
+    }
+
+    @Override
+    public Class<? extends IncubateRecipe> getRecipeClass() {
+        return IncubateRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".incubator").getString());
     }
 
     @Override
@@ -111,13 +111,13 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     }
 
     @Override
-    public IDrawable getBackground() {
-        return BACKGROUND;
+    public ResourceLocation getUid() {
+        return UID;
     }
 
-    @Override
-    public IDrawable getIcon() {
-        return ICON;
+    public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
+        return mouseX >= x && mouseY >= y
+                && mouseX < x + w && mouseY < y + h;
     }
 
     @Override

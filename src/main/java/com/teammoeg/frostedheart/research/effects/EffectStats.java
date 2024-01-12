@@ -45,13 +45,9 @@ public class EffectStats extends Effect {
     double val;
     boolean isPercentage = false;
 
-    public EffectStats(String vars, double add) {
-        super();
-
-        val = add;
-        this.vars = vars;
-
-
+    EffectStats() {
+        this.vars = "";
+        this.val = 0;
     }
 
     public EffectStats(JsonObject jo) {
@@ -69,55 +65,18 @@ public class EffectStats extends Effect {
         isPercentage = pb.readBoolean();
     }
 
-    EffectStats() {
-        this.vars = "";
-        this.val = 0;
+    public EffectStats(String vars, double add) {
+        super();
+
+        val = add;
+        this.vars = vars;
+
+
     }
 
     @Override
-    public void init() {
-
-    }
-
-    @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        if (isload) return false;
-        double var = team.getVariants().getDouble(vars);
-        if (isPercentage)
-            var += val / 100;
-        else
-            var += val;
-        team.getVariants().putDouble(vars, var);
-        return true;
-    }
-
-    @Override
-    public void revoke(TeamResearchData team) {
-        double var = team.getVariants().getDouble(vars);
-        if (isPercentage)
-            var -= val / 100;
-        else
-            var -= val;
-        team.getVariants().putDouble(vars, var);
-    }
-
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("vars", vars);
-        jo.addProperty("val", val);
-        if (isPercentage)
-            jo.addProperty("percent", true);
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeString(vars);
-        buffer.writeDouble(val);
-        buffer.writeBoolean(isPercentage);
+    public String getBrief() {
+        return "Stat " + vars + " += " + val;
     }
 
     @Override
@@ -129,6 +88,7 @@ public class EffectStats extends Effect {
     public IFormattableTextComponent getDefaultName() {
         return GuiUtils.translateGui("effect.stats");
     }
+
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
@@ -147,8 +107,48 @@ public class EffectStats extends Effect {
     }
 
     @Override
-    public String getBrief() {
-        return "Stat " + vars + " += " + val;
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        if (isload) return false;
+        double var = team.getVariants().getDouble(vars);
+        if (isPercentage)
+            var += val / 100;
+        else
+            var += val;
+        team.getVariants().putDouble(vars, var);
+        return true;
+    }
+
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public void revoke(TeamResearchData team) {
+        double var = team.getVariants().getDouble(vars);
+        if (isPercentage)
+            var -= val / 100;
+        else
+            var -= val;
+        team.getVariants().putDouble(vars, var);
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.addProperty("vars", vars);
+        jo.addProperty("val", val);
+        if (isPercentage)
+            jo.addProperty("percent", true);
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        buffer.writeString(vars);
+        buffer.writeDouble(val);
+        buffer.writeBoolean(isPercentage);
     }
 
 }

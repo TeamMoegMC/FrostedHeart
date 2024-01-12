@@ -29,11 +29,11 @@ public enum ResearchVariant {
     VILLAGER_FORGIVENESS("vlg_forgive")//Forgiveness for each kill in stats
     ;
 
+    private final String token;
+
     private ResearchVariant(String token) {
         this.token = token;
     }
-
-    private final String token;
 
     public String getToken() {
         return token;

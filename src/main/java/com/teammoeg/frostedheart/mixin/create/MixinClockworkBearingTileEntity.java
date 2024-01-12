@@ -33,15 +33,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClockworkBearingTileEntity.class)
 public abstract class MixinClockworkBearingTileEntity extends KineticTileEntity {
 
-    public MixinClockworkBearingTileEntity(TileEntityType<?> typeIn) {
-        super(typeIn);
-    }
-
     @Shadow(remap = false)
     protected ControlledContraptionEntity hourHand;
+
     @Shadow(remap = false)
     protected ControlledContraptionEntity minuteHand;
     private int fh$cooldown;
+    public MixinClockworkBearingTileEntity(TileEntityType<?> typeIn) {
+        super(typeIn);
+    }
 
     @Override
     public float calculateStressApplied() {

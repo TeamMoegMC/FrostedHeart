@@ -52,14 +52,6 @@ public class StructureUtils {
         return b;
     }
 
-    public static boolean isBanned(Block b) {
-        return baned.contains(b);
-    }
-
-    public static void RemapRL(Block org, ResourceLocation dest) {
-        remap.put(org, ForgeRegistries.BLOCKS.getValue(dest));
-    }
-
     public static void handlePalette(List<Template.Palette> p) {
 
         p.forEach(q -> q.func_237157_a_().replaceAll(r -> {
@@ -71,5 +63,13 @@ public class StructureUtils {
             }
             return r;
         }));
+    }
+
+    public static boolean isBanned(Block b) {
+        return baned.contains(b);
+    }
+
+    public static void RemapRL(Block org, ResourceLocation dest) {
+        remap.put(org, ForgeRegistries.BLOCKS.getValue(dest));
     }
 }

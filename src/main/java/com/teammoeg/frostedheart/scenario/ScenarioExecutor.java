@@ -34,18 +34,6 @@ import org.apache.logging.log4j.Logger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
 
 public class ScenarioExecutor {
-    static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
-    private static Function<String, Object> string = s -> s;
-    private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
-    private static Function<String, Object> integer = s -> ((Double) Double.parseDouble(s)).intValue();
-    private static Function<String, Object> fnumber = s -> ((Double) Double.parseDouble(s)).floatValue();
-    Map<String, ScenarioMethod> commands = new HashMap<>();
-
-    @FunctionalInterface
-    public interface ScenarioMethod {
-        void execute(ScenarioRunner runner, Map<String, String> param);
-    }
-
     private static class MethodInfo implements ScenarioMethod {
         private static class ParamInfo {
             String paramName;
@@ -57,6 +45,10 @@ public class ScenarioExecutor {
             }
         }
 
+        Method method;
+
+        Object instance;
+        ParamInfo[] params;
         public MethodInfo(Object instance, Method method) {
             super();
             this.instance = instance;
@@ -83,10 +75,6 @@ public class ScenarioExecutor {
             }
         }
 
-        Method method;
-        Object instance;
-        ParamInfo[] params;
-
         @Override
         public void execute(ScenarioRunner runner, Map<String, String> param) {
             Object[] pars = new Object[params.length + 1];
@@ -110,9 +98,25 @@ public class ScenarioExecutor {
             }
         }
     }
+    @FunctionalInterface
+    public interface ScenarioMethod {
+        void execute(ScenarioRunner runner, Map<String, String> param);
+    }
+    static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
+    private static Function<String, Object> string = s -> s;
+    private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
+    private static Function<String, Object> integer = s -> ((Double) Double.parseDouble(s)).intValue();
 
-    public void registerCommand(String cmdName, ScenarioMethod method) {
-        commands.put(cmdName.toLowerCase(), method);
+    private static Function<String, Object> fnumber = s -> ((Double) Double.parseDouble(s)).floatValue();
+
+    Map<String, ScenarioMethod> commands = new HashMap<>();
+
+    public void callCommand(String name, ScenarioRunner runner, Map<String, String> params) {
+        ScenarioMethod command = commands.get(name);
+        if (command == null) {
+            throw new ScenarioExecutionException("Can not find command " + name);
+        }
+        command.execute(runner, params);
     }
 
     public void regiser(Class<?> clazz) {
@@ -130,18 +134,8 @@ public class ScenarioExecutor {
 
     }
 
-    public void registerStatic(Class<?> clazz) {
-        for (Method met : clazz.getMethods()) {
-            if (Modifier.isPublic(met.getModifiers()) && Modifier.isStatic(met.getModifiers())) {
-                try {
-                    registerCommand(met.getName(), new MethodInfo(null, met));
-                } catch (ScenarioExecutionException ex) {
-
-                    ex.printStackTrace();
-                    LOGGER.warn(ex.getMessage());
-                }
-            }
-        }
+    public void registerCommand(String cmdName, ScenarioMethod method) {
+        commands.put(cmdName.toLowerCase(), method);
     }
 
     public void registerInst(Object clazz) {
@@ -157,11 +151,17 @@ public class ScenarioExecutor {
         }
     }
 
-    public void callCommand(String name, ScenarioRunner runner, Map<String, String> params) {
-        ScenarioMethod command = commands.get(name);
-        if (command == null) {
-            throw new ScenarioExecutionException("Can not find command " + name);
+    public void registerStatic(Class<?> clazz) {
+        for (Method met : clazz.getMethods()) {
+            if (Modifier.isPublic(met.getModifiers()) && Modifier.isStatic(met.getModifiers())) {
+                try {
+                    registerCommand(met.getName(), new MethodInfo(null, met));
+                } catch (ScenarioExecutionException ex) {
+
+                    ex.printStackTrace();
+                    LOGGER.warn(ex.getMessage());
+                }
+            }
         }
-        command.execute(runner, params);
     }
 }

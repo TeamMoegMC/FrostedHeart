@@ -43,12 +43,12 @@ import net.minecraftforge.fml.RegistryObject;
 import java.util.Random;
 
 public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends FHStoneMultiblockBlock<T> {
-    public NormalGeneratorMultiBlock(String name, RegistryObject type) {
-        super(name, type);
-    }
-
     public NormalGeneratorMultiBlock(String name, Properties props, RegistryObject<TileEntityType<T>> type) {
         super(name, props, type);
+    }
+
+    public NormalGeneratorMultiBlock(String name, RegistryObject type) {
+        super(name, type);
     }
 
     @OnlyIn(Dist.CLIENT)

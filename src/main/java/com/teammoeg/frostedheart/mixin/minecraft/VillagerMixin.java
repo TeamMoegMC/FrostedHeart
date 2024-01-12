@@ -52,24 +52,7 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
     }
 
     @Shadow
-    protected abstract void shakeHead();
-
-    @Shadow
-    public abstract void setCustomer(@Nullable PlayerEntity player);
-
-    @Shadow
     protected abstract void displayMerchantGui(PlayerEntity pe);
-
-    private VillagerEntity getThis() {
-        return (VillagerEntity) (Object) this;
-    }
-
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        CompoundNBT cnbt = new CompoundNBT();
-        fh$data.serialize(cnbt);
-        compound.put("fhdata", cnbt);
-    }
 
     @Inject(at = @At("HEAD"), method = "readAdditional")
     public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
@@ -80,6 +63,13 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
     public void fh$updateTask(CallbackInfo cbi) {
         super.updateAITasks();
         cbi.cancel();
+    }
+
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        CompoundNBT cnbt = new CompoundNBT();
+        fh$data.serialize(cnbt);
+        compound.put("fhdata", cnbt);
     }
 
     /**
@@ -135,4 +125,14 @@ public abstract class VillagerMixin extends AbstractVillagerEntity implements Vi
     public FHVillagerData getFHData() {
         return fh$data;
     }
+
+    private VillagerEntity getThis() {
+        return (VillagerEntity) (Object) this;
+    }
+
+    @Shadow
+    public abstract void setCustomer(@Nullable PlayerEntity player);
+
+    @Shadow
+    protected abstract void shakeHead();
 }

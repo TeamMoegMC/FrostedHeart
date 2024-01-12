@@ -31,9 +31,6 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 
 public class EditUtils {
 
-    private EditUtils() {
-    }
-
     public static void editResearch(Widget p, Research r) {
         if (r != null) {
             FHResearch.load(r);
@@ -42,14 +39,17 @@ public class EditUtils {
         ;
     }
 
+    public static TextField getTitle(Panel p, String title) {
+        TextField tf = new TextField(p).setMaxWidth(200).setText(title).setColor(Color4I.BLACK);
+
+        return tf;
+    }
+
     public static void saveResearch(Research r) {
         r.doIndex();
         FHResearch.save(r);
     }
 
-    public static TextField getTitle(Panel p, String title) {
-        TextField tf = new TextField(p).setMaxWidth(200).setText(title).setColor(Color4I.BLACK);
-
-        return tf;
+    private EditUtils() {
     }
 }

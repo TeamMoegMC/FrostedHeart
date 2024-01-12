@@ -30,12 +30,8 @@ import net.minecraft.network.PacketBuffer;
 public abstract class ListenerClue extends Clue {
     public boolean alwaysOn;
 
-    public ListenerClue(String name, float contribution) {
-        super(name, contribution);
-    }
-
-    public ListenerClue(String name, String desc, String hint, float contribution) {
-        super(name, desc, hint, contribution);
+    public ListenerClue() {
+        super();
     }
 
     public ListenerClue(JsonObject jo) {
@@ -48,27 +44,35 @@ public abstract class ListenerClue extends Clue {
         alwaysOn = pb.readBoolean();
     }
 
-    public ListenerClue() {
-        super();
+    public ListenerClue(String name, float contribution) {
+        super(name, contribution);
+    }
+
+    public ListenerClue(String name, String desc, String hint, float contribution) {
+        super(name, desc, hint, contribution);
     }
 
     @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("always", alwaysOn);
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeBoolean(alwaysOn);
+    public void end(Team team) {
+        if (!alwaysOn)
+            removeListener(team);
     }
 
     @Override
     public void init() {
         if (alwaysOn)
             initListener(null);
+    }
+
+    public abstract void initListener(Team t);
+
+    public abstract void removeListener(Team t);
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.addProperty("always", alwaysOn);
+        return jo;
     }
 
     @Override
@@ -79,13 +83,9 @@ public abstract class ListenerClue extends Clue {
     }
 
     @Override
-    public void end(Team team) {
-        if (!alwaysOn)
-            removeListener(team);
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        buffer.writeBoolean(alwaysOn);
     }
-
-    public abstract void initListener(Team t);
-
-    public abstract void removeListener(Team t);
 
 }

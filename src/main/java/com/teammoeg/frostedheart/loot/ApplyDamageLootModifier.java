@@ -32,6 +32,21 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 public class ApplyDamageLootModifier extends LootModifier {
+    public static class Serializer extends GlobalLootModifierSerializer<ApplyDamageLootModifier> {
+        @Override
+        public ApplyDamageLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+            return new ApplyDamageLootModifier(conditions, RandomValueRange.of(object.get("min").getAsFloat(), object.get("max").getAsFloat()));
+        }
+
+        @Override
+        public JsonObject write(ApplyDamageLootModifier instance) {
+            JsonObject object = new JsonObject();
+            object.addProperty("min", instance.dmg.getMin());
+            object.addProperty("max", instance.dmg.getMax());
+            return object;
+        }
+    }
+
     RandomValueRange dmg;
 
     private ApplyDamageLootModifier(ILootCondition[] conditionsIn, RandomValueRange rv) {
@@ -48,20 +63,5 @@ public class ApplyDamageLootModifier extends LootModifier {
             }
         });
         return generatedLoot;
-    }
-
-    public static class Serializer extends GlobalLootModifierSerializer<ApplyDamageLootModifier> {
-        @Override
-        public ApplyDamageLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
-            return new ApplyDamageLootModifier(conditions, RandomValueRange.of(object.get("min").getAsFloat(), object.get("max").getAsFloat()));
-        }
-
-        @Override
-        public JsonObject write(ApplyDamageLootModifier instance) {
-            JsonObject object = new JsonObject();
-            object.addProperty("min", instance.dmg.getMin());
-            object.addProperty("max", instance.dmg.getMax());
-            return object;
-        }
     }
 }

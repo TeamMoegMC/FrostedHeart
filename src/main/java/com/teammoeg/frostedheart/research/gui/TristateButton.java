@@ -42,6 +42,13 @@ public abstract class TristateButton extends Button {
     }
 
     @Override
+    public void addMouseOverText(TooltipList list) {
+        super.addMouseOverText(list);
+        if (tooltips != null)
+            tooltips.accept(list);
+    }
+
+    @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         if (getEnabled()) {
             if (super.isMouseOver())
@@ -63,51 +70,44 @@ public abstract class TristateButton extends Button {
         return enabled;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public Icon getLocked() {
+        return locked;
     }
 
     public Icon getNormal() {
         return normal;
     }
 
-    public void setNormal(Icon normal) {
-        this.normal = normal;
-    }
-
     public Icon getOver() {
         return over;
-    }
-
-    public void setOver(Icon over) {
-        this.over = over;
-    }
-
-    public Icon getLocked() {
-        return locked;
-    }
-
-    public void setLocked(Icon locked) {
-        this.locked = locked;
-    }
-
-    @Override
-    public void addMouseOverText(TooltipList list) {
-        super.addMouseOverText(list);
-        if (tooltips != null)
-            tooltips.accept(list);
     }
 
     public Consumer<TooltipList> getTooltips() {
         return tooltips;
     }
 
-    public void setTooltips(Consumer<TooltipList> tooltips) {
-        this.tooltips = tooltips;
-    }
-
     public void resetTooltips() {
         this.tooltips = null;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public void setLocked(Icon locked) {
+        this.locked = locked;
+    }
+
+    public void setNormal(Icon normal) {
+        this.normal = normal;
+    }
+
+    public void setOver(Icon over) {
+        this.over = over;
+    }
+
+    public void setTooltips(Consumer<TooltipList> tooltips) {
+        this.tooltips = tooltips;
     }
 
 }

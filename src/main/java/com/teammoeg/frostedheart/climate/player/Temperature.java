@@ -109,7 +109,12 @@ public class Temperature {
 		return spe.getPersistentData().getCompound(DATA_ID);
     }
 
-    public static void setFHData(PlayerEntity spe, CompoundNBT nc) {
+    public static void set(PlayerEntity spe, float body, float env) {
+        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+        // update delta before body
+        nc.putFloat("deltatemperature", nc.getFloat("bodytemperature") - body);
+        nc.putFloat("bodytemperature", body);
+        nc.putFloat("envtemperature", env);
         spe.getPersistentData().put(DATA_ID, nc);
     }
 
@@ -119,24 +124,19 @@ public class Temperature {
         spe.getPersistentData().put(DATA_ID, nc);
     }
 
-    public static void setEnv(PlayerEntity spe, float val) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        nc.putFloat("envtemperature", val);
-        spe.getPersistentData().put(DATA_ID, nc);
-    }
-
     public static void setBodySmoothed(PlayerEntity spe, float val) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
         nc.putFloat("smoothed_body_temperature", val);
         spe.getPersistentData().put(DATA_ID, nc);
     }
 
-    public static void set(PlayerEntity spe, float body, float env) {
+    public static void setEnv(PlayerEntity spe, float val) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        // update delta before body
-        nc.putFloat("deltatemperature", nc.getFloat("bodytemperature") - body);
-        nc.putFloat("bodytemperature", body);
-        nc.putFloat("envtemperature", env);
+        nc.putFloat("envtemperature", val);
+        spe.getPersistentData().put(DATA_ID, nc);
+    }
+
+    public static void setFHData(PlayerEntity spe, CompoundNBT nc) {
         spe.getPersistentData().put(DATA_ID, nc);
     }
 }

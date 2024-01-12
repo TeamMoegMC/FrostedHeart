@@ -27,16 +27,21 @@ import net.minecraft.network.PacketBuffer;
 public class SetLevelAction extends AbstractAction {
     int value;
 
-    public SetLevelAction(JsonObject jo) {
-        value = jo.get("level").getAsInt();
-    }
-
     public SetLevelAction(int value) {
         this.value = value;
     }
 
+    public SetLevelAction(JsonObject jo) {
+        value = jo.get("level").getAsInt();
+    }
+
     public SetLevelAction(PacketBuffer buffer) {
         value = buffer.readVarInt();
+    }
+
+    @Override
+    public void deal(FHVillagerData data, int num) {
+        data.setTradelevel(value);
     }
 
     @Override
@@ -50,11 +55,6 @@ public class SetLevelAction extends AbstractAction {
     public void write(PacketBuffer buffer) {
         super.write(buffer);
         buffer.writeVarInt(value);
-    }
-
-    @Override
-    public void deal(FHVillagerData data, int num) {
-        data.setTradelevel(value);
     }
 
 

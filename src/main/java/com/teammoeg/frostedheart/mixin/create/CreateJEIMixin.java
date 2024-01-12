@@ -38,9 +38,9 @@ import java.util.function.Supplier;
 
 @Mixin(targets = "com.simibubi.create.compat.jei.CreateJEI$CategoryBuilder", remap = false)
 public abstract class CreateJEIMixin {
+    private static final List<String> hidden = Arrays.asList("automatic_packing", "automatic_shapeless");
     @Shadow(remap = false)
     private CreateRecipeCategory category;
-    private static final List<String> hidden = Arrays.asList("automatic_packing", "automatic_shapeless");
 
     private static final IRecipe<?> fh$convert(ShapelessRecipe r) {
         NonNullList<Ingredient> i = r.getIngredients();

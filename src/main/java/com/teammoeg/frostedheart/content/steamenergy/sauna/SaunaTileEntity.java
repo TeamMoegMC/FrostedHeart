@@ -100,16 +100,51 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         this.insertionCap = LazyOptional.of(() -> new IEInventoryHandler(1, this));
     }
 
-    public float getPowerFraction() {
-        return power / POWER_CAP;
+    @Override
+    public boolean canConnectAt(Direction to) {
+        return to == Direction.DOWN;
     }
 
-    public boolean isWorking() {
-        return formed && power > 0;
+    @Override
+    public boolean canUseGui(PlayerEntity playerEntity) {
+        return true;
     }
 
-    public boolean hasMedicine() {
-        return remainTime > 0 && effect != null;
+    @Override
+    public boolean connect(Direction to, int dist) {
+        return network.reciveConnection(world, pos, to, dist);
+    }
+
+    private boolean dist(BlockPos crn, BlockPos orig) {
+        return MathHelper.abs(crn.getX() - orig.getX()) <= RANGE && MathHelper.abs(crn.getZ() - orig.getZ()) <= RANGE;
+    }
+
+    @Override
+    public void doGraphicalUpdates() {
+
+    }
+
+    private void findNext(World l, BlockPos crn, BlockPos orig, Set<BlockPos> poss, Set<BlockPos> edges) {
+        if (dist(crn, orig)) {
+            if (poss.add(crn)) {
+                for (Direction dir : HORIZONTALS) {
+                    BlockPos act = crn.offset(dir);
+                    // if crn connected to plank
+                    if (l.isBlockPresent(act) && (l.getBlockState(act).isIn(BlockTags.PLANKS) || l.getBlockState(act).getBlock().matchesBlock(FHBlocks.sauna))) {
+                        findNext(l, act, orig, poss, edges);
+                    }
+                    // otherwise, crn is an edge block
+                    else {
+                        edges.add(crn);
+                    }
+                }
+            }
+        }
+    }
+
+    @Nonnull
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
     }
 
     public EffectInstance getEffectInstance() {
@@ -122,6 +157,88 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     public float getEffectTimeFraction() {
         return (float) remainTime / (float) maxTime;
+    }
+
+    @Nullable
+    @Override
+    public IInteractionObjectIE getGuiMaster() {
+        return this;
+    }
+
+    @Override
+    public SteamNetworkHolder getHolder() {
+        return network;
+    }
+
+    @Nullable
+    @Override
+    public NonNullList<ItemStack> getInventory() {
+        return inventory;
+    }
+
+    public float getPowerFraction() {
+        return power / POWER_CAP;
+    }
+
+    @Override
+    public int getSlotLimit(int i) {
+        return 64;
+    }
+
+    private void grantEffects(ServerPlayerEntity p) {
+        // add effect only if armor is not equipped
+        if (p.getArmorCoverPercentage() > 0.0F) {
+            return;
+        }
+        UUID owner = IOwnerTile.getOwner(this);
+        if (owner == null) return;
+        Team t = FTBTeamsAPI.getPlayerTeam(p);
+        if (t == null || !t.getId().equals(owner)) return;
+        // add wet effect
+        if (world.getGameTime() % 200L == 0L) {
+            p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));
+        }
+
+        // add sauna effect
+        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA)) {
+            // initial reward
+            EnergyCore.addEnergy(p, 1000);
+            // whole day reward
+            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA, 23000, 0, true, false));
+        }
+        // add temperature
+        float lenvtemp = Temperature.getEnv(p);//get a smooth change in display
+        float lbodytemp = Temperature.getBodySmoothed(p);
+        Temperature.set(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
+        // add medical effect
+        if (hasMedicine() && remainTime == 1) {
+            p.addPotionEffect(getEffectInstance());
+        }
+    }
+
+    public boolean hasMedicine() {
+        return remainTime > 0 && effect != null;
+    }
+
+    @Override
+    public boolean isStackValid(int slot, ItemStack itemStack) {
+        return true;
+    }
+
+    public boolean isWorking() {
+        return formed && power > 0;
+    }
+
+    public ActionResultType onClick(PlayerEntity player) {
+        if (!player.world.isRemote) {
+            if (formed) {
+                // player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
+                NetworkHooks.openGui((ServerPlayerEntity) player, this, this.getPos());
+            } else {
+                player.sendStatusMessage(GuiUtils.translateMessage("structure_not_formed"), true);
+            }
+        }
+        return ActionResultType.SUCCESS;
     }
 
     @Override
@@ -151,43 +268,34 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        nbt.putFloat("power", power);
-        nbt.putInt("time", remainTime);
-        nbt.putInt("maxTime", maxTime);
-        if (effect != null) {
-            nbt.putInt("effect", Effect.getId(effect));
-            nbt.putInt("effectDuration", effectDuration);
-            nbt.putInt("effectAmplifier", effectAmplifier);
-        } else {
-            nbt.remove("effect");
-            nbt.remove("effectDuration");
-            nbt.remove("effectAmplifier");
+    public void receiveMessageFromServer(CompoundNBT message) {
+        super.receiveMessageFromServer(message);
+    }
+
+    private boolean structureIsValid() {
+        floor.clear();
+        edges.clear();
+        // collect connected floor and edges
+        findNext(this.getWorld(), this.getPos(), this.getPos(), floor, edges);
+        // check wall exist for each edge block
+        for (BlockPos pos : edges) {
+            for (int y = 1; y <= WALL_HEIGHT; y++) {
+                BlockState wall = world.getBlockState(pos.offset(Direction.UP, y));
+                if (!wall.isIn(BlockTags.PLANKS) && !wall.isIn(BlockTags.DOORS)) {
+                    return false;
+                }
+            }
+            // remove edges from the actual floor player can stand on, since play can't stand on wall
+            floor.remove(pos);
         }
-        nbt.putBoolean("refilling", refilling);
-        nbt.putBoolean("formed", formed);
-        ListNBT floorNBT = new ListNBT();
+        // check ceiling exist for each floor block
         for (BlockPos pos : floor) {
-            CompoundNBT posNBT = NBTUtil.writeBlockPos(pos);
-            floorNBT.add(posNBT);
+            BlockState ceiling = world.getBlockState(pos.offset(Direction.UP, WALL_HEIGHT));
+            if (!ceiling.isIn(BlockTags.PLANKS) && !ceiling.isIn(BlockTags.TRAPDOORS)) {
+                return false;
+            }
         }
-        ItemStackHelper.saveAllItems(nbt, this.inventory);
-        nbt.put("floor", floorNBT);
-    }
-
-    @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
-    }
-
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return to == Direction.DOWN;
-    }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
+        return true;
     }
 
     @Override
@@ -261,136 +369,28 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         }
     }
 
-    public ActionResultType onClick(PlayerEntity player) {
-        if (!player.world.isRemote) {
-            if (formed) {
-                // player.sendStatusMessage(GuiUtils.translateMessage("structure_formed"), true);
-                NetworkHooks.openGui((ServerPlayerEntity) player, this, this.getPos());
-            } else {
-                player.sendStatusMessage(GuiUtils.translateMessage("structure_not_formed"), true);
-            }
+    @Override
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        nbt.putFloat("power", power);
+        nbt.putInt("time", remainTime);
+        nbt.putInt("maxTime", maxTime);
+        if (effect != null) {
+            nbt.putInt("effect", Effect.getId(effect));
+            nbt.putInt("effectDuration", effectDuration);
+            nbt.putInt("effectAmplifier", effectAmplifier);
+        } else {
+            nbt.remove("effect");
+            nbt.remove("effectDuration");
+            nbt.remove("effectAmplifier");
         }
-        return ActionResultType.SUCCESS;
-    }
-
-    private void grantEffects(ServerPlayerEntity p) {
-        // add effect only if armor is not equipped
-        if (p.getArmorCoverPercentage() > 0.0F) {
-            return;
-        }
-        UUID owner = IOwnerTile.getOwner(this);
-        if (owner == null) return;
-        Team t = FTBTeamsAPI.getPlayerTeam(p);
-        if (t == null || !t.getId().equals(owner)) return;
-        // add wet effect
-        if (world.getGameTime() % 200L == 0L) {
-            p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));
-        }
-
-        // add sauna effect
-        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA)) {
-            // initial reward
-            EnergyCore.addEnergy(p, 1000);
-            // whole day reward
-            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA, 23000, 0, true, false));
-        }
-        // add temperature
-        float lenvtemp = Temperature.getEnv(p);//get a smooth change in display
-        float lbodytemp = Temperature.getBodySmoothed(p);
-        Temperature.set(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
-        // add medical effect
-        if (hasMedicine() && remainTime == 1) {
-            p.addPotionEffect(getEffectInstance());
-        }
-    }
-
-    private boolean dist(BlockPos crn, BlockPos orig) {
-        return MathHelper.abs(crn.getX() - orig.getX()) <= RANGE && MathHelper.abs(crn.getZ() - orig.getZ()) <= RANGE;
-    }
-
-    private void findNext(World l, BlockPos crn, BlockPos orig, Set<BlockPos> poss, Set<BlockPos> edges) {
-        if (dist(crn, orig)) {
-            if (poss.add(crn)) {
-                for (Direction dir : HORIZONTALS) {
-                    BlockPos act = crn.offset(dir);
-                    // if crn connected to plank
-                    if (l.isBlockPresent(act) && (l.getBlockState(act).isIn(BlockTags.PLANKS) || l.getBlockState(act).getBlock().matchesBlock(FHBlocks.sauna))) {
-                        findNext(l, act, orig, poss, edges);
-                    }
-                    // otherwise, crn is an edge block
-                    else {
-                        edges.add(crn);
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean structureIsValid() {
-        floor.clear();
-        edges.clear();
-        // collect connected floor and edges
-        findNext(this.getWorld(), this.getPos(), this.getPos(), floor, edges);
-        // check wall exist for each edge block
-        for (BlockPos pos : edges) {
-            for (int y = 1; y <= WALL_HEIGHT; y++) {
-                BlockState wall = world.getBlockState(pos.offset(Direction.UP, y));
-                if (!wall.isIn(BlockTags.PLANKS) && !wall.isIn(BlockTags.DOORS)) {
-                    return false;
-                }
-            }
-            // remove edges from the actual floor player can stand on, since play can't stand on wall
-            floor.remove(pos);
-        }
-        // check ceiling exist for each floor block
+        nbt.putBoolean("refilling", refilling);
+        nbt.putBoolean("formed", formed);
+        ListNBT floorNBT = new ListNBT();
         for (BlockPos pos : floor) {
-            BlockState ceiling = world.getBlockState(pos.offset(Direction.UP, WALL_HEIGHT));
-            if (!ceiling.isIn(BlockTags.PLANKS) && !ceiling.isIn(BlockTags.TRAPDOORS)) {
-                return false;
-            }
+            CompoundNBT posNBT = NBTUtil.writeBlockPos(pos);
+            floorNBT.add(posNBT);
         }
-        return true;
-    }
-
-    @Nullable
-    @Override
-    public NonNullList<ItemStack> getInventory() {
-        return inventory;
-    }
-
-    @Override
-    public boolean isStackValid(int slot, ItemStack itemStack) {
-        return true;
-    }
-
-    @Override
-    public int getSlotLimit(int i) {
-        return 64;
-    }
-
-    @Override
-    public void doGraphicalUpdates() {
-
-    }
-
-    @Nonnull
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
-    }
-
-    @Nullable
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
-    }
-
-    @Override
-    public boolean canUseGui(PlayerEntity playerEntity) {
-        return true;
-    }
-
-    @Override
-    public void receiveMessageFromServer(CompoundNBT message) {
-        super.receiveMessageFromServer(message);
+        ItemStackHelper.saveAllItems(nbt, this.inventory);
+        nbt.put("floor", floorNBT);
     }
 }

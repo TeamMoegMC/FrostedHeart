@@ -55,29 +55,6 @@ public class ReplaceLootModifier extends LootModifier {
         }
     }
 
-    List<ReplacePair> remap = new ArrayList<>();
-
-    private ReplaceLootModifier(ILootCondition[] conditionsIn, Collection<ReplacePair> pairsin) {
-        super(conditionsIn);
-        this.remap.addAll(pairsin);
-    }
-
-    @Nonnull
-    @Override
-    protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
-        generatedLoot.replaceAll(this::doReplace);
-        return generatedLoot;
-    }
-
-    private ItemStack doReplace(ItemStack orig) {
-        for (ReplacePair rp : remap) {
-            if (rp.from.test(orig)) {
-                return new ItemStack(rp.to, orig.getCount());
-            }
-        }
-        return orig;
-    }
-
     public static class Serializer extends GlobalLootModifierSerializer<ReplaceLootModifier> {
         @Override
         public ReplaceLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
@@ -99,5 +76,28 @@ public class ReplaceLootModifier extends LootModifier {
             object.add("changes", changes);
             return object;
         }
+    }
+
+    List<ReplacePair> remap = new ArrayList<>();
+
+    private ReplaceLootModifier(ILootCondition[] conditionsIn, Collection<ReplacePair> pairsin) {
+        super(conditionsIn);
+        this.remap.addAll(pairsin);
+    }
+
+    @Nonnull
+    @Override
+    protected List<ItemStack> doApply(List<ItemStack> generatedLoot, LootContext context) {
+        generatedLoot.replaceAll(this::doReplace);
+        return generatedLoot;
+    }
+
+    private ItemStack doReplace(ItemStack orig) {
+        for (ReplacePair rp : remap) {
+            if (rp.from.test(orig)) {
+                return new ItemStack(rp.to, orig.getCount());
+            }
+        }
+        return orig;
     }
 }

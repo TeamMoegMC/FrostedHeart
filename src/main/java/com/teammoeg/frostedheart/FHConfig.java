@@ -28,12 +28,6 @@ import net.minecraftforge.fml.config.ModConfig;
 
 public class FHConfig {
 
-    public static void register() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, FHConfig.CLIENT_CONFIG);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FHConfig.COMMON_CONFIG);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, FHConfig.SERVER_CONFIG);
-    }
-
     public static class Client {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureOrb;
         public final ForgeConfigSpec.BooleanValue enableUI;
@@ -124,6 +118,10 @@ public class FHConfig {
         }
     }
 
+    public enum TempOrbPos {
+        MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT;
+    }
+
     public static final ForgeConfigSpec CLIENT_CONFIG;
     public static final ForgeConfigSpec COMMON_CONFIG;
     public static final ForgeConfigSpec SERVER_CONFIG;
@@ -154,7 +152,9 @@ public class FHConfig {
         DEFAULT_WHITELIST.add("Dev");
     }
 
-    public enum TempOrbPos {
-        MIDDLE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT;
+    public static void register() {
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, FHConfig.CLIENT_CONFIG);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FHConfig.COMMON_CONFIG);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, FHConfig.SERVER_CONFIG);
     }
 }

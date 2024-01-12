@@ -64,42 +64,11 @@ public class EffectItemReward extends Effect {
     }
 
     @Override
-    public void init() {
+    public String getBrief() {
+        if (rewards.isEmpty())
+            return "Reward nothing";
 
-    }
-
-    public List<ItemStack> getRewards() {
-        return rewards;
-    }
-
-    @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        if (triggerPlayer == null || isload) return false;
-        for (ItemStack s : rewards) {
-            FHUtils.giveItem(triggerPlayer, s.copy());
-
-        }
-        return true;
-    }
-
-    //We dont confiscate players items, that is totally unnecessary
-    @Override
-    public void revoke(TeamResearchData team) {
-
-    }
-
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.add("rewards", SerializeUtil.toJsonList(rewards, SerializeUtil::toJson));
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeItemStack);
+        return "Reward " + rewards.get(0).getDisplayName().getString() + (rewards.size() > 1 ? " ..." : "");
     }
 
     @Override
@@ -127,11 +96,42 @@ public class EffectItemReward extends Effect {
         return tooltip;
     }
 
-    @Override
-    public String getBrief() {
-        if (rewards.isEmpty())
-            return "Reward nothing";
 
-        return "Reward " + rewards.get(0).getDisplayName().getString() + (rewards.size() > 1 ? " ..." : "");
+    public List<ItemStack> getRewards() {
+        return rewards;
+    }
+
+    @Override
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        if (triggerPlayer == null || isload) return false;
+        for (ItemStack s : rewards) {
+            FHUtils.giveItem(triggerPlayer, s.copy());
+
+        }
+        return true;
+    }
+
+    @Override
+    public void init() {
+
+    }
+
+    //We dont confiscate players items, that is totally unnecessary
+    @Override
+    public void revoke(TeamResearchData team) {
+
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.add("rewards", SerializeUtil.toJsonList(rewards, SerializeUtil::toJson));
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeItemStack);
     }
 }

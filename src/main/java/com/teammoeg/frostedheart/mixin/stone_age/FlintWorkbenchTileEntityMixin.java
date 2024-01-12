@@ -48,22 +48,16 @@ public class FlintWorkbenchTileEntityMixin extends TileEntity {
     @Shadow(remap = false)
     private RecipeWrapper inventoryWrapper;
 
+    PlayerEntity pe;
+
     public FlintWorkbenchTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
         super(tileEntityTypeIn);
     }
 
-    PlayerEntity pe;
-
-    /**
-     * @author khjxiaogu
-     * @reason Make research can limit flint workbench
-     */
-    @Overwrite(remap = false)
-    private List<FlintWorkbenchRecipe> findMatchingRecipes(@Nonnull ItemStack heldItemMainhand) {
-        assert this.world != null;
-
-        return findMatchingRecipes().stream()
-                .filter(flintWorkbenchRecipe -> flintWorkbenchRecipe.testTool(heldItemMainhand)).findFirst().map(ImmutableList::of).orElseGet(ImmutableList::of);
+    @Inject(at = @At("HEAD"), method = "blockActivated", remap = false)
+    public void fh$blockActivated(@Nonnull PlayerEntity player, @Nonnull BlockRayTraceResult hit,
+                                  CallbackInfoReturnable<ActionResultType> cbi) {
+        pe = player;
     }
 
     /**
@@ -83,9 +77,15 @@ public class FlintWorkbenchTileEntityMixin extends TileEntity {
         return ret;
     }
 
-    @Inject(at = @At("HEAD"), method = "blockActivated", remap = false)
-    public void fh$blockActivated(@Nonnull PlayerEntity player, @Nonnull BlockRayTraceResult hit,
-                                  CallbackInfoReturnable<ActionResultType> cbi) {
-        pe = player;
+    /**
+     * @author khjxiaogu
+     * @reason Make research can limit flint workbench
+     */
+    @Overwrite(remap = false)
+    private List<FlintWorkbenchRecipe> findMatchingRecipes(@Nonnull ItemStack heldItemMainhand) {
+        assert this.world != null;
+
+        return findMatchingRecipes().stream()
+                .filter(flintWorkbenchRecipe -> flintWorkbenchRecipe.testTool(heldItemMainhand)).findFirst().map(ImmutableList::of).orElseGet(ImmutableList::of);
     }
 }

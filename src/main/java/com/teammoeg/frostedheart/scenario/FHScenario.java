@@ -34,16 +34,12 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class FHScenario {
     public static ScenarioExecutor server = new ScenarioExecutor();
 
-    public static void registerCommand(String cmdName, ScenarioMethod method) {
-        server.registerCommand(cmdName, method);
+    public static void callCommand(String name, ScenarioRunner runner, Map<String, String> params) {
+        server.callCommand(name, runner, params);
     }
 
     public static void regiser(Class<?> clazz) {
         server.regiser(clazz);
-    }
-
-    public static void callCommand(String name, ScenarioRunner runner, Map<String, String> params) {
-        server.callCommand(name, runner, params);
     }
 
     public static void registerClientDelegate(Class<?> cls) {
@@ -56,5 +52,9 @@ public class FHScenario {
             }
         }
 
+    }
+
+    public static void registerCommand(String cmdName, ScenarioMethod method) {
+        server.registerCommand(cmdName, method);
     }
 }

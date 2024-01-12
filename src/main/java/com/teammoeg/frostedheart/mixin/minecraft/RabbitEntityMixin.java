@@ -36,18 +36,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PigEntity.class)
 public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedStore {
+    byte feeded = 0;
+
+
     protected RabbitEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
         super(type, worldIn);
     }
 
 
-    byte feeded = 0;
-
-
-    @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        compound.putByte("feed_stored", feeded);
-
+    @Override
+    public boolean consumeFeed() {
+        if (feeded > 0) {
+            feeded--;
+            return true;
+        }
+        return false;
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
@@ -55,6 +58,12 @@ public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedSto
         feeded = compound.getByte("feed_stored");
     }
 
+
+    @Inject(at = @At("HEAD"), method = "writeAdditional")
+    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        compound.putByte("feed_stored", feeded);
+
+    }
 
     @Override
     public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
@@ -69,14 +78,5 @@ public abstract class RabbitEntityMixin extends AnimalEntity implements IFeedSto
             }
         }
         return super.getEntityInteractionResult(playerIn, hand);
-    }
-
-    @Override
-    public boolean consumeFeed() {
-        if (feeded > 0) {
-            feeded--;
-            return true;
-        }
-        return false;
     }
 }

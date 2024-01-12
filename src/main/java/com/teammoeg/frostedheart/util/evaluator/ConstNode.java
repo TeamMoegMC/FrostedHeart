@@ -22,11 +22,6 @@ package com.teammoeg.frostedheart.util.evaluator;
 class ConstNode implements Node {
     double val;
 
-    @Override
-    public String toString() {
-        return "" + val;
-    }
-
     public ConstNode(double val) {
         this.val = val;
     }
@@ -44,5 +39,10 @@ class ConstNode implements Node {
     @Override
     public Node simplify() {
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "" + val;
     }
 }

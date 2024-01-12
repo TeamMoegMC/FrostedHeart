@@ -36,10 +36,14 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class KillClue extends ListenerClue {
     EntityType<?> type;
 
+    KillClue() {
+        super();
+    }
+
+
     public KillClue(EntityType<?> t, float contribution) {
         super("", "", "", contribution);
     }
-
 
     public KillClue(JsonObject jo) {
         super(jo);
@@ -51,15 +55,9 @@ public class KillClue extends ListenerClue {
         type = pb.readRegistryIdUnsafe(ForgeRegistries.ENTITIES);
     }
 
-    KillClue() {
-        super();
-    }
-
     @Override
-    public ITextComponent getName() {
-        if (name != null && !name.isEmpty())
-            return super.getName();
-        return GuiUtils.translate("clue." + FHMain.MODID + ".kill");
+    public String getBrief() {
+        return "Kill " + getDescriptionString();
     }
 
     @Override
@@ -70,18 +68,20 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
-    public void initListener(Team t) {
-        ResearchListeners.getKillClues().add(this, t);
-    }
-
-    @Override
-    public void removeListener(Team t) {
-        ResearchListeners.getKillClues().remove(this, t);
-    }
-
-    @Override
     public String getId() {
         return "kill";
+    }
+
+    @Override
+    public ITextComponent getName() {
+        if (name != null && !name.isEmpty())
+            return super.getName();
+        return GuiUtils.translate("clue." + FHMain.MODID + ".kill");
+    }
+
+    @Override
+    public void initListener(Team t) {
+        ResearchListeners.getKillClues().add(this, t);
     }
 
     public boolean isCompleted(TeamResearchData trd, LivingEntity e) {
@@ -93,22 +93,22 @@ public class KillClue extends ListenerClue {
     }
 
     @Override
+    public void removeListener(Team t) {
+        ResearchListeners.getKillClues().remove(this, t);
+    }
+
+
+    @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
         jo.addProperty("entity", type.getRegistryName().toString());
         return jo;
     }
 
-
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
         buffer.writeRegistryIdUnsafe(ForgeRegistries.ENTITIES, type);
-    }
-
-    @Override
-    public String getBrief() {
-        return "Kill " + getDescriptionString();
     }
 
 

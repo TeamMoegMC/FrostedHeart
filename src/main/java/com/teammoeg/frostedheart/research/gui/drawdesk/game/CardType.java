@@ -34,11 +34,11 @@ public enum CardType {
         this.mustInPair = mustInPair;
     }
 
-    public boolean match(int othis, int othat) {
-        return matcher.apply(othis, othat);
-    }
-
     public boolean isGood(int num) {
         return !mustInPair || num % 2 == 0;
+    }
+
+    public boolean match(int othis, int othat) {
+        return matcher.apply(othis, othat);
     }
 }

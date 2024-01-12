@@ -36,11 +36,11 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 
 public class CluePanel extends Panel {
-    Clue c;
-    Research r;
     public static final String sq = "\u2610";
     public static final String sq_v = "\u2611";
     public static final String sq_x = "\u2612";
+    Clue c;
+    Research r;
     ITextComponent hover;
     TextField clueName;
     TextField desc;
@@ -51,6 +51,38 @@ public class CluePanel extends Panel {
         super(panel);
         this.c = c;
         this.r = r;
+    }
+
+    @Override
+    public void addMouseOverText(TooltipList arg0) {
+        super.addMouseOverText(arg0);
+        if (hover != null)
+            arg0.add(hover);
+    }
+
+    @Override
+    public void addWidgets() {
+        add(clueName);
+        if (desc != null)
+            add(desc);
+        if (rq != null)
+            add(rq);
+        add(contribute);
+    }
+
+    @Override
+    public void alignWidgets() {
+    }
+
+    @Override
+    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        // super.drawBackground(matrixStack, theme, x, y, w, h);
+        if (c.isCompleted())
+            TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);
+        else if (r.isCompleted())
+            TechIcons.CHECKBOX_CROSS.draw(matrixStack, x, y, 9, 9);
+        else
+            TechIcons.CHECKBOX.draw(matrixStack, x, y, 9, 9);
     }
 
     public void initWidgets() {
@@ -85,16 +117,6 @@ public class CluePanel extends Panel {
     }
 
     @Override
-    public void addWidgets() {
-        add(clueName);
-        if (desc != null)
-            add(desc);
-        if (rq != null)
-            add(rq);
-        add(contribute);
-    }
-
-    @Override
     public boolean mousePressed(MouseButton button) {
         if (isMouseOver()) {
             if (getWidgetType() != WidgetType.DISABLED) {
@@ -105,28 +127,6 @@ public class CluePanel extends Panel {
         }
 
         return false;
-    }
-
-    @Override
-    public void alignWidgets() {
-    }
-
-    @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        // super.drawBackground(matrixStack, theme, x, y, w, h);
-        if (c.isCompleted())
-            TechIcons.CHECKBOX_CHECKED.draw(matrixStack, x, y, 9, 9);
-        else if (r.isCompleted())
-            TechIcons.CHECKBOX_CROSS.draw(matrixStack, x, y, 9, 9);
-        else
-            TechIcons.CHECKBOX.draw(matrixStack, x, y, 9, 9);
-    }
-
-    @Override
-    public void addMouseOverText(TooltipList arg0) {
-        super.addMouseOverText(arg0);
-        if (hover != null)
-            arg0.add(hover);
     }
 
 }

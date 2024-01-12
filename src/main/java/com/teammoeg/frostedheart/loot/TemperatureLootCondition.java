@@ -35,15 +35,6 @@ import net.minecraft.world.World;
 import java.util.function.BiPredicate;
 
 public class TemperatureLootCondition implements ILootCondition {
-    public static LootConditionType TYPE;
-    private float temp;
-    private Comp comparator;
-
-    public TemperatureLootCondition(float temp, Comp comparator) {
-        this.temp = temp;
-        this.comparator = comparator;
-    }
-
     private enum Comp {
         lt((a, b) -> a < b),
         le((a, b) -> a <= b),
@@ -61,6 +52,36 @@ public class TemperatureLootCondition implements ILootCondition {
             return comp.test(f1, f2);
         }
     }
+    public static class Serializer implements ILootSerializer<TemperatureLootCondition> {
+
+        @Override
+        public TemperatureLootCondition deserialize(JsonObject jo, JsonDeserializationContext jdc) {
+
+            return new TemperatureLootCondition(jo.get("temp").getAsFloat(), Comp.valueOf(jo.get("compare").getAsString()));
+        }
+
+        @Override
+        public void serialize(JsonObject jo, TemperatureLootCondition ot,
+                              JsonSerializationContext p_230424_3_) {
+            jo.addProperty("temp", ot.temp);
+            jo.addProperty("compare", ot.comparator.name());
+        }
+    }
+    public static LootConditionType TYPE;
+
+    private float temp;
+
+    private Comp comparator;
+
+    public TemperatureLootCondition(float temp, Comp comparator) {
+        this.temp = temp;
+        this.comparator = comparator;
+    }
+
+    @Override
+    public LootConditionType getConditionType() {
+        return TYPE;
+    }
 
     @SuppressWarnings("resource")
     @Override
@@ -72,26 +93,5 @@ public class TemperatureLootCondition implements ILootCondition {
             return comparator.test(ChunkHeatData.getTemperature(w, bp), temp);
         }
         return false;
-    }
-
-    @Override
-    public LootConditionType getConditionType() {
-        return TYPE;
-    }
-
-    public static class Serializer implements ILootSerializer<TemperatureLootCondition> {
-
-        @Override
-        public void serialize(JsonObject jo, TemperatureLootCondition ot,
-                              JsonSerializationContext p_230424_3_) {
-            jo.addProperty("temp", ot.temp);
-            jo.addProperty("compare", ot.comparator.name());
-        }
-
-        @Override
-        public TemperatureLootCondition deserialize(JsonObject jo, JsonDeserializationContext jdc) {
-
-            return new TemperatureLootCondition(jo.get("temp").getAsFloat(), Comp.valueOf(jo.get("compare").getAsString()));
-        }
     }
 }

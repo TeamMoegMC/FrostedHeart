@@ -45,17 +45,105 @@ import net.minecraftforge.fluids.IFluidTank;
 
 public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<RadiatorTileEntity> implements
         INetworkConsumer, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
+    public static final int INPUT_SLOT = 0;
+    public static final int OUTPUT_SLOT = 1;
     public int process = 0;
     public int processMax = 0;
     public float tempLevelLast;
-    public static final int INPUT_SLOT = 0;
-    public static final int OUTPUT_SLOT = 1;
+
+    SteamNetworkConsumer network = new SteamNetworkConsumer(3000, 24);
 
     public RadiatorTileEntity() {
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
     }
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(3000, 24);
+
+    @Override
+    protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, TileEntity te) {
+        if (te instanceof RadiatorTileEntity)
+            consumer.accept((RadiatorTileEntity) te);
+    }
+
+    @Override
+    public boolean canConnectAt(Direction to) {
+        return this.offsetToMaster.getY() == 0;
+    }
+
+    @Override
+    protected boolean canDrainTankFrom(int iTank, Direction side) {
+        return false;
+    }
+
+
+    @Override
+    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
+        return false;
+    }
+
+    @Override
+    public boolean canUseGui(PlayerEntity player) {
+        return false;
+    }
+
+
+    @Override
+    public boolean connect(Direction to, int dist) {
+        return network.reciveConnection(world, pos, to, dist);
+    }
+
+    @Override
+    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
+        return new IFluidTank[0];
+    }
+
+    @Override
+    public int getActualRange() {
+        return 8;
+    }
+
+    @Override
+    public int getActualTemp() {
+        return (int) (tempLevelLast * 10);
+    }
+
+    @Override
+    public int[] getCurrentProcessesMax() {
+        return new int[]{processMax};
+    }
+
+    @Override
+    public int[] getCurrentProcessesStep() {
+        return new int[]{processMax - process};
+    }
+
+    @Override
+    public IInteractionObjectIE getGuiMaster() {
+        return this;
+    }
+
+    @Override
+    public SteamNetworkHolder getHolder() {
+        return network;
+    }
+
+    @Override
+    public int getLowerBound() {
+        return 1;
+    }
+
+    @Override
+    public int getUpperBound() {
+        return 4;
+    }
+
+    @Override
+    public boolean isWorking() {
+        return true;
+    }
+
+    @Override
+    protected void onShutDown() {
+    }
 
 
     @Override
@@ -68,48 +156,10 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        network.save(nbt);
-        nbt.putInt("process", process);
-        nbt.putInt("processMax", processMax);
-        nbt.putFloat("temp", tempLevelLast);
-    }
-
-    @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
-    }
-
-
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
-    }
-
-    @Override
-    public boolean canUseGui(PlayerEntity player) {
-        return false;
-    }
-
-
-    @Override
-    public int[] getCurrentProcessesStep() {
-        return new int[]{processMax - process};
-    }
-
-    @Override
-    public int[] getCurrentProcessesMax() {
-        return new int[]{processMax};
-    }
-
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return this.offsetToMaster.getY() == 0;
-    }
-
-    @Override
-    protected void onShutDown() {
+    protected void tickEffects(boolean isActive) {
+        if (world != null && world.isRemote && isActive && world.rand.nextFloat() < 0.2) {
+            ClientUtils.spawnSteamParticles(world, this.getPos());
+        }
     }
 
     @Override
@@ -140,67 +190,17 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
     @Override
-    public boolean isWorking() {
-        return true;
-    }
-
-    @Override
-    public int getActualRange() {
-        return 8;
-    }
-
-    @Override
-    public int getActualTemp() {
-        return (int) (tempLevelLast * 10);
-    }
-
-    @Override
-    protected void tickEffects(boolean isActive) {
-        if (world != null && world.isRemote && isActive && world.rand.nextFloat() < 0.2) {
-            ClientUtils.spawnSteamParticles(world, this.getPos());
-        }
-    }
-
-    @Override
-    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
-        return new IFluidTank[0];
-    }
-
-    @Override
-    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-        return false;
-    }
-
-    @Override
-    protected boolean canDrainTankFrom(int iTank, Direction side) {
-        return false;
-    }
-
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
-    }
-
-    @Override
-    public int getUpperBound() {
-        return 4;
-    }
-
-    @Override
-    public int getLowerBound() {
-        return 1;
-    }
-
-    @Override
     public void tickHeat() {
 
 
     }
 
     @Override
-    protected void callBlockConsumerWithTypeCheck(Consumer<RadiatorTileEntity> consumer, TileEntity te) {
-        if (te instanceof RadiatorTileEntity)
-            consumer.accept((RadiatorTileEntity) te);
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.writeCustomNBT(nbt, descPacket);
+        network.save(nbt);
+        nbt.putInt("process", process);
+        nbt.putInt("processMax", processMax);
+        nbt.putFloat("temp", tempLevelLast);
     }
 }

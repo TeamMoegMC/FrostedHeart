@@ -30,6 +30,15 @@ import net.minecraft.util.Direction;
 public interface INetworkConsumer {
 
     /**
+     * Check can recive connect from direction.<br>
+     *
+     * @param to the to<br>
+     * @return true, if can recive connect from direction
+     */
+    boolean canConnectAt(Direction to);
+
+
+    /**
      * Recived Connection from any heat provider.<br>
      * Usually you should call reciveConnection of your holder
      *
@@ -39,14 +48,13 @@ public interface INetworkConsumer {
      */
     boolean connect(Direction d, int distance);
 
-
     /**
-     * Check can recive connect from direction.<br>
+     * Get network holder, for debug propose only
      *
-     * @param to the to<br>
-     * @return true, if can recive connect from direction
+     * @return holder<br>
      */
-    boolean canConnectAt(Direction to);
+    @Nullable
+    SteamNetworkHolder getHolder();
 
     /**
      * Try to connect at.<br>
@@ -61,12 +69,4 @@ public interface INetworkConsumer {
             return connect(d, distance);
         return false;
     }
-
-    /**
-     * Get network holder, for debug propose only
-     *
-     * @return holder<br>
-     */
-    @Nullable
-    SteamNetworkHolder getHolder();
 }

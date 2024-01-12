@@ -38,12 +38,8 @@ public class AdvancementClue extends TickListenerClue {
     ResourceLocation advancement = new ResourceLocation("minecraft:story/root");
     String criterion = "";
 
-    public AdvancementClue(String name, String desc, String hint, float contribution) {
-        super(name, desc, hint, contribution);
-    }
-
-    public AdvancementClue(String name, float contribution) {
-        super(name, contribution);
+    public AdvancementClue() {
+        super();
     }
 
     public AdvancementClue(JsonObject jo) {
@@ -59,15 +55,17 @@ public class AdvancementClue extends TickListenerClue {
         criterion = pb.readString();
     }
 
-    public AdvancementClue() {
-        super();
+    public AdvancementClue(String name, float contribution) {
+        super(name, contribution);
+    }
+
+    public AdvancementClue(String name, String desc, String hint, float contribution) {
+        super(name, desc, hint, contribution);
     }
 
     @Override
-    public ITextComponent getName() {
-        if (name != null && !name.isEmpty())
-            return super.getName();
-        return GuiUtils.translate("clue." + FHMain.MODID + ".advancement");
+    public String getBrief() {
+        return "Advancement " + getDescriptionString();
     }
 
     @Override
@@ -81,6 +79,18 @@ public class AdvancementClue extends TickListenerClue {
         else
             return null;
 
+    }
+
+    @Override
+    public String getId() {
+        return "advancement";
+    }
+
+    @Override
+    public ITextComponent getName() {
+        if (name != null && !name.isEmpty())
+            return super.getName();
+        return GuiUtils.translate("clue." + FHMain.MODID + ".advancement");
     }
 
     @Override
@@ -100,11 +110,6 @@ public class AdvancementClue extends TickListenerClue {
     }
 
     @Override
-    public String getId() {
-        return "advancement";
-    }
-
-    @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
         jo.addProperty("advancement", advancement.toString());
@@ -118,11 +123,6 @@ public class AdvancementClue extends TickListenerClue {
         super.write(buffer);
         buffer.writeResourceLocation(advancement);
         buffer.writeString(criterion);
-    }
-
-    @Override
-    public String getBrief() {
-        return "Advancement " + getDescriptionString();
     }
 
 

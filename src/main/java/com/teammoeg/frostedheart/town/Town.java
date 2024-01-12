@@ -26,22 +26,6 @@ import java.util.Optional;
  */
 public interface Town {
     /**
-     * Gets the team town data, may be null if not a player team.
-     *
-     * @param name the resouce type
-     * @return resource amount
-     */
-    Optional<TeamTownData> getTownData();
-
-    /**
-     * Gets resource.
-     *
-     * @param name the resouce type
-     * @return resource amount
-     */
-    double get(TownResourceType name);
-
-    /**
      * Adds resource.
      *
      * @param name     the resouce type
@@ -72,6 +56,16 @@ public interface Town {
     double cost(TownResourceType name, double val, boolean simulate);
 
     /**
+     * Cost a resource as a service, that means does not actually cost the resource, but would cost temporary at this tick.
+     *
+     * @param name     the resouce type
+     * @param val      to be cost
+     * @param simulate simulate process, not actually cost.
+     * @return the value that has been actually cost.
+     */
+    double costAsService(TownResourceType name, double val, boolean simulate);
+
+    /**
      * Cost a service
      *
      * @param name     the resouce type
@@ -82,13 +76,19 @@ public interface Town {
     double costService(TownResourceType name, double val, boolean simulate);
 
     /**
-     * Cost a resource as a service, that means does not actually cost the resource, but would cost temporary at this tick.
+     * Gets resource.
      *
-     * @param name     the resouce type
-     * @param val      to be cost
-     * @param simulate simulate process, not actually cost.
-     * @return the value that has been actually cost.
+     * @param name the resouce type
+     * @return resource amount
      */
-    double costAsService(TownResourceType name, double val, boolean simulate);
+    double get(TownResourceType name);
+
+    /**
+     * Gets the team town data, may be null if not a player team.
+     *
+     * @param name the resouce type
+     * @return resource amount
+     */
+    Optional<TeamTownData> getTownData();
 
 }

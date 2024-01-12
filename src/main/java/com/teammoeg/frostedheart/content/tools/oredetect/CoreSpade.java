@@ -50,32 +50,6 @@ public class CoreSpade extends FHLeveledTool {
     public static ResourceLocation otag = new ResourceLocation("forge:ores");
     public static ResourceLocation stag = new ResourceLocation("forge:stone");
 
-    public CoreSpade(String name, int lvl, Properties properties) {
-        super(name, lvl, properties);
-    }
-
-    public static int getHorizonalRange(ItemStack item) {
-        return Math.max(3, getLevel(item));
-    }
-
-    public static int getVerticalRange(ItemStack item) {
-        return getLevel(item) == 1 ? 32 : (48 + (getLevel(item) - 1) * 16);
-    }
-
-    public static int getLevel(ItemStack item) {
-        if (item.getItem() instanceof FHLeveledTool)
-            return ((FHLeveledTool) item.getItem()).getLevel();
-
-        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.coreSpade);
-    }
-
-    public static float getCorrectness(ItemStack item) {
-        if (item.getItem() instanceof FHLeveledTool)
-            return 1;
-
-        return ((IToolProvider) item.getItem()).getToolEfficiency(item, TetraCompat.coreSpade) + 1;
-    }
-
     public static ActionResultType doProspect(PlayerEntity player, World world, BlockPos blockpos, ItemStack is, Hand h) {
         if (player != null && (!(player instanceof FakePlayer))) {// fake players does not deserve XD
             if (!world.isRemote && world.getBlockState(blockpos).getBlock().getTags().contains(otag)) {// early exit 'cause ore found
@@ -143,15 +117,41 @@ public class CoreSpade extends FHLeveledTool {
         return ActionResultType.SUCCESS;
     }
 
-    @SuppressWarnings("resource")
-    @Override
-    public ActionResultType onItemUse(ItemUseContext context) {
-        return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());
+    public static float getCorrectness(ItemStack item) {
+        if (item.getItem() instanceof FHLeveledTool)
+            return 1;
 
+        return ((IToolProvider) item.getItem()).getToolEfficiency(item, TetraCompat.coreSpade) + 1;
+    }
+
+    public static int getHorizonalRange(ItemStack item) {
+        return Math.max(3, getLevel(item));
+    }
+
+    public static int getLevel(ItemStack item) {
+        if (item.getItem() instanceof FHLeveledTool)
+            return ((FHLeveledTool) item.getItem()).getLevel();
+
+        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.coreSpade);
+    }
+
+    public static int getVerticalRange(ItemStack item) {
+        return getLevel(item) == 1 ? 32 : (48 + (getLevel(item) - 1) * 16);
+    }
+
+    public CoreSpade(String name, int lvl, Properties properties) {
+        super(name, lvl, properties);
     }
 
     @Override
     public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         tooltip.add(GuiUtils.translateTooltip("meme.core_spade").mergeStyle(TextFormatting.GRAY));
+    }
+
+    @SuppressWarnings("resource")
+    @Override
+    public ActionResultType onItemUse(ItemUseContext context) {
+        return doProspect(context.getPlayer(), context.getWorld(), context.getPos(), context.getItem(), context.getHand());
+
     }
 }

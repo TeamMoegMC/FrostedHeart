@@ -50,11 +50,17 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
     }
 
 
+    @Override
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
+        return true;
+    }
+
     @Nullable
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
         return FHTileTypes.HEATPIPE.get().create();
     }
+
 
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
@@ -65,12 +71,6 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
 
     @Override
     public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-
-    @Override
-    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
         return true;
     }
 }

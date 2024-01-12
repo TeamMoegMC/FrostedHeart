@@ -34,12 +34,12 @@ public abstract class BaseEditDialog extends EditDialog {
     }
 
     @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        theme.drawGui(matrixStack, x - 5, y - 5, w + 10, h + 10, WidgetType.NORMAL);
+    public void alignWidgets() {
+        this.setHeight(super.align(WidgetLayout.VERTICAL));
     }
 
     @Override
-    public void alignWidgets() {
-        this.setHeight(super.align(WidgetLayout.VERTICAL));
+    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        theme.drawGui(matrixStack, x - 5, y - 5, w + 10, h + 10, WidgetType.NORMAL);
     }
 }

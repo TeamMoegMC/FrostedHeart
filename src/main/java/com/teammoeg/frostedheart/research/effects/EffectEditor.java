@@ -49,112 +49,6 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 
 public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
-    public static final Editor<EffectBuilding> BUILD = (p, l, v, c) -> {
-        new Building(p, l, v, c).open();
-    };
-    public static final Editor<EffectCrafting> CRAFT = (p, l, v, c) -> {
-        new Crafting(p, l, v, c).open();
-    };
-    public static final Editor<EffectItemReward> ITEM = (p, l, v, c) -> {
-        new ItemReward(p, l, v, c).open();
-    };
-    public static final Editor<EffectStats> STATS = (p, l, v, c) -> {
-        new Stats(p, l, v, c).open();
-    };
-    public static final Editor<EffectUse> USE = (p, l, v, c) -> {
-        new Use(p, l, v, c).open();
-    };
-    public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> {
-        new Category(p, l, v, c).open();
-    };
-    public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> {
-        new Command(p, l, v, c).open();
-    };
-    public static final Editor<EffectExperience> EXP = (p, l, v, c) -> {
-        new Exp(p, l, v, c).open();
-    };
-    public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
-        if (v instanceof EffectBuilding)
-            BUILD.open(p, l, (EffectBuilding) v, e -> c.accept(e));
-        else if (v instanceof EffectCrafting)
-            CRAFT.open(p, l, (EffectCrafting) v, e -> c.accept(e));
-        else if (v instanceof EffectItemReward)
-            ITEM.open(p, l, (EffectItemReward) v, e -> c.accept(e));
-        else if (v instanceof EffectStats)
-            STATS.open(p, l, (EffectStats) v, e -> c.accept(e));
-        else if (v instanceof EffectUse)
-            USE.open(p, l, (EffectUse) v, e -> c.accept(e));
-        else if (v instanceof EffectShowCategory)
-            CAT.open(p, l, (EffectShowCategory) v, e -> c.accept(e));
-        else if (v instanceof EffectCommand)
-            COMMAND.open(p, l, (EffectCommand) v, e -> c.accept(e));
-        else if (v instanceof EffectExperience)
-            EXP.open(p, l, (EffectExperience) v, e -> c.accept(e));
-        else
-            new EditorSelector<>(p, l, c)
-                    .addEditor("Building", BUILD)
-                    .addEditor("Craft", CRAFT)
-                    .addEditor("Item Reward", ITEM)
-                    .addEditor("Add Stats", STATS)
-                    .addEditor("Add Usage", USE)
-                    .addEditor("Recipe Category", CAT)
-                    .addEditor("Add Command", COMMAND)
-                    .addEditor("Add Experience", EXP)
-                    .open();
-
-    };
-
-    String lbl;
-    T e;
-    Consumer<T> cb;
-    protected LabeledTextBoxAndBtn nonce;
-    protected LabeledTextBox name;
-    protected LabeledSelection<Boolean> sd;
-    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
-    };
-
-    public EffectEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
-        super(panel);
-
-        this.lbl = lbl;
-
-
-        if (e == null) {
-            e = createEffect();
-        }
-        this.e = e;
-        nonce = new LabeledTextBoxAndBtn(this, "nonce", e.getNonce(), "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
-        name = new LabeledTextBox(this, "name", e.name);
-        sd = LabeledSelection.createBool(this, "Hide", e.isHidden());
-        this.cb = cb;
-    }
-
-    public abstract T createEffect();
-
-    @Override
-    public void onClose() {
-        e.name = name.getText();
-        e.hidden = sd.getSelection();
-        if (e.getRId() != 0) {
-            e.setNewId(nonce.getText());
-        } else {
-            e.nonce = nonce.getText();
-        }
-        cb.accept(e);
-
-    }
-
-    @Override
-    public void addWidgets() {
-        add(EditUtils.getTitle(this, lbl));
-        add(nonce);
-        add(name);
-        add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, e.tooltip, s -> e.tooltip = new ArrayList<>(s)));
-        add(new OpenEditorButton<>(this, "Edit icon", IconEditor.EDITOR, e.icon == null ? e.getDefaultIcon() : e.icon, s -> e.icon = s));
-        add(sd);
-    }
-
     private static class Building extends EffectEditor<EffectBuilding> {
 
         public Building(Widget panel, String lbl, EffectBuilding e, Consumer<EffectBuilding> cb) {
@@ -181,7 +75,6 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
-
     private static class Category extends EffectEditor<EffectShowCategory> {
         LabeledTextBox category;
 
@@ -209,7 +102,29 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+    private static class Command extends EffectEditor<EffectCommand> {
+        public Command(Widget panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
+            super(panel, lbl, e, cb);
 
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(new OpenEditorButton<>(this, "Edit Commands", EditListDialog.STRING_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
+        }
+
+        @Override
+        public EffectCommand createEffect() {
+            return new EffectCommand();
+        }
+
+        @Override
+        public void onClose() {
+            super.onClose();
+        }
+
+    }
     private static class Crafting extends EffectEditor<EffectCrafting> {
 
         public Crafting(Widget panel, String lbl, EffectCrafting e, Consumer<EffectCrafting> cb) {
@@ -241,7 +156,34 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+    private static class Exp extends EffectEditor<EffectExperience> {
+        NumberBox val;
 
+        public Exp(Widget panel, String lbl, EffectExperience e, Consumer<EffectExperience> cb) {
+            super(panel, lbl, e, cb);
+            val = new NumberBox(this, "Exp", this.e.exp);
+
+        }
+
+        @Override
+        public void addWidgets() {
+            super.addWidgets();
+            add(val);
+
+        }
+
+        @Override
+        public EffectExperience createEffect() {
+            return new EffectExperience(0);
+        }
+
+        @Override
+        public void onClose() {
+            e.exp = (int) val.getNum();
+            super.onClose();
+        }
+
+    }
     private static class ItemReward extends EffectEditor<EffectItemReward> {
         private static String fromItemStack(ItemStack s) {
             return s.getDisplayName().getString() + " x " + s.getCount();
@@ -264,7 +206,6 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
-
     private static class Stats extends EffectEditor<EffectStats> {
         LabeledSelection<Boolean> perc;
         LabeledTextBox name;
@@ -301,7 +242,6 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
-
     private static class Use extends EffectEditor<EffectUse> {
 
         public Use(Widget panel, String lbl, EffectUse e, Consumer<EffectUse> cb) {
@@ -321,57 +261,117 @@ public abstract class EffectEditor<T extends Effect> extends BaseEditDialog {
         }
 
     }
+    public static final Editor<EffectBuilding> BUILD = (p, l, v, c) -> {
+        new Building(p, l, v, c).open();
+    };
 
-    private static class Command extends EffectEditor<EffectCommand> {
-        public Command(Widget panel, String lbl, EffectCommand e, Consumer<EffectCommand> cb) {
-            super(panel, lbl, e, cb);
+    public static final Editor<EffectCrafting> CRAFT = (p, l, v, c) -> {
+        new Crafting(p, l, v, c).open();
+    };
+    public static final Editor<EffectItemReward> ITEM = (p, l, v, c) -> {
+        new ItemReward(p, l, v, c).open();
+    };
+    public static final Editor<EffectStats> STATS = (p, l, v, c) -> {
+        new Stats(p, l, v, c).open();
+    };
+    public static final Editor<EffectUse> USE = (p, l, v, c) -> {
+        new Use(p, l, v, c).open();
+    };
+    public static final Editor<EffectShowCategory> CAT = (p, l, v, c) -> {
+        new Category(p, l, v, c).open();
+    };
+    public static final Editor<EffectCommand> COMMAND = (p, l, v, c) -> {
+        new Command(p, l, v, c).open();
+    };
+    public static final Editor<EffectExperience> EXP = (p, l, v, c) -> {
+        new Exp(p, l, v, c).open();
+    };
 
+    public static final Editor<Effect> EDITOR = (p, l, v, c) -> {
+        if (v instanceof EffectBuilding)
+            BUILD.open(p, l, (EffectBuilding) v, e -> c.accept(e));
+        else if (v instanceof EffectCrafting)
+            CRAFT.open(p, l, (EffectCrafting) v, e -> c.accept(e));
+        else if (v instanceof EffectItemReward)
+            ITEM.open(p, l, (EffectItemReward) v, e -> c.accept(e));
+        else if (v instanceof EffectStats)
+            STATS.open(p, l, (EffectStats) v, e -> c.accept(e));
+        else if (v instanceof EffectUse)
+            USE.open(p, l, (EffectUse) v, e -> c.accept(e));
+        else if (v instanceof EffectShowCategory)
+            CAT.open(p, l, (EffectShowCategory) v, e -> c.accept(e));
+        else if (v instanceof EffectCommand)
+            COMMAND.open(p, l, (EffectCommand) v, e -> c.accept(e));
+        else if (v instanceof EffectExperience)
+            EXP.open(p, l, (EffectExperience) v, e -> c.accept(e));
+        else
+            new EditorSelector<>(p, l, c)
+                    .addEditor("Building", BUILD)
+                    .addEditor("Craft", CRAFT)
+                    .addEditor("Item Reward", ITEM)
+                    .addEditor("Add Stats", STATS)
+                    .addEditor("Add Usage", USE)
+                    .addEditor("Recipe Category", CAT)
+                    .addEditor("Add Command", COMMAND)
+                    .addEditor("Add Experience", EXP)
+                    .open();
+
+    };
+
+    public static final Editor<Collection<Effect>> EFFECT_LIST = (p, l, v, c) -> {
+        new EditListDialog<>(p, l, v, null, EffectEditor.EDITOR, Effect::getBrief, Effect::getIcon, c).open();
+    };
+
+    String lbl;
+
+    T e;
+
+    Consumer<T> cb;
+
+    protected LabeledTextBoxAndBtn nonce;
+
+    protected LabeledTextBox name;
+
+    protected LabeledSelection<Boolean> sd;
+
+    public EffectEditor(Widget panel, String lbl, T e, Consumer<T> cb) {
+        super(panel);
+
+        this.lbl = lbl;
+
+
+        if (e == null) {
+            e = createEffect();
         }
-
-        @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(new OpenEditorButton<>(this, "Edit Commands", EditListDialog.STRING_LIST, e.rewards, s -> e.rewards = new ArrayList<>(s)));
-        }
-
-        @Override
-        public EffectCommand createEffect() {
-            return new EffectCommand();
-        }
-
-        @Override
-        public void onClose() {
-            super.onClose();
-        }
-
+        this.e = e;
+        nonce = new LabeledTextBoxAndBtn(this, "nonce", e.getNonce(), "Random", t -> t.accept(Long.toHexString(UUID.randomUUID().getMostSignificantBits())));
+        name = new LabeledTextBox(this, "name", e.name);
+        sd = LabeledSelection.createBool(this, "Hide", e.isHidden());
+        this.cb = cb;
     }
 
-    private static class Exp extends EffectEditor<EffectExperience> {
-        NumberBox val;
+    @Override
+    public void addWidgets() {
+        add(EditUtils.getTitle(this, lbl));
+        add(nonce);
+        add(name);
+        add(new OpenEditorButton<>(this, "Edit Description", EditListDialog.STRING_LIST, e.tooltip, s -> e.tooltip = new ArrayList<>(s)));
+        add(new OpenEditorButton<>(this, "Edit icon", IconEditor.EDITOR, e.icon == null ? e.getDefaultIcon() : e.icon, s -> e.icon = s));
+        add(sd);
+    }
 
-        public Exp(Widget panel, String lbl, EffectExperience e, Consumer<EffectExperience> cb) {
-            super(panel, lbl, e, cb);
-            val = new NumberBox(this, "Exp", this.e.exp);
+    public abstract T createEffect();
 
+    @Override
+    public void onClose() {
+        e.name = name.getText();
+        e.hidden = sd.getSelection();
+        if (e.getRId() != 0) {
+            e.setNewId(nonce.getText());
+        } else {
+            e.nonce = nonce.getText();
         }
-
-        @Override
-        public void addWidgets() {
-            super.addWidgets();
-            add(val);
-
-        }
-
-        @Override
-        public EffectExperience createEffect() {
-            return new EffectExperience(0);
-        }
-
-        @Override
-        public void onClose() {
-            e.exp = (int) val.getNum();
-            super.onClose();
-        }
+        cb.accept(e);
 
     }
 }

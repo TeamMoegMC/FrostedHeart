@@ -53,14 +53,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
 
 
-    public static final int INPUT_SLOT = 0;
-    public static final int OUTPUT_SLOT = 1;
-    public int process;
-    public int processMax;
-    protected ItemStack currentItem;
-    //local inventory, prevent lost
-    NonNullList<ItemStack> linventory = NonNullList.withSize(2, ItemStack.EMPTY);
-
     public class GeneratorUIData implements IIntArray {
         public static final int MAX_BURN_TIME = 0;
         public static final int BURN_TIME = 1;
@@ -97,41 +89,38 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             return 2;
         }
     }
+    public static final int INPUT_SLOT = 0;
+    public static final int OUTPUT_SLOT = 1;
+    public int process;
+    public int processMax;
+    protected ItemStack currentItem;
+
+    //local inventory, prevent lost
+    NonNullList<ItemStack> linventory = NonNullList.withSize(2, ItemStack.EMPTY);
+
+    LazyOptional<IItemHandler> invHandler = registerConstantCap(
+            new IEInventoryHandler(2, this, 0, new boolean[]{true, false},
+                    new boolean[]{false, true})
+    );
 
     public MasterGeneratorTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
 
     }
 
-    public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.generatorData).filter(t -> this.pos.equals(t.actualPos));
+    @Override
+    protected boolean canDrainTankFrom(int iTank, Direction side) {
+        return false;
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        super.readCustomNBT(nbt, descPacket);
-        ItemStackHelper.loadAllItems(nbt, linventory);
+    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
+        return false;
     }
 
-    public void unregist() {
-        getTeamData().ifPresent(t -> {
-            t.generatorData.actualPos = BlockPos.ZERO;
-            t.generatorData.dimension = null;
-        });
-    }
-
-    public void registIfPossible() {
-        getTeamData().filter(t -> t.generatorData.actualPos.equals(this.pos)).ifPresent(t -> {
-            t.generatorData.actualPos = this.pos;
-            t.generatorData.dimension = this.world.getDimensionKey();
-        });
-    }
-
-    public void regist() {
-        getTeamData().ifPresent(t -> {
-            t.generatorData.actualPos = this.pos;
-            t.generatorData.dimension = this.world.getDimensionKey();
-        });
+    @Override
+    public boolean canUseGui(PlayerEntity player) {
+        return formed;
     }
 
     @Override
@@ -142,15 +131,92 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        super.writeCustomNBT(nbt, descPacket);
-        ItemStackHelper.saveAllItems(nbt, linventory);
+    public void doGraphicalUpdates() {
+
+    }
+
+    @Nonnull
+    @Override
+    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
+        return new IFluidTank[0];
     }
 
     @Nonnull
     @Override
     public VoxelShape getBlockBounds(@Nullable ISelectionContext ctx) {
         return VoxelShapes.fullCube();
+    }
+
+    @Nonnull
+    @Override
+    public <X> LazyOptional<X> getCapability(@Nonnull Capability<X> capability, Direction facing) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            T master = master();
+            if (master != null)
+                return master.invHandler.cast();
+        }
+        return super.getCapability(capability, facing);
+    }
+
+    @Override
+    public int[] getCurrentProcessesMax() {
+        T master = master();
+        if (master != this && master != null)
+            return master.getCurrentProcessesMax();
+        return new int[]{getData().map(t -> t.processMax).orElse(0)};
+    }
+
+    @Override
+    public int[] getCurrentProcessesStep() {
+        T master = master();
+        if (master != this && master != null)
+            return master.getCurrentProcessesStep();
+        return new int[]{getData().map(t -> t.processMax - t.process).orElse(0)};
+    }
+
+    public final Optional<GeneratorData> getData() {
+        return getTeamData().map(t -> t.generatorData).filter(t -> this.pos.equals(t.actualPos));
+    }
+
+    @Nullable
+    @Override
+    public IEBlockInterfaces.IInteractionObjectIE getGuiMaster() {
+        return master();
+    }
+
+    @Override
+    public NonNullList<ItemStack> getInventory() {
+        T master = master();
+        return Optional.ofNullable(master).flatMap(t -> t.getData()).map(t -> t.getInventory()).orElseGet(() -> master != null ? master.linventory : this.linventory);
+    }
+
+    @Override
+    public int getSlotLimit(int slot) {
+        return 64;
+    }
+
+    public boolean isDataPresent() {
+        T master = master();
+        return Optional.ofNullable(master).flatMap(t -> t.getData()).isPresent();
+    }
+
+    @Override
+    public boolean isStackValid(int slot, ItemStack stack) {
+        if (stack.isEmpty())
+            return false;
+        if (slot == INPUT_SLOT)
+            return GeneratorRecipe.findRecipe(stack) != null;
+        return false;
+    }
+
+    @Override
+    public void onShutDown() {
+    }
+
+    @Override
+    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.readCustomNBT(nbt, descPacket);
+        ItemStackHelper.loadAllItems(nbt, linventory);
     }
 
     @Override
@@ -177,97 +243,30 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             setRangeLevel(message.getInt("rangeLevel"));*/
     }
 
-    @Nonnull
-    @Override
-    protected IFluidTank[] getAccessibleFluidTanks(Direction side) {
-        return new IFluidTank[0];
+    public void regist() {
+        getTeamData().ifPresent(t -> {
+            t.generatorData.actualPos = this.pos;
+            t.generatorData.dimension = this.world.getDimensionKey();
+        });
+    }
+
+    public void registIfPossible() {
+        getTeamData().filter(t -> t.generatorData.actualPos.equals(this.pos)).ifPresent(t -> {
+            t.generatorData.actualPos = this.pos;
+            t.generatorData.dimension = this.world.getDimensionKey();
+        });
     }
 
     @Override
-    protected boolean canFillTankFrom(int iTank, Direction side, FluidStack resource) {
-        return false;
+    public void tick() {
+
+        super.tick();
+
     }
 
     @Override
-    protected boolean canDrainTankFrom(int iTank, Direction side) {
-        return false;
-    }
+    protected void tickEffects(boolean isActive) {
 
-    @Nullable
-    @Override
-    public IEBlockInterfaces.IInteractionObjectIE getGuiMaster() {
-        return master();
-    }
-
-    @Override
-    public boolean canUseGui(PlayerEntity player) {
-        return formed;
-    }
-
-    @Override
-    public int[] getCurrentProcessesStep() {
-        T master = master();
-        if (master != this && master != null)
-            return master.getCurrentProcessesStep();
-        return new int[]{getData().map(t -> t.processMax - t.process).orElse(0)};
-    }
-
-    @Override
-    public int[] getCurrentProcessesMax() {
-        T master = master();
-        if (master != this && master != null)
-            return master.getCurrentProcessesMax();
-        return new int[]{getData().map(t -> t.processMax).orElse(0)};
-    }
-
-    @Override
-    public NonNullList<ItemStack> getInventory() {
-        T master = master();
-        return Optional.ofNullable(master).flatMap(t -> t.getData()).map(t -> t.getInventory()).orElseGet(() -> master != null ? master.linventory : this.linventory);
-    }
-
-    public boolean isDataPresent() {
-        T master = master();
-        return Optional.ofNullable(master).flatMap(t -> t.getData()).isPresent();
-    }
-
-    @Override
-    public boolean isStackValid(int slot, ItemStack stack) {
-        if (stack.isEmpty())
-            return false;
-        if (slot == INPUT_SLOT)
-            return GeneratorRecipe.findRecipe(stack) != null;
-        return false;
-    }
-
-    @Override
-    public int getSlotLimit(int slot) {
-        return 64;
-    }
-
-    @Override
-    public void doGraphicalUpdates() {
-
-    }
-
-    LazyOptional<IItemHandler> invHandler = registerConstantCap(
-            new IEInventoryHandler(2, this, 0, new boolean[]{true, false},
-                    new boolean[]{false, true})
-    );
-
-    @Nonnull
-    @Override
-    public <X> LazyOptional<X> getCapability(@Nonnull Capability<X> capability, Direction facing) {
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            T master = master();
-            if (master != null)
-                return master.invHandler.cast();
-        }
-        return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public void onShutDown() {
     }
 
     @Override
@@ -287,16 +286,17 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
 
-    @Override
-    protected void tickEffects(boolean isActive) {
-
+    public void unregist() {
+        getTeamData().ifPresent(t -> {
+            t.generatorData.actualPos = BlockPos.ZERO;
+            t.generatorData.dimension = null;
+        });
     }
 
     @Override
-    public void tick() {
-
-        super.tick();
-
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        super.writeCustomNBT(nbt, descPacket);
+        ItemStackHelper.saveAllItems(nbt, linventory);
     }
 
 

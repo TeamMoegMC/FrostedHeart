@@ -47,17 +47,17 @@ public class HeatDebugItem extends Item {
 
     }
 
-    public int getUseDuration(ItemStack stack) {
-        return 1;
+    //Dont add to creative tag
+    @Override
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
     }
 
     public UseAction getUseAction(ItemStack stack) {
         return UseAction.NONE;
     }
 
-    //Dont add to creative tag
-    @Override
-    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+    public int getUseDuration(ItemStack stack) {
+        return 1;
     }
 
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
