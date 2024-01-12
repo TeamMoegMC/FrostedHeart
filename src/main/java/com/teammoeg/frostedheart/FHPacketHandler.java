@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
+import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioTextPacket;
 import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
@@ -117,6 +118,9 @@ public class FHPacketHandler {
         	ServerScenarioCommandPacket::new, ServerScenarioCommandPacket::handle);
         CHANNEL.registerMessage(id++, ServerSenarioTextPacket.class, ServerSenarioTextPacket::encode,
         	ServerSenarioTextPacket::new, ServerSenarioTextPacket::handle);
+        CHANNEL.registerMessage(id++, FHClientReadyPacket.class, FHClientReadyPacket::encode,
+        		FHClientReadyPacket::new, FHClientReadyPacket::handle);
+        
     }
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {

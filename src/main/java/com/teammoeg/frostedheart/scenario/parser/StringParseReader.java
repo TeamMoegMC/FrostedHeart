@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 public class StringParseReader {
 	public final String str;
     int idx = -1;
-    int srecord;
+    int srecord=0;
 
     public StringParseReader(String str) {
         super();
@@ -36,7 +36,9 @@ public class StringParseReader {
     public boolean hasNext() {
         return idx < str.length() - 1;
     }
-
+    public boolean isBegin() {
+    	return idx==-1;
+    }
     public char last() {
         return str.charAt(idx);
     }
@@ -52,20 +54,30 @@ public class StringParseReader {
     public char peek() {
         return str.charAt(idx + 1);
     }
-
+    public boolean eat(char ch) {
+    	if(peek()==ch) {
+    		next();
+    		return true;
+    	}
+    	return false;
+    }
     public char peekLast() {
         if (idx < 0)
-            return str.charAt(0);
+        	return str.charAt(0);
         return str.charAt(idx);
     }
 
     public void saveIndex() {
-        srecord = idx;
+        srecord = idx+1;
     }
 
     public void skipWhitespace() {
+    	boolean hasChangedIndex=false;
         while (Character.isWhitespace(str.charAt(idx)) && hasNext()) {
             idx++;
+            hasChangedIndex=true;
         }
+        if(hasChangedIndex)
+        	idx--;
     }
 }

@@ -19,27 +19,52 @@
 
 package com.teammoeg.frostedheart.scenario;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
+import com.teammoeg.frostedheart.scenario.commands.ControlCommands;
+import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
+import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
+import com.teammoeg.frostedheart.scenario.parser.ScenarioPiece;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class FHScenario {
     public static ScenarioExecutor server = new ScenarioExecutor();
-
+    public static Map<PlayerEntity,ScenarioRunner> runners=new HashMap<>();
+    public static void startFor(PlayerEntity pe) {
+    	ScenarioRunner sr=runners.computeIfAbsent(pe, ScenarioRunner::new);
+    	
+    	sr.run(loadScenario("init"));
+    }
+    static ScenarioParser parser=new ScenarioParser();
+    static File local=new File(FMLPaths.CONFIGDIR.get().toFile(),"fhscenario");
+    public static ScenarioPiece loadScenario(String name) {
+    	try {
+			return parser.parse(new File(local,name+".ks"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return new ScenarioPiece(name+".ks");
+    }
     public static void callCommand(String name, ScenarioRunner runner, Map<String, String> params) {
         server.callCommand(name, runner, params);
     }
 
-    public static void regiser(Class<?> clazz) {
-        server.regiser(clazz);
+    public static void register(Class<?> clazz) {
+        server.register(clazz);
     }
 
     public static void registerClientDelegate(Class<?> cls) {
@@ -56,5 +81,9 @@ public class FHScenario {
 
     public static void registerCommand(String cmdName, ScenarioMethod method) {
         server.registerCommand(cmdName, method);
+    }
+    static {
+    	register(TextualCommands.class);
+    	register(ControlCommands.class);
     }
 }

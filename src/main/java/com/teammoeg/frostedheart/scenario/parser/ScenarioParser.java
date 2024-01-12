@@ -24,10 +24,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 
 public class ScenarioParser {
     private static class CommandStack {
@@ -82,23 +85,37 @@ public class ScenarioParser {
     }
 
     public ScenarioPiece parse(File file) throws IOException {
+    	String name=file.getName();
         List<Node> nodes = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(file);
-             InputStreamReader isr = new InputStreamReader(fis);
+             InputStreamReader isr = new InputStreamReader(fis,StandardCharsets.UTF_8);
              BufferedReader reader = new BufferedReader(isr)) {
             String line;
+            int i=0;
             while ((line = reader.readLine()) != null) {
-                nodes.addAll(parseLine(line));
+            	i++;
+            	try {
+            		nodes.addAll(parseLine(line));
+            	}catch(Exception ex) {
+            		
+            		throw new ScenarioExecutionException("line "+i+":"+ex.getMessage(),ex);
+            		
+            	}
             }
+        }catch(Exception ex) {
+        	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
         }
         List<Integer> paragraphs = new ArrayList<>();
         List<CommandStack> ifstack = new ArrayList<>();
+        Map<String,Integer> labels=new HashMap<>();
         for (int i = 0; i < nodes.size(); i++) {
             Node n = nodes.get(i);
             if (n instanceof ParagraphNode) {
                 paragraphs.add(i);
-            }
-            if (n instanceof IfNode) {
+                ((ParagraphNode) n).nodeNum=i;
+            }else if(n instanceof LabelNode) {
+            	labels.put(((LabelNode)n).name, i);
+            }else if (n instanceof IfNode) {
                 IfNode ifn = (IfNode) n;
                 if (ifn.cmd.equals("if")) {
                     ifstack.add(new CommandStack(i, ifn));
@@ -114,14 +131,15 @@ public class ScenarioParser {
                 }
             }
         }
-        return new ScenarioPiece(file.getName(), nodes);
+        return new ScenarioPiece(name, nodes,paragraphs.stream().mapToInt(t->t).toArray(),labels);
     }
 
     public Node parseAtCommand(StringParseReader reader) throws IOException {
         Map<String, String> params = new HashMap<>();
         reader.saveIndex();
         String command = parseLiteralOrString(reader, -1);
-
+        reader.skipWhitespace();
+        if(!reader.hasNext()) return createCommand(command, params);
         while (reader.hasNext()) {
             String name = parseLiteralOrString(reader, '=');
             if (reader.last() != '=') {
@@ -142,7 +160,9 @@ public class ScenarioParser {
     public Node parseBarackCommand(StringParseReader reader) throws IOException {
         Map<String, String> params = new HashMap<>();
         reader.saveIndex();
-        String command = parseLiteralOrString(reader, -1);
+        String command = parseLiteralOrString(reader, ']');
+        reader.skipWhitespace();
+        if(reader.peekLast()==']') return createCommand(command, params);
         while (reader.hasNext()) {
             String name = parseLiteralOrString(reader, '=');
             if (reader.last() != '=') {
@@ -164,8 +184,10 @@ public class ScenarioParser {
         List<Node> nodes = new ArrayList<>();
         while (reader.hasNext()) {
             if (reader.peekLast() == '@') {
+            	if(reader.isBegin())reader.next();
                 nodes.add(parseAtCommand(reader));
             } else if (reader.peekLast() == '[') {
+            	if(reader.isBegin())reader.next();
                 nodes.add(parseBarackCommand(reader));
             } else {
                 nodes.add(new LiteralNode(parseLiteral(reader)));

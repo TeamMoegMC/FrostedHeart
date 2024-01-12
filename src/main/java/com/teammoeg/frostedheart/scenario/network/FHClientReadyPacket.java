@@ -26,31 +26,27 @@ import com.teammoeg.frostedheart.scenario.FHScenario;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class ClientScenarioResponsePacket {
-    boolean isSkipped;
-    int status;
-    public ClientScenarioResponsePacket(PacketBuffer buffer) {
-    	isSkipped=buffer.readBoolean();
-    	status=buffer.readVarInt();
+public class FHClientReadyPacket {
+    String lang;
+    public FHClientReadyPacket(PacketBuffer buffer) {
+    	lang=buffer.readString();
     }
 
 
-    public ClientScenarioResponsePacket(boolean isSkipped, int status) {
+    public FHClientReadyPacket(String lang) {
 		super();
-		this.isSkipped = isSkipped;
-		this.status = status;
+		this.lang=lang;
 	}
 
 
 	public void encode(PacketBuffer buffer) {
-		buffer.writeBoolean(isSkipped);
-		buffer.writeVarInt(status);
+		buffer.writeString(lang);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-        	FHScenario.runners.get(context.get().getSender()).notifyClientResponse(isSkipped, status);
+        	FHScenario.startFor(context.get().getSender());
         });
         context.get().setPacketHandled(true);
     }

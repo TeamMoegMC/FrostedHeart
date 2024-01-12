@@ -19,15 +19,31 @@
 
 package com.teammoeg.frostedheart.scenario.parser;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ScenarioPiece {
     public final String fileName;
     public final List<Node> pieces;
+    public final int[] paragraphs;
+    public final Map<String,Integer> labels;
 
-    public ScenarioPiece(String fileName, List<Node> pieces) {
-        super();
-        this.fileName = fileName;
-        this.pieces = pieces;
-    }
+	public ScenarioPiece(String fileName, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
+		super();
+		this.fileName = fileName;
+		this.pieces = pieces;
+		this.paragraphs = paragraphs;
+		this.labels = labels;
+	}
+
+	public ScenarioPiece(String name) {
+		super();
+        this.fileName = name;
+        this.pieces = new ArrayList<>();
+        paragraphs=new int[0];
+        labels=new HashMap<>();
+	}
+    
 }
