@@ -48,7 +48,7 @@ public class Temperature {
     }
 
     /**
-     * Get the delta temperature since last update (10 ticks ago)
+     * Get the temperature change since last update (10 ticks ago)
      * <p>
      * delta = last - current
      * </p>
@@ -59,6 +59,17 @@ public class Temperature {
     public static float getBodyDelta(PlayerEntity spe) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
         return nc.getFloat("deltatemperature");
+    }
+
+    /**
+     * Get the body temperature 10 ticks ago.
+     *
+     * @param spe the player
+     * @return the body temperature 10 ticks ago
+     */
+    public static float getBodyPrevious(PlayerEntity spe) {
+        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+        return nc.getFloat("previous_body_temperature");
     }
 
     /**
@@ -97,6 +108,17 @@ public class Temperature {
     }
 
     /**
+     * Get the smoothed body temperature 1 tick ago.
+     *
+     * @param spe the player
+     * @return the smoothed body temperature 1 tick ago
+     */
+    public static float getBodySmoothedPrevious(PlayerEntity spe) {
+        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+        return nc.getFloat("previous_smoothed_body_temperature");
+    }
+
+    /**
      * On the basis of 0 Celsius degree.
      * Example: return -20 when env temp is -20C.
      */
@@ -127,6 +149,7 @@ public class Temperature {
 
     public static void setBodySmoothed(PlayerEntity spe, float val) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
+        nc.putFloat("previous_smoothed_body_temperature", nc.getFloat("smoothed_body_temperature"));
         nc.putFloat("smoothed_body_temperature", val);
         spe.getPersistentData().put(DATA_ID, nc);
     }
@@ -134,6 +157,7 @@ public class Temperature {
     public static void set(PlayerEntity spe, float body, float env) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
         // update delta before body
+        nc.putFloat("previous_body_temperature", nc.getFloat("bodytemperature"));
         nc.putFloat("deltatemperature", nc.getFloat("bodytemperature") - body);
         nc.putFloat("bodytemperature", body);
         nc.putFloat("envtemperature", env);
