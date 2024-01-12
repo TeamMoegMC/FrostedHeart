@@ -41,7 +41,7 @@ public class FrostedParticles {
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
             if (!player.isSpectator() && !player.isCreative() && player.world != null) {
-                if (player.ticksExisted % 40 == 0) {
+                if (player.ticksExisted % 40 <= 3) {
                     float envTemp = Temperature.getEnv(player);
                     if (envTemp < 0.0F) {
                         // get the player's facing vector and make the particle spawn in front of the player
@@ -49,9 +49,9 @@ public class FrostedParticles {
                         double z = player.getPosZ() + player.getLookVec().z * 0.3D;
                         double y = player.getPosY() + 1.3D;
                         // the speed of the particle is based on the player's facing, so it looks like it's coming from their mouth
-                        double xSpeed = player.getLookVec().x * 0.02D;
-                        double ySpeed = player.getLookVec().y * 0.02D;
-                        double zSpeed = player.getLookVec().z * 0.02D;
+                        double xSpeed = player.getLookVec().x * 0.03D;
+                        double ySpeed = player.getLookVec().y * 0.03D;
+                        double zSpeed = player.getLookVec().z * 0.03D;
                         // apply the player's motion to the particle
                         xSpeed += player.getMotion().x;
                         ySpeed += player.getMotion().y;
