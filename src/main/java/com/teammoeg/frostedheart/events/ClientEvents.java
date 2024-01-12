@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.events;
@@ -60,7 +61,6 @@ import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
-import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -82,7 +82,6 @@ import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -384,30 +383,6 @@ public class ClientEvents {
 		}
 	}
 
-	@SubscribeEvent
-	public static void onPostRenderOverlay(RenderGameOverlayEvent.Post event) {
-		PlayerEntity player = FrostedHud.getRenderViewPlayer();
-		Minecraft mc = Minecraft.getInstance();
-		MatrixStack stack = event.getMatrixStack();
-		int anchorX = event.getWindow().getScaledWidth() / 2;
-		int anchorY = event.getWindow().getScaledHeight();
-		if (event.getType() == RenderGameOverlayEvent.ElementType.VIGNETTE && player != null) {
-
-			if (!player.isCreative() && !player.isSpectator()) {
-				if (BodyTemperature.getBodyTemperature(player) <= -0.5) {
-					FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, player);
-				} else if (BodyTemperature.getBodyTemperature(player) >= 0.5) {
-					FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, player);
-				}
-				if (BodyTemperature.getBodyTemperature(player) <= -1.0) {
-					FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, player);
-				}
-			}
-//			if (FrostedHud.renderForecast)
-//				FrostedHud.renderForecast(stack, anchorX, anchorY, mc, player);
-		}
-	}
-
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
 		Minecraft mc = Minecraft.getInstance();
@@ -457,7 +432,12 @@ public class ClientEvents {
 					FrostedHud.renderThirst(stack, anchorX, anchorY, mc, renderViewPlayer);
 				if (FrostedHud.renderHealth)
 					FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
-
+				if (FrostedHud.renderFrozenOverlay)
+					FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, renderViewPlayer);
+				if (FrostedHud.renderFrozenVignette)
+					FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
+				if (FrostedHud.renderHeatVignette)
+					FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
 				event.setCanceled(true);
 			}
 			if (event.getType() == RenderGameOverlayEvent.ElementType.ARMOR && FrostedHud.renderArmor) {

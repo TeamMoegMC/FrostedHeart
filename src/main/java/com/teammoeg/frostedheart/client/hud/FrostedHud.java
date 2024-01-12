@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart.client.hud;
@@ -73,12 +74,16 @@ public class FrostedHud {
 	public static boolean renderExperience = true;
 	public static boolean renderJumpBar = true;
 	public static boolean renderHypothermia = true;
-	public static boolean renderFrozen = true;
+	public static boolean renderFrozenOverlay = true;
 	public static boolean renderForecast = true;
+	public static boolean renderFrozenVignette = true;
+	public static boolean renderHeatVignette = true;
 
 	static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements.png");
 	// static final ResourceLocation FROZEN_OVERLAY_PATH = new
 	// ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
+	static final ResourceLocation FROZEN_OVERLAY = new ResourceLocation(FHMain.MODID,
+			"textures/gui/hud/frozen_overlay.png");
 	static final ResourceLocation FROZEN_OVERLAY_1 = new ResourceLocation(FHMain.MODID,
 			"textures/gui/hud/frozen_stage_1.png");
 	static final ResourceLocation FROZEN_OVERLAY_2 = new ResourceLocation(FHMain.MODID,
@@ -101,6 +106,7 @@ public class FrostedHud {
 			"textures/gui/hud/forecast_elements.png");
 
 	public static void renderSetup(ClientPlayerEntity player, PlayerEntity renderViewPlayer) {
+		// Vanilla replacement
 		renderHealth = !player.isCreative() && !player.isSpectator();
 		renderHealthMount = renderHealth && player.getRidingEntity() instanceof LivingEntity;
 		renderFood = renderHealth && !renderHealthMount;
@@ -108,9 +114,17 @@ public class FrostedHud {
 		renderJumpBar = renderHealth && player.isRidingHorse();
 		renderArmor = renderHealth && player.getTotalArmorValue() > 0;
 		renderExperience = renderHealth;
+
+		// Hypothermia
 		float bt = BodyTemperature.getBodyTemperature(renderViewPlayer);
 		renderHypothermia = renderHealth && bt < -0.5 || bt > 0.5;
-		renderFrozen = renderHealth && bt <= -1.0;
+
+		// Overlay and vignette
+		renderFrozenOverlay = FHConfig.CLIENT.enableFrozenOverlay.get() && renderHealth && bt <= -0.5;
+		renderFrozenVignette = FHConfig.CLIENT.enableFrozenVignette.get() && renderHealth && bt <= -0.5;
+		renderHeatVignette = FHConfig.CLIENT.enableHeatVignette.get() && renderHealth && bt >= 0.5;
+
+		// Forecast
 		boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
 		boolean hasRadar = player.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
 		boolean hasHelmet = player.inventory.armorInventory.get(3).getItem()==FHItems.weatherHelmet;
@@ -634,24 +648,16 @@ public class FrostedHud {
 
 	public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
 		mc.getProfiler().startSection("frostedheart_frozen");
-		float temp = BodyTemperature.getBodyTemperature(player);
+		float tempDelta = MathHelper.clamp(Math.abs(BodyTemperature.getBodyTemperature(player)), 0.5f, 5.0f);
+		float opacityDelta = (tempDelta - 0.5F) / 4.5F;
 		ResourceLocation texture;
 		RenderSystem.enableBlend();
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);
-		RenderSystem.defaultBlendFunc();
+		RenderSystem.blendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+		RenderSystem.color4f(1, 1, 1, Math.min(opacityDelta, 1));
 		RenderSystem.disableAlphaTest();
-		if (temp >= -2) {
-			texture = FROZEN_OVERLAY_1;
-		} else if (temp >= -3) {
-			texture = FROZEN_OVERLAY_2;
-		} else if (temp >= -4) {
-			texture = FROZEN_OVERLAY_3;
-		} else if (temp >= -5) {
-			texture = FROZEN_OVERLAY_4;
-		} else {
-			texture = FROZEN_OVERLAY_5;
-		}
+		texture = FROZEN_OVERLAY;
 		mc.getTextureManager().bindTexture(texture);
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder bufferbuilder = tessellator.getBuffer();
@@ -664,15 +670,15 @@ public class FrostedHud {
 		RenderSystem.depthMask(true);
 		RenderSystem.enableDepthTest();
 		RenderSystem.enableAlphaTest();
+		RenderSystem.color4f(1, 1, 1, 1);
 		RenderSystem.disableBlend();
 		mc.getProfiler().endSection();
 	}
 
 	public static void renderFrozenVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
 		mc.getProfiler().startSection("frostedheart_vignette");
-		float temp = MathHelper.clamp(BodyTemperature.getBodyTemperature(player), -10, -1);
-		// -10 < temp < 0 ===== 1 - 0
-		float opacityDelta = (Math.abs(temp) - 0.5F) / 9.5F;
+		float tempDelta = MathHelper.clamp(Math.abs(BodyTemperature.getBodyTemperature(player)), 0.5f, 5.0f);
+		float opacityDelta = (tempDelta - 0.5F) / 4.5F;
 		RenderSystem.enableBlend();
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);
@@ -698,9 +704,8 @@ public class FrostedHud {
 
 	public static void renderHeatVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
 		mc.getProfiler().startSection("frostedheart_vignette");
-		float temp = MathHelper.clamp(BodyTemperature.getBodyTemperature(player), 1, 10);
-		// 0 < temp < 10 ===== 1 - 0
-		float opacityDelta = (temp - 0.5F) / 9.5F;
+		float tempDelta = MathHelper.clamp(Math.abs(BodyTemperature.getBodyTemperature(player)), 0.5f, 5.0f);
+		float opacityDelta = (tempDelta - 0.5F) / 4.5F;
 		RenderSystem.enableBlend();
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);

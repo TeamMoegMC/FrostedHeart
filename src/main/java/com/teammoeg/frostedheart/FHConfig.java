@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -14,6 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
 package com.teammoeg.frostedheart;
@@ -40,6 +41,9 @@ public class FHConfig {
         public final ForgeConfigSpec.IntValue tempOrbOffsetY;
         public final ForgeConfigSpec.EnumValue<TempOrbPos> tempOrbPosition;
         public final ForgeConfigSpec.BooleanValue useFahrenheit;
+        public final ForgeConfigSpec.BooleanValue enableFrozenOverlay;
+        public final ForgeConfigSpec.BooleanValue enableFrozenVignette;
+        public final ForgeConfigSpec.BooleanValue enableHeatVignette;
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -61,6 +65,15 @@ public class FHConfig {
             tempOrbOffsetY = builder
                     .comment("Y Offset of the temperature orb. The anchor point is defined by the tempOrbPosition value. Only when you set tempOrbPosition to value other than MIDDLE will this value be used.  ")
                     .defineInRange("tempOrbOffsetY", 0, -4096, 4096);
+            enableFrozenOverlay = builder
+                    .comment("Enables the frozen overlay when player is freezing. ")
+                    .define("enableFrozenOverlay", true);
+            enableFrozenVignette = builder
+                    .comment("Enables the vignette when player is freezing. ")
+                    .define("enableFrozenVignette", true);
+            enableHeatVignette = builder
+                    .comment("Enables the vignette when player is too hot. ")
+                    .define("enableHeatVignette", true);
         }
     }
 
