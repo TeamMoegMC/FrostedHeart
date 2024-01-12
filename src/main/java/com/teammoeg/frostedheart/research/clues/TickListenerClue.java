@@ -29,12 +29,8 @@ import net.minecraft.network.PacketBuffer;
 
 public abstract class TickListenerClue extends ListenerClue {
 
-    public TickListenerClue(String name, String desc, String hint, float contribution) {
-        super(name, desc, hint, contribution);
-    }
-
-    public TickListenerClue(String name, float contribution) {
-        super(name, contribution);
+    public TickListenerClue() {
+        super();
     }
 
     public TickListenerClue(JsonObject jo) {
@@ -45,14 +41,20 @@ public abstract class TickListenerClue extends ListenerClue {
         super(pb);
     }
 
-    public TickListenerClue() {
-        super();
+    public TickListenerClue(String name, float contribution) {
+        super(name, contribution);
+    }
+
+    public TickListenerClue(String name, String desc, String hint, float contribution) {
+        super(name, desc, hint, contribution);
     }
 
     @Override
     public void initListener(Team t) {
         ResearchListeners.getTickClues().add(this, t);
     }
+
+    public abstract boolean isCompleted(TeamResearchData t, ServerPlayerEntity player);
 
     @Override
     public void removeListener(Team t) {
@@ -66,7 +68,5 @@ public abstract class TickListenerClue extends ListenerClue {
 
             }
     }
-
-    public abstract boolean isCompleted(TeamResearchData t, ServerPlayerEntity player);
 
 }

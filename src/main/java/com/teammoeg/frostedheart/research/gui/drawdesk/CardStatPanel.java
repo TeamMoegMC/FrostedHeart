@@ -41,17 +41,6 @@ public class CardStatPanel extends Panel {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        CardStat cs = rg.getStats().get(cardstate);
-        tf.setColor(cs.isGood() ? TechIcons.text : TechIcons.text_red);
-        tf.setText("" + cs.num);
-
-
-        DrawDeskIcons.getIcon(cs.type, cs.card, true).draw(matrixStack, x, y - 1, 16, 16);
-        super.draw(matrixStack, theme, x, y, w, h);
-    }
-
-    @Override
     public void addWidgets() {
         tf = new TextField(this);
         tf.addFlags(4).setColor(TechIcons.text).setMaxWidth(15).setTrim();
@@ -62,6 +51,17 @@ public class CardStatPanel extends Panel {
 
     @Override
     public void alignWidgets() {
+    }
+
+    @Override
+    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        CardStat cs = rg.getStats().get(cardstate);
+        tf.setColor(cs.isGood() ? TechIcons.text : TechIcons.text_red);
+        tf.setText("" + cs.num);
+
+
+        DrawDeskIcons.getIcon(cs.type, cs.card, true).draw(matrixStack, x, y - 1, 16, 16);
+        super.draw(matrixStack, theme, x, y, w, h);
     }
 
 }

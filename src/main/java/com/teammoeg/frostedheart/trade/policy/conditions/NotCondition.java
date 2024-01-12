@@ -29,17 +29,17 @@ import net.minecraft.network.PacketBuffer;
 public class NotCondition implements PolicyCondition {
     PolicyCondition nested;
 
-    public NotCondition(PolicyCondition n) {
-        super();
-        this.nested = n;
-    }
-
     public NotCondition(JsonObject jo) {
         this(Conditions.deserialize(jo.get("condition").getAsJsonObject()));
     }
 
     public NotCondition(PacketBuffer buffer) {
         this(Conditions.deserialize(buffer));
+    }
+
+    public NotCondition(PolicyCondition n) {
+        super();
+        this.nested = n;
     }
 
     @Override
@@ -51,14 +51,14 @@ public class NotCondition implements PolicyCondition {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
-        Conditions.writeId(this, buffer);
-        nested.write(buffer);
+    public boolean test(FHVillagerData ve) {
+        return !nested.test(ve);
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return !nested.test(ve);
+    public void write(PacketBuffer buffer) {
+        Conditions.writeId(this, buffer);
+        nested.write(buffer);
     }
 
 }

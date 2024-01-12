@@ -40,6 +40,27 @@ import java.util.List;
 import java.util.Map;
 
 public class DechantLootModifier extends LootModifier {
+    public static class Serializer extends GlobalLootModifierSerializer<DechantLootModifier> {
+        @Override
+        public DechantLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
+            JsonArray ja = object.get("removed").getAsJsonArray();
+            List<ResourceLocation> changes = new ArrayList<>();
+            for (JsonElement je : ja) {
+                changes.add(new ResourceLocation(je.getAsString()));
+            }
+            return new DechantLootModifier(conditions, changes);
+        }
+
+        @Override
+        public JsonObject write(DechantLootModifier instance) {
+            JsonObject object = new JsonObject();
+            JsonArray removed = new JsonArray();
+            instance.removed.stream().map(ForgeRegistries.ENCHANTMENTS::getKey).map(ResourceLocation::toString).forEach(removed::add);
+            object.add("removed", removed);
+            return object;
+        }
+    }
+
     List<Enchantment> removed = new ArrayList<>();
 
     private DechantLootModifier(ILootCondition[] conditionsIn, Collection<ResourceLocation> pairsin) {
@@ -69,26 +90,5 @@ public class DechantLootModifier extends LootModifier {
         }
         EnchantmentHelper.setEnchantments(enchs, orig);
         return orig;
-    }
-
-    public static class Serializer extends GlobalLootModifierSerializer<DechantLootModifier> {
-        @Override
-        public DechantLootModifier read(ResourceLocation location, JsonObject object, ILootCondition[] conditions) {
-            JsonArray ja = object.get("removed").getAsJsonArray();
-            List<ResourceLocation> changes = new ArrayList<>();
-            for (JsonElement je : ja) {
-                changes.add(new ResourceLocation(je.getAsString()));
-            }
-            return new DechantLootModifier(conditions, changes);
-        }
-
-        @Override
-        public JsonObject write(DechantLootModifier instance) {
-            JsonObject object = new JsonObject();
-            JsonArray removed = new JsonArray();
-            instance.removed.stream().map(ForgeRegistries.ENCHANTMENTS::getKey).map(ResourceLocation::toString).forEach(removed::add);
-            object.add("removed", removed);
-            return object;
-        }
     }
 }

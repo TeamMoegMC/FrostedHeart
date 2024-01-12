@@ -34,12 +34,6 @@ public class FHClimatePacket {
     private final long sec;
     private final ClimateType climate;
 
-    public FHClimatePacket(WorldClimate climateData) {
-        data = climateData.getFrames();
-        sec = climateData.getSec();
-        climate = climateData.getClimate();
-    }
-
     public FHClimatePacket() {
         data = new short[0];
         sec = 0;
@@ -50,6 +44,12 @@ public class FHClimatePacket {
         data = SerializeUtil.readShortArray(buffer);
         sec = buffer.readVarLong();
         climate = ClimateType.values()[buffer.readByte() & 0xff];
+    }
+
+    public FHClimatePacket(WorldClimate climateData) {
+        data = climateData.getFrames();
+        sec = climateData.getSec();
+        climate = climateData.getClimate();
     }
 
     public void encode(PacketBuffer buffer) {

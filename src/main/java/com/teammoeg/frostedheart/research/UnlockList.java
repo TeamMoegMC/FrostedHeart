@@ -42,14 +42,6 @@ public abstract class UnlockList<T> implements Iterable<T> {
         load(nbt);
     }
 
-    public void clear() {
-        s.clear();
-    }
-
-    public boolean has(T key) {
-        return s.contains(key);
-    }
-
     public void add(T key) {
         s.add(key);
     }
@@ -58,15 +50,38 @@ public abstract class UnlockList<T> implements Iterable<T> {
         s.addAll(key);
     }
 
-    public abstract String getString(T item);
+    public void clear() {
+        s.clear();
+    }
+
+    @Override
+    public void forEach(Consumer<? super T> action) {
+        s.forEach(action);
+    }
 
     public abstract T getObject(String s);
 
-    public ListNBT serialize() {
-        ListNBT ln = new ListNBT();
-        for (T t : s)
-            ln.add(StringNBT.valueOf(getString(t)));
-        return ln;
+    public abstract String getString(T item);
+
+    public boolean has(T key) {
+        return s.contains(key);
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return s.iterator();
+    }
+
+    public void load(ListNBT nbt) {
+        for (INBT in : nbt) {
+            s.add(getObject(in.getString()));
+        }
+    }
+
+    public void reload() {
+        Set<T> ns = new HashSet<>(s);
+        s.clear();
+        ns.stream().map(this::getString).map(this::getObject).forEach(s::add);
     }
 
     public void remove(T key) {
@@ -77,30 +92,15 @@ public abstract class UnlockList<T> implements Iterable<T> {
         s.removeAll(key);
     }
 
-    public void load(ListNBT nbt) {
-        for (INBT in : nbt) {
-            s.add(getObject(in.getString()));
-        }
-    }
-
-    @Override
-    public Iterator<T> iterator() {
-        return s.iterator();
-    }
-
-    @Override
-    public void forEach(Consumer<? super T> action) {
-        s.forEach(action);
+    public ListNBT serialize() {
+        ListNBT ln = new ListNBT();
+        for (T t : s)
+            ln.add(StringNBT.valueOf(getString(t)));
+        return ln;
     }
 
     @Override
     public Spliterator<T> spliterator() {
         return s.spliterator();
-    }
-
-    public void reload() {
-        Set<T> ns = new HashSet<>(s);
-        s.clear();
-        ns.stream().map(this::getString).map(this::getObject).forEach(s::add);
     }
 }

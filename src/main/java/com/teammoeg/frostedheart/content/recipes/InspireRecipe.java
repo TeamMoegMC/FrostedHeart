@@ -34,34 +34,22 @@ import net.minecraftforge.fml.RegistryObject;
 import java.util.List;
 
 public class InspireRecipe extends IESerializableRecipe {
-    public static IRecipeType<InspireRecipe> TYPE;
-    public static RegistryObject<IERecipeSerializer<InspireRecipe>> SERIALIZER;
-    public Ingredient item;
-    public int inspire;
-    public static List<InspireRecipe> recipes = ImmutableList.of();
-
-    public InspireRecipe(ResourceLocation id, Ingredient item, int inspire) {
-        super(ItemStack.EMPTY, TYPE, id);
-        this.item = item;
-        this.inspire = inspire;
-    }
-
-    @Override
-    public ItemStack getRecipeOutput() {
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    protected IERecipeSerializer getIESerializer() {
-        return SERIALIZER.get();
-    }
-
     public static class Serializer extends IERecipeSerializer<InspireRecipe> {
 
 
         @Override
+        public ItemStack getIcon() {
+            return new ItemStack(Items.PAPER);
+        }
+
+        @Override
         public InspireRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
             return new InspireRecipe(recipeId, Ingredient.read(buffer), buffer.readVarInt());
+        }
+
+        @Override
+        public InspireRecipe readFromJson(ResourceLocation arg0, JsonObject arg1) {
+            return new InspireRecipe(arg0, Ingredient.deserialize(arg1.get("item")), arg1.get("amount").getAsInt());
         }
 
         @Override
@@ -70,15 +58,27 @@ public class InspireRecipe extends IESerializableRecipe {
             buffer.writeVarInt(recipe.inspire);
         }
 
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(Items.PAPER);
-        }
+    }
+    public static IRecipeType<InspireRecipe> TYPE;
+    public static RegistryObject<IERecipeSerializer<InspireRecipe>> SERIALIZER;
+    public static List<InspireRecipe> recipes = ImmutableList.of();
+    public Ingredient item;
 
-        @Override
-        public InspireRecipe readFromJson(ResourceLocation arg0, JsonObject arg1) {
-            return new InspireRecipe(arg0, Ingredient.deserialize(arg1.get("item")), arg1.get("amount").getAsInt());
-        }
+    public int inspire;
 
+    public InspireRecipe(ResourceLocation id, Ingredient item, int inspire) {
+        super(ItemStack.EMPTY, TYPE, id);
+        this.item = item;
+        this.inspire = inspire;
+    }
+
+    @Override
+    protected IERecipeSerializer getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getRecipeOutput() {
+        return ItemStack.EMPTY;
     }
 }

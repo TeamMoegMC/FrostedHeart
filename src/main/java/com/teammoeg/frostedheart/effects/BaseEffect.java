@@ -36,7 +36,13 @@ public class BaseEffect extends Effect {
     }
 
     @Override
-    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
+    public void affectEntity(Entity source, Entity indirectSource, LivingEntity entityLivingBaseIn, int amplifier,
+                             double health) {
+    }
+
+    @Override
+    public List<ItemStack> getCurativeItems() {
+        return ImmutableList.of();
     }
 
     @Override
@@ -45,12 +51,6 @@ public class BaseEffect extends Effect {
     }
 
     @Override
-    public void affectEntity(Entity source, Entity indirectSource, LivingEntity entityLivingBaseIn, int amplifier,
-                             double health) {
-    }
-
-    @Override
-    public List<ItemStack> getCurativeItems() {
-        return ImmutableList.of();
+    public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
     }
 }

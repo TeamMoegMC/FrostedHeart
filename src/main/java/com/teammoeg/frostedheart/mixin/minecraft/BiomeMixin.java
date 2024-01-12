@@ -33,9 +33,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Biome.class)
 public abstract class BiomeMixin {
-    @Shadow
-    public abstract float getTemperature(BlockPos pos);
-
     public boolean doesWaterFreeze(IWorldReader worldIn, BlockPos water, boolean mustBeAtEdge) {
         if (this.getTemperature(water) >= 0.15F) {
             return false;
@@ -58,4 +55,7 @@ public abstract class BiomeMixin {
 
         return false;
     }
+
+    @Shadow
+    public abstract float getTemperature(BlockPos pos);
 }

@@ -27,17 +27,11 @@ import net.minecraft.util.text.TextComponent;
 public class FTBTextComponent extends TextComponent {
     String comp;
 
+    IFormattableTextComponent it;
+
     public FTBTextComponent(String comp) {
         super();
         this.comp = comp;
-    }
-
-    IFormattableTextComponent it;
-
-    protected IFormattableTextComponent intern() {
-        if (it == null)
-            it = (IFormattableTextComponent) ClientTextComponentUtils.parse(comp);
-        return it;
     }
 
     @Override
@@ -45,10 +39,16 @@ public class FTBTextComponent extends TextComponent {
         return new FTBTextComponent(comp);
     }
 
-
     @Override
     public IReorderingProcessor func_241878_f() {
         return intern().func_241878_f();
+    }
+
+
+    protected IFormattableTextComponent intern() {
+        if (it == null)
+            it = (IFormattableTextComponent) ClientTextComponentUtils.parse(comp);
+        return it;
     }
 
 

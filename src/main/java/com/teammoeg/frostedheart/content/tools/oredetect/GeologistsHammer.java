@@ -45,33 +45,6 @@ import java.util.Random;
 public class GeologistsHammer extends FHLeveledTool {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
 
-    public GeologistsHammer(String name, int lvl, Properties properties) {
-        super(name, lvl, properties);
-
-    }
-
-    public static int getHorizonalRange(ItemStack item) {
-        return getLevel(item) + 4;
-    }
-
-    public static int getVerticalRange(ItemStack item) {
-        return getLevel(item) + 3;
-    }
-
-    public static int getLevel(ItemStack item) {
-        if (item.getItem() instanceof FHLeveledTool)
-            return ((FHLeveledTool) item.getItem()).getLevel();
-
-        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.geoHammer);
-    }
-
-    public static float getCorrectness(ItemStack item) {
-        if (item.getItem() instanceof FHLeveledTool)
-            return 1;
-
-        return ((IToolProvider) item.getItem()).getToolEfficiency(item, TetraCompat.geoHammer) + 1;
-    }
-
     public static ActionResultType doProspect(PlayerEntity player, World world, BlockPos blockpos, ItemStack is, Hand h) {
         if (player != null && (!(player instanceof FakePlayer))) {//fake players does not deserve XD
             if (world.getBlockState(blockpos).getBlock().getTags().contains(tag)) {//early exit 'cause ore found
@@ -129,6 +102,33 @@ public class GeologistsHammer extends FHLeveledTool {
             }
         }
         return ActionResultType.SUCCESS;
+    }
+
+    public static float getCorrectness(ItemStack item) {
+        if (item.getItem() instanceof FHLeveledTool)
+            return 1;
+
+        return ((IToolProvider) item.getItem()).getToolEfficiency(item, TetraCompat.geoHammer) + 1;
+    }
+
+    public static int getHorizonalRange(ItemStack item) {
+        return getLevel(item) + 4;
+    }
+
+    public static int getLevel(ItemStack item) {
+        if (item.getItem() instanceof FHLeveledTool)
+            return ((FHLeveledTool) item.getItem()).getLevel();
+
+        return ((IToolProvider) item.getItem()).getToolLevel(item, TetraCompat.geoHammer);
+    }
+
+    public static int getVerticalRange(ItemStack item) {
+        return getLevel(item) + 3;
+    }
+
+    public GeologistsHammer(String name, int lvl, Properties properties) {
+        super(name, lvl, properties);
+
     }
 
     @SuppressWarnings("resource")

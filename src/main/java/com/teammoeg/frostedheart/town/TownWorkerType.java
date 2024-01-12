@@ -77,21 +77,21 @@ public enum TownWorkerType {
     }
 
     /**
-     * Gets the worker.
-     *
-     * @return the worker
-     */
-    public TownWorker getWorker() {
-        return worker;
-    }
-
-    /**
      * Gets the priority.
      *
      * @return the priority
      */
     public int getPriority() {
         return priority;
+    }
+
+    /**
+     * Gets the worker.
+     *
+     * @return the worker
+     */
+    public TownWorker getWorker() {
+        return worker;
     }
 
 

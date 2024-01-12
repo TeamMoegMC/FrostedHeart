@@ -38,11 +38,6 @@ public class FHResearchDataUpdatePacket {
     private final CompoundNBT data;
     private final int id;
 
-    public FHResearchDataUpdatePacket(ResearchData rd) {
-        this.data = rd.serialize();
-        this.id = rd.getResearch().getRId();
-    }
-
     public FHResearchDataUpdatePacket(int rid) {
         this.data = null;
         this.id = rid;
@@ -51,6 +46,11 @@ public class FHResearchDataUpdatePacket {
     public FHResearchDataUpdatePacket(PacketBuffer buffer) {
         data = SerializeUtil.readOptional(buffer, PacketBuffer::readCompoundTag).orElse(null);
         id = buffer.readVarInt();
+    }
+
+    public FHResearchDataUpdatePacket(ResearchData rd) {
+        this.data = rd.serialize();
+        this.id = rd.getResearch().getRId();
     }
 
     public void encode(PacketBuffer buffer) {

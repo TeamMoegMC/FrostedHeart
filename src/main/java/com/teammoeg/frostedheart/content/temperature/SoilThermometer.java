@@ -48,6 +48,24 @@ public class SoilThermometer extends FHBaseItem {
     }
 
     @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
+    }
+
+    /**
+     * returns the action that specifies what animation to play when the items is being used
+     */
+    @Override
+    public UseAction getUseAction(ItemStack stack) {
+        return UseAction.SPEAR;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 100;
+    }
+
+    @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
         playerIn.sendStatusMessage(GuiUtils.translateMessage("thermometer.testing"), true);
         playerIn.setActiveHand(handIn);
@@ -71,23 +89,5 @@ public class SoilThermometer extends FHBaseItem {
                     "info.soil_thermometerbody", (int) (ChunkHeatData.getTemperature(entityLiving.world, brtr.getPos()) * 10) / 10f);
         }
         return stack;
-    }
-
-    @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        tooltip.add(GuiUtils.translateTooltip("thermometer.usage").mergeStyle(TextFormatting.GRAY));
-    }
-
-    @Override
-    public int getUseDuration(ItemStack stack) {
-        return 100;
-    }
-
-    /**
-     * returns the action that specifies what animation to play when the items is being used
-     */
-    @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.SPEAR;
     }
 }

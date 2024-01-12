@@ -55,29 +55,6 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     }
 
     @Override
-    public int getMaxEnergyStored(ItemStack container) {
-        return 30000;
-    }
-
-    @Nullable
-    @Override
-    public EquipmentSlotType getEquipmentSlot(ItemStack stack) {
-        return EquipmentSlotType.CHEST;
-    }
-
-    @Override
-    public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlotType slot, String type) {
-        return FHMain.rl("textures/models/heater_vest.png").toString();
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public BipedModel getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlotType armorSlot,
-                                    BipedModel _default) {
-        return HeaterVestModel.getModel();
-    }
-
-    @Override
     public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
         String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
         list.add(GuiUtils.translateTooltip("charger.heat_vest").mergeStyle(TextFormatting.GRAY));
@@ -85,14 +62,8 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     }
 
     @Override
-    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-        if (this.isInGroup(group)) {
-            items.add(new ItemStack(this));
-            ItemStack is = new ItemStack(this);
-            this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
-            items.add(is);
-        }
-
+    public float charge(ItemStack stack, float value) {
+        return this.receiveEnergy(stack, (int) value, false);
     }
 
     @Override
@@ -109,13 +80,42 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     }
 
     @Override
-    public float charge(ItemStack stack, float value) {
-        return this.receiveEnergy(stack, (int) value, false);
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+        if (this.isInGroup(group)) {
+            items.add(new ItemStack(this));
+            ItemStack is = new ItemStack(this);
+            this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
+            items.add(is);
+        }
+
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public BipedModel getArmorModel(LivingEntity entityLiving, ItemStack itemStack, EquipmentSlotType armorSlot,
+                                    BipedModel _default) {
+        return HeaterVestModel.getModel();
+    }
+
+    @Override
+    public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlotType slot, String type) {
+        return FHMain.rl("textures/models/heater_vest.png").toString();
+    }
+
+    @Nullable
+    @Override
+    public EquipmentSlotType getEquipmentSlot(ItemStack stack) {
+        return EquipmentSlotType.CHEST;
     }
 
     @Override
     public float getMax(ItemStack stack) {
         return 0.1F;
+    }
+
+    @Override
+    public int getMaxEnergyStored(ItemStack container) {
+        return 30000;
     }
 
 }

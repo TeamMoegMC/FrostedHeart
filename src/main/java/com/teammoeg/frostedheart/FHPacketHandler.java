@@ -48,14 +48,6 @@ public class FHPacketHandler {
 
     private static SimpleChannel CHANNEL;
 
-    public static void send(PacketDistributor.PacketTarget target, Object message) {
-        CHANNEL.send(target, message);
-    }
-
-    public static void sendToServer(Object message) {
-        CHANNEL.sendToServer(message);
-    }
-
     public static SimpleChannel get() {
         return CHANNEL;
     }
@@ -117,6 +109,14 @@ public class FHPacketHandler {
         CHANNEL.registerMessage(id++, TradeUpdatePacket.class, TradeUpdatePacket::encode,
                 TradeUpdatePacket::new, TradeUpdatePacket::handle);
 
+    }
+
+    public static void send(PacketDistributor.PacketTarget target, Object message) {
+        CHANNEL.send(target, message);
+    }
+
+    public static void sendToServer(Object message) {
+        CHANNEL.sendToServer(message);
     }
 
 }

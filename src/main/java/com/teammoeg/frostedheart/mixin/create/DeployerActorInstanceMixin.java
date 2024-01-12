@@ -54,6 +54,10 @@ public abstract class DeployerActorInstanceMixin extends ActorInstance {
     @Shadow(remap = false)
     ModelData hand;
 
+    @Shadow(remap = false)
+    static void transformModel(MatrixTransformStack msr, ModelData pole, ModelData hand, float yRot, float zRot, float zRotPole) {
+    }
+
     public DeployerActorInstanceMixin(MaterialManager<?> materialManager, PlacementSimulationWorld world,
                                       MovementContext context) {
         super(materialManager, world, context);
@@ -90,10 +94,6 @@ public abstract class DeployerActorInstanceMixin extends ActorInstance {
                 .translate(offset);
 
         transformModel(msr, pole, hand, yRot, zRot, zRotPole);
-    }
-
-    @Shadow(remap = false)
-    static void transformModel(MatrixTransformStack msr, ModelData pole, ModelData hand, float yRot, float zRot, float zRotPole) {
     }
 
     ;

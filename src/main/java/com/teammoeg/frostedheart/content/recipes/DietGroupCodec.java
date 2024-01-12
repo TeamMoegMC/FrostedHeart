@@ -29,9 +29,6 @@ public class DietGroupCodec {
     private static List<IDietGroup> codecs = new ArrayList<>();
     public final static String[] groups = new String[]{"grains", "vegetables", "plant_oil", "proteins", "sugars", "vitamin"};
 
-    private DietGroupCodec() {
-    }
-
     public static void clearCodec() {
         codecs.clear();
     }
@@ -77,6 +74,16 @@ public class DietGroupCodec {
         return -1;
     }
 
+    public static Map<String, Float> read(PacketBuffer pb) {
+        int size = pb.readVarInt();
+        Map<String, Float> m = new HashMap<>();
+        if (size > 0)
+            for (int i = 0; i < size; i++) {
+                m.put(groups[pb.readVarInt()], pb.readFloat());
+            }
+        return m;
+    }
+
     public static void write(PacketBuffer pb, Map<String, Float> f) {
         pb.writeVarInt(f.size());
         if (!f.isEmpty())
@@ -86,13 +93,6 @@ public class DietGroupCodec {
             });
     }
 
-    public static Map<String, Float> read(PacketBuffer pb) {
-        int size = pb.readVarInt();
-        Map<String, Float> m = new HashMap<>();
-        if (size > 0)
-            for (int i = 0; i < size; i++) {
-                m.put(groups[pb.readVarInt()], pb.readFloat());
-            }
-        return m;
+    private DietGroupCodec() {
     }
 }

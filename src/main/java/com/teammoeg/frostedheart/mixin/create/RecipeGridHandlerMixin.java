@@ -35,9 +35,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(RecipeGridHandler.class)
 public class RecipeGridHandlerMixin {
-    public RecipeGridHandlerMixin() {
-    }
-
     @Inject(at = @At("HEAD"), method = "getTargetingCrafter", remap = false)
     private static void fh$getTargetingCrafter(MechanicalCrafterTileEntity crafter, CallbackInfoReturnable<MechanicalCrafterTileEntity> cbi) {
         ResearchListeners.te = IOwnerTile.getOwner(crafter);
@@ -53,5 +50,8 @@ public class RecipeGridHandlerMixin {
     @Inject(at = @At("RETURN"), method = "tryToApplyRecipe", cancellable = true, remap = false)
     private static void fh$tryToApplyRecipe(World world, GroupedItems items, CallbackInfoReturnable<ItemStack> cbi) {
         ResearchListeners.te = null;
+    }
+
+    public RecipeGridHandlerMixin() {
     }
 }

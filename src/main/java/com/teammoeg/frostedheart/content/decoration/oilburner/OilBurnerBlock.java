@@ -56,29 +56,6 @@ public class OilBurnerBlock extends FHBaseBlock {
     }
 
     @Override
-    protected void fillStateContainer(Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
-        builder.add(LIT);
-    }
-
-    @Override
-    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return FHTileTypes.OIL_BURNER.get().create();
-    }
-
-    @Override
-    public boolean hasTileEntity(BlockState state) {
-        return true;
-    }
-
-    @Override
-    public void onEntityWalk(World w, BlockPos p, Entity e) {
-        if (w.getBlockState(p).get(LIT))
-            if (e instanceof LivingEntity)
-                e.setFire(60);
-    }
-
-    @Override
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         if (stateIn.get(LIT)) {
@@ -90,11 +67,34 @@ public class OilBurnerBlock extends FHBaseBlock {
     }
 
     @Override
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+        return FHTileTypes.OIL_BURNER.get().create();
+    }
+
+    @Override
+    protected void fillStateContainer(Builder<Block, BlockState> builder) {
+        super.fillStateContainer(builder);
+        builder.add(LIT);
+    }
+
+    @Override
+    public boolean hasTileEntity(BlockState state) {
+        return true;
+    }
+
+    @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player,
                                              Hand handIn, BlockRayTraceResult hit) {
         if (FluidUtil.interactWithFluidHandler(player, handIn, worldIn, pos, hit.getFace()))
             return ActionResultType.SUCCESS;
         return super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+    }
+
+    @Override
+    public void onEntityWalk(World w, BlockPos p, Entity e) {
+        if (w.getBlockState(p).get(LIT))
+            if (e instanceof LivingEntity)
+                e.setFire(60);
     }
 
 }

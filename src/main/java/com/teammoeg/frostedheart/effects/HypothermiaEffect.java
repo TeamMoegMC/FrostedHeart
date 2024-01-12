@@ -36,6 +36,20 @@ public class HypothermiaEffect extends Effect {
     }
 
     @Override
+    public List<ItemStack> getCurativeItems() {
+        return ImmutableList.of();
+    }
+
+    public boolean isReady(int duration, int amplifier) {
+
+        int k = 60 >> Math.max(amplifier - 2, 0);
+        if (k > 1) {
+            return duration % k == 0;
+        }
+        return true;
+    }
+
+    @Override
     public void performEffect(LivingEntity entityLivingBaseIn, int amplifier) {
         if (entityLivingBaseIn instanceof ServerPlayerEntity) {
             ((ServerPlayerEntity) entityLivingBaseIn).addExhaustion(amplifier < 2 ? 0.044f * (amplifier + 1) : 0.132f);
@@ -51,19 +65,5 @@ public class HypothermiaEffect extends Effect {
                 }
             }
         }
-    }
-
-    public boolean isReady(int duration, int amplifier) {
-
-        int k = 60 >> Math.max(amplifier - 2, 0);
-        if (k > 1) {
-            return duration % k == 0;
-        }
-        return true;
-    }
-
-    @Override
-    public List<ItemStack> getCurativeItems() {
-        return ImmutableList.of();
     }
 }

@@ -38,15 +38,6 @@ import net.minecraftforge.fml.common.Mod;
 public class AttachCapabilityEvents {
 
     @SubscribeEvent
-    public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
-        // only attach to dimension with skylight (i.e. overworld)
-        if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
-            event.addCapability(WorldClimate.ID, new WorldClimate());
-
-        }
-    }
-
-    @SubscribeEvent
     public static void attachToChunk(AttachCapabilitiesEvent<Chunk> event) {
         if (!event.getObject().isEmpty()) {
             World world = event.getObject().getWorld();
@@ -68,6 +59,15 @@ public class AttachCapabilityEvents {
 
         }
 
+    }
+
+    @SubscribeEvent
+    public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
+        // only attach to dimension with skylight (i.e. overworld)
+        if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
+            event.addCapability(WorldClimate.ID, new WorldClimate());
+
+        }
     }
 
 }

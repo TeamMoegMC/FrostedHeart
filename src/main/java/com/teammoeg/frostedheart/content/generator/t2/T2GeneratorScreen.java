@@ -47,68 +47,6 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
     }
 
     @Override
-    public void init() {
-        super.init();
-        this.buttons.clear();
-        this.addButton(new GuiButtonBoolean(guiLeft + 56, guiTop + 35, 19, 10, "", tile.isWorking(), TEXTURE, 0, 245, 0,
-                btn -> {
-                    CompoundNBT tag = new CompoundNBT();
-                    tile.setWorking(!btn.getState());
-                    tag.putBoolean("isWorking", tile.isWorking());
-                    FHPacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
-                    fullInit();
-                }));
-        this.addButton(new GuiButtonBoolean(guiLeft + 101, guiTop + 35, 19, 10, "", tile.isOverdrive(), TEXTURE, 0, 245, 0,
-                btn -> {
-                    CompoundNBT tag = new CompoundNBT();
-                    tile.setOverdrive(!btn.getState());
-                    tag.putBoolean("isOverdrive", tile.isOverdrive());
-                    FHPacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
-                    fullInit();
-                }));
-    }
-
-    @Override
-    public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
-        super.render(transform, mouseX, mouseY, partial);
-        List<ITextComponent> tooltip = new ArrayList<>();
-        GuiHelper.handleGuiTank(transform, tile.tank, guiLeft + 30, guiTop + 16, 16, 47, 177, 86, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
-
-        if (isMouseIn(mouseX, mouseY, 57, 36, 19, 10)) {
-            if (tile.isWorking()) {
-                tooltip.add(GuiUtils.translateGui("generator.mode.off"));
-            } else {
-                tooltip.add(GuiUtils.translateGui("generator.mode.on"));
-            }
-        }
-
-        if (isMouseIn(mouseX, mouseY, 102, 36, 19, 10)) {
-            if (tile.isOverdrive()) {
-                tooltip.add(GuiUtils.translateGui("generator.overdrive.off"));
-            } else {
-                tooltip.add(GuiUtils.translateGui("generator.overdrive.on"));
-            }
-        }
-
-        if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
-            //tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getIsActive()?tile.getActualTemp():0)));
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TmeperatureDisplayHelper.toTemperatureDeltaIntString(tile.getActualTemp())));
-        }
-
-        if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
-        }
-
-        if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int) tile.power)));
-        }
-
-        if (!tooltip.isEmpty()) {
-            net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
-        }
-    }
-
-    @Override
     protected void drawGuiContainerBackgroundLayer(MatrixStack transform, float partial, int x, int y) {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
@@ -153,8 +91,70 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
     }
 
     @Override
+    public void init() {
+        super.init();
+        this.buttons.clear();
+        this.addButton(new GuiButtonBoolean(guiLeft + 56, guiTop + 35, 19, 10, "", tile.isWorking(), TEXTURE, 0, 245, 0,
+                btn -> {
+                    CompoundNBT tag = new CompoundNBT();
+                    tile.setWorking(!btn.getState());
+                    tag.putBoolean("isWorking", tile.isWorking());
+                    FHPacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                    fullInit();
+                }));
+        this.addButton(new GuiButtonBoolean(guiLeft + 101, guiTop + 35, 19, 10, "", tile.isOverdrive(), TEXTURE, 0, 245, 0,
+                btn -> {
+                    CompoundNBT tag = new CompoundNBT();
+                    tile.setOverdrive(!btn.getState());
+                    tag.putBoolean("isOverdrive", tile.isOverdrive());
+                    FHPacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                    fullInit();
+                }));
+    }
+
+    @Override
     public boolean isMouseIn(int mouseX, int mouseY, int x, int y, int w, int h) {
         return mouseX >= guiLeft + x && mouseY >= guiTop + y
                 && mouseX < guiLeft + x + w && mouseY < guiTop + y + h;
+    }
+
+    @Override
+    public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
+        super.render(transform, mouseX, mouseY, partial);
+        List<ITextComponent> tooltip = new ArrayList<>();
+        GuiHelper.handleGuiTank(transform, tile.tank, guiLeft + 30, guiTop + 16, 16, 47, 177, 86, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
+
+        if (isMouseIn(mouseX, mouseY, 57, 36, 19, 10)) {
+            if (tile.isWorking()) {
+                tooltip.add(GuiUtils.translateGui("generator.mode.off"));
+            } else {
+                tooltip.add(GuiUtils.translateGui("generator.mode.on"));
+            }
+        }
+
+        if (isMouseIn(mouseX, mouseY, 102, 36, 19, 10)) {
+            if (tile.isOverdrive()) {
+                tooltip.add(GuiUtils.translateGui("generator.overdrive.off"));
+            } else {
+                tooltip.add(GuiUtils.translateGui("generator.overdrive.on"));
+            }
+        }
+
+        if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
+            //tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getIsActive()?tile.getActualTemp():0)));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TmeperatureDisplayHelper.toTemperatureDeltaIntString(tile.getActualTemp())));
+        }
+
+        if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {
+            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+        }
+
+        if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54)) {
+            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int) tile.power)));
+        }
+
+        if (!tooltip.isEmpty()) {
+            net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
+        }
     }
 }

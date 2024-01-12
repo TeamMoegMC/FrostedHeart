@@ -35,9 +35,8 @@ public class ItemClue extends Clue {
     boolean consume;
     IngredientWithSize stack;
 
-    public ItemClue(String name, String desc, String hint, float contribution, IngredientWithSize stack) {
-        super(name, desc, hint, contribution);
-        this.stack = stack;
+    ItemClue() {
+        super();
     }
 
     public ItemClue(JsonObject jo) {
@@ -53,62 +52,21 @@ public class ItemClue extends Clue {
         consume = pb.readBoolean();
     }
 
-    ItemClue() {
-        super();
-    }
-
-    @Override
-    public ITextComponent getName() {
-        if (name != null && !name.isEmpty())
-            return super.getName();
-        if (consume)
-            return GuiUtils.translate("clue." + FHMain.MODID + ".consume_item");
-        return GuiUtils.translate("clue." + FHMain.MODID + ".item");
-    }
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.add("item", stack.serialize());
-        if (consume)
-            jo.addProperty("consume", consume);
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        stack.write(buffer);
-        buffer.writeBoolean(consume);
-    }
-
-    public int test(TeamResearchData t, ItemStack stack) {
-        if (!this.isCompleted(t))
-            if (this.stack.test(stack)) {
-                this.setCompleted(t, true);
-                if (consume)
-                    return this.stack.getCount();
-            }
-        return 0;
-    }
-
-    @Override
-    public String getId() {
-        return "item";
-    }
-
-    @Override
-    public void init() {
-    }
-
-    @Override
-    public void start(Team team) {
+    public ItemClue(String name, String desc, String hint, float contribution, IngredientWithSize stack) {
+        super(name, desc, hint, contribution);
+        this.stack = stack;
     }
 
     @Override
     public void end(Team team) {
     }
 
+    @Override
+    public String getBrief() {
+        if (consume)
+            return "Submit item " + getDescriptionString();
+        return "Inspect item " + getDescriptionString();
+    }
 
     @Override
     public ITextComponent getDescription() {
@@ -122,9 +80,51 @@ public class ItemClue extends Clue {
     }
 
     @Override
-    public String getBrief() {
+    public String getId() {
+        return "item";
+    }
+
+    @Override
+    public ITextComponent getName() {
+        if (name != null && !name.isEmpty())
+            return super.getName();
         if (consume)
-            return "Submit item " + getDescriptionString();
-        return "Inspect item " + getDescriptionString();
+            return GuiUtils.translate("clue." + FHMain.MODID + ".consume_item");
+        return GuiUtils.translate("clue." + FHMain.MODID + ".item");
+    }
+
+    @Override
+    public void init() {
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.add("item", stack.serialize());
+        if (consume)
+            jo.addProperty("consume", consume);
+        return jo;
+    }
+
+    @Override
+    public void start(Team team) {
+    }
+
+
+    public int test(TeamResearchData t, ItemStack stack) {
+        if (!this.isCompleted(t))
+            if (this.stack.test(stack)) {
+                this.setCompleted(t, true);
+                if (consume)
+                    return this.stack.getCount();
+            }
+        return 0;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        stack.write(buffer);
+        buffer.writeBoolean(consume);
     }
 }

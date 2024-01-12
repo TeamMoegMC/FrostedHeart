@@ -62,12 +62,12 @@ class HelpPanel extends Panel {
         add(t5);
         Button closePanel = new Button(this) {
             @Override
-            public void onClicked(MouseButton mouseButton) {
-                ot.closeHelp();
+            public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
             }
 
             @Override
-            public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            public void onClicked(MouseButton mouseButton) {
+                ot.closeHelp();
             }
         };
         closePanel.setPosAndSize(226, 7, 9, 8);

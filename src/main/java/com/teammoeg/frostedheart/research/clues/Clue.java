@@ -56,21 +56,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     public Supplier<Research> parent;
     boolean required = false;
 
-    public float getResearchContribution() {
-        return contribution;
-    }
-
-    public Clue(String name, String desc, String hint, float contribution) {
-        super();
-        this.contribution = contribution;
-        this.name = name;
-        this.desc = desc;
-        this.hint = hint;
+    public Clue() {
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
-    }
-
-    public Clue(String name, float contribution) {
-        this(name, "", "", contribution);
     }
 
     public Clue(JsonObject jo) {
@@ -97,65 +84,56 @@ public abstract class Clue extends AutoIDItem implements Writeable {
         this.required = pb.readBoolean();
     }
 
-    public Clue() {
+    public Clue(String name, float contribution) {
+        this(name, "", "", contribution);
+    }
+
+    public Clue(String name, String desc, String hint, float contribution) {
+        super();
+        this.contribution = contribution;
+        this.name = name;
+        this.desc = desc;
+        this.hint = hint;
         this.nonce = Long.toHexString(UUID.randomUUID().getMostSignificantBits());
     }
 
-    public void setCompleted(Team team, boolean trig) {
-        FHResearchDataManager.INSTANCE.getData(team.getId()).setClueTriggered(this, trig);
-        if (trig)
-            end(team);
-        else
-            start(team);
-        this.sendProgressPacket(team);
+    public void delete() {
+        deleteSelf();
+        if (parent != null) {
+            Research r = parent.get();
+            if (r != null) {
+                r.getClues().remove(this);
+            }
+        }
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public void setCompleted(boolean trig) {
-        TeamResearchData.getClientInstance().setClueTriggered(this, trig);
-        ;
+    private void deleteInTree() {
+        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getTeam().ifPresent(this::end));
     }
 
-    public boolean isCompleted(TeamResearchData data) {
-        return data.isClueTriggered(this);
+    public void deleteSelf() {
+        deleteInTree();
+        FHResearch.clues.remove(this);
     }
 
-    public boolean isCompleted(Team team) {
-        return FHResearchDataManager.INSTANCE.getData(team.getId()).isClueTriggered(this);
+    public void edit() {
+        deleteInTree();
     }
-
-    @OnlyIn(Dist.CLIENT)
-    public boolean isCompleted() {
-        return TeamResearchData.getClientInstance().isClueTriggered(this);
-    }
-
-    /**
-     * send progress packet to client
-     * should not called manually
-     */
-    public void sendProgressPacket(Team team) {
-        FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team.getId(), this);
-        for (ServerPlayerEntity spe : team.getOnlineMembers())
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
-    }
-
-    /**
-     * called when researches load finish
-     */
-    public abstract void init();
-
-    /**
-     * called when this clue's research has started
-     */
-    public abstract void start(Team team);
 
     /**
      * Stop detection when clue is completed
      */
     public abstract void end(Team team);
 
-    public ITextComponent getName() {
-        return FHTextUtil.get(name, "clue", () -> this.getLId() + ".name");
+    /**
+     * Get brief string describe this clue for show in editor.
+     *
+     * @return brief<br>
+     */
+    public abstract String getBrief();
+
+    public String getBriefDesc() {
+        return "   " + (this.required ? "required " : "") + "+" + (int) (this.contribution * 100) + "%";
     }
 
     public ITextComponent getDescription() {
@@ -170,6 +148,59 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 
     public ITextComponent getHint() {
         return FHTextUtil.getOptional(hint, "clue", () -> this.getLId() + ".hint");
+    }
+
+    public abstract String getId();
+
+    public ITextComponent getName() {
+        return FHTextUtil.get(name, "clue", () -> this.getLId() + ".name");
+    }
+
+    @Override
+    public String getNonce() {
+        return nonce;
+    }
+
+    public float getResearchContribution() {
+        return contribution;
+    }
+
+    @Override
+    public final String getType() {
+        return "clue";
+    }
+
+    /**
+     * called when researches load finish
+     */
+    public abstract void init();
+
+    @OnlyIn(Dist.CLIENT)
+    public boolean isCompleted() {
+        return TeamResearchData.getClientInstance().isClueTriggered(this);
+    }
+
+
+    public boolean isCompleted(Team team) {
+        return FHResearchDataManager.INSTANCE.getData(team.getId()).isClueTriggered(this);
+    }
+
+    public boolean isCompleted(TeamResearchData data) {
+        return data.isClueTriggered(this);
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+
+    /**
+     * send progress packet to client
+     * should not called manually
+     */
+    public void sendProgressPacket(Team team) {
+        FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team.getId(), this);
+        for (ServerPlayerEntity spe : team.getOnlineMembers())
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
     @Override
@@ -189,51 +220,30 @@ public abstract class Clue extends AutoIDItem implements Writeable {
         return jo;
     }
 
-    public abstract String getId();
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        Clues.writeId(this, buffer);
-        buffer.writeString(name);
-        buffer.writeString(desc);
-        buffer.writeString(hint);
-        buffer.writeFloat(contribution);
-        buffer.writeString(nonce);
-        buffer.writeBoolean(required);
+    @OnlyIn(Dist.CLIENT)
+    public void setCompleted(boolean trig) {
+        TeamResearchData.getClientInstance().setClueTriggered(this, trig);
+        ;
     }
 
-
-    @Override
-    public final String getType() {
-        return "clue";
+    public void setCompleted(Team team, boolean trig) {
+        FHResearchDataManager.INSTANCE.getData(team.getId()).setClueTriggered(this, trig);
+        if (trig)
+            end(team);
+        else
+            start(team);
+        this.sendProgressPacket(team);
     }
 
-    @Override
-    public String getNonce() {
-        return nonce;
-    }
-
-    private void deleteInTree() {
-        FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.getTeam().ifPresent(this::end));
-    }
-
-    public void edit() {
-        deleteInTree();
-    }
-
-    public void deleteSelf() {
-        deleteInTree();
-        FHResearch.clues.remove(this);
-    }
-
-    public void delete() {
-        deleteSelf();
-        if (parent != null) {
-            Research r = parent.get();
-            if (r != null) {
-                r.getClues().remove(this);
-            }
-        }
+    public void setCompleted(TeamResearchData trd, boolean trig) {
+        trd.setClueTriggered(this, trig);
+        trd.getTeam().ifPresent(team -> {
+            if (trig)
+                end(team);
+            else
+                start(team);
+            this.sendProgressPacket(team);
+        });
     }
 
     void setNewId(String id) {
@@ -251,31 +261,21 @@ public abstract class Clue extends AutoIDItem implements Writeable {
         }
     }
 
-    public void setCompleted(TeamResearchData trd, boolean trig) {
-        trd.setClueTriggered(this, trig);
-        trd.getTeam().ifPresent(team -> {
-            if (trig)
-                end(team);
-            else
-                start(team);
-            this.sendProgressPacket(team);
-        });
-    }
-
     /**
-     * Get brief string describe this clue for show in editor.
-     *
-     * @return brief<br>
+     * called when this clue's research has started
      */
-    public abstract String getBrief();
-
-    public String getBriefDesc() {
-        return "   " + (this.required ? "required " : "") + "+" + (int) (this.contribution * 100) + "%";
-    }
+    public abstract void start(Team team);
 
     ;
 
-    public boolean isRequired() {
-        return required;
+    @Override
+    public void write(PacketBuffer buffer) {
+        Clues.writeId(this, buffer);
+        buffer.writeString(name);
+        buffer.writeString(desc);
+        buffer.writeString(hint);
+        buffer.writeFloat(contribution);
+        buffer.writeString(nonce);
+        buffer.writeBoolean(required);
     }
 }

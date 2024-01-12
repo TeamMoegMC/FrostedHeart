@@ -55,15 +55,10 @@ import net.minecraft.item.Items;
 public class FHItems {
     public static String[] colors = new String[]{"black", "blue", "brown", "cyan", "gray", "green", "light_blue", "light_gray", "lime", "magenta", "orange", "pink", "purple", "red", "white", "yellow"};
 
-    public static void init() {
-    }
-
-    static Properties createProps() {
-        return new Item.Properties().group(FHMain.itemGroup);
-    }
-
     public static Item hand_stove = new CoalHandStove("hand_stove", createProps().defaultMaxDamage(10));
+
     public static Item coal_stick = new FHBaseItem("coal_stick", createProps());
+
     public static Item charcoal_stick = new FHBaseItem("charcoal_stick", createProps());
     public static Item energy_core = new FHBaseItem("energy_core", createProps());
     public static Item wolfberries = new FoodBlockItem(FHBlocks.wolfberry_bush_block, createProps(), FHFoods.WOLFBERRIES, "wolfberries");
@@ -87,9 +82,9 @@ public class FHItems {
     public static Item packed_nuts = new CannedFoodItem("packed_nuts", createProps().food((new Food.Builder()).hunger(2).saturation(0.8F).build()), false);
     public static Item dried_vegetables = new CannedFoodItem("dried_vegetables", createProps().food((new Food.Builder()).hunger(4).saturation(0.6F).build()));
     public static Item chocolate = new FHBaseItem("chocolate", createProps().food((new Food.Builder()).hunger(4).saturation(0.8F).meat().fastToEat().build()));
-
     public static Item steam_bottle = new SteamBottleItem("steam_bottle", createProps().maxStackSize(1));
     public static Item raw_hide = new FHBaseItem("raw_hide", createProps());
+
     public static Item rubbing_tool = new RubbingTool("rubbing_tool", createProps().maxDamage(5).setNoRepair());
     public static Item rubbing_pad = new FHBaseItem("rubbing_pad", createProps().maxStackSize(1));
     public static Item buff_coat = new FHBaseItem("buff_coat", createProps().defaultMaxDamage(384)).setRepairItem(raw_hide);
@@ -114,7 +109,6 @@ public class FHItems {
     public static Item thermos = new ThermosItem("thermos", "item.frostedheart.thermos", 1500, 250, true);
     public static Item advanced_thermos = new ThermosItem("advanced_thermos", "item.frostedheart.advanced_thermos", 3000, 250, true);
     public static Item generatorupgrader = new GeneratorUpgraderI("generator_upgrade_i", createProps().maxStackSize(0));
-
     static {
         for (String s : FHItems.colors) {
             allthermos.add(new ThermosItem(s + "_thermos", "item.frostedheart.thermos", 1500, 250, false));
@@ -123,10 +117,11 @@ public class FHItems {
             alladvthermos.add(new ThermosItem(s + "_advanced_thermos", "item.frostedheart.advanced_thermos", 3000, 250, false));
         }
     }
-
-
     public static Item copper_pro_pick = new ProspectorPick("copper_pro_pick", 1, createProps().defaultMaxDamage(128));
+
     public static Item iron_pro_pick = new ProspectorPick("iron_pro_pick", 2, createProps().defaultMaxDamage(192));
+
+
     public static Item steel_pro_pick = new ProspectorPick("steel_pro_pick", 3, createProps().defaultMaxDamage(256));
     public static Item copper_core_spade = new CoreSpade("copper_core_spade", 1, createProps().defaultMaxDamage(96));
     public static Item iron_core_spade = new CoreSpade("iron_core_spade", 2, createProps().defaultMaxDamage(128));
@@ -144,4 +139,9 @@ public class FHItems {
     public static Item weatherHelmet = new FHBaseArmorItem("weather_helmet", FHArmorMaterial.WEATHER, EquipmentSlotType.HEAD, createProps());
     public static Item weatherRadar = new FHBaseItem("weather_radar", createProps().maxStackSize(1));
     public static Item temperatureProbe = new FHBaseItem("temperature_probe", createProps().maxStackSize(1));
+    static Properties createProps() {
+        return new Item.Properties().group(FHMain.itemGroup);
+    }
+    public static void init() {
+    }
 }

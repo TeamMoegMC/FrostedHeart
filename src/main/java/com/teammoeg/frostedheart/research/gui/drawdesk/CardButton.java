@@ -44,11 +44,6 @@ public class CardButton extends Button {
     }
 
     @Override
-    public void onClicked(MouseButton arg0) {
-        game.select(card);
-    }
-
-    @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         Card c = game.get(card);
         if (c.isShow()) {
@@ -67,6 +62,11 @@ public class CardButton extends Button {
         if (game.isTouchable(card))
             return CursorType.HAND;
         return CursorType.ARROW;
+    }
+
+    @Override
+    public void onClicked(MouseButton arg0) {
+        game.select(card);
     }
 
 }

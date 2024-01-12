@@ -28,12 +28,12 @@ public class PlayerRelationData {
 
     long lastUpdated;
 
-    public void update(long day) {
-        long delta = day - lastUpdated;
-        if (delta > 0) {
-            totalbenefit = (int) (totalbenefit * Math.pow(0.75f, delta));
-        }
-        lastUpdated = day;
+    public void deserialize(CompoundNBT data) {
+
+        sawmurder = data.getInt("murder");
+        totalbenefit = data.getInt("benefit");
+
+        lastUpdated = data.getLong("last");
     }
 
     public CompoundNBT serialize(CompoundNBT data) {
@@ -45,11 +45,11 @@ public class PlayerRelationData {
         return data;
     }
 
-    public void deserialize(CompoundNBT data) {
-
-        sawmurder = data.getInt("murder");
-        totalbenefit = data.getInt("benefit");
-
-        lastUpdated = data.getLong("last");
+    public void update(long day) {
+        long delta = day - lastUpdated;
+        if (delta > 0) {
+            totalbenefit = (int) (totalbenefit * Math.pow(0.75f, delta));
+        }
+        lastUpdated = day;
     }
 }

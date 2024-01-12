@@ -38,7 +38,7 @@ public class CuttingRecipe implements IRecipe<IInventory> {
     }
 
     @Override
-    public boolean matches(IInventory inv, World worldIn) {
+    public boolean canFit(int width, int height) {
         return false;
     }
 
@@ -48,18 +48,13 @@ public class CuttingRecipe implements IRecipe<IInventory> {
     }
 
     @Override
-    public boolean canFit(int width, int height) {
-        return false;
+    public ResourceLocation getId() {
+        return new ResourceLocation(FHMain.MODID, "cutting/" + out.getItem().getRegistryName().getPath());
     }
 
     @Override
     public ItemStack getRecipeOutput() {
         return out;
-    }
-
-    @Override
-    public ResourceLocation getId() {
-        return new ResourceLocation(FHMain.MODID, "cutting/" + out.getItem().getRegistryName().getPath());
     }
 
     @Override
@@ -70,6 +65,11 @@ public class CuttingRecipe implements IRecipe<IInventory> {
     @Override
     public IRecipeType<?> getType() {
         return IRecipeType.CRAFTING;
+    }
+
+    @Override
+    public boolean matches(IInventory inv, World worldIn) {
+        return false;
     }
 
 }

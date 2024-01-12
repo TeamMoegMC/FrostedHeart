@@ -36,9 +36,9 @@ public class DayTemperatureData {
             setWindSpeed(0);
         }
 
-        public HourData(int packed) {
-            this();
-            unpack(packed);
+        public HourData(ClimateType type) {
+            super();
+            this.type = type;
         }
 
 
@@ -50,22 +50,22 @@ public class DayTemperatureData {
             setWindSpeed(windSpeed);
         }
 
-        private void setWindSpeed(int val) {
-            windSpeed = (byte) (val);
-        }
-
-        public int getWindSpeed() {
-            return windSpeed & 0xFF;
+        public HourData(int packed) {
+            this();
+            unpack(packed);
         }
 
         public float getTemp() {
             return temp;
         }
 
+        public ClimateType getType() {
+            return type == null ? ClimateType.NONE : type;//IDK why this happen, but this would fix
+        }
 
-        public HourData(ClimateType type) {
-            super();
-            this.type = type;
+
+        public int getWindSpeed() {
+            return windSpeed & 0xFF;
         }
 
         public int pack() {
@@ -78,12 +78,8 @@ public class DayTemperatureData {
             return val;
         }
 
-        public void unpack(int val) {
-            short tempInt = (short) (val & 0xFFFF);
-            temp = tempInt / 100f;
-            windSpeed = (byte) ((val >> 16) & 0xff);
-            int vx = (val >> 24);
-            type = ClimateType.values()[vx];
+        private void setWindSpeed(int val) {
+            windSpeed = (byte) (val);
         }
 
         @Override
@@ -91,8 +87,12 @@ public class DayTemperatureData {
             return "{T=" + temp + ",W=" + getType() + ",V=" + getWindSpeed() + "}";
         }
 
-        public ClimateType getType() {
-            return type == null ? ClimateType.NONE : type;//IDK why this happen, but this would fix
+        public void unpack(int val) {
+            short tempInt = (short) (val & 0xFFFF);
+            temp = tempInt / 100f;
+            windSpeed = (byte) ((val >> 16) & 0xff);
+            int vx = (val >> 24);
+            type = ClimateType.values()[vx];
         }
 
 
@@ -102,6 +102,12 @@ public class DayTemperatureData {
     float dayHumidity;
     float dayNoise;
     long day;
+
+    public static DayTemperatureData read(CompoundNBT data) {
+        DayTemperatureData dtd = new DayTemperatureData();
+        dtd.deserialize(data);
+        return dtd;
+    }
 
     public DayTemperatureData() {
         for (int i = 0; i < 24; i++)
@@ -114,37 +120,61 @@ public class DayTemperatureData {
 
     }
 
-    void setTemp(int hourInDay, float temp) {
-        hourData[hourInDay].temp = temp;
-        ;
+    public void deserialize(CompoundNBT cnbt) {
+        int[] iar = cnbt.getIntArray("ndata");
+        for (int i = 0; i < iar.length; i++)
+            hourData[i].unpack(iar[i]);
+        dayHumidity = cnbt.getFloat("humidity");
+        dayNoise = cnbt.getFloat("noise");
+        day = cnbt.getLong("day");
     }
 
-    public float getTemp(WorldClockSource wcs) {
-        return getTemp(wcs.getHourInDay());
+    public HourData getData(int hourInDay) {
+        return hourData[hourInDay];
+    }
+
+    public HourData getData(WorldClockSource clockSource) {
+        return getData(clockSource.getHourInDay());
     }
 
     public float getTemp(int hourInDay) {
         return hourData[hourInDay].getTemp();
     }
 
-    public void setBlizzard(int hourInDay, boolean data) {
-        hourData[hourInDay].type = ClimateType.BLIZZARD;
+    public float getTemp(WorldClockSource wcs) {
+        return getTemp(wcs.getHourInDay());
     }
 
-    public boolean isBlizzard(WorldClockSource wcs) {
-        return isBlizzard(wcs.getHourInDay());
+    public ClimateType getType(int hourInDay) {
+        return hourData[hourInDay].type;
+    }
+
+    public ClimateType getType(WorldClockSource wcs) {
+        return getType(wcs.getHourInDay());
+    }
+
+    public int getWind(int hourInDay) {
+        return hourData[hourInDay].getWindSpeed();
+    }
+
+    public int getWind(WorldClockSource wcs) {
+        return getWind(wcs.getHourInDay());
     }
 
     public boolean isBlizzard(int hourInDay) {
         return hourData[hourInDay].getType() == ClimateType.BLIZZARD;
     }
 
-    public void setSnow(int hourInDay, boolean data) {
-        hourData[hourInDay].type = ClimateType.SNOW;
+    public boolean isBlizzard(WorldClockSource wcs) {
+        return isBlizzard(wcs.getHourInDay());
     }
 
-    public boolean isSnow(WorldClockSource wcs) {
-        return isSnow(wcs.getHourInDay());
+    public boolean isCloudy(int hourInDay) {
+        return hourData[hourInDay].getType() == ClimateType.CLOUDY;
+    }
+
+    public boolean isCloudy(WorldClockSource wcs) {
+        return isCloudy(wcs.getHourInDay());
     }
 
     public boolean isSnow(int hourInDay) {
@@ -152,61 +182,16 @@ public class DayTemperatureData {
         return type == ClimateType.SNOW || type == ClimateType.SNOW_BLIZZARD;
     }
 
-    public void setCloudy(int hourInDay, boolean data) {
-        hourData[hourInDay].type = ClimateType.CLOUDY;
-    }
-
-    public boolean isCloudy(WorldClockSource wcs) {
-        return isCloudy(wcs.getHourInDay());
-    }
-
-    public boolean isCloudy(int hourInDay) {
-        return hourData[hourInDay].getType() == ClimateType.CLOUDY;
-    }
-
-    public void setSunny(int hourInDay, boolean data) {
-        hourData[hourInDay].type = ClimateType.SUN;
-    }
-
-    public boolean isSunny(WorldClockSource wcs) {
-        return isSunny(wcs.getHourInDay());
+    public boolean isSnow(WorldClockSource wcs) {
+        return isSnow(wcs.getHourInDay());
     }
 
     public boolean isSunny(int hourInDay) {
         return hourData[hourInDay].getType() == ClimateType.SUN;
     }
 
-    public HourData getData(WorldClockSource clockSource) {
-        return getData(clockSource.getHourInDay());
-    }
-
-    public HourData getData(int hourInDay) {
-        return hourData[hourInDay];
-    }
-
-    public void setType(int hourInDay, ClimateType type) {
-        hourData[hourInDay].type = type;
-    }
-
-    public ClimateType getType(WorldClockSource wcs) {
-        return getType(wcs.getHourInDay());
-    }
-
-    public ClimateType getType(int hourInDay) {
-        return hourData[hourInDay].type;
-    }
-
-    public void setWind(int hourInDay, int speed) {
-        hourData[hourInDay].setWindSpeed(speed);
-        ;
-    }
-
-    public int getWind(WorldClockSource wcs) {
-        return getWind(wcs.getHourInDay());
-    }
-
-    public int getWind(int hourInDay) {
-        return hourData[hourInDay].getWindSpeed();
+    public boolean isSunny(WorldClockSource wcs) {
+        return isSunny(wcs.getHourInDay());
     }
 
     public CompoundNBT serialize() {
@@ -220,19 +205,34 @@ public class DayTemperatureData {
         return cnbt;
     }
 
-    public void deserialize(CompoundNBT cnbt) {
-        int[] iar = cnbt.getIntArray("ndata");
-        for (int i = 0; i < iar.length; i++)
-            hourData[i].unpack(iar[i]);
-        dayHumidity = cnbt.getFloat("humidity");
-        dayNoise = cnbt.getFloat("noise");
-        day = cnbt.getLong("day");
+    public void setBlizzard(int hourInDay, boolean data) {
+        hourData[hourInDay].type = ClimateType.BLIZZARD;
     }
 
-    public static DayTemperatureData read(CompoundNBT data) {
-        DayTemperatureData dtd = new DayTemperatureData();
-        dtd.deserialize(data);
-        return dtd;
+    public void setCloudy(int hourInDay, boolean data) {
+        hourData[hourInDay].type = ClimateType.CLOUDY;
+    }
+
+    public void setSnow(int hourInDay, boolean data) {
+        hourData[hourInDay].type = ClimateType.SNOW;
+    }
+
+    public void setSunny(int hourInDay, boolean data) {
+        hourData[hourInDay].type = ClimateType.SUN;
+    }
+
+    void setTemp(int hourInDay, float temp) {
+        hourData[hourInDay].temp = temp;
+        ;
+    }
+
+    public void setType(int hourInDay, ClimateType type) {
+        hourData[hourInDay].type = type;
+    }
+
+    public void setWind(int hourInDay, int speed) {
+        hourData[hourInDay].setWindSpeed(speed);
+        ;
     }
 
     @Override

@@ -54,6 +54,75 @@ public class SteamNetworkHolder {
     }
 
     /**
+     * Recive Connection.
+     *
+     * @param sen  the network<br>
+     * @param dist the distance to master<br>
+     */
+    void connect(SteamEnergyNetwork sen, int dist) {
+        this.counter = 10;
+        this.sen = sen;
+        this.dist = dist;
+    }
+
+    /**
+     * Drain heat from network.<br>
+     *
+     * @param val the max power to drain<br>
+     * @return returns drained heat
+     */
+    public float drainHeat(float val) {
+        if (!isValid()) return 0;
+        return sen.drainHeat(val);
+    }
+
+    /**
+     * get Heat network controller(Generator etc)
+     *
+     * @return heat controller
+     */
+    public HeatController getController() {
+        return sen.getController();
+    }
+
+    /**
+     * Get distance.
+     *
+     * @return distance<br>
+     */
+    public int getDistance() {
+        return dist;
+    }
+
+    /**
+     * Get network.
+     *
+     * @return network<br>
+     */
+    public SteamEnergyNetwork getNetwork() {
+        return sen;
+    }
+
+    /**
+     * Get temperature level.
+     *
+     * @return temperature level<br>
+     */
+    public float getTemperatureLevel() {
+        if (!isValid()) return 0;
+        return sen.getTemperatureLevel();
+    }
+
+    /**
+     * Checks if is valid.<br>
+     *
+     * @return if is valid,true.
+     */
+    public boolean isValid() {
+        return sen != null && sen.isValid();
+    }
+
+    /**
      * Recive connection from specific direction.<br>
      *
      * @param w    the world of reciver<br>
@@ -72,18 +141,6 @@ public class SteamNetworkHolder {
     }
 
     /**
-     * Recive Connection.
-     *
-     * @param sen  the network<br>
-     * @param dist the distance to master<br>
-     */
-    void connect(SteamEnergyNetwork sen, int dist) {
-        this.counter = 10;
-        this.sen = sen;
-        this.dist = dist;
-    }
-
-    /**
      * Tick for revalidate network.
      */
     public boolean tick() {
@@ -96,6 +153,16 @@ public class SteamNetworkHolder {
             this.dist = Integer.MAX_VALUE;
         }
         return false;
+    }
+
+    /**
+     * To string.<br>
+     *
+     * @return returns to string
+     */
+    @Override
+    public String toString() {
+        return "NetworkHolder [sen=" + sen + ", dist=" + dist + ", counter=" + counter + "]";
     }
 
     /**
@@ -112,72 +179,5 @@ public class SteamNetworkHolder {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Drain heat from network.<br>
-     *
-     * @param val the max power to drain<br>
-     * @return returns drained heat
-     */
-    public float drainHeat(float val) {
-        if (!isValid()) return 0;
-        return sen.drainHeat(val);
-    }
-
-    /**
-     * Get temperature level.
-     *
-     * @return temperature level<br>
-     */
-    public float getTemperatureLevel() {
-        if (!isValid()) return 0;
-        return sen.getTemperatureLevel();
-    }
-
-    /**
-     * Get network.
-     *
-     * @return network<br>
-     */
-    public SteamEnergyNetwork getNetwork() {
-        return sen;
-    }
-
-    /**
-     * Checks if is valid.<br>
-     *
-     * @return if is valid,true.
-     */
-    public boolean isValid() {
-        return sen != null && sen.isValid();
-    }
-
-    /**
-     * Get distance.
-     *
-     * @return distance<br>
-     */
-    public int getDistance() {
-        return dist;
-    }
-
-    /**
-     * get Heat network controller(Generator etc)
-     *
-     * @return heat controller
-     */
-    public HeatController getController() {
-        return sen.getController();
-    }
-
-    /**
-     * To string.<br>
-     *
-     * @return returns to string
-     */
-    @Override
-    public String toString() {
-        return "NetworkHolder [sen=" + sen + ", dist=" + dist + ", counter=" + counter + "]";
     }
 }

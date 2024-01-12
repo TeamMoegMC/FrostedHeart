@@ -29,43 +29,15 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
 public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatController, INetworkConsumer, ITickableTileEntity {
-    public DebugHeaterTileEntity() {
-        super(FHTileTypes.DEBUGHEATER.get());
-    }
-
     SteamEnergyNetwork network = new SteamEnergyNetwork(this);
+
     HeatProviderManager manager = new HeatProviderManager(this, c -> {
         for (Direction d : Direction.values()) {
             c.accept(pos.offset(d), d.getOpposite());
         }
     });
-
-    @Override
-    public SteamEnergyNetwork getNetwork() {
-        return network;
-    }
-
-    @Override
-    public float getMaxHeat() {
-        return Float.MAX_VALUE;
-    }
-
-    @Override
-    public float drainHeat(float value) {
-        return value;
-    }
-
-    @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-    }
-
-    @Override
-    public float getTemperatureLevel() {
-        return this.getBlockState().get(BlockStateProperties.LEVEL_1_8);
+    public DebugHeaterTileEntity() {
+        super(FHTileTypes.DEBUGHEATER.get());
     }
 
     @Override
@@ -78,15 +50,9 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
         return false;
     }
 
-
     @Override
-    public void tick() {
-        manager.tick();
-    }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return null;
+    public float drainHeat(float value) {
+        return value;
     }
 
     @Override
@@ -97,5 +63,39 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
     @Override
     public TileEntity getEntity() {
         return this;
+    }
+
+    @Override
+    public SteamNetworkHolder getHolder() {
+        return null;
+    }
+
+    @Override
+    public float getMaxHeat() {
+        return Float.MAX_VALUE;
+    }
+
+    @Override
+    public SteamEnergyNetwork getNetwork() {
+        return network;
+    }
+
+
+    @Override
+    public float getTemperatureLevel() {
+        return this.getBlockState().get(BlockStateProperties.LEVEL_1_8);
+    }
+
+    @Override
+    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+    }
+
+    @Override
+    public void tick() {
+        manager.tick();
+    }
+
+    @Override
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
     }
 }

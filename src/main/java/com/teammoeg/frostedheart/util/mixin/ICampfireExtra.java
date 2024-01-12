@@ -20,9 +20,9 @@
 package com.teammoeg.frostedheart.util.mixin;
 
 public interface ICampfireExtra {
-    int getLifeTime();
-
     void addLifeTime(int add);
+
+    int getLifeTime();
 
     void setLifeTime(int set);
 }

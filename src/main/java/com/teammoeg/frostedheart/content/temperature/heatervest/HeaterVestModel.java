@@ -29,9 +29,17 @@ import net.minecraft.client.renderer.model.ModelRenderer;
 import net.minecraft.entity.LivingEntity;
 
 public class HeaterVestModel<T extends LivingEntity> extends FHArmorBaseModel<T> {
+    static HeaterVestModel modelInstance;
     private final ModelRenderer front;
     private final ModelRenderer deco;
+
     private final ModelRenderer back;
+
+    public static HeaterVestModel getModel() {
+        if (modelInstance == null)
+            modelInstance = new HeaterVestModel(.0625f, 0, 32, 32);
+        return modelInstance;
+    }
 
     public HeaterVestModel(float modelSize, float yOffsetIn, int textureWidthIn, int textureHeightIn) {
         super(modelSize, yOffsetIn, textureWidthIn, textureHeightIn);
@@ -64,22 +72,14 @@ public class HeaterVestModel<T extends LivingEntity> extends FHArmorBaseModel<T>
         this.bipedRightLeg.showModel = false;
     }
 
-    public void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
-        modelRenderer.rotateAngleX = x;
-        modelRenderer.rotateAngleY = y;
-        modelRenderer.rotateAngleZ = z;
-    }
-
     @Override
     public void render(MatrixStack matrixStackIn, IVertexBuilder bufferIn, int packedLightIn, int packedOverlayIn, float red, float green, float blue, float alpha) {
         super.render(matrixStackIn, bufferIn, packedLightIn, packedOverlayIn, red, green, blue, alpha);
     }
 
-    static HeaterVestModel modelInstance;
-
-    public static HeaterVestModel getModel() {
-        if (modelInstance == null)
-            modelInstance = new HeaterVestModel(.0625f, 0, 32, 32);
-        return modelInstance;
+    public void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
+        modelRenderer.rotateAngleX = x;
+        modelRenderer.rotateAngleY = y;
+        modelRenderer.rotateAngleZ = z;
     }
 }

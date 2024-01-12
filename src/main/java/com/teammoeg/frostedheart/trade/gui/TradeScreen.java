@@ -138,6 +138,94 @@ public class TradeScreen extends BaseScreen {
     }
 
     @Override
+    public void addWidgets() {
+
+        RTextField ptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
+                .setMaxLine(1).setText(GuiUtils.translateGui("trade.me"));
+        ptf.setPos(0, 119);
+        super.add(ptf);
+        RTextField vptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
+                .setMaxLine(1).setText(GuiUtils.translateGui("trade.profession." + cx.data.policytype));
+        vptf.setPos(132, 119);
+        super.add(vptf);
+
+        RTextField vltf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
+                .setMaxLine(1).setText(new TranslationTextComponent("merchant.level." + (cx.data.getTradeLevel() + 1)));
+        vltf.setPos(132, 34);
+        super.add(vltf);
+
+        super.add(trade);
+
+        super.add(bargain);
+
+        super.add(tab);
+        ToolTipWidget ttw = new ToolTipWidget(this, list -> {
+            int tot = cx.relations.sum();
+            list.add(GuiUtils.translateGui("trade.relation").appendSibling(GuiUtils.str(tot > 0 ? " +" + tot : "" + tot)
+                    .mergeStyle(tot > 0 ? TextFormatting.GREEN : TextFormatting.RED)));
+
+            for (RelationModifier m : RelationModifier.values()) {
+                int rel = cx.relations.get(m);
+                if (rel == 0)
+                    continue;
+                IFormattableTextComponent tx = new StringTextComponent(rel > 0 ? " +" + rel : " " + rel)
+                        .mergeStyle(rel > 0 ? TextFormatting.GREEN : TextFormatting.RED);
+                list.add(m.getDesc().appendSibling(tx));
+
+            }
+        });
+        ttw.setPosAndSize(133, 18, 54, 5);
+        super.add(ttw);
+        for (FakeSlot fs : slots)
+            super.add(fs);
+        for (FakeSlot fs : orders)
+            super.add(fs);
+        super.add(rels);
+    }
+
+    @Override
+    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        TradeIcons.MAIN.draw(matrixStack, x, y, w, h);
+        TradeIcons.REL.draw(matrixStack, x + 133, y + 18, 54, 5);
+        int repos = cx.relations.sum();
+        repos = Math.min(Math.max(repos, -50), 50);
+        int reposx = (repos + 50) * 50 / 100;
+        TradeIcons.PTR.draw(matrixStack, x + reposx + 133, y + 17, 3, 7);
+
+        TradeIcons.icons[cx.balance + 3].draw(matrixStack, x, y, 56, 45);
+        if (cx.poffer != 0)
+            TradeIcons.POFFER_EMP.draw(matrixStack, x + 54, y + 14, 76, 60);
+        if (!cx.order.isEmpty())
+            TradeIcons.VOFFER_EMP.draw(matrixStack, x + 57, y + 73, 74, 60);
+        if (tab.getState())
+            TradeIcons.OVLBUY.draw(matrixStack, x + 189, y + 56, 48, 48);
+        else
+            TradeIcons.OVLSELL.draw(matrixStack, x + 189, y + 56, 48, 48);
+        int max = cx.policy.maxExp;
+        if (max > 0) {
+            float progress = ((float) (cx.data.totaltraded)) / max;
+
+            TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, (int) (54 * progress), 5);
+        } else {
+            TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, 54, 5);
+        }
+        InventoryScreen.drawEntityOnScreen(x + 28, y + 115, 30, (float) (x + 8) - this.getMouseX(),
+                (float) (y + 75 - 50) - this.getMouseY(), ClientUtils.getPlayer());
+        InventoryScreen.drawEntityOnScreen(x + 160, y + 115, 30, (float) (x + 140) - this.getMouseX(),
+                (float) (y + 75 - 50) - this.getMouseY(), cx.data.parent);
+    }
+
+    @Override
+    public void drawForeground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        super.drawForeground(matrixStack, theme, x, y, w, h);
+        for (DetectionSlot ds : cx.slots) {
+            if (ds.isSaleable) {
+                TradeIcons.SALEABLE.draw(matrixStack, ds.xPos + x, ds.yPos + y, 7, 6);
+            }
+        }
+    }
+
+    @Override
     public boolean onInit() {
         int sw = 244;
         int sh = 227;
@@ -192,63 +280,6 @@ public class TradeScreen extends BaseScreen {
                 });
             updateOrders();
 
-        }
-    }
-
-    public void updateOrders() {
-        for (FakeSlot fs : orders)
-            fs.clear();
-        Iterator<Entry<String, Integer>> it = cx.order.entrySet().iterator();
-        int j = 0;
-        while (it.hasNext()) {
-            Entry<String, Integer> cur = it.next();
-            FakeSlot curs = orders[j++];
-            curs.setSlot(cx.policy.getSells().get(cur.getKey()).getItem());
-            curs.setCount(cur.getValue());
-        }
-        updateTrade();
-    }
-
-    public void updateTrade() {
-        cx.recalc();
-        if (cx.balance >= 0 && cx.poffer > 0) {
-
-            trade.setEnabled(true);
-
-            if (cx.originalVOffer > cx.poffer) {
-                trade.setNormal(TradeIcons.DEALGRN);
-                trade.setOver(TradeIcons.DEALGRNO);
-                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.discounted_offering")));
-            } else if (cx.poffer - cx.originalVOffer > 10) {
-                trade.setNormal(TradeIcons.DEALYEL);
-                trade.setOver(TradeIcons.DEALYELO);
-                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.too_much_offering")));
-            } else {
-                trade.setNormal(TradeIcons.DEALN);
-                trade.setOver(TradeIcons.DEALO);
-                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.deal")));
-            }
-        } else {
-            trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.not_enough_offering")));
-            trade.setEnabled(false);
-        }
-        if (cx.relations.sum() >= 40) {
-            if (cx.order.isEmpty()) {
-                bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.trade_to_bargain")));
-                bargain.setEnabled(false);
-            } else {
-                if (cx.discountRatio > 0.4) {
-                    bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.maxed_bargain")));
-                    bargain.setEnabled(false);
-                } else {
-                    bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.bargain")));
-                    bargain.setEnabled(true);
-                }
-            }
-
-        } else {
-            bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.no_bargain")));
-            bargain.setEnabled(false);
         }
     }
 
@@ -314,91 +345,60 @@ public class TradeScreen extends BaseScreen {
         updateTrade();
     }
 
-    @Override
-    public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        TradeIcons.MAIN.draw(matrixStack, x, y, w, h);
-        TradeIcons.REL.draw(matrixStack, x + 133, y + 18, 54, 5);
-        int repos = cx.relations.sum();
-        repos = Math.min(Math.max(repos, -50), 50);
-        int reposx = (repos + 50) * 50 / 100;
-        TradeIcons.PTR.draw(matrixStack, x + reposx + 133, y + 17, 3, 7);
-
-        TradeIcons.icons[cx.balance + 3].draw(matrixStack, x, y, 56, 45);
-        if (cx.poffer != 0)
-            TradeIcons.POFFER_EMP.draw(matrixStack, x + 54, y + 14, 76, 60);
-        if (!cx.order.isEmpty())
-            TradeIcons.VOFFER_EMP.draw(matrixStack, x + 57, y + 73, 74, 60);
-        if (tab.getState())
-            TradeIcons.OVLBUY.draw(matrixStack, x + 189, y + 56, 48, 48);
-        else
-            TradeIcons.OVLSELL.draw(matrixStack, x + 189, y + 56, 48, 48);
-        int max = cx.policy.maxExp;
-        if (max > 0) {
-            float progress = ((float) (cx.data.totaltraded)) / max;
-
-            TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, (int) (54 * progress), 5);
-        } else {
-            TradeIcons.EXP.draw(matrixStack, 133 + x, 25 + y, 54, 5);
-        }
-        InventoryScreen.drawEntityOnScreen(x + 28, y + 115, 30, (float) (x + 8) - this.getMouseX(),
-                (float) (y + 75 - 50) - this.getMouseY(), ClientUtils.getPlayer());
-        InventoryScreen.drawEntityOnScreen(x + 160, y + 115, 30, (float) (x + 140) - this.getMouseX(),
-                (float) (y + 75 - 50) - this.getMouseY(), cx.data.parent);
-    }
-
-    @Override
-    public void addWidgets() {
-
-        RTextField ptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(GuiUtils.translateGui("trade.me"));
-        ptf.setPos(0, 119);
-        super.add(ptf);
-        RTextField vptf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(GuiUtils.translateGui("trade.profession." + cx.data.policytype));
-        vptf.setPos(132, 119);
-        super.add(vptf);
-
-        RTextField vltf = new RTextField(this).addFlags(Theme.CENTERED | Theme.SHADOW).setMaxWidth(56).setMinWidth(56)
-                .setMaxLine(1).setText(new TranslationTextComponent("merchant.level." + (cx.data.getTradeLevel() + 1)));
-        vltf.setPos(132, 34);
-        super.add(vltf);
-
-        super.add(trade);
-
-        super.add(bargain);
-
-        super.add(tab);
-        ToolTipWidget ttw = new ToolTipWidget(this, list -> {
-            int tot = cx.relations.sum();
-            list.add(GuiUtils.translateGui("trade.relation").appendSibling(GuiUtils.str(tot > 0 ? " +" + tot : "" + tot)
-                    .mergeStyle(tot > 0 ? TextFormatting.GREEN : TextFormatting.RED)));
-
-            for (RelationModifier m : RelationModifier.values()) {
-                int rel = cx.relations.get(m);
-                if (rel == 0)
-                    continue;
-                IFormattableTextComponent tx = new StringTextComponent(rel > 0 ? " +" + rel : " " + rel)
-                        .mergeStyle(rel > 0 ? TextFormatting.GREEN : TextFormatting.RED);
-                list.add(m.getDesc().appendSibling(tx));
-
-            }
-        });
-        ttw.setPosAndSize(133, 18, 54, 5);
-        super.add(ttw);
-        for (FakeSlot fs : slots)
-            super.add(fs);
+    public void updateOrders() {
         for (FakeSlot fs : orders)
-            super.add(fs);
-        super.add(rels);
+            fs.clear();
+        Iterator<Entry<String, Integer>> it = cx.order.entrySet().iterator();
+        int j = 0;
+        while (it.hasNext()) {
+            Entry<String, Integer> cur = it.next();
+            FakeSlot curs = orders[j++];
+            curs.setSlot(cx.policy.getSells().get(cur.getKey()).getItem());
+            curs.setCount(cur.getValue());
+        }
+        updateTrade();
     }
 
-    @Override
-    public void drawForeground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.drawForeground(matrixStack, theme, x, y, w, h);
-        for (DetectionSlot ds : cx.slots) {
-            if (ds.isSaleable) {
-                TradeIcons.SALEABLE.draw(matrixStack, ds.xPos + x, ds.yPos + y, 7, 6);
+    public void updateTrade() {
+        cx.recalc();
+        if (cx.balance >= 0 && cx.poffer > 0) {
+
+            trade.setEnabled(true);
+
+            if (cx.originalVOffer > cx.poffer) {
+                trade.setNormal(TradeIcons.DEALGRN);
+                trade.setOver(TradeIcons.DEALGRNO);
+                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.discounted_offering")));
+            } else if (cx.poffer - cx.originalVOffer > 10) {
+                trade.setNormal(TradeIcons.DEALYEL);
+                trade.setOver(TradeIcons.DEALYELO);
+                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.too_much_offering")));
+            } else {
+                trade.setNormal(TradeIcons.DEALN);
+                trade.setOver(TradeIcons.DEALO);
+                trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.deal")));
             }
+        } else {
+            trade.setTooltips(c -> c.add(GuiUtils.translateGui("trade.not_enough_offering")));
+            trade.setEnabled(false);
+        }
+        if (cx.relations.sum() >= 40) {
+            if (cx.order.isEmpty()) {
+                bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.trade_to_bargain")));
+                bargain.setEnabled(false);
+            } else {
+                if (cx.discountRatio > 0.4) {
+                    bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.maxed_bargain")));
+                    bargain.setEnabled(false);
+                } else {
+                    bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.bargain")));
+                    bargain.setEnabled(true);
+                }
+            }
+
+        } else {
+            bargain.setTooltips(c -> c.add(GuiUtils.translateGui("trade.no_bargain")));
+            bargain.setEnabled(false);
         }
     }
 

@@ -39,16 +39,6 @@ import java.util.UUID;
 public class TileEntityMixin implements IOwnerTile {
     UUID id;
 
-    @Override
-    public UUID getStoredOwner() {
-        return id;
-    }
-
-    @Override
-    public void setStoredOwner(UUID id) {
-        this.id = id;
-    }
-
     @Inject(at = @At("RETURN"), method = "read(Lnet/minecraft/block/BlockState;Lnet/minecraft/nbt/CompoundNBT;)V")
     public void fh$to$read(BlockState bs, CompoundNBT nbt, CallbackInfo cbi) {
         if (nbt.contains("fhowner"))
@@ -59,5 +49,15 @@ public class TileEntityMixin implements IOwnerTile {
     public void fh$to$write(CompoundNBT nbt, CallbackInfoReturnable<CompoundNBT> cbi) {
         if (id != null)
             nbt.putString("fhowner", id.toString());
+    }
+
+    @Override
+    public UUID getStoredOwner() {
+        return id;
+    }
+
+    @Override
+    public void setStoredOwner(UUID id) {
+        this.id = id;
     }
 }

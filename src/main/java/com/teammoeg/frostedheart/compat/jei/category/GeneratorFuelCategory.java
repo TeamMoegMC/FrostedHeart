@@ -56,21 +56,6 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends GeneratorRecipe> getRecipeClass() {
-        return GeneratorRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_fuel").getString());
-    }
-
-    @Override
     public void draw(GeneratorRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         FIRE.draw(transform, 60, 30);
         SWITCH.draw(transform, 32, 32);
@@ -83,9 +68,24 @@ public class GeneratorFuelCategory implements IRecipeCategory<GeneratorRecipe> {
         return BACKGROUND;
     }
 
+
     @Override
     public IDrawable getIcon() {
         return ICON;
+    }
+
+    @Override
+    public Class<? extends GeneratorRecipe> getRecipeClass() {
+        return GeneratorRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".generator_fuel").getString());
+    }
+
+    @Override
+    public ResourceLocation getUid() {
+        return UID;
     }
 
     @Override

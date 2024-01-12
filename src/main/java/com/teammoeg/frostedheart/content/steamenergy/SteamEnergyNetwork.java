@@ -25,16 +25,8 @@ public class SteamEnergyNetwork {
     private HeatController provider;
     private boolean isValid = true;
 
-    public HeatController getController() {
-        return provider;
-    }
-
     public SteamEnergyNetwork(HeatController provider) {
         this.provider = provider;
-    }
-
-    public boolean hasEnoughHeat(float val) {
-        return provider.getMaxHeat() >= val;
     }
 
     public float drainHeat(float val) {
@@ -45,20 +37,28 @@ public class SteamEnergyNetwork {
         return provider.fillHeat(val);
     }
 
+    public HeatController getController() {
+        return provider;
+    }
+
     public float getTemperatureLevel() {
         return provider.getTemperatureLevel();
     }
 
-    @Override
-    public String toString() {
-        return "SteamEnergyNetwork [provider=" + provider + ", isValid=" + isValid + (isValid() ? (", temp=" + this.getTemperatureLevel() + ", power=" + this.provider.getMaxHeat()) : "") + "]";
+    public boolean hasEnoughHeat(float val) {
+        return provider.getMaxHeat() >= val;
+    }
+
+    public void invalidate() {
+        isValid = false;
     }
 
     public boolean isValid() {
         return isValid && (provider instanceof TileEntity) && (!((TileEntity) provider).isRemoved());
     }
 
-    public void invalidate() {
-        isValid = false;
+    @Override
+    public String toString() {
+        return "SteamEnergyNetwork [provider=" + provider + ", isValid=" + isValid + (isValid() ? (", temp=" + this.getTemperatureLevel() + ", power=" + this.provider.getMaxHeat()) : "") + "]";
     }
 }

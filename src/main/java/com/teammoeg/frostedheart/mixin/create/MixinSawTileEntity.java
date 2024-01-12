@@ -38,6 +38,9 @@ public abstract class MixinSawTileEntity extends BlockBreakingKineticTileEntity 
         super(typeIn);
     }
 
+    @Shadow(remap = false)
+    public abstract void dropItemFromCutTree(BlockPos pos, ItemStack stack);
+
     @Inject(at = @At(value = "INVOKE",
             target = "Lcom/simibubi/create/foundation/utility/TreeCutter;findTree(Lnet/minecraft/world/IBlockReader;Lnet/minecraft/util/math/BlockPos;)Lcom/simibubi/create/foundation/utility/TreeCutter$Tree;",
             ordinal = 0, remap = false),
@@ -71,7 +74,4 @@ public abstract class MixinSawTileEntity extends BlockBreakingKineticTileEntity 
 		TreeCutter.findTree(world, breakingPos)
 			.destroyBlocks(world, null, this::dropItemFromCutTree);
 	}*/
-
-    @Shadow(remap = false)
-    public abstract void dropItemFromCutTree(BlockPos pos, ItemStack stack);
 }

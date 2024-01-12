@@ -28,8 +28,8 @@ import net.minecraft.network.PacketBuffer;
  * Very Custom Clue trigger by code or manually.
  */
 public class CustomClue extends Clue {
-    public CustomClue(String name, float contribution) {
-        super(name, contribution);
+    public CustomClue() {
+        super();
     }
 
     public CustomClue(JsonObject jo) {
@@ -40,12 +40,21 @@ public class CustomClue extends Clue {
         super(pb);
     }
 
+    public CustomClue(String name, float contribution) {
+        super(name, contribution);
+    }
+
     public CustomClue(String name, String desc, String hint, float contribution) {
         super(name, desc, hint, contribution);
     }
 
-    public CustomClue() {
-        super();
+    @Override
+    public void end(Team team) {
+    }
+
+    @Override
+    public String getBrief() {
+        return "Custom " + getDescriptionString();
     }
 
     @Override
@@ -59,15 +68,6 @@ public class CustomClue extends Clue {
 
     @Override
     public void start(Team team) {
-    }
-
-    @Override
-    public void end(Team team) {
-    }
-
-    @Override
-    public String getBrief() {
-        return "Custom " + getDescriptionString();
     }
 
 }

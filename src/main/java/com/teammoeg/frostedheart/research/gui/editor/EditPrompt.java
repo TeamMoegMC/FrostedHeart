@@ -58,6 +58,10 @@ public class EditPrompt extends BaseEditDialog {
     Button ok;
     Button cancel;
 
+    public static void open(Widget p, String l, String v, Consumer<String> f) {
+        new EditPrompt(p, l, v, f).open();
+    }
+
     public EditPrompt(Widget panel, String label, String val, Consumer<String> onFinished) {
         super(panel);
         box = new LabeledTextBox(this, label, val);
@@ -86,20 +90,16 @@ public class EditPrompt extends BaseEditDialog {
         ok.setSize(300, 20);
     }
 
-    public static void open(Widget p, String l, String v, Consumer<String> f) {
-        new EditPrompt(p, l, v, f).open();
-    }
-
-    @Override
-    public void onClose() {
-    }
-
     @Override
     public void addWidgets() {
 
         add(box);
         add(ok);
         add(cancel);
+    }
+
+    @Override
+    public void onClose() {
     }
 
 

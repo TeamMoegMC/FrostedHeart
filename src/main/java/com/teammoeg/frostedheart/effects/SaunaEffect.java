@@ -38,11 +38,8 @@ public class SaunaEffect extends Effect {
     }
 
     @Override
-    public void performEffect(LivingEntity entity, int amplifier) {
-        if (entity instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) entity;
-            EnergyCore.addEnergy(player, 9);
-        }
+    public List<ItemStack> getCurativeItems() {
+        return ImmutableList.of();
     }
 
     @Override
@@ -51,7 +48,10 @@ public class SaunaEffect extends Effect {
     }
 
     @Override
-    public List<ItemStack> getCurativeItems() {
-        return ImmutableList.of();
+    public void performEffect(LivingEntity entity, int amplifier) {
+        if (entity instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) entity;
+            EnergyCore.addEnergy(player, 9);
+        }
     }
 }

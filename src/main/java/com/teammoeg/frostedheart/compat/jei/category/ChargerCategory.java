@@ -53,21 +53,6 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends ChargerRecipe> getRecipeClass() {
-        return ChargerRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger").getString());
-    }
-
-    @Override
     public void draw(ChargerRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
         AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
@@ -85,9 +70,24 @@ public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
         return BACKGROUND;
     }
 
+
     @Override
     public IDrawable getIcon() {
         return ICON;
+    }
+
+    @Override
+    public Class<? extends ChargerRecipe> getRecipeClass() {
+        return ChargerRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".charger").getString());
+    }
+
+    @Override
+    public ResourceLocation getUid() {
+        return UID;
     }
 
     @Override

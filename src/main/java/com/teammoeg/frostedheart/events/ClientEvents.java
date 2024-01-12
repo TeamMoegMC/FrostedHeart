@@ -92,195 +92,6 @@ import static net.minecraft.util.text.TextFormatting.GRAY;
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientEvents {
     @SubscribeEvent
-    public static void tickClient(ClientTickEvent event) {
-        if (event.phase == Phase.START) {
-            PlayerEntity pe = ClientUtils.getPlayer();
-            if (pe != null && pe.getActivePotionEffect(FHEffects.NYCTALOPIA) != null) {
-                ClientUtils.applyspg = true;
-                ClientUtils.spgamma = MathHelper.clamp((float) (ClientUtils.mc().gameSettings.gamma), 0f, 1f) * 0.1f
-                        - 1f;
-            } else {
-                ClientUtils.applyspg = false;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void tickClient(Unload event) {
-        ClientUtils.applyspg = false;
-    }
-
-    @SuppressWarnings({"unchecked", "resource"})
-    @SubscribeEvent
-    public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
-        Screen gui = event.getGui();
-        if (gui instanceof MainMenuScreen) {
-            FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
-                boolean isStable = true;
-                if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
-                    FHVersion preversion = FHMain.pre.fetchVersion().resolve().get();
-                    if (preversion.laterThan(stableVersion)) {
-                        stableVersion = preversion;
-                        isStable = false;
-                    }
-                }
-                if (stableVersion.isEmpty())
-                    return;
-                MatrixStack matrixStack = event.getMatrixStack();
-                FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
-                FontRenderer font = gui.getMinecraft().fontRenderer;
-                if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                    List<IReorderingProcessor> list = font.trimStringToWidth(GuiUtils.translateGui("update_recommended")
-                            .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), 70);
-                    int l = 0;
-                    for (IReorderingProcessor line : list) {
-                        FHGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,
-                                gui.height / 2 + 9 + l);
-                        font.drawTextWithShadow(matrixStack, line, 1, gui.height / 2.0F + l, 0xFFFFFF);
-
-                        l += 9;
-                    }
-                    if (isStable) {
-                        IFormattableTextComponent itxc = new StringTextComponent("CurseForge")
-                                .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
-                                .mergeStyle(TextFormatting.GOLD);
-                        boolean needEvents = true;
-                        for (IGuiEventListener x : gui.getEventListeners())
-                            if (x instanceof GuiClickedEvent) {
-                                needEvents = false;
-                                break;
-                            }
-                        font.drawTextWithShadow(matrixStack, itxc, 1, gui.height / 2.0F + l, 0xFFFFFF);
-                        Style opencf = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
-                                "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
-                        // Though the capture is ? extends IGuiEventListener, I can't add new to it
-                        // unless I cast it to List
-                        if (needEvents)
-                            ((List<IGuiEventListener>) gui.getEventListeners()).add(new GuiClickedEvent(1,
-                                    (int) (gui.height / 2.0F + l), font.getStringPropertyWidth(itxc) + 1,
-                                    (int) (gui.height / 2.0F + l + 9), () -> gui.handleComponentClicked(opencf)));
-                        if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
-                                .equalsIgnoreCase("zh_cn")) {
-                            l += 9;
-                            Style openmcbbs = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
-                                    "https://www.mcbbs.net/thread-1227167-1-1.html"));
-                            IFormattableTextComponent itxm = new StringTextComponent("MCBBS")
-                                    .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
-                                    .mergeStyle(TextFormatting.DARK_RED);
-                            if (needEvents)
-                                ((List<IGuiEventListener>) gui.getEventListeners()).add(new GuiClickedEvent(1,
-                                        (int) (gui.height / 2.0F + l), font.getStringPropertyWidth(itxm) + 1,
-                                        (int) (gui.height / 2.0F + l + 9),
-                                        () -> gui.handleComponentClicked(openmcbbs)));
-                            font.drawTextWithShadow(matrixStack, itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    @SubscribeEvent
-    public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
-        FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
-            boolean isStable = true;
-            if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
-                FHVersion preversion = FHMain.pre.fetchVersion().resolve().get();
-                if (preversion.laterThan(stableVersion)) {
-                    stableVersion = preversion;
-                    isStable = false;
-                }
-            }
-            if (stableVersion.isEmpty())
-                return;
-            FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
-            if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
-                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
-                        .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), false);
-                if (isStable) {
-                    event.getPlayer()
-                            .sendStatusMessage(new StringTextComponent("CurseForge")
-                                    .setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
-                                            "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
-                                    .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
-                                    .mergeStyle(TextFormatting.GOLD), false);
-
-                    if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
-                            .equalsIgnoreCase("zh_cn")) {
-                        event.getPlayer()
-                                .sendStatusMessage(new StringTextComponent("MCBBS")
-                                        .setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
-                                                "https://www.mcbbs.net/thread-1227167-1-1.html")))
-                                        .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
-                                        .mergeStyle(TextFormatting.DARK_RED), false);
-                    }
-                }
-            }
-        });
-        if (ServerLifecycleHooks.getCurrentServer() != null)
-            if (FHMain.saveNeedUpdate) {
-                event.getPlayer().sendStatusMessage(
-                        GuiUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
-                                .mergeStyle(TextFormatting.RED),
-                        false);
-            } else if (FHMain.lastbkf != null) {
-                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("save_updated")
-                                .appendSibling(new StringTextComponent(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
-                                        .setClickEvent(
-                                                new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
-                                        .applyFormatting(TextFormatting.UNDERLINE))),
-                        false);
-            }
-
-    }
-
-    /**
-     * @param event
-     */
-    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
-    @SubscribeEvent
-    public void onWorldLoad(WorldEvent.Load event) {
-        if (!HeaterVestRenderer.rendersAssigned) {
-            for (Object render : ClientUtils.mc().getRenderManager().renderers.values())
-                if (BipedRenderer.class.isAssignableFrom(render.getClass()))
-                    ((BipedRenderer) render).addLayer(new HeaterVestRenderer<>((BipedRenderer) render));
-                else if (ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
-                    ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
-            HeaterVestRenderer.rendersAssigned = true;
-        }
-
-    }
-
-    @SubscribeEvent
-    public void onWorldUnLoad(Unload event) {
-
-    }
-
-    @SubscribeEvent
-    public static void onResearchStatus(ClientResearchStatusEvent event) {
-        if (event.isStatusChanged()) {
-            if (event.isCompletion())
-                ClientUtils.mc().getToastGui().add(new ResearchToast(event.getResearch()));
-        } else if (!event.isCompletion())
-            return;
-        for (Effect e : event.getResearch().getEffects())
-            if (e instanceof EffectCrafting || e instanceof EffectShowCategory) {
-                JEICompat.syncJEI();
-                return;
-            }
-    }
-
-
-    @SubscribeEvent
-    public static void addNormalItemTooltip(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        Item i = stack.getItem();
-        if (i == Items.FLINT) {
-            event.getToolTip().add(GuiUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
-        }
-    }
-
-    @SubscribeEvent
     public static void addItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
@@ -378,6 +189,113 @@ public class ClientEvents {
         }
     }
 
+    @SubscribeEvent
+    public static void addNormalItemTooltip(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        Item i = stack.getItem();
+        if (i == Items.FLINT) {
+            event.getToolTip().add(GuiUtils.translateTooltip("double_flint_ignition").mergeStyle(GRAY));
+        }
+    }
+
+    @SubscribeEvent
+    public static void addWeatherItemTooltips(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        if (stack.getItem() == FHItems.temperatureProbe) {
+            event.getToolTip().add(GuiUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
+        }
+        if (stack.getItem() == FHItems.weatherRadar) {
+            event.getToolTip().add(GuiUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
+        }
+        if (stack.getItem() == FHItems.weatherHelmet) {
+            event.getToolTip().add(GuiUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
+        }
+    }
+
+    @SuppressWarnings({"unchecked", "resource"})
+    @SubscribeEvent
+    public static void drawUpdateReminder(GuiScreenEvent.DrawScreenEvent.Post event) {
+        Screen gui = event.getGui();
+        if (gui instanceof MainMenuScreen) {
+            FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
+                boolean isStable = true;
+                if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
+                    FHVersion preversion = FHMain.pre.fetchVersion().resolve().get();
+                    if (preversion.laterThan(stableVersion)) {
+                        stableVersion = preversion;
+                        isStable = false;
+                    }
+                }
+                if (stableVersion.isEmpty())
+                    return;
+                MatrixStack matrixStack = event.getMatrixStack();
+                FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
+                FontRenderer font = gui.getMinecraft().fontRenderer;
+                if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
+                    List<IReorderingProcessor> list = font.trimStringToWidth(GuiUtils.translateGui("update_recommended")
+                            .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), 70);
+                    int l = 0;
+                    for (IReorderingProcessor line : list) {
+                        FHGuiHelper.drawLine(matrixStack, Color4I.rgba(0, 0, 0, 255), 0, gui.height / 2 - 1 + l, 72,
+                                gui.height / 2 + 9 + l);
+                        font.drawTextWithShadow(matrixStack, line, 1, gui.height / 2.0F + l, 0xFFFFFF);
+
+                        l += 9;
+                    }
+                    if (isStable) {
+                        IFormattableTextComponent itxc = new StringTextComponent("CurseForge")
+                                .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
+                                .mergeStyle(TextFormatting.GOLD);
+                        boolean needEvents = true;
+                        for (IGuiEventListener x : gui.getEventListeners())
+                            if (x instanceof GuiClickedEvent) {
+                                needEvents = false;
+                                break;
+                            }
+                        font.drawTextWithShadow(matrixStack, itxc, 1, gui.height / 2.0F + l, 0xFFFFFF);
+                        Style opencf = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
+                                "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue"));
+                        // Though the capture is ? extends IGuiEventListener, I can't add new to it
+                        // unless I cast it to List
+                        if (needEvents)
+                            ((List<IGuiEventListener>) gui.getEventListeners()).add(new GuiClickedEvent(1,
+                                    (int) (gui.height / 2.0F + l), font.getStringPropertyWidth(itxc) + 1,
+                                    (int) (gui.height / 2.0F + l + 9), () -> gui.handleComponentClicked(opencf)));
+                        if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
+                                .equalsIgnoreCase("zh_cn")) {
+                            l += 9;
+                            Style openmcbbs = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
+                                    "https://www.mcbbs.net/thread-1227167-1-1.html"));
+                            IFormattableTextComponent itxm = new StringTextComponent("MCBBS")
+                                    .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
+                                    .mergeStyle(TextFormatting.DARK_RED);
+                            if (needEvents)
+                                ((List<IGuiEventListener>) gui.getEventListeners()).add(new GuiClickedEvent(1,
+                                        (int) (gui.height / 2.0F + l), font.getStringPropertyWidth(itxm) + 1,
+                                        (int) (gui.height / 2.0F + l + 9),
+                                        () -> gui.handleComponentClicked(openmcbbs)));
+                            font.drawTextWithShadow(matrixStack, itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    @SubscribeEvent
+    public static void onResearchStatus(ClientResearchStatusEvent event) {
+        if (event.isStatusChanged()) {
+            if (event.isCompletion())
+                ClientUtils.mc().getToastGui().add(new ResearchToast(event.getResearch()));
+        } else if (!event.isCompletion())
+            return;
+        for (Effect e : event.getResearch().getEffects())
+            if (e instanceof EffectCrafting || e instanceof EffectShowCategory) {
+                JEICompat.syncJEI();
+                return;
+            }
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
@@ -456,17 +374,99 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
-    public static void addWeatherItemTooltips(ItemTooltipEvent event) {
-        ItemStack stack = event.getItemStack();
-        if (stack.getItem() == FHItems.temperatureProbe) {
-            event.getToolTip().add(GuiUtils.translateTooltip("temperature_probe").mergeStyle(TextFormatting.GRAY));
+    public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
+        FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
+            boolean isStable = true;
+            if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
+                FHVersion preversion = FHMain.pre.fetchVersion().resolve().get();
+                if (preversion.laterThan(stableVersion)) {
+                    stableVersion = preversion;
+                    isStable = false;
+                }
+            }
+            if (stableVersion.isEmpty())
+                return;
+            FHVersion clientVersion = FHMain.local.fetchVersion().orElse(FHVersion.empty);
+            if (!stableVersion.isEmpty() && (clientVersion.isEmpty() || !clientVersion.laterThan(stableVersion))) {
+                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("update_recommended")
+                        .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), false);
+                if (isStable) {
+                    event.getPlayer()
+                            .sendStatusMessage(new StringTextComponent("CurseForge")
+                                    .setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
+                                            "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
+                                    .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
+                                    .mergeStyle(TextFormatting.GOLD), false);
+
+                    if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
+                            .equalsIgnoreCase("zh_cn")) {
+                        event.getPlayer()
+                                .sendStatusMessage(new StringTextComponent("MCBBS")
+                                        .setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
+                                                "https://www.mcbbs.net/thread-1227167-1-1.html")))
+                                        .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
+                                        .mergeStyle(TextFormatting.DARK_RED), false);
+                    }
+                }
+            }
+        });
+        if (ServerLifecycleHooks.getCurrentServer() != null)
+            if (FHMain.saveNeedUpdate) {
+                event.getPlayer().sendStatusMessage(
+                        GuiUtils.translateGui("save_update_needed", FHMain.lastServerConfig.getAbsolutePath())
+                                .mergeStyle(TextFormatting.RED),
+                        false);
+            } else if (FHMain.lastbkf != null) {
+                event.getPlayer().sendStatusMessage(GuiUtils.translateGui("save_updated")
+                                .appendSibling(new StringTextComponent(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
+                                        .setClickEvent(
+                                                new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
+                                        .applyFormatting(TextFormatting.UNDERLINE))),
+                        false);
+            }
+
+    }
+
+
+    @SubscribeEvent
+    public static void tickClient(ClientTickEvent event) {
+        if (event.phase == Phase.START) {
+            PlayerEntity pe = ClientUtils.getPlayer();
+            if (pe != null && pe.getActivePotionEffect(FHEffects.NYCTALOPIA) != null) {
+                ClientUtils.applyspg = true;
+                ClientUtils.spgamma = MathHelper.clamp((float) (ClientUtils.mc().gameSettings.gamma), 0f, 1f) * 0.1f
+                        - 1f;
+            } else {
+                ClientUtils.applyspg = false;
+            }
         }
-        if (stack.getItem() == FHItems.weatherRadar) {
-            event.getToolTip().add(GuiUtils.translateTooltip("weather_radar").mergeStyle(TextFormatting.GRAY));
+    }
+
+    @SubscribeEvent
+    public static void tickClient(Unload event) {
+        ClientUtils.applyspg = false;
+    }
+
+    /**
+     * @param event
+     */
+    @SuppressWarnings({"resource", "unchecked", "rawtypes"})
+    @SubscribeEvent
+    public void onWorldLoad(WorldEvent.Load event) {
+        if (!HeaterVestRenderer.rendersAssigned) {
+            for (Object render : ClientUtils.mc().getRenderManager().renderers.values())
+                if (BipedRenderer.class.isAssignableFrom(render.getClass()))
+                    ((BipedRenderer) render).addLayer(new HeaterVestRenderer<>((BipedRenderer) render));
+                else if (ArmorStandRenderer.class.isAssignableFrom(render.getClass()))
+                    ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
+            HeaterVestRenderer.rendersAssigned = true;
         }
-        if (stack.getItem() == FHItems.weatherHelmet) {
-            event.getToolTip().add(GuiUtils.translateTooltip("weather_helmet").mergeStyle(TextFormatting.GRAY));
-        }
+
+    }
+
+    @SubscribeEvent
+    public void onWorldUnLoad(Unload event) {
+
     }
 
     /*

@@ -34,18 +34,6 @@ public interface INoise1D {
     }
 
 
-    float noise(float in);
-
-    /**
-     * Applies a transformation to the input coordinates. This is useful for clamp / scale operations on the input coordinates.
-     *
-     * @param transform the input function
-     * @return a new noise function
-     */
-    default INoise1D transformed(INoise1D transform) {
-        return in -> INoise1D.this.noise(transform.noise(in));
-    }
-
     /**
      * Extends to a 2D noise layer
      *
@@ -62,5 +50,17 @@ public interface INoise1D {
      */
     default INoise2D extendY() {
         return (x, y) -> noise(x);
+    }
+
+    float noise(float in);
+
+    /**
+     * Applies a transformation to the input coordinates. This is useful for clamp / scale operations on the input coordinates.
+     *
+     * @param transform the input function
+     * @return a new noise function
+     */
+    default INoise1D transformed(INoise1D transform) {
+        return in -> INoise1D.this.noise(transform.noise(in));
     }
 }

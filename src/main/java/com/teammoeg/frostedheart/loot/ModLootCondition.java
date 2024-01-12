@@ -32,39 +32,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ModLootCondition implements ILootCondition {
-    public static LootConditionType TYPE;
-    private Set<String> mods = new HashSet<>();
-
-    public ModLootCondition(String mod) {
-        mods.add(mod);
-
-    }
-
-    public ModLootCondition(Collection<String> mods) {
-        mods.addAll(mods);
-
-    }
-
-    @SuppressWarnings("resource")
-    @Override
-    public boolean test(LootContext t) {
-        return mods.contains(t.getQueriedLootTableId().getNamespace());
-    }
-
-    @Override
-    public LootConditionType getConditionType() {
-        return TYPE;
-    }
-
     public static class Serializer implements ILootSerializer<ModLootCondition> {
-
-        @Override
-        public void serialize(JsonObject jsonObject, ModLootCondition cond, JsonSerializationContext serializationContext) {
-            if (cond.mods.size() == 1)
-                jsonObject.addProperty("mod", cond.mods.iterator().next());
-            else
-                jsonObject.add("mods", SerializeUtil.toJsonList(cond.mods, JsonPrimitive::new));
-        }
 
         @Nonnull
         @Override
@@ -74,5 +42,37 @@ public class ModLootCondition implements ILootCondition {
             }
             return new ModLootCondition(SerializeUtil.parseJsonElmList(jsonObject.get("mods"), JsonElement::getAsString));
         }
+
+        @Override
+        public void serialize(JsonObject jsonObject, ModLootCondition cond, JsonSerializationContext serializationContext) {
+            if (cond.mods.size() == 1)
+                jsonObject.addProperty("mod", cond.mods.iterator().next());
+            else
+                jsonObject.add("mods", SerializeUtil.toJsonList(cond.mods, JsonPrimitive::new));
+        }
+    }
+    public static LootConditionType TYPE;
+
+    private Set<String> mods = new HashSet<>();
+
+    public ModLootCondition(Collection<String> mods) {
+        mods.addAll(mods);
+
+    }
+
+    public ModLootCondition(String mod) {
+        mods.add(mod);
+
+    }
+
+    @Override
+    public LootConditionType getConditionType() {
+        return TYPE;
+    }
+
+    @SuppressWarnings("resource")
+    @Override
+    public boolean test(LootContext t) {
+        return mods.contains(t.getQueriedLootTableId().getNamespace());
     }
 }

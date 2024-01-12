@@ -36,8 +36,13 @@ public class EmbNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
-
+    public String getDisplay(ScenarioRunner runner) {
+        Object dat = "";
+        if (exp != null)
+            dat = runner.eval(exp);
+        else if (pat != null)
+            dat = runner.evalPathString(pat);
+        return String.format(format, dat);
     }
 
     @Override
@@ -51,13 +56,8 @@ public class EmbNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
-        Object dat = "";
-        if (exp != null)
-            dat = runner.eval(exp);
-        else if (pat != null)
-            dat = runner.evalPathString(pat);
-        return String.format(format, dat);
+    public void run(ScenarioRunner runner) {
+
     }
 
 }

@@ -39,9 +39,34 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ResearchDashboardPanel extends Panel {
 
+    final static String read = "kmgtpezyh";
+    final static DecimalFormat df1 = new DecimalFormat("#.#");
+
+    final static DecimalFormat df2 = new DecimalFormat("#.##");
+
+    final static DecimalFormat df3 = new DecimalFormat("#.##");
+
     ResearchDetailPanel detailPanel;
     RTextField techpoint;
-
+    public static synchronized String toReadable(long num) {
+        int unit = -1;
+        double lnum = num;
+        while (lnum > 1999) {
+            unit++;
+            lnum /= 1000;
+        }
+        if (unit < 0)
+            return String.valueOf(num);
+        if (lnum >= 1000) {
+            return "" + ((long) lnum) + read.charAt(unit);
+        } else if (lnum >= 100) {
+            return df1.format(lnum) + read.charAt(unit);
+        } else if (lnum >= 10) {
+            return df2.format(lnum) + read.charAt(unit);
+        } else {
+            return df3.format(lnum) + read.charAt(unit);
+        }
+    }
     public ResearchDashboardPanel(ResearchDetailPanel panel) {
         super(panel);
         this.setOnlyInteractWithWidgetsInside(true);
@@ -81,31 +106,6 @@ public class ResearchDashboardPanel extends Panel {
         }
         techpoint.setText(toReadable(detailPanel.research.getRequiredPoints()) + "IOPS");
         add(techpoint);
-    }
-
-    final static String read = "kmgtpezyh";
-    final static DecimalFormat df1 = new DecimalFormat("#.#");
-    final static DecimalFormat df2 = new DecimalFormat("#.##");
-    final static DecimalFormat df3 = new DecimalFormat("#.##");
-
-    public static synchronized String toReadable(long num) {
-        int unit = -1;
-        double lnum = num;
-        while (lnum > 1999) {
-            unit++;
-            lnum /= 1000;
-        }
-        if (unit < 0)
-            return String.valueOf(num);
-        if (lnum >= 1000) {
-            return "" + ((long) lnum) + read.charAt(unit);
-        } else if (lnum >= 100) {
-            return df1.format(lnum) + read.charAt(unit);
-        } else if (lnum >= 10) {
-            return df2.format(lnum) + read.charAt(unit);
-        } else {
-            return df3.format(lnum) + read.charAt(unit);
-        }
     }
 
     @Override

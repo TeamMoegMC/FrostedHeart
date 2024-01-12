@@ -46,31 +46,13 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
     private final static ResourceLocation cow_feed = new ResourceLocation(FHMain.MODID, "cow_feed");
     private EatGrassGoal eatGrassGoal;
 
-    @Override
-    public byte getMilk() {
-        return milk;
-    }
-
-    @Override
-    public void setMilk(byte milk) {
-        this.milk = milk;
-    }
-
-    @Override
-    public void eatGrassBonus() {
-
-        if (this.isChild()) {
-            this.addGrowth(60);
-        } else if (feeded < 2)
-            feeded++;
-
-    }
-
     byte feeded;
-    int digestTimer;
-    byte milk;
-    short hxteTimer;
 
+    int digestTimer;
+
+    byte milk;
+
+    short hxteTimer;
     protected CowEntityMixin(EntityType<? extends AnimalEntity> type, World worldIn) {
         super(type, worldIn);
     }/*
@@ -84,6 +66,102 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
 		new Exception().printStackTrace();
 		super.setInLove(player);
 	}*/
+    @Override
+    public boolean consumeFeed() {
+        if (feeded > 0) {
+            feeded--;
+            return true;
+        }
+        if (milk > 0) {
+            milk--;
+            return true;
+        }
+        return false;
+    }
+    @Override
+    public void eatGrassBonus() {
+
+        if (this.isChild()) {
+            this.addGrowth(60);
+        } else if (feeded < 2)
+            feeded++;
+
+    }
+
+    /**
+     * @author khjxiaogu
+     * @reason change to our own milk logic
+     */
+    @Overwrite
+    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
+        ItemStack itemstack = playerIn.getHeldItem(hand);
+        //FHMain.LOGGER.info("start feed"+this.isInLove());
+        if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
+            if (feeded < 2) {
+                feeded++;
+                //FHMain.LOGGER.info("yield feed"+this.isInLove());
+                if (!this.world.isRemote)
+                    this.consumeItemFromStack(playerIn, itemstack);
+                //FHMain.LOGGER.info("ret feed"+this.isInLove());
+                return ActionResultType.func_233537_a_(this.world.isRemote);
+            }
+        }
+        //FHMain.LOGGER.info("end feed"+this.isInLove());
+        if (itemstack.getItem() == Items.BUCKET) {
+            if (milk > 0 && !this.isChild()) {
+                playerIn.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
+                ItemStack itemstack1 = DrinkHelper.fill(itemstack, playerIn, Items.MILK_BUCKET.getDefaultInstance());
+                playerIn.setHeldItem(hand, itemstack1);
+                milk--;
+                return ActionResultType.func_233537_a_(this.world.isRemote);
+            }
+            if (!world.isRemote) {
+                if (feeded <= 0)
+                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), true);
+                else
+                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.digest"), true);
+            }
+        }
+        return super.getEntityInteractionResult(playerIn, hand);
+    }
+
+    @Override
+    public byte getMilk() {
+        return milk;
+    }
+
+    @Override
+    public void readAdditional(CompoundNBT compound) {
+        super.readAdditional(compound);
+        milk = compound.getByte("milk_stored");
+        feeded = compound.getByte("feed_stored");
+        digestTimer = compound.getInt("feed_digest");
+        hxteTimer = compound.getShort("hxthermia");
+    }
+
+    /**
+     * @author khjxiaogu
+     * @reason make cow eat grass
+     */
+    @Overwrite
+    @Override
+    protected void registerGoals() {
+        eatGrassGoal = new EatGrassGoal(this);
+        this.goalSelector.addGoal(0, new SwimGoal(this));
+        this.goalSelector.addGoal(1, new PanicGoal(this, 2.0D));
+        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
+        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.fromItems(Items.WHEAT), false));
+        this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.25D));
+        this.goalSelector.addGoal(5, eatGrassGoal);
+        this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
+        this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+        this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
+    }
+
+    @Override
+    public void setMilk(byte milk) {
+        this.milk = milk;
+    }
 
     @Override
     public void tick() {
@@ -136,83 +214,5 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
         compound.putByte("feed_stored", feeded);
         compound.putInt("feed_digest", digestTimer);
         compound.putShort("hxthermia", hxteTimer);
-    }
-
-    @Override
-    public void readAdditional(CompoundNBT compound) {
-        super.readAdditional(compound);
-        milk = compound.getByte("milk_stored");
-        feeded = compound.getByte("feed_stored");
-        digestTimer = compound.getInt("feed_digest");
-        hxteTimer = compound.getShort("hxthermia");
-    }
-
-    /**
-     * @author khjxiaogu
-     * @reason make cow eat grass
-     */
-    @Overwrite
-    @Override
-    protected void registerGoals() {
-        eatGrassGoal = new EatGrassGoal(this);
-        this.goalSelector.addGoal(0, new SwimGoal(this));
-        this.goalSelector.addGoal(1, new PanicGoal(this, 2.0D));
-        this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
-        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.fromItems(Items.WHEAT), false));
-        this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.25D));
-        this.goalSelector.addGoal(5, eatGrassGoal);
-        this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
-        this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
-        this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
-    }
-
-    /**
-     * @author khjxiaogu
-     * @reason change to our own milk logic
-     */
-    @Overwrite
-    public ActionResultType getEntityInteractionResult(PlayerEntity playerIn, Hand hand) {
-        ItemStack itemstack = playerIn.getHeldItem(hand);
-        //FHMain.LOGGER.info("start feed"+this.isInLove());
-        if (!this.isChild() && !itemstack.isEmpty() && itemstack.getItem().getTags().contains(cow_feed)) {
-            if (feeded < 2) {
-                feeded++;
-                //FHMain.LOGGER.info("yield feed"+this.isInLove());
-                if (!this.world.isRemote)
-                    this.consumeItemFromStack(playerIn, itemstack);
-                //FHMain.LOGGER.info("ret feed"+this.isInLove());
-                return ActionResultType.func_233537_a_(this.world.isRemote);
-            }
-        }
-        //FHMain.LOGGER.info("end feed"+this.isInLove());
-        if (itemstack.getItem() == Items.BUCKET) {
-            if (milk > 0 && !this.isChild()) {
-                playerIn.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, 1.0F);
-                ItemStack itemstack1 = DrinkHelper.fill(itemstack, playerIn, Items.MILK_BUCKET.getDefaultInstance());
-                playerIn.setHeldItem(hand, itemstack1);
-                milk--;
-                return ActionResultType.func_233537_a_(this.world.isRemote);
-            }
-            if (!world.isRemote) {
-                if (feeded <= 0)
-                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.hungry"), true);
-                else
-                    playerIn.sendStatusMessage(GuiUtils.translateMessage("cow.nomilk.digest"), true);
-            }
-        }
-        return super.getEntityInteractionResult(playerIn, hand);
-    }
-
-    @Override
-    public boolean consumeFeed() {
-        if (feeded > 0) {
-            feeded--;
-            return true;
-        }
-        if (milk > 0) {
-            milk--;
-            return true;
-        }
-        return false;
     }
 }

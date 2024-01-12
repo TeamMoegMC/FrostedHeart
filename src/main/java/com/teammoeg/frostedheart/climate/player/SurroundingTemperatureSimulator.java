@@ -45,24 +45,32 @@ import java.util.Random;
  * @author Alphagem618
  */
 public class SurroundingTemperatureSimulator {
-    public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
+    /**
+     * Extract block data into shape and temperature, other data are disposed.
+     */
+    private static class CachedBlockInfo {
+        VoxelShape shape;
+        float temperature;
+
+        public CachedBlockInfo(VoxelShape shape) {
+            super();
+            this.shape = shape;
+        }
+
+        public CachedBlockInfo(VoxelShape shape, float temperature) {
+            super();
+            this.shape = shape;
+            this.temperature = temperature;
+        }
+    }
     public static final int range = 8;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
-    // of sections is 8
-    BlockPos origin;
-    ServerWorld world;
-    Random rnd;
     private static final int n = 4168;
     private static final int rdiff = 10;
     private static final float v0 = .4f;
     private static final VoxelShape EMPTY = VoxelShapes.empty();
     private static final VoxelShape FULL = VoxelShapes.fullCube();
-    private double[] qx = new double[n], qy = new double[n], qz = new double[n];// Qpos, position of particle.
     private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list
-    // is considered a distributed ball
-    // mesh.
-    private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
     private static final int num_rounds = 20;
-
     static {// generate speed vector list
         int o = 0;
         for (int i = -rdiff; i <= rdiff; ++i)
@@ -80,31 +88,23 @@ public class SurroundingTemperatureSimulator {
                     o++;
                 }
     }
+    public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
+    // of sections is 8
+    BlockPos origin;
+    ServerWorld world;
+    Random rnd;
 
-    public static void init() {
-    }
+    private double[] qx = new double[n], qy = new double[n], qz = new double[n];// Qpos, position of particle.
 
-    /**
-     * Extract block data into shape and temperature, other data are disposed.
-     */
-    private static class CachedBlockInfo {
-        VoxelShape shape;
-        float temperature;
-
-        public CachedBlockInfo(VoxelShape shape, float temperature) {
-            super();
-            this.shape = shape;
-            this.temperature = temperature;
-        }
-
-        public CachedBlockInfo(VoxelShape shape) {
-            super();
-            this.shape = shape;
-        }
-    }
+    // is considered a distributed ball
+    // mesh.
+    private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
 
     public Map<BlockState, CachedBlockInfo> info = new HashMap<>();// state to info cache
+
     public Map<BlockPos, CachedBlockInfo> posinfo = new HashMap<>();// position to info cache
+    public static void init() {
+    }
 
     public SurroundingTemperatureSimulator(ServerPlayerEntity player) {
         int sourceX = (int) player.getPosX(), sourceY = (int) player.getPosYEye(), sourceZ = (int) player.getPosZ();
@@ -177,12 +177,39 @@ public class SurroundingTemperatureSimulator {
         }
     }
 
-    /***
-     * Since a position is highly possible to be fetched for multiple times, add
-     * cache in normal fetch
+    public float getBlockTemperature(double qx0, double qy0, double qz0) {
+        for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
+        {
+            qx[i] = qx0;
+            qy[i] = qy0;
+            qz[i] = qz0;
+            vid[i] = i;
+        }
+        float heat = 0;
+        for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
+        {
+            for (int i = 0; i < n; ++i) // for all particles:
+            {
+                if (isBlockade(qx[i] + vx[vid[i]], qy[i] + vy[vid[i]], qz[i] + vz[vid[i]])) // if running into a block
+                {
+                    vid[i] = rnd.nextInt(n); // re-choose a speed direction randomly (from the pre-generated pool)
+                }
+                qx[i] = qx[i] + vx[vid[i]]; // move x
+                qy[i] = qy[i] + vy[vid[i]]; // move y
+                qz[i] = qz[i] + vz[vid[i]]; // move z
+                heat += getHeat(qx[i], qy[i], qz[i])
+                        * MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
+            }
+        }
+        return heat / n;
+    }
+
+    /**
+     * Get location temperature
      */
-    private CachedBlockInfo getInfoCached(BlockPos pos) {
-        return posinfo.computeIfAbsent(pos, p -> getInfo(p));
+    private float getHeat(double x, double y, double z) {
+
+        return getInfoCached(new BlockPos(x, y, z)).temperature;
     }
 
     /***
@@ -229,6 +256,14 @@ public class SurroundingTemperatureSimulator {
         return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp);
     }
 
+    /***
+     * Since a position is highly possible to be fetched for multiple times, add
+     * cache in normal fetch
+     */
+    private CachedBlockInfo getInfoCached(BlockPos pos) {
+        return posinfo.computeIfAbsent(pos, p -> getInfo(p));
+    }
+
     /**
      * Check if this location collides with block.
      */
@@ -240,40 +275,5 @@ public class SurroundingTemperatureSimulator {
             return false;
         return info.shape.contains(MathHelper.frac(x), MathHelper.frac(y), MathHelper.frac(z));
 
-    }
-
-    /**
-     * Get location temperature
-     */
-    private float getHeat(double x, double y, double z) {
-
-        return getInfoCached(new BlockPos(x, y, z)).temperature;
-    }
-
-    public float getBlockTemperature(double qx0, double qy0, double qz0) {
-        for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
-        {
-            qx[i] = qx0;
-            qy[i] = qy0;
-            qz[i] = qz0;
-            vid[i] = i;
-        }
-        float heat = 0;
-        for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
-        {
-            for (int i = 0; i < n; ++i) // for all particles:
-            {
-                if (isBlockade(qx[i] + vx[vid[i]], qy[i] + vy[vid[i]], qz[i] + vz[vid[i]])) // if running into a block
-                {
-                    vid[i] = rnd.nextInt(n); // re-choose a speed direction randomly (from the pre-generated pool)
-                }
-                qx[i] = qx[i] + vx[vid[i]]; // move x
-                qy[i] = qy[i] + vy[vid[i]]; // move y
-                qz[i] = qz[i] + vz[vid[i]]; // move z
-                heat += getHeat(qx[i], qy[i], qz[i])
-                        * MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
-            }
-        }
-        return heat / n;
     }
 }

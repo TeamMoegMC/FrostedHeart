@@ -37,6 +37,13 @@ import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.GROW
 @Mixin(HempBlock.class)
 public class HempBlockMixin {
 
+    private static EnumHempGrowth fh$getMaxGrowth(EnumHempGrowth current) {
+        if (current == EnumHempGrowth.TOP0)
+            return EnumHempGrowth.TOP0;
+        else
+            return EnumHempGrowth.BOTTOM4;
+    }
+
     private float fh$getGrowthSpeed(World world, BlockPos pos, BlockState state, int light) {
         float growth = 0.125f * (light - 11);
         if (world.canBlockSeeSky(pos))
@@ -45,13 +52,6 @@ public class HempBlockMixin {
         if (soil.getBlock().isFertile(soil, world, pos.add(0, -1, 0)))
             growth *= 1.5f;
         return 1f + growth;
-    }
-
-    private static EnumHempGrowth fh$getMaxGrowth(EnumHempGrowth current) {
-        if (current == EnumHempGrowth.TOP0)
-            return EnumHempGrowth.TOP0;
-        else
-            return EnumHempGrowth.BOTTOM4;
     }
 
 //    @Inject(method = "tick(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/util/math/BlockPos;Ljava/util/Random;)V", at = @At(value = "HEAD", args = {"log=true"}), cancellable = true)

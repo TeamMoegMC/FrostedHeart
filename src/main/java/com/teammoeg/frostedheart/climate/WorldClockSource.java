@@ -32,8 +32,48 @@ public class WorldClockSource {
     public WorldClockSource() {
     }
 
-    public void update(ServerWorld w) {
-        update(w.getDayTime());
+    public void deserialize(CompoundNBT cnbt) {
+        secs = cnbt.getLong("secs");
+        lastdaytime = cnbt.getLong("last");
+    }
+
+    public long getDate() {
+        return (secs / 50) / 24;
+    }
+
+    public int getHourInDay() {
+        return (int) ((secs / 50) % 24);
+    }
+
+    public long getHours() {
+        return (secs / 50);
+    }
+
+    public long getMonth() {
+        return (secs / 50) / 24 / 30;
+    }
+
+    public long getTimeSecs() {
+        return secs;
+    }
+
+    public CompoundNBT serialize() {
+        return serialize(new CompoundNBT());
+    }
+
+    public CompoundNBT serialize(CompoundNBT cnbt) {
+        cnbt.putLong("secs", secs);
+        cnbt.putLong("last", lastdaytime);
+        return cnbt;
+    }
+
+    public void setDate(long date) {
+        secs = (secs % 1200) + date * 1200;
+    }
+
+    @Override
+    public String toString() {
+        return "WorldClockSource [secs=" + secs + "]";
     }
 
     public void update(long newTime) {
@@ -47,47 +87,7 @@ public class WorldClockSource {
         lastdaytime = newTime - newTime % 20;
     }
 
-    public int getHourInDay() {
-        return (int) ((secs / 50) % 24);
-    }
-
-    public long getDate() {
-        return (secs / 50) / 24;
-    }
-
-    public void setDate(long date) {
-        secs = (secs % 1200) + date * 1200;
-    }
-
-    public long getMonth() {
-        return (secs / 50) / 24 / 30;
-    }
-
-    public long getHours() {
-        return (secs / 50);
-    }
-
-    public long getTimeSecs() {
-        return secs;
-    }
-
-    public CompoundNBT serialize(CompoundNBT cnbt) {
-        cnbt.putLong("secs", secs);
-        cnbt.putLong("last", lastdaytime);
-        return cnbt;
-    }
-
-    public CompoundNBT serialize() {
-        return serialize(new CompoundNBT());
-    }
-
-    public void deserialize(CompoundNBT cnbt) {
-        secs = cnbt.getLong("secs");
-        lastdaytime = cnbt.getLong("last");
-    }
-
-    @Override
-    public String toString() {
-        return "WorldClockSource [secs=" + secs + "]";
+    public void update(ServerWorld w) {
+        update(w.getDayTime());
     }
 }

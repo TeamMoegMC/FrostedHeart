@@ -32,41 +32,6 @@ import java.util.Scanner;
 
 public class FHRemote {
     public static class FHLocal extends FHRemote {
-        protected void fetch() {
-            doFetch();
-        }
-
-        private void fromTLV() {
-            File vers = new File(FMLPaths.CONFIGDIR.get().toFile(), ".twrlastversion");//from twrlastvers
-            if (vers.exists()) {
-                try {
-                    this.stableVersion = FileUtil.readString(vers);
-                } catch (Throwable e) {
-                }
-            }
-        }
-
-        private void fromModVersion() {
-            try {
-                String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
-                this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
-            } catch (Throwable e) {
-            }
-        }
-
-        private void fromCFM() {//from curseforge manifest
-            File vers = new File(FMLPaths.GAMEDIR.get().toFile(), "manifest.json");
-            if (vers.exists()) {
-                try {
-                    JsonParser parser = new JsonParser();
-                    try (FileReader fr = new FileReader(vers)) {
-                        this.stableVersion = parser.parse(fr).getAsJsonObject().get("version").getAsString();
-                    }
-                } catch (Throwable e) {
-                }
-            }
-        }
-
         @Override
         public void doFetch() {
             fromTLV();
@@ -82,6 +47,41 @@ public class FHRemote {
             } else {
                 FHMain.LOGGER.info("[TWR Version Check] Failed to fetch FH local version, check your installation.");
                 this.stableVersion = "";
+            }
+        }
+
+        protected void fetch() {
+            doFetch();
+        }
+
+        private void fromCFM() {//from curseforge manifest
+            File vers = new File(FMLPaths.GAMEDIR.get().toFile(), "manifest.json");
+            if (vers.exists()) {
+                try {
+                    JsonParser parser = new JsonParser();
+                    try (FileReader fr = new FileReader(vers)) {
+                        this.stableVersion = parser.parse(fr).getAsJsonObject().get("version").getAsString();
+                    }
+                } catch (Throwable e) {
+                }
+            }
+        }
+
+        private void fromModVersion() {
+            try {
+                String versionWithMC = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
+                this.stableVersion = versionWithMC.substring(versionWithMC.indexOf('-') + 1);
+            } catch (Throwable e) {
+            }
+        }
+
+        private void fromTLV() {
+            File vers = new File(FMLPaths.CONFIGDIR.get().toFile(), ".twrlastversion");//from twrlastvers
+            if (vers.exists()) {
+                try {
+                    this.stableVersion = FileUtil.readString(vers);
+                } catch (Throwable e) {
+                }
             }
         }
 
@@ -101,31 +101,6 @@ public class FHRemote {
     }
 
     public String stableVersion = null;
-
-    public FHRemote() {
-        fetch();
-    }
-
-    protected void fetch() {
-        new Thread(() -> {
-            doFetch();
-        }).start();
-    }
-
-    protected void doFetch() {
-       /* try {
-            JsonParser parser = new JsonParser();
-            JsonObject json = parser.parse(fetchString("https://addons-ecs.forgesvc.net/api/v2/addon/535790")).getAsJsonObject();
-            String fileName = json.get("latestFiles").getAsJsonArray().get(0).getAsJsonObject().get("fileName").getAsString();
-            stableVersion = fileName.substring(18, fileName.indexOf(".zip"));
-        } catch (Throwable e) {
-            stableVersion = "";
-            e.printStackTrace();
-        }*/
-        if (stableVersion == null || stableVersion.isEmpty()) {
-            stableVersion = fetchString("http://server.teammoeg.com:15010/data/twrver");
-        }
-    }
 
     /**
      * Fetch a simple string from remote URL
@@ -148,6 +123,31 @@ public class FHRemote {
             e.printStackTrace();
         }
         return "";
+    }
+
+    public FHRemote() {
+        fetch();
+    }
+
+    protected void doFetch() {
+       /* try {
+            JsonParser parser = new JsonParser();
+            JsonObject json = parser.parse(fetchString("https://addons-ecs.forgesvc.net/api/v2/addon/535790")).getAsJsonObject();
+            String fileName = json.get("latestFiles").getAsJsonArray().get(0).getAsJsonObject().get("fileName").getAsString();
+            stableVersion = fileName.substring(18, fileName.indexOf(".zip"));
+        } catch (Throwable e) {
+            stableVersion = "";
+            e.printStackTrace();
+        }*/
+        if (stableVersion == null || stableVersion.isEmpty()) {
+            stableVersion = fetchString("http://server.teammoeg.com:15010/data/twrver");
+        }
+    }
+
+    protected void fetch() {
+        new Thread(() -> {
+            doFetch();
+        }).start();
     }
 
     public LazyOptional<FHVersion> fetchVersion() {

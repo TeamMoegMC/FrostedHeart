@@ -46,79 +46,16 @@ import java.util.List;
 import java.util.Map;
 
 public class IncubateRecipe extends IESerializableRecipe {
-    public static IRecipeType<IncubateRecipe> TYPE;
-    public static RegistryObject<Serializer> SERIALIZER;
-
-    public IngredientWithSize input;
-    public IngredientWithSize catalyst;
-    public ItemStack output;
-    public FluidStack output_fluid;
-    public boolean consume_catalyst;
-    public final boolean isFood;
-    public int water;
-    public int time;
-
-
-    public IncubateRecipe(ResourceLocation id, IngredientWithSize input,
-                          IngredientWithSize catalyst, ItemStack output, FluidStack output_fluid, boolean consume_catalyst, int water,
-                          int time) {
-        super(output, TYPE, id);
-        this.input = input;
-        this.catalyst = catalyst;
-        this.output = output;
-        this.output_fluid = output_fluid;
-        this.consume_catalyst = consume_catalyst;
-        this.water = water;
-        this.time = time;
-        isFood = false;
-    }
-
-    public IncubateRecipe() {
-        super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);
-        isFood = true;
-        List<IItemProvider> items = new ArrayList<>();
-        for (Item i : ForgeRegistries.ITEMS.getValues()) {
-            if (i.isFood())
-                items.add(i);
-        }
-
-        this.input = new IngredientWithSize(Ingredient.fromItems(items.toArray(new IItemProvider[0])), 1);
-        this.catalyst = IngredientWithSize.of(new ItemStack(Items.ROTTEN_FLESH));
-        this.output = ItemStack.EMPTY;
-        this.output_fluid = new FluidStack(IncubatorTileEntity.getProtein(), 25);
-        this.consume_catalyst = true;
-        this.water = 20;
-        this.time = 20;
-    }
-
-    @Override
-    protected IERecipeSerializer<IncubateRecipe> getIESerializer() {
-        return SERIALIZER.get();
-    }
-
-    @Override
-    public ItemStack getRecipeOutput() {
-        return this.output;
-    }
-
-    public static Map<ResourceLocation, IncubateRecipe> recipeList = Collections.emptyMap();
-
-    public static IncubateRecipe findRecipe(ItemStack in, ItemStack catalyst) {
-        return recipeList.values().stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
-    }
-
-    public static boolean canBeCatalyst(ItemStack catalyst) {
-        return recipeList.values().stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
-    }
-
-    public static boolean canBeInput(ItemStack input) {
-        return recipeList.values().stream().anyMatch(r -> r.input.testIgnoringSize(input));
-    }
-
     public static class Serializer extends IERecipeSerializer<IncubateRecipe> {
         @Override
         public ItemStack getIcon() {
             return new ItemStack(FHBlocks.incubator1);
+        }
+
+        @Nullable
+        @Override
+        public IncubateRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readItemStack(), buffer.readFluidStack(), buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
         }
 
         @Override
@@ -146,12 +83,6 @@ public class IncubateRecipe extends IESerializableRecipe {
             return new IncubateRecipe(recipeId, input, seed, output, output_fluid, use_catalyst, water, time);
         }
 
-        @Nullable
-        @Override
-        public IncubateRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new IncubateRecipe(recipeId, IngredientWithSize.read(buffer), SerializeUtil.readOptional(buffer, IngredientWithSize::read).orElse(null), buffer.readItemStack(), buffer.readFluidStack(), buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt());
-        }
-
         @Override
         public void write(PacketBuffer buffer, IncubateRecipe recipe) {
             recipe.input.write(buffer);
@@ -163,5 +94,74 @@ public class IncubateRecipe extends IESerializableRecipe {
             buffer.writeVarInt(recipe.water);
             buffer.writeVarInt(recipe.time);
         }
+    }
+    public static IRecipeType<IncubateRecipe> TYPE;
+
+    public static RegistryObject<Serializer> SERIALIZER;
+    public static Map<ResourceLocation, IncubateRecipe> recipeList = Collections.emptyMap();
+    public IngredientWithSize input;
+    public IngredientWithSize catalyst;
+    public ItemStack output;
+    public FluidStack output_fluid;
+    public boolean consume_catalyst;
+    public final boolean isFood;
+
+
+    public int water;
+
+    public int time;
+
+    public static boolean canBeCatalyst(ItemStack catalyst) {
+        return recipeList.values().stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
+    }
+
+    public static boolean canBeInput(ItemStack input) {
+        return recipeList.values().stream().anyMatch(r -> r.input.testIgnoringSize(input));
+    }
+
+    public static IncubateRecipe findRecipe(ItemStack in, ItemStack catalyst) {
+        return recipeList.values().stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
+    }
+
+    public IncubateRecipe() {
+        super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);
+        isFood = true;
+        List<IItemProvider> items = new ArrayList<>();
+        for (Item i : ForgeRegistries.ITEMS.getValues()) {
+            if (i.isFood())
+                items.add(i);
+        }
+
+        this.input = new IngredientWithSize(Ingredient.fromItems(items.toArray(new IItemProvider[0])), 1);
+        this.catalyst = IngredientWithSize.of(new ItemStack(Items.ROTTEN_FLESH));
+        this.output = ItemStack.EMPTY;
+        this.output_fluid = new FluidStack(IncubatorTileEntity.getProtein(), 25);
+        this.consume_catalyst = true;
+        this.water = 20;
+        this.time = 20;
+    }
+
+    public IncubateRecipe(ResourceLocation id, IngredientWithSize input,
+                          IngredientWithSize catalyst, ItemStack output, FluidStack output_fluid, boolean consume_catalyst, int water,
+                          int time) {
+        super(output, TYPE, id);
+        this.input = input;
+        this.catalyst = catalyst;
+        this.output = output;
+        this.output_fluid = output_fluid;
+        this.consume_catalyst = consume_catalyst;
+        this.water = water;
+        this.time = time;
+        isFood = false;
+    }
+
+    @Override
+    protected IERecipeSerializer<IncubateRecipe> getIESerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public ItemStack getRecipeOutput() {
+        return this.output;
     }
 }

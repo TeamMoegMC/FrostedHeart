@@ -36,6 +36,10 @@ public class ConstResearchNumber implements IResearchNumber, Writeable {
     private static Cache<Number, ConstResearchNumber> cb = CacheBuilder.newBuilder().expireAfterAccess(20, TimeUnit.SECONDS).build();
     final Number n;
 
+    public static ConstResearchNumber valueOf(JsonObject buffer) {
+        return valueOf(buffer.get("value").getAsNumber());
+    }
+
     public static ConstResearchNumber valueOf(Number n) {
         try {
             return cb.get(n, () -> new ConstResearchNumber(n));
@@ -46,23 +50,14 @@ public class ConstResearchNumber implements IResearchNumber, Writeable {
         return null;
     }
 
-    public ConstResearchNumber(Number n) {
-        super();
-        this.n = n;
-
-    }
-
     public static ConstResearchNumber valueOf(PacketBuffer buffer) {
         return valueOf(buffer.readDouble());
     }
 
-    public static ConstResearchNumber valueOf(JsonObject buffer) {
-        return valueOf(buffer.get("value").getAsNumber());
-    }
+    public ConstResearchNumber(Number n) {
+        super();
+        this.n = n;
 
-    @Override
-    public double getVal(ResearchData rd) {
-        return n.doubleValue();
     }
 
     @Override
@@ -73,6 +68,11 @@ public class ConstResearchNumber implements IResearchNumber, Writeable {
     @Override
     public long getLong(ResearchData rd) {
         return n.longValue();
+    }
+
+    @Override
+    public double getVal(ResearchData rd) {
+        return n.doubleValue();
     }
 
     @Override

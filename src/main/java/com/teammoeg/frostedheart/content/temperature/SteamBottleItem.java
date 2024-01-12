@@ -52,6 +52,77 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
         super(name, properties);
     }
 
+    @Override
+    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
+        tooltip.add(GuiUtils.translateTooltip("meme.steam_bottle").mergeStyle(TextFormatting.GRAY));
+        tooltip.add(GuiUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
+    }
+
+    @Override
+    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
+        return this.extractEnergy(stack, 3, false) / 120;
+    }
+
+    @Override
+    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
+        if (this.isInGroup(group)) {
+            ItemStack is = new ItemStack(this);
+            this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
+            items.add(is);
+        }
+
+    }
+
+    @Override
+    public float getHeat(ItemStack is, float env) {
+        return this.getEnergyStored(is) / 120;
+    }
+
+
+    @Override
+    public float getMax(ItemStack stack) {
+        return 0.025F;
+    }
+
+    @Override
+    public int getMaxEnergyStored(ItemStack container) {
+        return 240;
+    }
+
+    /**
+     * returns the action that specifies what animation to play when the items is being used
+     */
+    @Override
+    public UseAction getUseAction(ItemStack stack) {
+        return UseAction.DRINK;
+    }
+
+
+    /**
+     * How long it takes to use or consume an item
+     */
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 16;
+    }
+
+    @Override
+    public void onCreated(ItemStack stack, World worldIn, PlayerEntity playerIn) {
+        super.onCreated(stack, worldIn, playerIn);
+        this.receiveEnergy(stack, 240, false);
+    }
+
+    /**
+     * Called to trigger the item's "innate" right click behavior. To handle when this item is used on a Block, see
+     * {@link #onItemUse}.
+     */
+    @Override
+    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
+        playerIn.setActiveHand(handIn);
+        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
+    }
+
     /**
      * Called when the player finishes using this Item (E.g. finishes eating.). Not called when the player stops using
      * the Item before the action is complete.
@@ -82,77 +153,6 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
         }
 
         return stack;
-    }
-
-    @Override
-    public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        String stored = this.getEnergyStored(stack) + "/" + this.getMaxEnergyStored(stack);
-        tooltip.add(GuiUtils.translateTooltip("meme.steam_bottle").mergeStyle(TextFormatting.GRAY));
-        tooltip.add(GuiUtils.translateTooltip("steam_stored", stored).mergeStyle(TextFormatting.GOLD));
-    }
-
-    /**
-     * How long it takes to use or consume an item
-     */
-    @Override
-    public int getUseDuration(ItemStack stack) {
-        return 16;
-    }
-
-    @Override
-    public void onCreated(ItemStack stack, World worldIn, PlayerEntity playerIn) {
-        super.onCreated(stack, worldIn, playerIn);
-        this.receiveEnergy(stack, 240, false);
-    }
-
-
-    /**
-     * returns the action that specifies what animation to play when the items is being used
-     */
-    @Override
-    public UseAction getUseAction(ItemStack stack) {
-        return UseAction.DRINK;
-    }
-
-    /**
-     * Called to trigger the item's "innate" right click behavior. To handle when this item is used on a Block, see
-     * {@link #onItemUse}.
-     */
-    @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
-        playerIn.setActiveHand(handIn);
-        return new ActionResult<>(ActionResultType.SUCCESS, playerIn.getHeldItem(handIn));
-    }
-
-    @Override
-    public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
-        if (this.isInGroup(group)) {
-            ItemStack is = new ItemStack(this);
-            this.receiveEnergy(is, this.getMaxEnergyStored(is), false);
-            items.add(is);
-        }
-
-    }
-
-
-    @Override
-    public int getMaxEnergyStored(ItemStack container) {
-        return 240;
-    }
-
-    @Override
-    public float getHeat(ItemStack is, float env) {
-        return this.getEnergyStored(is) / 120;
-    }
-
-    @Override
-    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-        return this.extractEnergy(stack, 3, false) / 120;
-    }
-
-    @Override
-    public float getMax(ItemStack stack) {
-        return 0.025F;
     }
 
 }

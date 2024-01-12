@@ -63,6 +63,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTileEntity,
         FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE, IEBlockInterfaces.IProcessTile {
+    public static final ResourceLocation food = new ResourceLocation(FHMain.MODID, "food");
+    public static final ResourceLocation pr = new ResourceLocation("kubejs", "protein");
     protected NonNullList<ItemStack> inventory;
     protected FluidTank[] fluid = new FluidTank[]{new FluidTank(6000, w -> w.getFluid() == Fluids.WATER),
             new FluidTank(6000)};
@@ -74,8 +76,68 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
     ResourceLocation last;
     ItemStack out = ItemStack.EMPTY;
     FluidStack outfluid = FluidStack.EMPTY;
-    public static final ResourceLocation food = new ResourceLocation(FHMain.MODID, "food");
-    public static final ResourceLocation pr = new ResourceLocation("kubejs", "protein");
+
+    IFluidHandler handler = new IFluidHandler() {
+
+        @Override
+        public FluidStack drain(FluidStack resource, FluidAction action) {
+            FluidStack fs = fluid[1].drain(resource, action);
+            if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
+                markContainingBlockForUpdate(null);
+            }
+            return fs;
+        }
+
+        @Override
+        public FluidStack drain(int maxDrain, FluidAction action) {
+            FluidStack fs = fluid[1].drain(maxDrain, action);
+            if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
+                markContainingBlockForUpdate(null);
+            }
+            return fs;
+        }
+
+        @Override
+        public int fill(FluidStack resource, FluidAction action) {
+            int f = fluid[0].fill(resource, action);
+            if (f > 0 && action == FluidAction.EXECUTE) {
+                markContainingBlockForUpdate(null);
+
+            }
+            return f;
+        }
+
+        @Override
+        public FluidStack getFluidInTank(int tank) {
+
+            return fluid[tank].getFluid();
+        }
+
+        @Override
+        public int getTankCapacity(int tank) {
+            return 6000;
+        }
+
+        @Override
+        public int getTanks() {
+            return 2;
+        }
+
+        @Override
+        public boolean isFluidValid(int tank, FluidStack stack) {
+            if (tank != 0) return false;
+            return fluid[tank].isFluidValid(tank, stack);
+        }
+
+    };
+
+    LazyOptional<IFluidHandler> fluidHandler = LazyOptional.of(() -> handler);
+
+    LazyOptional<IItemHandler> invHandlerUp = registerConstantCap(new IEInventoryHandler(2, this, 1, true, false));
+
+    LazyOptional<IItemHandler> invHandlerSide = registerConstantCap(new IEInventoryHandler(1, this, 0, true, false));
+
+    LazyOptional<IItemHandler> invHandlerDown = registerConstantCap(new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
         Fluid f = ForgeRegistries.FLUIDS.getValue(pr);
@@ -92,10 +154,79 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
         this.inventory = NonNullList.withSize(4, ItemStack.EMPTY);
     }
 
+    @Override
+    public boolean canUseGui(PlayerEntity arg0) {
+        return true;
+    }
+
+    @Override
+    public void doGraphicalUpdates() {
+
+    }
+
+    protected boolean fetchFuel() {
+        ItemStack is = inventory.get(0);
+        if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
+            is.shrink(1);
+            fuel = fuelMax = 16000;
+            return true;
+        }
+        return false;
+    }
+
+    @Nonnull
+    @Override
+    public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability, Direction facing) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+
+            if (!fluidHandler.isPresent()) {
+                LazyOptional<IFluidHandler> old = fluidHandler;
+                fluidHandler = LazyOptional.of(() -> handler);
+                old.invalidate();
+            }
+            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.orEmpty(capability, fluidHandler);
+        }
+        if (facing != null) {
+            if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+                if (facing == Direction.UP)
+                    return invHandlerUp.cast();
+                if (facing == Direction.DOWN)
+                    return invHandlerDown.cast();
+
+                return invHandlerSide.cast();
+            }
+        }
+        return super.getCapability(capability, facing);
+    }
+
+    @Override
+    public int[] getCurrentProcessesMax() {
+        return new int[]{processMax, 100, fuelMax};
+    }
+
+    @Override
+    public int[] getCurrentProcessesStep() {
+        return new int[]{processMax - process, MathHelper.ceil(efficiency * 100), fuel};
+    }
+
+    @Override
+    public IInteractionObjectIE getGuiMaster() {
+        return this;
+    }
+
     @Nullable
     @Override
     public NonNullList<ItemStack> getInventory() {
         return inventory;
+    }
+
+    protected float getMaxEfficiency() {
+        return 1f;
+    }
+
+    @Override
+    public int getSlotLimit(int i) {
+        return 64;
     }
 
     @Override
@@ -111,41 +242,6 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
             return false;
         return true;
     }
-
-    @Override
-    public int getSlotLimit(int i) {
-        return 64;
-    }
-
-    @Override
-    public void doGraphicalUpdates() {
-
-    }
-
-    @Override
-    public boolean canUseGui(PlayerEntity arg0) {
-        return true;
-    }
-
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
-    }
-
-    protected boolean fetchFuel() {
-        ItemStack is = inventory.get(0);
-        if (!is.isEmpty() && is.getItem() == RankineItems.QUICKLIME.get()) {
-            is.shrink(1);
-            fuel = fuelMax = 16000;
-            return true;
-        }
-        return false;
-    }
-
-    protected float getMaxEfficiency() {
-        return 1f;
-    }
-
     @Override
     public void markBlockForUpdate(BlockPos pos, BlockState newState) {
         BlockState state = world.getBlockState(pos);
@@ -153,7 +249,26 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
             newState = state;
         world.notifyBlockUpdate(pos, state, newState, 3);
     }
+    @Override
+    public void readCustomNBT(CompoundNBT compound, boolean client) {
+        process = compound.getInt("process");
+        lprocess = compound.getInt("lprocess");
+        processMax = compound.getInt("processMax");
+        fuel = compound.getInt("fuel");
+        fuelMax = compound.getInt("fuelMax");
 
+        efficiency = compound.getFloat("efficiency");
+        fluid[0].readFromNBT(compound.getCompound("fluid1"));
+        fluid[1].readFromNBT(compound.getCompound("fluid2"));
+        if (!client) {
+            if (compound.contains("last"))
+                last = new ResourceLocation(compound.getString("last"));
+            water = compound.getInt("water");
+            ItemStackHelper.loadAllItems(compound, this.inventory);
+            out = ItemStack.read(compound.getCompound("out"));
+            outfluid = FluidStack.loadFluidStackFromNBT(compound.getCompound("outfluid"));
+        }
+    }
     @Override
     public void tick() {
         if (!this.world.isRemote) {
@@ -313,27 +428,6 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT compound, boolean client) {
-        process = compound.getInt("process");
-        lprocess = compound.getInt("lprocess");
-        processMax = compound.getInt("processMax");
-        fuel = compound.getInt("fuel");
-        fuelMax = compound.getInt("fuelMax");
-
-        efficiency = compound.getFloat("efficiency");
-        fluid[0].readFromNBT(compound.getCompound("fluid1"));
-        fluid[1].readFromNBT(compound.getCompound("fluid2"));
-        if (!client) {
-            if (compound.contains("last"))
-                last = new ResourceLocation(compound.getString("last"));
-            water = compound.getInt("water");
-            ItemStackHelper.loadAllItems(compound, this.inventory);
-            out = ItemStack.read(compound.getCompound("out"));
-            outfluid = FluidStack.loadFluidStackFromNBT(compound.getCompound("outfluid"));
-        }
-    }
-
-    @Override
     public void writeCustomNBT(CompoundNBT compound, boolean client) {
         compound.putInt("process", process);
         compound.putInt("lprocess", lprocess);
@@ -351,100 +445,6 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
             compound.put("out", out.serializeNBT());
             compound.put("outfluid", outfluid.writeToNBT(new CompoundNBT()));
         }
-    }
-
-    @Override
-    public int[] getCurrentProcessesMax() {
-        return new int[]{processMax, 100, fuelMax};
-    }
-
-    @Override
-    public int[] getCurrentProcessesStep() {
-        return new int[]{processMax - process, MathHelper.ceil(efficiency * 100), fuel};
-    }
-
-    IFluidHandler handler = new IFluidHandler() {
-
-        @Override
-        public int getTanks() {
-            return 2;
-        }
-
-        @Override
-        public FluidStack getFluidInTank(int tank) {
-
-            return fluid[tank].getFluid();
-        }
-
-        @Override
-        public int getTankCapacity(int tank) {
-            return 6000;
-        }
-
-        @Override
-        public boolean isFluidValid(int tank, FluidStack stack) {
-            if (tank != 0) return false;
-            return fluid[tank].isFluidValid(tank, stack);
-        }
-
-        @Override
-        public int fill(FluidStack resource, FluidAction action) {
-            int f = fluid[0].fill(resource, action);
-            if (f > 0 && action == FluidAction.EXECUTE) {
-                markContainingBlockForUpdate(null);
-
-            }
-            return f;
-        }
-
-        @Override
-        public FluidStack drain(FluidStack resource, FluidAction action) {
-            FluidStack fs = fluid[1].drain(resource, action);
-            if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
-                markContainingBlockForUpdate(null);
-            }
-            return fs;
-        }
-
-        @Override
-        public FluidStack drain(int maxDrain, FluidAction action) {
-            FluidStack fs = fluid[1].drain(maxDrain, action);
-            if (!fs.isEmpty() && action == FluidAction.EXECUTE) {
-                markContainingBlockForUpdate(null);
-            }
-            return fs;
-        }
-
-    };
-
-    LazyOptional<IFluidHandler> fluidHandler = LazyOptional.of(() -> handler);
-    LazyOptional<IItemHandler> invHandlerUp = registerConstantCap(new IEInventoryHandler(2, this, 1, true, false));
-    LazyOptional<IItemHandler> invHandlerSide = registerConstantCap(new IEInventoryHandler(1, this, 0, true, false));
-    LazyOptional<IItemHandler> invHandlerDown = registerConstantCap(new IEInventoryHandler(1, this, 3, false, true));
-
-    @Nonnull
-    @Override
-    public <C> LazyOptional<C> getCapability(@Nonnull Capability<C> capability, Direction facing) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
-
-            if (!fluidHandler.isPresent()) {
-                LazyOptional<IFluidHandler> old = fluidHandler;
-                fluidHandler = LazyOptional.of(() -> handler);
-                old.invalidate();
-            }
-            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.orEmpty(capability, fluidHandler);
-        }
-        if (facing != null) {
-            if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-                if (facing == Direction.UP)
-                    return invHandlerUp.cast();
-                if (facing == Direction.DOWN)
-                    return invHandlerDown.cast();
-
-                return invHandlerSide.cast();
-            }
-        }
-        return super.getCapability(capability, facing);
     }
 
 }

@@ -31,14 +31,14 @@ import java.util.List;
 public class BasicPolicyGroup extends PolicyGroup {
     List<BaseData> bdata;
 
-    public BasicPolicyGroup(List<PolicyCondition> conditions, List<BaseData> bdata) {
-        super(conditions);
-        this.bdata = bdata;
-    }
-
     public BasicPolicyGroup(JsonObject jo) {
         super(jo);
         bdata = SerializeUtil.parseJsonList(jo.get("data"), BaseData::read);
+    }
+
+    public BasicPolicyGroup(List<PolicyCondition> conditions, List<BaseData> bdata) {
+        super(conditions);
+        this.bdata = bdata;
     }
 
     public BasicPolicyGroup(PacketBuffer pb) {

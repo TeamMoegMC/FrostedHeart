@@ -44,62 +44,57 @@ import java.util.Collections;
 import java.util.Map;
 
 public class InstallInnerRecipe extends SpecialRecipe {
+    public static class Serializer extends IERecipeSerializer<InstallInnerRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHItems.buff_coat);
+        }
+
+        @Nullable
+        @Override
+        public InstallInnerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient input = Ingredient.read(buffer);
+            int dura = buffer.readVarInt();
+            return new InstallInnerRecipe(recipeId, input, dura);
+        }
+
+        @Override
+        public InstallInnerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            Ingredient input = Ingredient.deserialize(json.get("input"));
+            int dura = JsonHelper.getIntOrDefault(json, "durable", 100);
+            return new InstallInnerRecipe(recipeId, input, dura);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, InstallInnerRecipe recipe) {
+            recipe.type.write(buffer);
+            buffer.writeVarInt(recipe.durability);
+        }
+    }
+
     public static RegistryObject<IERecipeSerializer<InstallInnerRecipe>> SERIALIZER;
+
+    public static Map<ResourceLocation, InstallInnerRecipe> recipeList = Collections.emptyMap();
+
+    Ingredient type;
+
+    int durability;
 
     protected InstallInnerRecipe(ResourceLocation id, Ingredient t, int d) {
         super(id);
         type = t;
         durability = d;
     }
-
-    public int getDurability() {
-        return durability;
+    /**
+     * Used to determine if this recipe can fit in a grid of the given width/height
+     */
+    public boolean canFit(int width, int height) {
+        return width * height >= 2;
     }
 
     public ResourceLocation getBuffType() {
         return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e -> e.getItem().getRegistryName())
                 .or(new ResourceLocation("minecraft", "air"));
-    }
-
-    public Ingredient getIngredient() {
-        return type;
-    }
-
-    Ingredient type;
-    int durability;
-
-    /**
-     * Used to check if a recipe matches current crafting inventory
-     */
-    public boolean matches(CraftingInventory inv, World worldIn) {
-        boolean hasArmor = false;
-        boolean hasItem = false;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
-            if (itemstack == null || itemstack.isEmpty()) {
-                continue;
-            }
-            if (type.test(itemstack)) {
-                if (hasItem)
-                    return false;
-                hasItem = true;
-            } else {
-                if (hasArmor)
-                    return false;
-                EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
-                if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
-                    if (itemstack.hasTag()) {
-                        if (!itemstack.getTag().getString("inner_cover").isEmpty()) return false;
-                    }
-                hasArmor = true;
-            }
-        }
-        return hasArmor && hasItem;
-    }
-
-    public boolean matches(ItemStack itemstack) {
-        EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
-        return type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND;
     }
 
     /**
@@ -139,19 +134,18 @@ public class InstallInnerRecipe extends SpecialRecipe {
         return ItemStack.EMPTY;
     }
 
+    public int getDurability() {
+        return durability;
+    }
+
+    public Ingredient getIngredient() {
+        return type;
+    }
+
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
         NonNullList<ItemStack> nonnulllist = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
         return nonnulllist;
-    }
-
-    public static Map<ResourceLocation, InstallInnerRecipe> recipeList = Collections.emptyMap();
-
-    /**
-     * Used to determine if this recipe can fit in a grid of the given width/height
-     */
-    public boolean canFit(int width, int height) {
-        return width * height >= 2;
     }
 
     @Override
@@ -159,32 +153,38 @@ public class InstallInnerRecipe extends SpecialRecipe {
         return SERIALIZER.get();
     }
 
-    public static class Serializer extends IERecipeSerializer<InstallInnerRecipe> {
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+    /**
+     * Used to check if a recipe matches current crafting inventory
+     */
+    public boolean matches(CraftingInventory inv, World worldIn) {
+        boolean hasArmor = false;
+        boolean hasItem = false;
+        for (int i = 0; i < inv.getSizeInventory(); ++i) {
+            ItemStack itemstack = inv.getStackInSlot(i);
+            if (itemstack == null || itemstack.isEmpty()) {
+                continue;
+            }
+            if (type.test(itemstack)) {
+                if (hasItem)
+                    return false;
+                hasItem = true;
+            } else {
+                if (hasArmor)
+                    return false;
+                EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+                if (type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND)
+                    if (itemstack.hasTag()) {
+                        if (!itemstack.getTag().getString("inner_cover").isEmpty()) return false;
+                    }
+                hasArmor = true;
+            }
         }
+        return hasArmor && hasItem;
+    }
 
-        @Override
-        public InstallInnerRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            Ingredient input = Ingredient.deserialize(json.get("input"));
-            int dura = JsonHelper.getIntOrDefault(json, "durable", 100);
-            return new InstallInnerRecipe(recipeId, input, dura);
-        }
-
-        @Nullable
-        @Override
-        public InstallInnerRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient input = Ingredient.read(buffer);
-            int dura = buffer.readVarInt();
-            return new InstallInnerRecipe(recipeId, input, dura);
-        }
-
-        @Override
-        public void write(PacketBuffer buffer, InstallInnerRecipe recipe) {
-            recipe.type.write(buffer);
-            buffer.writeVarInt(recipe.durability);
-        }
+    public boolean matches(ItemStack itemstack) {
+        EquipmentSlotType type = MobEntity.getSlotForItemStack(itemstack);
+        return type != null && type != EquipmentSlotType.MAINHAND && type != EquipmentSlotType.OFFHAND;
     }
 
 }

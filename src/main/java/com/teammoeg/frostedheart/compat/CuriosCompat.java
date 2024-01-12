@@ -35,55 +35,30 @@ import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class CuriosCompat {
-    public static void sendIMCS() {
-        InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
-                () -> SlotTypePreset.BACK.getMessageBuilder().build());
-        InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
-                () -> SlotTypePreset.CHARM.getMessageBuilder().build());
-    }
-
-    public static ItemStack getHeaterVest(LivingEntity living) {
-        return getCuriosIfVisible(living, SlotTypePreset.BACK, stack -> stack.getItem() instanceof HeaterVestItem);
-    }
-
-    public static ItemStack getCuriosIfVisible(LivingEntity living, SlotTypePreset slot, Predicate<ItemStack> predicate) {
-        LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosHelper().getCuriosHandler(living);
-        return optional.resolve()
-                .flatMap(handler -> handler.getStacksHandler(slot.getIdentifier()))
-                .filter(ICurioStacksHandler::isVisible)
-                .map(stacksHandler -> {
-                    for (int i = 0; i < stacksHandler.getSlots(); i++)
-                        if (stacksHandler.getRenders().get(i)) {
-                            ItemStack stack = stacksHandler.getStacks().getStackInSlot(i);
-                            if (predicate.test(stack))
-                                return stack;
-                        }
-                    return ItemStack.EMPTY;
-                }).orElse(ItemStack.EMPTY);
-    }
-
-    public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
-        return new Iterable<ItemStack>() {
-            @Override
-            public Iterator<ItemStack> iterator() {
-                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h -> new CuriosIterator(h.getCurios().values().iterator())).orElse(new CuriosIterator(null) {
-                    @Override
-                    public boolean hasNext() {
-                        return false;
-                    }
-
-                    @Override
-                    public ItemStack next() {
-                        return null;
-                    }
-
-                });
-            }
-        };
-    }
-
     static class CuriosIterator implements Iterator<ItemStack> {
+        static class ItemIterator implements Iterator<ItemStack> {
+            int i = 0;
+            int max;
+            IDynamicStackHandler handler;
+
+            public ItemIterator(int max, IDynamicStackHandler handler) {
+                this.max = max;
+                this.handler = handler;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return i < max;
+            }
+
+            @Override
+            public ItemStack next() {
+                return handler.getStackInSlot(i++);
+            }
+
+        }
         ItemIterator cur;
+
         Iterator<ICurioStacksHandler> it;
 
         public CuriosIterator(Iterator<ICurioStacksHandler> it) {
@@ -118,27 +93,52 @@ public class CuriosCompat {
             }
             return null;
         }
+    }
 
-        static class ItemIterator implements Iterator<ItemStack> {
-            int i = 0;
-            int max;
-            IDynamicStackHandler handler;
-
+    public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
+        return new Iterable<ItemStack>() {
             @Override
-            public boolean hasNext() {
-                return i < max;
-            }
+            public Iterator<ItemStack> iterator() {
+                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h -> new CuriosIterator(h.getCurios().values().iterator())).orElse(new CuriosIterator(null) {
+                    @Override
+                    public boolean hasNext() {
+                        return false;
+                    }
 
-            public ItemIterator(int max, IDynamicStackHandler handler) {
-                this.max = max;
-                this.handler = handler;
-            }
+                    @Override
+                    public ItemStack next() {
+                        return null;
+                    }
 
-            @Override
-            public ItemStack next() {
-                return handler.getStackInSlot(i++);
+                });
             }
+        };
+    }
 
-        }
+    public static ItemStack getCuriosIfVisible(LivingEntity living, SlotTypePreset slot, Predicate<ItemStack> predicate) {
+        LazyOptional<ICuriosItemHandler> optional = CuriosApi.getCuriosHelper().getCuriosHandler(living);
+        return optional.resolve()
+                .flatMap(handler -> handler.getStacksHandler(slot.getIdentifier()))
+                .filter(ICurioStacksHandler::isVisible)
+                .map(stacksHandler -> {
+                    for (int i = 0; i < stacksHandler.getSlots(); i++)
+                        if (stacksHandler.getRenders().get(i)) {
+                            ItemStack stack = stacksHandler.getStacks().getStackInSlot(i);
+                            if (predicate.test(stack))
+                                return stack;
+                        }
+                    return ItemStack.EMPTY;
+                }).orElse(ItemStack.EMPTY);
+    }
+
+    public static ItemStack getHeaterVest(LivingEntity living) {
+        return getCuriosIfVisible(living, SlotTypePreset.BACK, stack -> stack.getItem() instanceof HeaterVestItem);
+    }
+
+    public static void sendIMCS() {
+        InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
+                () -> SlotTypePreset.BACK.getMessageBuilder().build());
+        InterModComms.sendTo(CuriosApi.MODID, SlotTypeMessage.REGISTER_TYPE,
+                () -> SlotTypePreset.CHARM.getMessageBuilder().build());
     }
 }

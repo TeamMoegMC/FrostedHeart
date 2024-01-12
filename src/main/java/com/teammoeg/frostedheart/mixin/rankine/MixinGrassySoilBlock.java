@@ -33,13 +33,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(GrassySoilBlock.class)
 public class MixinGrassySoilBlock extends GrassBlock {
 
-    public MixinGrassySoilBlock(Properties properties) {
-        super(properties);
-    }
-
     @Inject(at = @At("HEAD"), method = "isSnowyConditions", cancellable = true, remap = false)
     private static void isSnowyConditions(BlockState state, IWorldReader worldReader, BlockPos pos, CallbackInfoReturnable<Boolean> cbi) {
         if (!FHUtils.canGrassSurvive(worldReader, pos))
             cbi.setReturnValue(false);
+    }
+
+    public MixinGrassySoilBlock(Properties properties) {
+        super(properties);
     }
 }

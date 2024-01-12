@@ -54,77 +54,43 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class SelectDialog<T> extends EditDialog {
-    public static <R> Function<R, ITextComponent> wrap(Function<R, Object> str) {
-        return e -> new StringTextComponent(String.valueOf(str.apply(e)));
+    public class SelectorButton extends Button {
+        T obj;
+        SelectorList listPanel;
+        ITextComponent t;
+
+        public SelectorButton(SelectorList panel, T obj) {
+            super(panel, StringTextComponent.EMPTY, toicon.apply(obj));
+            this.obj = obj;
+            this.listPanel = panel;
+            t = tostr.apply(obj);
+
+        }
+
+        @Override
+        public void addMouseOverText(TooltipList list) {
+            list.add(tostr.apply(obj));
+        }
+
+        @Override
+        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+            //GuiHelper.setupDrawing();
+            if (val == this.obj)
+                theme.drawButton(matrixStack, x, y, w, h, WidgetType.DISABLED);
+            else
+                theme.drawButton(matrixStack, x, y, w, h, WidgetType.mouseOver(isMouseOver()));
+            this.drawIcon(matrixStack, theme, x + 1, y + 1, 16, 16);
+            theme.drawString(matrixStack, t, x + 18, y + 6);
+
+
+        }
+
+        @Override
+        public void onClicked(MouseButton mouseButton) {
+            cb.accept(obj);
+            close();
+        }
     }
-
-    public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
-                Research::getName, e -> new String[]{e.getId(), e.getName().getString()},
-                Research::getIcon
-        ).open();
-    };
-    public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
-                wrap(IMultiblock::getUniqueName)
-        ).open();
-    };
-    public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
-        ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancementManager();
-        Advancement adv = cam.getAdvancementList().getAdvancement(v);
-
-        new SelectDialog<Advancement>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancementList().getAll(),
-                Advancement::getDisplayText, advx -> new String[]{advx.getDisplayText().getString(), advx.getId().toString()},
-                advx -> FHIcons.getIcon(advx.getDisplay().getIcon())
-        ).open();
-    };
-    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName, e -> new String[]{e.getName().getString(), e.getRegistryName().toString()}
-        ).open();
-    };
-    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
-
-
-        new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
-    };
-    String lbl;
-    T val;
-    Consumer<T> cb;
-    Supplier<Collection<T>> fetcher;
-    Function<T, ITextComponent> tostr;
-    Function<T, String[]> tosearch;
-    Function<T, Icon> toicon;
-
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
-                        Function<T, ITextComponent> tostr) {
-        this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> Icon.EMPTY);
-    }
-
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
-        this(panel, lbl, val, cb, fetcher, e -> new StringTextComponent(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
-    }
-
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
-                        Function<T, ITextComponent> tostr, Function<T, String[]> tosearch) {
-        this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> Icon.EMPTY);
-    }
-
-    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
-                        Function<T, ITextComponent> tostr, Function<T, String[]> tosearch, Function<T, Icon> toicon) {
-        super(panel);
-        this.lbl = lbl;
-        this.val = val;
-        this.cb = cb;
-        this.fetcher = fetcher;
-        this.tostr = tostr;
-        this.tosearch = tosearch;
-        this.toicon = toicon;
-        setSize(400, 300);
-    }
-
-    public PanelScrollBar scroll;
-    public SelectorList rl;
-    public TextBox searchBox;
 
     public class SelectorList extends Panel {
         public SelectorList(Panel panel) {
@@ -162,43 +128,77 @@ public class SelectDialog<T> extends EditDialog {
         }
 
     }
+    public static final Editor<Research> EDITOR_RESEARCH = (p, l, v, c) -> {
+        new SelectDialog<>(p, l, v, c, FHResearch::getAllResearch,
+                Research::getName, e -> new String[]{e.getId(), e.getName().getString()},
+                Research::getIcon
+        ).open();
+    };
+    public static final Editor<IMultiblock> EDITOR_MULTIBLOCK = (p, l, v, c) -> {
+        new SelectDialog<>(p, l, v, c, MultiblockHandler::getMultiblocks,
+                wrap(IMultiblock::getUniqueName)
+        ).open();
+    };
+    public static final Editor<ResourceLocation> EDITOR_ADVANCEMENT = (p, l, v, c) -> {
+        ClientAdvancementManager cam = ClientUtils.mc().player.connection.getAdvancementManager();
+        Advancement adv = cam.getAdvancementList().getAdvancement(v);
 
-    public class SelectorButton extends Button {
-        T obj;
-        SelectorList listPanel;
-        ITextComponent t;
-
-        public SelectorButton(SelectorList panel, T obj) {
-            super(panel, StringTextComponent.EMPTY, toicon.apply(obj));
-            this.obj = obj;
-            this.listPanel = panel;
-            t = tostr.apply(obj);
-
-        }
-
-        @Override
-        public void onClicked(MouseButton mouseButton) {
-            cb.accept(obj);
-            close();
-        }
-
-        @Override
-        public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-            //GuiHelper.setupDrawing();
-            if (val == this.obj)
-                theme.drawButton(matrixStack, x, y, w, h, WidgetType.DISABLED);
-            else
-                theme.drawButton(matrixStack, x, y, w, h, WidgetType.mouseOver(isMouseOver()));
-            this.drawIcon(matrixStack, theme, x + 1, y + 1, 16, 16);
-            theme.drawString(matrixStack, t, x + 18, y + 6);
+        new SelectDialog<Advancement>(p, l, adv, e -> c.accept(e.getId()), () -> cam.getAdvancementList().getAll(),
+                Advancement::getDisplayText, advx -> new String[]{advx.getDisplayText().getString(), advx.getId().toString()},
+                advx -> FHIcons.getIcon(advx.getDisplay().getIcon())
+        ).open();
+    };
+    public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> {
+        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName, e -> new String[]{e.getName().getString(), e.getRegistryName().toString()}
+        ).open();
+    };
+    public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
 
 
-        }
+        new SelectDialog<>(p, l, v, c, () -> Minecraft.getInstance().world.getTags().getItemTags().getRegisteredTags().stream().map(ResourceLocation::toString).collect(Collectors.toSet())).open();
+    };
+    String lbl;
+    T val;
+    Consumer<T> cb;
+    Supplier<Collection<T>> fetcher;
+    Function<T, ITextComponent> tostr;
+    Function<T, String[]> tosearch;
 
-        @Override
-        public void addMouseOverText(TooltipList list) {
-            list.add(tostr.apply(obj));
-        }
+    Function<T, Icon> toicon;
+
+    public PanelScrollBar scroll;
+
+    public SelectorList rl;
+
+    public TextBox searchBox;
+
+    public static <R> Function<R, ITextComponent> wrap(Function<R, Object> str) {
+        return e -> new StringTextComponent(String.valueOf(str.apply(e)));
+    }
+    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
+        this(panel, lbl, val, cb, fetcher, e -> new StringTextComponent(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
+    }
+    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+                        Function<T, ITextComponent> tostr) {
+        this(panel, lbl, val, cb, fetcher, tostr, e -> new String[]{tostr.apply(val).getString()}, e -> Icon.EMPTY);
+    }
+
+    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+                        Function<T, ITextComponent> tostr, Function<T, String[]> tosearch) {
+        this(panel, lbl, val, cb, fetcher, tostr, tosearch, e -> Icon.EMPTY);
+    }
+
+    public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
+                        Function<T, ITextComponent> tostr, Function<T, String[]> tosearch, Function<T, Icon> toicon) {
+        super(panel);
+        this.lbl = lbl;
+        this.val = val;
+        this.cb = cb;
+        this.fetcher = fetcher;
+        this.tostr = tostr;
+        this.tosearch = tosearch;
+        this.toicon = toicon;
+        setSize(400, 300);
     }
 
     @Override
@@ -230,7 +230,9 @@ public class SelectDialog<T> extends EditDialog {
     }
 
     @Override
-    public void onClose() {
+    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
+        super.draw(matrixStack, theme, x, y, w, h);
+        theme.drawString(matrixStack, lbl, x, y - 10);
     }
 
     @Override
@@ -239,8 +241,6 @@ public class SelectDialog<T> extends EditDialog {
     }
 
     @Override
-    public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
-        super.draw(matrixStack, theme, x, y, w, h);
-        theme.drawString(matrixStack, lbl, x, y - 10);
+    public void onClose() {
     }
 }

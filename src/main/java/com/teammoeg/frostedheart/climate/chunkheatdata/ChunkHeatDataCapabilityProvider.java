@@ -35,12 +35,12 @@ public final class ChunkHeatDataCapabilityProvider {
 
     public static void setup() {
         CapabilityManager.INSTANCE.register(ChunkHeatData.class, new Capability.IStorage<ChunkHeatData>() {
-            public INBT writeNBT(Capability<ChunkHeatData> capability, ChunkHeatData instance, Direction side) {
-                return instance.serializeNBT();
-            }
-
             public void readNBT(Capability<ChunkHeatData> capability, ChunkHeatData instance, Direction side, INBT nbt) {
                 instance.deserializeNBT((CompoundNBT) nbt);
+            }
+
+            public INBT writeNBT(Capability<ChunkHeatData> capability, ChunkHeatData instance, Direction side) {
+                return instance.serializeNBT();
             }
         }, () -> {
             return null;

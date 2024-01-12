@@ -90,12 +90,12 @@ public class FHDataManager {
             super();
         }
 
-        public ResourceMap(int initialCapacity, float loadFactor) {
-            super(initialCapacity, loadFactor);
-        }
-
         public ResourceMap(int initialCapacity) {
             super(initialCapacity);
+        }
+
+        public ResourceMap(int initialCapacity, float loadFactor) {
+            super(initialCapacity, loadFactor);
         }
 
         public ResourceMap(Map<? extends ResourceLocation, ? extends T> m) {
@@ -103,73 +103,21 @@ public class FHDataManager {
         }
     }
 
-    private FHDataManager() {
-    }
-
     @SuppressWarnings("rawtypes")
     public static final EnumMap<FHDataType, ResourceMap> ALL_DATA = new EnumMap<>(FHDataType.class);
+
     public static boolean synched = false;
     private static final JsonParser parser = new JsonParser();
-
     static {
         for (FHDataType dt : FHDataType.values()) {
             ALL_DATA.put(dt, new ResourceMap<>());
         }
     }
 
-    public static final void reset() {
-        synched = false;
-        for (ResourceMap<?> rm : ALL_DATA.values())
-            rm.clear();
-    }
-
-    @SuppressWarnings("unchecked")
-    public static final void register(FHDataType dt, JsonObject data) {
-        JsonDataHolder jdh = dt.type.create(data);
-        //System.out.println("registering "+dt.type.location+": "+jdh.getId());
-        ALL_DATA.get(dt).put(jdh.getId(), jdh);
-        synched = false;
-    }
-
     @SuppressWarnings("unchecked")
     public static final <T extends JsonDataHolder> ResourceMap<T> get(FHDataType dt) {
         return ALL_DATA.get(dt);
 
-    }
-
-    @SuppressWarnings("unchecked")
-    public static final void load(DataEntry[] entries) {
-        reset();
-        for (DataEntry de : entries) {
-            JsonDataHolder jdh = de.type.type.create(parser.parse(de.data).getAsJsonObject());
-            //System.out.println("registering "+dt.type.location+": "+jdh.getId());
-            ALL_DATA.get(de.type).put(jdh.getId(), jdh);
-        }
-    }
-
-    @SuppressWarnings("rawtypes")
-    public static final DataEntry[] save() {
-        int tsize = 0;
-        for (ResourceMap map : ALL_DATA.values()) {
-            tsize += map.size();
-        }
-        DataEntry[] entries = new DataEntry[tsize];
-        int i = -1;
-        for (Entry<FHDataType, ResourceMap> entry : ALL_DATA.entrySet()) {
-            for (Object jdh : entry.getValue().values()) {
-                entries[++i] = new DataEntry(entry.getKey(), ((JsonDataHolder) jdh).getData());
-            }
-        }
-        return entries;
-    }
-
-    public static ITempAdjustFood getFood(ItemStack is) {
-        CupData data = FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
-        ResourceMap<FoodTempData> foodData = FHDataManager.get(FHDataType.Food);
-        if (data != null) {
-            return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(is.getItem().getRegistryName()));
-        }
-        return foodData.get(is.getItem().getRegistryName());
     }
 
     public static IWarmKeepingEquipment getArmor(ItemStack is) {
@@ -190,13 +138,6 @@ public class FHDataManager {
         return 0F;
     }
 
-    public static Float getWorldTemp(World w) {
-        WorldTempData data = FHDataManager.<WorldTempData>get(FHDataType.World).get(w.getDimensionKey().getLocation());
-        if (data != null)
-            return data.getTemp();
-        return null;
-    }
-
     public static BlockTempData getBlockData(Block b) {
         return FHDataManager.<BlockTempData>get(FHDataType.Block).get(b.getRegistryName());
     }
@@ -210,5 +151,64 @@ public class FHDataManager {
         if (dtd != null)
             return dtd.getHeat();
         return -0.3f;
+    }
+
+    public static ITempAdjustFood getFood(ItemStack is) {
+        CupData data = FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
+        ResourceMap<FoodTempData> foodData = FHDataManager.get(FHDataType.Food);
+        if (data != null) {
+            return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(is.getItem().getRegistryName()));
+        }
+        return foodData.get(is.getItem().getRegistryName());
+    }
+
+    public static Float getWorldTemp(World w) {
+        WorldTempData data = FHDataManager.<WorldTempData>get(FHDataType.World).get(w.getDimensionKey().getLocation());
+        if (data != null)
+            return data.getTemp();
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static final void load(DataEntry[] entries) {
+        reset();
+        for (DataEntry de : entries) {
+            JsonDataHolder jdh = de.type.type.create(parser.parse(de.data).getAsJsonObject());
+            //System.out.println("registering "+dt.type.location+": "+jdh.getId());
+            ALL_DATA.get(de.type).put(jdh.getId(), jdh);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static final void register(FHDataType dt, JsonObject data) {
+        JsonDataHolder jdh = dt.type.create(data);
+        //System.out.println("registering "+dt.type.location+": "+jdh.getId());
+        ALL_DATA.get(dt).put(jdh.getId(), jdh);
+        synched = false;
+    }
+
+    public static final void reset() {
+        synched = false;
+        for (ResourceMap<?> rm : ALL_DATA.values())
+            rm.clear();
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static final DataEntry[] save() {
+        int tsize = 0;
+        for (ResourceMap map : ALL_DATA.values()) {
+            tsize += map.size();
+        }
+        DataEntry[] entries = new DataEntry[tsize];
+        int i = -1;
+        for (Entry<FHDataType, ResourceMap> entry : ALL_DATA.entrySet()) {
+            for (Object jdh : entry.getValue().values()) {
+                entries[++i] = new DataEntry(entry.getKey(), ((JsonDataHolder) jdh).getData());
+            }
+        }
+        return entries;
+    }
+
+    private FHDataManager() {
     }
 }

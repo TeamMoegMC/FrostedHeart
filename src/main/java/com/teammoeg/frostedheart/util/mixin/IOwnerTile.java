@@ -25,10 +25,6 @@ import net.minecraft.tileentity.TileEntity;
 import java.util.UUID;
 
 public interface IOwnerTile {
-    public UUID getStoredOwner();
-
-    public void setStoredOwner(UUID id);
-
     public static UUID getOwner(TileEntity te) {
         if (te instanceof IOwnerTile) {
             return ((IOwnerTile) te).getStoredOwner();
@@ -49,4 +45,8 @@ public interface IOwnerTile {
             }
         }
     }
+
+    public UUID getStoredOwner();
+
+    public void setStoredOwner(UUID id);
 }

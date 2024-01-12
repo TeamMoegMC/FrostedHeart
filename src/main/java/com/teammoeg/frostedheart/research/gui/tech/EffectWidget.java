@@ -57,20 +57,6 @@ public class EffectWidget extends Widget {
     }
 
     @Override
-    public boolean mousePressed(MouseButton button) {
-        if (isMouseOver()) {
-            if (getWidgetType() != WidgetType.DISABLED) {
-                //TODO edit effect
-                e.onClick();
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         GuiHelper.setupDrawing();
         TechIcons.SLOT.draw(matrixStack, x - 4, y - 4, 24, 24);
@@ -82,5 +68,19 @@ public class EffectWidget extends Widget {
             TechIcons.FIN.draw(matrixStack, x, y, w, h);
             matrixStack.pop();
         }
+    }
+
+    @Override
+    public boolean mousePressed(MouseButton button) {
+        if (isMouseOver()) {
+            if (getWidgetType() != WidgetType.DISABLED) {
+                //TODO edit effect
+                e.onClick();
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

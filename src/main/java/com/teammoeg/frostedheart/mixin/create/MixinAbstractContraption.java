@@ -35,35 +35,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractContraptionEntity.class)
 public abstract class MixinAbstractContraption extends Entity implements IStressContraption {
-    public MixinAbstractContraption(EntityType<?> p_i48580_1_, World p_i48580_2_) {
-        super(p_i48580_1_, p_i48580_2_);
-    }
-
     boolean shoulddisb = false;
+
     float calculatedCost = -1;
     float actorCost = -1;
     float calculatedRotationCost = -1;
     @Shadow(remap = false)
     protected Contraption contraption;
-
-    /**
-     * @author khjxiaogu
-     * @reason force reset contraptions for mod propose
-     */
-    @Inject(at = @At("TAIL"), method = "writeAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
-    protected void writeAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
-        if (!world.isRemote)
-            compound.putInt("spinst", 2);
+    public MixinAbstractContraption(EntityType<?> p_i48580_1_, World p_i48580_2_) {
+        super(p_i48580_1_, p_i48580_2_);
     }
 
+    @Shadow(remap = false)
+    public abstract void disassemble();
+
     @Override
-    public float getStressCost() {
+    public float getActorCost() {
         if (!this.isAlive()) return 0;
         if (actorCost == -1)
             actorCost = ContraptionCostUtils.calculateActorStressApply(contraption);
-        if (calculatedCost == -1)
-            calculatedCost = ContraptionCostUtils.calculateStressApply(contraption);
-        return calculatedCost + actorCost;
+        return actorCost;
     }
 
     @Override
@@ -77,15 +68,14 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
     }
 
     @Override
-    public float getActorCost() {
+    public float getStressCost() {
         if (!this.isAlive()) return 0;
         if (actorCost == -1)
             actorCost = ContraptionCostUtils.calculateActorStressApply(contraption);
-        return actorCost;
+        if (calculatedCost == -1)
+            calculatedCost = ContraptionCostUtils.calculateStressApply(contraption);
+        return calculatedCost + actorCost;
     }
-
-    @Shadow(remap = false)
-    public abstract void disassemble();
 
     /**
      * @author khjxiaogu
@@ -108,5 +98,15 @@ public abstract class MixinAbstractContraption extends Entity implements IStress
         if (!world.isRemote)
             if (this.shoulddisb)
                 this.disassemble();
+    }
+
+    /**
+     * @author khjxiaogu
+     * @reason force reset contraptions for mod propose
+     */
+    @Inject(at = @At("TAIL"), method = "writeAdditional(Lnet/minecraft/nbt/CompoundNBT;Z)V", remap = false)
+    protected void writeAdditional(CompoundNBT compound, boolean spawnPacket, CallbackInfo cbi) {
+        if (!world.isRemote)
+            compound.putInt("spinst", 2);
     }
 }

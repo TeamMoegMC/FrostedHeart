@@ -31,14 +31,14 @@ import javax.annotation.Nullable;
  * @param <T> The capability class
  */
 public final class NoopStorage<T> implements Capability.IStorage<T> {
-    @Nullable
     @Override
-    public INBT writeNBT(Capability<T> capability, T instance, Direction side) {
+    public void readNBT(Capability<T> capability, T instance, Direction side, INBT nbt) {
         throw new UnsupportedOperationException("This storage is non functional. Do not use it.");
     }
 
+    @Nullable
     @Override
-    public void readNBT(Capability<T> capability, T instance, Direction side, INBT nbt) {
+    public INBT writeNBT(Capability<T> capability, T instance, Direction side) {
         throw new UnsupportedOperationException("This storage is non functional. Do not use it.");
     }
 }

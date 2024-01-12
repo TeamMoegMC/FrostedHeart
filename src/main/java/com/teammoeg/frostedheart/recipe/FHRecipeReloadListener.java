@@ -61,40 +61,7 @@ import java.util.stream.Collectors;
 public class FHRecipeReloadListener implements IResourceManagerReloadListener {
     private final DataPackRegistries dataPackRegistries;
 
-    public FHRecipeReloadListener(DataPackRegistries dataPackRegistries) {
-        this.dataPackRegistries = dataPackRegistries;
-    }
-
-    @Override
-    public void onResourceManagerReload(@Nonnull IResourceManager resourceManager) {
-        if (dataPackRegistries != null) {
-            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-            if (server != null) {
-                Iterator<ServerWorld> it = server.getWorlds().iterator();
-                // Should only be false when no players are loaded, so the data will be synced on login
-                if (it.hasNext())
-                    ApiUtils.addFutureServerTask(it.next(),
-                            () -> StaticTemplateManager.syncMultiblockTemplates(PacketDistributor.ALL.noArg(), true)
-                    );
-            }
-        }
-    }
-
     RecipeManager clientRecipeManager;
-
-    @SubscribeEvent
-    public void onTagsUpdated(TagsUpdatedEvent event) {
-        if (clientRecipeManager != null)
-            TagUtils.setTagCollectionGetters(ItemTags::getCollection, BlockTags::getCollection);
-    }
-
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public void onRecipesUpdated(RecipesUpdatedEvent event) {
-        clientRecipeManager = event.getRecipeManager();
-        if (!Minecraft.getInstance().isSingleplayer())
-            buildRecipeLists(clientRecipeManager);
-
-    }
 
     public static void buildRecipeLists(RecipeManager recipeManager) {
         Collection<IRecipe<?>> recipes = recipeManager.getRecipes();
@@ -133,6 +100,13 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
 
     }
 
+    static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass) {
+        return recipes.stream()
+                .filter(iRecipe -> iRecipe.getClass() == recipeClass)
+                .map(recipeClass::cast)
+                .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
+    }
+
     static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass, IRecipeType<R> recipeType) {
         return recipes.stream()
                 .filter(iRecipe -> iRecipe.getType() == recipeType)
@@ -140,10 +114,36 @@ public class FHRecipeReloadListener implements IResourceManagerReloadListener {
                 .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
     }
 
-    static <R extends IRecipe<?>> Map<ResourceLocation, R> filterRecipes(Collection<IRecipe<?>> recipes, Class<R> recipeClass) {
-        return recipes.stream()
-                .filter(iRecipe -> iRecipe.getClass() == recipeClass)
-                .map(recipeClass::cast)
-                .collect(Collectors.toMap(recipe -> recipe.getId(), recipe -> recipe));
+    public FHRecipeReloadListener(DataPackRegistries dataPackRegistries) {
+        this.dataPackRegistries = dataPackRegistries;
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onRecipesUpdated(RecipesUpdatedEvent event) {
+        clientRecipeManager = event.getRecipeManager();
+        if (!Minecraft.getInstance().isSingleplayer())
+            buildRecipeLists(clientRecipeManager);
+
+    }
+
+    @Override
+    public void onResourceManagerReload(@Nonnull IResourceManager resourceManager) {
+        if (dataPackRegistries != null) {
+            MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+            if (server != null) {
+                Iterator<ServerWorld> it = server.getWorlds().iterator();
+                // Should only be false when no players are loaded, so the data will be synced on login
+                if (it.hasNext())
+                    ApiUtils.addFutureServerTask(it.next(),
+                            () -> StaticTemplateManager.syncMultiblockTemplates(PacketDistributor.ALL.noArg(), true)
+                    );
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onTagsUpdated(TagsUpdatedEvent event) {
+        if (clientRecipeManager != null)
+            TagUtils.setTagCollectionGetters(ItemTags::getCollection, BlockTags::getCollection);
     }
 }

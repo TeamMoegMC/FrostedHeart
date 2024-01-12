@@ -39,15 +39,6 @@ public class BargainResponse {
     int bargained;
     private RelationList relation;
 
-    public BargainResponse(TradeContainer trade, boolean state) {
-        super();
-        this.relation = trade.relations;
-        this.rdiscount = trade.discountRatio;
-        this.discount = trade.maxdiscount;
-        this.bargained = trade.bargained;
-        this.succeed = state;
-    }
-
     public BargainResponse(PacketBuffer buffer) {
         relation = new RelationList();
         relation.read(buffer);
@@ -55,6 +46,15 @@ public class BargainResponse {
         discount = buffer.readVarInt();
         bargained = buffer.readVarInt();
         succeed = buffer.readBoolean();
+    }
+
+    public BargainResponse(TradeContainer trade, boolean state) {
+        super();
+        this.relation = trade.relations;
+        this.rdiscount = trade.discountRatio;
+        this.discount = trade.maxdiscount;
+        this.bargained = trade.bargained;
+        this.succeed = state;
     }
 
     public void encode(PacketBuffer buffer) {

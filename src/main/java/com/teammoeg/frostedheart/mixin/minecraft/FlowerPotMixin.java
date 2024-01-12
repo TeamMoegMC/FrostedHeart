@@ -28,12 +28,12 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(FlowerPotBlock.class)
 public abstract class FlowerPotMixin extends Block {
+    @Shadow(remap = false)
+    private java.util.function.Supplier<FlowerPotBlock> emptyPot;
+
     public FlowerPotMixin(Properties properties) {
         super(properties);
     }
-
-    @Shadow(remap = false)
-    private java.util.function.Supplier<FlowerPotBlock> emptyPot;
 
     /**
      * @author khjxiaogu

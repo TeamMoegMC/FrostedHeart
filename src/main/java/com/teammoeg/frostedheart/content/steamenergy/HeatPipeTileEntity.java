@@ -40,13 +40,25 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     }
 
     @Override
-    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        if (descPacket) return;
+    public boolean canConnectAt(Direction to) {
+        return true;
+    }
+
+    public boolean connect(Direction to, int ndist) {
+        if (justPropagated) return true;
+        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
+        if (te instanceof EnergyNetworkProvider) {
+            SteamEnergyNetwork newNetwork = ((EnergyNetworkProvider) te).getNetwork();
+            justPropagated = true;
+            this.propagate(to, newNetwork, ndist);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        if (descPacket) return;
+    public SteamNetworkHolder getHolder() {
+        return network;
     }
 
     @Override
@@ -78,16 +90,9 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
         }
     }
 
-    public boolean connect(Direction to, int ndist) {
-        if (justPropagated) return true;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof EnergyNetworkProvider) {
-            SteamEnergyNetwork newNetwork = ((EnergyNetworkProvider) te).getNetwork();
-            justPropagated = true;
-            this.propagate(to, newNetwork, ndist);
-            return true;
-        }
-        return false;
+    @Override
+    public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        if (descPacket) return;
     }
 
     @Override
@@ -104,12 +109,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
     }
 
     @Override
-    public boolean canConnectAt(Direction to) {
-        return true;
-    }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        if (descPacket) return;
     }
 }

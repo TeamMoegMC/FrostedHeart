@@ -31,11 +31,6 @@ import java.util.Map;
 public class DemandData extends BaseData {
     public Ingredient item;
 
-    public DemandData(String id, int maxstore, float recover, int price, Ingredient item) {
-        super(id, maxstore, recover, price);
-        this.item = item;
-    }
-
     public DemandData(JsonObject jo) {
         super(jo);
         item = Ingredient.deserialize(jo.get("demand"));
@@ -46,11 +41,21 @@ public class DemandData extends BaseData {
         item = Ingredient.read(pb);
     }
 
+    public DemandData(String id, int maxstore, float recover, int price, Ingredient item) {
+        super(id, maxstore, recover, price);
+        this.item = item;
+    }
+
     @Override
     public void fetch(PolicySnapshot ps, Map<String, Float> data) {
         int num = (int) (float) data.getOrDefault(getId(), 0f);
         if (!hideStockout || num > 0)
             ps.registerBuy(new BuyData(getId(), num, this));
+    }
+
+    @Override
+    public String getType() {
+        return "b";
     }
 
     @Override
@@ -65,11 +70,6 @@ public class DemandData extends BaseData {
         buffer.writeVarInt(2);
         super.write(buffer);
         item.write(buffer);
-    }
-
-    @Override
-    public String getType() {
-        return "b";
     }
 
 }

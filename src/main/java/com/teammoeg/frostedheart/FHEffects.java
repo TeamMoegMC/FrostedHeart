@@ -53,16 +53,16 @@ public class FHEffects {
     public static final Effect SAUNA = register("sauna", new SaunaEffect(EffectType.BENEFICIAL, 816760296) {
     });
 
-    public static void registerAll(IForgeRegistry<Effect> registry) {
-        for (Effect effect : EFFECTS) {
-            registry.register(effect);
-        }
-    }
-
     public static Effect register(String name, Effect effect) {
         effect.setRegistryName(FHMain.rl(name));
         EFFECTS.add(effect);
         return effect;
+    }
+
+    public static void registerAll(IForgeRegistry<Effect> registry) {
+        for (Effect effect : EFFECTS) {
+            registry.register(effect);
+        }
     }
 
 }

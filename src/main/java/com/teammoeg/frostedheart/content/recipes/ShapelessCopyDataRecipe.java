@@ -40,12 +40,69 @@ import net.minecraft.util.registry.Registry;
 import net.minecraftforge.fml.RegistryObject;
 
 public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishedRecipe {
-    public final Ingredient tool;
+    public static class Serializer extends IERecipeSerializer<ShapelessCopyDataRecipe> {
+        private static NonNullList<Ingredient> readIngredients(JsonArray ingredientArray) {
+            NonNullList<Ingredient> nonnulllist = NonNullList.create();
+
+            for (int i = 0; i < ingredientArray.size(); ++i) {
+                Ingredient ingredient = Ingredient.deserialize(ingredientArray.get(i));
+                if (!ingredient.hasNoMatchingItems()) {
+                    nonnulllist.add(ingredient);
+                }
+            }
+
+            return nonnulllist;
+        }
+
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(Blocks.CRAFTING_TABLE);
+        }
+
+        public ShapelessCopyDataRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+
+            NonNullList<Ingredient> nonnulllist = NonNullList.from(Ingredient.EMPTY,
+                    SerializeUtil.readList(buffer, Ingredient::read).toArray(new Ingredient[0]));
+            ItemStack itemstack = buffer.readItemStack();
+            return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
+        }
+
+        public ShapelessCopyDataRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
+            if (nonnulllist.isEmpty()) {
+                throw new JsonParseException("No ingredients for shapeless recipe");
+            } else if (nonnulllist.size() > 9) {
+                throw new JsonParseException("Too many ingredients for shapeless recipe the max is 9");
+            } else {
+                ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
+                return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
+            }
+        }
+
+        public void write(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
+
+            SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::write);
+            buffer.writeItemStack(recipe.getRecipeOutput());
+        }
+    }
     public static RegistryObject<IERecipeSerializer<ShapelessCopyDataRecipe>> SERIALIZER;
+
+    public final Ingredient tool;
 
     public ShapelessCopyDataRecipe(ResourceLocation idIn, ItemStack out, NonNullList<Ingredient> materials) {
         super(idIn, "", out, materials);
         tool = materials.get(0);
+    }
+
+    @Override
+    public ResourceLocation getAdvancementID() {
+        return null;
+    }
+
+
+    @Override
+    public JsonObject getAdvancementJson() {
+        return null;
     }
 
     /**
@@ -64,55 +121,13 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
         return ItemStack.EMPTY;
     }
 
-    public IRecipeSerializer<?> getSerializer() {
-        return SERIALIZER.get();
+    @Override
+    public ResourceLocation getID() {
+        return getId();
     }
 
-
-    public static class Serializer extends IERecipeSerializer<ShapelessCopyDataRecipe> {
-        public ShapelessCopyDataRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            NonNullList<Ingredient> nonnulllist = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
-            if (nonnulllist.isEmpty()) {
-                throw new JsonParseException("No ingredients for shapeless recipe");
-            } else if (nonnulllist.size() > 9) {
-                throw new JsonParseException("Too many ingredients for shapeless recipe the max is 9");
-            } else {
-                ItemStack itemstack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
-                return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
-            }
-        }
-
-        private static NonNullList<Ingredient> readIngredients(JsonArray ingredientArray) {
-            NonNullList<Ingredient> nonnulllist = NonNullList.create();
-
-            for (int i = 0; i < ingredientArray.size(); ++i) {
-                Ingredient ingredient = Ingredient.deserialize(ingredientArray.get(i));
-                if (!ingredient.hasNoMatchingItems()) {
-                    nonnulllist.add(ingredient);
-                }
-            }
-
-            return nonnulllist;
-        }
-
-        public ShapelessCopyDataRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-
-            NonNullList<Ingredient> nonnulllist = NonNullList.from(Ingredient.EMPTY,
-                    SerializeUtil.readList(buffer, Ingredient::read).toArray(new Ingredient[0]));
-            ItemStack itemstack = buffer.readItemStack();
-            return new ShapelessCopyDataRecipe(recipeId, itemstack, nonnulllist);
-        }
-
-        public void write(PacketBuffer buffer, ShapelessCopyDataRecipe recipe) {
-
-            SerializeUtil.writeList(buffer, recipe.getIngredients(), Ingredient::write);
-            buffer.writeItemStack(recipe.getRecipeOutput());
-        }
-
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(Blocks.CRAFTING_TABLE);
-        }
+    public IRecipeSerializer<?> getSerializer() {
+        return SERIALIZER.get();
     }
 
     @Override
@@ -132,21 +147,6 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
         }
 
         json.add("result", jsonobject);
-    }
-
-    @Override
-    public ResourceLocation getID() {
-        return getId();
-    }
-
-    @Override
-    public JsonObject getAdvancementJson() {
-        return null;
-    }
-
-    @Override
-    public ResourceLocation getAdvancementID() {
-        return null;
     }
 
 }

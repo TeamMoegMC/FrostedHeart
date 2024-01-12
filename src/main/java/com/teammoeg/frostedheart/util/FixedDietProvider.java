@@ -42,6 +42,16 @@ public class FixedDietProvider implements ICapabilitySerializable<INBT> {
         this.capability = capability;
     }
 
+    @Override
+    public void deserializeNBT(INBT nbt) {
+
+        if (DietCapability.DIET_TRACKER != null) {
+            DietCapability.DIET_TRACKER.readNBT(capability.orElse(EMPTY_TRACKER), null, nbt);
+        } else {
+            DietMod.LOGGER.error("Missing Diet capability!");
+        }
+    }
+
     @Nonnull
     @Override
     public <T> net.minecraftforge.common.util.LazyOptional<T> getCapability(@Nonnull Capability<T> cap,
@@ -62,16 +72,6 @@ public class FixedDietProvider implements ICapabilitySerializable<INBT> {
         }
         DietMod.LOGGER.error("Missing Diet capability!");
         return new CompoundNBT();
-    }
-
-    @Override
-    public void deserializeNBT(INBT nbt) {
-
-        if (DietCapability.DIET_TRACKER != null) {
-            DietCapability.DIET_TRACKER.readNBT(capability.orElse(EMPTY_TRACKER), null, nbt);
-        } else {
-            DietMod.LOGGER.error("Missing Diet capability!");
-        }
     }
 
 }

@@ -38,13 +38,6 @@ public abstract class EditDialog extends Panel {
             sc = (DrawDeskScreen) panel.getGui();
     }
 
-    public void open() {
-        if (sc.getDialog() != this) {
-            previous = sc.getDialog();
-            sc.openDialog(this, true);
-        }
-    }
-
     public void close() {
         close(true);
     }
@@ -75,12 +68,6 @@ public abstract class EditDialog extends Panel {
         ;
     }
 
-    public abstract void onClose();
-
-    public void onClosed() {
-
-    }
-
     @Override
     public boolean keyPressed(Key key) {
         if (key.esc()) {
@@ -89,5 +76,18 @@ public abstract class EditDialog extends Panel {
             return true;
         }
         return super.keyPressed(key);
+    }
+
+    public abstract void onClose();
+
+    public void onClosed() {
+
+    }
+
+    public void open() {
+        if (sc.getDialog() != this) {
+            previous = sc.getDialog();
+            sc.openDialog(this, true);
+        }
     }
 }

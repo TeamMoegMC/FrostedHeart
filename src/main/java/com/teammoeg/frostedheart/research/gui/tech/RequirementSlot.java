@@ -55,20 +55,6 @@ public class RequirementSlot extends Widget {
     }
 
     @Override
-    public boolean mousePressed(MouseButton button) {
-        if (isMouseOver()) {
-            if (getWidgetType() != WidgetType.DISABLED) {
-                //TODO edit ingredient
-                JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         ItemStack cur = i[(int) ((System.currentTimeMillis() / 1000) % i.length)];
         GuiHelper.setupDrawing();
@@ -86,6 +72,20 @@ public class RequirementSlot extends Widget {
             matrixStack.pop();
         }
         matrixStack.pop();
+    }
+
+    @Override
+    public boolean mousePressed(MouseButton button) {
+        if (isMouseOver()) {
+            if (getWidgetType() != WidgetType.DISABLED) {
+                //TODO edit ingredient
+                JEICompat.showJEIFor(i[(int) ((System.currentTimeMillis() / 1000) % i.length)]);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
 

@@ -27,12 +27,6 @@ public class RealBox extends LabeledTextBox {
         super(panel, lab, String.valueOf(val));
     }
 
-    public void setNum(double number) {
-        super.setText(String.valueOf(number));
-    }
-
-    ;
-
     public double getNum() {
         try {
             return Double.parseDouble(getText());
@@ -40,6 +34,12 @@ public class RealBox extends LabeledTextBox {
 
         }
         return Double.parseDouble(orig);
+    }
+
+    ;
+
+    public void setNum(double number) {
+        super.setText(String.valueOf(number));
     }
 
     ;

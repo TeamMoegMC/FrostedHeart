@@ -80,6 +80,28 @@ import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_
 public class ClientRegistryEvents {
     private static Tree.InnerNode<ResourceLocation, ManualEntry> CATEGORY;
 
+    public static void addManual() {
+        ManualInstance man = ManualHelper.getManual();
+        CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);
+        {
+            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
+            builder.addSpecialElement("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
+            man.addEntry(CATEGORY, builder.create(), 0);
+        }
+        {
+            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
+            builder.addSpecialElement("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2));
+            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
+            man.addEntry(CATEGORY, builder.create(), 1);
+        }
+    }
+
+    public static <C extends Container, S extends BaseScreen> ScreenManager.IScreenFactory<C, MenuScreenWrapper<C>>
+    FTBScreenFactory(Function<C, S> factory) {
+        return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
+    }
+
     /**
      * @param event
      */
@@ -126,48 +148,6 @@ public class ClientRegistryEvents {
     }
 
     @SubscribeEvent
-    public static void provideTextures(final TextureStitchEvent.Pre event) {
-        if (AtlasTexture.LOCATION_BLOCKS_TEXTURE.equals(event.getMap().getTextureLocation())) {
-            Minecraft.getInstance().getResourceManager().getAllResourceLocations("textures/item/module", s -> s.endsWith(".png")).stream()
-                    .filter(resourceLocation -> FHMain.MODID.equals(resourceLocation.getNamespace()))
-                    // 9 is the length of "textures/" & 4 is the length of ".png"
-
-                    .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
-                    .map(rl -> {
-                        FHMain.LOGGER.info("stitching texture" + rl.toString());
-                        return rl;
-                    })
-                    .forEach(event::addSprite);
-        }
-    }
-
-    public static <C extends Container, S extends Screen & IHasContainer<C>> void
-    registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
-        @SuppressWarnings("unchecked")
-        ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
-        ScreenManager.registerFactory(type, factory);
-    }
-
-    public static <C extends Container, S extends BaseScreen> void
-    registerFTBScreen(ContainerType<C> type, Function<C, S> factory) {
-        ScreenManager.registerFactory(type, FTBScreenFactory(factory));
-    }
-
-    public static <C extends Container, S extends BaseScreen> ScreenManager.IScreenFactory<C, MenuScreenWrapper<C>>
-    FTBScreenFactory(Function<C, S> factory) {
-        return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
-    }
-
-    /**
-     * @param event
-     */
-    @SuppressWarnings("resource")
-    @SubscribeEvent
-    public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
-        Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
-    }
-
-    @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
         for (ResourceLocation location : event.getModelRegistry().keySet()) {
             // Now find all armors
@@ -210,21 +190,41 @@ public class ClientRegistryEvents {
         }
     }
 
-    public static void addManual() {
-        ManualInstance man = ManualHelper.getManual();
-        CATEGORY = man.getRoot().getOrCreateSubnode(new ResourceLocation(FHMain.MODID, "main"), 110);
-        {
-            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-            builder.addSpecialElement("generator", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR));
-            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator"));
-            man.addEntry(CATEGORY, builder.create(), 0);
+    @SubscribeEvent
+    public static void provideTextures(final TextureStitchEvent.Pre event) {
+        if (AtlasTexture.LOCATION_BLOCKS_TEXTURE.equals(event.getMap().getTextureLocation())) {
+            Minecraft.getInstance().getResourceManager().getAllResourceLocations("textures/item/module", s -> s.endsWith(".png")).stream()
+                    .filter(resourceLocation -> FHMain.MODID.equals(resourceLocation.getNamespace()))
+                    // 9 is the length of "textures/" & 4 is the length of ".png"
+
+                    .map(rl -> new ResourceLocation(rl.getNamespace(), rl.getPath().substring(9, rl.getPath().length() - 4)))
+                    .map(rl -> {
+                        FHMain.LOGGER.info("stitching texture" + rl.toString());
+                        return rl;
+                    })
+                    .forEach(event::addSprite);
         }
-        {
-            ManualEntry.ManualEntryBuilder builder = new ManualEntry.ManualEntryBuilder(man);
-            builder.addSpecialElement("generator_2", 0, () -> new ManualElementMultiblock(man, FHMultiblocks.GENERATOR_T2));
-            builder.readFromFile(new ResourceLocation(FHMain.MODID, "generator_t2"));
-            man.addEntry(CATEGORY, builder.create(), 1);
-        }
+    }
+
+    public static <C extends Container, S extends BaseScreen> void
+    registerFTBScreen(ContainerType<C> type, Function<C, S> factory) {
+        ScreenManager.registerFactory(type, FTBScreenFactory(factory));
+    }
+
+    public static <C extends Container, S extends Screen & IHasContainer<C>> void
+    registerIEScreen(ResourceLocation containerName, ScreenManager.IScreenFactory<C, S> factory) {
+        @SuppressWarnings("unchecked")
+        ContainerType<C> type = (ContainerType<C>) GuiHandler.getContainerType(containerName);
+        ScreenManager.registerFactory(type, factory);
+    }
+
+    /**
+     * @param event
+     */
+    @SuppressWarnings("resource")
+    @SubscribeEvent
+    public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
+        Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
     }
 
 }

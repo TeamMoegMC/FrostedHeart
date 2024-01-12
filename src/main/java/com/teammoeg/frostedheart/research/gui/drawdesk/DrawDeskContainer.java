@@ -35,11 +35,11 @@ public class DrawDeskContainer extends IEBaseContainer<DrawingDeskTileEntity> {
     }
 
     public static class EnableIESlot extends IESlot implements Enabled {
+        boolean enabled = true;
+
         public EnableIESlot(Container containerMenu, IInventory inv, int id, int x, int y) {
             super(containerMenu, inv, id, x, y);
         }
-
-        boolean enabled = true;
 
         public boolean isEnabled() {
             return enabled;
@@ -51,11 +51,11 @@ public class DrawDeskContainer extends IEBaseContainer<DrawingDeskTileEntity> {
     }
 
     public static class EnableSlot extends Slot implements Enabled {
+        boolean enabled = true;
+
         public EnableSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
             super(inventoryIn, index, xPosition, yPosition);
         }
-
-        boolean enabled = true;
 
         public boolean isEnabled() {
             return enabled;

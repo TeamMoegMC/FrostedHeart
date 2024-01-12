@@ -52,15 +52,15 @@ import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ResearchEditorDialog extends BaseEditDialog {
+    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> {
+        new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
+    };
     Research r;
     LabeledTextBox id, name;
     LabeledSelection<ResearchCategory> cat;
     NumberBox pts;
     LabeledSelection<Boolean> hide, alt, hidden, locked, showed, inf;
     boolean removed;
-    public static final Editor<Collection<Research>> RESEARCH_LIST = (p, l, v, c) -> {
-        new EditListDialog<>(p, l, v, null, SelectDialog.EDITOR_RESEARCH, e -> e.getName().getString(), Research::getIcon, c).open();
-    };
 
     public ResearchEditorDialog(Widget panel, Research r, ResearchCategory def) {
         super(panel);
@@ -84,36 +84,6 @@ public class ResearchEditorDialog extends BaseEditDialog {
 
     }
 
-
-    @Override
-    public void onClose() {
-        if (removed) {
-            if (r.getRId() != 0)
-                r.delete();
-
-        } else {
-            r.name = name.getText();
-            r.setCategory(cat.getSelection());
-            r.points = pts.getNum();
-            r.alwaysShow = showed.getSelection();
-            r.hideEffects = hide.getSelection();
-            r.showfdesc = alt.getSelection();
-            r.isHidden = hidden.getSelection();
-            r.infinite = inf.getSelection();
-            r.setInCompletable(locked.getSelection());
-
-            if (r.getRId() == 0) {//creating new research
-                if (!id.getText().isEmpty()) {
-                    r.setId(id.getText());
-                    FHResearch.register(r);
-                }
-            } else {//modify old research
-                r.setNewId(id.getText());
-            }
-            EditUtils.saveResearch(r);
-        }
-        FHResearch.reindex();
-    }
 
     @Override
     public void addWidgets() {
@@ -177,13 +147,43 @@ public class ResearchEditorDialog extends BaseEditDialog {
         add(locked);
     }
 
-
     @Override
     public void draw(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         super.draw(matrixStack, theme, x, y, w, h);
         Research r = FHResearch.researches.getByName(id.getText());
         if (r != null && r != this.r)
             theme.drawString(matrixStack, "ID Existed!", x + id.width + 10, y + 27, Color4I.RED, 0);
+    }
+
+
+    @Override
+    public void onClose() {
+        if (removed) {
+            if (r.getRId() != 0)
+                r.delete();
+
+        } else {
+            r.name = name.getText();
+            r.setCategory(cat.getSelection());
+            r.points = pts.getNum();
+            r.alwaysShow = showed.getSelection();
+            r.hideEffects = hide.getSelection();
+            r.showfdesc = alt.getSelection();
+            r.isHidden = hidden.getSelection();
+            r.infinite = inf.getSelection();
+            r.setInCompletable(locked.getSelection());
+
+            if (r.getRId() == 0) {//creating new research
+                if (!id.getText().isEmpty()) {
+                    r.setId(id.getText());
+                    FHResearch.register(r);
+                }
+            } else {//modify old research
+                r.setNewId(id.getText());
+            }
+            EditUtils.saveResearch(r);
+        }
+        FHResearch.reindex();
     }
 
 }

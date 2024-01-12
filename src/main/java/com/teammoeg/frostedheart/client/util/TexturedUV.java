@@ -38,16 +38,10 @@ public class TexturedUV extends UV {
         this.texture = texture;
     }
 
-    //blit with texture bind at IngameGui add point
-    public void blit(Minecraft mc, MatrixStack s, int lx, int ly, Point loc) {
+    //blit with texture bind
+    public void blit(Minecraft mc, AbstractGui gui, MatrixStack s, int lx, int ly) {
         mc.getTextureManager().bindTexture(texture);
-        super.blit(mc.ingameGUI, s, lx, ly, loc);
-    }
-
-    //blit with texture bind at IngameGui
-    public void blit(Minecraft mc, MatrixStack s, int lx, int ly) {
-        mc.getTextureManager().bindTexture(texture);
-        super.blit(mc.ingameGUI, s, lx, ly);
+        super.blit(gui, s, lx, ly);
     }
 
     //blit with texture bind add point
@@ -56,9 +50,15 @@ public class TexturedUV extends UV {
         super.blit(gui, s, lx, ly, loc);
     }
 
-    //blit with texture bind
-    public void blit(Minecraft mc, AbstractGui gui, MatrixStack s, int lx, int ly) {
+    //blit with texture bind at IngameGui
+    public void blit(Minecraft mc, MatrixStack s, int lx, int ly) {
         mc.getTextureManager().bindTexture(texture);
-        super.blit(gui, s, lx, ly);
+        super.blit(mc.ingameGUI, s, lx, ly);
+    }
+
+    //blit with texture bind at IngameGui add point
+    public void blit(Minecraft mc, MatrixStack s, int lx, int ly, Point loc) {
+        mc.getTextureManager().bindTexture(texture);
+        super.blit(mc.ingameGUI, s, lx, ly, loc);
     }
 }

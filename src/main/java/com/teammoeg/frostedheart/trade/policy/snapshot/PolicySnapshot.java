@@ -30,15 +30,15 @@ import java.util.Map;
 public class PolicySnapshot {
     public static final PolicySnapshot empty = new PolicySnapshot() {
         @Override
-        public void register(BaseData bd) {
-        }
-
-        @Override
         public void calculateRecovery(int deltaDays, FHVillagerData data) {
         }
 
         @Override
         public void fetchTrades(Map<String, Float> data) {
+        }
+
+        @Override
+        public void register(BaseData bd) {
         }
     };
     Map<String, BaseData> data = new HashMap<>();
@@ -46,16 +46,24 @@ public class PolicySnapshot {
     Map<String, SellData> sells = new HashMap<>();
     public int maxExp;
 
-    public void register(BaseData bd) {
-        data.put(bd.getId(), bd);
-    }
-
     public void calculateRecovery(int deltaDays, FHVillagerData data) {
         this.data.values().forEach(t -> t.tick(deltaDays, data));
     }
 
     public void fetchTrades(Map<String, Float> data) {
         this.data.values().forEach(t -> t.fetch(this, data));
+    }
+
+    public List<BuyData> getBuys() {
+        return buys;
+    }
+
+    public Map<String, SellData> getSells() {
+        return sells;
+    }
+
+    public void register(BaseData bd) {
+        data.put(bd.getId(), bd);
     }
 
     public void registerBuy(BuyData bd) {
@@ -69,13 +77,5 @@ public class PolicySnapshot {
     @Override
     public String toString() {
         return "PolicySnapshot [data=" + data + ", buys=" + getBuys() + ", sells=" + getSells() + "]";
-    }
-
-    public Map<String, SellData> getSells() {
-        return sells;
-    }
-
-    public List<BuyData> getBuys() {
-        return buys;
     }
 }

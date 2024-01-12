@@ -42,6 +42,11 @@ public class SetFlagAction implements PolicyAction {
     }
 
     @Override
+    public void deal(FHVillagerData data, int num) {
+        data.flags.computeIfAbsent(name, k -> 1);
+    }
+
+    @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();
         Actions.writeType(this, jo);
@@ -53,11 +58,6 @@ public class SetFlagAction implements PolicyAction {
     public void write(PacketBuffer buffer) {
         Actions.writeId(this, buffer);
         buffer.writeString(name);
-    }
-
-    @Override
-    public void deal(FHVillagerData data, int num) {
-        data.flags.computeIfAbsent(name, k -> 1);
     }
 
 }

@@ -45,13 +45,16 @@ public class TownWorkerData {
         this.priority = data.getInt("priority");
     }
 
-    public CompoundNBT serialize() {
-        CompoundNBT data = new CompoundNBT();
-        data.putLong("pos", pos.toLong());
-        data.putString("type", type.name());
-        data.put("data", workData);
-        data.putInt("priority", priority);
-        return data;
+    public boolean afterWork(Town resource) {
+        return type.getWorker().afterWork(resource, workData);
+    }
+
+    public boolean beforeWork(Town resource) {
+        return type.getWorker().beforeWork(resource, workData);
+    }
+
+    public boolean firstWork(Town resource) {
+        return type.getWorker().firstWork(resource, workData);
     }
 
     public void fromBlock(ITownBlockTE te) {
@@ -60,37 +63,34 @@ public class TownWorkerData {
         priority = te.getPriority();
     }
 
-    public TownWorkerType getType() {
-        return type;
-    }
-
     public BlockPos getPos() {
         return pos;
+    }
+
+    public long getPriority() {
+        long prio = (priority & 0xFFFFFFFF) << 32 + (type.getPriority() & 0xFFFFFFFF);
+        return prio;
+    }
+
+    public TownWorkerType getType() {
+        return type;
     }
 
     public CompoundNBT getWorkData() {
         return workData;
     }
 
-    public void setWorkData(CompoundNBT workData) {
-        this.workData = workData;
+    public boolean lastWork(Town resource) {
+        return type.getWorker().lastWork(resource, workData);
     }
 
-    public boolean beforeWork(Town resource) {
-        return type.getWorker().beforeWork(resource, workData);
-    }
-
-    public boolean work(Town resource) {
-        return type.getWorker().work(resource, workData);
-    }
-
-    public boolean afterWork(Town resource) {
-        return type.getWorker().afterWork(resource, workData);
-    }
-
-    public long getPriority() {
-        long prio = (priority & 0xFFFFFFFF) << 32 + (type.getPriority() & 0xFFFFFFFF);
-        return prio;
+    public CompoundNBT serialize() {
+        CompoundNBT data = new CompoundNBT();
+        data.putLong("pos", pos.toLong());
+        data.putString("type", type.name());
+        data.put("data", workData);
+        data.putInt("priority", priority);
+        return data;
     }
 
     public void setData(ServerWorld w) {
@@ -102,11 +102,11 @@ public class TownWorkerData {
         }
     }
 
-    public boolean firstWork(Town resource) {
-        return type.getWorker().firstWork(resource, workData);
+    public void setWorkData(CompoundNBT workData) {
+        this.workData = workData;
     }
 
-    public boolean lastWork(Town resource) {
-        return type.getWorker().lastWork(resource, workData);
+    public boolean work(Town resource) {
+        return type.getWorker().work(resource, workData);
     }
 }

@@ -37,7 +37,38 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
 
 public class FuelingRecipe extends SpecialRecipe {
+    public static class Serializer extends IERecipeSerializer<FuelingRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(FHItems.buff_coat);
+        }
+
+        @Nullable
+        @Override
+        public FuelingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient input = Ingredient.read(buffer);
+            int f = buffer.readVarInt();
+            return new FuelingRecipe(recipeId, input, f);
+        }
+
+        @Override
+        public FuelingRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            Ingredient input = Ingredient.deserialize(json.get("input"));
+            int fuel = JsonHelper.getIntOrDefault(json, "fuel", 400);
+            return new FuelingRecipe(recipeId, input, fuel);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, FuelingRecipe recipe) {
+            recipe.type.write(buffer);
+            buffer.writeVarInt(recipe.fuel);
+        }
+    }
+
     public static RegistryObject<IERecipeSerializer<FuelingRecipe>> SERIALIZER;
+
+    Ingredient type;
+    int fuel;
 
     protected FuelingRecipe(ResourceLocation id, Ingredient t, int d) {
         super(id);
@@ -45,40 +76,11 @@ public class FuelingRecipe extends SpecialRecipe {
         fuel = d;
     }
 
-    Ingredient type;
-    int fuel;
-
-    public Ingredient getIngredient() {
-        return type;
-    }
-
-    public int getFuel() {
-        return fuel;
-    }
-
     /**
-     * Used to check if a recipe matches current crafting inventory
+     * Used to determine if this recipe can fit in a grid of the given width/height
      */
-    public boolean matches(CraftingInventory inv, World worldIn) {
-        boolean hasArmor = false;
-        boolean hasItem = false;
-        for (int i = 0; i < inv.getSizeInventory(); ++i) {
-            ItemStack itemstack = inv.getStackInSlot(i);
-            if (itemstack == null || itemstack.isEmpty()) {
-                continue;
-            }
-            if (type.test(itemstack)) {
-                if (hasItem)
-                    return false;
-                hasItem = true;
-            } else {
-                if (hasArmor)
-                    return false;
-                if (itemstack.getItem() instanceof CoalHandStove)
-                    hasArmor = true;
-            }
-        }
-        return hasArmor && hasItem;
+    public boolean canFit(int width, int height) {
+        return width * height >= 2;
     }
 
     /**
@@ -109,11 +111,12 @@ public class FuelingRecipe extends SpecialRecipe {
         return ItemStack.EMPTY;
     }
 
-    /**
-     * Used to determine if this recipe can fit in a grid of the given width/height
-     */
-    public boolean canFit(int width, int height) {
-        return width * height >= 2;
+    public int getFuel() {
+        return fuel;
+    }
+
+    public Ingredient getIngredient() {
+        return type;
     }
 
     @Override
@@ -121,31 +124,28 @@ public class FuelingRecipe extends SpecialRecipe {
         return SERIALIZER.get();
     }
 
-    public static class Serializer extends IERecipeSerializer<FuelingRecipe> {
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+    /**
+     * Used to check if a recipe matches current crafting inventory
+     */
+    public boolean matches(CraftingInventory inv, World worldIn) {
+        boolean hasArmor = false;
+        boolean hasItem = false;
+        for (int i = 0; i < inv.getSizeInventory(); ++i) {
+            ItemStack itemstack = inv.getStackInSlot(i);
+            if (itemstack == null || itemstack.isEmpty()) {
+                continue;
+            }
+            if (type.test(itemstack)) {
+                if (hasItem)
+                    return false;
+                hasItem = true;
+            } else {
+                if (hasArmor)
+                    return false;
+                if (itemstack.getItem() instanceof CoalHandStove)
+                    hasArmor = true;
+            }
         }
-
-        @Override
-        public FuelingRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            Ingredient input = Ingredient.deserialize(json.get("input"));
-            int fuel = JsonHelper.getIntOrDefault(json, "fuel", 400);
-            return new FuelingRecipe(recipeId, input, fuel);
-        }
-
-        @Nullable
-        @Override
-        public FuelingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient input = Ingredient.read(buffer);
-            int f = buffer.readVarInt();
-            return new FuelingRecipe(recipeId, input, f);
-        }
-
-        @Override
-        public void write(PacketBuffer buffer, FuelingRecipe recipe) {
-            recipe.type.write(buffer);
-            buffer.writeVarInt(recipe.fuel);
-        }
+        return hasArmor && hasItem;
     }
 }

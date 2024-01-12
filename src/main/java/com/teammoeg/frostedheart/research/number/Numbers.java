@@ -35,17 +35,6 @@ public class Numbers {
         registry.register(ExpResearchNumber.class, "exp", ExpResearchNumber::new, ExpResearchNumber::new);
     }
 
-    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<PacketBuffer, IResearchNumber> packet) {
-        registry.register(cls, type, json, packet);
-    }
-
-    private Numbers() {
-    }
-
-    public static void writeId(IResearchNumber e, PacketBuffer pb) {
-        registry.writeId(pb, e);
-    }
-
     public static IResearchNumber deserialize(JsonElement je) {
         if (je.isJsonPrimitive()) {
             JsonPrimitive jp = (JsonPrimitive) je;
@@ -61,7 +50,18 @@ public class Numbers {
         return registry.read(data);
     }
 
+    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<PacketBuffer, IResearchNumber> packet) {
+        registry.register(cls, type, json, packet);
+    }
+
+    public static void writeId(IResearchNumber e, PacketBuffer pb) {
+        registry.writeId(pb, e);
+    }
+
     public static void writeType(IResearchNumber e, JsonObject jo) {
         registry.writeType(jo, e);
+    }
+
+    private Numbers() {
     }
 }

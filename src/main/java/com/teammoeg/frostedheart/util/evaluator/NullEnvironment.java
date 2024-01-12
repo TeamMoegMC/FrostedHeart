@@ -27,6 +27,11 @@ public class NullEnvironment implements IEnvironment {
     }
 
     @Override
+    public double get(String key) {
+        throw new IllegalStateException("Connot call variant on non variant enironment.");
+    }
+
+    @Override
     public Double getOptional(String key) {
         return null;
     }
@@ -34,10 +39,5 @@ public class NullEnvironment implements IEnvironment {
     @Override
     public void set(String key, double v) {
 
-    }
-
-    @Override
-    public double get(String key) {
-        throw new IllegalStateException("Connot call variant on non variant enironment.");
     }
 }

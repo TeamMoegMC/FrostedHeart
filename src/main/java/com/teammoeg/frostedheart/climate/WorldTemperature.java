@@ -118,32 +118,9 @@ public class WorldTemperature {
     public static Map<Object, Float> worldbuffer = new HashMap<>();
     public static Map<Biome, Float> biomebuffer = new HashMap<>();
 
-    /**
-     * Get World temperature for a specific world, affected by weather and so on
-     *
-     * @param w the world<br>
-     * @return world temperature<br>
-     */
-    public static float getTemperature(IWorldReader w, BlockPos pos) {
-        Biome b = w.getBiome(pos);
-        Float temp = null;
-        if (b != null)
-            temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
-        float wt = 0;
-        if (w instanceof World) {
-            wt = worldbuffer.computeIfAbsent(w, (k) -> {
-                Float fw = FHDataManager.getWorldTemp((World) w);
-                if (fw == null) return -10F;
-                return fw;
-            });
-
-            // Add dynamic temperature baseline
-            wt += WorldClimate.getTemp((World) w) * 0.25f;
-        }
-
-        if (temp != null)
-            return wt + temp;
-        return wt;
+    public static void clear() {
+        worldbuffer.clear();
+        biomebuffer.clear();
     }
 
     /**
@@ -177,15 +154,38 @@ public class WorldTemperature {
         return 0;
     }
 
+    /**
+     * Get World temperature for a specific world, affected by weather and so on
+     *
+     * @param w the world<br>
+     * @return world temperature<br>
+     */
+    public static float getTemperature(IWorldReader w, BlockPos pos) {
+        Biome b = w.getBiome(pos);
+        Float temp = null;
+        if (b != null)
+            temp = biomebuffer.computeIfAbsent(b, FHDataManager::getBiomeTemp);
+        float wt = 0;
+        if (w instanceof World) {
+            wt = worldbuffer.computeIfAbsent(w, (k) -> {
+                Float fw = FHDataManager.getWorldTemp((World) w);
+                if (fw == null) return -10F;
+                return fw;
+            });
+
+            // Add dynamic temperature baseline
+            wt += WorldClimate.getTemp((World) w) * 0.25f;
+        }
+
+        if (temp != null)
+            return wt + temp;
+        return wt;
+    }
+
     public static boolean isWorldBlizzard(IWorldReader w) {
         if (w instanceof World) {
             return WorldClimate.isBlizzard((World) w);
         }
         return false;
-    }
-
-    public static void clear() {
-        worldbuffer.clear();
-        biomebuffer.clear();
     }
 }

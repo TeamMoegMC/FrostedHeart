@@ -50,14 +50,14 @@ public class FlagValueCondition extends WithFlagCondition {
     }
 
     @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeVarInt(value);
+    public boolean test(FHVillagerData ve) {
+        return ve.flags.getOrDefault(name, 0) == value;
     }
 
     @Override
-    public boolean test(FHVillagerData ve) {
-        return ve.flags.getOrDefault(name, 0) == value;
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        buffer.writeVarInt(value);
     }
 
 }

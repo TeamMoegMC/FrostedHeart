@@ -35,8 +35,8 @@ public class CommandNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
-        FHScenario.callCommand(command, runner, params);
+    public String getDisplay(ScenarioRunner runner) {
+        return "";
     }
 
     @Override
@@ -50,8 +50,8 @@ public class CommandNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
-        return "";
+    public void run(ScenarioRunner runner) {
+        FHScenario.callCommand(command, runner, params);
     }
 
 }

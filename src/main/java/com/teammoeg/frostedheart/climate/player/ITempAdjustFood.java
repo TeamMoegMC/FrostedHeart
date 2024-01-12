@@ -32,6 +32,16 @@ import net.minecraft.item.ItemStack;
 public interface ITempAdjustFood {
 
     /**
+     * Get delta temperature this item would give.
+     *
+     * @param is the is<br>
+     * @return heat<br>
+     */
+    float getHeat(ItemStack is, float env);
+
+    ;
+
+    /**
      * Get max temperature this item can get.
      *
      * @param is the stack<br>
@@ -52,14 +62,4 @@ public interface ITempAdjustFood {
     default float getMinTemp(ItemStack is) {
         return -15;
     }
-
-    ;
-
-    /**
-     * Get delta temperature this item would give.
-     *
-     * @param is the is<br>
-     * @return heat<br>
-     */
-    float getHeat(ItemStack is, float env);
 }

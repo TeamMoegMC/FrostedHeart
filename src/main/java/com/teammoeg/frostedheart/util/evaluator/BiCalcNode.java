@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.function.DoubleBinaryOperator;
 
 class BiCalcNode extends BiNode {
-    DoubleBinaryOperator calc;
     public static Map<DoubleBinaryOperator, String> toStr = new HashMap<>();
     public static DoubleBinaryOperator add = (v1, v2) -> v1 + v2;
     public static DoubleBinaryOperator min = (v1, v2) -> v1 - v2;
@@ -33,7 +32,6 @@ class BiCalcNode extends BiNode {
     public static DoubleBinaryOperator sdiv = (v1, v2) -> v2 == 0 ? 0 : v1 / v2;
     public static DoubleBinaryOperator pow = (v1, v2) -> Math.pow(v1, v2);
     public static DoubleBinaryOperator mod = (v1, v2) -> v1 % v2;
-
     static {
         toStr.put(add, "+");
         toStr.put(min, "-");
@@ -43,6 +41,8 @@ class BiCalcNode extends BiNode {
         toStr.put(pow, "^");
         toStr.put(mod, "%");
     }
+
+    DoubleBinaryOperator calc;
 
     public BiCalcNode(Node left, Node right, DoubleBinaryOperator calc) {
         super(left, right);
@@ -60,12 +60,6 @@ class BiCalcNode extends BiNode {
     }
 
     @Override
-    public String toString() {
-        String cn = toStr.getOrDefault(calc, "" + calc);
-        return left + cn + right;
-    }
-
-    @Override
     public Node simplify() {
         left = left.simplify();
         right = right.simplify();
@@ -77,6 +71,12 @@ class BiCalcNode extends BiNode {
             return new TermNode(calc == mul, left, right).simplify();
         }
         return this;
+    }
+
+    @Override
+    public String toString() {
+        String cn = toStr.getOrDefault(calc, "" + calc);
+        return left + cn + right;
     }
 
 }

@@ -46,6 +46,8 @@ class MainGamePanel extends Panel {
     int lstatus = 0;
     CardButton[][] cbs = new CardButton[9][9];
 
+    boolean enabled = true;
+
     public MainGamePanel(DrawDeskPanel panel, DrawDeskScreen p) {
         super(panel);
         ot = panel;
@@ -59,32 +61,21 @@ class MainGamePanel extends Panel {
         reset = new TechButton(this, DrawDeskIcons.RESET) {
 
             @Override
-            public void onClicked(MouseButton arg0) {
-                rg.init();
-                refreshWidgets();
-            }
-
-            @Override
             public void addMouseOverText(TooltipList list) {
                 super.addMouseOverText(list);
                 list.add(GuiUtils.translateGui("draw_desk.reset"));
+            }
+
+            @Override
+            public void onClicked(MouseButton arg0) {
+                rg.init();
+                refreshWidgets();
             }
         };
         reset.setPosAndSize(157, 136, 27, 16);
         status = new TextField(this).addFlags(Theme.CENTERED).addFlags(Theme.CENTERED_V).setMaxWidth(108).setColor(TechIcons.text);
 
         status.setPosAndSize(22, 54, 108, 50);
-    }
-
-    boolean enabled = true;
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     @Override
@@ -157,14 +148,14 @@ class MainGamePanel extends Panel {
         TechButton help = new TechButton(this, TechIcons.Question) {
 
             @Override
-            public void onClicked(MouseButton arg0) {
-                ot.openHelp();
-            }
-
-            @Override
             public void addMouseOverText(TooltipList list) {
                 super.addMouseOverText(list);
                 list.add(GuiUtils.translateGui("draw_desk.help"));
+            }
+
+            @Override
+            public void onClicked(MouseButton arg0) {
+                ot.openHelp();
             }
         };
         help.setPosAndSize(157, 116, 27, 16);
@@ -175,11 +166,6 @@ class MainGamePanel extends Panel {
 
     @Override
     public void alignWidgets() {
-    }
-
-    @Override
-    public void onClosed() {
-        rg.deinit();
     }
 
     @Override
@@ -237,5 +223,19 @@ class MainGamePanel extends Panel {
             lstatus = 0;
         }
 
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void onClosed() {
+        rg.deinit();
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

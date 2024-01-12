@@ -44,13 +44,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteractionObjectIE, IIEInventory {
-    protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
-    ResearchGame game = new ResearchGame();
     public static final int INK_SLOT = 2;
     public static final int PAPER_SLOT = 1;
     public static final int EXAMINE_SLOT = 0;
     public static int ENERGY_PER_COMBINE = 100;
     public static int ENERGY_PER_PAPER = 3000;
+    protected NonNullList<ItemStack> inventory = NonNullList.withSize(3, ItemStack.EMPTY);
+    ResearchGame game = new ResearchGame();
 
     public DrawingDeskTileEntity() {
         super(FHTileTypes.DRAWING_DESK.get());
@@ -61,13 +61,25 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         return true;
     }
 
-    @Override
-    public IInteractionObjectIE getGuiMaster() {
-        return this;
+    private boolean damageInk(ServerPlayerEntity spe, int val, int lvl) {
+        ItemStack is = inventory.get(INK_SLOT);
+        if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
+        IPen pen = (IPen) is.getItem();
+        if (pen.getLevel(is, spe) < lvl) return false;
+        return pen.damage(spe, is, val);
     }
 
     @Override
     public void doGraphicalUpdates() {
+    }
+
+    public ResearchGame getGame() {
+        return game;
+    }
+
+    @Override
+    public IInteractionObjectIE getGuiMaster() {
+        return this;
     }
 
     @Override
@@ -78,6 +90,36 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
     @Override
     public int getSlotLimit(int slot) {
         return 64;
+    }
+
+    public void initGame(ServerPlayerEntity player) {
+        if (inventory.get(PAPER_SLOT).isEmpty()) return;
+        int lvl = ResearchListeners.fetchGameLevel(player);
+        if (lvl < 0) return;
+        Optional<ResearchPaperRecipe> pr = ResearchPaperRecipe.recipes.stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
+        if (!pr.isPresent()) return;
+        if (!EnergyCore.hasEnoughEnergy(player, ENERGY_PER_PAPER)) return;
+        if (!damageInk(player, 5, lvl)) return;
+        EnergyCore.consumeEnergy(player, ENERGY_PER_PAPER);
+        inventory.get(PAPER_SLOT).shrink(1);
+        game.init(GenerateInfo.all[lvl], new Random());
+        game.setLvl(lvl);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public boolean isInkSatisfied(int val) {
+        ItemStack is = inventory.get(INK_SLOT);
+        if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
+        IPen pen = (IPen) is.getItem();
+        return pen.getLevel(is, ClientUtils.getPlayer()) >= ResearchListeners.fetchGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public boolean isPaperSatisfied() {
+        ItemStack is = inventory.get(PAPER_SLOT);
+        if (is.isEmpty()) return false;
+        int lvl = ResearchListeners.fetchGameLevel();
+        return ResearchPaperRecipe.recipes.stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
     }
 
     @Override
@@ -104,55 +146,8 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
 
     }
 
-    @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        nbt.put("gamedata", game.serialize());
-        if (!descPacket) {
-
-            ItemStackHelper.saveAllItems(nbt, inventory);
-        }
-    }
-
-    public ResearchGame getGame() {
-        return game;
-    }
-
-    public void initGame(ServerPlayerEntity player) {
-        if (inventory.get(PAPER_SLOT).isEmpty()) return;
-        int lvl = ResearchListeners.fetchGameLevel(player);
-        if (lvl < 0) return;
-        Optional<ResearchPaperRecipe> pr = ResearchPaperRecipe.recipes.stream().filter(r -> r.maxlevel >= lvl && r.paper.test(inventory.get(PAPER_SLOT))).findAny();
-        if (!pr.isPresent()) return;
-        if (!EnergyCore.hasEnoughEnergy(player, ENERGY_PER_PAPER)) return;
-        if (!damageInk(player, 5, lvl)) return;
-        EnergyCore.consumeEnergy(player, ENERGY_PER_PAPER);
-        inventory.get(PAPER_SLOT).shrink(1);
-        game.init(GenerateInfo.all[lvl], new Random());
-        game.setLvl(lvl);
-    }
-
-    private boolean damageInk(ServerPlayerEntity spe, int val, int lvl) {
-        ItemStack is = inventory.get(INK_SLOT);
-        if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
-        IPen pen = (IPen) is.getItem();
-        if (pen.getLevel(is, spe) < lvl) return false;
-        return pen.damage(spe, is, val);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public boolean isInkSatisfied(int val) {
-        ItemStack is = inventory.get(INK_SLOT);
-        if (is.isEmpty() || !(is.getItem() instanceof IPen)) return false;
-        IPen pen = (IPen) is.getItem();
-        return pen.getLevel(is, ClientUtils.getPlayer()) >= ResearchListeners.fetchGameLevel() && pen.canUse(ClientUtils.getPlayer(), is, val);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    public boolean isPaperSatisfied() {
-        ItemStack is = inventory.get(PAPER_SLOT);
-        if (is.isEmpty()) return false;
-        int lvl = ResearchListeners.fetchGameLevel();
-        return ResearchPaperRecipe.recipes.stream().anyMatch(r -> r.maxlevel >= lvl && r.paper.test(is));
+    public void submitItem(ServerPlayerEntity sender) {
+        inventory.set(EXAMINE_SLOT, ResearchListeners.submitItem(sender, inventory.get(EXAMINE_SLOT)));
     }
 
     public boolean tryCombine(ServerPlayerEntity player, CardPos cp1, CardPos cp2) {
@@ -180,8 +175,13 @@ public class DrawingDeskTileEntity extends IEBaseTileEntity implements IInteract
         }
     }
 
-    public void submitItem(ServerPlayerEntity sender) {
-        inventory.set(EXAMINE_SLOT, ResearchListeners.submitItem(sender, inventory.get(EXAMINE_SLOT)));
+    @Override
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        nbt.put("gamedata", game.serialize());
+        if (!descPacket) {
+
+            ItemStackHelper.saveAllItems(nbt, inventory);
+        }
     }
 
 }

@@ -27,6 +27,8 @@ class ExprNode implements Node {
     List<Node> positive = new ArrayList<>();
     List<Node> negative = new ArrayList<>();
 
+    double primaries = 0;
+
     public ExprNode() {
         super();
     }
@@ -55,37 +57,6 @@ class ExprNode implements Node {
     public boolean isPrimary() {
         return false;
     }
-
-    @Override
-    public String toString() {
-        String x = "";
-		/*System.out.println("sx");
-		for(Node n:positive) {
-			System.out.println(n.getClass().getSimpleName()+":"+n);
-		}
-		System.out.println("xe");*/
-        if (!positive.isEmpty()) {
-            x = String.join("+", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return positive.stream().map(n -> n.toString()).iterator();
-                }
-            });
-        } else if (!negative.isEmpty())
-            x = "0";
-        if (!negative.isEmpty()) {
-            x += "-";
-            x += String.join("-", new Iterable<String>() {
-                @Override
-                public Iterator<String> iterator() {
-                    return negative.stream().map(n -> n.toString()).iterator();
-                }
-            });
-        }
-        return x;
-    }
-
-    double primaries = 0;
 
     @Override
     public Node simplify() {
@@ -140,6 +111,35 @@ class ExprNode implements Node {
 		}
 		System.out.println("t:"+this.toString());*/
         return this;
+    }
+
+    @Override
+    public String toString() {
+        String x = "";
+		/*System.out.println("sx");
+		for(Node n:positive) {
+			System.out.println(n.getClass().getSimpleName()+":"+n);
+		}
+		System.out.println("xe");*/
+        if (!positive.isEmpty()) {
+            x = String.join("+", new Iterable<String>() {
+                @Override
+                public Iterator<String> iterator() {
+                    return positive.stream().map(n -> n.toString()).iterator();
+                }
+            });
+        } else if (!negative.isEmpty())
+            x = "0";
+        if (!negative.isEmpty()) {
+            x += "-";
+            x += String.join("-", new Iterable<String>() {
+                @Override
+                public Iterator<String> iterator() {
+                    return negative.stream().map(n -> n.toString()).iterator();
+                }
+            });
+        }
+        return x;
     }
 
 }

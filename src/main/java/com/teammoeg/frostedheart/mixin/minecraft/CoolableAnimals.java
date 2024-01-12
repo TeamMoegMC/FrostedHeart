@@ -46,14 +46,14 @@ public class CoolableAnimals extends MobEntity {
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        compound.putShort("hxthermia", hxteTimer);
-
+    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        hxteTimer = compound.getShort("hxthermia");
     }
 
     @Inject(at = @At("HEAD"), method = "writeAdditional")
-    public void fh$readAdditional(CompoundNBT compound, CallbackInfo cbi) {
-        hxteTimer = compound.getShort("hxthermia");
+    public void fh$writeAdditional(CompoundNBT compound, CallbackInfo cbi) {
+        compound.putShort("hxthermia", hxteTimer);
+
     }
 
     @Override

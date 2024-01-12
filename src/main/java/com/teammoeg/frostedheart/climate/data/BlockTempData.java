@@ -27,12 +27,12 @@ public class BlockTempData extends JsonDataHolder {
         super(data);
     }
 
-    public float getTemp() {
-        return this.getFloatOrDefault("temperature", 0F);
-    }
-
     public int getRange() {
         return this.getIntOrDefault("range", 5);
+    }
+
+    public float getTemp() {
+        return this.getFloatOrDefault("temperature", 0F);
     }
 
     public boolean isLevel() {

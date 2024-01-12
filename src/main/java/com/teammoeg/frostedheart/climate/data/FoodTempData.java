@@ -30,6 +30,11 @@ public class FoodTempData extends JsonDataHolder implements ITempAdjustFood {
     }
 
     @Override
+    public float getHeat(ItemStack is, float env) {
+        return this.getFloatOrDefault("heat", 0F);
+    }
+
+    @Override
     public float getMaxTemp(ItemStack is) {
         return this.getFloatOrDefault("max", 15F);
     }
@@ -37,10 +42,5 @@ public class FoodTempData extends JsonDataHolder implements ITempAdjustFood {
     @Override
     public float getMinTemp(ItemStack is) {
         return this.getFloatOrDefault("min", -15F);
-    }
-
-    @Override
-    public float getHeat(ItemStack is, float env) {
-        return this.getFloatOrDefault("heat", 0F);
     }
 }

@@ -39,6 +39,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 
 public class LabeledSelection<R> extends LabeledPane<Button> {
+    List<R> objs;
+
+    Function<R, String> tostr;
+
+    int sel;
     public static LabeledSelection<Boolean> createBool(Panel p, String lab, boolean val) {
         return new LabeledSelection<>(p, lab, val, Arrays.asList(true, false), String::valueOf);
     }
@@ -63,10 +68,9 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
         };
     }
 
-    List<R> objs;
-    Function<R, String> tostr;
-
-    int sel;
+    public LabeledSelection(Panel panel, String lab, R val, Collection<R> aobjs, Function<R, String> atostr) {
+        this(panel, lab, val, new ArrayList<>(aobjs), atostr);
+    }
 
     public LabeledSelection(Panel panel, String lab, R val, List<R> aobjs, Function<R, String> atostr) {
         super(panel, lab);
@@ -74,6 +78,18 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
         this.tostr = atostr;
         sel = objs.indexOf(val);
         obj = new SimpleTextButton(this, new StringTextComponent(tostr.apply(val)), Icon.EMPTY) {
+
+            @Override
+            public void addMouseOverText(TooltipList list) {
+                int i = 0;
+                for (R elm : objs) {
+                    if (i == sel)
+                        list.add(new StringTextComponent("->" + tostr.apply(elm)));
+                    else
+                        list.add(new StringTextComponent(tostr.apply(elm)));
+                    i++;
+                }
+            }
 
             @Override
             public void onClicked(MouseButton arg0) {
@@ -90,18 +106,6 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
                 onChange(objs.get(sel));
             }
 
-            @Override
-            public void addMouseOverText(TooltipList list) {
-                int i = 0;
-                for (R elm : objs) {
-                    if (i == sel)
-                        list.add(new StringTextComponent("->" + tostr.apply(elm)));
-                    else
-                        list.add(new StringTextComponent(tostr.apply(elm)));
-                    i++;
-                }
-            }
-
         };
 
         obj.setHeight(20);
@@ -111,15 +115,11 @@ public class LabeledSelection<R> extends LabeledPane<Button> {
         this(panel, lab, val, Arrays.asList(aobjs), atostr);
     }
 
-    public LabeledSelection(Panel panel, String lab, R val, Collection<R> aobjs, Function<R, String> atostr) {
-        this(panel, lab, val, new ArrayList<>(aobjs), atostr);
+    public R getSelection() {
+        return objs.get(sel);
     }
 
     public void onChange(R current) {
-    }
-
-    public R getSelection() {
-        return objs.get(sel);
     }
 
     public void setSelection(R val) {

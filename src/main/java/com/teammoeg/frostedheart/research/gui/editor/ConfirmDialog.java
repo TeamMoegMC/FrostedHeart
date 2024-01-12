@@ -72,16 +72,6 @@ public class ConfirmDialog extends BaseEditDialog {
     }
 
     @Override
-    public void onClosed() {
-        if (!selected)
-            try {
-                fin.accept(selected);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-    }
-
-    @Override
     public void addWidgets() {
         add(tf);
         add(ok);
@@ -90,6 +80,16 @@ public class ConfirmDialog extends BaseEditDialog {
 
     @Override
     public void onClose() {
+    }
+
+    @Override
+    public void onClosed() {
+        if (!selected)
+            try {
+                fin.accept(selected);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
     }
 
 }

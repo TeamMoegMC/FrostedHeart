@@ -32,12 +32,6 @@ import java.util.Map;
 public class ProductionData extends BaseData {
     public ItemStack item;
 
-    public ProductionData(String id, int maxstore, float recover, int price, ItemStack item) {
-        super(id, maxstore, recover, price);
-        this.item = item;
-
-    }
-
     public ProductionData(JsonObject jo) {
         super(jo);
         item = SerializeUtil.fromJson(jo.get("produce"));
@@ -48,12 +42,23 @@ public class ProductionData extends BaseData {
         item = pb.readItemStack();
     }
 
+    public ProductionData(String id, int maxstore, float recover, int price, ItemStack item) {
+        super(id, maxstore, recover, price);
+        this.item = item;
+
+    }
+
     @Override
     public void fetch(PolicySnapshot ps, Map<String, Float> data) {
 
         int num = (int) (float) data.getOrDefault(getId(), 0f);
         if (!hideStockout || num > 0)
             ps.registerSell(new SellData(getId(), num, this));
+    }
+
+    @Override
+    public String getType() {
+        return "s";
     }
 
     @Override
@@ -68,10 +73,5 @@ public class ProductionData extends BaseData {
         buffer.writeVarInt(1);
         super.write(buffer);
         buffer.writeItemStack(item);
-    }
-
-    @Override
-    public String getType() {
-        return "s";
     }
 }

@@ -25,16 +25,16 @@ import net.minecraft.network.PacketBuffer;
 
 public class GreaterFlagCondition extends FlagValueCondition {
 
-    public GreaterFlagCondition(String name, int val) {
-        super(name, val);
-    }
-
     public GreaterFlagCondition(JsonObject jo) {
         super(jo);
     }
 
     public GreaterFlagCondition(PacketBuffer buffer) {
         super(buffer);
+    }
+
+    public GreaterFlagCondition(String name, int val) {
+        super(name, val);
     }
 
     @Override

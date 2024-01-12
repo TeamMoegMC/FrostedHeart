@@ -40,6 +40,10 @@ public class NopData extends BaseData {
     }
 
     @Override
+    public void fetch(PolicySnapshot shot, Map<String, Float> data) {
+    }
+
+    @Override
     public String getType() {
         return "n";
     }
@@ -48,10 +52,6 @@ public class NopData extends BaseData {
     public void write(PacketBuffer buffer) {
         buffer.writeVarInt(3);
         super.write(buffer);
-    }
-
-    @Override
-    public void fetch(PolicySnapshot shot, Map<String, Float> data) {
     }
 
 }

@@ -44,6 +44,11 @@ public class FakeSlot extends Widget {
     Icon overlay;
     Consumer<TooltipList> tooltip;
 
+    public FakeSlot(Panel panel) {
+        super(panel);
+        this.setSize(16, 16);
+    }
+
     public FakeSlot(Panel panel, Ingredient is) {
         super(panel);
         this.i = is.getMatchingStacks();
@@ -56,24 +61,6 @@ public class FakeSlot extends Widget {
         this.setSize(16, 16);
     }
 
-    public FakeSlot(Panel panel) {
-        super(panel);
-        this.setSize(16, 16);
-    }
-
-    public void setSlot(Ingredient is) {
-        this.i = is.getMatchingStacks();
-    }
-
-    public void setSlot(ItemStack iss) {
-        this.i = new ItemStack[]{iss};
-    }
-
-    public void clear() {
-        i = null;
-        cnt = 0;
-    }
-
     @Override
     public void addMouseOverText(TooltipList list) {
         if (i == null) return;
@@ -84,18 +71,9 @@ public class FakeSlot extends Widget {
             tooltip.accept(list);
     }
 
-    @Override
-    public boolean mousePressed(MouseButton button) {
-        if (isMouseOver()) {
-            if (i == null) return false;
-            if (getWidgetType() != WidgetType.DISABLED) {
-                onClick(button);
-            }
-
-            return true;
-        }
-
-        return false;
+    public void clear() {
+        i = null;
+        cnt = 0;
     }
 
     @Override
@@ -122,12 +100,37 @@ public class FakeSlot extends Widget {
         matrixStack.pop();
     }
 
-    public void setCount(int store) {
-        cnt = store;
-    }
-
     public Icon getOverlay() {
         return overlay;
+    }
+
+    public Consumer<TooltipList> getTooltip() {
+        return tooltip;
+    }
+
+    @Override
+    public boolean mousePressed(MouseButton button) {
+        if (isMouseOver()) {
+            if (i == null) return false;
+            if (getWidgetType() != WidgetType.DISABLED) {
+                onClick(button);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public void onClick(MouseButton btn) {
+    }
+
+    public void resetOverlay() {
+        this.overlay = null;
+    }
+
+    public void setCount(int store) {
+        cnt = store;
     }
 
     public void setOverlay(Icon overlay, int height, int width) {
@@ -136,19 +139,16 @@ public class FakeSlot extends Widget {
         this.ovlw = width;
     }
 
-    public void resetOverlay() {
-        this.overlay = null;
+    public void setSlot(Ingredient is) {
+        this.i = is.getMatchingStacks();
     }
 
-    public Consumer<TooltipList> getTooltip() {
-        return tooltip;
+    public void setSlot(ItemStack iss) {
+        this.i = new ItemStack[]{iss};
     }
 
     public void setTooltip(Consumer<TooltipList> tooltip) {
         this.tooltip = tooltip;
-    }
-
-    public void onClick(MouseButton btn) {
     }
 
 }

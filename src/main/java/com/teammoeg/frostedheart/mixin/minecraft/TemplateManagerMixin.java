@@ -60,9 +60,9 @@ public abstract class TemplateManagerMixin {
 
     @Shadow
     @Nullable
-    abstract Template loadTemplateResource(ResourceLocation p_209201_1_);
+    abstract Template loadTemplateFile(ResourceLocation locationIn);
 
     @Shadow
     @Nullable
-    abstract Template loadTemplateFile(ResourceLocation locationIn);
+    abstract Template loadTemplateResource(ResourceLocation p_209201_1_);
 }

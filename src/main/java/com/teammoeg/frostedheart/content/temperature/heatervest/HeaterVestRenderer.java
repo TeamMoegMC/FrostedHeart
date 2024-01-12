@@ -49,6 +49,10 @@ public class HeaterVestRenderer<E extends LivingEntity, M extends BipedModel<E>>
     public static boolean rendersAssigned = false;
     public static Map<UUID, Pair<ItemStack, Integer>> HEATER_VEST_PLAYERS = new HashMap<>();
 
+    public static void addWornHeaterVest(LivingEntity living, ItemStack heaterVest) {
+        HEATER_VEST_PLAYERS.put(living.getUniqueID(), Pair.of(heaterVest, 5));
+    }
+
     public HeaterVestRenderer(IEntityRenderer<E, M> entityRendererIn) {
         super(entityRendererIn);
     }
@@ -75,10 +79,6 @@ public class HeaterVestRenderer<E extends LivingEntity, M extends BipedModel<E>>
             else
                 HEATER_VEST_PLAYERS.put(living.getUniqueID(), Pair.of(entry.getLeft(), time));
         }
-    }
-
-    public static void addWornHeaterVest(LivingEntity living, ItemStack heaterVest) {
-        HEATER_VEST_PLAYERS.put(living.getUniqueID(), Pair.of(heaterVest, 5));
     }
 
     private void renderHeaterVest(ItemStack heaterVest, MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {

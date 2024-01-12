@@ -151,26 +151,16 @@ public final class NoiseUtil {
             1, 1, 0, 0, 0, -1, 1, 0, -1, 1, 0, 0, 0, -1, -1, 0
     };
 
-    public static float fastMin(float a, float b) {
-        return a < b ? a : b;
+    public static int fastFloor(float f) {
+        return f < 0 ? (int) f - 1 : (int) f;
     }
 
     public static float fastMax(float a, float b) {
         return a > b ? a : b;
     }
 
-    public static float lerp(float start, float end, float t) {
-        return start * (1 - t) + end * t;
-    }
-
-    public static float lerpGrid(float valueNE, float valueNW, float valueSE, float valueSW, float tNS, float tEW) {
-        final float valueN = lerp(valueNE, valueNW, tEW);
-        final float valueS = lerp(valueSE, valueSW, tEW);
-        return lerp(valueN, valueS, tNS);
-    }
-
-    public static int fastFloor(float f) {
-        return f < 0 ? (int) f - 1 : (int) f;
+    public static float fastMin(float a, float b) {
+        return a < b ? a : b;
     }
 
     public static int fastRound(float f) {
@@ -204,19 +194,29 @@ public final class NoiseUtil {
         return hashPrimed(seed, x * PRIME_X, y * PRIME_Y);
     }
 
+    public static int hash(int seed, int x, int y, int z) {
+        return hashPrimed(seed, x * PRIME_X, y * PRIME_Y, z * PRIME_Z);
+    }
+
     public static int hashPrimed(int seed, int xPrimed, int yPrimed) {
         long hash = seed ^ xPrimed ^ yPrimed;
         hash *= 0x27d4eb2d;
         return (int) hash;
     }
 
-    public static int hash(int seed, int x, int y, int z) {
-        return hashPrimed(seed, x * PRIME_X, y * PRIME_Y, z * PRIME_Z);
-    }
-
     public static int hashPrimed(int seed, int xPrimed, int yPrimed, int zPrimed) {
         long hash = seed ^ xPrimed ^ yPrimed ^ zPrimed;
         hash *= 0x27d4eb2d;
         return (int) hash;
+    }
+
+    public static float lerp(float start, float end, float t) {
+        return start * (1 - t) + end * t;
+    }
+
+    public static float lerpGrid(float valueNE, float valueNW, float valueSE, float valueSW, float tNS, float tEW) {
+        final float valueN = lerp(valueNE, valueNW, tEW);
+        final float valueS = lerp(valueSE, valueSW, tEW);
+        return lerp(valueN, valueS, tNS);
     }
 }

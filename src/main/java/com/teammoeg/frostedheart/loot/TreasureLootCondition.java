@@ -31,15 +31,22 @@ import net.minecraft.loot.conditions.ILootCondition;
 import javax.annotation.Nonnull;
 
 public class TreasureLootCondition implements ILootCondition {
+    public static class Serializer implements ILootSerializer<TreasureLootCondition> {
+
+        @Nonnull
+        @Override
+        public TreasureLootCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
+            return new TreasureLootCondition();
+        }
+
+        @Override
+        public void serialize(JsonObject jsonObject, TreasureLootCondition matchTagCondition, JsonSerializationContext serializationContext) {
+        }
+    }
+
     public static LootConditionType TYPE;
 
     public TreasureLootCondition() {
-    }
-
-    @SuppressWarnings("resource")
-    @Override
-    public boolean test(LootContext t) {
-        return t.getLootTable(t.getQueriedLootTableId()).getParameterSet() == LootParameterSets.CHEST;
     }
 
     @Override
@@ -47,16 +54,9 @@ public class TreasureLootCondition implements ILootCondition {
         return TYPE;
     }
 
-    public static class Serializer implements ILootSerializer<TreasureLootCondition> {
-
-        @Override
-        public void serialize(JsonObject jsonObject, TreasureLootCondition matchTagCondition, JsonSerializationContext serializationContext) {
-        }
-
-        @Nonnull
-        @Override
-        public TreasureLootCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
-            return new TreasureLootCondition();
-        }
+    @SuppressWarnings("resource")
+    @Override
+    public boolean test(LootContext t) {
+        return t.getLootTable(t.getQueriedLootTableId()).getParameterSet() == LootParameterSets.CHEST;
     }
 }

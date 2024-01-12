@@ -27,15 +27,13 @@ import net.minecraft.item.Item;
 import net.minecraftforge.common.ToolType;
 
 public class FHProps {
-    public static void init() {
-    }
-
     public static final AbstractBlock.Properties stoneDecoProps = AbstractBlock.Properties
             .create(Material.ROCK)
             .sound(SoundType.STONE)
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10);
+
     public static final AbstractBlock.Properties metalDecoProps = AbstractBlock.Properties
             .create(Material.IRON)
             .sound(SoundType.METAL)
@@ -56,4 +54,6 @@ public class FHProps {
             .hardnessAndResistance(0.6F);
     public static final Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
     public static final AbstractBlock.Properties berryBushBlocks = AbstractBlock.Properties.create(Material.PLANTS).tickRandomly().doesNotBlockMovement().sound(SoundType.SWEET_BERRY_BUSH);
+    public static void init() {
+    }
 }

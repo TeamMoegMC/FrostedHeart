@@ -49,16 +49,63 @@ import net.minecraft.world.World;
 
 public class ChargerTileEntity extends IEBaseTileEntity implements
         INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
-    public float power = 0;
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
+    public float power = 0;
+
+    SteamNetworkHolder network = new SteamNetworkHolder();
+
+    private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
+        int i = MathHelper.floor(experience);
+        float f = MathHelper.frac(experience);
+        if (f != 0.0F && Math.random() < f) {
+            ++i;
+        }
+
+        while (i > 0) {
+            int j = ExperienceOrbEntity.getXPSplit(i);
+            i -= j;
+            world.addEntity(new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), j));
+        }
+
+    }
+
 
     public ChargerTileEntity() {
         super(FHTileTypes.CHARGER.get());
     }
 
-    SteamNetworkHolder network = new SteamNetworkHolder();
+    @Override
+    public boolean canConnectAt(Direction dir) {
+        Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
+        return dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH);
+    }
 
+    @Override
+    public boolean connect(Direction to, int dist) {
+
+        return network.reciveConnection(world, pos, to, dist);
+    }
+
+    public void drawEffect() {
+        if (world != null && world.isRemote) {
+            ClientUtils.spawnSteamParticles(world, this.getPos());
+        }
+    }
+
+    public Direction getDirection() {
+        return this.getBlockState().get(BlockStateProperties.FACING);
+    }
+
+    @Override
+    public SteamNetworkHolder getHolder() {
+        return network;
+    }
+
+
+    public float getMaxPower() {
+        return 20000F;
+    }
 
     public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
         if (is != null) {
@@ -124,50 +171,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         return ActionResultType.PASS;
     }
 
-    private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
-        int i = MathHelper.floor(experience);
-        float f = MathHelper.frac(experience);
-        if (f != 0.0F && Math.random() < f) {
-            ++i;
-        }
-
-        while (i > 0) {
-            int j = ExperienceOrbEntity.getXPSplit(i);
-            i -= j;
-            world.addEntity(new ExperienceOrbEntity(world, pos.getX(), pos.getY(), pos.getZ(), j));
-        }
-
-    }
-
-    public void drawEffect() {
-        if (world != null && world.isRemote) {
-            ClientUtils.spawnSteamParticles(world, this.getPos());
-        }
-    }
-
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         power = nbt.getFloat("power");
-    }
-
-    @Override
-    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
-        nbt.putFloat("power", power);
-    }
-
-    @Override
-    public boolean connect(Direction to, int dist) {
-
-        return network.reciveConnection(world, pos, to, dist);
-    }
-
-
-    public float getMaxPower() {
-        return 20000F;
-    }
-
-    public Direction getDirection() {
-        return this.getBlockState().get(BlockStateProperties.FACING);
     }
 
     @Override
@@ -190,13 +196,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public boolean canConnectAt(Direction dir) {
-        Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
-        return dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH);
-    }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
+    public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
+        nbt.putFloat("power", power);
     }
 }

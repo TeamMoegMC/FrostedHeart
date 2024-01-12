@@ -54,10 +54,8 @@ import net.minecraftforge.common.ToolType;
 public class FHBlocks {
 
 
-    public static void init() {
-    }
-
     public static Block generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
+
     public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
     public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
     public static Block rye_block = new RyeBlock("rye_block", WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps, FHBlockItem::new);
@@ -71,12 +69,12 @@ public class FHBlocks {
 //        public static Block gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK), FHBlockItem::new);
     public static Block fluorite_ore;
     public static Block halite_ore;
-
     public static Block heat_pipe = new HeatPipeBlock("heat_pipe", Block.Properties
             .create(Material.ROCK).sound(SoundType.WOOD)
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(1, 5)
             .notSolid(), FHBlockItem::new);
+
     public static Block debug_heater = new DebugHeaterBlock("debug_heater", Block.Properties
             .create(Material.ROCK).sound(SoundType.STONE)
             .setRequiresTool()
@@ -146,4 +144,6 @@ public class FHBlocks {
             .harvestTool(ToolType.AXE)
             .hardnessAndResistance(2, 6)
             .notSolid(), FHBlockItem::new);
+    public static void init() {
+    }
 }

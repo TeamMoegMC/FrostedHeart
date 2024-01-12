@@ -56,12 +56,47 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class TradeContainer extends Container {
+    public class DetectionSlot extends Slot {
+        boolean isSaleable = false;
+
+        public DetectionSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
+            super(inventoryIn, index, xPosition, yPosition);
+            slots.add(this);
+        }
+
+        @Override
+        public void onSlotChange(ItemStack oldStackIn, ItemStack newStackIn) {
+            super.onSlotChange(oldStackIn, newStackIn);
+            redetect();
+
+        }
+
+        @Override
+        public void onSlotChanged() {
+            super.onSlotChanged();
+            redetect();
+        }
+
+        private void redetect() {
+            isSaleable = false;
+            for (BuyData bd : policy.getBuys()) {
+                if (bd.getItem().test(this.getStack())) {
+                    if (bd.getStore() != 0) {
+                        isSaleable = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+    public static final int RELATION_TO_TRADE = -30;
     public FHVillagerData data;
     public PlayerRelationData pld;
     public RelationList relations;
     public PolicySnapshot policy;
+
     public VillagerEntity ve;
-    public static final int RELATION_TO_TRADE = -30;
 
     ItemStackHandler inv = new ItemStackHandler(12) {
 
@@ -79,41 +114,6 @@ public class TradeContainer extends Container {
 
     };
 
-    public class DetectionSlot extends Slot {
-        boolean isSaleable = false;
-
-        public DetectionSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
-            super(inventoryIn, index, xPosition, yPosition);
-            slots.add(this);
-        }
-
-        private void redetect() {
-            isSaleable = false;
-            for (BuyData bd : policy.getBuys()) {
-                if (bd.getItem().test(this.getStack())) {
-                    if (bd.getStore() != 0) {
-                        isSaleable = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onSlotChange(ItemStack oldStackIn, ItemStack newStackIn) {
-            super.onSlotChange(oldStackIn, newStackIn);
-            redetect();
-
-        }
-
-        @Override
-        public void onSlotChanged() {
-            super.onSlotChanged();
-            redetect();
-        }
-
-    }
-
     // client side memory
     LinkedHashMap<String, Integer> order = new LinkedHashMap<>();
     List<DetectionSlot> slots = new ArrayList<>();
@@ -123,6 +123,8 @@ public class TradeContainer extends Container {
     public int bargained;
     public int discountAmount;
     public int relationMinus;
+
+    int voffer, poffer, originalVOffer;
 
     public TradeContainer(int id, PlayerInventory inventoryPlayer, PacketBuffer pb) {
         this(id, inventoryPlayer,
@@ -138,12 +140,6 @@ public class TradeContainer extends Container {
         relations.read(pb);
         policy = data.getPolicy();
         policy.fetchTrades(data.storage);
-    }
-
-    public void setOrder(Map<String, Integer> order) {
-        this.order.clear();
-        this.order.putAll(order);
-        this.recalc();
     }
 
     public TradeContainer(int id, PlayerInventory inventoryPlayer,
@@ -185,119 +181,8 @@ public class TradeContainer extends Container {
 
     }
 
-    protected boolean tryMergeStack(ItemStack pStack, int pStartIndex, int pEndIndex) {
-        boolean inAllowedRange = true;
-        int allowedStart = pStartIndex;
-        for (int i = pStartIndex; i < pEndIndex; i++) {
-            boolean mayplace = this.inventorySlots.get(i).isItemValid(pStack);
-            if (inAllowedRange && (!mayplace || i == pEndIndex - 1)) {
-                if (this.mergeItemStack(pStack, allowedStart, i, false))
-                    return true;
-                inAllowedRange = false;
-            } else if (!inAllowedRange && mayplace) {
-                allowedStart = i;
-                inAllowedRange = true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public ItemStack transferStackInSlot(PlayerEntity player, int slot) {
-        ItemStack itemstack = ItemStack.EMPTY;
-        Slot slotObject = super.inventorySlots.get(slot);
-        final int slotCount = 12;
-        if (slotObject != null && slotObject.getHasStack()) {
-            ItemStack itemstack1 = slotObject.getStack();
-            itemstack = itemstack1.copy();
-            if (slot < slotCount) {
-                if (!this.mergeItemStack(itemstack1, slotCount, this.inventorySlots.size(), true)) {
-                    return ItemStack.EMPTY;
-                }
-            } else if (!this.tryMergeStack(itemstack1, 0, slotCount)) {
-                return ItemStack.EMPTY;
-            }
-
-            if (itemstack1.isEmpty()) {
-                slotObject.putStack(ItemStack.EMPTY);
-            } else {
-                slotObject.onSlotChanged();
-            }
-        }
-
-        return itemstack;
-    }
-
-    int voffer, poffer, originalVOffer;
-
-    public void recalc() {
-        poffer = 0;
-        outer:
-        for (int i = 0; i < inv.getSlots(); i++) {
-            ItemStack is = inv.getStackInSlot(i);
-            for (BuyData bd : policy.getBuys()) {
-                if (bd.getItem().test(is)) {
-                    int cnt = Math.min(is.getCount(), bd.getStore());
-                    poffer += cnt * bd.getPrice();
-                    continue outer;
-                }
-            }
-        }
-        voffer = 0;
-        for (Entry<String, Integer> entry : order.entrySet()) {
-            voffer += policy.getSells().get(entry.getKey()).getPrice() * entry.getValue();
-        }
-        originalVOffer = voffer;
-        relationMinus = 0;
-        discountAmount = 0;
-        int relation = relations.sum();
-        if (!order.isEmpty()) {
-            if (relation < RELATION_TO_TRADE) {
-                relationMinus = 10000000;
-            } else if (relation < 0 && voffer > 0) {
-                relationMinus = (int) (MathHelper.lerp(MathHelper.clamp(-relation / 30f, 0, 1), 0, 0.2) * voffer);
-            }
-            voffer += relationMinus;
-            if (discountRatio > 0) {
-                discountAmount = Math.min((int) (voffer * discountRatio), maxdiscount);
-                voffer -= discountAmount;
-            }
-        }
-        // System.out.println(relationMinus);
-        if (voffer > 2 * poffer)
-            balance = -3;
-        else if (voffer > 1.5f * poffer)
-            balance = -2;
-        else if (voffer > poffer)
-            balance = -1;
-        else if (2 * voffer < poffer)
-            balance = 3;
-        else if (1.5f * voffer < poffer)
-            balance = 2;
-        else if (1.05f * voffer < poffer)
-            balance = 1;
-        else
-            balance = 0;
-    }
-
-    public void handleBargain(ServerPlayerEntity pe) {
-        if (relations.sum() < 40)
-            return;
-        recalc();
-        if (order.isEmpty())
-            return;
-
-        boolean succeed = false;
-        if (true) {// TODO:simulates bargain success
-            discountRatio = maxdiscount / ((float) voffer);
-            discountRatio = Math.min(0.4f, discountRatio + 0.1f);
-            maxdiscount = (int) (voffer * discountRatio);
-            bargained++;
-            data.bargain++;
-            relations = data.getRelationShip(pe);
-            succeed = true;
-        }
-        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
+    public boolean canInteractWith(PlayerEntity playerIn) {
+        return ve.getCustomer() == playerIn;
     }
 
     public void commitTrade(ServerPlayerEntity pe) {
@@ -354,8 +239,28 @@ public class TradeContainer extends Container {
         }
     }
 
-    public boolean canInteractWith(PlayerEntity playerIn) {
-        return ve.getCustomer() == playerIn;
+    public void fireClientUpdateTrade() {
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientTradeHandler::updateTrade);
+    }
+
+    public void handleBargain(ServerPlayerEntity pe) {
+        if (relations.sum() < 40)
+            return;
+        recalc();
+        if (order.isEmpty())
+            return;
+
+        boolean succeed = false;
+        if (true) {// TODO:simulates bargain success
+            discountRatio = maxdiscount / ((float) voffer);
+            discountRatio = Math.min(0.4f, discountRatio + 0.1f);
+            maxdiscount = (int) (voffer * discountRatio);
+            bargained++;
+            data.bargain++;
+            relations = data.getRelationShip(pe);
+            succeed = true;
+        }
+        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
     }
 
     @Override
@@ -377,6 +282,56 @@ public class TradeContainer extends Container {
 
     }
 
+    public void recalc() {
+        poffer = 0;
+        outer:
+        for (int i = 0; i < inv.getSlots(); i++) {
+            ItemStack is = inv.getStackInSlot(i);
+            for (BuyData bd : policy.getBuys()) {
+                if (bd.getItem().test(is)) {
+                    int cnt = Math.min(is.getCount(), bd.getStore());
+                    poffer += cnt * bd.getPrice();
+                    continue outer;
+                }
+            }
+        }
+        voffer = 0;
+        for (Entry<String, Integer> entry : order.entrySet()) {
+            voffer += policy.getSells().get(entry.getKey()).getPrice() * entry.getValue();
+        }
+        originalVOffer = voffer;
+        relationMinus = 0;
+        discountAmount = 0;
+        int relation = relations.sum();
+        if (!order.isEmpty()) {
+            if (relation < RELATION_TO_TRADE) {
+                relationMinus = 10000000;
+            } else if (relation < 0 && voffer > 0) {
+                relationMinus = (int) (MathHelper.lerp(MathHelper.clamp(-relation / 30f, 0, 1), 0, 0.2) * voffer);
+            }
+            voffer += relationMinus;
+            if (discountRatio > 0) {
+                discountAmount = Math.min((int) (voffer * discountRatio), maxdiscount);
+                voffer -= discountAmount;
+            }
+        }
+        // System.out.println(relationMinus);
+        if (voffer > 2 * poffer)
+            balance = -3;
+        else if (voffer > 1.5f * poffer)
+            balance = -2;
+        else if (voffer > poffer)
+            balance = -1;
+        else if (2 * voffer < poffer)
+            balance = 3;
+        else if (1.5f * voffer < poffer)
+            balance = 2;
+        else if (1.05f * voffer < poffer)
+            balance = 1;
+        else
+            balance = 0;
+    }
+
     public void setData(FHVillagerData dat, PlayerEntity pe) {
         data = dat;
         pld = data.getRelationDataForRead(pe);
@@ -385,8 +340,53 @@ public class TradeContainer extends Container {
         policy.fetchTrades(data.storage);
     }
 
-    public void fireClientUpdateTrade() {
-        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientTradeHandler::updateTrade);
+    public void setOrder(Map<String, Integer> order) {
+        this.order.clear();
+        this.order.putAll(order);
+        this.recalc();
+    }
+
+    @Override
+    public ItemStack transferStackInSlot(PlayerEntity player, int slot) {
+        ItemStack itemstack = ItemStack.EMPTY;
+        Slot slotObject = super.inventorySlots.get(slot);
+        final int slotCount = 12;
+        if (slotObject != null && slotObject.getHasStack()) {
+            ItemStack itemstack1 = slotObject.getStack();
+            itemstack = itemstack1.copy();
+            if (slot < slotCount) {
+                if (!this.mergeItemStack(itemstack1, slotCount, this.inventorySlots.size(), true)) {
+                    return ItemStack.EMPTY;
+                }
+            } else if (!this.tryMergeStack(itemstack1, 0, slotCount)) {
+                return ItemStack.EMPTY;
+            }
+
+            if (itemstack1.isEmpty()) {
+                slotObject.putStack(ItemStack.EMPTY);
+            } else {
+                slotObject.onSlotChanged();
+            }
+        }
+
+        return itemstack;
+    }
+
+    protected boolean tryMergeStack(ItemStack pStack, int pStartIndex, int pEndIndex) {
+        boolean inAllowedRange = true;
+        int allowedStart = pStartIndex;
+        for (int i = pStartIndex; i < pEndIndex; i++) {
+            boolean mayplace = this.inventorySlots.get(i).isItemValid(pStack);
+            if (inAllowedRange && (!mayplace || i == pEndIndex - 1)) {
+                if (this.mergeItemStack(pStack, allowedStart, i, false))
+                    return true;
+                inAllowedRange = false;
+            } else if (!inAllowedRange && mayplace) {
+                allowedStart = i;
+                inAllowedRange = true;
+            }
+        }
+        return false;
     }
 
     public void update(CompoundNBT sdata, CompoundNBT splayer, RelationList rels, boolean isReset) {

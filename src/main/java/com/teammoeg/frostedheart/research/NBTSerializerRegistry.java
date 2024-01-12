@@ -35,10 +35,6 @@ public class NBTSerializerRegistry<U> extends SerializerRegistry<U, CompoundNBT>
         super();
     }
 
-    public void writeType(JsonObject jo, U obj) {
-        jo.addProperty("type", typeOf(obj));
-    }
-
     public U deserialize(CompoundNBT je) {
         Function<CompoundNBT, U> func = fromJson.get(je.getString("type"));
         if (func == null)
@@ -56,5 +52,9 @@ public class NBTSerializerRegistry<U> extends SerializerRegistry<U, CompoundNBT>
     @Override
     protected void putSerializer(String type, Function<CompoundNBT, U> s) {
         fromJson.put(type, s);
+    }
+
+    public void writeType(JsonObject jo, U obj) {
+        jo.addProperty("type", typeOf(obj));
     }
 }

@@ -37,9 +37,6 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.vector.Matrix4f;
 
 public class FHGuiHelper {
-    public static final RenderType BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold",
-            DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128, RenderStateAccess.getLineState(4));
-
     // hack to access render state protected members
     public static class RenderStateAccess extends RenderState {
         public static RenderType.State getLineState(double width) {
@@ -61,6 +58,18 @@ public class FHGuiHelper {
 
     }
 
+    public static final RenderType BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold",
+            DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128, RenderStateAccess.getLineState(4));
+
+    private static void drawLine(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
+                                 int endX, int endY) {
+        RenderSystem.enableColorMaterial();
+        renderBuffer.pos(mat, startX, startY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+                .endVertex();
+        renderBuffer.pos(mat, endX, endY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+                .endVertex();
+    }
+
     // draw a line from start to end by color, ABSOLUTE POSITION
     public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY) {
         IVertexBuilder vertexBuilderLines = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource()
@@ -68,22 +77,14 @@ public class FHGuiHelper {
         drawLine(matrixStack.getLast().getMatrix(), vertexBuilderLines, color, startX, startY, endX, endY);
     }
 
-    // draw a rectangle
-    public static void fillGradient(MatrixStack matrixStack, int x1, int y1, int x2, int y2, int colorFrom, int colorTo) {
-        RenderSystem.disableTexture();
-        RenderSystem.enableBlend();
-        RenderSystem.disableAlphaTest();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.shadeModel(7425);
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
-        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        fillGradient(matrixStack.getLast().getMatrix(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
-        tessellator.draw();
-        RenderSystem.shadeModel(7424);
-        RenderSystem.disableBlend();
-        RenderSystem.enableAlphaTest();
-        RenderSystem.enableTexture();
+    private static void drawRect(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int x, int y, int w, int h) {
+        renderBuffer.pos(mat, x, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+        renderBuffer.pos(mat, x + w, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+                .endVertex();
+        renderBuffer.pos(mat, x, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+                .endVertex();
+        renderBuffer.pos(mat, x + w, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+                .endVertex();
     }
 
     private static void fillGradient(Matrix4f matrix, BufferBuilder builder, int x1, int y1, int x2, int y2, int colorB,
@@ -102,22 +103,21 @@ public class FHGuiHelper {
         builder.pos(matrix, x1, y2, 0f).color(f5, f6, f7, f4).endVertex();
     }
 
-    private static void drawLine(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
-                                 int endX, int endY) {
-        RenderSystem.enableColorMaterial();
-        renderBuffer.pos(mat, startX, startY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
-                .endVertex();
-        renderBuffer.pos(mat, endX, endY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
-                .endVertex();
-    }
-
-    private static void drawRect(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int x, int y, int w, int h) {
-        renderBuffer.pos(mat, x, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
-        renderBuffer.pos(mat, x + w, y, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
-                .endVertex();
-        renderBuffer.pos(mat, x, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
-                .endVertex();
-        renderBuffer.pos(mat, x + w, y + h, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
-                .endVertex();
+    // draw a rectangle
+    public static void fillGradient(MatrixStack matrixStack, int x1, int y1, int x2, int y2, int colorFrom, int colorTo) {
+        RenderSystem.disableTexture();
+        RenderSystem.enableBlend();
+        RenderSystem.disableAlphaTest();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.shadeModel(7425);
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
+        fillGradient(matrixStack.getLast().getMatrix(), bufferbuilder, x1, y1, x2, y2, colorFrom, colorTo);
+        tessellator.draw();
+        RenderSystem.shadeModel(7424);
+        RenderSystem.disableBlend();
+        RenderSystem.enableAlphaTest();
+        RenderSystem.enableTexture();
     }
 }

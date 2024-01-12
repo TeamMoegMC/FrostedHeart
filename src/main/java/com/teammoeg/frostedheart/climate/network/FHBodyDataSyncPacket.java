@@ -34,12 +34,12 @@ import java.util.function.Supplier;
 public class FHBodyDataSyncPacket {
     private final CompoundNBT data;
 
-    public FHBodyDataSyncPacket(PlayerEntity pe) {
-        this.data = Temperature.getFHData(pe);
-    }
-
     public FHBodyDataSyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
+    }
+
+    public FHBodyDataSyncPacket(PlayerEntity pe) {
+        this.data = Temperature.getFHData(pe);
     }
 
     public void encode(PacketBuffer buffer) {

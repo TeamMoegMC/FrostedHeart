@@ -35,15 +35,15 @@ public class FHEffectProgressSyncPacket {
     private final boolean data;
     private final int id;
 
+    public FHEffectProgressSyncPacket(PacketBuffer buffer) {
+        data = buffer.readBoolean();
+        id = buffer.readVarInt();
+    }
+
     public FHEffectProgressSyncPacket(UUID team, Effect rs) {
         TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isEffectGranted(rs);
         this.id = rs.getRId();
-    }
-
-    public FHEffectProgressSyncPacket(PacketBuffer buffer) {
-        data = buffer.readBoolean();
-        id = buffer.readVarInt();
     }
 
 

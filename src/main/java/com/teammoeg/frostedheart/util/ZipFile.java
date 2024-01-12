@@ -38,8 +38,17 @@ public class ZipFile implements AutoCloseable {
         bkf = new ZipOutputStream(new FileOutputStream(output));
     }
 
-    public void close() throws IOException {
-        bkf.close();
+    public void add(File f) throws IOException {
+        if (f.isDirectory()) {
+            File[] fs = f.listFiles();
+            if (fs != null) {
+                for (File file : fs) {
+                    add(file);
+                }
+            }
+        } else {
+            addFile(f);
+        }
     }
 
     public void addAndDel(File f, Predicate<File> p) throws IOException {
@@ -59,19 +68,6 @@ public class ZipFile implements AutoCloseable {
         }
     }
 
-    public void add(File f) throws IOException {
-        if (f.isDirectory()) {
-            File[] fs = f.listFiles();
-            if (fs != null) {
-                for (File file : fs) {
-                    add(file);
-                }
-            }
-        } else {
-            addFile(f);
-        }
-    }
-
     // String normalize
     private void addFile(File f) throws IOException {
         if (f.exists()) {
@@ -80,5 +76,9 @@ public class ZipFile implements AutoCloseable {
             FileUtil.transfer(f, bkf);
             bkf.closeEntry();
         }
+    }
+
+    public void close() throws IOException {
+        bkf.close();
     }
 }

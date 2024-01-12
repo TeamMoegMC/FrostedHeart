@@ -56,6 +56,14 @@ public class SaunaBlock extends FHBaseBlock implements ISteamEnergyBlock {
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
+    @Override
+    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+        super.animateTick(stateIn, worldIn, pos, rand);
+        if (stateIn.get(LIT)) {
+            ClientUtils.spawnSteamParticles(worldIn, pos);
+        }
+    }
+
     @Nullable
     @Override
     public TileEntity createTileEntity(@Nonnull BlockState state, @Nonnull IBlockReader world) {
@@ -67,14 +75,6 @@ public class SaunaBlock extends FHBaseBlock implements ISteamEnergyBlock {
         super.fillStateContainer(builder);
         builder.add(BlockStateProperties.FACING);
         builder.add(LIT);
-    }
-
-    @Override
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-        super.animateTick(stateIn, worldIn, pos, rand);
-        if (stateIn.get(LIT)) {
-            ClientUtils.spawnSteamParticles(worldIn, pos);
-        }
     }
 
     @Override

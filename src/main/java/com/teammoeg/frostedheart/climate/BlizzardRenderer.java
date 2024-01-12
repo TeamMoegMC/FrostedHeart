@@ -50,18 +50,6 @@ public class BlizzardRenderer {
     private final static float[] rainSizeXMemento = new float[1024];
     private final static float[] rainSizeZMemento = new float[1024];
 
-    public BlizzardRenderer() {
-        for (int i = 0; i < 32; ++i) {
-            for (int j = 0; j < 32; ++j) {
-                float f = j - 16;
-                float f1 = i - 16;
-                float f2 = MathHelper.sqrt(f * f + f1 * f1);
-                rainSizeXMemento[i << 5 | j] = -f1 / f2;
-                rainSizeZMemento[i << 5 | j] = f / f2;
-            }
-        }
-    }
-
     public static void render(Minecraft mc,
                               ClientWorld world,
                               LightTexture lightTexture,
@@ -199,5 +187,17 @@ public class BlizzardRenderer {
         RenderSystem.defaultAlphaFunc();
         RenderSystem.disableAlphaTest();
         lightTexture.disableLightmap();
+    }
+
+    public BlizzardRenderer() {
+        for (int i = 0; i < 32; ++i) {
+            for (int j = 0; j < 32; ++j) {
+                float f = j - 16;
+                float f1 = i - 16;
+                float f2 = MathHelper.sqrt(f * f + f1 * f1);
+                rainSizeXMemento[i << 5 | j] = -f1 / f2;
+                rainSizeZMemento[i << 5 | j] = f / f2;
+            }
+        }
     }
 }

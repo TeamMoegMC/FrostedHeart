@@ -32,18 +32,23 @@ public class ExpResearchNumber implements IResearchNumber, Writeable {
     Calculator.Node calc;
     String exp;
 
-    public ExpResearchNumber(String exp) {
-        super();
-        this.exp = exp;
-        calc = Calculator.eval(exp);
+    public ExpResearchNumber(JsonObject buffer) {
+        this(buffer.get("exp").getAsString());
     }
 
     public ExpResearchNumber(PacketBuffer buffer) {
         this(buffer.readString());
     }
 
-    public ExpResearchNumber(JsonObject buffer) {
-        this(buffer.get("exp").getAsString());
+    public ExpResearchNumber(String exp) {
+        super();
+        this.exp = exp;
+        calc = Calculator.eval(exp);
+    }
+
+    @Override
+    public double getVal(ResearchData rd) {
+        return calc.eval(rd);
     }
 
     @Override
@@ -54,11 +59,6 @@ public class ExpResearchNumber implements IResearchNumber, Writeable {
     @Override
     public void write(PacketBuffer buffer) {
         buffer.writeString(exp);
-    }
-
-    @Override
-    public double getVal(ResearchData rd) {
-        return calc.eval(rd);
     }
 
 }

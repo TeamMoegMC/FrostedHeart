@@ -71,33 +71,10 @@ public class EffectUse extends Effect {
     }
 
     @Override
-    public void init() {
-        ResearchListeners.block.addAll(blocks);
-    }
-
-    @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        team.block.addAll(blocks);
-        return true;
-    }
-
-    @Override
-    public void revoke(TeamResearchData team) {
-        team.block.removeAll(blocks);
-    }
-
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.add("blocks", SerializeUtil.toJsonStringList(blocks, Block::getRegistryName));
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        SerializeUtil.writeList(buffer, blocks, (b, p) -> p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, b));
+    public String getBrief() {
+        if (blocks.isEmpty())
+            return "Use nothing";
+        return "Use " + blocks.get(0).getTranslatedName().getString() + (blocks.size() > 1 ? " ..." : "");
     }
 
     @Override
@@ -110,6 +87,7 @@ public class EffectUse extends Effect {
         return GuiUtils.translateGui("effect.use");
     }
 
+
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
@@ -121,9 +99,31 @@ public class EffectUse extends Effect {
     }
 
     @Override
-    public String getBrief() {
-        if (blocks.isEmpty())
-            return "Use nothing";
-        return "Use " + blocks.get(0).getTranslatedName().getString() + (blocks.size() > 1 ? " ..." : "");
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        team.block.addAll(blocks);
+        return true;
+    }
+
+    @Override
+    public void init() {
+        ResearchListeners.block.addAll(blocks);
+    }
+
+    @Override
+    public void revoke(TeamResearchData team) {
+        team.block.removeAll(blocks);
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        jo.add("blocks", SerializeUtil.toJsonStringList(blocks, Block::getRegistryName));
+        return jo;
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        SerializeUtil.writeList(buffer, blocks, (b, p) -> p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, b));
     }
 }

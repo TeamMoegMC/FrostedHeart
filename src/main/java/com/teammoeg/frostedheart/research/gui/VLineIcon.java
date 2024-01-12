@@ -51,20 +51,27 @@ public class VLineIcon extends IconWithParent {
         updateParts();
     }
 
-    private Icon get(int x, int y, int w, int h) {
-        return parent.withUV(this.x + x, this.y + y, w, h, tw, th);
-    }
-
-    public void updateParts() {
-        s0 = get(0, 0, w, side1);
-        m = get(0, side1, w, h - side2 - side1);
-        s1 = get(0, h - side2, w, side2);
-    }
-
     @Override
     public VLineIcon copy() {
         VLineIcon icon = new VLineIcon(parent.copy(), x, y, w, h, side1, side2, tw, th);
         return icon;
+    }
+
+    @Override
+    public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
+        int msize = h - side2 - side1;
+        if (msize <= 0) {
+            s0.draw(matrixStack, x, y, w, side1);
+            s1.draw(matrixStack, x, y + side1, w, side2);
+        } else {
+            m.draw(matrixStack, x, y + side1, w, msize);
+            s0.draw(matrixStack, x, y, w, side1);
+            s1.draw(matrixStack, x, y + h - side2, w, side2);
+        }
+    }
+
+    private Icon get(int x, int y, int w, int h) {
+        return parent.withUV(this.x + x, this.y + y, w, h, tw, th);
     }
 
     @Override
@@ -95,17 +102,10 @@ public class VLineIcon extends IconWithParent {
         updateParts();
     }
 
-    @Override
-    public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
-        int msize = h - side2 - side1;
-        if (msize <= 0) {
-            s0.draw(matrixStack, x, y, w, side1);
-            s1.draw(matrixStack, x, y + side1, w, side2);
-        } else {
-            m.draw(matrixStack, x, y + side1, w, msize);
-            s0.draw(matrixStack, x, y, w, side1);
-            s1.draw(matrixStack, x, y + h - side2, w, side2);
-        }
+    public void updateParts() {
+        s0 = get(0, 0, w, side1);
+        m = get(0, side1, w, h - side2 - side1);
+        s1 = get(0, h - side2, w, side2);
     }
 
 }

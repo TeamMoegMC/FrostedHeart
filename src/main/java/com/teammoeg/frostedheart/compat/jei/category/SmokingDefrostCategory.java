@@ -76,34 +76,11 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends SmokingDefrostRecipe> getRecipeClass() {
-        return SmokingDefrostRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_smoking").getString());
-    }
-
-    @Override
     public void draw(SmokingDefrostRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         animatedFlame.draw(transform, 1, 20);
         IDrawableAnimated arrow = getArrow(recipe);
         arrow.draw(transform, 24, 8);
         drawCookTime(recipe, transform, 35);
-    }
-
-    protected IDrawableAnimated getArrow(SmokingDefrostRecipe recipe) {
-        int cookTime = recipe.getCookTime();
-        if (cookTime <= 0) {
-            cookTime = 100;
-        }
-        return this.cachedArrows.getUnchecked(cookTime);
     }
 
     protected void drawCookTime(SmokingDefrostRecipe recipe, MatrixStack matrixStack, int y) {
@@ -118,6 +95,15 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
         }
     }
 
+
+    protected IDrawableAnimated getArrow(SmokingDefrostRecipe recipe) {
+        int cookTime = recipe.getCookTime();
+        if (cookTime <= 0) {
+            cookTime = 100;
+        }
+        return this.cachedArrows.getUnchecked(cookTime);
+    }
+
     @Override
     public IDrawable getBackground() {
         return BACKGROUND;
@@ -126,6 +112,20 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
     @Override
     public IDrawable getIcon() {
         return ICON;
+    }
+
+    @Override
+    public Class<? extends SmokingDefrostRecipe> getRecipeClass() {
+        return SmokingDefrostRecipe.class;
+    }
+
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".defrost_smoking").getString());
+    }
+
+    @Override
+    public ResourceLocation getUid() {
+        return UID;
     }
 
     @Override

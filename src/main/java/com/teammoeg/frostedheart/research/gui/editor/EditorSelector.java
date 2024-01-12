@@ -52,10 +52,6 @@ public class EditorSelector<T> extends BaseEditDialog {
         return this;
     }
 
-    @Override
-    public void onClose() {
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public void addWidgets() {
@@ -63,6 +59,10 @@ public class EditorSelector<T> extends BaseEditDialog {
         for (Entry<String, Editor<? extends T>> ent : editors.entrySet()) {
             add(new OpenEditorButton<>(this, ent.getKey(), (Editor<T>) ent.getValue().and((p, l, v, c) -> close(false)), (val != null && getEditor.test(val, ent.getKey()) ? val : null), e -> callback.accept(e)));
         }
+    }
+
+    @Override
+    public void onClose() {
     }
 
 }

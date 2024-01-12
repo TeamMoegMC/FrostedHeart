@@ -33,15 +33,15 @@ public class AtlasUV extends TexturedUV {
         super(texture, x, y, w, h);
     }
 
-    //blit with texture bind and altas set add point
-    public void blit(Minecraft mc, MatrixStack s, int lx, int ly, Point loc, int mx, int my, int p3, int p4) {
-        mc.getTextureManager().bindTexture(texture);
-        super.blit(s, lx, ly, loc, mx, my, p3, p4);
-    }
-
     //blit with texture bind and altas set
     public void blit(Minecraft mc, MatrixStack s, int lx, int ly, int mx, int my, int p3, int p4) {
         mc.getTextureManager().bindTexture(texture);
         super.blit(s, lx, ly, mx, my, p3, p4);
+    }
+
+    //blit with texture bind and altas set add point
+    public void blit(Minecraft mc, MatrixStack s, int lx, int ly, Point loc, int mx, int my, int p3, int p4) {
+        mc.getTextureManager().bindTexture(texture);
+        super.blit(s, lx, ly, loc, mx, my, p3, p4);
     }
 }

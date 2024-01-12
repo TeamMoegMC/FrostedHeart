@@ -50,23 +50,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
     public final String name;
     protected int lightOpacity;
 
-    public ResourceLocation createRegistryName() {
-        return new ResourceLocation(FHMain.MODID, name);
-    }
-
-    public T setLightOpacity(int opacity) {
-        lightOpacity = opacity;
-        return (T) this;
-    }
-
-    @Override
-    public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
-        if (state.isOpaqueCube(worldIn, pos))
-            return lightOpacity;
-        else
-            return state.propagatesSkylightDown(worldIn, pos) ? 0 : 1;
-    }
-
     public FluidPipeBlock(Class<T> type, String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
         super(4 / 16f, blockProps);
         this.name = name;
@@ -89,12 +72,27 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
         this.setDefaultState(defaultState);
     }
 
+    @Override
+    public boolean allowsMovement(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
+        return false;
+    }
 
-    public BlockState getAxisState(Axis axis) {
-        BlockState defaultState = getDefaultState();
-        for (Direction d : Direction.values())
-            defaultState = defaultState.with(FACING_TO_PROPERTY_MAP.get(d), d.getAxis() == axis);
-        return defaultState;
+    public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
+        if (neighbour.getBlock() instanceof ISteamEnergyBlock && ((ISteamEnergyBlock) neighbour.getBlock()).canConnectFrom(world, neighbourPos, neighbour, direction))
+            return true;
+
+        return false;
+    }
+
+    public ResourceLocation createRegistryName() {
+        return new ResourceLocation(FHMain.MODID, name);
+    }
+
+
+    @Override
+    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
+        builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, BlockStateProperties.WATERLOGGED);
+        super.fillStateContainer(builder);
     }
 
     @Nullable
@@ -112,16 +110,64 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
         return null;
     }
 
+    public BlockState getAxisState(Axis axis) {
+        BlockState defaultState = getDefaultState();
+        for (Direction d : Direction.values())
+            defaultState = defaultState.with(FACING_TO_PROPERTY_MAP.get(d), d.getAxis() == axis);
+        return defaultState;
+    }
+
+
+    @Override
+    public FluidState getFluidState(BlockState state) {
+        return state.get(BlockStateProperties.WATERLOGGED) ? Fluids.WATER.getStillFluidState(false)
+                : Fluids.EMPTY.getDefaultState();
+    }
+
+    @Override
+    public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
+        if (state.isOpaqueCube(worldIn, pos))
+            return lightOpacity;
+        else
+            return state.propagatesSkylightDown(worldIn, pos) ? 0 : 1;
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockItemUseContext context) {
+        FluidState FluidState = context.getWorld()
+                .getFluidState(context.getPos());
+        return updateBlockState(getDefaultState(), context.getNearestLookingDirection(), null, context.getWorld(),
+                context.getPos()).with(BlockStateProperties.WATERLOGGED,
+                Boolean.valueOf(FluidState.getFluid() == Fluids.WATER));
+    }
+
     @Override
     public boolean hasTileEntity(BlockState state) {
         return true;
     }
 
+    public boolean isCornerOrEndPipe(IBlockDisplayReader world, BlockPos pos, BlockState state) {
+        return (type.isInstance(state.getBlock())) && getAxis(world, pos, state) == null
+                && !shouldDrawCasing(world, pos, state);
+    }
 
-    public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-        if (neighbour.getBlock() instanceof ISteamEnergyBlock && ((ISteamEnergyBlock) neighbour.getBlock()).canConnectFrom(world, neighbourPos, neighbour, direction))
-            return true;
+    public boolean isOpenAt(BlockState state, Direction direction) {
+        return state.get(FACING_TO_PROPERTY_MAP.get(direction));
+    }
 
+    public T setLightOpacity(int opacity) {
+        lightOpacity = opacity;
+        return (T) this;
+    }
+
+    public boolean shouldDrawCasing(IBlockDisplayReader world, BlockPos pos, BlockState state) {
+        if (!type.isInstance(state.getBlock()))
+            return false;
+        Axis axis = getAxis(world, pos, state);
+        if (axis == null) return false;
+        for (Direction direction : Direction.values())
+            if (direction.getAxis() != axis && isOpenAt(state, direction))
+                return true;
         return false;
     }
 
@@ -146,39 +192,14 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
         return true;
     }
 
-    public boolean isOpenAt(BlockState state, Direction direction) {
-        return state.get(FACING_TO_PROPERTY_MAP.get(direction));
-    }
+    public BlockState updateBlockState(BlockState state, Direction preferredDirection, @Nullable Direction ignore,
+                                       IWorld world, BlockPos pos) {
 
-    public boolean isCornerOrEndPipe(IBlockDisplayReader world, BlockPos pos, BlockState state) {
-        return (type.isInstance(state.getBlock())) && getAxis(world, pos, state) == null
-                && !shouldDrawCasing(world, pos, state);
-    }
-
-    public boolean shouldDrawCasing(IBlockDisplayReader world, BlockPos pos, BlockState state) {
-        if (!type.isInstance(state.getBlock()))
-            return false;
-        Axis axis = getAxis(world, pos, state);
-        if (axis == null) return false;
-        for (Direction direction : Direction.values())
-            if (direction.getAxis() != axis && isOpenAt(state, direction))
-                return true;
-        return false;
-    }
-
-    @Override
-    protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, BlockStateProperties.WATERLOGGED);
-        super.fillStateContainer(builder);
-    }
-
-    @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
-        FluidState FluidState = context.getWorld()
-                .getFluidState(context.getPos());
-        return updateBlockState(getDefaultState(), context.getNearestLookingDirection(), null, context.getWorld(),
-                context.getPos()).with(BlockStateProperties.WATERLOGGED,
-                Boolean.valueOf(FluidState.getFluid() == Fluids.WATER));
+        for (Direction d : Direction.values())
+            if (d != ignore) {
+                state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
+            }
+        return state;
     }
 
     @Override
@@ -191,27 +212,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
             world.getPendingBlockTicks()
                     .scheduleTick(pos, this, 1, TickPriority.HIGH);
         return updateBlockState(state, direction, direction.getOpposite(), world, pos);
-    }
-
-    public BlockState updateBlockState(BlockState state, Direction preferredDirection, @Nullable Direction ignore,
-                                       IWorld world, BlockPos pos) {
-
-        for (Direction d : Direction.values())
-            if (d != ignore) {
-                state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
-            }
-        return state;
-    }
-
-    @Override
-    public FluidState getFluidState(BlockState state) {
-        return state.get(BlockStateProperties.WATERLOGGED) ? Fluids.WATER.getStillFluidState(false)
-                : Fluids.EMPTY.getDefaultState();
-    }
-
-    @Override
-    public boolean allowsMovement(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
-        return false;
     }
 
 

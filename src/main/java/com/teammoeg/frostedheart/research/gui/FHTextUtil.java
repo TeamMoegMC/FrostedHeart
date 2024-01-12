@@ -34,7 +34,28 @@ import net.minecraft.util.text.ITextComponent;
 
 public class FHTextUtil {
 
-    private FHTextUtil() {
+    public static List<ITextComponent> get(List<String> orig, String type, Supplier<String> pid) {
+        String s = pid.get();
+        List<ITextComponent> li = new ArrayList<>();
+        if (orig.isEmpty()) {
+            int i = 0;
+            while (true) {
+                final int fi = i;
+                i++;
+                ITextComponent it = null;
+                it = getOptional(null, type, () -> s + "." + fi);
+                if (it != null)
+                    li.add(it);
+                else
+                    return li;
+            }
+
+        }
+        for (int i = 0; i < orig.size(); i++) {
+            final int fi = i;
+            li.add(get(orig.get(i), type, () -> s + "." + fi));
+        }
+        return li;
     }
 
     @Nonnull
@@ -67,27 +88,6 @@ public class FHTextUtil {
         return ClientTextComponentUtils.parse(orig);
     }
 
-    public static List<ITextComponent> get(List<String> orig, String type, Supplier<String> pid) {
-        String s = pid.get();
-        List<ITextComponent> li = new ArrayList<>();
-        if (orig.isEmpty()) {
-            int i = 0;
-            while (true) {
-                final int fi = i;
-                i++;
-                ITextComponent it = null;
-                it = getOptional(null, type, () -> s + "." + fi);
-                if (it != null)
-                    li.add(it);
-                else
-                    return li;
-            }
-
-        }
-        for (int i = 0; i < orig.size(); i++) {
-            final int fi = i;
-            li.add(get(orig.get(i), type, () -> s + "." + fi));
-        }
-        return li;
+    private FHTextUtil() {
     }
 }

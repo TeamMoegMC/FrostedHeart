@@ -32,15 +32,6 @@ import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.TextFormatting;
 
 public class ResearchCategoryPanel extends Panel {
-    public static final int CAT_PANEL_HEIGHT = 40;
-
-    public ResearchPanel researchScreen;
-
-    public ResearchCategoryPanel(ResearchPanel panel) {
-        super(panel);
-        researchScreen = panel;
-    }
-
     public static class CategoryButton extends Button {
 
         ResearchCategory category;
@@ -50,12 +41,6 @@ public class ResearchCategoryPanel extends Panel {
             super(panel, category.getName(), Icon.getIcon(category.getIcon()));
             this.category = category;
             this.categoryPanel = panel;
-        }
-
-        @Override
-        public void onClicked(MouseButton mouseButton) {
-            categoryPanel.researchScreen.selectCategory(category);
-
         }
 
         @Override
@@ -78,6 +63,21 @@ public class ResearchCategoryPanel extends Panel {
 
             //theme.drawString(matrixStack, category.getName(), x + (w - theme.getStringWidth(category.getName())) / 2, y + 24);
         }
+
+        @Override
+        public void onClicked(MouseButton mouseButton) {
+            categoryPanel.researchScreen.selectCategory(category);
+
+        }
+    }
+
+    public static final int CAT_PANEL_HEIGHT = 40;
+
+    public ResearchPanel researchScreen;
+
+    public ResearchCategoryPanel(ResearchPanel panel) {
+        super(panel);
+        researchScreen = panel;
     }
 
     @Override

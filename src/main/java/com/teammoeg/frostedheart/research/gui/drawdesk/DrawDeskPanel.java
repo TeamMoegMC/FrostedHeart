@@ -45,25 +45,16 @@ public class DrawDeskPanel extends Panel {
     DrawDeskScreen dd;
     MainGamePanel mgp;
 
+    boolean showHelp;
+
+    boolean enabled;
+
     public DrawDeskPanel(DrawDeskScreen p) {
         super(p);
         dd = p;
         mgp = new MainGamePanel(this, dd);
         mgp.setPosAndSize(165, 25, 218, 164);
     }
-
-    public void openHelp() {
-        showHelp = true;
-        mgp.setEnabled(false);
-
-    }
-
-    public void closeHelp() {
-        showHelp = false;
-        mgp.setEnabled(true);
-    }
-
-    boolean showHelp;
 
     @Override
     public void addWidgets() {
@@ -103,8 +94,12 @@ public class DrawDeskPanel extends Panel {
         Button itemSubmit = new Button(this) {
 
             @Override
-            public void onClicked(MouseButton arg0) {
-                FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getPos(), 3));
+            public void addMouseOverText(TooltipList list) {
+                super.addMouseOverText(list);
+                if (!ResearchListeners.canExamine(dd.getTile().getInventory().get(DrawingDeskTileEntity.EXAMINE_SLOT)))
+                    list.add(GuiUtils.translateGui("draw_desk.unable_examine"));
+                else
+                    list.add(GuiUtils.translateGui("draw_desk.examine"));
             }
 
             @Override
@@ -114,12 +109,8 @@ public class DrawDeskPanel extends Panel {
             }
 
             @Override
-            public void addMouseOverText(TooltipList list) {
-                super.addMouseOverText(list);
-                if (!ResearchListeners.canExamine(dd.getTile().getInventory().get(DrawingDeskTileEntity.EXAMINE_SLOT)))
-                    list.add(GuiUtils.translateGui("draw_desk.unable_examine"));
-                else
-                    list.add(GuiUtils.translateGui("draw_desk.examine"));
+            public void onClicked(MouseButton arg0) {
+                FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getPos(), 3));
             }
 
         };
@@ -131,23 +122,22 @@ public class DrawDeskPanel extends Panel {
     }
 
     @Override
+    public void alignWidgets() {
+    }
+
+    public void closeHelp() {
+        showHelp = false;
+        mgp.setEnabled(true);
+    }
+
+    @Override
     public void drawBackground(MatrixStack matrixStack, Theme theme, int x, int y, int w, int h) {
         DrawDeskIcons.Background.draw(matrixStack, x, y, w, h);
     }
 
     @Override
-    public void alignWidgets() {
-    }
-
-    boolean enabled;
-
-    @Override
     public boolean isEnabled() {
         return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
     }
 
     @Override
@@ -157,6 +147,16 @@ public class DrawDeskPanel extends Panel {
             return true;
         }
         return super.keyPressed(k);
+    }
+
+    public void openHelp() {
+        showHelp = true;
+        mgp.setEnabled(false);
+
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
 

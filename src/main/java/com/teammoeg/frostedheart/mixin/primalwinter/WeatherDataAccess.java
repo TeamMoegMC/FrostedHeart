@@ -27,10 +27,10 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(WeatherData.class)
 public interface WeatherDataAccess {
     @Accessor(remap = false)
-    LazyOptional<WeatherData> getCapability();
+    boolean getAlreadySetWorldToWinter();
 
     @Accessor(remap = false)
-    boolean getAlreadySetWorldToWinter();
+    LazyOptional<WeatherData> getCapability();
 
     @Accessor(remap = false)
     void setAlreadySetWorldToWinter(boolean flag);

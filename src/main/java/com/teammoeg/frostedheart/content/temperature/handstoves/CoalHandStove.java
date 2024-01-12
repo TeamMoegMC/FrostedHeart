@@ -47,40 +47,7 @@ import net.minecraft.world.World;
 public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
     public final static int max_fuel = 800;
 
-    public CoalHandStove(String name, Properties properties) {
-        super(name, properties);
-    }
-
-    @Override
-    public boolean isEnchantable(ItemStack stack) {
-        return false;
-    }
-
-    @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
-        list.add(GuiUtils.translateTooltip("handstove.add_fuel").mergeStyle(TextFormatting.GRAY));
-        if (getAshAmount(stack) >= 800)
-            list.add(GuiUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.RED));
-        list.add(GuiUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).mergeStyle(TextFormatting.GRAY));
-    }
-
-    @Override
-    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-        int fuel = getFuelAmount(stack);
-        if (fuel >= 2) {
-            int ash = getAshAmount(stack);
-            if (ash <= 800) {
-                fuel--;
-                ash++;
-                setFuelAmount(stack, fuel);
-                setAshAmount(stack, ash);
-                if (bodyTemp < 0) {
-                    return this.getMax(stack);
-                }
-            }
-        }
-        return 0;
-    }
+    ResourceLocation ashitem = new ResourceLocation("frostedheart", "ash");
 
     public static int getAshAmount(ItemStack is) {
         return is.getOrCreateTag().getInt("ash");
@@ -104,9 +71,49 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
             is.getTag().putInt("CustomModelData", 1);
     }
 
+    public CoalHandStove(String name, Properties properties) {
+        super(name, properties);
+    }
+
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World world, List<ITextComponent> list, ITooltipFlag flag) {
+        list.add(GuiUtils.translateTooltip("handstove.add_fuel").mergeStyle(TextFormatting.GRAY));
+        if (getAshAmount(stack) >= 800)
+            list.add(GuiUtils.translateTooltip("handstove.trash_ash").mergeStyle(TextFormatting.RED));
+        list.add(GuiUtils.translateTooltip("handstove.fuel", getFuelAmount(stack) / 2).mergeStyle(TextFormatting.GRAY));
+    }
+
+    @Override
+    public boolean canHandHeld() {
+        return true;
+    }
+
+    @Override
+    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
+        int fuel = getFuelAmount(stack);
+        if (fuel >= 2) {
+            int ash = getAshAmount(stack);
+            if (ash <= 800) {
+                fuel--;
+                ash++;
+                setFuelAmount(stack, fuel);
+                setAshAmount(stack, ash);
+                if (bodyTemp < 0) {
+                    return this.getMax(stack);
+                }
+            }
+        }
+        return 0;
+    }
+
     @Override
     public double getDurabilityForDisplay(ItemStack stack) {
         return getFuelAmount(stack) * 1.0D / max_fuel;
+    }
+
+    @Override
+    public float getMax(ItemStack stack) {
+        return getFuelAmount(stack) > 0 ? 0.015F : 0;
     }
 
     @Override
@@ -114,7 +121,16 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
         return UseAction.EAT;
     }
 
-    ResourceLocation ashitem = new ResourceLocation("frostedheart", "ash");
+    @Override
+    public int getUseDuration(ItemStack stack) {
+        return 40;
+    }
+
+
+    @Override
+    public boolean isEnchantable(ItemStack stack) {
+        return false;
+    }
 
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn) {
@@ -143,21 +159,5 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
             }
         }
         return stack;
-    }
-
-
-    @Override
-    public int getUseDuration(ItemStack stack) {
-        return 40;
-    }
-
-    @Override
-    public float getMax(ItemStack stack) {
-        return getFuelAmount(stack) > 0 ? 0.015F : 0;
-    }
-
-    @Override
-    public boolean canHandHeld() {
-        return true;
     }
 }

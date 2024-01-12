@@ -50,23 +50,25 @@ import net.minecraft.world.storage.FolderName;
 
 public class FHResearchDataManager {
     public static MinecraftServer server;
-    Path local;
-    File regfile;
     static final FolderName dataFolder = new FolderName("fhresearch");
     public static FHResearchDataManager INSTANCE;
+    Path local;
+    File regfile;
     private Map<UUID, TeamResearchData> data = new HashMap<>();
+
+    public static RecipeManager getRecipeManager() {
+        if (server != null)
+            return server.getRecipeManager();
+        return ClientUtils.mc().world.getRecipeManager();
+    }
 
     public FHResearchDataManager(MinecraftServer s) {
         server = s;
         INSTANCE = this;
     }
 
-    public TeamResearchData getData(UUID id) {
-
-        TeamResearchData cn = data.computeIfAbsent(id,
-                c -> new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(id)));
-        return cn;
-
+    public Collection<TeamResearchData> getAllData() {
+        return data.values();
     }
 
     /*
@@ -100,14 +102,12 @@ public class FHResearchDataManager {
 
     }
 
-    public static RecipeManager getRecipeManager() {
-        if (server != null)
-            return server.getRecipeManager();
-        return ClientUtils.mc().world.getRecipeManager();
-    }
+    public TeamResearchData getData(UUID id) {
 
-    public Collection<TeamResearchData> getAllData() {
-        return data.values();
+        TeamResearchData cn = data.computeIfAbsent(id,
+                c -> new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(id)));
+        return cn;
+
     }
 
     public void load() {

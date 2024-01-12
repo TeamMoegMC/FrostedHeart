@@ -37,26 +37,6 @@ import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 
 public class VolcanicVentStructure extends Structure<NoFeatureConfig> {
-    public VolcanicVentStructure(Codec<NoFeatureConfig> codec) {
-        super(codec);
-    }
-
-
-    public Structure.IStartFactory<NoFeatureConfig> getStartFactory() {
-        return Start::new;
-    }
-
-    @Override
-    public GenerationStage.Decoration getDecorationStage() {
-        return GenerationStage.Decoration.SURFACE_STRUCTURES;
-    }
-
-
-    @Override
-    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom seed, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
-        return true;
-    }
-
     public static class Start extends StructureStart<NoFeatureConfig> {
         public Start(Structure<NoFeatureConfig> p_i225819_1_, int p_i225819_2_, int p_i225819_3_, MutableBoundingBox boundingBox, int p_i225819_5_, long p_i225819_6_) {
             super(p_i225819_1_, p_i225819_2_, p_i225819_3_, boundingBox, p_i225819_5_, p_i225819_6_);
@@ -74,5 +54,25 @@ public class VolcanicVentStructure extends Structure<NoFeatureConfig> {
             this.recalculateStructureSize();
 //            FHMain.LOGGER.debug( "volcanic at " + (blockpos.getX()) + " " + blockpos.getY() + " " + (blockpos.getZ()));
         }
+    }
+
+
+    public VolcanicVentStructure(Codec<NoFeatureConfig> codec) {
+        super(codec);
+    }
+
+    @Override
+    protected boolean func_230363_a_(ChunkGenerator generator, BiomeProvider biomeprovider, long p_230363_3_, SharedSeedRandom seed, int chunkX, int chunkZ, Biome biome, ChunkPos chunkPos, NoFeatureConfig p_230363_10_) {
+        return true;
+    }
+
+
+    @Override
+    public GenerationStage.Decoration getDecorationStage() {
+        return GenerationStage.Decoration.SURFACE_STRUCTURES;
+    }
+
+    public Structure.IStartFactory<NoFeatureConfig> getStartFactory() {
+        return Start::new;
     }
 }

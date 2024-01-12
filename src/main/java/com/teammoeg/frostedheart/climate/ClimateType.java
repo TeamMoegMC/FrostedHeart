@@ -27,11 +27,11 @@ public enum ClimateType {
     SUN(3),
     CLOUDY(4);
 
+    int typeId;//Same typeid represent same weather event but with different presentation, for forecasting
+
     private ClimateType(int typeId) {
         this.typeId = typeId;
     }
-
-    int typeId;//Same typeid represent same weather event but with different presentation, for forecasting
 
 
 }

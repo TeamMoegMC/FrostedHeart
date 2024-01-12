@@ -29,22 +29,22 @@ public class ResearchStatusEvent extends Event {
     Team team;
     boolean completion;
 
-    public Research getResearch() {
-        return research;
-    }
-
-    public boolean isCompletion() {
-        return completion;
-    }
-
     public ResearchStatusEvent(Research research, Team team, boolean completion) {
         this.research = research;
         this.team = team;
         this.completion = completion;
     }
 
+    public Research getResearch() {
+        return research;
+    }
+
     public Team getTeam() {
         return team;
+    }
+
+    public boolean isCompletion() {
+        return completion;
     }
 
 }

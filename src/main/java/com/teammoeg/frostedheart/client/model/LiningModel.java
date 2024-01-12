@@ -47,45 +47,8 @@ public class LiningModel implements IBakedModel {
     }
 
     @Override
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
-        return baseArmorModel.getQuads(state, side, rand);
-    }
-
-    @Override
-    public boolean isAmbientOcclusion() {
-        return baseArmorModel.isAmbientOcclusion();
-    }
-
-    @Override
-    public boolean isGui3d() {
-        return baseArmorModel.isGui3d();
-    }
-
-    @Override
-    public boolean isSideLit() {
-        return baseArmorModel.isSideLit();
-    }
-
-    @Override
-    public boolean isBuiltInRenderer() {
-        return baseArmorModel.isBuiltInRenderer();
-    }
-
-    @Override
-    public TextureAtlasSprite getParticleTexture() {
-        return baseArmorModel.getParticleTexture();
-    }
-
-    @Override
     public ItemCameraTransforms getItemCameraTransforms() {
         return baseArmorModel.getItemCameraTransforms();
-    }
-
-    // This is a forge extension that is expected for blocks only.
-    @Override
-    @Nonnull
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @Nonnull Random rand, @Nonnull IModelData extraData) {
-        throw new AssertionError("LiningModel::getQuads(IModelData) should never be called");
     }
 
     // This is a forge extension that is expected for blocks only.
@@ -98,5 +61,42 @@ public class LiningModel implements IBakedModel {
     @Override
     public ItemOverrideList getOverrides() {
         return overrideList;
+    }
+
+    @Override
+    public TextureAtlasSprite getParticleTexture() {
+        return baseArmorModel.getParticleTexture();
+    }
+
+    @Override
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
+        return baseArmorModel.getQuads(state, side, rand);
+    }
+
+    // This is a forge extension that is expected for blocks only.
+    @Override
+    @Nonnull
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @Nonnull Random rand, @Nonnull IModelData extraData) {
+        throw new AssertionError("LiningModel::getQuads(IModelData) should never be called");
+    }
+
+    @Override
+    public boolean isAmbientOcclusion() {
+        return baseArmorModel.isAmbientOcclusion();
+    }
+
+    @Override
+    public boolean isBuiltInRenderer() {
+        return baseArmorModel.isBuiltInRenderer();
+    }
+
+    @Override
+    public boolean isGui3d() {
+        return baseArmorModel.isGui3d();
+    }
+
+    @Override
+    public boolean isSideLit() {
+        return baseArmorModel.isSideLit();
     }
 }

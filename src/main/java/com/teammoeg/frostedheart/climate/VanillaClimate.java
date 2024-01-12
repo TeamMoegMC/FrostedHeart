@@ -53,31 +53,6 @@ public final class VanillaClimate {
 
     private static final Random RANDOM = new Random(); // Used for daily temperature variations
 
-    /**
-     * Used to calculate the actual temperature at a world and position.
-     * Will be valid when used on both logical sides.
-     * MUST NOT be used by world generation, it should use {@link VanillaClimate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
-     */
-    public static float getTemperature(IWorld world, BlockPos pos) {
-        return calculateTemperature(pos.getZ(), pos.getY(), ChunkHeatData.getTemperature(world, pos));
-    }
-
-    /**
-     * Calculates the temperature, scaled to vanilla like values.
-     * References: 0.15 ~ 0 C (freezing point of water). Vanilla typically ranges from -0.5 to +1 in the overworld.
-     * This scales 0 C -> 0.15, -30 C -> -0.51, +30 C -> 0.801
-     */
-    public static float toVanillaTemperature(float actualTemperature) {
-        return actualTemperature * 0.0217f + 0.15f;
-    }
-
-    /**
-     * The reverse of {@link VanillaClimate#toVanillaTemperature(float)}
-     */
-    public static float toActualTemperature(float vanillaTemperature) {
-        return (vanillaTemperature - 0.15f) / 0.0217f;
-    }
-
     public static float calculateMonthlyTemperature(int z, int y, float averageTemperature, float monthTemperatureModifier) {
         float temperatureScale = 20000;
         float monthTemperature = monthTemperatureModifier * INoise1D.triangle(LATITUDE_TEMPERATURE_VARIANCE_AMPLITUDE, LATITUDE_TEMPERATURE_VARIANCE_MEAN, 1 / (2 * temperatureScale), 0, z);
@@ -96,6 +71,31 @@ public final class VanillaClimate {
 
         // Sum all different temperature values.
         return averageTemperature - elevationTemperature;
+    }
+
+    /**
+     * Used to calculate the actual temperature at a world and position.
+     * Will be valid when used on both logical sides.
+     * MUST NOT be used by world generation, it should use {@link VanillaClimate#calculateTemperature(BlockPos, float)} instead, with the average temperature obtained through the correct chunk data source
+     */
+    public static float getTemperature(IWorld world, BlockPos pos) {
+        return calculateTemperature(pos.getZ(), pos.getY(), ChunkHeatData.getTemperature(world, pos));
+    }
+
+    /**
+     * The reverse of {@link VanillaClimate#toVanillaTemperature(float)}
+     */
+    public static float toActualTemperature(float vanillaTemperature) {
+        return (vanillaTemperature - 0.15f) / 0.0217f;
+    }
+
+    /**
+     * Calculates the temperature, scaled to vanilla like values.
+     * References: 0.15 ~ 0 C (freezing point of water). Vanilla typically ranges from -0.5 to +1 in the overworld.
+     * This scales 0 C -> 0.15, -30 C -> -0.51, +30 C -> 0.801
+     */
+    public static float toVanillaTemperature(float actualTemperature) {
+        return actualTemperature * 0.0217f + 0.15f;
     }
 
     private VanillaClimate() {

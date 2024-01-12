@@ -30,8 +30,6 @@ public interface IPen {
 
     boolean canUse(@Nullable PlayerEntity e, ItemStack stack, int val);
 
-    void doDamage(@Nullable PlayerEntity e, ItemStack stack, int val);
-
     default boolean damage(@Nullable PlayerEntity e, ItemStack stack, int val) {
         if (canUse(e, stack, val)) {
             doDamage(e, stack, val);
@@ -39,6 +37,8 @@ public interface IPen {
         }
         return false;
     }
+
+    void doDamage(@Nullable PlayerEntity e, ItemStack stack, int val);
 
     int getLevel(ItemStack is, @Nullable PlayerEntity player);
 

@@ -37,6 +37,10 @@ public class FHOreBlock extends FHBaseBlock {
         super(name, blockProps, createItemBlock);
     }
 
+    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+        builder.add(RankineOreBlock.TYPE);
+    }
+
     public BlockState getStateForPlacement(BlockItemUseContext context) {
         World world = context.getWorld();
         BlockState target = world.getBlockState(context.getPos().offset(context.getFace().getOpposite()));
@@ -45,9 +49,5 @@ public class FHOreBlock extends FHBaseBlock {
         } else {
             return WorldgenUtils.ORE_STONES.contains(target.getBlock()) ? this.getDefaultState().with(RankineOreBlock.TYPE, WorldgenUtils.ORE_STONES.indexOf(target.getBlock())) : this.getDefaultState().with(RankineOreBlock.TYPE, 0);
         }
-    }
-
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(RankineOreBlock.TYPE);
     }
 }

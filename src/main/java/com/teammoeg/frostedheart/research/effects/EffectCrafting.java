@@ -62,10 +62,7 @@ public class EffectCrafting extends Effect {
     ItemStack itemStack = null;
     Item item = null;
 
-    public EffectCrafting(ItemStack item) {
-        super();
-
-        this.itemStack = item;
+    EffectCrafting() {
     }
 
     public EffectCrafting(IItemProvider item) {
@@ -74,54 +71,10 @@ public class EffectCrafting extends Effect {
         initItem();
     }
 
-    private void initItem() {
-        unlocks.clear();
-        for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
-            if (r.getRecipeOutput().getItem().equals(this.item)) {
-                unlocks.add(r);
-            }
-        }
-    }
+    public EffectCrafting(ItemStack item) {
+        super();
 
-    private void initStack() {
-        unlocks.clear();
-        for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
-            if (r.getRecipeOutput().equals(item)) {
-                unlocks.add(r);
-            }
-        }
-    }
-
-    @Override
-    public void reload() {
-        if (item != null) {
-            initItem();
-        } else if (itemStack != null) {
-            initStack();
-        } else {
-            unlocks.replaceAll(o -> FHResearchDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
-            unlocks.removeIf(o -> o == null);
-        }
-    }
-
-    public EffectCrafting(ResourceLocation recipe) {
-        super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
-        Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(recipe);
-
-        if (r.isPresent()) {
-            unlocks.add(r.get());
-        }
-    }
-
-    public void setList(Collection<String> ls) {
-        unlocks.clear();
-        for (String s : ls) {
-            Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
-
-            if (r.isPresent()) {
-                unlocks.add(r.get());
-            }
-        }
+        this.itemStack = item;
     }
 
     public EffectCrafting(JsonObject jo) {
@@ -153,49 +106,24 @@ public class EffectCrafting extends Effect {
         } else initItem();
     }
 
-    EffectCrafting() {
-    }
+    public EffectCrafting(ResourceLocation recipe) {
+        super("@gui." + FHMain.MODID + ".effect.crafting", new ArrayList<>());
+        Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(recipe);
 
-    @Override
-    public void init() {
-        ResearchListeners.recipe.addAll(unlocks);
-    }
-
-    @Override
-    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        team.crafting.addAll(unlocks);
-        return true;
-    }
-
-    @Override
-    public void revoke(TeamResearchData team) {
-        team.crafting.removeAll(unlocks);
-    }
-
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        if (item != null)
-            jo.addProperty("item", item.getRegistryName().toString());
-        else if (itemStack != null)
-            jo.add("item", SerializeUtil.toJson(itemStack));
-        else if (unlocks.size() == 1)
-            jo.addProperty("recipes", unlocks.get(1).getId().toString());
-        else if (unlocks.size() > 1)
-            jo.add("recipes", SerializeUtil.toJsonStringList(unlocks, IRecipe<?>::getId));
-        return jo;
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        SerializeUtil.writeOptional(buffer, item, (o, b) -> b.writeRegistryIdUnsafe(ForgeRegistries.ITEMS, o));
-        if (item == null) {
-            SerializeUtil.writeOptional2(buffer, itemStack, PacketBuffer::writeItemStack);
-            if (itemStack == null)
-                SerializeUtil.writeList(buffer, unlocks, (o, b) -> b.writeResourceLocation(o.getId()));
+        if (r.isPresent()) {
+            unlocks.add(r.get());
         }
+    }
+
+    @Override
+    public String getBrief() {
+        if (item != null)
+            return "Craft " + new TranslationTextComponent(item.getTranslationKey()).getString();
+        if (itemStack != null)
+            return "Craft " + itemStack.getDisplayName().getString();
+        if (!unlocks.isEmpty())
+            return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
+        return "Craft nothing";
     }
 
     @Override
@@ -249,14 +177,33 @@ public class EffectCrafting extends Effect {
     }
 
     @Override
-    public String getBrief() {
-        if (item != null)
-            return "Craft " + new TranslationTextComponent(item.getTranslationKey()).getString();
-        if (itemStack != null)
-            return "Craft " + itemStack.getDisplayName().getString();
-        if (!unlocks.isEmpty())
-            return "Craft" + unlocks.get(0).getId() + (unlocks.size() > 1 ? " ..." : "");
-        return "Craft nothing";
+    public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
+        team.crafting.addAll(unlocks);
+        return true;
+    }
+
+    @Override
+    public void init() {
+        ResearchListeners.recipe.addAll(unlocks);
+    }
+
+    private void initItem() {
+        unlocks.clear();
+        for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
+            if (r.getRecipeOutput().getItem().equals(this.item)) {
+                unlocks.add(r);
+            }
+        }
+    }
+
+
+    private void initStack() {
+        unlocks.clear();
+        for (IRecipe<?> r : FHResearchDataManager.getRecipeManager().getRecipes()) {
+            if (r.getRecipeOutput().equals(item)) {
+                unlocks.add(r);
+            }
+        }
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -267,6 +214,59 @@ public class EffectCrafting extends Effect {
             JEICompat.showJEIFor(new ItemStack(item));
         else if (itemStack != null)
             JEICompat.showJEIFor(itemStack);
+    }
+
+    @Override
+    public void reload() {
+        if (item != null) {
+            initItem();
+        } else if (itemStack != null) {
+            initStack();
+        } else {
+            unlocks.replaceAll(o -> FHResearchDataManager.getRecipeManager().getRecipe(o.getId()).orElse(null));
+            unlocks.removeIf(o -> o == null);
+        }
+    }
+
+    @Override
+    public void revoke(TeamResearchData team) {
+        team.crafting.removeAll(unlocks);
+    }
+
+    @Override
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
+        if (item != null)
+            jo.addProperty("item", item.getRegistryName().toString());
+        else if (itemStack != null)
+            jo.add("item", SerializeUtil.toJson(itemStack));
+        else if (unlocks.size() == 1)
+            jo.addProperty("recipes", unlocks.get(1).getId().toString());
+        else if (unlocks.size() > 1)
+            jo.add("recipes", SerializeUtil.toJsonStringList(unlocks, IRecipe<?>::getId));
+        return jo;
+    }
+
+    public void setList(Collection<String> ls) {
+        unlocks.clear();
+        for (String s : ls) {
+            Optional<? extends IRecipe<?>> r = FHResearchDataManager.getRecipeManager().getRecipe(new ResourceLocation(s));
+
+            if (r.isPresent()) {
+                unlocks.add(r.get());
+            }
+        }
+    }
+
+    @Override
+    public void write(PacketBuffer buffer) {
+        super.write(buffer);
+        SerializeUtil.writeOptional(buffer, item, (o, b) -> b.writeRegistryIdUnsafe(ForgeRegistries.ITEMS, o));
+        if (item == null) {
+            SerializeUtil.writeOptional2(buffer, itemStack, PacketBuffer::writeItemStack);
+            if (itemStack == null)
+                SerializeUtil.writeList(buffer, unlocks, (o, b) -> b.writeResourceLocation(o.getId()));
+        }
     }
 
 }

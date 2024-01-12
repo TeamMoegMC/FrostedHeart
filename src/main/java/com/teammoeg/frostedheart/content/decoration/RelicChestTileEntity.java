@@ -55,43 +55,18 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    protected NonNullList<ItemStack> getItems() {
-        return this.inventory;
-    }
-
-    @Override
-    protected void setItems(NonNullList<ItemStack> itemsIn) {
-        this.inventory = itemsIn;
-    }
-
-    @Override
     protected Container createMenu(int id, PlayerInventory player) {
         return GuiHandler.createContainer(player, this, id);
     }
 
     @Override
-    public int getSizeInventory() {
-        return 15;
+    public void doGraphicalUpdates() {
+
     }
 
-    @Override
-    public CompoundNBT write(CompoundNBT compound) {
-        super.write(compound);
-        if (!this.checkLootAndWrite(compound)) {
-            ItemStackHelper.saveAllItems(compound, this.inventory);
-        }
-
-        return compound;
-    }
-
-    @Override
-    public void read(BlockState state, CompoundNBT nbt) {
-        super.read(state, nbt);
-        this.inventory = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
-        if (!this.checkLootAndRead(nbt)) {
-            ItemStackHelper.loadAllItems(nbt, this.inventory);
-        }
-
+    @Nonnull
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
     }
 
     @Override
@@ -106,8 +81,13 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public boolean isStackValid(int i, ItemStack itemStack) {
-        return true;
+    protected NonNullList<ItemStack> getItems() {
+        return this.inventory;
+    }
+
+    @Override
+    public int getSizeInventory() {
+        return 15;
     }
 
     @Override
@@ -116,7 +96,17 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
     }
 
     @Override
-    public void doGraphicalUpdates() {
+    public boolean isStackValid(int i, ItemStack itemStack) {
+        return true;
+    }
+
+    @Override
+    public void read(BlockState state, CompoundNBT nbt) {
+        super.read(state, nbt);
+        this.inventory = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
+        if (!this.checkLootAndRead(nbt)) {
+            ItemStackHelper.loadAllItems(nbt, this.inventory);
+        }
 
     }
 
@@ -129,8 +119,18 @@ public class RelicChestTileEntity extends LockableLootTileEntity implements IIEI
         return super.receiveClientEvent(id, type);
     }
 
-    @Nonnull
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
+    @Override
+    protected void setItems(NonNullList<ItemStack> itemsIn) {
+        this.inventory = itemsIn;
+    }
+
+    @Override
+    public CompoundNBT write(CompoundNBT compound) {
+        super.write(compound);
+        if (!this.checkLootAndWrite(compound)) {
+            ItemStackHelper.saveAllItems(compound, this.inventory);
+        }
+
+        return compound;
     }
 }

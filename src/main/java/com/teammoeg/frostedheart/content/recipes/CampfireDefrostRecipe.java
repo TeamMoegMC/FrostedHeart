@@ -34,49 +34,6 @@ import java.util.Random;
 
 public class CampfireDefrostRecipe extends CampfireCookingRecipe implements DefrostRecipe {
 
-    public CampfireDefrostRecipe(ResourceLocation p_i50030_1_, String p_i50030_2_, Ingredient p_i50030_3_,
-                                 ItemStack[] results, float p_i50030_5_, int p_i50030_6_) {
-        super(p_i50030_1_, p_i50030_2_, p_i50030_3_, ItemStack.EMPTY, p_i50030_5_, p_i50030_6_);
-        iss = results;
-    }
-
-    ItemStack[] iss;
-
-    Random recipeRNG = new Random();
-
-    public Ingredient getIngredient() {
-        return super.ingredient;
-    }
-
-    @Override
-    public boolean isDynamic() {
-        return true;
-    }
-
-    @Override
-    public ItemStack getCraftingResult(IInventory inv) {
-        if (iss.length <= 0)
-            return ItemStack.EMPTY;
-        return iss[recipeRNG.nextInt(getIss().length)].copy();
-    }
-
-    @Override
-    public ItemStack getRecipeOutput() {
-        return getCraftingResult(null);
-    }
-
-    public ItemStack[] getIss() {
-        return iss;
-    }
-
-    public static RegistryObject<IRecipeSerializer<CampfireDefrostRecipe>> SERIALIZER;
-    public static Map<ResourceLocation, CampfireDefrostRecipe> recipeList = Collections.emptyMap();
-
-    @Override
-    public IRecipeSerializer<?> getSerializer() {
-        return SERIALIZER.get();
-    }
-
     public static class Serializer extends DefrostRecipe.Serializer<CampfireDefrostRecipe> {
 
         public Serializer() {
@@ -90,6 +47,49 @@ public class CampfireDefrostRecipe extends CampfireCookingRecipe implements Defr
             buffer.writeVarInt(recipe.getCookTime());
         }
 
+    }
+
+    public static RegistryObject<IRecipeSerializer<CampfireDefrostRecipe>> SERIALIZER;
+
+    public static Map<ResourceLocation, CampfireDefrostRecipe> recipeList = Collections.emptyMap();
+
+    ItemStack[] iss;
+
+    Random recipeRNG = new Random();
+
+    public CampfireDefrostRecipe(ResourceLocation p_i50030_1_, String p_i50030_2_, Ingredient p_i50030_3_,
+                                 ItemStack[] results, float p_i50030_5_, int p_i50030_6_) {
+        super(p_i50030_1_, p_i50030_2_, p_i50030_3_, ItemStack.EMPTY, p_i50030_5_, p_i50030_6_);
+        iss = results;
+    }
+
+    @Override
+    public ItemStack getCraftingResult(IInventory inv) {
+        if (iss.length <= 0)
+            return ItemStack.EMPTY;
+        return iss[recipeRNG.nextInt(getIss().length)].copy();
+    }
+
+    public Ingredient getIngredient() {
+        return super.ingredient;
+    }
+
+    public ItemStack[] getIss() {
+        return iss;
+    }
+    @Override
+    public ItemStack getRecipeOutput() {
+        return getCraftingResult(null);
+    }
+
+    @Override
+    public IRecipeSerializer<?> getSerializer() {
+        return SERIALIZER.get();
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return true;
     }
 
 }

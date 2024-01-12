@@ -56,21 +56,6 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     }
 
     @Override
-    public ResourceLocation getUid() {
-        return UID;
-    }
-
-    @Override
-    public Class<? extends SaunaRecipe> getRecipeClass() {
-        return SaunaRecipe.class;
-    }
-
-
-    public String getTitle() {
-        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".sauna").getString());
-    }
-
-    @Override
     public void draw(SaunaRecipe recipe, MatrixStack transform, double mouseX, double mouseY) {
         AllGuiTextures.JEI_SLOT.draw(transform, 43, 4);
         AllGuiTextures.JEI_DOWN_ARROW.draw(transform, 67, 7);
@@ -87,23 +72,19 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
         return BACKGROUND;
     }
 
+
     @Override
     public IDrawable getIcon() {
         return ICON;
     }
 
     @Override
-    public void setIngredients(SaunaRecipe recipe, IIngredients ingredients) {
-        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.input.getMatchingStacks())));
+    public Class<? extends SaunaRecipe> getRecipeClass() {
+        return SaunaRecipe.class;
     }
 
-
-    @Override
-    public void setRecipe(IRecipeLayout recipeLayout, SaunaRecipe recipe, IIngredients ingredients) {
-        IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
-        itemStacks.init(0, true, 43, 4);
-//        itemStacks.init(1, false, 117, 47);
-        itemStacks.set(ingredients);
+    public String getTitle() {
+        return (new TranslationTextComponent("gui.jei.category." + FHMain.MODID + ".sauna").getString());
     }
 
     @Override
@@ -115,8 +96,27 @@ public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
         return tooltip;
     }
 
+    @Override
+    public ResourceLocation getUid() {
+        return UID;
+    }
+
+
     public boolean isMouseIn(double mouseX, double mouseY, int x, int y, int w, int h) {
         return mouseX >= x && mouseY >= y
                 && mouseX < x + w && mouseY < y + h;
+    }
+
+    @Override
+    public void setIngredients(SaunaRecipe recipe, IIngredients ingredients) {
+        ingredients.setInputLists(VanillaTypes.ITEM, Arrays.asList(Arrays.asList(recipe.input.getMatchingStacks())));
+    }
+
+    @Override
+    public void setRecipe(IRecipeLayout recipeLayout, SaunaRecipe recipe, IIngredients ingredients) {
+        IGuiItemStackGroup itemStacks = recipeLayout.getItemStacks();
+        itemStacks.init(0, true, 43, 4);
+//        itemStacks.init(1, false, 117, 47);
+        itemStacks.set(ingredients);
     }
 }

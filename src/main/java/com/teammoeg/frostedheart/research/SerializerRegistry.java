@@ -38,11 +38,11 @@ public abstract class SerializerRegistry<T, R> {
         super();
     }
 
-    public void register(Class<? extends T> cls, String type, Function<R, T> json, Function<PacketBuffer, T> packet) {
-        putSerializer(type, json);
-        int id = fromPacket.size();
-        fromPacket.add(packet);
-        typeInfo.put(cls, Pair.of(id, type));
+    public int idOf(T obj) {
+        Pair<Integer, String> info = typeInfo.get(obj.getClass());
+        if (info == null)
+            return -1;
+        return info.getFirst();
     }
 
     protected abstract void putSerializer(String type, Function<R, T> s);
@@ -61,11 +61,11 @@ public abstract class SerializerRegistry<T, R> {
         return fromPacket.get(id).apply(pb);
     }
 
-    public int idOf(T obj) {
-        Pair<Integer, String> info = typeInfo.get(obj.getClass());
-        if (info == null)
-            return -1;
-        return info.getFirst();
+    public void register(Class<? extends T> cls, String type, Function<R, T> json, Function<PacketBuffer, T> packet) {
+        putSerializer(type, json);
+        int id = fromPacket.size();
+        fromPacket.add(packet);
+        typeInfo.put(cls, Pair.of(id, type));
     }
 
     public String typeOf(T obj) {

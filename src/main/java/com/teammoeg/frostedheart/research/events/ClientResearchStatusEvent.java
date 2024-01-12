@@ -28,19 +28,19 @@ public class ClientResearchStatusEvent extends Event {
     boolean completion;
     boolean statusChanged;
 
+    public ClientResearchStatusEvent(Research research, boolean completion, boolean statusChanged) {
+        super();
+        this.research = research;
+        this.completion = completion;
+        this.statusChanged = statusChanged;
+    }
+
     public Research getResearch() {
         return research;
     }
 
     public boolean isCompletion() {
         return completion;
-    }
-
-    public ClientResearchStatusEvent(Research research, boolean completion, boolean statusChanged) {
-        super();
-        this.research = research;
-        this.completion = completion;
-        this.statusChanged = statusChanged;
     }
 
     public boolean isStatusChanged() {

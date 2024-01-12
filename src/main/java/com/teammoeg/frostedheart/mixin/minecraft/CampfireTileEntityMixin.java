@@ -38,9 +38,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class CampfireTileEntityMixin extends TileEntity implements ICampfireExtra {
     public int lifeTime = 0;
 
-    @Override
-    public int getLifeTime() {
-        return lifeTime;
+    public CampfireTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
+        super(tileEntityTypeIn.CAMPFIRE);
     }
 
     @Override
@@ -48,23 +47,31 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
         lifeTime += add;
     }
 
-    @Override
-    public void setLifeTime(int set) {
-        lifeTime = set;
-    }
-
-    public CampfireTileEntityMixin(TileEntityType<?> tileEntityTypeIn) {
-        super(tileEntityTypeIn.CAMPFIRE);
-    }
-
     public void extinguishCampfire() {
         this.world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.BLOCKS, 1.0F, 1.0F);
         this.world.setBlockState(this.pos, this.getBlockState().with(CampfireBlock.LIT, false));
     }
 
+    @Override
+    public int getLifeTime() {
+        return lifeTime;
+    }
+
     @Inject(at = @At("RETURN"), method = "<init>()V")
     private void init(CallbackInfo ci) {
         lifeTime = 0;
+    }
+
+    @Inject(at = @At("TAIL"), method = "read")
+    public void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
+        if (nbt.contains("LifeTime", 3)) {
+            setLifeTime(nbt.getInt("LifeTime"));
+        }
+    }
+
+    @Override
+    public void setLifeTime(int set) {
+        lifeTime = set;
     }
 
     @Inject(at = @At("RETURN"), method = "tick()V")
@@ -77,13 +84,6 @@ public abstract class CampfireTileEntityMixin extends TileEntity implements ICam
                     lifeTime = 0;
                     extinguishCampfire();
                 }
-        }
-    }
-
-    @Inject(at = @At("TAIL"), method = "read")
-    public void readAdditional(BlockState state, CompoundNBT nbt, CallbackInfo ci) {
-        if (nbt.contains("LifeTime", 3)) {
-            setLifeTime(nbt.getInt("LifeTime"));
         }
     }
 

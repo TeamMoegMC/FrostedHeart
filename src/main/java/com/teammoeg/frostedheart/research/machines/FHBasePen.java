@@ -31,14 +31,14 @@ public class FHBasePen extends FHBaseItem implements IPen {
     }
 
     @Override
-    public void doDamage(PlayerEntity e, ItemStack stack, int val) {
-        stack.damageItem(val, e, ex -> {
-        });
+    public boolean canUse(PlayerEntity e, ItemStack stack, int val) {
+        return true;
     }
 
     @Override
-    public boolean canUse(PlayerEntity e, ItemStack stack, int val) {
-        return true;
+    public void doDamage(PlayerEntity e, ItemStack stack, int val) {
+        stack.damageItem(val, e, ex -> {
+        });
     }
 
     @Override

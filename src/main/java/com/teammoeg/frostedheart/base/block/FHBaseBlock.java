@@ -54,16 +54,16 @@ public class FHBaseBlock extends Block {
         return new ResourceLocation(FHMain.MODID, name);
     }
 
-    public FHBaseBlock setLightOpacity(int opacity) {
-        lightOpacity = opacity;
-        return this;
-    }
-
     @Override
     public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {
         if (state.isOpaqueCube(worldIn, pos))
             return lightOpacity;
         else
             return state.propagatesSkylightDown(worldIn, pos) ? 0 : 1;
+    }
+
+    public FHBaseBlock setLightOpacity(int opacity) {
+        lightOpacity = opacity;
+        return this;
     }
 }

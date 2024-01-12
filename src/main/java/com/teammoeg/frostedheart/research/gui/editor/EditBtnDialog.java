@@ -75,14 +75,14 @@ public class EditBtnDialog extends BaseEditDialog {
 
 
     @Override
-    public void onClose() {
-    }
-
-    @Override
     public void addWidgets() {
 
         add(box);
         add(ok);
         add(cancel);
+    }
+
+    @Override
+    public void onClose() {
     }
 }

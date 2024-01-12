@@ -45,6 +45,10 @@ public class FHStructures {
 //    public static final Structure<NoFeatureConfig> VOLCANIC_VENT = new VolcanicVentStructure(NoFeatureConfig.CODEC);
 
 
+    private static IStructurePieceType registerPiece(IStructurePieceType type, String key) {
+        return Registry.register(Registry.STRUCTURE_PIECE, key, type);
+    }
+
     public static void registerStructureGenerate() {
         Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.OBSERVATORY.getRegistryName().toString(), FHStructures.OBSERVATORY);
 //        Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.VOLCANIC_VENT.getRegistryName().toString(), FHStructures.VOLCANIC_VENT);
@@ -70,9 +74,5 @@ public class FHStructures {
                 settings.getStructures().field_236193_d_ = tempMap;
             } else structureMap.putAll(StructureSettingMap);
         });
-    }
-
-    private static IStructurePieceType registerPiece(IStructurePieceType type, String key) {
-        return Registry.register(Registry.STRUCTURE_PIECE, key, type);
     }
 }

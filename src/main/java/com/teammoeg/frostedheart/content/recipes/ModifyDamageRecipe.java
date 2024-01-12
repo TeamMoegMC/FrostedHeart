@@ -37,16 +37,75 @@ import net.minecraftforge.fml.RegistryObject;
 import javax.annotation.Nullable;
 
 public class ModifyDamageRecipe extends ShapelessRecipe {
+    public static class Serializer extends IERecipeSerializer<ModifyDamageRecipe> {
+        @Override
+        public ItemStack getIcon() {
+            return new ItemStack(Items.CRAFTING_TABLE);
+        }
+
+        @Nullable
+        @Override
+        public ModifyDamageRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient input = Ingredient.read(buffer);
+            Ingredient input2 = Ingredient.read(buffer);
+            int dura = buffer.readVarInt();
+            return new ModifyDamageRecipe(recipeId, input, input2, dura);
+        }
+
+        @Override
+        public ModifyDamageRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
+            Ingredient input = Ingredient.deserialize(json.get("tool"));
+            Ingredient input2 = Ingredient.deserialize(json.get("item"));
+            int dura = JsonHelper.getIntOrDefault(json, "modify", 1);
+            return new ModifyDamageRecipe(recipeId, input, input2, dura);
+        }
+
+        @Override
+        public void write(PacketBuffer buffer, ModifyDamageRecipe recipe) {
+            recipe.tool.write(buffer);
+            recipe.repair.write(buffer);
+
+            buffer.writeVarInt(recipe.modify);
+        }
+    }
+    public static RegistryObject<IERecipeSerializer<ModifyDamageRecipe>> SERIALIZER;
     public final Ingredient tool;
     public final Ingredient repair;
+
     public final int modify;
-    public static RegistryObject<IERecipeSerializer<ModifyDamageRecipe>> SERIALIZER;
 
     public ModifyDamageRecipe(ResourceLocation idIn, Ingredient torepair, Ingredient material, int mod) {
         super(idIn, "", torepair.getMatchingStacks()[0], NonNullList.from(Ingredient.EMPTY, torepair, material));
         repair = material;
         tool = torepair;
         modify = mod;
+    }
+
+    /**
+     * Used to determine if this recipe can fit in a grid of the given width/height
+     */
+    public boolean canFit(int width, int height) {
+        return width * height >= 2;
+    }
+
+    /**
+     * Returns an Item that is the result of this recipe
+     */
+    public ItemStack getCraftingResult(CraftingInventory inv) {
+        for (int j = 0; j < inv.getSizeInventory(); ++j) {
+            ItemStack in = inv.getStackInSlot(j);
+            if (tool.test(in)) {
+                in = in.copy();
+                in.setDamage(in.getDamage() - modify);
+                return in;
+            }
+        }
+
+        return ItemStack.EMPTY;
+    }
+
+    public IRecipeSerializer<?> getSerializer() {
+        return SERIALIZER.get();
     }
 
     public boolean matches(CraftingInventory inv, World worldIn) {
@@ -74,65 +133,6 @@ public class ModifyDamageRecipe extends ShapelessRecipe {
             }
         }
         return hasArmor && hasItem;
-    }
-
-    /**
-     * Returns an Item that is the result of this recipe
-     */
-    public ItemStack getCraftingResult(CraftingInventory inv) {
-        for (int j = 0; j < inv.getSizeInventory(); ++j) {
-            ItemStack in = inv.getStackInSlot(j);
-            if (tool.test(in)) {
-                in = in.copy();
-                in.setDamage(in.getDamage() - modify);
-                return in;
-            }
-        }
-
-        return ItemStack.EMPTY;
-    }
-
-    /**
-     * Used to determine if this recipe can fit in a grid of the given width/height
-     */
-    public boolean canFit(int width, int height) {
-        return width * height >= 2;
-    }
-
-    public IRecipeSerializer<?> getSerializer() {
-        return SERIALIZER.get();
-    }
-
-    public static class Serializer extends IERecipeSerializer<ModifyDamageRecipe> {
-        @Override
-        public ItemStack getIcon() {
-            return new ItemStack(Items.CRAFTING_TABLE);
-        }
-
-        @Override
-        public ModifyDamageRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
-            Ingredient input = Ingredient.deserialize(json.get("tool"));
-            Ingredient input2 = Ingredient.deserialize(json.get("item"));
-            int dura = JsonHelper.getIntOrDefault(json, "modify", 1);
-            return new ModifyDamageRecipe(recipeId, input, input2, dura);
-        }
-
-        @Nullable
-        @Override
-        public ModifyDamageRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient input = Ingredient.read(buffer);
-            Ingredient input2 = Ingredient.read(buffer);
-            int dura = buffer.readVarInt();
-            return new ModifyDamageRecipe(recipeId, input, input2, dura);
-        }
-
-        @Override
-        public void write(PacketBuffer buffer, ModifyDamageRecipe recipe) {
-            recipe.tool.write(buffer);
-            recipe.repair.write(buffer);
-
-            buffer.writeVarInt(recipe.modify);
-        }
     }
 
 }

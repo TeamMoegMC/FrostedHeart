@@ -29,9 +29,27 @@ import net.minecraft.loot.conditions.ILootCondition;
 import javax.annotation.Nonnull;
 
 public class BlizzardDamageCondition implements ILootCondition {
+    public static class Serializer implements ILootSerializer<BlizzardDamageCondition> {
+
+        @Nonnull
+        @Override
+        public BlizzardDamageCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
+            return new BlizzardDamageCondition();
+        }
+
+        @Override
+        public void serialize(JsonObject jsonObject, BlizzardDamageCondition matchTagCondition, JsonSerializationContext serializationContext) {
+        }
+    }
+
     public static LootConditionType TYPE;
 
     public BlizzardDamageCondition() {
+    }
+
+    @Override
+    public LootConditionType getConditionType() {
+        return TYPE;
     }
 
     @SuppressWarnings("resource")
@@ -43,23 +61,5 @@ public class BlizzardDamageCondition implements ILootCondition {
             }
         }
         return false;
-    }
-
-    @Override
-    public LootConditionType getConditionType() {
-        return TYPE;
-    }
-
-    public static class Serializer implements ILootSerializer<BlizzardDamageCondition> {
-
-        @Override
-        public void serialize(JsonObject jsonObject, BlizzardDamageCondition matchTagCondition, JsonSerializationContext serializationContext) {
-        }
-
-        @Nonnull
-        @Override
-        public BlizzardDamageCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
-            return new BlizzardDamageCondition();
-        }
     }
 }

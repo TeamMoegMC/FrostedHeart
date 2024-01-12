@@ -31,14 +31,14 @@ import java.util.List;
 public class ExtendPolicyGroup extends PolicyGroup {
     ResourceLocation ref;
 
-    public ExtendPolicyGroup(List<PolicyCondition> conditions, ResourceLocation ref) {
-        super(conditions);
-        this.ref = ref;
-    }
-
     public ExtendPolicyGroup(JsonObject jo) {
         super(jo);
         ref = new ResourceLocation(jo.get("parent").getAsString());
+    }
+
+    public ExtendPolicyGroup(List<PolicyCondition> conditions, ResourceLocation ref) {
+        super(conditions);
+        this.ref = ref;
     }
 
     public ExtendPolicyGroup(PacketBuffer pb) {

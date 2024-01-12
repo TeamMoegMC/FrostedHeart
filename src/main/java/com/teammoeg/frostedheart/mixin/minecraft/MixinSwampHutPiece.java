@@ -34,6 +34,10 @@ import java.util.Random;
 @Mixin(SwampHutPiece.class)
 public abstract class MixinSwampHutPiece extends ScatteredStructurePiece {
 
+    protected MixinSwampHutPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
+        super(structurePieceTypeIn, nbt);
+    }
+
     public MixinSwampHutPiece(IStructurePieceType structurePieceTypeIn, Random rand, int xIn, int yIn, int zIn,
                               int widthIn, int heightIn, int depthIn) {
         super(structurePieceTypeIn, rand, xIn, yIn, zIn, widthIn, heightIn, depthIn);
@@ -45,10 +49,6 @@ public abstract class MixinSwampHutPiece extends ScatteredStructurePiece {
         if (blockstateIn != null && blockstateIn.getBlock() instanceof CraftingTableBlock) return;
 
         super.setBlockState(worldIn, blockstateIn, x, y, z, boundingboxIn);
-    }
-
-    protected MixinSwampHutPiece(IStructurePieceType structurePieceTypeIn, CompoundNBT nbt) {
-        super(structurePieceTypeIn, nbt);
     }
 
 }

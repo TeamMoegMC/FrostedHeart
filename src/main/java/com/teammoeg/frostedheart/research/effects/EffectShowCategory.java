@@ -51,11 +51,6 @@ public class EffectShowCategory extends Effect {
         super();
     }
 
-    public EffectShowCategory(ResourceLocation cat) {
-        super();
-        cate = cat;
-    }
-
     public EffectShowCategory(JsonObject jo) {
         super(jo);
         cate = new ResourceLocation(jo.get("category").getAsString());
@@ -67,9 +62,31 @@ public class EffectShowCategory extends Effect {
 
     }
 
+    public EffectShowCategory(ResourceLocation cat) {
+        super();
+        cate = cat;
+    }
+
     @Override
-    public void init() {
-        ResearchListeners.categories.add(cate);
+    public String getBrief() {
+        return "JEI Category " + cate.toString();
+    }
+
+    @Override
+    public FHIcon getDefaultIcon() {
+        return FHIcons.getIcon(Blocks.CRAFTING_TABLE);
+    }
+
+    @Override
+    public IFormattableTextComponent getDefaultName() {
+        return GuiUtils.translateGui("effect.category");
+    }
+
+
+    @Override
+    public List<ITextComponent> getDefaultTooltip() {
+        List<ITextComponent> tooltip = new ArrayList<>();
+        return tooltip;
     }
 
     @Override
@@ -78,11 +95,23 @@ public class EffectShowCategory extends Effect {
         return true;
     }
 
+
+    @Override
+    public void init() {
+        ResearchListeners.categories.add(cate);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public void onClick() {
+        if (cate != null)
+            JEICompat.showJEICategory(cate);
+    }
+
     @Override
     public void revoke(TeamResearchData team) {
         team.categories.remove(cate);
     }
-
 
     @Override
     public JsonObject serialize() {
@@ -95,34 +124,5 @@ public class EffectShowCategory extends Effect {
     public void write(PacketBuffer buffer) {
         super.write(buffer);
         buffer.writeResourceLocation(cate);
-    }
-
-
-    @Override
-    public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(Blocks.CRAFTING_TABLE);
-    }
-
-    @Override
-    public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.category");
-    }
-
-    @Override
-    public List<ITextComponent> getDefaultTooltip() {
-        List<ITextComponent> tooltip = new ArrayList<>();
-        return tooltip;
-    }
-
-    @Override
-    public String getBrief() {
-        return "JEI Category " + cate.toString();
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public void onClick() {
-        if (cate != null)
-            JEICompat.showJEICategory(cate);
     }
 }

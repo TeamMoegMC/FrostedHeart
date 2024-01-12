@@ -43,18 +43,6 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
 
 
     @Override
-    public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
-        super.render(transform, mouseX, mouseY, partial);
-        List<ITextComponent> tooltip = new ArrayList<>();
-        GuiHelper.handleGuiTank(transform, tile.fluid[0], guiLeft + 88, guiTop + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
-        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 124, guiTop + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
-
-        if (!tooltip.isEmpty()) {
-            net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
-        }
-    }
-
-    @Override
     protected void drawGuiContainerBackgroundLayer(MatrixStack transform, float partial, int x, int y) {
         ClientUtils.bindTexture(TEXTURE);
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
@@ -90,5 +78,17 @@ public class IncubatorT2Screen extends IEContainerScreen<IncubatorT2Container> {
     public boolean isMouseIn(int mouseX, int mouseY, int x, int y, int w, int h) {
         return mouseX >= guiLeft + x && mouseY >= guiTop + y
                 && mouseX < guiLeft + x + w && mouseY < guiTop + y + h;
+    }
+
+    @Override
+    public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
+        super.render(transform, mouseX, mouseY, partial);
+        List<ITextComponent> tooltip = new ArrayList<>();
+        GuiHelper.handleGuiTank(transform, tile.fluid[0], guiLeft + 88, guiTop + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
+        GuiHelper.handleGuiTank(transform, tile.fluid[1], guiLeft + 124, guiTop + 20, 16, 46, 177, 177, 20, 51, mouseX, mouseY, TEXTURE, tooltip);
+
+        if (!tooltip.isEmpty()) {
+            net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
+        }
     }
 }
