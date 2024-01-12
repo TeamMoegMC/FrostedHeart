@@ -400,6 +400,10 @@ public class ClientEvents {
 
 		FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
 		if (FHConfig.CLIENT.enableUI.get()) {
+			if (event.getType() == RenderGameOverlayEvent.ElementType.ALL) {
+				if (FrostedHud.renderForecast)
+					FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
+			}
 			if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
 				if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
 					mc.ingameGUI.getSpectatorGui().func_238528_a_(stack, partialTicks);
@@ -428,8 +432,6 @@ public class ClientEvents {
 					FrostedHud.renderThirst(stack, anchorX, anchorY, mc, renderViewPlayer);
 				if (FrostedHud.renderHealth)
 					FrostedHud.renderTemperature(stack, anchorX, anchorY, mc, renderViewPlayer);
-				if (FrostedHud.renderForecast)
-					FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
 				if (FrostedHud.renderFrozenOverlay)
 					FrostedHud.renderFrozenOverlay(stack, anchorX, anchorY, mc, renderViewPlayer);
 				if (FrostedHud.renderFrozenVignette)
