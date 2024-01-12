@@ -35,9 +35,6 @@ public class FHParticle extends SpriteTexturedParticle {
 
     public FHParticle(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
         super(world, x, y, z, motionX, motionY, motionZ);
-        this.motionX *= 1.25;
-        this.motionY *= 1.25;
-        this.motionZ *= 1.25;
     }
 
     public IParticleRenderType getRenderType() {
@@ -55,23 +52,34 @@ public class FHParticle extends SpriteTexturedParticle {
     }
 
     public void tick() {
+        // update previous position
         this.prevPosX = posX;
         this.prevPosY = posY;
         this.prevPosZ = posZ;
+
+        // kill the particle if it's too old
         if (age >= maxAge)
             setExpired();
         this.age++;
+
+        // apply gravity
         this.motionY -= 0.04D * particleGravity;
+
+        // move the particle
         move(motionX, motionY, motionZ);
 
+        // when stuck on ceiling, it spreads out
         if (posY == prevPosY) {
             this.motionX *= 1.1D;
             this.motionZ *= 1.1D;
         }
+
+        // natural friction decay
         this.motionX *= 0.96D;
         this.motionY *= 0.96D;
         this.motionZ *= 0.96D;
 
+        // when on ground, friction increases
         if (onGround) {
             this.motionX *= 0.67D;
             this.motionZ *= 0.67D;

@@ -19,23 +19,20 @@
 
 package com.teammoeg.frostedheart.research.inspire;
 
-import java.util.Map.Entry;
-
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
-
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -55,6 +52,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.network.PacketDistributor;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
+
+import java.util.Map.Entry;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class EnergyCore {
@@ -228,7 +227,7 @@ public class EnergyCore {
             //System.out.println(nenergy);
             double cenergy = 5 / n;
             if (tenergy * 2 < M && nenergy <= 5) {
-                player.addPotionEffect(new EffectInstance(FHEffects.SAD, 200));
+                player.addPotionEffect(new EffectInstance(FHEffects.SAD, 200, 0, false, false));
             }
             if (tenergy < 13500)
                 nenergy = Math.max(nenergy, 1);

@@ -565,13 +565,9 @@ public class FrostedHud {
     }
     public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_frozen");
+        // render frozen overlay with alpha based on linear interpolation
         float tempDelta = MathHelper.clamp(Math.abs(Temperature.getBodySmoothed(player)), 0.5f, 5.0f);
         float opacityDelta = (tempDelta - 0.5F) / 4.5F;
-        // play sound if tempDelta is 0.1f around an integer
-//        if (Math.abs(tempDelta - Math.round(tempDelta)) < 0.1f && tempDelta > 0.5f)
-//            if (mc.world != null)
-//                mc.world.playSound(player, player.getPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
-//
         ResourceLocation texture;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();

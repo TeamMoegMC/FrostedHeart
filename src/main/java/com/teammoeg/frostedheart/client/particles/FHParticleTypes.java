@@ -30,4 +30,5 @@ public class FHParticleTypes {
     public static final DeferredRegister<ParticleType<?>> REGISTER = DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, FHMain.MODID);
 
     public static final RegistryObject<BasicParticleType> STEAM = REGISTER.register("steam", () -> new BasicParticleType(false));
+    public static final RegistryObject<BasicParticleType> BREATH = REGISTER.register("breath", () -> new BasicParticleType(false));
 }
