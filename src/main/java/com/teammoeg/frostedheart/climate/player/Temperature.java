@@ -44,8 +44,6 @@ public class Temperature {
      */
     public static float getBody(PlayerEntity spe) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return 0;
         return nc.getFloat("bodytemperature");
     }
 
@@ -60,8 +58,6 @@ public class Temperature {
      */
     public static float getBodyDelta(PlayerEntity spe) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return 0;
         return nc.getFloat("deltatemperature");
     }
 
@@ -106,16 +102,11 @@ public class Temperature {
      */
     public static float getEnv(PlayerEntity spe) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return 0;
         return nc.getFloat("envtemperature");
     }
 
     public static CompoundNBT getFHData(PlayerEntity spe) {
-        CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            return new CompoundNBT();
-        return nc;
+		return spe.getPersistentData().getCompound(DATA_ID);
     }
 
     public static void setFHData(PlayerEntity spe, CompoundNBT nc) {
@@ -124,16 +115,12 @@ public class Temperature {
 
     public static void setBody(PlayerEntity spe, float val) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            nc = new CompoundNBT();
         nc.putFloat("bodytemperature", val);
         spe.getPersistentData().put(DATA_ID, nc);
     }
 
     public static void setEnv(PlayerEntity spe, float val) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            nc = new CompoundNBT();
         nc.putFloat("envtemperature", val);
         spe.getPersistentData().put(DATA_ID, nc);
     }
@@ -146,8 +133,6 @@ public class Temperature {
 
     public static void set(PlayerEntity spe, float body, float env) {
         CompoundNBT nc = spe.getPersistentData().getCompound(DATA_ID);
-        if (nc == null)
-            nc = new CompoundNBT();
         // update delta before body
         nc.putFloat("deltatemperature", nc.getFloat("bodytemperature") - body);
         nc.putFloat("bodytemperature", body);
