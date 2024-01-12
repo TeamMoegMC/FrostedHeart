@@ -30,6 +30,31 @@ import java.util.List;
 import java.util.Map;
 
 public class ScenarioParser {
+	private static class CommandStack{
+		int from;
+		List<IfNode> allNodes=new ArrayList<>();
+		public CommandStack(int from,IfNode f) {
+			super();
+			this.from = from;
+			allNodes.add(f);
+		}
+		public void add(int idx,IfNode elsif) {
+			allNodes.get(allNodes.size()-1).elseBlock=idx;
+			elsif.parentBlock=from;
+			allNodes.add(elsif);
+		}
+		public void addElse(int idx) {
+			if(allNodes.get(allNodes.size()-1).elseBlock!=-1) {
+				allNodes.get(allNodes.size()-1).elseBlock=idx;
+			}
+			throw new IllegalArgumentException("Illegal else block at node "+idx);
+		}
+		public void addEndif(int idx) {
+			for(IfNode ifn:allNodes) {
+				ifn.endBlock=idx;
+			}
+		}
+	}
 	public ScenarioPiece parse(File file) throws IOException {
 		List<Node> nodes=new ArrayList<>();
 		try (FileInputStream fis=new FileInputStream(file);
@@ -38,6 +63,29 @@ public class ScenarioParser {
 			String line;
 			while((line=reader.readLine())!=null) {
 				nodes.addAll(parseLine(line));
+			}
+		}
+		List<Integer> paragraphs=new ArrayList<>();
+		List<CommandStack> ifstack=new ArrayList<>();
+		for(int i=0;i<nodes.size();i++) {
+			Node n=nodes.get(i);
+			if(n instanceof ParagraphNode) {
+				paragraphs.add(i);
+			}
+			if(n instanceof IfNode) {
+				IfNode ifn=(IfNode) n;
+				if(ifn.cmd.equals("if")) {
+					ifstack.add(new CommandStack(i,ifn));
+				}else {
+					ifstack.get(ifstack.size()-1).add(i, ifn);
+				}
+			}else if(n instanceof ElsEndifNode) {
+				ElsEndifNode els=(ElsEndifNode) n;
+				if(els.command.equals("else")) {
+					ifstack.get(ifstack.size()-1).addElse(i);
+				}else {
+					ifstack.remove(ifstack.size()-1).addEndif(i);
+				}
 			}
 		}
 		return new ScenarioPiece(file.getName(),nodes);
@@ -72,7 +120,7 @@ public class ScenarioParser {
 			String val=parseLiteralOrString(reader,-1);
 			params.put(name, val);
 			reader.skipWhitespace();
-			if(!reader.hasNext())return new CommandNode(command,params);
+			if(!reader.hasNext())return createCommand(command,params);
 		}
 		return new LiteralNode(reader.fromStart());
 		
@@ -92,28 +140,42 @@ public class ScenarioParser {
 			String val=parseLiteralOrString(reader,']');
 			params.put(name, val);
 			reader.skipWhitespace();
-			if(reader.last()==']')return new CommandNode(command,params);
+			if(reader.last()==']')return createCommand(command,params);
 		}
 		return new LiteralNode(reader.fromStart());
+	}
+	private Node createCommand(String command,Map<String,String> params) {
+		switch(command) {
+		case "eval":return new AssignNode(command,params);
+		case "if":
+		case "elsif":return new IfNode(command,params);
+		case "else":
+		case "endif":return new ElsEndifNode(command,params);
+		case "emb":return new EmbNode(command,params);
+		case "label":return new LabelNode(command,params);
+		case "p":return new ParagraphNode(command,params);
+		}
+		return new CommandNode(command,params);
+		
 	}
 	public String parseLiteral(StringParseReader reader) throws IOException {
 		StringBuilder all=new StringBuilder();
 		boolean isEscaping=false;
 		while(reader.hasNext()) {
-			int r=reader.next();
+			char r=reader.next();
 			if(!isEscaping&&r=='\\') {
 				isEscaping=true;
 				continue;
 			}
 			if(isEscaping) {
-				all.append(Character.toString((char) r));
+				all.append(r);
 				isEscaping=false;
 				continue;
 			}
 			if(r=='['||r=='@') {
 				break;
 			}
-			all.append(Character.toString((char) r));
+			all.append(r);
 		}
 		return all.toString();
 	}
@@ -122,13 +184,13 @@ public class ScenarioParser {
 		boolean isEscaping=false;
 		boolean hasQuote=false;
 		while(reader.hasNext()) {
-			int r=reader.next();
+			char r=reader.next();
 			if(!isEscaping&&r=='\\') {
 				isEscaping=true;
 				continue;
 			}
 			if(isEscaping) {
-				all.append(Character.toString((char) r));
+				all.append(r);
 				isEscaping=false;
 				continue;
 			}
@@ -143,7 +205,7 @@ public class ScenarioParser {
 			if(!hasQuote&&(r==ch||Character.isWhitespace(r))) {
 				break;
 			}
-			all.append(Character.toString((char) r));
+			all.append(r);
 		}
 		return all.toString();
 	}

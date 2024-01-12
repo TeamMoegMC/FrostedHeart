@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart.scenario.parser;
 
-import com.teammoeg.frostedheart.scenario.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
 
 public class LiteralNode implements Node{
 	String text;
@@ -10,9 +10,6 @@ public class LiteralNode implements Node{
 		this.text = text;
 	}
 
-	@Override
-	public void run(ScenarioRunner runner) {
-	}
 
 	@Override
 	public String getText() {
@@ -22,6 +19,17 @@ public class LiteralNode implements Node{
 	@Override
 	public boolean isLiteral() {
 		return true;
+	}
+
+
+	@Override
+	public void run(ScenarioRunner runner) {
+	}
+
+
+	@Override
+	public String getDisplay(ScenarioRunner runner) {
+		return text;
 	}
 	
 	

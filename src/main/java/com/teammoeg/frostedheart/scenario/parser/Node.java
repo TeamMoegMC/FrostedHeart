@@ -1,9 +1,10 @@
 package com.teammoeg.frostedheart.scenario.parser;
 
-import com.teammoeg.frostedheart.scenario.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
 
 public interface Node {
-	void run(ScenarioRunner runner);
 	String getText();
+	String getDisplay(ScenarioRunner runner);
 	boolean isLiteral();
+	void run(ScenarioRunner runner);
 }
