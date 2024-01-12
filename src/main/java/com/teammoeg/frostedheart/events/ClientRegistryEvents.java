@@ -28,6 +28,7 @@ import blusunrize.lib.manual.Tree;
 import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
+import com.teammoeg.frostedheart.client.particles.BreathParticle;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
 import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
@@ -225,6 +226,7 @@ public class ClientRegistryEvents {
     @SubscribeEvent
     public static void registerParticleFactories(ParticleFactoryRegisterEvent event) {
         Minecraft.getInstance().particles.registerFactory(FHParticleTypes.STEAM.get(), SteamParticle.Factory::new);
+        Minecraft.getInstance().particles.registerFactory(FHParticleTypes.BREATH.get(), BreathParticle.Factory::new);
     }
 
 }
