@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -281,9 +281,8 @@ public class EnergyCore {
     public static void tickEnergy(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.START
                 && event.player instanceof ServerPlayerEntity) {
-
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            if (player.ticksExisted % 20 == 0)
+            if (!player.isSpectator() && !player.isCreative() && player.ticksExisted % 20 == 0)
                 EnergyCore.dT(player);
         }
     }
