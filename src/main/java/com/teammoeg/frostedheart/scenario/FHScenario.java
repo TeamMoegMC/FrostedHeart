@@ -8,7 +8,10 @@ import com.teammoeg.frostedheart.FHPacketHandler;
 
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioCommentPacket;
+import com.teammoeg.frostedheart.scenario.runner.ParagraphRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
 
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 
@@ -30,7 +33,7 @@ public class FHScenario {
 		for(Method met:cls.getMethods()) {
 			if(Modifier.isPublic(met.getModifiers())) {
 				final String name=met.getName();
-				registerCommand(name,(r,p)->{FHPacketHandler.send(PacketDistributor.PLAYER.with(r::getPlayer),new ClientScenarioCommentPacket(name, p,r.getExecutionData()));});
+				registerCommand(name,(r,p)->{FHPacketHandler.send(PacketDistributor.PLAYER.with(()->(ServerPlayerEntity)r.getPlayer()),new ClientScenarioCommentPacket(name, p,r.getExecutionData()));});
 			}
 		}
 		

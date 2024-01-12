@@ -13,6 +13,9 @@ import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.teammoeg.frostedheart.scenario.runner.ParagraphRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
+
 public class ScenarioExecutor {
 	static Logger LOGGER=LogManager.getLogger("ScenarioExecutor");
 	private static Function<String,Object> string=s->s;
@@ -86,7 +89,7 @@ public class ScenarioExecutor {
 		}
 	}
 	public void registerCommand(String cmdName,ScenarioMethod method) {
-		commands.put(cmdName, method);
+		commands.put(cmdName.toLowerCase(), method);
 	}
 	public void regiser(Class<?> clazz) {
 		registerStatic(clazz);
