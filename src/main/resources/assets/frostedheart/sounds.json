@@ -6,5 +6,11 @@
   "mc_roll": {
     "subtitle": "subtitle.frostedheart.mechanical_calculator_roll",
     "sounds": [ "frostedheart:mech_calc_roll" ]
+  },
+  "ice_cracking": {
+    "subtitle": "subtitle.frostedheart.ice_cracking",
+    "sounds": [
+      "frostedheart:ice_cracking"
+    ]
   }
 }

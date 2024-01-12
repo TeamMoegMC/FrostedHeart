@@ -376,6 +376,7 @@
   "research.category.frostedheart.rescue": "Rescue",
   "subtitle.frostedheart.mechanical_calculator_bell":"Mechanical calculator bell rings",
   "subtitle.frostedheart.mechanical_calculator_roll":"Mechanical calculator rolls",
+  "subtitle.frostedheart.ice_cracking": "Ice cracking",
   "tooltip.frostedheart.armor_heating": "Heating rate:%s/s",
   "tooltip.frostedheart.armor_warm": "Warming Modifier:%s %%",
   "tooltip.frostedheart.block_temp": "Temperature change:%s",
