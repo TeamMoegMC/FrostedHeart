@@ -52,7 +52,7 @@ public class EmbNode implements Node {
 
     @Override
     public boolean isLiteral() {
-        return false;
+        return true;
     }
 
     @Override

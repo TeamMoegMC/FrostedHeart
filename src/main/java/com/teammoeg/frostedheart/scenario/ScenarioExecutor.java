@@ -24,9 +24,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,11 +40,18 @@ public class ScenarioExecutor {
         private static class ParamInfo {
             String paramName;
             Function<String, Object> convertion;
-
+            Supplier<Object> def = null;
             public ParamInfo(String paramName, Function<String, Object> convertion) {
                 this.paramName = paramName;
                 this.convertion = convertion;
             }
+
+            @Override
+            public String toString() {
+                return "[name=" + paramName + "]";
+            }
+            
+            
         }
 
         Method method;
@@ -56,23 +65,38 @@ public class ScenarioExecutor {
             Parameter[] param = method.getParameters();
             params = new ParamInfo[param.length - 1];
 
-            for (int i = 1; i < params.length; i++) {
+            for (int i = 1; i < param.length; i++) {
                 Function<String, Object> converter = null;
                 Class<?> partype = param[i].getType();
-                String name = param[i].getName();
+                Param par = param[i].getAnnotation(Param.class);
+                String name = par != null ? par.value() : (param[i].isNamePresent() ? param[i].getName() : param[i].getName().substring(4));
+                Supplier<Object> def = null;
                 if (partype.isAssignableFrom(Double.class) || partype == double.class) {
                     converter = number;
+                    if (partype.isPrimitive())
+                        def = () -> 0d;
                 } else if (partype.isAssignableFrom(String.class)) {
                     converter = string;
                 } else if (partype.isAssignableFrom(Integer.class) || partype == int.class) {
                     converter = integer;
+                    if (partype.isPrimitive())
+                        def = () -> 0;
                 } else if (partype.isAssignableFrom(Float.class) || partype == float.class) {
                     converter = fnumber;
+                    if (partype.isPrimitive())
+                        def = () -> 0f;
                 } else {
                     throw new ScenarioExecutionException("No matching type found for param " + name + " of " + method.getName());
                 }
                 params[i - 1] = new ParamInfo(name, converter);
+                params[i - 1].def = def;
             }
+            //System.out.println(toString());
+        }
+
+        @Override
+        public String toString() {
+            return "[method=" + method.getDeclaringClass().getSimpleName() + "." + method.getName() + ", params=" + Arrays.toString(params) + "]";
         }
 
         @Override
@@ -86,15 +110,20 @@ public class ScenarioExecutor {
                     } catch (NumberFormatException | ClassCastException ex) {
                         throw new ScenarioExecutionException("Exception converting param " + params[i].paramName, ex);
                     }
+                } else {
+                    if (params[i].def != null)
+                        pars[i + 1] = params[i].def.get();
                 }
-                pars[0] = runner;
-                try {
-                    method.invoke(instance, pars);
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    throw new ScenarioExecutionException(e);
-                } catch (InvocationTargetException e) {
-                    throw new ScenarioExecutionException(e.getTargetException());
-                }
+            }
+            pars[0] = runner;
+            try {
+                method.invoke(instance, pars);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                e.printStackTrace();
+                System.out.println(e.getMessage());
+                throw new ScenarioExecutionException(e);
+            } catch (InvocationTargetException e) {
+                throw new ScenarioExecutionException(e.getTargetException());
             }
         }
     }
@@ -119,8 +148,7 @@ public class ScenarioExecutor {
         command.execute(runner, params);
     }
 
-    public void regiser(Class<?> clazz) {
-        registerStatic(clazz);
+    public void register(Class<?> clazz) {
         try {
             Constructor<?> ctor = clazz.getConstructor();
             registerInst(ctor.newInstance());
@@ -142,7 +170,8 @@ public class ScenarioExecutor {
         for (Method met : clazz.getClass().getMethods()) {
             if (Modifier.isPublic(met.getModifiers())) {
                 try {
-                    registerCommand(met.getName(), new MethodInfo(clazz, Modifier.isStatic(met.getModifiers()) ? null : met));
+                    if (met.getParameterCount() > 0 && met.getParameters()[0].getType() == ScenarioRunner.class)
+                        registerCommand(met.getName(), new MethodInfo(Modifier.isStatic(met.getModifiers()) ? null : clazz, met));
                 } catch (ScenarioExecutionException ex) {
                     ex.printStackTrace();
                     LOGGER.warn(ex.getMessage());
@@ -163,5 +192,22 @@ public class ScenarioExecutor {
                 }
             }
         }
+    }
+
+    static class Test {
+        public void test(ScenarioRunner sr, @Param("t") int t) {
+            System.out.println(t);
+
+        }
+
+        ;
+    }
+
+    public static void main(String[] args) throws NoSuchMethodException, SecurityException {
+        Test t = new Test();
+        MethodInfo mi = new MethodInfo(t, t.getClass().getMethod("test", ScenarioRunner.class, int.class));
+        Map<String, String> mp = new HashMap<>();
+        mp.put("t", "20");
+        mi.execute(null, mp);
     }
 }

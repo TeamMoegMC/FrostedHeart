@@ -29,19 +29,12 @@ import net.minecraft.nbt.INBT;
 public class ParagraphRunner {
     CompoundNBT parVars;
     int paragraphNum;
-    String section;
-    String chapter;
-    String file;
     PlayerEntity player;
 
-    public ParagraphRunner(CompoundNBT parVars, int paragraphNum, String section, String chapter, String file,
-                           PlayerEntity player) {
+    public ParagraphRunner(CompoundNBT parVars, int paragraphNum, PlayerEntity player) {
         super();
         this.parVars = parVars;
         this.paragraphNum = paragraphNum;
-        this.section = section;
-        this.chapter = chapter;
-        this.file = file;
         this.player = player;
     }
 

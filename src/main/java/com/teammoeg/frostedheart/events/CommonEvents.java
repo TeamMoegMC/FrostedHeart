@@ -56,6 +56,8 @@ import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.scenario.FHScenario;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -617,6 +619,16 @@ public class CommonEvents {
         }
     }
 
+    @SubscribeEvent
+    public static void regulateTemperature(PlayerTickEvent event) {
+        if (event.side == LogicalSide.SERVER && event.phase == Phase.END
+                && event.player instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+            ScenarioRunner runner = FHScenario.runners.get(player);
+            if (runner != null)
+                runner.tick();
+        }
+    }
     @SubscribeEvent
     public static void onSleep(SleepingTimeCheckEvent event) {
         long ttime = event.getEntity().getEntityWorld().getDayTime() % 24000;

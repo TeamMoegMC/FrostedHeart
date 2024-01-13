@@ -20,52 +20,68 @@
 package com.teammoeg.frostedheart.scenario.parser;
 
 public class StringParseReader {
-    String str;
+    public final String str;
     int idx = -1;
-    int srecord;
+    int srecord = 0;
 
     public StringParseReader(String str) {
         super();
         this.str = str;
     }
 
-    String fromStart() {
+    public String fromStart() {
         return str.substring(srecord, idx);
     }
 
-    boolean hasNext() {
+    public boolean hasNext() {
         return idx < str.length() - 1;
     }
 
-    char last() {
-        return str.charAt(idx - 1);
+    public boolean isBegin() {
+        return idx == -1;
     }
 
-    void loadIndex() {
+    public char last() {
+        return str.charAt(idx);
+    }
+
+    public void loadIndex() {
         idx = srecord;
     }
 
-    char next() {
-        return str.charAt(idx++);
+    public char next() {
+        return str.charAt(++idx);
     }
 
-    char peek() {
+    public char peek() {
         return str.charAt(idx + 1);
     }
 
-    char peekLast() {
+    public boolean eat(char ch) {
+        if (peek() == ch) {
+            next();
+            return true;
+        }
+        return false;
+    }
+
+    public char peekLast() {
         if (idx < 0)
             return str.charAt(0);
-        return str.charAt(idx - 1);
+        return str.charAt(idx);
     }
 
-    void saveIndex() {
-        srecord = idx;
+    public void saveIndex() {
+        srecord = idx + 1;
     }
 
-    void skipWhitespace() {
+    public void skipWhitespace() {
+        boolean hasChangedIndex = false;
         while (Character.isWhitespace(str.charAt(idx)) && hasNext()) {
             idx++;
+            hasChangedIndex = true;
         }
+        if (hasChangedIndex)
+            idx--;
     }
 }

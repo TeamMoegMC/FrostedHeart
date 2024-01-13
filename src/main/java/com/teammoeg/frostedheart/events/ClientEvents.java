@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.renderer.FrostbiteRenderer;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -40,19 +41,25 @@ import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
+import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
+import com.teammoeg.frostedheart.scenario.client.ClientTextProcessor;
+import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
+import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.RenderComponentsUtil;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
@@ -73,9 +80,12 @@ import net.minecraft.util.text.*;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -86,6 +96,7 @@ import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 import java.util.List;
@@ -299,6 +310,11 @@ public class ClientEvents {
             }
     }
 
+    @SubscribeEvent
+    public static void fireLogin(LoggedInEvent event) {
+        FHScenarioClient.sendInitializePacket = true;
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void renderCustomHUD(RenderGameOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
@@ -313,6 +329,7 @@ public class ClientEvents {
         int anchorX = event.getWindow().getScaledWidth() / 2;
         int anchorY = event.getWindow().getScaledHeight();
         float partialTicks = event.getPartialTicks();
+        ;
 
         FrostedHud.renderSetup(clientPlayer, renderViewPlayer);
         if (FHConfig.CLIENT.enableUI.get()) {
@@ -323,6 +340,7 @@ public class ClientEvents {
                     FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderHeatVignette)
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
+
             }
             if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
                 if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
@@ -332,6 +350,7 @@ public class ClientEvents {
                         FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
                     FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
                 }
+
                 event.setCanceled(true);
             }
             if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience) {
@@ -430,10 +449,15 @@ public class ClientEvents {
 
     }
 
-
     @SubscribeEvent
     public static void tickClient(ClientTickEvent event) {
+
         if (event.phase == Phase.START) {
+            if (ClientUtils.mc().world != null) {
+                Minecraft mc = ClientUtils.mc();
+                ClientTextProcessor.render(mc);
+
+            }
             PlayerEntity pe = ClientUtils.getPlayer();
             if (pe != null && pe.getActivePotionEffect(FHEffects.NYCTALOPIA) != null) {
                 ClientUtils.applyspg = true;
@@ -441,12 +465,13 @@ public class ClientEvents {
                         - 1f;
             } else {
                 ClientUtils.applyspg = false;
+                ClientUtils.spgamma = MathHelper.clamp((float) ClientUtils.mc().gameSettings.gamma, 0f, 1f);
             }
         }
     }
 
     @SubscribeEvent
-    public static void tickClient(Unload event) {
+    public static void unloadWorld(Unload event) {
         ClientUtils.applyspg = false;
     }
 
@@ -464,7 +489,14 @@ public class ClientEvents {
                     ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
             HeaterVestRenderer.rendersAssigned = true;
         }
+    }
 
+    @SubscribeEvent
+    public static void onWorldRender(RenderWorldLastEvent event) {
+        if (FHScenarioClient.sendInitializePacket) {
+            FHScenarioClient.sendInitializePacket = false;
+            FHPacketHandler.send(PacketDistributor.SERVER.noArg(), new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+        }
     }
 
     /**

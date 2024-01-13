@@ -926,7 +926,6 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         int delta = crt % 3;
         TemperatureFrame[] toRender = new TemperatureFrame[40];
         for (TemperatureFrame te : getFrames(0, 120 - delta)) {
-            System.out.println(te);
             int renderIndex = (te.dhours + delta) / 3;
             if (renderIndex >= 40) break;
             TemperatureFrame prev = toRender[renderIndex];

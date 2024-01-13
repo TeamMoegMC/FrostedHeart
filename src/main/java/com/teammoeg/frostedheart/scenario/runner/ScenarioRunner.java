@@ -19,22 +19,118 @@
 
 package com.teammoeg.frostedheart.scenario.runner;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.scenario.network.ServerSenarioTextPacket;
+import com.teammoeg.frostedheart.scenario.parser.Node;
+import com.teammoeg.frostedheart.scenario.parser.ScenarioPiece;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ScenarioRunner implements IEnvironment {
     int paragraphNum;
-    int nodeNum;
-    ParagraphRunner current;
+    int nodeNum = 0;
+    public ParagraphRunner current;
     ArrayList<CallStackElement> callStack = new ArrayList<>();
+    ScenarioPiece sp;
+    public PlayerEntity player;
+    File folder = FMLPaths.CONFIGDIR.get().toFile();
+    File rf = new File(folder, "fhresearches");
+    public boolean waitClient;
+    public boolean isNowait;
+    public boolean isSkip;
+    int waiting;
+    int status;
+    StringBuilder currentLiteral;
 
+    public ScenarioRunner(PlayerEntity player) {
+        super();
+        this.player = player;
+    }
+
+    public void addWait(int time) {
+        waiting += time;
+    }
+
+    public void tick() {
+        if (!waitClient)
+            if (waiting > 0) {
+                waiting--;
+                if (waiting <= 0)
+                    run();
+            }
+    }
+
+    public void run(ScenarioPiece sp) {
+        this.sp = sp;
+        nodeNum = 0;
+        paragraphNum = 0;
+        current = new ParagraphRunner(new CompoundNBT(), paragraphNum, player);
+        for (Node n : sp.pieces) {
+            System.out.println(n.getText());
+        }
+        run();
+    }
+
+    public void run() {
+        while (!waitClient && waiting <= 0) {
+            if (currentLiteral == null)
+                currentLiteral = new StringBuilder();
+            Node node = sp.pieces.get(nodeNum);
+            currentLiteral.append(node.getDisplay(this));
+            node.run(this);
+            nodeNum++;
+            if (nodeNum >= sp.pieces.size())
+                break;
+        }
+    }
+
+    public boolean shouldWaitClient() {
+        return currentLiteral != null && currentLiteral.length() != 0;
+    }
+
+    public void sendNormal() {
+        if (currentLiteral != null && currentLiteral.length() != 0)
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new ServerSenarioTextPacket(currentLiteral.toString(), true, isNowait));
+        currentLiteral = null;
+    }
+
+    public void sendNoreline() {
+        if (currentLiteral != null && currentLiteral.length() != 0)
+            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new ServerSenarioTextPacket(currentLiteral.toString(), false, isNowait));
+        currentLiteral = null;
+    }
+
+    public void waitClient() {
+        waitClient = true;
+    }
+
+    public void notifyClientResponse(boolean isSkip, int status) {
+        if (waitClient) {
+            waitClient = false;
+            this.isSkip = isSkip;
+            this.status = status;
+            run();
+        }
+    }
+
+    public void paragraph(int pn) {
+        paragraphNum = pn;
+        current = new ParagraphRunner(new CompoundNBT(), paragraphNum, player);
+        waitClient();
+        sendNormal();
+
+    }
     public boolean containsPath(String path) {
         return current.containsPath(path);
     }
@@ -161,4 +257,5 @@ public class ScenarioRunner implements IEnvironment {
     public void setPathString(String path, String val) {
         current.setPathString(path, val);
     }
+
 }

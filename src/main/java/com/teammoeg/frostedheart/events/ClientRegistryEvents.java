@@ -63,10 +63,12 @@ import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -145,7 +147,8 @@ public class ClientRegistryEvents {
         render = skinMap.get("slim");
         render.addLayer(new HeaterVestRenderer<>(render));
         addManual();
-        TetraClient.init();
+        if (ModList.get().isLoaded("tetra"))
+            TetraClient.init();
     }
 
     @SubscribeEvent

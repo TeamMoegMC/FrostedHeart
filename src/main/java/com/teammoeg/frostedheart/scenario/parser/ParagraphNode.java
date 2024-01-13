@@ -48,5 +48,6 @@ public class ParagraphNode implements Node {
 
     @Override
     public void run(ScenarioRunner runner) {
+        runner.paragraph(nodeNum);
     }
 }
