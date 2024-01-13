@@ -19,16 +19,9 @@
 
 package com.teammoeg.frostedheart.scenario.runner;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.network.ServerSenarioTextPacket;
 import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioPiece;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
@@ -37,11 +30,8 @@ import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ScenarioConductor implements IEnvironment {
+public class ScenarioConductor{
 	public static class ExecuteTarget{
 		String scenario;
 		String label;
@@ -54,20 +44,17 @@ public class ScenarioConductor implements IEnvironment {
 	}
     int paragraphNum;
     int nodeNum=0;
-    public ParagraphData paraData;
-    ArrayList<FlowElement> flowControlStack = new ArrayList<>();
-
-    ScenarioPiece sp;
-    public PlayerEntity player;
-    File folder = FMLPaths.CONFIGDIR.get().toFile();
-    File rf = new File(folder, "fhresearches");
-    public boolean waitClient;
+    private transient final SceneHandler paraData=new SceneHandler(this);
+    private CompoundNBT varSnapshot;
+    private transient final ScenarioVariables varData=new ScenarioVariables();
+    private ScenarioPiece sp;
+    public transient PlayerEntity player;
+    public transient boolean waitClient;
     public boolean isNowait;
-    public boolean isSkip;
-    boolean lastIsReline;
-    int waiting;
-    int status;
-    StringBuilder currentLiteral;
+    public transient boolean isSkip;
+    transient int waiting;
+    transient int status;
+    
     public ScenarioConductor(PlayerEntity player) {
 		super();
 		this.player = player;
@@ -83,16 +70,17 @@ public class ScenarioConductor implements IEnvironment {
 	    			run();
 	    	}
     }
-    public ParagraphData getParagraph() {
-    	if(paraData==null)
-    		paraData=new ParagraphData(paragraphNum);
+    public ScenarioVariables getVaribles() {
+    	return varData;
+    }
+    public SceneHandler getScene() {
     	return paraData;
     }
 	public void run(ScenarioPiece sp) {
 		this.sp=sp;
 		nodeNum=0;
 		paragraphNum=0;
-		paraData=null;
+		paraData.clear(paragraphNum);
 		for(Node n:sp.pieces) {
 			System.out.println(n.getText());
 		}
@@ -105,11 +93,20 @@ public class ScenarioConductor implements IEnvironment {
 		getParagraph().links.put(id, new ExecuteTarget(scenario,label));
 		return id;
 	}
+	private SceneHandler getParagraph() {
+		return paraData;
+	}
 	public void clearLink() {
 		getParagraph().links.clear();
 	}
 	public void jump(ExecuteTarget target) {
 		jump(target.scenario,target.label);
+	}
+	public void prepareTextualModification() {
+		getScene().sendNoreline();
+	}
+	public void newLine() {
+		getScene().sendNewline();
 	}
 	public void jump(String scenario,String label) {
 		if(scenario!=null) {
@@ -117,7 +114,7 @@ public class ScenarioConductor implements IEnvironment {
 				this.sp=FHScenario.loadScenario(scenario);
 			nodeNum=0;
 			paragraphNum=0;
-			paraData=null;
+			paraData.clear(paragraphNum);
 		}
 		if(label!=null) {
 			Integer ps=this.sp.labels.get(label);
@@ -133,14 +130,12 @@ public class ScenarioConductor implements IEnvironment {
     	try {
     		isRunning=true;
 	    	while(!waitClient&&waiting<=0&&nodeNum<sp.pieces.size()) {
-	    		if(currentLiteral==null)
-	        		currentLiteral=new StringBuilder();
 	    		Node node=sp.pieces.get(nodeNum);
-	    		currentLiteral.append(node.getDisplay(this));
+	    		getParagraph().appendLiteral(node.getLiteral(this));
 	    		node.run(this);
 	    		nodeNum++;
 	    		if(nodeNum>=sp.pieces.size()) {
-	    			sendNormal();
+	    			paragraph(-1);
 	    		}
 	    	}
     	}finally {
@@ -150,31 +145,10 @@ public class ScenarioConductor implements IEnvironment {
     public void stop() {
     	nodeNum=sp.pieces.size();
     }
-    public boolean shouldWaitClient() {
-    	return currentLiteral!=null&&currentLiteral.length()!=0;
-    }
-    
-    public void sendNormal() {
-    	if(currentLiteral!=null&&currentLiteral.length()>0) {
-    		//System.out.println("Reline "+currentLiteral.toString());
-    		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->(ServerPlayerEntity)player), new ServerSenarioTextPacket(currentLiteral.toString(),true,isNowait));
-    	}else if(lastIsReline) {
-    		//System.out.println("Reline");
-    		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->(ServerPlayerEntity)player), new ServerSenarioTextPacket("",true,isNowait));
-    		lastIsReline=false;
-    	}
-    	currentLiteral=null;
-    }
-    public void sendNoreline() {
-    	if(currentLiteral!=null&&currentLiteral.length()>0) {
-    		//System.out.println("NoReline "+currentLiteral.toString());
-    		lastIsReline=true;
-    		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->(ServerPlayerEntity)player), new ServerSenarioTextPacket(currentLiteral.toString(),false,isNowait));
-    	}
-    	currentLiteral=null;
-    }
+
     public void waitClient() {
-    	waitClient=true;
+    	if(getScene().shouldWaitClient())
+    		waitClient=true;
     }
 	public void notifyClientResponse(boolean isSkip,int status) {
 		if(waitClient) {
@@ -186,134 +160,34 @@ public class ScenarioConductor implements IEnvironment {
     }
 	public void paragraph(int pn) {
 		paragraphNum=pn;
-		paraData=null;
-		if(shouldWaitClient())
-			waitClient();
-		sendNormal();
+		varSnapshot=varData.takeSnapshot();
+		paraData.clear(paragraphNum);
 		
 	}
-    public boolean containsPath(String path) {
-        return getParagraph().containsPath(path);
-    }
-
     public double eval(String exp) {
-        return Evaluator.eval(exp).eval(this);
-    }
-
-    public INBT evalPath(String path) {
-        return getParagraph().evalPath(path);
-    }
-
-    public Double evalPathDouble(String path) {
-        return getParagraph().evalPathDouble(path);
-    }
-
-    public String evalPathString(String path) {
-        return getParagraph().evalPathString(path);
-    }
-
-    @Override
-    public double get(String key) {
-
-        return evalPathDouble(key);
-    }
-
-    public FlowElement getByCaller(int caller) {
-        for (int i = flowControlStack.size() - 1; i >= 0; i--) {
-            FlowElement cur = flowControlStack.get(i);
-            if (cur.getCaller() == caller)
-                return cur;
-        }
-        return null;
+        return Evaluator.eval(exp).eval(varData);
     }
 
     public CompoundNBT getExecutionData() {
-        return null;
-    }
-
-    public FlowElement getLast() {
-        return flowControlStack.get(flowControlStack.size() - 1);
+        return paraData.executionData;
     }
 
     public int getNodeNum() {
         return nodeNum;
     }
 
-    @Override
-    public Double getOptional(String key) {
-        if (!containsPath(key))
-            return null;
-        return get(key);
-    }
 
     public ServerPlayerEntity getPlayer() {
         return (ServerPlayerEntity) player;
     }
 
-    public void jump(int target) {
+    public void gotoNode(int target) {
         nodeNum = target;
     }
 
-    public boolean popCall() {
-        if (flowControlStack.size() > 0) {
-            nodeNum = flowControlStack.remove(flowControlStack.size() - 1).getTarget();
-            return true;
-        }
-        return false;
-    }
 
-    public boolean popCaller(int caller) {
-        if (flowControlStack.size() > 0) {
-            if (getLast().getCaller() == caller) {
-                nodeNum = flowControlStack.remove(flowControlStack.size() - 1).getTarget();
-                return true;
-            }
-        }
-        return false;
-    }
 
-    public void pushCall(int caller, int target) {
-        flowControlStack.add(new FlowElement(caller, target));
-    }
 
-    public boolean removeCall() {
-        if (flowControlStack.size() > 0) {
-            flowControlStack.remove(flowControlStack.size() - 1).getTarget();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean removeCaller(int caller) {
-        if (flowControlStack.size() > 0) {
-            if (getLast().getCaller() == caller) {
-                flowControlStack.remove(flowControlStack.size() - 1).getTarget();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void set(String key, double v) {
-        setPathNumber(key, v);
-    }
-
-    public void setNodeNum(int nodeNum) {
-        this.nodeNum = nodeNum;
-    }
-
-    public void setPath(String path, INBT val) {
-        getParagraph().setPath(path, val);
-    }
-
-    public void setPathNumber(String path, Number val) {
-        getParagraph().setPathNumber(path, val);
-    }
-
-    public void setPathString(String path, String val) {
-        getParagraph().setPathString(path, val);
-    }
 	public void onLinkClicked(String link) {
 		ExecuteTarget jt=getParagraph().links.get(link);
 		if(jt!=null) {

@@ -36,12 +36,12 @@ public class EmbNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioConductor runner) {
+    public String getLiteral(ScenarioConductor runner) {
         Object dat = "";
         if (exp != null)
             dat = runner.eval(exp);
         else if (pat != null)
-            dat = runner.evalPathString(pat);
+            dat = runner.getVaribles().evalPathString(pat);
         return String.format(format, dat);
     }
 

@@ -32,7 +32,7 @@ public class ElseNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioConductor runner) {
+    public String getLiteral(ScenarioConductor runner) {
         return "";
     }
 
@@ -48,7 +48,7 @@ public class ElseNode implements Node {
 
     @Override
     public void run(ScenarioConductor runner) {
-    	runner.jump(target);
+    	runner.gotoNode(target);
     }
 
 }

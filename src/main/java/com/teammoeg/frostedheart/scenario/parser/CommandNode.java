@@ -35,7 +35,7 @@ public class CommandNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioConductor runner) {
+    public String getLiteral(ScenarioConductor runner) {
         return "";
     }
 

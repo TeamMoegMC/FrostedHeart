@@ -9,10 +9,9 @@ import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ControlCommands {
 	public void wt(ScenarioConductor runner,@Param("t")int t) {
+		runner.waitClient();
 		runner.addWait(t);
-		if(runner.shouldWaitClient())
-			runner.waitClient();
-		runner.sendNoreline();
+		runner.prepareTextualModification();
 
 	}
 	public void s(ScenarioConductor runner) {
@@ -24,14 +23,14 @@ public class ControlCommands {
 
 	}
 	public void link(ScenarioConductor runner,@Param("lid")String linkId,@Param("s")String scenario,@Param("l")String label) {
-		runner.sendNoreline();
+		runner.prepareTextualModification();
 		linkId=runner.createLink(linkId, scenario, label);
 		Map<String,String> pars=new HashMap<>();
 		pars.put("lid", linkId);
 		FHScenario.callClientCommand("link", runner, pars);
 	}
 	public void endlink(ScenarioConductor runner) {
-		runner.sendNoreline();
+		runner.prepareTextualModification();
 		Map<String,String> pars=new HashMap<>();
 		FHScenario.callClientCommand("endlink", runner, pars);
 	}

@@ -38,7 +38,7 @@ public class AssignNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioConductor runner) {
+    public String getLiteral(ScenarioConductor runner) {
         return "";
     }
 
@@ -55,11 +55,11 @@ public class AssignNode implements Node {
     @Override
     public void run(ScenarioConductor runner) {
         if (pat2 != null) {
-            runner.setPath(pat, runner.evalPath(pat2));
+            runner.getVaribles().setPath(pat, runner.getVaribles().evalPath(pat2));
         } else if (str != null) {
-            runner.setPathString(pat, str);
+            runner.getVaribles().setPathString(pat, str);
         } else {
-            runner.setPathNumber(pat, runner.eval(exp));
+            runner.getVaribles().setPathNumber(pat, runner.eval(exp));
         }
     }
 

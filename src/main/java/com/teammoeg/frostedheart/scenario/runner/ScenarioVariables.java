@@ -24,24 +24,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor.ExecuteTarget;
+import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
-/*
- * Paragraph data.
- * A Paragraph is like some sort of base block for code.
- * Declared local data like links and ui elements should be invalidate when paragraph is changed.
- * 
- * */
-public class ParagraphData {
+
+public class ScenarioVariables implements IEnvironment  {
     CompoundNBT extraData;
-    int paragraphNum;
-    Map<String,ExecuteTarget> links=new HashMap<>();
-    public ParagraphData(int paragraphNum) {
+
+
+    public ScenarioVariables() {
         super();
-        this.paragraphNum = paragraphNum;
     }
 
     public boolean containsPath(String path) {
@@ -114,7 +109,7 @@ public class ParagraphData {
         }
         nbt.putDouble(paths[paths.length - 1], val.doubleValue());
     }
-
+    
     public void setPathString(String path, String val) {
         String[] paths = path.split("\\.");
         CompoundNBT nbt = getExecutionData();
@@ -129,5 +124,26 @@ public class ParagraphData {
                 throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
         }
         nbt.putString(paths[paths.length - 1], val);
+    }
+    public CompoundNBT takeSnapshot() {
+    	return extraData.copy();
+    }
+
+    @Override
+    public double get(String key) {
+
+        return evalPathDouble(key);
+    }
+    @Override
+    public Double getOptional(String key) {
+        if (!containsPath(key))
+            return null;
+        return get(key);
+    }
+
+
+    @Override
+    public void set(String key, double v) {
+    	setPathNumber(key, v);
     }
 }

@@ -43,7 +43,7 @@ public class IfNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioConductor runner) {
+    public String getLiteral(ScenarioConductor runner) {
         return "";
     }
 
@@ -63,11 +63,11 @@ public class IfNode implements Node {
         if (runner.eval(exp) <= 0) {
         	for(Entry<String, Integer> ent:elsifs.entrySet()) {
         		if(runner.eval(ent.getKey())>0) {
-        			runner.jump(ent.getValue());
+        			runner.gotoNode(ent.getValue());
         			return;
         		}
         	}
-            runner.jump(elseBlock);
+            runner.gotoNode(elseBlock);
         }
     }
 

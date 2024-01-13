@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public interface Node {
-    String getDisplay(ScenarioConductor runner);
+    String getLiteral(ScenarioConductor runner);
 
     String getText();
 

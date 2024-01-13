@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.scenario.client;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.teammoeg.frostedheart.FHPacketHandler;
@@ -54,7 +55,7 @@ public class ClientTextProcessor {
 			return !(text instanceof SizedReorderingProcessor)||((SizedReorderingProcessor) text).isFinished;
 		}
 	}
-	static List<TextInfo> textlines=new ArrayList<>();
+	static LinkedList<TextInfo> msgQueue=new LinkedList<>();
 	static int ticks;
 	static int page=0;
 	static int wait;
@@ -64,7 +65,7 @@ public class ClientTextProcessor {
 	public static void showOneChar() {
 
 		unFinished=false;
-		for(TextInfo t:textlines) {
+		for(TextInfo t:msgQueue) {
 			if(t.addLimit()) { 
 				unFinished=true;
 				break;
@@ -81,7 +82,7 @@ public class ClientTextProcessor {
 		page=0;
 		wait=0;
 		ticksToContinue=0;
-		textlines.clear();
+		msgQueue.clear();
 		unFinished=false;
 		hasText=false;
 	}
@@ -155,7 +156,7 @@ public class ClientTextProcessor {
 	}
 
 	public static void cls() {
-		textlines.clear();
+		msgQueue.clear();
 	}
 	public static void setText(String txt) {
 		cls();
@@ -179,8 +180,8 @@ public class ClientTextProcessor {
 		if(preset!=null)
 			item=item.copyRaw().mergeStyle(preset);
 		List<IReorderingProcessor> lines;
-        if(!textlines.isEmpty()&&!textlines.get(textlines.size()-1).reline) {
-        	TextInfo ti=textlines.remove(textlines.size()-1);
+        if(!msgQueue.isEmpty()&&!msgQueue.peekLast().reline) {
+        	TextInfo ti=msgQueue.remove(msgQueue.size()-1);
         	int lastline=ti.line;
         	int lastLimit=countCh(ti.text);
         	System.out.println(lastLimit);
@@ -200,17 +201,17 @@ public class ClientTextProcessor {
         			line=sized;
         		}
         		//System.out.println(toString(line));
-        		textlines.add(new TextInfo(ntext,i,line,true));
+        		msgQueue.add(new TextInfo(ntext,i,line,true));
         	}
         }else {
 	        lines=RenderComponentsUtil.func_238505_a_(item, w,ClientUtils.mc().fontRenderer);
 	        int i=0;
 	        for(IReorderingProcessor line:lines) {
-	        	textlines.add(new TextInfo(item,i++,isNowait?line:new SizedReorderingProcessor(line),true));
+	        	msgQueue.add(new TextInfo(item,i++,isNowait?line:new SizedReorderingProcessor(line),true));
 	        }
         }
-        if(!textlines.isEmpty()) {
-        	textlines.get(textlines.size()-1).reline=isReline2;
+        if(!msgQueue.isEmpty()) {
+        	msgQueue.peekLast().reline=isReline2;
         }
 	}
 	public static void process(String text, boolean isReline2, boolean isNowait) {
@@ -218,8 +219,8 @@ public class ClientTextProcessor {
 			hasText=true;
 			ITextComponent item=ClientTextComponentUtils.parse(text);
 			processClient(item,isReline2,isNowait);
-		}else if(!textlines.isEmpty()) {
-        	textlines.get(textlines.size()-1).reline=isReline2;
+		}else if(!msgQueue.isEmpty()) {
+        	msgQueue.peekLast().reline=isReline2;
         }
        
 	}
@@ -239,11 +240,11 @@ public class ClientTextProcessor {
         	List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
             
         	
-            if(!textlines.isEmpty()) {
+            if(!msgQueue.isEmpty()) {
             	ClientTextProcessor.showOneChar();
             	int j=0;
             	i.removeIf(l->l.getChatLineID()==fhchatid);
-            	for(TextInfo t:textlines) {
+            	for(TextInfo t:msgQueue) {
             		if(t.isFinished()&&t.reline) {
             			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),0));
             			System.out.println("removed "+toString(t.text));
@@ -258,7 +259,7 @@ public class ClientTextProcessor {
             		
             	}
             	while(--j>=0) {
-            		textlines.remove(0);
+            		msgQueue.remove(0);
             	}
             }
 

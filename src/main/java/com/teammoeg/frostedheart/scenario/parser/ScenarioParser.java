@@ -110,7 +110,7 @@ public class ScenarioParser {
             Node n = nodes.get(i);
             if (n instanceof ParagraphNode) {
                 paragraphs.add(i);
-                ((ParagraphNode) n).nodeNum=i;
+                ((ParagraphNode) n).nodeNum=paragraphs.size();
             }else if(n instanceof LabelNode) {
             	labels.put(((LabelNode)n).name, i);
             }else if (n instanceof IfNode) {
