@@ -17,24 +17,36 @@
  *
  */
 
-package com.teammoeg.frostedheart.scenario.runner;
+package com.teammoeg.frostedheart.scenario.parser;
 
-public class CallStackElement {
-    private int caller;
-    private int target;
+import java.util.Map;
 
-    public CallStackElement(int caller, int target) {
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+
+public class NopNode implements Node {
+    String command;
+    public NopNode(String command, Map<String, String> params) {
         super();
-        this.caller = caller;
-        this.target = target;
+        this.command = command.toLowerCase();
     }
 
-    public int getCaller() {
-        return caller;
+    @Override
+    public String getDisplay(ScenarioConductor runner) {
+        return "";
     }
 
-    public int getTarget() {
-        return target;
+    @Override
+    public String getText() {
+        return "@" + command;
+    }
+
+    @Override
+    public boolean isLiteral() {
+        return false;
+    }
+
+    @Override
+    public void run(ScenarioConductor runner) {
     }
 
 }

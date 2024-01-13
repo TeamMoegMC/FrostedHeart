@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ScenarioExecutor {
     private static class MethodInfo implements ScenarioMethod {
@@ -100,7 +100,7 @@ public class ScenarioExecutor {
 		}
 
 		@Override
-        public void execute(ScenarioRunner runner, Map<String, String> param) {
+        public void execute(ScenarioConductor runner, Map<String, String> param) {
             Object[] pars = new Object[params.length + 1];
             for (int i = 0; i < params.length; i++) {
                 String par = param.get(params[i].paramName);
@@ -129,7 +129,7 @@ public class ScenarioExecutor {
     }
     @FunctionalInterface
     public interface ScenarioMethod {
-        void execute(ScenarioRunner runner, Map<String, String> param);
+        void execute(ScenarioConductor runner, Map<String, String> param);
     }
     static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
     private static Function<String, Object> string = s -> s;
@@ -140,7 +140,7 @@ public class ScenarioExecutor {
 
     Map<String, ScenarioMethod> commands = new HashMap<>();
 
-    public void callCommand(String name, ScenarioRunner runner, Map<String, String> params) {
+    public void callCommand(String name, ScenarioConductor runner, Map<String, String> params) {
         ScenarioMethod command = commands.get(name);
         if (command == null) {
             throw new ScenarioExecutionException("Can not find command " + name);
@@ -170,7 +170,7 @@ public class ScenarioExecutor {
         for (Method met : clazz.getClass().getMethods()) {
             if (Modifier.isPublic(met.getModifiers())) {
                 try {
-                	if(met.getParameterCount()>0&&met.getParameters()[0].getType()==ScenarioRunner.class)
+                	if(met.getParameterCount()>0&&met.getParameters()[0].getType()==ScenarioConductor.class)
                 		registerCommand(met.getName(), new MethodInfo(Modifier.isStatic(met.getModifiers()) ? null :clazz,  met));
                 } catch (ScenarioExecutionException ex) {
                     ex.printStackTrace();
@@ -194,14 +194,14 @@ public class ScenarioExecutor {
         }
     }
     static class Test{
-    	public void test(ScenarioRunner sr,@Param("t")int t) {
+    	public void test(ScenarioConductor sr,@Param("t")int t) {
     		System.out.println(t);
     		
     	};
     }
     public static void main(String[] args) throws NoSuchMethodException, SecurityException {
     	Test t=new Test();
-    	MethodInfo mi=new MethodInfo(t,t.getClass().getMethod("test", ScenarioRunner.class,int.class));
+    	MethodInfo mi=new MethodInfo(t,t.getClass().getMethod("test", ScenarioConductor.class,int.class));
     	Map<String,String> mp=new HashMap<>();
     	mp.put("t", "20");
     	mi.execute(null, mp);

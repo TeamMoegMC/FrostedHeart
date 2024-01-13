@@ -141,7 +141,7 @@ public abstract class ChickenEntityMixin extends AnimalEntity implements IFeedSt
                 digestTimer = 6000;
             }
 
-            if (FHUtils.isBlizzardHarming(world, entityBlockPosition)) {
+            if (FHUtils.isBlizzardHarming(world, this.getPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {

@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class CommandNode implements Node {
     String command;
@@ -35,7 +35,7 @@ public class CommandNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
+    public String getDisplay(ScenarioConductor runner) {
         return "";
     }
 
@@ -50,7 +50,7 @@ public class CommandNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
+    public void run(ScenarioConductor runner) {
         FHScenario.callCommand(command, runner, params);
     }
 

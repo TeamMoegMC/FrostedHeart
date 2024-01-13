@@ -61,7 +61,7 @@ public class CoolableAnimals extends MobEntity {
         super.tick();
         if (!this.world.isRemote) {
 
-            if (FHUtils.isBlizzardHarming(world, entityBlockPosition)) {
+            if (FHUtils.isBlizzardHarming(world, this.getPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {

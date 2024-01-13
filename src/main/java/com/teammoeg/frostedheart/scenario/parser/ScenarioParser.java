@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,32 +35,28 @@ import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 
 public class ScenarioParser {
     private static class CommandStack {
-        int from;
-        List<IfNode> allNodes = new ArrayList<>();
-
-        public CommandStack(int from, IfNode f) {
+        IfNode f;
+        List<ElseNode> elses=new ArrayList<>();
+        public CommandStack( IfNode f) {
             super();
-            this.from = from;
-            allNodes.add(f);
+            this.f=f;
         }
 
-        public void add(int idx, IfNode elsif) {
-            allNodes.get(allNodes.size() - 1).elseBlock = idx;
-            elsif.parentBlock = from;
-            allNodes.add(elsif);
+        public void add(int idx, ElsifNode elsif) {
+            f.elsifs.put(elsif.exp, idx+1);
+            elses.add(elsif);
         }
 
-        public void addElse(int idx) {
-            if (allNodes.get(allNodes.size() - 1).elseBlock != -1) {
-                allNodes.get(allNodes.size() - 1).elseBlock = idx;
-            }
-            throw new IllegalArgumentException("Illegal else block at node " + idx);
+        public void setElse(int idx,ElseNode els) {
+            if(f.elseBlock==-1)
+            	f.elseBlock=idx+1;
+            elses.add(els);
         }
 
-        public void addEndif(int idx) {
-            for (IfNode ifn : allNodes) {
-                ifn.endBlock = idx;
-            }
+        public void setEndif(int idx) {
+        	if(f.elseBlock==-1)
+            	f.elseBlock=idx;
+        	elses.forEach(t->t.target=idx);
         }
     }
 
@@ -68,11 +65,13 @@ public class ScenarioParser {
             case "eval":
                 return new AssignNode(command, params);
             case "if":
+            	return new IfNode(command, params);
             case "elsif":
-                return new IfNode(command, params);
+            	return new ElsifNode(command, params);
             case "else":
+            	return new ElseNode(command, params);
             case "endif":
-                return new ElsEndifNode(command, params);
+                return new EndIfNode(command, params);
             case "emb":
                 return new EmbNode(command, params);
             case "label":
@@ -84,8 +83,7 @@ public class ScenarioParser {
 
     }
 
-    public ScenarioPiece parse(File file) throws IOException {
-    	String name=file.getName();
+    public ScenarioPiece parse(String name,File file) throws IOException {
         List<Node> nodes = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis,StandardCharsets.UTF_8);
@@ -106,7 +104,7 @@ public class ScenarioParser {
         	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
         }
         List<Integer> paragraphs = new ArrayList<>();
-        List<CommandStack> ifstack = new ArrayList<>();
+        LinkedList<CommandStack> ifstack = new LinkedList<>();
         Map<String,Integer> labels=new HashMap<>();
         for (int i = 0; i < nodes.size(); i++) {
             Node n = nodes.get(i);
@@ -117,18 +115,15 @@ public class ScenarioParser {
             	labels.put(((LabelNode)n).name, i);
             }else if (n instanceof IfNode) {
                 IfNode ifn = (IfNode) n;
-                if (ifn.cmd.equals("if")) {
-                    ifstack.add(new CommandStack(i, ifn));
-                } else {
-                    ifstack.get(ifstack.size() - 1).add(i, ifn);
-                }
-            } else if (n instanceof ElsEndifNode) {
-                ElsEndifNode els = (ElsEndifNode) n;
-                if (els.command.equals("else")) {
-                    ifstack.get(ifstack.size() - 1).addElse(i);
-                } else {
-                    ifstack.remove(ifstack.size() - 1).addEndif(i);
-                }
+                ifstack.add(new CommandStack(ifn));
+            }else if (n instanceof ElsifNode) {
+            	ElsifNode ifn = (ElsifNode) n;
+                ifstack.peekLast().add(i, ifn);
+            } else if (n instanceof ElseNode) {
+                ElseNode els = (ElseNode) n;
+                ifstack.peekLast().setElse(i,els);
+            } else if (n instanceof EndIfNode) {
+                ifstack.pollLast().setEndif(i);
             }
         }
         return new ScenarioPiece(name, nodes,paragraphs.stream().mapToInt(t->t).toArray(),labels);

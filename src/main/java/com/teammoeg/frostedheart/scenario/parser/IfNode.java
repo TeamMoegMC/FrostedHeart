@@ -19,32 +19,31 @@
 
 package com.teammoeg.frostedheart.scenario.parser;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class IfNode implements Node {
     String cmd;
     String exp;
-    int parentBlock = -1;
+    Map<String,Integer> elsifs=new LinkedHashMap<>();
     int elseBlock = -1;
-    int endBlock = -1;
 
-    public IfNode(String exp, int parentBlock, int elseBlock, int endBlock) {
+    public IfNode(String exp, int elseBlock) {
         super();
         this.exp = exp;
-        this.parentBlock = parentBlock;
         this.elseBlock = elseBlock;
-        this.endBlock = endBlock;
     }
 
     public IfNode(String cmd, Map<String, String> params) {
         this.cmd = cmd;
-        exp = params.get("exp");
+        exp = params.getOrDefault("exp","1");
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
+    public String getDisplay(ScenarioConductor runner) {
         return "";
     }
 
@@ -59,13 +58,15 @@ public class IfNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
-        if (runner.popCaller(parentBlock))
-            return;
+    public void run(ScenarioConductor runner) {
 
-        if (runner.eval(exp) > 0) {
-            runner.pushCall(parentBlock, endBlock);
-        } else {
+        if (runner.eval(exp) <= 0) {
+        	for(Entry<String, Integer> ent:elsifs.entrySet()) {
+        		if(runner.eval(ent.getKey())>0) {
+        			runner.jump(ent.getValue());
+        			return;
+        		}
+        	}
             runner.jump(elseBlock);
         }
     }

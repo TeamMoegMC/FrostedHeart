@@ -23,20 +23,24 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.commands.ClientControl;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class FHScenarioClient {
     static ScenarioExecutor client = new ScenarioExecutor();
     public static boolean sendInitializePacket=false;
-    public static void callCommand(String name, ScenarioRunner runner, Map<String, String> params) {
+    public static void callCommand(String name, ScenarioConductor runner, Map<String, String> params) {
         client.callCommand(name, runner, params);
     }
 
-    public static void regiser(Class<?> clazz) {
+    public static void register(Class<?> clazz) {
         client.register(clazz);
     }
 
     public static void registerCommand(String cmdName, ScenarioMethod method) {
         client.registerCommand(cmdName, method);
+    }
+    static {
+    	register(ClientControl.class);
     }
 }

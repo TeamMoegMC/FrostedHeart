@@ -20,27 +20,33 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor.ExecuteTarget;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
-
-public class ParagraphRunner {
-    CompoundNBT parVars;
+/*
+ * Paragraph data.
+ * A Paragraph is like some sort of base block for code.
+ * Declared local data like links and ui elements should be invalidate when paragraph is changed.
+ * 
+ * */
+public class ParagraphData {
+    CompoundNBT extraData;
     int paragraphNum;
-    PlayerEntity player;
-
-    public ParagraphRunner(CompoundNBT parVars, int paragraphNum,PlayerEntity player) {
+    Map<String,ExecuteTarget> links=new HashMap<>();
+    public ParagraphData(int paragraphNum) {
         super();
-        this.parVars = parVars;
         this.paragraphNum = paragraphNum;
-        this.player = player;
     }
 
     public boolean containsPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
+        CompoundNBT nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (!nbt.contains(paths[i], 10))
                 return false;
@@ -51,7 +57,7 @@ public class ParagraphRunner {
 
     public INBT evalPath(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
+        CompoundNBT nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             nbt = nbt.getCompound(paths[i]);
         }
@@ -60,7 +66,7 @@ public class ParagraphRunner {
 
     public Double evalPathDouble(String path) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
+        CompoundNBT nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             nbt = nbt.getCompound(paths[i]);
         }
@@ -72,16 +78,14 @@ public class ParagraphRunner {
     }
 
     public CompoundNBT getExecutionData() {
-        return parVars;
+    	if(extraData==null) {
+    		extraData=new CompoundNBT();
+    	}
+        return extraData;
     }
-
-    public PlayerEntity getPlayer() {
-        return player;
-    }
-
     public void setPath(String path, INBT val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
+        CompoundNBT nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
@@ -97,7 +101,7 @@ public class ParagraphRunner {
 
     public void setPathNumber(String path, Number val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
+        CompoundNBT nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);
@@ -113,7 +117,7 @@ public class ParagraphRunner {
 
     public void setPathString(String path, String val) {
         String[] paths = path.split("\\.");
-        CompoundNBT nbt = parVars;
+        CompoundNBT nbt = getExecutionData();
         for (int i = 0; i < paths.length - 1; i++) {
             if (nbt.contains(paths[i], 10)) {
                 nbt = nbt.getCompound(paths[i]);

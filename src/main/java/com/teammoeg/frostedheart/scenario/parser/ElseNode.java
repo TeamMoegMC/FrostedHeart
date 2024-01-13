@@ -19,14 +19,36 @@
 
 package com.teammoeg.frostedheart.scenario.parser;
 
+import java.util.Map;
+
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
-public interface Node {
-    String getDisplay(ScenarioConductor runner);
+public class ElseNode implements Node {
+    String command;
+    int target;
+    public ElseNode(String command, Map<String, String> params) {
+        super();
+        this.command = command.toLowerCase();
+    }
 
-    String getText();
+    @Override
+    public String getDisplay(ScenarioConductor runner) {
+        return "";
+    }
 
-    boolean isLiteral();
+    @Override
+    public String getText() {
+        return "@" + command;
+    }
 
-    void run(ScenarioConductor runner);
+    @Override
+    public boolean isLiteral() {
+        return false;
+    }
+
+    @Override
+    public void run(ScenarioConductor runner) {
+    	runner.jump(target);
+    }
+
 }

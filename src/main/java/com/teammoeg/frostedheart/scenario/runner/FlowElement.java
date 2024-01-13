@@ -17,37 +17,24 @@
  *
  */
 
-package com.teammoeg.frostedheart.scenario.parser;
+package com.teammoeg.frostedheart.scenario.runner;
 
-import java.util.Map;
+public class FlowElement {
+    private int caller;
+    private int target;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
-
-public class ElsEndifNode implements Node {
-    String command;
-
-    public ElsEndifNode(String command, Map<String, String> params) {
+    public FlowElement(int caller, int target) {
         super();
-        this.command = command.toLowerCase();
+        this.caller = caller;
+        this.target = target;
     }
 
-    @Override
-    public String getDisplay(ScenarioRunner runner) {
-        return "";
+    public int getCaller() {
+        return caller;
     }
 
-    @Override
-    public String getText() {
-        return "@" + command;
-    }
-
-    @Override
-    public boolean isLiteral() {
-        return false;
-    }
-
-    @Override
-    public void run(ScenarioRunner runner) {
+    public int getTarget() {
+        return target;
     }
 
 }

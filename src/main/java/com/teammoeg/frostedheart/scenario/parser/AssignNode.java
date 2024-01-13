@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class AssignNode implements Node {
     String exp;
@@ -38,7 +38,7 @@ public class AssignNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
+    public String getDisplay(ScenarioConductor runner) {
         return "";
     }
 
@@ -53,7 +53,7 @@ public class AssignNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
+    public void run(ScenarioConductor runner) {
         if (pat2 != null) {
             runner.setPath(pat, runner.evalPath(pat2));
         } else if (str != null) {

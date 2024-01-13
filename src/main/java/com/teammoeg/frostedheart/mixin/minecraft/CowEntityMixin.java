@@ -179,7 +179,7 @@ public abstract class CowEntityMixin extends AnimalEntity implements IMilkable, 
             } else if (feeded > 0) {
                 digestTimer = 14400;
             }
-            if (FHUtils.isBlizzardHarming(world, entityBlockPosition)) {
+            if (FHUtils.isBlizzardHarming(world, this.getPosition())) {
                 if (hxteTimer < 20) {
                     hxteTimer++;
                 } else {

@@ -13,12 +13,12 @@ import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.RenderComponentsUtil;
-import net.minecraft.client.gui.screen.IngameMenuScreen;
 import net.minecraft.util.ICharacterConsumer;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientTextProcessor {
@@ -76,6 +76,15 @@ public class ClientTextProcessor {
 			hasText=false;
 		}
 	}
+	public static void reset() {
+		ticks=0;
+		page=0;
+		wait=0;
+		ticksToContinue=0;
+		textlines.clear();
+		unFinished=false;
+		hasText=false;
+	}
 	public static void sendContinuePacket(boolean isSkip) {
 		FHPacketHandler.send(PacketDistributor.SERVER.noArg(),new ClientScenarioResponsePacket(isSkip,0));
 	}
@@ -96,12 +105,16 @@ public class ClientTextProcessor {
 		}
 		@Override
 		public boolean accept(ICharacterConsumer p_accept_1_) {
+			ReferenceValue<Integer> renderTracker=new ReferenceValue<>(0);
 			return origin.accept((i,s,c)->{
 				isFinished=true;
-				if(i<limit) {
+				if(renderTracker.getVal()<limit) {
 					p_accept_1_.accept(i, s, c);
 				}else {
 					isFinished=false;
+				}
+				if(c!=65533) {
+					renderTracker.setVal(renderTracker.getVal()+1);
 				}
 				return true;
 			});
@@ -153,31 +166,40 @@ public class ClientTextProcessor {
 		//if(p instanceof SizedReorderingProcessor)
 		//	p=((SizedReorderingProcessor) p).origin;
 		p.accept((i,s,c)->{
-			count.setVal(Math.max(i, count.getVal()));
+			if(c!=65533)
+				count.setVal(count.getVal()+1);
 			return true;
 		});
 		return count.getVal();
 	}
+	//fh$scenario$link:
 	static int w;
-	public static void process(String text, boolean isReline2, boolean isNowait) {
-		hasText=true;
-		ITextComponent item=ClientTextComponentUtils.parse(text);
+	public static Style preset=null;
+	public static void processClient(ITextComponent item, boolean isReline2, boolean isNowait) {
+		if(preset!=null)
+			item=item.copyRaw().mergeStyle(preset);
 		List<IReorderingProcessor> lines;
         if(!textlines.isEmpty()&&!textlines.get(textlines.size()-1).reline) {
         	TextInfo ti=textlines.remove(textlines.size()-1);
         	int lastline=ti.line;
         	int lastLimit=countCh(ti.text);
-        	
+        	System.out.println(lastLimit);
         	IFormattableTextComponent ntext=ti.parent.deepCopy().appendSibling(item);
         	lines=RenderComponentsUtil.func_238505_a_(ntext, w,ClientUtils.mc().fontRenderer);
         	for(int i=lastline;i<lines.size();i++) {
+        		
         		IReorderingProcessor line=lines.get(i);
+        		
+        			
+        		//System.out.println(i);
+        		//System.out.println(toString(line));
         		if(!isNowait) {
         			SizedReorderingProcessor sized=new SizedReorderingProcessor(line);
         			if(i==lastline)
         				sized.limit=lastLimit;
         			line=sized;
         		}
+        		//System.out.println(toString(line));
         		textlines.add(new TextInfo(ntext,i,line,true));
         	}
         }else {
@@ -187,9 +209,28 @@ public class ClientTextProcessor {
 	        	textlines.add(new TextInfo(item,i++,isNowait?line:new SizedReorderingProcessor(line),true));
 	        }
         }
-        if(!lines.isEmpty()) {
+        if(!textlines.isEmpty()) {
         	textlines.get(textlines.size()-1).reline=isReline2;
         }
+	}
+	public static void process(String text, boolean isReline2, boolean isNowait) {
+		if(!text.isEmpty()) {
+			hasText=true;
+			ITextComponent item=ClientTextComponentUtils.parse(text);
+			processClient(item,isReline2,isNowait);
+		}else if(!textlines.isEmpty()) {
+        	textlines.get(textlines.size()-1).reline=isReline2;
+        }
+       
+	}
+	public static String toString(IReorderingProcessor ipp) {
+		StringBuilder sb=new StringBuilder();
+		ipp.accept((i,s,c)->{
+			sb.appendCodePoint(c);
+			return true;
+		});
+		return sb.toString();
+		
 	}
 	public static void render(Minecraft mc) {
 		final int fhchatid=0x05301110;
@@ -200,20 +241,25 @@ public class ClientTextProcessor {
         	
             if(!textlines.isEmpty()) {
             	ClientTextProcessor.showOneChar();
-            	if(textlines.size()>1)
-	            	textlines.removeIf(t->{
-	            		if(t.isFinished()&&t.reline) {
-	            			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),0));
-	            			return true;
-	            		}
-	            		return false;
-	            	});
-            	if(hasText) {
-	            	i.removeIf(t->t.getChatLineID()==fhchatid);
-	            	for(TextInfo line:textlines)
-	            		i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),line.asFinished(),fhchatid));
+            	int j=0;
+            	i.removeIf(l->l.getChatLineID()==fhchatid);
+            	for(TextInfo t:textlines) {
+            		if(t.isFinished()&&t.reline) {
+            			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),0));
+            			System.out.println("removed "+toString(t.text));
+            			j++;
+            		}else {
+            			//if(hasText) {
+            				
+            				i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),fhchatid));
+            			//}
+            			break;
+            		}
+            		
             	}
-	            
+            	while(--j>=0) {
+            		textlines.remove(0);
+            	}
             }
 
         }

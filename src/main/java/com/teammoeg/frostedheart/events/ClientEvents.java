@@ -40,7 +40,6 @@ import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.effects.EffectShowCategory;
@@ -49,16 +48,15 @@ import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.scenario.client.ClientTextProcessor;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
+import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.RenderComponentsUtil;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
@@ -78,8 +76,8 @@ import net.minecraft.util.text.*;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
-import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -491,13 +489,22 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onWorldRender(RenderWorldLastEvent event) {
         if(FHScenarioClient.sendInitializePacket) {
+        	ClientTextProcessor.reset();
         	FHScenarioClient.sendInitializePacket=false;
-        	FHPacketHandler.send(PacketDistributor.SERVER.noArg(), new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+        	FHPacketHandler.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
         }
     }
     @SubscribeEvent
     public void onWorldUnLoad(Unload event) {
-
+    	
+    }
+    @SubscribeEvent
+    public static void onClientChat(ClientChatEvent event) {
+    	if(event.getOriginalMessage().startsWith("fh$scenario$link:")) {
+    		ClientLinkClickedPacket packet=new ClientLinkClickedPacket(event.getOriginalMessage().substring("fh$scenario$link:".length()));
+    		FHPacketHandler.sendToServer(packet);
+    		event.setCanceled(true);
+    	}
     }
 
     /*

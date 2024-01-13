@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioRunner;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ParagraphNode implements Node {
     int nodeNum;
@@ -31,7 +31,7 @@ public class ParagraphNode implements Node {
     }
 
     @Override
-    public String getDisplay(ScenarioRunner runner) {
+    public String getDisplay(ScenarioConductor runner) {
         return "";
     }
 
@@ -47,7 +47,7 @@ public class ParagraphNode implements Node {
     }
 
     @Override
-    public void run(ScenarioRunner runner) {
+    public void run(ScenarioConductor runner) {
     	runner.paragraph(nodeNum);
     }
 }
