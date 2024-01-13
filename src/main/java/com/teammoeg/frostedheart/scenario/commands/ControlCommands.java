@@ -8,8 +8,8 @@ import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ControlCommands {
-	public void wt(ScenarioConductor runner,@Param("t")int t) {
-		runner.waitClient();
+	public void delay(ScenarioConductor runner,@Param("t")int t) {
+		//runner.waitClient();
 		runner.addWait(t);
 		runner.prepareTextualModification();
 

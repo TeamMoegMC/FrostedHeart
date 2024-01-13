@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioTextPacket;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor.ExecuteTarget;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -27,11 +26,11 @@ public class SceneHandler {
 		super();
 		this.parent = parent;
 	}
-	public void clear(int paragraphNum) {
+	public void newParagraph(ParagraphData data) {
 		sendNormal();
 		parent.waitClient();
     	lastIsReline=true;
-    	this.paragraphNum=paragraphNum;
+    	this.paragraphNum=data.getParagraphNum();
     	if(!executionData.isEmpty())
     		executionData=new CompoundNBT();
     	links.clear();

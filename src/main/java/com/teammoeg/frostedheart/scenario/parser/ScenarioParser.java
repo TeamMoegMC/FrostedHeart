@@ -83,7 +83,7 @@ public class ScenarioParser {
 
     }
 
-    public ScenarioPiece parse(String name,File file) throws IOException {
+    public Scenario parse(String name,File file) throws IOException {
         List<Node> nodes = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis,StandardCharsets.UTF_8);
@@ -118,15 +118,24 @@ public class ScenarioParser {
                 ifstack.add(new CommandStack(ifn));
             }else if (n instanceof ElsifNode) {
             	ElsifNode ifn = (ElsifNode) n;
+            	if(ifstack.isEmpty())
+            		throw new ScenarioExecutionException("At file "+name+" Unexpected Elsif!");
                 ifstack.peekLast().add(i, ifn);
             } else if (n instanceof ElseNode) {
                 ElseNode els = (ElseNode) n;
+                if(ifstack.isEmpty())
+            		throw new ScenarioExecutionException("At file "+name+" Unexpected Else!");
                 ifstack.peekLast().setElse(i,els);
             } else if (n instanceof EndIfNode) {
+            	if(ifstack.isEmpty())
+            		throw new ScenarioExecutionException("At file "+name+" Unexpected Endif!");
                 ifstack.pollLast().setEndif(i);
             }
         }
-        return new ScenarioPiece(name, nodes,paragraphs.stream().mapToInt(t->t).toArray(),labels);
+        if(!ifstack.isEmpty()) {
+        	throw new ScenarioExecutionException("At file "+name+" If and Endif not match!");
+        }
+        return new Scenario(name, nodes,paragraphs.stream().mapToInt(t->t).toArray(),labels);
     }
 
     public Node parseAtCommand(StringParseReader reader) throws IOException {

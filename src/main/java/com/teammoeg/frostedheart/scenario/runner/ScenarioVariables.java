@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor.ExecuteTarget;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
 import net.minecraft.entity.player.PlayerEntity;

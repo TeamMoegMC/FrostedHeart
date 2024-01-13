@@ -24,26 +24,51 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ScenarioPiece {
-    public final String fileName;
+public class Scenario {
+    public final String name;
     public final List<Node> pieces;
     public final int[] paragraphs;
     public final Map<String, Integer> labels;
 
-    public ScenarioPiece(String fileName, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
+    public Scenario(String fileName, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
         super();
-        this.fileName = fileName;
+        this.name = fileName;
         this.pieces = pieces;
         this.paragraphs = paragraphs;
         this.labels = labels;
     }
 
-    public ScenarioPiece(String name) {
+    public Scenario(String name) {
         super();
-        this.fileName = name;
+        this.name = name;
         this.pieces = new ArrayList<>();
         paragraphs = new int[0];
         labels = new HashMap<>();
     }
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Scenario other = (Scenario) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
+	}
     
 }

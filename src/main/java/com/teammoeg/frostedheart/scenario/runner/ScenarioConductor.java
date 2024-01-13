@@ -19,42 +19,55 @@
 
 package com.teammoeg.frostedheart.scenario.runner;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
-import com.teammoeg.frostedheart.scenario.FHScenario;
+import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
-import com.teammoeg.frostedheart.scenario.parser.ScenarioPiece;
+import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
-import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 
 public class ScenarioConductor{
-	public static class ExecuteTarget{
-		String scenario;
-		String label;
-		public ExecuteTarget(String scenario, String label) {
-			super();
-			this.scenario = scenario;
-			this.label = label;
-		}
-		
-	}
-    int paragraphNum;
-    int nodeNum=0;
+	//Conducting and scheduling data 
+	private ParagraphData paragraphData=new ParagraphData();//Last paragraph info
+	private Scenario sp;//current scenario
+	private int nodeNum=0;//Program register
+	private LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
+    private transient List<TriggerTarget> triggers=new ArrayList<>();
+    private LinkedList<ExecuteTarget> toExecute=new LinkedList<>();
+	
+    //Executing data
     private transient final SceneHandler paraData=new SceneHandler(this);
-    private CompoundNBT varSnapshot;
+    private CompoundNBT varSnapshot;//global variable snapshot for save
     private transient final ScenarioVariables varData=new ScenarioVariables();
-    private ScenarioPiece sp;
+    
+    //Textual Handling state
+    public boolean isNowait;
+    transient int waiting;
+    
+    //Server and Client info
     public transient PlayerEntity player;
     public transient boolean waitClient;
-    public boolean isNowait;
     public transient boolean isSkip;
-    transient int waiting;
     transient int status;
-    
+
+    public ExecuteStackElement getCurrentPosition() {
+    	return new ExecuteStackElement(sp,nodeNum);
+    }
+	public void restorePosition(ExecuteStackElement target) {
+		
+		if(!target.getScenario().equals(sp)) {
+			this.sp=target.getScenario();
+		}
+		nodeNum=target.getNodeNum();
+		run();
+	}
     public ScenarioConductor(PlayerEntity player) {
 		super();
 		this.player = player;
@@ -76,16 +89,18 @@ public class ScenarioConductor{
     public SceneHandler getScene() {
     	return paraData;
     }
-	public void run(ScenarioPiece sp) {
+	public void run(Scenario sp) {
 		this.sp=sp;
 		nodeNum=0;
-		paragraphNum=0;
-		paraData.clear(paragraphNum);
+		paragraphData.setParagraphNum(0);
+		paragraphData.setScenario(sp);
+		paraData.newParagraph(paragraphData);
 		for(Node n:sp.pieces) {
 			System.out.println(n.getText());
 		}
 		run();
 	}
+	
 	public String createLink(String id,String scenario,String label) {
 		if(id==null||getParagraph().links.containsKey(id)) {
 			id=UUID.randomUUID().toString();
@@ -99,8 +114,32 @@ public class ScenarioConductor{
 	public void clearLink() {
 		getParagraph().links.clear();
 	}
+	public void queue(ExecuteTarget target) {
+		toExecute.add(target);
+	}
+	public void call(ExecuteTarget target) {
+		callStack.add(getCurrentPosition());
+		jump(target);
+	}
+	public void endCall() {
+		if(callStack.isEmpty()) {
+			throw new ScenarioExecutionException("Invalid return at "+sp.name);
+		}
+		restorePosition(callStack.pollLast());
+	}
 	public void jump(ExecuteTarget target) {
-		jump(target.scenario,target.label);
+		
+		if(!target.getScenario().equals(sp)) {
+			this.sp=target.getScenario();
+			nodeNum=0;
+		}
+		if(target.getLabel()!=null) {
+			Integer ps=this.sp.labels.get(target.getLabel());
+			if(ps!=null) {
+				nodeNum=ps;
+			}
+		}
+		run();
 	}
 	public void prepareTextualModification() {
 		getScene().sendNoreline();
@@ -109,20 +148,10 @@ public class ScenarioConductor{
 		getScene().sendNewline();
 	}
 	public void jump(String scenario,String label) {
-		if(scenario!=null) {
-			if(this.sp==null||this.sp.fileName!=scenario)
-				this.sp=FHScenario.loadScenario(scenario);
-			nodeNum=0;
-			paragraphNum=0;
-			paraData.clear(paragraphNum);
-		}
-		if(label!=null) {
-			Integer ps=this.sp.labels.get(label);
-			if(ps!=null) {
-				nodeNum=ps;
-			}
-		}
-		run();
+		if(scenario==null)
+			jump(new ExecuteTarget(scenario,label));
+		else
+			jump(new ExecuteTarget(sp,label));
 	}
 	boolean isRunning;
     public void run() {
@@ -159,9 +188,10 @@ public class ScenarioConductor{
 		}
     }
 	public void paragraph(int pn) {
-		paragraphNum=pn;
+		paragraphData.setParagraphNum(pn);
+		paragraphData.setScenario(sp);
 		varSnapshot=varData.takeSnapshot();
-		paraData.clear(paragraphNum);
+		paraData.newParagraph(paragraphData);
 		
 	}
     public double eval(String exp) {

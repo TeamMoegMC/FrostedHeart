@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.scenario.commands.ControlCommands;
 import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
-import com.teammoeg.frostedheart.scenario.parser.ScenarioPiece;
+import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -52,14 +52,14 @@ public class FHScenario {
     static ScenarioParser parser = new ScenarioParser();
     static File local = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhscenario");
 
-    public static ScenarioPiece loadScenario(String name) {
+    public static Scenario loadScenario(String name) {
     	try {
 			return parser.parse(name,new File(local,name+".ks"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	return new ScenarioPiece(name);
+    	return new Scenario(name);
     }
     public static void callCommand(String name, ScenarioConductor runner, Map<String, String> params) {
         server.callCommand(name, runner, params);
