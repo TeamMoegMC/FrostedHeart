@@ -19,33 +19,34 @@ import net.minecraft.util.text.Style;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ServerSenarioTextPacket {
-	private final String text;
-	private final boolean isReline;
-	private final boolean isNowait;
-	public ServerSenarioTextPacket(PacketBuffer buffer) {
-		text=buffer.readString(1024*300);
-		isReline = buffer.readBoolean();
-		isNowait= buffer.readBoolean();
-	}
+    private final String text;
+    private final boolean isReline;
+    private final boolean isNowait;
 
-	public ServerSenarioTextPacket(String text, boolean isReline, boolean isNowait) {
-		super();
-		this.text = text;
-		this.isReline = isReline;
-		this.isNowait=isNowait;
-	}
+    public ServerSenarioTextPacket(PacketBuffer buffer) {
+        text = buffer.readString(1024 * 300);
+        isReline = buffer.readBoolean();
+        isNowait = buffer.readBoolean();
+    }
 
-	public void encode(PacketBuffer buffer) {
-		buffer.writeString(text,1024*300);
-		buffer.writeBoolean(isReline);
-		buffer.writeBoolean(isNowait);
-	}
+    public ServerSenarioTextPacket(String text, boolean isReline, boolean isNowait) {
+        super();
+        this.text = text;
+        this.isReline = isReline;
+        this.isNowait = isNowait;
+    }
 
-	public void handle(Supplier<NetworkEvent.Context> context) {
-		context.get().enqueueWork(() -> {
-			
-			ClientTextProcessor.process(text,isReline,isNowait);
-		});
-		context.get().setPacketHandled(true);
-	}
+    public void encode(PacketBuffer buffer) {
+        buffer.writeString(text, 1024 * 300);
+        buffer.writeBoolean(isReline);
+        buffer.writeBoolean(isNowait);
+    }
+
+    public void handle(Supplier<NetworkEvent.Context> context) {
+        context.get().enqueueWork(() -> {
+
+            ClientTextProcessor.process(text, isReline, isNowait);
+        });
+        context.get().setPacketHandled(true);
+    }
 }

@@ -41,9 +41,9 @@ public class FrostedParticles {
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
             if (!player.isSpectator() && !player.isCreative() && player.world != null) {
-                if (player.ticksExisted % 40 <= 3) {
+                if (player.ticksExisted % 60 <= 3) {
                     float envTemp = Temperature.getEnv(player);
-                    if (envTemp < 0.0F) {
+                    if (envTemp < -10.0F) {
                         // get the player's facing vector and make the particle spawn in front of the player
                         double x = player.getPosX() + player.getLookVec().x * 0.3D;
                         double z = player.getPosZ() + player.getLookVec().z * 0.3D;

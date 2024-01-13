@@ -28,25 +28,26 @@ import net.minecraftforge.fml.network.NetworkEvent;
 
 public class FHClientReadyPacket {
     String lang;
+
     public FHClientReadyPacket(PacketBuffer buffer) {
-    	lang=buffer.readString();
+        lang = buffer.readString();
     }
 
 
     public FHClientReadyPacket(String lang) {
-		super();
-		this.lang=lang;
-	}
+        super();
+        this.lang = lang;
+    }
 
 
-	public void encode(PacketBuffer buffer) {
-		buffer.writeString(lang);
+    public void encode(PacketBuffer buffer) {
+        buffer.writeString(lang);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-        	FHScenario.startFor(context.get().getSender());
+            FHScenario.startFor(context.get().getSender());
         });
         context.get().setPacketHandled(true);
     }

@@ -29,28 +29,29 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class ClientScenarioResponsePacket {
     boolean isSkipped;
     int status;
+
     public ClientScenarioResponsePacket(PacketBuffer buffer) {
-    	isSkipped=buffer.readBoolean();
-    	status=buffer.readVarInt();
+        isSkipped = buffer.readBoolean();
+        status = buffer.readVarInt();
     }
 
 
     public ClientScenarioResponsePacket(boolean isSkipped, int status) {
-		super();
-		this.isSkipped = isSkipped;
-		this.status = status;
-	}
+        super();
+        this.isSkipped = isSkipped;
+        this.status = status;
+    }
 
 
-	public void encode(PacketBuffer buffer) {
-		buffer.writeBoolean(isSkipped);
-		buffer.writeVarInt(status);
+    public void encode(PacketBuffer buffer) {
+        buffer.writeBoolean(isSkipped);
+        buffer.writeVarInt(status);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-        	FHScenario.runners.get(context.get().getSender()).notifyClientResponse(isSkipped, status);
+            FHScenario.runners.get(context.get().getSender()).notifyClientResponse(isSkipped, status);
         });
         context.get().setPacketHandled(true);
     }

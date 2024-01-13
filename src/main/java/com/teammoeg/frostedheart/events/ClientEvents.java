@@ -21,11 +21,7 @@ package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHItems;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
@@ -80,6 +76,7 @@ import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
@@ -304,13 +301,14 @@ public class ClientEvents {
                 return;
             }
     }
+
     @SubscribeEvent
-    public static void fireLogin(LoggedInEvent event){
-    	FHScenarioClient.sendInitializePacket=true;
+    public static void fireLogin(LoggedInEvent event) {
+        FHScenarioClient.sendInitializePacket = true;
     }
-    
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
+    public static void renderCustomHUD(RenderGameOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         ClientPlayerEntity clientPlayer = mc.player;
         PlayerEntity renderViewPlayer = FrostedHud.getRenderViewPlayer();
@@ -334,7 +332,7 @@ public class ClientEvents {
                     FrostedHud.renderFrozenVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
                 if (FrostedHud.renderHeatVignette)
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
-                
+
             }
             if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
                 if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
@@ -445,21 +443,21 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void tickClient(ClientTickEvent event) {
-    	
+
         if (event.phase == Phase.START) {
-        	if(ClientUtils.mc().world!=null) {
-        		Minecraft mc=ClientUtils.mc();
-	        	ClientTextProcessor.render(mc);
-	            
-        	}
-        	PlayerEntity pe = ClientUtils.getPlayer();
+            if (ClientUtils.mc().world != null) {
+                Minecraft mc = ClientUtils.mc();
+                ClientTextProcessor.render(mc);
+
+            }
+            PlayerEntity pe = ClientUtils.getPlayer();
             if (pe != null && pe.getActivePotionEffect(FHEffects.NYCTALOPIA) != null) {
                 ClientUtils.applyspg = true;
                 ClientUtils.spgamma = MathHelper.clamp((float) (ClientUtils.mc().gameSettings.gamma), 0f, 1f) * 0.1f
                         - 1f;
             } else {
                 ClientUtils.applyspg = false;
-                ClientUtils.spgamma=MathHelper.clamp((float)ClientUtils.mc().gameSettings.gamma, 0f, 1f);
+                ClientUtils.spgamma = MathHelper.clamp((float) ClientUtils.mc().gameSettings.gamma, 0f, 1f);
             }
         }
     }
@@ -483,9 +481,8 @@ public class ClientEvents {
                     ((ArmorStandRenderer) render).addLayer(new HeaterVestRenderer<>((ArmorStandRenderer) render));
             HeaterVestRenderer.rendersAssigned = true;
         }
-
-
     }
+
     @SubscribeEvent
     public static void onWorldRender(RenderWorldLastEvent event) {
         if(FHScenarioClient.sendInitializePacket) {
@@ -494,6 +491,7 @@ public class ClientEvents {
         	FHPacketHandler.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
         }
     }
+
     @SubscribeEvent
     public void onWorldUnLoad(Unload event) {
     	
@@ -505,6 +503,20 @@ public class ClientEvents {
     		FHPacketHandler.sendToServer(packet);
     		event.setCanceled(true);
     	}
+    }
+
+    /**
+     * Add our custom render player
+     *
+     * @param event fired before player is rendered
+     */
+    @SubscribeEvent
+    public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
+//        if (event.getPlayer() != null && event.getPlayer().world.isRemote()) {
+//            PlayerRenderer renderer = event.getRenderer();
+//            // add our custom render layer
+//            renderer.addLayer(new FrostbiteRenderer<>(renderer));
+//        }
     }
 
     /*

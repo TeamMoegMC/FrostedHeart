@@ -28,22 +28,22 @@ public class ScenarioPiece {
     public final String fileName;
     public final List<Node> pieces;
     public final int[] paragraphs;
-    public final Map<String,Integer> labels;
+    public final Map<String, Integer> labels;
 
-	public ScenarioPiece(String fileName, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
-		super();
-		this.fileName = fileName;
-		this.pieces = pieces;
-		this.paragraphs = paragraphs;
-		this.labels = labels;
-	}
+    public ScenarioPiece(String fileName, List<Node> pieces, int[] paragraphs, Map<String, Integer> labels) {
+        super();
+        this.fileName = fileName;
+        this.pieces = pieces;
+        this.paragraphs = paragraphs;
+        this.labels = labels;
+    }
 
-	public ScenarioPiece(String name) {
-		super();
+    public ScenarioPiece(String name) {
+        super();
         this.fileName = name;
         this.pieces = new ArrayList<>();
-        paragraphs=new int[0];
-        labels=new HashMap<>();
-	}
+        paragraphs = new int[0];
+        labels = new HashMap<>();
+    }
     
 }

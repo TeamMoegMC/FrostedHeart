@@ -618,6 +618,7 @@ public class CommonEvents {
 
         }
     }
+
     @SubscribeEvent
     public static void regulateTemperature(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END

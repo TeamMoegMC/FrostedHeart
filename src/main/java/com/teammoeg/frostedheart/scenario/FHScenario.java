@@ -48,8 +48,10 @@ public class FHScenario {
     	
     	sr.run(loadScenario("init"));
     }
-    static ScenarioParser parser=new ScenarioParser();
-    static File local=new File(FMLPaths.CONFIGDIR.get().toFile(),"fhscenario");
+
+    static ScenarioParser parser = new ScenarioParser();
+    static File local = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhscenario");
+
     public static ScenarioPiece loadScenario(String name) {
     	try {
 			return parser.parse(name,new File(local,name+".ks"));
@@ -85,8 +87,9 @@ public class FHScenario {
     public static void registerCommand(String cmdName, ScenarioMethod method) {
         server.registerCommand(cmdName, method);
     }
+
     static {
-    	register(TextualCommands.class);
-    	register(ControlCommands.class);
+        register(TextualCommands.class);
+        register(ControlCommands.class);
     }
 }

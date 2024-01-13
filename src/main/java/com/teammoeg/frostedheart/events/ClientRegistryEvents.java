@@ -147,8 +147,8 @@ public class ClientRegistryEvents {
         render = skinMap.get("slim");
         render.addLayer(new HeaterVestRenderer<>(render));
         addManual();
-        if(ModList.get().isLoaded("tetra"))
-        	TetraClient.init();
+        if (ModList.get().isLoaded("tetra"))
+            TetraClient.init();
     }
 
     @SubscribeEvent
