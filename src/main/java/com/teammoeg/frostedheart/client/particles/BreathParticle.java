@@ -60,9 +60,9 @@ public class BreathParticle extends FHParticle {
     public void renderParticle(IVertexBuilder worldRendererIn, ActiveRenderInfo entityIn, float pt) {
         float age = (this.age + pt) / maxAge * 32.0F;
         age = MathHelper.clamp(age, 0.0F, 1.0F);
-        float alpha = 0.5F * (1 - (this.age + pt) / maxAge);
-        super.particleAlpha = MathHelper.clamp(alpha, 0.0F, 0.5F);
-        super.particleScale = originalScale * (age + this.age * 0.0375F);
+        float alpha = 0.3F * (1 - (this.age + pt) / maxAge);
+        super.particleAlpha = MathHelper.clamp(alpha, 0.0F, 0.3F);
+        super.particleScale = originalScale * (age + this.age * 0.0375F) * 0.5F;
         super.renderParticle(worldRendererIn, entityIn, pt);
     }
 }
