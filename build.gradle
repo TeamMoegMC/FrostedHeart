@@ -59,18 +59,17 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
             //jvmArgs '-Xdebug','-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9009'
 
-
             // For Mac OS X users with an Apple Silicon chip,
             // you would need the latest GLFW version that supports Apple Silicon.
             // You can download the latest GLFW version from https://www.glfw.org/download.html
             // and set the LIBGLFW_PATH_MACOS environment variable to the path of the
             // GLFW library file libglfw.3.dylib
+            // NOTE for IDEA user: You need to manually set the JVM arg
+            // and the environment variable in the IDEA run configuration.
             if (System.env.LIBGLFW_PATH_MACOS != null) {
                 println "LIBGLFW_PATH_MACOS is set to ${System.env.LIBGLFW_PATH_MACOS}"
                 jvmArgs "-Dorg.lwjgl.glfw.libname=${System.env.LIBGLFW_PATH_MACOS}"
             }
-            // In addition, you have to disable the FML early progress window
-            jvmArgs "-Dfml.earlyprogresswindow=false"
 
             // Similar steps for Linux users
             if (System.env.LIBGLFW_PATH != null) {
