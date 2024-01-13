@@ -21,13 +21,8 @@ package com.teammoeg.frostedheart.events;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHItems;
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.*;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
-import com.teammoeg.frostedheart.client.renderer.FrostbiteRenderer;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -41,7 +36,6 @@ import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
-import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.effects.EffectShowCategory;
@@ -56,15 +50,12 @@ import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.RenderComponentsUtil;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
-import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -81,7 +72,6 @@ import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
-import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -506,11 +496,11 @@ public class ClientEvents {
      */
     @SubscribeEvent
     public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
-        if (event.getPlayer() != null && event.getPlayer().world.isRemote()) {
-            PlayerRenderer renderer = event.getRenderer();
-            // add our custom render layer
-            renderer.addLayer(new FrostbiteRenderer<>(renderer));
-        }
+//        if (event.getPlayer() != null && event.getPlayer().world.isRemote()) {
+//            PlayerRenderer renderer = event.getRenderer();
+//            // add our custom render layer
+//            renderer.addLayer(new FrostbiteRenderer<>(renderer));
+//        }
     }
 
     /*
