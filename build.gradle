@@ -192,47 +192,40 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-//    compile fileTree(include: ['*.jar'], dir: 'libs')
+    // compile fileTree(include: ['*.jar'], dir: 'libs')
 
+    implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
     implementation fg.deobf("me.shedaniel:architectury-forge:${rootProject.architectury_version}")
-
     implementation fg.deobf("dev.ftb.mods:ftb-library-forge:${rootProject.ftb_library_version}")
     implementation fg.deobf("dev.ftb.mods:ftb-teams-forge:${rootProject.ftb_teams_version}")
-    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
     implementation fg.deobf("dev.ftb.mods:ftb-chunks-forge:1605.3.2-build.115")
-
-    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.7-143")
+    implementation fg.deobf("dev.latvian.mods:item-filters-forge:1605.2.5-build.9")
+    implementation fg.deobf("curse.maven:diet-443570:3756693")
+    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
+    implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.7-143")
     implementation fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.5-5.0.7-143:datagen")
-
+    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
     implementation fg.deobf("curse.maven:create-328085:3499718")
     implementation fg.deobf("curse.maven:flywheel-486392:3459739")
     implementation fg.deobf('curse.maven:Project-Rankine-400704:4086553')
-    implementation fg.deobf("curse.maven:chisel-235279:3376782")
-    implementation fg.deobf("curse.maven:ctm-267602:3137659")
-    implementation fg.deobf('com.alcatrazescapee.primalwinter:primal-winter:1.16.4-2.0.5-TWR')
-	implementation fg.deobf("dev.latvian.mods:item-filters-forge:1605.2.5-build.9")
-    implementation fg.deobf("curse.maven:kiwi-303657:3377053")
-    implementation fg.deobf("curse.maven:snowrealmagic-308663:3295579")
-    compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
-	implementation fg.deobf("curse.maven:diet-443570:3756693")
-    implementation fg.deobf("mezz.jei:jei-1.16.5:7.6.4.88")
-	implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
-	implementation fg.deobf("curse.maven:tetra-289712:3585032")
-	implementation fg.deobf("curse.maven:mgui-351914:3456505")
+    implementation fg.deobf("curse.maven:thermopolium-594107:4005647")
+
+    compileOnly fg.deobf("curse.maven:chisel-235279:3376782")
+    compileOnly fg.deobf("curse.maven:ctm-267602:3137659")
+    compileOnly fg.deobf("curse.maven:kiwi-303657:3377053")
+    compileOnly fg.deobf("curse.maven:snowrealmagic-308663:3295579")
+    compileOnly fg.deobf("curse.maven:tetra-289712:3585032")
+    compileOnly fg.deobf("curse.maven:mgui-351914:3456505")
+    compileOnly fg.deobf("curse.maven:selene-499980:3517008")
+    compileOnly fg.deobf("curse.maven:age-api-353992:3176394")
+    compileOnly fg.deobf("curse.maven:neolithic-world-534605:3937806")
     compileOnly fg.deobf("curse.maven:supplementaries-412082:3650035")
-	implementation fg.deobf("curse.maven:selene-499980:3517008")
-    //compile fg.deobf("curse.maven:better-weather-400714:3420517")
-    //implementation fg.deobf("curse.maven:better-weather-400714:3420517")
+    compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
     compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
-    implementation fg.deobf("curse.maven:age-api-353992:3176394")
-    implementation fg.deobf("curse.maven:neolithic-world-534605:3937806")
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
+    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
 
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
-    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
-    implementation fg.deobf("gloridifice.watersource:WaterSource:1.1.33-beta-1.16.5")
-
-    // runtimeOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
-//    compileOnly fg.deobf("java.moze_intel:ProjectE:PE1.0.1B")
 
     // FG5 requires 0.8.3
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
