@@ -26,6 +26,7 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
+import com.teammoeg.frostedheart.client.renderer.FrostbiteRenderer;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
@@ -56,6 +57,7 @@ import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
+import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -73,6 +75,7 @@ import net.minecraft.world.GameType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -297,7 +300,7 @@ public class ClientEvents {
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void renderVanillaOverlay(RenderGameOverlayEvent.Pre event) {
+    public static void renderCustomHUD(RenderGameOverlayEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         ClientPlayerEntity clientPlayer = mc.player;
         PlayerEntity renderViewPlayer = FrostedHud.getRenderViewPlayer();
@@ -464,9 +467,18 @@ public class ClientEvents {
 
     }
 
+    /**
+     * Add our custom render player
+     *
+     * @param event fired before player is rendered
+     */
     @SubscribeEvent
-    public void onWorldUnLoad(Unload event) {
-
+    public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
+        if (event.getPlayer() != null && event.getPlayer().world.isRemote()) {
+            PlayerRenderer renderer = event.getRenderer();
+            // add our custom render layer
+            renderer.addLayer(new FrostbiteRenderer<>(renderer));
+        }
     }
 
     /*
