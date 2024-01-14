@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
+import dev.ftb.mods.ftbteams.event.PlayerLeftPartyTeamEvent;
 import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
@@ -67,7 +68,17 @@ public class FTBTeamsEvents {
         }
 
     }
-
+    public static void syncDataWhenOwnerLeft(PlayerLeftPartyTeamEvent event) {
+    	 if (FTBTeamsAPI.isManagerLoaded()) {
+    		 if(event.getTeamDeleted()) {//transfer to last player
+	             UUID owner = event.getTeam().getOwner();
+	             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
+	
+	             FHResearchDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
+    		 }
+         }
+    	
+    }
     public FTBTeamsEvents() {
     }
 }

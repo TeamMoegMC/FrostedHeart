@@ -151,6 +151,7 @@ public class FHMain {
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
         TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
         TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
+        TeamEvent.PLAYER_LEFT_PARTY.register(FTBTeamsEvents::syncDataWhenOwnerLeft);
 //        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
