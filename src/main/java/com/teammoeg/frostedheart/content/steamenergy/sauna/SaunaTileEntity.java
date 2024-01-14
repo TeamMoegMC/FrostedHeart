@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
@@ -192,8 +193,8 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         }
         UUID owner = IOwnerTile.getOwner(this);
         if (owner == null) return;
-        Team t = FTBTeamsAPI.getPlayerTeam(p);
-        if (t == null || !t.getId().equals(owner)) return;
+        UUID t = ResearchDataAPI.getData(p).getId();
+        if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {
             p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));

@@ -24,6 +24,7 @@ import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileE
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.simibubi.create.content.contraptions.components.crafter.MechanicalCrafterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.Block;
@@ -62,7 +63,7 @@ public class BlockMixin extends Block {
             if (te instanceof MultiblockPartTileEntity) {
                 te = ((MultiblockPartTileEntity) te).master();
             }
-            IOwnerTile.trySetOwner(te, FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) player).getId());
+            IOwnerTile.trySetOwner(te, ResearchDataAPI.getData(player).getId());
         }
     }
 
@@ -72,6 +73,6 @@ public class BlockMixin extends Block {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
         if (placer != null && placer instanceof ServerPlayerEntity && !(placer instanceof FakePlayer))
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos), FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) placer).getId());
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(worldIn, pos),ResearchDataAPI.getData((PlayerEntity) placer).getId());
     }
 }

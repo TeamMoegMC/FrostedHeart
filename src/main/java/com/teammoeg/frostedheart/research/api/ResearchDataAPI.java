@@ -46,7 +46,7 @@ public class ResearchDataAPI {
 
     public static double getVariantDouble(PlayerEntity id, ResearchVariant name) {
         if (id instanceof ServerPlayerEntity)
-            return getVariantDouble(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id).getId(), name);
+            return getVariantDouble(ResearchDataAPI.getData(id).getId(), name);
         return TeamResearchData.getClientInstance().getVariants().getDouble(name.getToken());
 
     }
@@ -57,7 +57,7 @@ public class ResearchDataAPI {
 
     public static long getVariantLong(PlayerEntity id, ResearchVariant name) {
         if (id instanceof ServerPlayerEntity)
-            return getVariantLong(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) id).getId(), name);
+            return getVariantLong(ResearchDataAPI.getData(id).getId(), name);
         return TeamResearchData.getClientInstance().getVariants().getLong(name.getToken());
 
     }
@@ -85,7 +85,7 @@ public class ResearchDataAPI {
     }
 
     public static void putVariantDouble(ServerPlayerEntity id, ResearchVariant name, double val) {
-        putVariantDouble(FTBTeamsAPI.getPlayerTeam(id).getId(), name, val);
+        putVariantDouble(ResearchDataAPI.getData(id).getId(), name, val);
     }
 
     public static void putVariantDouble(UUID id, ResearchVariant name, double val) {
@@ -93,7 +93,7 @@ public class ResearchDataAPI {
     }
 
     public static void putVariantLong(ServerPlayerEntity id, ResearchVariant name, long val) {
-        putVariantLong(FTBTeamsAPI.getPlayerTeam(id).getId(), name, val);
+        putVariantLong(ResearchDataAPI.getData(id).getId(), name, val);
     }
 
     public static void putVariantLong(UUID id, ResearchVariant name, long val) {

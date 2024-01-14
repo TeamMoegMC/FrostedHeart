@@ -182,7 +182,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 
 
     public boolean isCompleted(Team team) {
-        return FHResearchDataManager.INSTANCE.getData(team.getId()).isClueTriggered(this);
+        return FHResearchDataManager.INSTANCE.getData(team).isClueTriggered(this);
     }
 
     public boolean isCompleted(TeamResearchData data) {
@@ -198,7 +198,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
      * should not called manually
      */
     public void sendProgressPacket(Team team) {
-        FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team.getId(), this);
+        FHClueProgressSyncPacket packet = new FHClueProgressSyncPacket(team, this);
         for (ServerPlayerEntity spe : team.getOnlineMembers())
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
@@ -227,7 +227,7 @@ public abstract class Clue extends AutoIDItem implements Writeable {
     }
 
     public void setCompleted(Team team, boolean trig) {
-        FHResearchDataManager.INSTANCE.getData(team.getId()).setClueTriggered(this, trig);
+        FHResearchDataManager.INSTANCE.getData(team).setClueTriggered(this, trig);
         if (trig)
             end(team);
         else

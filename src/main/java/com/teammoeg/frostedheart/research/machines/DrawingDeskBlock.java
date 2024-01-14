@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
 import blusunrize.immersiveengineering.api.client.IModelOffsetProvider;
@@ -165,7 +166,7 @@ public class DrawingDeskBlock extends FHBaseBlock implements IModelOffsetProvide
                     pos = pos.offset(getNeighbourDirection(state.get(IS_NOT_MAIN), state.get(FACING)));
                 }
                 TileEntity ii = Utils.getExistingTileEntity(worldIn, pos);
-                UUID crid = FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) player).getId();
+                UUID crid = ResearchDataAPI.getData(player).getId();
                 IOwnerTile.trySetOwner(ii, crid);
                 if (crid != null && crid.equals(IOwnerTile.getOwner(ii)))
                     NetworkHooks.openGui((ServerPlayerEntity) player, (IInteractionObjectIE) ii, ii.getPos());

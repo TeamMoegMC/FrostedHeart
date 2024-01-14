@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -40,7 +41,7 @@ public class FHClueProgressSyncPacket {
         id = buffer.readVarInt();
     }
 
-    public FHClueProgressSyncPacket(UUID team, Clue rs) {
+    public FHClueProgressSyncPacket(Team team, Clue rs) {
         TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isClueTriggered(rs);
         this.id = rs.getRId();

@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.mixin.immersiveengineering;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
+
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
@@ -32,6 +34,9 @@ import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.util.UUID;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
@@ -61,6 +66,6 @@ public abstract class TemplateMultiblockMixin implements IMultiblock, MultiBlock
     @Inject(at = @At("RETURN"), remap = false, method = "form", locals = LocalCapture.CAPTURE_FAILHARD)
     public void fh$on$form(World world, BlockPos pos, Rotation rot, Mirror mirror, Direction sideHit, CallbackInfo cbi, BlockPos master) {
         if (pe != null)
-            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master), FTBTeamsAPI.getPlayerTeam(pe).getId());
+            IOwnerTile.trySetOwner(Utils.getExistingTileEntity(world, master),ResearchDataAPI.getData(pe).getId());
     }
 }

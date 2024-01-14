@@ -365,7 +365,7 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      * @param team the team<br>
      */
     public void sendProgressPacket(Team team) {
-        FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team.getId(), this);
+        FHEffectProgressSyncPacket packet = new FHEffectProgressSyncPacket(team, this);
         for (ServerPlayerEntity spe : team.getOnlineMembers())
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }

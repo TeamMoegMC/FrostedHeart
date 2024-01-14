@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
@@ -72,7 +73,7 @@ public class GeneratorUpgraderI extends FHBaseItem {
             if (nte instanceof T2GeneratorTileEntity) {//bug: cannot get correct te
                 ((T2GeneratorTileEntity) nte).setWorking(t1te.isWorking());
                 ((T2GeneratorTileEntity) nte).setOverdrive(t1te.isOverdrive());
-                ((T2GeneratorTileEntity) nte).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) entityplayer).getId());
+                ((T2GeneratorTileEntity) nte).setOwner(ResearchDataAPI.getData(entityplayer).getId());
                 NonNullList<ItemStack> nnl = ((T2GeneratorTileEntity) nte).getInventory();
                 for (int i = 0; i < nnl.size(); i++) {
                     ((T2GeneratorTileEntity) nte).getInventory().set(i, nnl.get(i));

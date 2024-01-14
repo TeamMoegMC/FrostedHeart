@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 
+import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -40,7 +41,7 @@ public class FHEffectProgressSyncPacket {
         id = buffer.readVarInt();
     }
 
-    public FHEffectProgressSyncPacket(UUID team, Effect rs) {
+    public FHEffectProgressSyncPacket(Team team, Effect rs) {
         TeamResearchData rd = FHResearchDataManager.INSTANCE.getData(team);
         this.data = rd.isEffectGranted(rs);
         this.id = rs.getRId();

@@ -55,7 +55,8 @@ public class FHResearchDataManager {
     Path local;
     File regfile;
     private Map<UUID, TeamResearchData> data = new HashMap<>();
-
+    private Map<UUID, TeamResearchData> dataByResearchId = new HashMap<>();
+    
     public static RecipeManager getRecipeManager() {
         if (server != null)
             return server.getRecipeManager();
@@ -104,8 +105,7 @@ public class FHResearchDataManager {
 
     public TeamResearchData getData(UUID id) {
 
-        TeamResearchData cn = data.computeIfAbsent(id,
-                c -> new TeamResearchData(() -> TeamManager.INSTANCE.getTeamByID(id)));
+        TeamResearchData cn = dataByResearchId.get(id);
         return cn;
 
     }
@@ -142,6 +142,7 @@ public class FHResearchDataManager {
 
                 trd.deserialize(nbt, false);
                 data.put(tud, trd);
+                dataByResearchId.put(trd.getId(), trd);
             } catch (IllegalArgumentException ex) {
                 ex.printStackTrace();
                 FHMain.LOGGER.error("Unexpected data file " + f.getName() + ", ignoring...");

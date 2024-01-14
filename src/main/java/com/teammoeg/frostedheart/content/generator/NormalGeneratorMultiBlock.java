@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.generator;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.base.block.FHStoneMultiblockBlock;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -71,7 +73,7 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
 
                 if (((ZoneHeatingMultiblockTileEntity) te).getOwner() == null) {
                     te = ((ZoneHeatingMultiblockTileEntity) te).master();
-                    ((ZoneHeatingMultiblockTileEntity) te).setOwner(FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) player).getId());
+                    ((ZoneHeatingMultiblockTileEntity) te).setOwner(ResearchDataAPI.getData(player).getId());
                     if (te instanceof MasterGeneratorTileEntity)
                         ((MasterGeneratorTileEntity) te).regist();
                 }

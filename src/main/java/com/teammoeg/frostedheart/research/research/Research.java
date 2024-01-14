@@ -403,7 +403,7 @@ public class Research extends FHRegisteredItem implements Writeable {
      * @return data<br>
      */
     public ResearchData getData(Team team) {
-        return FHResearchDataManager.INSTANCE.getData(team.getId()).getData(this);
+        return FHResearchDataManager.INSTANCE.getData(team).getData(this);
     }
 
     /**
