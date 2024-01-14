@@ -1,6 +1,7 @@
-package com.teammoeg.frostedheart.scenario.runner;
+package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ExecuteTarget extends ScenarioTarget{
 
@@ -15,7 +16,15 @@ public class ExecuteTarget extends ScenarioTarget{
 
 		this.label = label;
 	}
-	String getLabel() {
-		return label;
+	@Override
+	public void accept(ScenarioConductor runner) {
+
+		if(label!=null) {
+			Integer ps=getScenario().labels.get(label);
+			if(ps!=null) {
+				runner.gotoNode(ps);
+			}
+		}
 	}
+	
 }

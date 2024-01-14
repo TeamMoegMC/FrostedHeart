@@ -38,17 +38,17 @@ import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 public class ScenarioExecutor {
     private static class MethodInfo implements ScenarioMethod {
         private static class ParamInfo {
-            String paramName;
+            String[] paramName;
             Function<String, Object> convertion;
             Supplier<Object> def=null;
-            public ParamInfo(String paramName, Function<String, Object> convertion) {
+            public ParamInfo(String[] paramName, Function<String, Object> convertion) {
                 this.paramName = paramName;
                 this.convertion = convertion;
             }
 
 			@Override
 			public String toString() {
-				return "[name=" + paramName + "]";
+				return "[name=" + Arrays.toString(paramName) + "]";
 			}
             
             
@@ -68,8 +68,18 @@ public class ScenarioExecutor {
             for (int i = 1; i < param.length; i++) {
                 Function<String, Object> converter = null;
                 Class<?> partype = param[i].getType();
-                Param par=param[i].getAnnotation(Param.class);
-                String name = par!=null?par.value():(param[i].isNamePresent()?param[i].getName():param[i].getName().substring(4));
+                Params par=param[i].getAnnotation(Params.class);
+                int size=0;
+                if(par!=null) {
+                	size=par.value().length;
+                }
+                String[] names=new String[size+1];
+                names[0]=(param[i].isNamePresent()?param[i].getName():param[i].getName().substring(4));
+                if(par!=null) {
+                	for(int j=0;j<size;j++) {
+                		names[j+1]=par.value()[j].value();
+                	}
+                }
                 Supplier<Object> def=null;
                 if (partype.isAssignableFrom(Double.class) || partype == double.class) {
                     converter = number;
@@ -86,9 +96,9 @@ public class ScenarioExecutor {
                     if(partype.isPrimitive())
                     	def=()->0f;
                 } else {
-                    throw new ScenarioExecutionException("No matching type found for param " + name + " of " + method.getName());
+                    throw new ScenarioExecutionException("No matching type found for param " + Arrays.toString(names) + " of " + method.getName());
                 }
-                params[i - 1] = new ParamInfo(name, converter);
+                params[i - 1] = new ParamInfo(names, converter);
                 params[i - 1].def=def;
             }
             //System.out.println(toString());
@@ -103,7 +113,11 @@ public class ScenarioExecutor {
         public void execute(ScenarioConductor runner, Map<String, String> param) {
             Object[] pars = new Object[params.length + 1];
             for (int i = 0; i < params.length; i++) {
-                String par = param.get(params[i].paramName);
+            	String par=null;
+            	for(String name:params[i].paramName) {
+            		par = param.get(name);
+            		if(par!=null)break;
+            	}
                 if (par != null) {
                     try {
                         pars[i + 1] = params[i].convertion.apply(par);

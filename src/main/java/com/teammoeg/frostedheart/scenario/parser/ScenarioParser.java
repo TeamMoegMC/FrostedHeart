@@ -106,6 +106,7 @@ public class ScenarioParser {
         List<Integer> paragraphs = new ArrayList<>();
         LinkedList<CommandStack> ifstack = new LinkedList<>();
         Map<String,Integer> labels=new HashMap<>();
+        int macro=0;
         for (int i = 0; i < nodes.size(); i++) {
             Node n = nodes.get(i);
             if (n instanceof ParagraphNode) {
@@ -130,10 +131,21 @@ public class ScenarioParser {
             	if(ifstack.isEmpty())
             		throw new ScenarioExecutionException("At file "+name+" Unexpected Endif!");
                 ifstack.pollLast().setEndif(i);
+            }else if(n instanceof CommandNode) {
+            	CommandNode cmd=(CommandNode) n;
+            	if("macro".equals(cmd.command)){
+            		macro++;
+            	}
+            	if("endmacro".equals(cmd.command)){
+            		macro--;
+            	}
             }
         }
         if(!ifstack.isEmpty()) {
-        	throw new ScenarioExecutionException("At file "+name+" If and Endif not match!");
+        	throw new ScenarioExecutionException("At file "+name+" could not find endif for if!");
+        }
+        if(macro!=0) {
+        	throw new ScenarioExecutionException("At file "+name+" macro and endmacro not match! "+Math.abs(macro)+" more "+(macro>0?"macro(s)":"endmacro(s)"));
         }
         return new Scenario(name, nodes,paragraphs.stream().mapToInt(t->t).toArray(),labels);
     }

@@ -51,7 +51,7 @@ public class CommandNode implements Node {
 
     @Override
     public void run(ScenarioConductor runner) {
-        FHScenario.callCommand(command, runner, params);
+        runner.callCommand(command, params);
     }
 
 }

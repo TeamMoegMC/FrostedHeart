@@ -32,12 +32,24 @@ import net.minecraft.nbt.INBT;
 
 public class ScenarioVariables implements IEnvironment  {
     CompoundNBT extraData;
-
+    CompoundNBT snapshot;
 
     public ScenarioVariables() {
         super();
     }
-
+    public CompoundNBT save() {
+    	if(snapshot==null)
+    		return new CompoundNBT();
+    	return snapshot;
+    }
+    public void load(CompoundNBT data) {
+    	extraData=data;
+    }
+    public void restoreSnapshot() {
+    	if(snapshot!=null) {
+    		extraData=snapshot;
+    	}
+    }
     public boolean containsPath(String path) {
         String[] paths = path.split("\\.");
         CompoundNBT nbt = getExecutionData();
@@ -124,8 +136,8 @@ public class ScenarioVariables implements IEnvironment  {
         }
         nbt.putString(paths[paths.length - 1], val);
     }
-    public CompoundNBT takeSnapshot() {
-    	return extraData.copy();
+    public void takeSnapshot() {
+    	snapshot= extraData.copy();
     }
 
     @Override

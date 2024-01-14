@@ -55,7 +55,7 @@ public class FHScenario {
     public static Scenario loadScenario(String name) {
     	try {
 			return parser.parse(name,new File(local,name+".ks"));
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

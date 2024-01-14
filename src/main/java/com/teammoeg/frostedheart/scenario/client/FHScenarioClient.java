@@ -23,7 +23,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
-import com.teammoeg.frostedheart.scenario.commands.ClientControl;
+import com.teammoeg.frostedheart.scenario.commands.client.ClientControl;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class FHScenarioClient {

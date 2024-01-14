@@ -10,6 +10,14 @@ public class ParagraphData{
 	public ParagraphData() {
 		super();
 	}
+	public ParagraphData(String name, int paragraphNum) {
+		super();
+		this.name = name;
+		this.paragraphNum = paragraphNum;
+	}
+	public ParagraphData copy() {
+		return new ParagraphData(name,paragraphNum);
+	}
 	public void setScenario(Scenario sc) {
 		this.sp=sc;
 		this.name=sc.name;

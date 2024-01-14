@@ -14,13 +14,34 @@ public class ControlCommands {
 		runner.prepareTextualModification();
 
 	}
+	public void wt(ScenarioConductor runner) {
+		
+	}
 	public void s(ScenarioConductor runner) {
 		runner.stop();
-
+	}
+	public void l(ScenarioConductor runner) {
+		runner.getScene().sendNoreline();
+		runner.waitClient();
 	}
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.jump(scenario, label);
 
+	}
+	public void call(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
+		runner.call(scenario, label);
+
+	}
+	public void Return(ScenarioConductor runner) {
+		runner.popCallStack();
+	}
+	public void macro(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
+		runner.call(scenario, label);
+
+	}
+	public void endmacro(ScenarioConductor runner) {
+		runner.getExecutionData().remove("mp");
+		runner.popCallStack();
 	}
 	public void link(ScenarioConductor runner,@Param("lid")String linkId,@Param("s")String scenario,@Param("l")String label) {
 		runner.prepareTextualModification();
