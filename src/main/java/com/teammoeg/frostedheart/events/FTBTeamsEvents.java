@@ -29,6 +29,7 @@ import dev.ftb.mods.ftbteams.event.PlayerLeftPartyTeamEvent;
 import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.UUID;
@@ -36,7 +37,8 @@ import java.util.UUID;
 public class FTBTeamsEvents {
 
     public static void syncDataWhenTeamChange(PlayerChangedTeamEvent event) {
-        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
+    	if(event.getPlayer()!=null)
+    		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> event.getPlayer()),
                 new FHResearchDataSyncPacket(
                         FTBTeamsAPI.getPlayerTeam(event.getPlayer())));
     }
@@ -56,6 +58,11 @@ public class FTBTeamsEvents {
             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
 
             FHResearchDataManager.INSTANCE.transfer(event.getTeam().getId(), orig);
+            for(ServerPlayerEntity p:event.getTeam().getOnlineMembers()) {
+	            FHPacketHandler.send(PacketDistributor.PLAYER.with(()->p),
+	                    new FHResearchDataSyncPacket(FTBTeamsAPI.getPlayerTeam(p)));
+            }
+            
         }
 
     }
@@ -64,13 +71,12 @@ public class FTBTeamsEvents {
         if (FTBTeamsAPI.isManagerLoaded()) {
 
             FHResearchDataManager.INSTANCE.getData(event.getTeam()).setOwnerName(event.getFrom().getGameProfile().getName());
-            ;
         }
 
     }
-    public static void syncDataWhenOwnerLeft(PlayerLeftPartyTeamEvent event) {
+   /* public static void syncDataWhenOwnerLeft(PlayerLeftPartyTeamEvent event) {
     	 if (FTBTeamsAPI.isManagerLoaded()) {
-    		 if(event.getTeamDeleted()) {//transfer to last player
+    		 if(event.getPlayerId().equals(event.getTeam().getOwner())) {//transfer to last player
 	             UUID owner = event.getTeam().getOwner();
 	             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(owner);
 	
@@ -78,7 +84,7 @@ public class FTBTeamsEvents {
     		 }
          }
     	
-    }
+    }*/
     public FTBTeamsEvents() {
     }
 }
