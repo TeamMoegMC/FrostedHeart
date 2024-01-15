@@ -30,18 +30,15 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 
-public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
+public class DirectScenarioVariables implements IEnvironment, IScenarioVaribles  {
     CompoundNBT extraData;
-    CompoundNBT snapshot;
-
-    public ScenarioVariables() {
+    
+    public DirectScenarioVariables() {
         super();
     }
     @Override
 	public CompoundNBT save() {
-    	if(snapshot==null)
-    		return new CompoundNBT();
-    	return snapshot;
+    	return extraData;
     }
     @Override
 	public void load(CompoundNBT data) {
@@ -49,9 +46,6 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     }
     @Override
 	public void restoreSnapshot() {
-    	if(snapshot!=null) {
-    		extraData=snapshot;
-    	}
     }
     @Override
 	public boolean containsPath(String path) {
@@ -149,7 +143,6 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     }
     @Override
 	public void takeSnapshot() {
-    	snapshot= extraData.copy();
     }
 
     @Override

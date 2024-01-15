@@ -6,7 +6,7 @@ import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
-public abstract class ScenarioTarget implements Consumer<ScenarioConductor>{
+public abstract class ScenarioTarget implements IScenarioTarget{
 	private final String name;
 	private transient Scenario sp;
 	public ScenarioTarget(String name) {

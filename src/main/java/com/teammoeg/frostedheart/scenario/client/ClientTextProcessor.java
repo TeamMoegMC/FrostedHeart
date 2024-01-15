@@ -54,6 +54,15 @@ public class ClientTextProcessor {
 		boolean isFinished() {
 			return !(text instanceof SizedReorderingProcessor)||((SizedReorderingProcessor) text).isFinished;
 		}
+
+		public boolean hasText() {
+			return (text instanceof SizedReorderingProcessor)?((SizedReorderingProcessor) text).hasText():true;
+		}
+
+		public IReorderingProcessor getFinished() {
+			// TODO Auto-generated method stub
+			return (text instanceof SizedReorderingProcessor)?((SizedReorderingProcessor) text).origin:text;
+		}
 	}
 	static LinkedList<TextInfo> msgQueue=new LinkedList<>();
 	static int ticks;
@@ -160,7 +169,7 @@ public class ClientTextProcessor {
 	}
 	public static void setText(String txt) {
 		cls();
-		process(txt,true,false);
+		process(txt,true,false,true);
 	}
 	private static int countCh(IReorderingProcessor p) {
 		ReferenceValue<Integer> count=new ReferenceValue<>(0);
@@ -214,7 +223,17 @@ public class ClientTextProcessor {
         	msgQueue.peekLast().reline=isReline2;
         }
 	}
-	public static void process(String text, boolean isReline2, boolean isNowait) {
+	static final int fhchatid=0x05301110;
+	public static void process(String text, boolean isReline2, boolean isNowait,boolean resetScene) {
+		if(resetScene) {
+			Minecraft mc=ClientUtils.mc();
+			List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
+			i.removeIf(l->l.getChatLineID()==fhchatid);
+			for(TextInfo t:msgQueue) {
+    			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.getFinished(),0));
+
+    		}
+		}
 		if(!text.isEmpty()) {
 			hasText=true;
 			ITextComponent item=ClientTextComponentUtils.parse(text);
@@ -234,7 +253,7 @@ public class ClientTextProcessor {
 		
 	}
 	public static void render(Minecraft mc) {
-		final int fhchatid=0x05301110;
+		
 		w=MathHelper.floor((double)mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
         if(ClientTextProcessor.isTick()&&!mc.isGamePaused()) {
         	List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
@@ -245,11 +264,7 @@ public class ClientTextProcessor {
             	int j=0;
             	i.removeIf(l->l.getChatLineID()==fhchatid);
             	for(TextInfo t:msgQueue) {
-            		if(t.isFinished()&&t.reline) {
-            			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),0));
-            			System.out.println("removed "+toString(t.text));
-            			j++;
-            		}else {
+            		if(t.hasText()){
             			//if(hasText) {
             				
             				i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),fhchatid));

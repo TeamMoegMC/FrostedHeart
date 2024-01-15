@@ -5,24 +5,25 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.Param;
+import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ControlCommands {
 	public void delay(ScenarioConductor runner,@Param("t")int t) {
 		//runner.waitClient();
-		runner.addWait(t);
+		runner.getScene().addWait(t);
 		runner.prepareTextualModification();
 
 	}
 	public void wt(ScenarioConductor runner) {
-		
+		runner.getCurrentAct().setStatus(RunStatus.WAITTRIGGER);
 	}
 	public void s(ScenarioConductor runner) {
 		runner.stop();
 	}
 	public void l(ScenarioConductor runner) {
 		runner.getScene().sendNoreline();
-		runner.waitClient();
+		runner.getScene().waitClient();
 	}
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.jump(scenario, label);

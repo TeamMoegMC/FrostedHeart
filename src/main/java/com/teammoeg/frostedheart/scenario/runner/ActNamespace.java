@@ -1,20 +1,25 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
-public class ImmutableQuestNamespace {
+public class ActNamespace {
     public final String chapter;
-
-	public final String quest;
-    public ImmutableQuestNamespace(String chapter, String quest) {
+    public final String act;
+    public ActNamespace(String chapter, String quest) {
 		super();
 		this.chapter = chapter;
-		this.quest = quest;
+		this.act = quest;
 	}
+    public ActNamespace() {
+		super();
+		this.chapter = "";
+		this.act = "";
+	}
+    
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((chapter == null) ? 0 : chapter.hashCode());
-		result = prime * result + ((quest == null) ? 0 : quest.hashCode());
+		result = prime * result + ((act == null) ? 0 : act.hashCode());
 		return result;
 	}
 	@Override
@@ -25,17 +30,14 @@ public class ImmutableQuestNamespace {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ImmutableQuestNamespace other = (ImmutableQuestNamespace) obj;
-		if (chapter == null) {
-			if (other.chapter != null)
-				return false;
-		} else if (!chapter.equals(other.chapter))
+		ActNamespace other = (ActNamespace) obj;
+		if (!chapter.equals(other.chapter))
 			return false;
-		if (quest == null) {
-			if (other.quest != null)
-				return false;
-		} else if (!quest.equals(other.quest))
+		if (!act.equals(other.act))
 			return false;
 		return true;
+	}
+	public boolean isAct() {
+		return !act.isEmpty()&&!chapter.isEmpty();
 	}
 }

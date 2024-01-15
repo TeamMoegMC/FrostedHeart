@@ -2,8 +2,9 @@ package com.teammoeg.frostedheart.scenario.runner;
 
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
-public class ParagraphData{
+public class ParagraphData implements IScenarioTarget{
 	private String name;
 	private transient Scenario sp;
 	private int paragraphNum;
@@ -36,5 +37,14 @@ public class ParagraphData{
 	}
 	public String getName() {
 		return name;
+	}
+	@Override
+	public void accept(ScenarioConductor t) {
+		if(!getScenario().equals(t.getScenario())) {
+			t.setScenario(getScenario());
+			t.gotoNode(0);
+		}
+		if(paragraphNum!=0)
+			t.gotoNode(t.getScenario().paragraphs[paragraphNum-1]);
 	}
 }

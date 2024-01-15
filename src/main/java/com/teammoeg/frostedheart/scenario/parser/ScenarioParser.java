@@ -78,6 +78,8 @@ public class ScenarioParser {
                 return new LabelNode(command, params);
             case "p":
                 return new ParagraphNode(command, params);
+            case "save":
+            	return new SavepointNode(command, params);
         }
         return new CommandNode(command, params);
 
