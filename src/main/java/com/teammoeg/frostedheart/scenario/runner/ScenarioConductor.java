@@ -182,7 +182,7 @@ public class ScenarioConductor{
         return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player);
     }
 	public boolean isOfflined() {
-		return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player)!=null;
+		return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player)==null;
 	}
 	public Scene getScene() {
     	return getCurrentAct().getScene();
@@ -208,7 +208,7 @@ public class ScenarioConductor{
 			jump(new ExecuteTarget(getScenario(),label));
 	}
 	public void newLine() {
-		getScene().sendNewline();
+		getScene().showln();
 	}
 	public void notifyClientResponse(boolean isSkip,int status) {
 		if(getCurrentAct().getStatus()==RunStatus.WAITCLIENT) {
@@ -230,7 +230,7 @@ public class ScenarioConductor{
 		
 	}
 	public void prepareTextualModification() {
-		getScene().sendNoreline();
+		getScene().show();
 	}
 	public void addTrigger(IScenarioTrigger trig) {
 		if(currentAct.name.isAct()) {

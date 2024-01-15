@@ -48,7 +48,7 @@ public class ControlCommands {
 		runner.getScene().clear();
 	}
 	public void l(ScenarioConductor runner) {
-		runner.getScene().sendNoreline();
+		runner.getScene().show();
 		runner.getScene().waitClient();
 	}
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {

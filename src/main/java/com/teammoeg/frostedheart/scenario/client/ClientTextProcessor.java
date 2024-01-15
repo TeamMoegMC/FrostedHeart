@@ -27,7 +27,6 @@ public class ClientTextProcessor {
 		ITextComponent parent;
 		int line;
 		IReorderingProcessor text;
-		boolean reline;
 		boolean addLimit() {
 			if(text instanceof SizedReorderingProcessor) {
 				SizedReorderingProcessor t=(SizedReorderingProcessor) text;
@@ -39,12 +38,11 @@ public class ClientTextProcessor {
 			return false;
 		}
 
-		public TextInfo(ITextComponent parent, int line, IReorderingProcessor text, boolean reline) {
+		public TextInfo(ITextComponent parent, int line, IReorderingProcessor text) {
 			super();
 			this.parent = parent;
 			this.line = line;
 			this.text = text;
-			this.reline = reline;
 		}
 
 		IReorderingProcessor asFinished() {
@@ -185,11 +183,12 @@ public class ClientTextProcessor {
 	//fh$scenario$link:
 	static int w;
 	public static Style preset=null;
-	public static void processClient(ITextComponent item, boolean isReline2, boolean isNowait) {
+	public static boolean shouldWrap;
+	public static void processClient(ITextComponent item, boolean isReline, boolean isNowait) {
 		if(preset!=null)
 			item=item.copyRaw().mergeStyle(preset);
 		List<IReorderingProcessor> lines;
-        if(!msgQueue.isEmpty()&&!msgQueue.peekLast().reline) {
+        if(!msgQueue.isEmpty()&&!shouldWrap) {
         	TextInfo ti=msgQueue.remove(msgQueue.size()-1);
         	int lastline=ti.line;
         	int lastLimit=countCh(ti.text);
@@ -210,21 +209,19 @@ public class ClientTextProcessor {
         			line=sized;
         		}
         		//System.out.println(toString(line));
-        		msgQueue.add(new TextInfo(ntext,i,line,true));
+        		msgQueue.add(new TextInfo(ntext,i,line));
         	}
         }else {
 	        lines=RenderComponentsUtil.func_238505_a_(item, w,ClientUtils.mc().fontRenderer);
 	        int i=0;
 	        for(IReorderingProcessor line:lines) {
-	        	msgQueue.add(new TextInfo(item,i++,isNowait?line:new SizedReorderingProcessor(line),true));
+	        	msgQueue.add(new TextInfo(item,i++,isNowait?line:new SizedReorderingProcessor(line)));
 	        }
         }
-        if(!msgQueue.isEmpty()) {
-        	msgQueue.peekLast().reline=isReline2;
-        }
+        shouldWrap=isReline;
 	}
 	static final int fhchatid=0x05301110;
-	public static void process(String text, boolean isReline2, boolean isNowait,boolean resetScene) {
+	public static void process(String text, boolean isReline, boolean isNowait,boolean resetScene) {
 		if(resetScene) {
 			Minecraft mc=ClientUtils.mc();
 			List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
@@ -233,14 +230,15 @@ public class ClientTextProcessor {
     			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.getFinished(),0));
     		}
 			msgQueue.clear();
+			shouldWrap=false;
 		}
+		System.out.println("Received "+isReline+" "+text);
 		if(!text.isEmpty()) {
 			hasText=true;
 			ITextComponent item=ClientTextComponentUtils.parse(text);
-			processClient(item,isReline2,isNowait);
-		}else if(!msgQueue.isEmpty()) {
-        	msgQueue.peekLast().reline=isReline2;
-        }
+			processClient(item,isReline,isNowait);
+		}
+		shouldWrap=isReline;
        
 	}
 	public static String toString(IReorderingProcessor ipp) {

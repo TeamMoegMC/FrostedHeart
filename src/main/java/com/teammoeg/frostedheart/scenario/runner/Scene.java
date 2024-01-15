@@ -69,7 +69,7 @@ public class Scene {
 	}
 	public void clear() {
 		doResetScene=true;
-		sendNormal();
+		showNeeded();
 		
     	lastNowrap=true;
     	isSaveNowait=isNowait;
@@ -94,7 +94,7 @@ public class Scene {
     	}
     }
     
-    public void sendNormal() {
+    public void showNeeded() {
     	if(currentLiteral!=null) {
     		addLog(currentLiteral.toString());
     		//System.out.println("Reline "+currentLiteral.toString());
@@ -113,7 +113,7 @@ public class Scene {
     	}
     	currentLiteral=null;
     }
-    public void sendNewline() {
+    public void showln() {
     	if(currentLiteral!=null) {
     		//System.out.println("Reline "+currentLiteral.toString());
     		addLog(currentLiteral.toString());
@@ -130,7 +130,7 @@ public class Scene {
     	}
     	currentLiteral=null;
     }
-    public void sendNoreline() {
+    public void show() {
     	if(currentLiteral!=null) {
     		//System.out.println("NoReline "+currentLiteral.toString());
     		lastNowrap=true;
