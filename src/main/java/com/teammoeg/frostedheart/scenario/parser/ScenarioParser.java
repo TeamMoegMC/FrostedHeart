@@ -80,6 +80,8 @@ public class ScenarioParser {
                 return new ParagraphNode(command, params);
             case "save":
             	return new SavepointNode(command, params);
+            case "sharp":
+            	return new ShpNode(command,params);
         }
         return new CommandNode(command, params);
 
@@ -239,6 +241,10 @@ public class ScenarioParser {
         StringParseReader reader = new StringParseReader(line);
         List<Node> nodes = new ArrayList<>();
         while (reader.hasNext()) {
+        	reader.skipWhitespace();
+        	if(reader.peekLast()=='#') {
+        		break;
+        	}else
             if (reader.peekLast() == '@') {
             	if(reader.isBegin())reader.next();
                 nodes.add(parseAtCommand(reader));
