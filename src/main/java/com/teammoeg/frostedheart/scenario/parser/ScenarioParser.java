@@ -209,7 +209,7 @@ public class ScenarioParser {
             String val = parseLiteralOrString(reader, -1);
             params.put(name, val);
             reader.skipWhitespace();
-            if (!reader.hasNext()) return createCommand(command, params);
+            if (!reader.hasNext()||reader.eat('#')) return createCommand(command, params);
         }
         return new LiteralNode(reader.fromStart());
 
