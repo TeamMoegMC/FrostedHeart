@@ -57,7 +57,7 @@ public class Scene {
     	}
     }
     public void addLog(String text) {
-    	if(lastNowrap) {
+    	if(lastNowrap&&!log.isEmpty()) {
     		log.peekLast().append(text);
     	}else {
     		log.add(new StringBuilder(text));
@@ -70,7 +70,7 @@ public class Scene {
 	public void clear() {
 		doResetScene=true;
 		sendNormal();
-		//parent.waitClient();
+		
     	lastNowrap=true;
     	isSaveNowait=isNowait;
     	savedLog.clear();
@@ -157,6 +157,7 @@ public class Scene {
 	public boolean tickWait() {
     	if(waiting>0) {
     		waiting--;
+    		
     		if(waiting<=0)
     			return true;
     	}

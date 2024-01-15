@@ -31,7 +31,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 
 public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
-    CompoundNBT extraData;
+    CompoundNBT extraData=new CompoundNBT();
     CompoundNBT snapshot;
 
     public ScenarioVariables() {

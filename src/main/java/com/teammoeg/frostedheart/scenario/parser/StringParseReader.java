@@ -77,7 +77,7 @@ public class StringParseReader {
 
     public void skipWhitespace() {
         boolean hasChangedIndex = false;
-        while (Character.isWhitespace(str.charAt(idx)) && hasNext()) {
+        while (hasNext()&&Character.isWhitespace(peek())) {
             idx++;
             hasChangedIndex = true;
         }

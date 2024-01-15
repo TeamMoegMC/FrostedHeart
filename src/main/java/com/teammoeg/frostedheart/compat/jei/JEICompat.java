@@ -184,9 +184,13 @@ public class JEICompat implements IModPlugin {
             IRecipe<?> ovrd = overrides.get(i.getId());
             if (!TeamResearchData.getClientInstance().crafting.has(i)) {
                 for (ResourceLocation rl : all) {
+                	try {
                     man.hideRecipe(i, rl);
+                	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
                     if (ovrd != null)
-                        man.hideRecipe(ovrd, rl);
+                    	try {
+                    		man.hideRecipe(ovrd, rl);
+                    	}catch(Exception ex) {}//IDK How JEI And IE conflict, so just catch all.
                     //System.out.println("hiding "+i.getId()+" for "+rl);
                 }
                 if (!irs.isEmpty())

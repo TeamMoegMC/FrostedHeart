@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.mixin.minecraft.FlowerPotMixin;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
@@ -217,8 +218,10 @@ public class FHMain {
 
     @SuppressWarnings("unused")
     private void serverSave(final WorldEvent.Save event) {
-        if (FHResearchDataManager.INSTANCE != null)
+        if (FHResearchDataManager.INSTANCE != null) {
             FHResearchDataManager.INSTANCE.save();
+            FHScenario.save();
+        }
     }
 
     private void serverStart(final FMLServerAboutToStartEvent event) {

@@ -621,7 +621,7 @@ public class CommonEvents {
     }
 
     @SubscribeEvent
-    public static void regulateTemperature(PlayerTickEvent event) {
+    public static void tickPlayer(PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;

@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
@@ -64,12 +65,12 @@ public class ScenarioConductor{
     private transient boolean isConducting;
     
     //Sence control
-    private transient Act currentAct=new Act(this,empty);
+    private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
     private transient boolean isQuestEnabled;
-    
+    private transient ActNamespace lastQuest;
     //Server and Client info
-    public transient PlayerEntity player;
+    public transient UUID player;
     public transient boolean isSkip;
     private transient int clientStatus;
     private static final ActNamespace empty=new ActNamespace();
@@ -90,12 +91,13 @@ public class ScenarioConductor{
     	varData.snapshot=data.getCompound("vars");
     	ListNBT lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
     	for(INBT v:lacts) {
-    		Act i=new Act(this,(ActNamespace) v);
+    		Act i=new Act(this,(CompoundNBT) v);
     		acts.put(i.name, i);
     	}
-    	currentAct=acts.get(new ActNamespace(data.getString("chapter"),data.getString("act")));
-    	if(currentAct==null)
-    		currentAct=acts.get(empty);
+    	lastQuest=new ActNamespace(data.getString("chapter"),data.getString("act"));
+    	//currentAct=acts.get();
+    	//if(currentAct==null)
+    	currentAct=acts.get(empty);
     }
     public void enableQuest() {
     	if(!isQuestEnabled) {
@@ -104,20 +106,29 @@ public class ScenarioConductor{
     		acts.values().forEach(t->{
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
     				//t.getScene().setSlient(true);
+    				if(t.name.equals(lastQuest))lastQuest=null;
     				t.queue(t.paragraph);
     				//t.getScene().setSlient(false);
     			}
     		});
+    		if(lastQuest!=null) {
+    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
+    		}
     	}
     }
     public ScenarioConductor(PlayerEntity player) {
 		super();
-		this.player = player;
+		this.player = player.getUniqueID();
+		currentAct=new Act(this,empty);
 		if(acts.isEmpty()) {
 			acts.put(empty, currentAct);
 		}
 	}
-
+    public ScenarioConductor(PlayerEntity player,CompoundNBT data) {
+		super();
+		this.player = player.getUniqueID();
+		load(data);
+	}
 	public void call(String scenario, String label) {
 		call(new ExecuteTarget(scenario,label));
 	}
@@ -168,8 +179,11 @@ public class ScenarioConductor{
         return getCurrentAct().nodeNum;
     }
 	public ServerPlayerEntity getPlayer() {
-        return (ServerPlayerEntity) player;
+        return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player);
     }
+	public boolean isOfflined() {
+		return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player)!=null;
+	}
 	public Scene getScene() {
     	return getCurrentAct().getScene();
     }
@@ -240,7 +254,6 @@ public class ScenarioConductor{
     private void runCode() {
     	getCurrentAct().setStatus(RunStatus.RUNNING);
     	while(isRunning()) {
-    		getCurrentAct().setStatus(RunStatus.RUNNING);
 	    	while(isRunning()&&getScenario()!=null&&getCurrentAct().nodeNum<getScenario().pieces.size()) {
 	    		Node node=getScenario().pieces.get(getCurrentAct().nodeNum);
 	    		try {
@@ -292,6 +305,8 @@ public class ScenarioConductor{
 		getCurrentAct().nodeNum=0;
 		varData.takeSnapshot();
 		getCurrentAct().newParagraph(sp, 0);
+		for(Node n:sp.pieces)
+			System.out.println(n.getText());
 		run();
 	}
 
@@ -313,11 +328,13 @@ public class ScenarioConductor{
     	for(Act a:acts.values())
 	    	a.getScene().tickTriggers(this, currentAct==a);
     	triggers.removeIf(t->!t.canUse());
-    	if(getCurrentAct().getStatus()==RunStatus.WAITTIMER)
+    	if(getCurrentAct().getStatus()==RunStatus.WAITTIMER) {
     		if(getScene().tickWait()) {
+    			
     			run();
     			return;
     		}
+    	}
     	//Execute Queued actions
     	if(getCurrentAct().getStatus().shouldPause&&!toExecute.isEmpty()) {
     		run();

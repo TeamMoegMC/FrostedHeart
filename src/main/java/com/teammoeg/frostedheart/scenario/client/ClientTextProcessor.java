@@ -231,8 +231,8 @@ public class ClientTextProcessor {
 			i.removeIf(l->l.getChatLineID()==fhchatid);
 			for(TextInfo t:msgQueue) {
     			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.getFinished(),0));
-
     		}
+			msgQueue.clear();
 		}
 		if(!text.isEmpty()) {
 			hasText=true;
@@ -269,7 +269,6 @@ public class ClientTextProcessor {
             				
             				i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),fhchatid));
             			//}
-            			break;
             		}
             		
             	}

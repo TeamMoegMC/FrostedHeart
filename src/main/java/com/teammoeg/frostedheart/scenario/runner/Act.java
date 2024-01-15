@@ -40,15 +40,15 @@ import net.minecraftforge.common.util.Constants;
  * 
  * */
 public class Act {
-	ParagraphData paragraph;
+	ParagraphData paragraph=new ParagraphData();
 	LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
 	ActNamespace name;
 	transient Scenario sp;//current scenario
 	transient int nodeNum=0;//Program register
 	private RunStatus status=RunStatus.STOPPED;
     private final Scene scene;
-    public String title;
-    public String subtitle;
+    public String title="";
+    public String subtitle="";
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
@@ -99,6 +99,7 @@ public class Act {
 	public void newParagraph(Scenario sp,int pn) {
 		paragraph.setParagraphNum(pn);
 		paragraph.setScenario(sp);
+		getScene().waitClient();
 		getScene().clear();
     }
 	public Scene getScene() {

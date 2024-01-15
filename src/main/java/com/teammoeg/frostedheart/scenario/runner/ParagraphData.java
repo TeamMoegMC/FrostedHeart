@@ -40,7 +40,7 @@ public class ParagraphData implements IScenarioTarget{
 	}
 	@Override
 	public void accept(ScenarioConductor t) {
-		if(!getScenario().equals(t.getScenario())) {
+		if(name!=null&&!getScenario().equals(t.getScenario())) {
 			t.setScenario(getScenario());
 			t.gotoNode(0);
 		}

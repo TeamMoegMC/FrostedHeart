@@ -212,10 +212,10 @@ dependencies {
 
     compileOnly fg.deobf("curse.maven:chisel-235279:3376782")
     compileOnly fg.deobf("curse.maven:ctm-267602:3137659")
-    compileOnly fg.deobf("curse.maven:kiwi-303657:3377053")
+    implementation fg.deobf("curse.maven:kiwi-303657:3377053")
     compileOnly fg.deobf("curse.maven:snowrealmagic-308663:3295579")
-    compileOnly fg.deobf("curse.maven:tetra-289712:3585032")
-    compileOnly fg.deobf("curse.maven:mgui-351914:3456505")
+    implementation fg.deobf("curse.maven:tetra-289712:3585032")
+    implementation fg.deobf("curse.maven:mgui-351914:3456505")
     compileOnly fg.deobf("curse.maven:selene-499980:3517008")
     compileOnly fg.deobf("curse.maven:age-api-353992:3176394")
     compileOnly fg.deobf("curse.maven:neolithic-world-534605:3937806")
@@ -223,7 +223,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:engineers-decor-313866:3566177")
     compileOnly fg.deobf("curse.maven:projecte-226410:3223221")
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2:api")
-    compileOnly fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
+    implementation fg.deobf("dev.ftb.mods:ftb-quests-forge:1605.3.6-build.98")
 
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.5-4.0.5.2")
 

@@ -68,16 +68,16 @@ public class ScenarioExecutor {
             for (int i = 1; i < param.length; i++) {
                 Function<String, Object> converter = null;
                 Class<?> partype = param[i].getType();
-                Params par=param[i].getAnnotation(Params.class);
+                Param[] par=param[i].getAnnotationsByType(Param.class);
                 int size=0;
                 if(par!=null) {
-                	size=par.value().length;
+                	size=par.length;
                 }
                 String[] names=new String[size+1];
                 names[0]=(param[i].isNamePresent()?param[i].getName():param[i].getName().substring(4));
                 if(par!=null) {
                 	for(int j=0;j<size;j++) {
-                		names[j+1]=par.value()[j].value();
+                		names[j+1]=par[j].value();
                 	}
                 }
                 Supplier<Object> def=null;

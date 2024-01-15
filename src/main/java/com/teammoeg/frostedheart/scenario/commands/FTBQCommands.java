@@ -38,7 +38,7 @@ public class FTBQCommands {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
-			return quest.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.player));
+			return quest.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
 	public void waittaskComplete(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
@@ -46,7 +46,7 @@ public class FTBQCommands {
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
 		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
-			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.player));
+			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
 	public void waittaskCompleteShow(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
@@ -55,19 +55,19 @@ public class FTBQCommands {
 		Task tsk=quest.tasks.get(t);
 		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
 		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
-			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.player));
+			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
 	public void waitquestStart(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
-			return qf.getData(r.player).canStartTasks(quest);
+			return qf.getData(r.getPlayer()).canStartTasks(quest);
 		}));
 	}
 	public void completequest(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(q));
-		TeamData td=ServerQuestFile.INSTANCE.getData(runner.player);
+		TeamData td=ServerQuestFile.INSTANCE.getData(runner.getPlayer());
 		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE);
 		change.origin = quest;
 		change.reset = false;
@@ -76,7 +76,7 @@ public class FTBQCommands {
 	}
 	public void completetask(ScenarioConductor runner,@Param("q")String q,@Param("t")int t) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(q));
-		TeamData td=ServerQuestFile.INSTANCE.getData(runner.player);
+		TeamData td=ServerQuestFile.INSTANCE.getData(runner.getPlayer());
 		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE);
 		change.origin = quest.tasks.get(t);
 		change.reset = false;
