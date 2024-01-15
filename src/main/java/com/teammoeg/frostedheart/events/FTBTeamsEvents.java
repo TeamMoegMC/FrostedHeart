@@ -48,6 +48,10 @@ public class FTBTeamsEvents {
             PlayerTeam orig = FTBTeamsAPI.getManager().getInternalPlayerTeam(event.getCreator().getUniqueID());
 
             FHResearchDataManager.INSTANCE.transfer(orig.getId(), event.getTeam());
+            for(ServerPlayerEntity p:event.getTeam().getOnlineMembers()) {
+	            FHPacketHandler.send(PacketDistributor.PLAYER.with(()->p),
+	                    new FHResearchDataSyncPacket(FTBTeamsAPI.getPlayerTeam(p)));
+            }
         }
 
     }
