@@ -40,10 +40,8 @@ public class FTBQProvider implements Function<String, Scenario> {
 				b.append("[link l=tsk").append(it).append("]").append(tsk.title==null?"Click here":tsk.title).append("[endlink]")
 				.append("[wa]\n");
 			}else {
-				b.append("@WaitTaskCompleteShow l=tsk").append(it)
-				.append(" q=").append(quest.getCodeString())
-				.append(" t=").append(it)
-				.append("\n").append("@wt\n");
+				b.append("@WaitTaskCompleteShow l=tsk").append(it).append(" q=").append(quest.getCodeString())
+				.append(" t=").append(it).append("\n").append("@wt\n");
 			}
 			b.append("@label name=tsk").append(it).append("\n");
 			if(tsk instanceof CheckmarkTask)
