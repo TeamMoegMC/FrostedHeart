@@ -25,6 +25,9 @@ public class ControlCommands {
 	public void s(ScenarioConductor runner) {
 		runner.stop();
 	}
+	public void er(ScenarioConductor runner) {
+		runner.getScene().clear();
+	}
 	public void l(ScenarioConductor runner) {
 		runner.getScene().sendNoreline();
 		runner.getScene().waitClient();
