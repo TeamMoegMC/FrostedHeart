@@ -63,8 +63,8 @@ public class ControlCommands {
 	public void Return(ScenarioConductor runner) {
 		runner.popCallStack();
 	}
-	public void macro(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.call(scenario, label);
+	public void macro(ScenarioConductor runner,@Param("name")String name) {
+		runner.addMacro(name);
 
 	}
 	public void endmacro(ScenarioConductor runner) {

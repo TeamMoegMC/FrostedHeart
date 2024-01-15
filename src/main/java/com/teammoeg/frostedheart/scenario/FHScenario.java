@@ -82,7 +82,7 @@ public class FHScenario {
     }
     public static void callClientCommand(String name, ScenarioConductor runner, Map<String, String> params) {
     	  FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
-    			  new ServerScenarioCommandPacket(name, params,runner.getExecutionData()));
+    			  new ServerScenarioCommandPacket(name.toLowerCase(), params,runner.getExecutionData()));
     }
     public static void callClientCommand(String name, ScenarioConductor runner,String... params) {
     	Map<String, String> data=new HashMap<>();
@@ -91,7 +91,7 @@ public class FHScenario {
     	}
     	
   	  FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
-  			  new ServerScenarioCommandPacket(name, data,runner.getExecutionData()));
+  			  new ServerScenarioCommandPacket(name.toLowerCase(), data,runner.getExecutionData()));
   }
     public static void registerClientDelegate(Class<?> cls) {
         for (Method met : cls.getMethods()) {

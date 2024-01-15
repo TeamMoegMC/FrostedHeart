@@ -122,6 +122,7 @@ public class ScenarioConductor{
 		call(new ExecuteTarget(scenario,label));
 	}
 	public void callCommand(String name,Map<String,String> params) {
+		name=name.toLowerCase();
 		if(macros.containsKey(name)) {
 			CompoundNBT mp=new CompoundNBT();
 			for(Entry<String, String> e:params.entrySet()) {
@@ -399,5 +400,8 @@ public class ScenarioConductor{
 	}
 	public Act getCurrentAct() {
 		return currentAct;
+	}
+	public void addMacro(String name) {
+		macros.put(name.toLowerCase(), getCurrentAct().getCurrentPosition().next());
 	}
 }

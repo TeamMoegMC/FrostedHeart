@@ -272,7 +272,7 @@ public class ScenarioParser {
                 isEscaping = false;
                 continue;
             }
-            if (r == '[' || r == '@') {
+            if (r == '[' || r == '@'||r=='#') {
                 break;
             }
             all.append(r);
