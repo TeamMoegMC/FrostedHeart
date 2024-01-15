@@ -38,6 +38,7 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue enableFrozenOverlay;
         public final ForgeConfigSpec.BooleanValue enableFrozenVignette;
         public final ForgeConfigSpec.BooleanValue enableHeatVignette;
+        public final ForgeConfigSpec.BooleanValue enableFrozenSound;
 
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
@@ -69,6 +70,9 @@ public class FHConfig {
             enableHeatVignette = builder
                     .comment("Enables the vignette when player is too hot. ")
                     .define("enableHeatVignette", true);
+            enableFrozenSound = builder
+                    .comment("Enables the frozen sound when player is freezing. ")
+                    .define("enableFrozenSound", true);
         }
     }
 

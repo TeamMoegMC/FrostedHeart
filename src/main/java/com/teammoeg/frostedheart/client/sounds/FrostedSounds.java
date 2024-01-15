@@ -44,7 +44,7 @@ public class FrostedSounds {
                 float prevTemp = Temperature.getBodySmoothedPrevious(player);
                 float currTemp = Temperature.getBodySmoothed(player);
                 // play sound if currTemp transitions across integer threshold
-                if (MathHelper.floor(prevTemp) != MathHelper.floor(currTemp))
+                if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F))
                     player.world.playSound(player, player.getPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
             }
         }
