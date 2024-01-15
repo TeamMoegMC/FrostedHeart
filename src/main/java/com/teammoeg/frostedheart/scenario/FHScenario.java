@@ -55,7 +55,7 @@ public class FHScenario {
     	sr.run(loadScenario("init"));
     }
 
-    static ScenarioParser parser = new ScenarioParser();
+    public static final ScenarioParser parser = new ScenarioParser();
     static File local = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhscenario");
     public static void registerScenarioProvider(Function<String,Scenario> p) {
     	scenarioProviders.add(p);

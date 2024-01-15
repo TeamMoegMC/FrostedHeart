@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.scenario.parser.providers;
 
 import java.util.function.Function;
 
+import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 
 import dev.ftb.mods.ftbquests.quest.Quest;
@@ -51,8 +52,7 @@ public class FTBQProvider implements Function<String, Scenario> {
 			b.append("@EndAct\n");
 			it++;
 		}
-
-		return null;
+		return FHScenario.parser.parseString(t,b.toString());
 	}
 
 }

@@ -102,7 +102,7 @@ public class ScenarioParser {
         }
         return process(name,nodes);
     }
-    public Scenario parseString(String name,String code) throws IOException {
+    public Scenario parseString(String name,String code){
         List<Node> nodes = new ArrayList<>();
         
         try  {
