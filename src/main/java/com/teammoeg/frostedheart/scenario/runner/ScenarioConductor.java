@@ -379,9 +379,14 @@ public class ScenarioConductor{
 				run();
 		}
 	}
-	public void endQuest() {
-		acts.remove(getCurrentAct().name);
+	public void endAct() {
+		getCurrentAct().setStatus(RunStatus.STOPPED);
+		ExecuteStackElement tatg=getCurrentAct().getCurrentPosition();
+		if(getCurrentAct().name.isAct()) {
+			acts.remove(getCurrentAct().name);
+		}
 		globalScope();
+		jump(tatg);
 	}
 	public Scenario getScenario() {
 		return getCurrentAct().sp;

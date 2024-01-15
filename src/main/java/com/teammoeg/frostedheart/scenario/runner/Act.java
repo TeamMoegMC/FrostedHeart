@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2024 TeamMoeg
+ *
+ * This file is part of Frosted Heart.
+ *
+ * Frosted Heart is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * Frosted Heart is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Frosted Heart. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.LinkedList;
@@ -28,6 +47,8 @@ public class Act {
 	transient int nodeNum=0;//Program register
 	private RunStatus status=RunStatus.STOPPED;
     private final Scene scene;
+    public String title;
+    public String subtitle;
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
@@ -52,6 +73,8 @@ public class Act {
     	nbt.put("callStack", css);
     	nbt.putString("chapter", name.chapter);
     	nbt.putString("act", name.act);
+    	nbt.putString("title", title);
+    	nbt.putString("subtitle", subtitle);
     	nbt.put("scene", scene.save());
     	if(getStatus().doPersist) {
     		nbt.putInt("status", getStatus().ordinal());
@@ -67,7 +90,8 @@ public class Act {
     		callStack.add(new ExecuteStackElement((CompoundNBT) n));
     	}
     	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("quest"));
-
+    	title=nbt.getString("title");
+    	subtitle=nbt.getString("subtitle");
     	scene.load(nbt.getCompound("scene"));
     	setStatus(RunStatus.values()[nbt.getInt("status")]);
     	

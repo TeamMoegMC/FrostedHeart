@@ -19,37 +19,39 @@
 
 package com.teammoeg.frostedheart.scenario.runner.target;
 
+import java.util.function.Predicate;
+
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
-import net.minecraft.nbt.CompoundNBT;
-
-public class ExecuteStackElement extends ScenarioTarget{
-	private final int nodeNum;
-	public ExecuteStackElement(String name, int nodeNum) {
-		super(name);
-		this.nodeNum = nodeNum;
+public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenarioTrigger {
+	boolean canStillTrigger;
+	Predicate<ScenarioConductor> test;
+	public SingleExecuteTargerTrigger(String name, String label,Predicate<ScenarioConductor> test) {
+		super(name, label);
+		this.test=test;
 	}
-	public ExecuteStackElement(Scenario sc, int nodeNum) {
-		super(sc);
-		this.nodeNum = nodeNum;
-	}
-	public ExecuteStackElement(CompoundNBT n) {
-		this(n.getString("storage"),n.getInt("node"));
+	public SingleExecuteTargerTrigger(Scenario sc, String label,Predicate<ScenarioConductor> test) {
+		super(sc, label);
+		this.test=test;
 	}
 	@Override
-	public void accept(ScenarioConductor runner) {
-		super.accept(runner);
-		runner.gotoNode(nodeNum);
+	public boolean test(ScenarioConductor t) {
+
+		return test.test(t);
 	}
-	public CompoundNBT save() {
-		CompoundNBT nbt=new CompoundNBT();
-		nbt.putString("storage", getName());
-		nbt.putInt("node", nodeNum);
-		return nbt;
+	@Override
+	public boolean use() {
+		if(canStillTrigger) {
+			canStillTrigger=false;
+			return true;
+		}
+		return false;
 	}
-	public ExecuteStackElement next() {
-		return new ExecuteStackElement(this.getScenario(),nodeNum+1);
+	@Override
+	public boolean canUse() {
+		return canStillTrigger;
 	}
 
 }
