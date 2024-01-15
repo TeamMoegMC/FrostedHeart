@@ -29,5 +29,8 @@ public class ExecuteStackElement extends ScenarioTarget{
 		nbt.putInt("node", nodeNum);
 		return nbt;
 	}
+	public ExecuteStackElement next() {
+		return new ExecuteStackElement(this.getScenario(),nodeNum+1);
+	}
 
 }

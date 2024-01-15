@@ -7,6 +7,7 @@ import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 
 public class ControlCommands {
 	public void delay(ScenarioConductor runner,@Param("t")int t) {
@@ -18,6 +19,9 @@ public class ControlCommands {
 	public void wt(ScenarioConductor runner) {
 		runner.getCurrentAct().setStatus(RunStatus.WAITTRIGGER);
 	}
+	public void wa(ScenarioConductor runner) {
+		runner.getCurrentAct().setStatus(RunStatus.WAITACTION);
+	}
 	public void s(ScenarioConductor runner) {
 		runner.stop();
 	}
@@ -26,12 +30,13 @@ public class ControlCommands {
 		runner.getScene().waitClient();
 	}
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.jump(scenario, label);
-
+		runner.getCurrentAct().jump(new ExecuteTarget(scenario,label));
 	}
 	public void call(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.call(scenario, label);
-
+	}
+	public void queue(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
+		runner.getCurrentAct().queue(new ExecuteTarget(scenario,label));
 	}
 	public void Return(ScenarioConductor runner) {
 		runner.popCallStack();

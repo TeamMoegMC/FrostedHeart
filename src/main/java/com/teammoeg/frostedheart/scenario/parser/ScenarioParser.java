@@ -84,8 +84,43 @@ public class ScenarioParser {
         return new CommandNode(command, params);
 
     }
-
-    public Scenario parse(String name,File file) throws IOException {
+    public Scenario parseString(String name,List<String> code) throws IOException {
+        List<Node> nodes = new ArrayList<>();
+        
+        try{
+            int i=0;
+            for(String line:code) {
+            	i++;
+            	try {
+            		nodes.addAll(parseLine(line));
+            	}catch(Exception ex) {
+            		throw new ScenarioExecutionException("line "+i+":"+ex.getMessage(),ex);
+            	}
+            }
+        }catch(Exception ex) {
+        	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
+        }
+        return process(name,nodes);
+    }
+    public Scenario parseString(String name,String code) throws IOException {
+        List<Node> nodes = new ArrayList<>();
+        
+        try  {
+            int i=0;
+            for(String line:code.split("\r\n")) {
+            	i++;
+            	try {
+            		nodes.addAll(parseLine(line));
+            	}catch(Exception ex) {
+            		throw new ScenarioExecutionException("line "+i+":"+ex.getMessage(),ex);
+            	}
+            }
+        }catch(Exception ex) {
+        	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
+        }
+        return process(name,nodes);
+    }
+    public Scenario parseFile(String name,File file) throws IOException {
         List<Node> nodes = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(file);
              InputStreamReader isr = new InputStreamReader(fis,StandardCharsets.UTF_8);
@@ -97,15 +132,16 @@ public class ScenarioParser {
             	try {
             		nodes.addAll(parseLine(line));
             	}catch(Exception ex) {
-            		
             		throw new ScenarioExecutionException("line "+i+":"+ex.getMessage(),ex);
-            		
             	}
             }
         }catch(Exception ex) {
         	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
         }
-        List<Integer> paragraphs = new ArrayList<>();
+        return process(name,nodes);
+    }
+    private Scenario process(String name,List<Node> nodes) {
+    	List<Integer> paragraphs = new ArrayList<>();
         LinkedList<CommandStack> ifstack = new LinkedList<>();
         Map<String,Integer> labels=new HashMap<>();
         int macro=0;
@@ -151,8 +187,10 @@ public class ScenarioParser {
         }
         return new Scenario(name, nodes,paragraphs.stream().mapToInt(t->t).toArray(),labels);
     }
+    
 
-    public Node parseAtCommand(StringParseReader reader) throws IOException {
+
+    private Node parseAtCommand(StringParseReader reader) throws IOException {
         Map<String, String> params = new HashMap<>();
         reader.saveIndex();
         String command = parseLiteralOrString(reader, -1);
@@ -175,7 +213,7 @@ public class ScenarioParser {
 
     }
 
-    public Node parseBarackCommand(StringParseReader reader) throws IOException {
+    private Node parseBarackCommand(StringParseReader reader) throws IOException {
         Map<String, String> params = new HashMap<>();
         reader.saveIndex();
         String command = parseLiteralOrString(reader, ']');
@@ -197,7 +235,7 @@ public class ScenarioParser {
         return new LiteralNode(reader.fromStart());
     }
 
-    public List<Node> parseLine(String line) throws IOException {
+    private List<Node> parseLine(String line) throws IOException {
         StringParseReader reader = new StringParseReader(line);
         List<Node> nodes = new ArrayList<>();
         while (reader.hasNext()) {
@@ -214,7 +252,7 @@ public class ScenarioParser {
         return nodes;
     }
 
-    public String parseLiteral(StringParseReader reader) throws IOException {
+    private String parseLiteral(StringParseReader reader) throws IOException {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         while (reader.hasNext()) {
@@ -236,7 +274,7 @@ public class ScenarioParser {
         return all.toString();
     }
 
-    public String parseLiteralOrString(StringParseReader reader, int ch) throws IOException {
+    private String parseLiteralOrString(StringParseReader reader, int ch) throws IOException {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         boolean hasQuote = false;

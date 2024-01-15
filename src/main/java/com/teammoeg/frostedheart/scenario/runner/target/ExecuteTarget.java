@@ -20,7 +20,7 @@ public class ExecuteTarget extends ScenarioTarget{
 	public void accept(ScenarioConductor runner) {
 
 		if(label!=null) {
-			Integer ps=getScenario().labels.get(label);
+			Integer ps=runner.getScenario().labels.get(label);
 			if(ps!=null) {
 				runner.gotoNode(ps);
 			}

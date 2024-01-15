@@ -19,6 +19,8 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 		this.name=sc.name;
 	}
 	protected Scenario getScenario() {
+		if(name==null)
+			return null;
 		if(sp==null)
 			sp=FHScenario.loadScenario(name);
 		return sp;
@@ -28,7 +30,7 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 	}
 	@Override
 	public void accept(ScenarioConductor runner) {
-		if(!getScenario().equals(runner.getScenario())) {
+		if(name!=null&&!getScenario().equals(runner.getScenario())) {
 			runner.setScenario(getScenario());
 			runner.gotoNode(0);
 		}

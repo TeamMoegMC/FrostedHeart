@@ -13,7 +13,7 @@ public class ActTarget implements IScenarioTarget {
 	}
 	@Override
 	public void accept(ScenarioConductor t) {
-		t.continueQuest(ns);
+		t.createQuest(ns);
 		parent.accept(t);
 		
 	}

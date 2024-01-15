@@ -28,6 +28,8 @@ public class Act {
 	transient int nodeNum=0;//Program register
 	private RunStatus status=RunStatus.STOPPED;
     private final Scene scene;
+    public String title;
+    public String subtitle;
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
@@ -52,6 +54,8 @@ public class Act {
     	nbt.put("callStack", css);
     	nbt.putString("chapter", name.chapter);
     	nbt.putString("act", name.act);
+    	nbt.putString("title", title);
+    	nbt.putString("subtitle", subtitle);
     	nbt.put("scene", scene.save());
     	if(getStatus().doPersist) {
     		nbt.putInt("status", getStatus().ordinal());
@@ -67,7 +71,8 @@ public class Act {
     		callStack.add(new ExecuteStackElement((CompoundNBT) n));
     	}
     	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("quest"));
-
+    	title=nbt.getString("title");
+    	subtitle=nbt.getString("subtitle");
     	scene.load(nbt.getCompound("scene"));
     	setStatus(RunStatus.values()[nbt.getInt("status")]);
     	
