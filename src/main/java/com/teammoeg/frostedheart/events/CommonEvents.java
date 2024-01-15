@@ -126,6 +126,7 @@ import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -284,7 +285,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getItemStack().getItem() instanceof IModularItem) {
+        if (ModList.get().isLoaded("tetra") && event.getItemStack().getItem() instanceof IModularItem) {
             Set<ToolType> tt = event.getItemStack().getToolTypes();
             int type = 0;
             if (tt.contains(TetraCompat.coreSpade))
