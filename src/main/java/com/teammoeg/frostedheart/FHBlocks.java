@@ -42,6 +42,7 @@ import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
+import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
 
@@ -132,6 +133,13 @@ public class FHBlocks {
             .notSolid(), FHBlockItem::new);
     public static Block sauna = new SaunaBlock("sauna_vent", Block.Properties
             .create(Material.ROCK)
+            .sound(SoundType.METAL)
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(2, 10)
+            .notSolid(), FHBlockItem::new);
+    public static Block steam_core = new SteamCoreBlock("steam_core", Block.Properties
+            .create(Material.IRON)
             .sound(SoundType.METAL)
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)

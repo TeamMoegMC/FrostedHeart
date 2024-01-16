@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
 
@@ -86,6 +87,10 @@ public class FHTileTypes {
 
     public static final RegistryObject<TileEntityType<MechCalcTileEntity>> MECH_CALC = REGISTER.register(
             "mechanical_calculator", makeType(MechCalcTileEntity::new, () -> FHBlocks.mech_calc)
+    );
+
+    public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
+            "steam_core", makeType(SteamCoreTileEntity::new, () -> FHBlocks.steam_core)
     );
 
     public static final RegistryObject<TileEntityType<SaunaTileEntity>> SAUNA = REGISTER.register(
