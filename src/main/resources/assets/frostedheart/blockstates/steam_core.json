@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "frostedheart:block/steamcore/steam_core",
+      "y": 0
+    },
+    "facing=south": {
+      "model": "frostedheart:block/steamcore/steam_core",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "frostedheart:block/steamcore/steam_core",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "frostedheart:block/steamcore/steam_core",
+      "y": 90
+    }
+  }
+}

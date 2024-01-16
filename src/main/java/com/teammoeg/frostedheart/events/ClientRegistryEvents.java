@@ -131,6 +131,7 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.steam_core, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest, RenderType.getCutout());
