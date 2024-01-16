@@ -47,7 +47,6 @@ public class ControlCommands {
 		runner.stop();
 	}
 	public void er(ScenarioConductor runner) {
-		runner.sendCachedSence();
 		runner.getScene().clear();
 		runner.sendCachedSence();
 	}

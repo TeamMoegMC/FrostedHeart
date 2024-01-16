@@ -239,7 +239,7 @@ public class ClientScene {
 			shouldWrap=false;
 			needUpdate=false;
 		}
-		//System.out.println("Received "+isReline+" "+text+" "+resetScene);
+		System.out.println("Received "+isReline+" "+text+" "+resetScene);
 		if(!text.isEmpty()) {
 			hasText=true;
 			ITextComponent item=ClientTextComponentUtils.parse(text);

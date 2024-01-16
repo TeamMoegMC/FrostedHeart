@@ -263,7 +263,7 @@ public class ScenarioConductor implements IScenarioConductor{
 
     private void runCode() {
     	
-    	while(isRunning()) {
+    	//while(isRunning()) {
 	    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
 	    		System.out.println(nodeNum);
 	    		Node node=getScenario().pieces.get(nodeNum);
@@ -282,7 +282,9 @@ public class ScenarioConductor implements IScenarioConductor{
 		    		return;
 	    		}
 	    	}
-		}
+	    	if(isRunning())
+	    		setStatus((RunStatus.STOPPED));
+		//}
     }
     private void runScheduled() {
     	if(getStatus().shouldPause) {
@@ -309,8 +311,10 @@ public class ScenarioConductor implements IScenarioConductor{
     	if(isConducting)return;
     	try {
     		isConducting=true;
-    		runCode();
-    		runScheduled();
+    		while(isRunning()) {
+    			runCode();
+    			runScheduled();
+    		}
     	}finally {
     		isConducting=false;
     	}

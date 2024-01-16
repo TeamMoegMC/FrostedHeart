@@ -51,9 +51,9 @@ public class FTBQProvider implements Function<String, Scenario> {
 		if(quest.subtitle!=null&&!quest.subtitle.isEmpty()) {
 			b.append(" st=\"").append(quest.subtitle.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"")).append("\"");
 		}
-		b.append("\n[l][er]\n");
+		b.append("\n[p]\n");
 		for(String s:quest.description) {
-			b.append(s.replaceAll("\\[", "\\[").replaceAll("@", "\\@")).append("[l][er]\n");
+			b.append(s.replaceAll("\\[", "\\[").replaceAll("@", "\\@")).append("[p]\n");
 		}
 		int it=0;
 		for(Task tsk:quest.tasks) {

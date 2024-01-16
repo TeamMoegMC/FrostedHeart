@@ -54,7 +54,9 @@ public class FTBQCommands {
 		Task tsk=quest.tasks.get(t);
 		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
 		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
-			boolean rx=tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
+			TeamData td=ServerQuestFile.INSTANCE.getData(r.getPlayer());
+			boolean rx=td.isCompleted(tsk);
+			
 			//System.out.println(rx);
 			return rx;
 		}));
@@ -73,7 +75,7 @@ public class FTBQCommands {
 		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE);
 		change.origin = quest;
 		change.reset = false;
-		ServerQuestFile.INSTANCE.forceProgress(td,change);
+		change.origin.forceProgress(td, change);
 
 	}
 	public void completetask(ScenarioConductor runner,@Param("q")String q,@Param("t")int t) {
@@ -82,7 +84,8 @@ public class FTBQCommands {
 		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE);
 		change.origin = quest.tasks.get(t);
 		change.reset = false;
-		ServerQuestFile.INSTANCE.forceProgress(td,change);
+		change.origin.forceProgress(td, change);
+		//ServerQuestFile.INSTANCE.forceProgress(td,change);
 
 	}
 }
