@@ -50,8 +50,8 @@ public class ScenarioExecutor {
 			public String toString() {
 				return "[name=" + Arrays.toString(paramName) + "]";
 			}
-            
-            
+
+
         }
 
         Method method;
@@ -59,7 +59,6 @@ public class ScenarioExecutor {
         Object instance;
         ParamInfo[] params;
         public MethodInfo(Object instance, Method method) {
-            super();
             this.instance = instance;
             this.method = method;
             Parameter[] param = method.getParameters();
@@ -210,8 +209,8 @@ public class ScenarioExecutor {
     static class Test{
     	public void test(ScenarioConductor sr,@Param("t")int t) {
     		System.out.println(t);
-    		
-    	};
+
+    	}
     }
     public static void main(String[] args) throws NoSuchMethodException, SecurityException {
     	Test t=new Test();

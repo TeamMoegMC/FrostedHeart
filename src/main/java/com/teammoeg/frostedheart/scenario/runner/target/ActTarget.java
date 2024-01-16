@@ -33,7 +33,7 @@ public class ActTarget implements IScenarioTarget {
 	}
 	@Override
 	public void accept(ScenarioConductor t) {
-		t.continueQuest(ns);
+		t.continueAct(ns);
 		parent.apply(t);
 		
 	}

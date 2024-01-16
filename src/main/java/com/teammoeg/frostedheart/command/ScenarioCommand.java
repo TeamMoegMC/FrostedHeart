@@ -58,7 +58,7 @@ public class ScenarioCommand {
 				.then(Commands.literal("chapter").then(
 					Commands.literal("act").executes(ct->{
 						ScenarioConductor cdt=FHScenario.runners.get(ct.getSource().asPlayer());
-						cdt.continueQuest(new ActNamespace(StringArgumentType.getString(ct, "chapter"),StringArgumentType.getString(ct, "act")));
+						cdt.continueAct(new ActNamespace(StringArgumentType.getString(ct, "chapter"),StringArgumentType.getString(ct, "act")));
 						return Command.SINGLE_SUCCESS;
 					})))
 				);

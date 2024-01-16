@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.scenario;
 public class ScenarioExecutionException extends RuntimeException {
 
     public ScenarioExecutionException() {
-        super();
         // TODO Auto-generated constructor stub
     }
 

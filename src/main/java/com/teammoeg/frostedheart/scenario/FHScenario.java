@@ -40,9 +40,10 @@ import com.teammoeg.frostedheart.scenario.commands.FTBQCommands;
 import com.teammoeg.frostedheart.scenario.commands.SceneCommand;
 import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
-import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -91,7 +92,7 @@ public class FHScenario {
 	}
 
 	public static void callClientCommand(String name, ScenarioConductor runner, Map<String, String> params) {
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), params, runner.getExecutionData()));
 	}
 
@@ -101,7 +102,7 @@ public class FHScenario {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), data, runner.getExecutionData()));
 	}
 

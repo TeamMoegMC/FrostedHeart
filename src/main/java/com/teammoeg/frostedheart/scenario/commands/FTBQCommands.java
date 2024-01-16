@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.scenario.commands;
 
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.Param;
-import com.teammoeg.frostedheart.scenario.client.ClientTextProcessor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.target.SingleExecuteTargerTrigger;
 

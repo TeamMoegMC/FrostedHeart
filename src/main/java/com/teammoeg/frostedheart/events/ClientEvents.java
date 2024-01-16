@@ -42,7 +42,7 @@ import com.teammoeg.frostedheart.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
-import com.teammoeg.frostedheart.scenario.client.ClientTextProcessor;
+import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
@@ -447,7 +447,7 @@ public class ClientEvents {
         if (event.phase == Phase.START) {
             if (ClientUtils.mc().world != null) {
                 Minecraft mc = ClientUtils.mc();
-                ClientTextProcessor.render(mc);
+                ClientScene.render(mc);
 
             }
             PlayerEntity pe = ClientUtils.getPlayer();
@@ -486,7 +486,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onWorldRender(RenderWorldLastEvent event) {
         if(FHScenarioClient.sendInitializePacket) {
-        	ClientTextProcessor.reset();
+        	ClientScene.reset();
         	FHScenarioClient.sendInitializePacket=false;
         	FHPacketHandler.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
         }

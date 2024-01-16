@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.teammoeg.frostedheart.scenario.client.ClientTextProcessor;
+import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
@@ -53,7 +53,7 @@ public class ServerSenarioTextPacket {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
 
-            ClientTextProcessor.process(text, isReline, isNowait,resetScene);
+            ClientScene.process(text, isReline, isNowait,resetScene);
         });
         context.get().setPacketHandled(true);
     }

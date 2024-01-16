@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 public class SceneCommand {
 	public void startAct(ScenarioConductor runner,@Param("c")String c,@Param("a")String a) {
 		runner.endAct();
-		runner.enterQuest(new ActNamespace(c,a));
+		runner.enterAct(new ActNamespace(c,a));
 		//runner.jump(new ActTarget(new ActNamespace(c,a),runner.getCurrentAct().getCurrentPosition().next()));
 	}
 	public void endAct(ScenarioConductor runner) {
@@ -36,7 +36,7 @@ public class SceneCommand {
 	}
 	public void queueAct(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
 		
-		runner.queueQuest(new ActNamespace(c,a),s,l);
+		runner.queueAct(new ActNamespace(c,a),s,l);
 	}
 	public void actTitle(ScenarioConductor runner,@Param("t")String t,@Param("st")String st) {
 		if(t!=null)

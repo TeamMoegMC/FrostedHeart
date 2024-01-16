@@ -20,13 +20,8 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 

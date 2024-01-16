@@ -38,7 +38,7 @@ import net.minecraftforge.common.util.Constants;
 public class Act implements IScenarioConductor{
 	ParagraphData paragraph=new ParagraphData();
 	String label;
-	LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
+	
 	ActNamespace name;
 	private transient Scenario sp;//current scenario
 	private transient int nodeNum=-1;//Program register
@@ -46,6 +46,7 @@ public class Act implements IScenarioConductor{
     private final Scene scene;
     public String title="";
     public String subtitle="";
+    private LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
@@ -111,7 +112,15 @@ public class Act implements IScenarioConductor{
     	setStatus((RunStatus.values()[nbt.getInt("status")]));
     	
     }
+    public void saveActState() {
+		setNodeNum(parent.nodeNum);
+		setScenario(parent.sp);
+		setStatus(parent.getStatus());
+		callStack.clear();
+		callStack.addAll(parent.getCallStack());
+    }
 	public void newParagraph(Scenario sp,int pn) {
+		saveActState();
 		paragraph.setParagraphNum(pn);
 		paragraph.setScenario(sp);
 		getScene().waitClient();
@@ -123,27 +132,15 @@ public class Act implements IScenarioConductor{
     public ExecuteStackElement getCurrentPosition() {
     	return new ExecuteStackElement(sp,nodeNum);
     }
-	public void addCallStack() {
-		callStack.add(parent.getCurrentPosition());
-	}
-	/*public void jump(IScenarioTarget target) {
-		parent.jump(new ActTarget(name,target));
-	}*/
+
+
 	public void queue(IScenarioTarget target) {
 		parent.queue(new ActTarget(name,target));
 	}
 	public ServerPlayerEntity getPlayer() {
 		return parent.getPlayer();
 	}
-	/*public IScenarioTarget getExecutionPoint(){
-		return new QuestExecuteTarget(paragraph.getScenario(),paragraph.getParagraphNum(),currentQuest.asImmutable());
-	}*/
-	/*public RunStatus getStatus() {
-		return status;
-	}
-	public void setStatus(RunStatus status) {
-		this.status = status;
-	}*/
+
 	@Override
 	public void setScenario(Scenario s) {
 		this.sp=s;

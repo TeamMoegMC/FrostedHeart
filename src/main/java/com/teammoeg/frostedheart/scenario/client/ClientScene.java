@@ -22,7 +22,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ClientTextProcessor {
+public class ClientScene {
 	static class TextInfo{
 		ITextComponent parent;
 		int line;
@@ -188,6 +188,7 @@ public class ClientTextProcessor {
 		if(preset!=null)
 			item=item.copyRaw().mergeStyle(preset);
 		List<IReorderingProcessor> lines;
+		System.out.println(msgQueue.size()+":"+shouldWrap);
         if(!msgQueue.isEmpty()&&!shouldWrap) {
         	TextInfo ti=msgQueue.remove(msgQueue.size()-1);
         	int lastline=ti.line;
@@ -253,12 +254,12 @@ public class ClientTextProcessor {
 	public static void render(Minecraft mc) {
 		
 		w=MathHelper.floor((double)mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
-        if(ClientTextProcessor.isTick()&&!mc.isGamePaused()) {
+        if(ClientScene.isTick()&&!mc.isGamePaused()) {
         	List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
             
         	
             if(!msgQueue.isEmpty()) {
-            	ClientTextProcessor.showOneChar();
+            	ClientScene.showOneChar();
             	int j=0;
             	i.removeIf(l->l.getChatLineID()==fhchatid);
             	for(TextInfo t:msgQueue) {
@@ -269,9 +270,6 @@ public class ClientTextProcessor {
             			//}
             		}
             		
-            	}
-            	while(--j>=0) {
-            		msgQueue.remove(0);
             	}
             }
 

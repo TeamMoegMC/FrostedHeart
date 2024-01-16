@@ -62,7 +62,7 @@ public class ScenarioConductor implements IScenarioConductor{
 	transient int nodeNum=0;//Program register
 	private RunStatus status=RunStatus.STOPPED;
     //Text handling state machine
-
+	private transient LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
 
     private transient boolean isConducting;
     
@@ -147,8 +147,9 @@ public class ScenarioConductor implements IScenarioConductor{
 		}else
 			FHScenario.callCommand(name, this, params);
 	}
+
 	public void addCallStack() {
-		getCurrentAct().addCallStack();
+		getCallStack().add(getCurrentPosition());
 	}
 	public void call(IScenarioTarget target) {
 		addCallStack();
@@ -165,10 +166,10 @@ public class ScenarioConductor implements IScenarioConductor{
 		return id;
 	}
     public void popCallStack() {
-		if(getCurrentAct().callStack.isEmpty()) {
+		if(getCallStack().isEmpty()) {
 			throw new ScenarioExecutionException("Invalid return at "+getScenario().name);
 		}
-		jump(getCurrentAct().callStack.pollLast());
+		jump(getCallStack().pollLast());
 	}
     public double eval(String exp) {
         return Evaluator.eval(exp).eval(getVaribles());
@@ -358,9 +359,7 @@ public class ScenarioConductor implements IScenarioConductor{
 				olddata.paragraph.apply(olddata);
 				olddata.setStatus(RunStatus.RUNNING);
 			}else {//Save current state if stopped or waiting trigger.
-				olddata.setNodeNum(nodeNum);
-				olddata.setScenario(sp);
-				olddata.setStatus(status);
+				olddata.saveActState();
 			}
 			acts.put(old, olddata);
 			globalScope();
@@ -368,7 +367,7 @@ public class ScenarioConductor implements IScenarioConductor{
 			varData.takeSnapshot();
 		}	
 	}
-	public void continueQuest(ActNamespace quest) {
+	public void continueAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act data=acts.get(quest);
 		if(data!=null) {
@@ -385,7 +384,7 @@ public class ScenarioConductor implements IScenarioConductor{
 	private void globalScope() {
 		currentAct=acts.get(empty);
 	}
-	public void enterQuest(ActNamespace quest) {
+	public void enterAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act data=acts.get(quest);
 		pauseAct();
@@ -397,7 +396,7 @@ public class ScenarioConductor implements IScenarioConductor{
 			this.currentAct=data;
 		}
 	}
-	public void queueQuest(ActNamespace quest,String scene,String label) {
+	public void queueAct(ActNamespace quest,String scene,String label) {
 		Act data=getCurrentAct();
 		if(!quest.equals(getCurrentAct().name)) {
 			acts.get(quest);
@@ -450,5 +449,8 @@ public class ScenarioConductor implements IScenarioConductor{
 	}
 	public void setStatus(RunStatus status) {
 		this.status = status;
+	}
+	public LinkedList<ExecuteStackElement> getCallStack() {
+		return callStack;
 	}
 }
