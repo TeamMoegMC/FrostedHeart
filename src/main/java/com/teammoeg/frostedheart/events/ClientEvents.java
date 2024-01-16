@@ -75,6 +75,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -92,6 +93,8 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 import java.util.List;
+
+import org.lwjgl.glfw.GLFW;
 
 import static net.minecraft.util.text.TextFormatting.GRAY;
 
@@ -502,6 +505,13 @@ public class ClientEvents {
     		ClientLinkClickedPacket packet=new ClientLinkClickedPacket(event.getOriginalMessage().substring("fh$scenario$link:".length()));
     		FHPacketHandler.sendToServer(packet);
     		event.setCanceled(true);
+    	}
+    }
+    @SubscribeEvent
+    public static void onClientKey(KeyInputEvent event) {
+    	if(event.getAction()==GLFW.GLFW_PRESS&&ClientRegistryEvents.key_skipDialog.isPressed()) {
+    		ClientScene.sendContinuePacket(true);
+    		//event.setCanceled(true);
     	}
     }
 

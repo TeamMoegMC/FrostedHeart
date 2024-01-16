@@ -58,6 +58,7 @@ import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.ArmorItem;
@@ -67,6 +68,7 @@ import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -76,6 +78,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Map;
 import java.util.function.Function;
+
+import org.lwjgl.glfw.GLFW;
 
 import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
 
@@ -104,7 +108,8 @@ public class ClientRegistryEvents {
     FTBScreenFactory(Function<C, S> factory) {
         return (c, i, t) -> new MenuScreenWrapper<>(factory.apply(c), c, i, t).disableSlotDrawing();
     }
-
+	public static KeyBinding key_skipDialog = new KeyBinding("key.frostedheart.skip_dialog", 
+		GLFW.GLFW_KEY_Z, "key.categories.frostedheart");
     /**
      * @param event
      */
@@ -141,6 +146,8 @@ public class ClientRegistryEvents {
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
+        key_skipDialog.setKeyConflictContext(KeyConflictContext.IN_GAME);
+		ClientRegistry.registerKeyBinding(key_skipDialog);
         // Register layers
         Map<String, PlayerRenderer> skinMap = Minecraft.getInstance().getRenderManager().getSkinMap();
         PlayerRenderer render = skinMap.get("default");

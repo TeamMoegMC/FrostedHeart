@@ -68,6 +68,7 @@ public class ClientScene {
 	static int ticksToContinue;
 	static boolean unFinished=false;
 	static boolean hasText=false;
+	static boolean canSkip=false;
 	public static void showOneChar() {
 
 		unFinished=false;
@@ -81,6 +82,8 @@ public class ClientScene {
 		if(!unFinished&&hasText){
 			ticksToContinue=40;
 			hasText=false;
+		}else if(hasText) {
+			canSkip=true;
 		}
 	}
 	public static void reset() {
@@ -93,6 +96,7 @@ public class ClientScene {
 		hasText=false;
 	}
 	public static void sendContinuePacket(boolean isSkip) {
+		//if(canSkip)
 		FHPacketHandler.send(PacketDistributor.SERVER.noArg(),new ClientScenarioResponsePacket(isSkip,0));
 	}
 	public static class SizedReorderingProcessor implements IReorderingProcessor{

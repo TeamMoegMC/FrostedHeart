@@ -215,13 +215,19 @@ public class ScenarioConductor implements IScenarioConductor{
 		getScene().showln();
 	}
 	public void notifyClientResponse(boolean isSkip,int status) {
+		this.isSkip=isSkip;
+		this.clientStatus=status;
 		if(this.getStatus()==RunStatus.WAITCLIENT) {
-			this.isSkip=isSkip;
-			this.clientStatus=status;
+			run();
+		}else if(this.getStatus()==RunStatus.WAITTIMER&&isSkip) {
+			this.stopWait();
 			run();
 		}
     }
-    public void onLinkClicked(String link) {
+    public void stopWait() {
+		getScene().waiting=0;
+	}
+	public void onLinkClicked(String link) {
 		ExecuteTarget jt=getScene().links.get(link);
 		if(jt!=null) {
 			jump(jt);
