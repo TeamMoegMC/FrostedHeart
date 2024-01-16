@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.DebugCommand;
 import com.teammoeg.frostedheart.command.ResearchCommand;
+import com.teammoeg.frostedheart.command.ScenarioCommand;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
@@ -572,6 +573,7 @@ public class CommonEvents {
         ResearchCommand.register(dispatcher);
         ClimateCommand.register(dispatcher);
         DebugCommand.register(dispatcher);
+        ScenarioCommand.register(dispatcher);
     }
 
     @SubscribeEvent
