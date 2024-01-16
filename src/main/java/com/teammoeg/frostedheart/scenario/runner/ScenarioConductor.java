@@ -233,7 +233,7 @@ public class ScenarioConductor implements IScenarioConductor{
     	getCurrentAct().newParagraph(getScenario(), pn);
 		
 	}
-	public void prepareTextualModification() {
+	public void sendCachedSence() {
 		getScene().show();
 	}
 	public void addTrigger(IScenarioTrigger trig) {
@@ -269,11 +269,12 @@ public class ScenarioConductor implements IScenarioConductor{
 	    			break;
 	    		}
 	    		nodeNum++;
+		    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
+		    		sendCachedSence();
+		    		setStatus((RunStatus.STOPPED));
+		    		return;
+	    		}
 	    	}
-	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
-	    		setStatus((RunStatus.STOPPED));
-    		}
-
 		}
     }
     private void runScheduled() {

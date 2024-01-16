@@ -31,24 +31,28 @@ import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 public class ControlCommands {
 	public void delay(ScenarioConductor runner,@Param("t")int t) {
 		//runner.waitClient();
+		runner.sendCachedSence();
 		runner.getScene().addWait(t);
-		runner.prepareTextualModification();
-
 	}
 	public void wt(ScenarioConductor runner) {
+		runner.sendCachedSence();
 		runner.setStatus((RunStatus.WAITTRIGGER));
 	}
 	public void wa(ScenarioConductor runner) {
+		runner.sendCachedSence();
 		runner.setStatus((RunStatus.WAITACTION));
 	}
 	public void s(ScenarioConductor runner) {
+		runner.sendCachedSence();
 		runner.stop();
 	}
 	public void er(ScenarioConductor runner) {
+		runner.sendCachedSence();
 		runner.getScene().clear();
+		runner.sendCachedSence();
 	}
 	public void l(ScenarioConductor runner) {
-		runner.getScene().show();
+		runner.sendCachedSence();
 		runner.getScene().waitClient();
 	}
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
@@ -72,14 +76,14 @@ public class ControlCommands {
 		runner.popCallStack();
 	}
 	public void link(ScenarioConductor runner,@Param("lid")String linkId,@Param("s")String scenario,@Param("l")String label) {
-		runner.prepareTextualModification();
+		runner.sendCachedSence();
 		linkId=runner.createLink(linkId, scenario, label);
 		Map<String,String> pars=new HashMap<>();
 		pars.put("lid", linkId);
 		FHScenario.callClientCommand("link", runner, pars);
 	}
 	public void endlink(ScenarioConductor runner) {
-		runner.prepareTextualModification();
+		runner.sendCachedSence();
 		Map<String,String> pars=new HashMap<>();
 		FHScenario.callClientCommand("endlink", runner, pars);
 	}

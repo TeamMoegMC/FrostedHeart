@@ -68,9 +68,9 @@ public class Scene {
 		this.parent = paraData;
 	}
 	public void clear() {
-		doResetScene=true;
-		showNeeded();
 		
+		showNeeded();
+		doResetScene=true;
     	lastNowrap=true;
     	isSaveNowait=isNowait;
     	savedLog.clear();
@@ -128,15 +128,19 @@ public class Scene {
     		if(!isSlient())
     			FHPacketHandler.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioTextPacket(" ",true,isNowait,doResetScene));
     	}
+    	doResetScene=false;
     	currentLiteral=null;
     }
     public void show() {
     	if(currentLiteral!=null) {
     		//System.out.println("NoReline "+currentLiteral.toString());
+    		
     		lastNowrap=true;
     		addLog(currentLiteral.toString());
     		if(!isSlient())
     			FHPacketHandler.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioTextPacket(currentLiteral.toString(),false,isNowait,doResetScene));
+    		lastNowrap=false;
+    		doResetScene=false;
     	}
     	currentLiteral=null;
     }

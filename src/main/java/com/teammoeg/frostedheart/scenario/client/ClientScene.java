@@ -218,8 +218,10 @@ public class ClientScene {
 	        	msgQueue.add(new TextInfo(item,i++,isNowait?line:new SizedReorderingProcessor(line)));
 	        }
         }
+        needUpdate=true;
         shouldWrap=isReline;
 	}
+	static boolean needUpdate=false;
 	static final int fhchatid=0x05301110;
 	public static void process(String text, boolean isReline, boolean isNowait,boolean resetScene) {
 		if(resetScene) {
@@ -231,8 +233,9 @@ public class ClientScene {
     		}
 			msgQueue.clear();
 			shouldWrap=false;
+			needUpdate=false;
 		}
-		System.out.println("Received "+isReline+" "+text);
+		//System.out.println("Received "+isReline+" "+text+" "+resetScene);
 		if(!text.isEmpty()) {
 			hasText=true;
 			ITextComponent item=ClientTextComponentUtils.parse(text);
@@ -253,25 +256,23 @@ public class ClientScene {
 	public static void render(Minecraft mc) {
 		
 		w=MathHelper.floor((double)mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
-        if(ClientScene.isTick()&&!mc.isGamePaused()) {
+		if(!mc.isGamePaused()) {
         	List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
-            
-        	
             if(!msgQueue.isEmpty()) {
-            	ClientScene.showOneChar();
-            	int j=0;
-            	i.removeIf(l->l.getChatLineID()==fhchatid);
-            	for(TextInfo t:msgQueue) {
-            		if(t.hasText()){
-            			//if(hasText) {
-            				
-            				i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),fhchatid));
-            			//}
-            		}
-            		
+            	if(ClientScene.isTick())
+            		ClientScene.showOneChar();
+            	if(needUpdate||mc.ingameGUI.getTicks()%20==0) {
+            		needUpdate=false;
+	            	i.removeIf(l->l.getChatLineID()==fhchatid);
+	            	for(TextInfo t:msgQueue) {
+	            		if(t.hasText()){
+	            			//if(hasText) {
+	            				i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.asFinished(),fhchatid));
+	            			//}
+	            		}
+	            	}
             	}
             }
-
         }
 	}
 }
