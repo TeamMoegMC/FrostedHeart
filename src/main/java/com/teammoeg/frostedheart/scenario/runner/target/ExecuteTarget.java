@@ -39,7 +39,7 @@ public class ExecuteTarget extends ScenarioTarget{
 	}
 	@Override
 	public void accept(ScenarioConductor runner) {
-
+		super.accept(runner);
 		if(label!=null) {
 			Integer ps=runner.getScenario().labels.get(label);
 			if(ps!=null) {

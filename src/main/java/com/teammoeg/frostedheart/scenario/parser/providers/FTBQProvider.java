@@ -41,22 +41,24 @@ public class FTBQProvider implements Function<String, Scenario> {
 		if(!t.startsWith("quest:"))
 			return null;
 		String qid=t.substring("quest:".length());
+		System.out.println("loading quest "+qid);
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(qid));
 		if(quest==null)return null;
 		StringBuilder b=new StringBuilder();
-		b.append("@StartAct c=").append(quest.getChapter().getCodeString()).append(" a=").append(quest.getCodeString()).append("\n");
-		b.append("@ActTitle t=\"").append(quest.title.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")).append("\"");
+		b.append("[WaitQuestStart q="+qid+" l=qstart][wt][label name=qstart]");
+		//b.append("@act c=").append(quest.getChapter().getCodeString()).append(" a=").append(quest.getCodeString()).append("\n");
+		b.append("@ActTitle t=\"").append(quest.title.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"")).append("\"");
 		if(quest.subtitle!=null&&!quest.subtitle.isEmpty()) {
-			b.append(" st=\"").append(quest.subtitle.replaceAll("\\", "\\\\").replaceAll("\"", "\\\"")).append("\"");
+			b.append(" st=\"").append(quest.subtitle.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"")).append("\"");
 		}
-		b.append("\n@p\n");
+		b.append("\n[l][er]\n");
 		for(String s:quest.description) {
-			b.append(s.replaceAll("\\[", "\\[").replaceAll("@", "\\@")).append("@p\n");
+			b.append(s.replaceAll("\\[", "\\[").replaceAll("@", "\\@")).append("[l][er]\n");
 		}
 		int it=0;
 		for(Task tsk:quest.tasks) {
 			if(tsk instanceof CheckmarkTask) {
-				b.append("[link l=tsk").append(it).append("]").append(tsk.title==null?"Click here":tsk.title).append("[endlink]")
+				b.append("[link l=tsk").append(it).append("]").append(tsk.title==null||tsk.title.isEmpty()?"{message.frostedheart.click_complete}":tsk.title).append("[endlink]")
 				.append("[wa]\n");
 			}else {
 				b.append("@WaitTaskCompleteShow l=tsk").append(it).append(" q=").append(quest.getCodeString())
@@ -66,9 +68,11 @@ public class FTBQProvider implements Function<String, Scenario> {
 			if(tsk instanceof CheckmarkTask)
 				b.append("@CompleteTask q=").append(quest.getCodeString()).append(" t=").append(it).append("\n");
 			b.append("@p\n");
-			b.append("@EndAct\n");
+			
 			it++;
 		}
+		//b.append("@EndAct\n");
+		System.out.println(b.toString());
 		return FHScenario.parser.parseString(t,b.toString());
 	}
 

@@ -82,6 +82,8 @@ public class ScenarioParser {
             	return new SavepointNode(command, params);
             case "sharp":
             	return new ShpNode(command,params);
+            case "include":
+            	return new IncludeNode(command,params);
         }
         return new CommandNode(command, params);
 
@@ -109,7 +111,7 @@ public class ScenarioParser {
         
         try  {
             int i=0;
-            for(String line:code.split("\r\n")) {
+            for(String line:code.split("[\r\n]")) {
             	i++;
             	try {
             		nodes.addAll(parseLine(line));
@@ -179,6 +181,8 @@ public class ScenarioParser {
             	if("endmacro".equals(cmd.command)){
             		macro--;
             	}
+            }else if(n instanceof IncludeNode) {
+            	IncludeNode in=(IncludeNode) n;
             }
         }
         if(!ifstack.isEmpty()) {
@@ -241,7 +245,6 @@ public class ScenarioParser {
         StringParseReader reader = new StringParseReader(line);
         List<Node> nodes = new ArrayList<>();
         while (reader.hasNext()) {
-        	reader.skipWhitespace();
         	if(reader.peekLast()=='#') {
         		break;
         	}else

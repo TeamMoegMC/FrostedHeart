@@ -168,18 +168,22 @@ public class Scene {
     	return false;
 	}
 	public void tickTriggers(ScenarioConductor runner,boolean isCurrentAct) {
+		IScenarioTrigger acttrigger=null;
     	for(IScenarioTrigger t:triggers) {
     		if(t.test(runner)) {
     			if(t.use()) {
 	    			if(isCurrentAct) {
-	    				parent.jump(t);
-	    			}else {
-	    				parent.queue(t);
+	    				acttrigger=t;
+	    				break;
 	    			}
+					parent.queue(t);
     			}
     		}
     	}
     	triggers.removeIf(t->!t.canUse());
+    	if(acttrigger!=null) {
+    		parent.jump(acttrigger);
+    	}
 	}
     public void clearLink() {
     	links.clear();

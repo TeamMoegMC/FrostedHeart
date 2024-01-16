@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.scenario.commands.client;
 
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
@@ -26,6 +27,8 @@ import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.QuestFile;
+import dev.ftb.mods.ftbquests.quest.task.ItemTask;
+import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.event.ClickEvent;
@@ -41,6 +44,13 @@ public class ClientControl {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
-		ClientScene.processClient(tsk.getTitle(), true, true);
+		if(tsk instanceof ItemTask) {
+			
+			ClientScene.processClient(GuiUtils.translateMessage("item_task",tsk.getTitle()), true, true);
+		}else if(tsk instanceof KillTask) {
+			ClientScene.processClient(GuiUtils.translateMessage("kill_task",tsk.getTitle()), true, true);
+		}else {
+			ClientScene.processClient(GuiUtils.translateMessage("other_task",tsk.getTitle()), true, true);
+		}
 	}
 }

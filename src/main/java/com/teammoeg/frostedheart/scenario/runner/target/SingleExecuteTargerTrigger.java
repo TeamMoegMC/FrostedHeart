@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenarioTrigger {
-	boolean canStillTrigger;
+	boolean canStillTrigger=true;
 	Predicate<ScenarioConductor> test;
 	public SingleExecuteTargerTrigger(String name, String label,Predicate<ScenarioConductor> test) {
 		super(name, label);

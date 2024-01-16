@@ -262,9 +262,10 @@ public class ScenarioConductor implements IScenarioConductor{
 	}*/
 
     private void runCode() {
-    	setStatus((RunStatus.RUNNING));
+    	
     	while(isRunning()) {
 	    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
+	    		System.out.println(nodeNum);
 	    		Node node=getScenario().pieces.get(nodeNum);
 	    		try {
 	    			getScene().appendLiteral(node.getLiteral(this));
@@ -285,12 +286,17 @@ public class ScenarioConductor implements IScenarioConductor{
     }
     private void runScheduled() {
     	if(getStatus().shouldPause) {
+    		//getScene().tickTriggers(this, true);
     		IScenarioTarget nxt=toExecute.pollFirst();
     		if(nxt!=null) {
     			globalScope();
     			paragraph(-1);
     			jump(nxt);
     		}
+    		/*acts.values().forEach(t->{
+    			if(!t.name.equals(getCurrentAct().name))
+    				t.getScene().tickTriggers(this, false);
+    		});*/
     	}
     }
     /**
@@ -299,7 +305,7 @@ public class ScenarioConductor implements IScenarioConductor{
 	 * 
 	 * */
     private void run() {
-    	
+    	setStatus((RunStatus.RUNNING));
     	if(isConducting)return;
     	try {
     		isConducting=true;
@@ -316,8 +322,8 @@ public class ScenarioConductor implements IScenarioConductor{
 		nodeNum=0;
 		varData.takeSnapshot();
 		getCurrentAct().newParagraph(sp, 0);
-		for(Node n:sp.pieces)
-			System.out.println(n.getText());
+		//for(Node n:sp.pieces)
+		//	System.out.println(n.getText());
 		run();
 	}
 
@@ -352,7 +358,7 @@ public class ScenarioConductor implements IScenarioConductor{
     	}
     	//Execute Queued actions
     	if(getStatus().shouldPause&&!toExecute.isEmpty()) {
-    		run();
+    		runScheduled();
     	}
     }
 

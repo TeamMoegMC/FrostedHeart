@@ -22,11 +22,9 @@ package com.teammoeg.frostedheart.scenario.commands;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
-import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 
 public class SceneCommand {
-	public void startAct(ScenarioConductor runner,@Param("c")String c,@Param("a")String a) {
+	public void act(ScenarioConductor runner,@Param("c")String c,@Param("a")String a) {
 		runner.endAct();
 		runner.enterAct(new ActNamespace(c,a));
 		//runner.jump(new ActTarget(new ActNamespace(c,a),runner.getCurrentAct().getCurrentPosition().next()));

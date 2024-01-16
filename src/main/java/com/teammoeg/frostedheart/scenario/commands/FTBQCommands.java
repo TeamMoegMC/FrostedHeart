@@ -54,8 +54,11 @@ public class FTBQCommands {
 		Task tsk=quest.tasks.get(t);
 		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
 		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
-			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
+			boolean rx=tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
+			//System.out.println(rx);
+			return rx;
 		}));
+		
 	}
 	public void waitquestStart(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
