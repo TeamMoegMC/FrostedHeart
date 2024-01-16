@@ -28,5 +28,5 @@ import net.minecraft.network.PacketBuffer;
 public interface Writeable {
     public JsonElement serialize();
 
-    public void write(PacketBuffer buffer);
+    void write(PacketBuffer buffer);
 }

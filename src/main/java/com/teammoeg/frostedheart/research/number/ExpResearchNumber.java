@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.util.Writeable;
 
 import net.minecraft.network.PacketBuffer;
 
-public class ExpResearchNumber implements IResearchNumber, Writeable {
+public class ExpResearchNumber implements IResearchNumber {
     Calculator.Node calc;
     String exp;
 
@@ -51,12 +51,10 @@ public class ExpResearchNumber implements IResearchNumber, Writeable {
         return calc.eval(rd);
     }
 
-    @Override
     public JsonElement serialize() {
         return new JsonPrimitive(exp);
     }
 
-    @Override
     public void write(PacketBuffer buffer) {
         buffer.writeString(exp);
     }

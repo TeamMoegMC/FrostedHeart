@@ -63,7 +63,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * file: Effect.java
  * @date 2022年9月2日
  */
-public abstract class Effect extends AutoIDItem implements Writeable {
+public abstract class Effect extends AutoIDItem {
 
     /**
      * The name.<br>
@@ -375,10 +375,8 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      *
      * @return returns serialize
      */
-    @Override
-    public JsonObject serialize() {
+    JsonObject serialize() {
         JsonObject jo = new JsonObject();
-        Effects.writeType(this, jo);
         if (!name.isEmpty())
             jo.addProperty("name", name);
         if (!tooltip.isEmpty())
@@ -426,7 +424,6 @@ public abstract class Effect extends AutoIDItem implements Writeable {
      *
      * @param buffer the buffer<br>
      */
-    @Override
     public void write(PacketBuffer buffer) {
         Effects.writeId(this, buffer);
         buffer.writeString(name);

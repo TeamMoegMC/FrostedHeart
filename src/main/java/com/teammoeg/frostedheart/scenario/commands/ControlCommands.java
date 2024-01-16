@@ -36,10 +36,10 @@ public class ControlCommands {
 
 	}
 	public void wt(ScenarioConductor runner) {
-		runner.getCurrentAct().setStatus(RunStatus.WAITTRIGGER);
+		runner.setStatus((RunStatus.WAITTRIGGER));
 	}
 	public void wa(ScenarioConductor runner) {
-		runner.getCurrentAct().setStatus(RunStatus.WAITACTION);
+		runner.setStatus((RunStatus.WAITACTION));
 	}
 	public void s(ScenarioConductor runner) {
 		runner.stop();
@@ -52,7 +52,7 @@ public class ControlCommands {
 		runner.getScene().waitClient();
 	}
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.getCurrentAct().jump(new ExecuteTarget(scenario,label));
+		runner.jump(new ExecuteTarget(scenario,label));
 	}
 	public void call(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.call(scenario, label);

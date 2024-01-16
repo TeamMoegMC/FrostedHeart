@@ -46,7 +46,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * researches.6
  * Clue can be trigger if any research is researchable(finished item commit)
  */
-public abstract class Clue extends AutoIDItem implements Writeable {
+public abstract class Clue extends AutoIDItem{
     float contribution;// percentage, range (0,1]
     String name = "";
     String desc = "";
@@ -203,10 +203,8 @@ public abstract class Clue extends AutoIDItem implements Writeable {
             FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
-    @Override
-    public JsonObject serialize() {
+	JsonObject serialize() {
         JsonObject jo = new JsonObject();
-        jo.addProperty("type", this.getId());
         if (!name.isEmpty())
             jo.addProperty("name", name);
         if (!desc.isEmpty())
@@ -268,7 +266,6 @@ public abstract class Clue extends AutoIDItem implements Writeable {
 
     ;
 
-    @Override
     public void write(PacketBuffer buffer) {
         Clues.writeId(this, buffer);
         buffer.writeString(name);

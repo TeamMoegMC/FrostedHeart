@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ActTarget implements IScenarioTarget {
@@ -32,9 +33,13 @@ public class ActTarget implements IScenarioTarget {
 	}
 	@Override
 	public void accept(ScenarioConductor t) {
-		t.createQuest(ns);
-		parent.accept(t);
+		t.continueQuest(ns);
+		parent.apply(t);
 		
+	}
+	@Override
+	public void apply(IScenarioConductor conductor) {
+		parent.apply(conductor);
 	}
 
 }

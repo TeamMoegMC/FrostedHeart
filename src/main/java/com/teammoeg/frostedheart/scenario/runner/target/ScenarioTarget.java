@@ -19,11 +19,9 @@
 
 package com.teammoeg.frostedheart.scenario.runner.target;
 
-import java.util.function.Consumer;
-
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 
 public abstract class ScenarioTarget implements IScenarioTarget{
 	private final String name;
@@ -44,14 +42,15 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 			sp=FHScenario.loadScenario(name);
 		return sp;
 	}
+	@Override
+	public void apply(IScenarioConductor conductor) {
+		if(name!=null&&!getScenario().equals(conductor.getScenario())) {
+			conductor.setScenario(getScenario());
+			conductor.setNodeNum(0);
+		}
+	}
 	protected String getName() {
 		return name;
 	}
-	@Override
-	public void accept(ScenarioConductor runner) {
-		if(name!=null&&!getScenario().equals(runner.getScenario())) {
-			runner.setScenario(getScenario());
-			runner.gotoNode(0);
-		}
-	}
+
 }

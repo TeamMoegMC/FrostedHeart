@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.util.Writeable;
 
 import net.minecraft.network.PacketBuffer;
 
-public class ConstResearchNumber implements IResearchNumber, Writeable {
+public class ConstResearchNumber implements IResearchNumber {
     private static Cache<Number, ConstResearchNumber> cb = CacheBuilder.newBuilder().expireAfterAccess(20, TimeUnit.SECONDS).build();
     final Number n;
 
@@ -75,12 +75,10 @@ public class ConstResearchNumber implements IResearchNumber, Writeable {
         return n.doubleValue();
     }
 
-    @Override
     public JsonElement serialize() {
         return new JsonPrimitive(n);
     }
 
-    @Override
     public void write(PacketBuffer buffer) {
         buffer.writeDouble(n.doubleValue());
     }

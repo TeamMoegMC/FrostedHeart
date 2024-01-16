@@ -50,7 +50,7 @@ import net.minecraftforge.common.util.Constants;
  * You shouldn't opearte this class from any other code except from scenario trigger and commands.
  * You should define triggers in script file and activate triggers to make it execute.
  * */
-public class ScenarioConductor{
+public class ScenarioConductor implements IScenarioConductor{
 	//Conducting and scheduling data 
 
 	
@@ -58,7 +58,9 @@ public class ScenarioConductor{
     private transient List<IScenarioTrigger> triggers=new ArrayList<>();
     private transient Map<String,ExecuteStackElement> macros=new HashMap<>();
     private final ScenarioVariables varData=new ScenarioVariables();
-
+	transient Scenario sp;//current scenario
+	transient int nodeNum=0;//Program register
+	private RunStatus status=RunStatus.STOPPED;
     //Text handling state machine
 
 
@@ -106,6 +108,7 @@ public class ScenarioConductor{
     		acts.values().forEach(t->{
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
     				//t.getScene().setSlient(true);
+    				t.setStatus(RunStatus.RUNNING);
     				if(t.name.equals(lastQuest))lastQuest=null;
     				t.queue(t.paragraph);
     				//t.getScene().setSlient(false);
@@ -176,7 +179,7 @@ public class ScenarioConductor{
     }
 	
 	public int getNodeNum() {
-        return getCurrentAct().nodeNum;
+        return nodeNum;
     }
 	public ServerPlayerEntity getPlayer() {
         return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player);
@@ -191,10 +194,10 @@ public class ScenarioConductor{
     	return varData;
     }
 	public void gotoNode(int target) {
-		getCurrentAct().nodeNum = target;
+		nodeNum = target;
     }
 	public boolean isRunning() {
-		return getCurrentAct().getStatus()==RunStatus.RUNNING;
+		return getStatus()==RunStatus.RUNNING;
 	}
 	public void jump(IScenarioTarget nxt) {
 		nxt.accept(this);
@@ -211,7 +214,7 @@ public class ScenarioConductor{
 		getScene().showln();
 	}
 	public void notifyClientResponse(boolean isSkip,int status) {
-		if(getCurrentAct().getStatus()==RunStatus.WAITCLIENT) {
+		if(this.getStatus()==RunStatus.WAITCLIENT) {
 			this.isSkip=isSkip;
 			this.clientStatus=status;
 			run();
@@ -252,32 +255,32 @@ public class ScenarioConductor{
 	}*/
 
     private void runCode() {
-    	getCurrentAct().setStatus(RunStatus.RUNNING);
+    	setStatus((RunStatus.RUNNING));
     	while(isRunning()) {
-	    	while(isRunning()&&getScenario()!=null&&getCurrentAct().nodeNum<getScenario().pieces.size()) {
-	    		Node node=getScenario().pieces.get(getCurrentAct().nodeNum);
+	    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
+	    		Node node=getScenario().pieces.get(nodeNum);
 	    		try {
 	    			getScene().appendLiteral(node.getLiteral(this));
 	    			node.run(this);
 	    		}catch(Throwable t) {
 	    			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
-	    			getCurrentAct().setStatus(RunStatus.STOPPED);
+	    			setStatus((RunStatus.STOPPED));
 	    			break;
 	    		}
-	    		getCurrentAct().nodeNum++;
+	    		nodeNum++;
 	    	}
-	    	if(getScenario()==null||getCurrentAct().nodeNum>=getScenario().pieces.size()) {
-	    		getCurrentAct().setStatus(RunStatus.STOPPED);
+	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
+	    		setStatus((RunStatus.STOPPED));
     		}
 
 		}
     }
     private void runScheduled() {
-    	if(getCurrentAct().getStatus().shouldPause) {
-    		paragraph(-1);
+    	if(getStatus().shouldPause) {
     		IScenarioTarget nxt=toExecute.pollFirst();
     		if(nxt!=null) {
     			globalScope();
+    			paragraph(-1);
     			jump(nxt);
     		}
     	}
@@ -302,7 +305,7 @@ public class ScenarioConductor{
 
     public void run(Scenario sp) {
 		this.setScenario(sp);
-		getCurrentAct().nodeNum=0;
+		nodeNum=0;
 		varData.takeSnapshot();
 		getCurrentAct().newParagraph(sp, 0);
 		for(Node n:sp.pieces)
@@ -311,7 +314,8 @@ public class ScenarioConductor{
 	}
 
     public void stop() {
-    	getCurrentAct().nodeNum=getScenario().pieces.size();
+    	nodeNum=getScenario().pieces.size();
+    	setStatus(RunStatus.STOPPED);
     }
 
 
@@ -319,6 +323,9 @@ public class ScenarioConductor{
 
 	public void tick() {    	
     	//detect triggers
+		if(getStatus()==RunStatus.RUNNING) {
+			run();
+		}
     	for(IScenarioTrigger t:triggers) {
     		if(t.test(this)) {
     			if(t.use())
@@ -328,7 +335,7 @@ public class ScenarioConductor{
     	for(Act a:acts.values())
 	    	a.getScene().tickTriggers(this, currentAct==a);
     	triggers.removeIf(t->!t.canUse());
-    	if(getCurrentAct().getStatus()==RunStatus.WAITTIMER) {
+    	if(getStatus()==RunStatus.WAITTIMER) {
     		if(getScene().tickWait()) {
     			
     			run();
@@ -336,81 +343,89 @@ public class ScenarioConductor{
     		}
     	}
     	//Execute Queued actions
-    	if(getCurrentAct().getStatus().shouldPause&&!toExecute.isEmpty()) {
+    	if(getStatus().shouldPause&&!toExecute.isEmpty()) {
     		run();
     	}
     }
 
-	/*public void switchQuest(String chapter,String quest) {
-		QuestNamespace old=currentAct.currentQuest.asImmutable();
-		Act olddata=acts.remove(old);
-		if(olddata==null)
-			olddata=new Act(this);
-		olddata.isWaiting=false;
-		currentAct.currentQuest.chapter=chapter;
-		currentAct.currentQuest.quest=quest;
-		currentAct=olddata;
-		acts.put(currentAct.currentQuest.asImmutable(), olddata);
-	}*/
-	public void pauseQuest() {
+
+	public void pauseAct() {
 		if(getCurrentAct().name.isAct()) {
 			ActNamespace old=getCurrentAct().name;
 			Act olddata=getCurrentAct();
-			if(olddata.getStatus()==RunStatus.WAITACTION) {
-				olddata.paragraph.accept(this);
+			varData.restoreSnapshot();//Protective against modify varibles without save
+			if(!status.shouldPause) {//Back to last savepoint unless it is waiting trigger
+				olddata.paragraph.apply(olddata);
+				olddata.setStatus(RunStatus.RUNNING);
+			}else {//Save current state if stopped or waiting trigger.
+				olddata.setNodeNum(nodeNum);
+				olddata.setScenario(sp);
+				olddata.setStatus(status);
 			}
-			varData.restoreSnapshot();
 			acts.put(old, olddata);
 			globalScope();
 		}else {
 			varData.takeSnapshot();
-		}
-		
-		
-	}
-	private void globalScope() {
-		
-		currentAct=acts.get(empty);
-	}
-	public void createQuest(ActNamespace quest) {
-		if(quest.equals(getCurrentAct().name))return;
-		Act data=acts.get(quest);
-		pauseQuest();
-		if(data!=null) {
-			this.currentAct=data;
-			if(data.getStatus().shouldRun)
-				run();
-		}else {
-			data=new Act(this,quest);
-			acts.put(quest, data);
-			this.currentAct=data;
-			run();
-		}
+		}	
 	}
 	public void continueQuest(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act data=acts.get(quest);
 		if(data!=null) {
-			pauseQuest();
+			pauseAct();
 			this.currentAct=data;
-			if(data.getStatus().shouldRun)
+			data.prepareForRun();
+			this.sp=data.getScenario();
+			this.nodeNum=data.getNodeNum();
+			this.status=data.getStatus();
+			if(getStatus().shouldRun)
 				run();
 		}
 	}
+	private void globalScope() {
+		currentAct=acts.get(empty);
+	}
+	public void enterQuest(ActNamespace quest) {
+		if(quest.equals(getCurrentAct().name))return;
+		Act data=acts.get(quest);
+		pauseAct();
+		if(data!=null) {
+			this.currentAct=data;
+		}else {
+			data=new Act(this,quest);
+			acts.put(quest, data);
+			this.currentAct=data;
+		}
+	}
+	public void queueQuest(ActNamespace quest,String scene,String label) {
+		if(quest.equals(getCurrentAct().name))return;
+		Act data=acts.get(quest);
+		pauseAct();
+		if(data==null){
+			data=new Act(this,quest);
+			acts.put(quest, data);
+		}
+		data.paragraph.setScenario(FHScenario.loadScenario(scene));
+		data.paragraph.setParagraphNum(0);
+		if(label!=null) {
+			data.label=label;
+			new ExecuteTarget(scene,label).apply(data);
+		}
+	}
+	public ExecuteStackElement getCurrentPosition() {
+    	return new ExecuteStackElement(sp,nodeNum);
+    }
 	public void endAct() {
-		getCurrentAct().setStatus(RunStatus.STOPPED);
-		ExecuteStackElement tatg=getCurrentAct().getCurrentPosition();
 		if(getCurrentAct().name.isAct()) {
 			acts.remove(getCurrentAct().name);
 		}
 		globalScope();
-		jump(tatg);
 	}
 	public Scenario getScenario() {
-		return getCurrentAct().sp;
+		return sp;
 	}
 	public void setScenario(Scenario sp) {
-		getCurrentAct().sp = sp;
+		this.sp = sp;
 	}
 	public int getClientStatus() {
 		return clientStatus;
@@ -419,6 +434,16 @@ public class ScenarioConductor{
 		return currentAct;
 	}
 	public void addMacro(String name) {
-		macros.put(name.toLowerCase(), getCurrentAct().getCurrentPosition().next());
+		macros.put(name.toLowerCase(), getCurrentPosition().next());
+	}
+	@Override
+	public void setNodeNum(int num) {
+		gotoNode(num);
+	}
+	public RunStatus getStatus() {
+		return status;
+	}
+	public void setStatus(RunStatus status) {
+		this.status = status;
 	}
 }

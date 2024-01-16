@@ -99,7 +99,11 @@ public class FHIcons {
                 icons.get((int) ((System.currentTimeMillis() / 1000) % icons.size())).draw(ms, x, y, w, h);
             }
         }
-
+        public JsonObject asObject() {
+        	JsonObject jo=new JsonObject();
+        	jo.add("icons", serialize());
+            return jo;
+        }
         @Override
         public JsonElement serialize() {
 
@@ -154,7 +158,9 @@ public class FHIcons {
             jo.add("small", small.serialize());
             return jo;
         }
-
+        public JsonObject asObject() {
+        	return serialize().getAsJsonObject();
+        }
         @Override
         public void write(PacketBuffer buffer) {
             super.write(buffer);
@@ -197,20 +203,23 @@ public class FHIcons {
             super.write(buffer);
             buffer.writeString(name);
         }
+
+		@Override
+		JsonObject asObject() {
+			return serialize().getAsJsonObject();
+		}
     }
 
-    public static abstract class FHIcon extends Icon implements Writeable, Cloneable {
+    public static abstract class FHIcon extends Icon implements Cloneable {
         public FHIcon() {
             super();
         }
 
         public JsonElement serialize() {
             JsonObject jo = new JsonObject();
-            serializers.writeType(jo, this);
             return jo;
         }
-
-        @Override
+        abstract JsonObject asObject();
         public void write(PacketBuffer buffer) {
             serializers.writeId(buffer, this);
         }
@@ -235,6 +244,11 @@ public class FHIcons {
         }
 
         @Override
+		public JsonObject asObject() {
+			return serialize().getAsJsonObject();
+		}
+
+		@Override
         public JsonElement serialize() {
             JsonObject jo = super.serialize().getAsJsonObject();
             jo.add("ingredient", igd.serialize());
@@ -303,7 +317,12 @@ public class FHIcons {
             if (stack != null)
                 nested = ItemIcon.getItemIcon(stack);
         }
-
+        @Override
+		public JsonObject asObject() {
+        	JsonObject jo=new JsonObject();
+        	jo.add("item", serialize());
+			return jo;
+		}
         @Override
         public JsonElement serialize() {
             JsonElement je = SerializeUtil.toJson(stack);
@@ -349,6 +368,11 @@ public class FHIcons {
         public JsonElement serialize() {
             return JsonNull.INSTANCE;
         }
+
+		@Override
+		JsonObject asObject() {
+			return new JsonObject();
+		}
 
     }
 
@@ -396,6 +420,11 @@ public class FHIcons {
             super.write(buffer);
             buffer.writeString(text);
         }
+
+        @Override
+		public JsonObject asObject() {
+			return serialize().getAsJsonObject();
+		}
     }
 
     private static class FHTextureIcon extends FHIcon {
@@ -420,7 +449,10 @@ public class FHIcons {
             GuiHelper.setupDrawing();
             nested.draw(ms, x, y, w, h);
         }
-
+        @Override
+		public JsonObject asObject() {
+			return serialize().getAsJsonObject();
+		}
         @Override
         public JsonElement serialize() {
             JsonObject jo = super.serialize().getAsJsonObject();
@@ -478,7 +510,10 @@ public class FHIcons {
         public void init() {
             nested = ImageIcon.getIcon(rl).withUV(x, y, w, h, tw, th);
         }
-
+        @Override
+		public JsonObject asObject() {
+			return serialize().getAsJsonObject();
+		}
         @Override
         public JsonElement serialize() {
             JsonObject jo = super.serialize().getAsJsonObject();
@@ -695,15 +730,15 @@ public class FHIcons {
     private static JsonSerializerRegistry<FHIcon> serializers = new JsonSerializerRegistry<>();
 
     static {
-        serializers.register(FHNopIcon.class, "nop", FHNopIcon::get, FHNopIcon::get);
-        serializers.register(FHItemIcon.class, "item", FHItemIcon::new, FHItemIcon::new);
-        serializers.register(FHCombinedIcon.class, "combined", FHCombinedIcon::new, FHCombinedIcon::new);
-        serializers.register(FHAnimatedIcon.class, "animated", FHAnimatedIcon::new, FHAnimatedIcon::new);
-        serializers.register(FHIngredientIcon.class, "ingredient", FHIngredientIcon::new, FHIngredientIcon::new);
-        serializers.register(FHTextureIcon.class, "texture", FHTextureIcon::new, FHTextureIcon::new);
-        serializers.register(FHTextureUVIcon.class, "texture_uv", FHTextureUVIcon::new, FHTextureUVIcon::new);
-        serializers.register(FHTextIcon.class, "text", FHTextIcon::new, FHTextIcon::new);
-        serializers.register(FHDelegateIcon.class, "internal", FHDelegateIcon::new, FHDelegateIcon::new);
+        serializers.register(FHNopIcon.class, "nop", FHNopIcon::get,FHIcon::asObject, FHNopIcon::get);
+        serializers.register(FHItemIcon.class, "item", FHItemIcon::new,FHIcon::asObject, FHItemIcon::new);
+        serializers.register(FHCombinedIcon.class, "combined", FHCombinedIcon::new,FHIcon::asObject, FHCombinedIcon::new);
+        serializers.register(FHAnimatedIcon.class, "animated", FHAnimatedIcon::new,FHIcon::asObject, FHAnimatedIcon::new);
+        serializers.register(FHIngredientIcon.class, "ingredient", FHIngredientIcon::new,FHIcon::asObject, FHIngredientIcon::new);
+        serializers.register(FHTextureIcon.class, "texture", FHTextureIcon::new,FHIcon::asObject, FHTextureIcon::new);
+        serializers.register(FHTextureUVIcon.class, "texture_uv", FHTextureUVIcon::new,FHIcon::asObject, FHTextureUVIcon::new);
+        serializers.register(FHTextIcon.class, "text", FHTextIcon::new,FHIcon::asObject, FHTextIcon::new);
+        serializers.register(FHDelegateIcon.class, "internal", FHDelegateIcon::new,FHIcon::asObject, FHDelegateIcon::new);
     }
 
     public static FHIcon getAnimatedIcon(FHIcon... icons) {

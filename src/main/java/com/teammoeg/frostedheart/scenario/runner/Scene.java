@@ -20,14 +20,14 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * A scene is a place to present content to client
- *
+ * You should NOT store this object, always get it from {@link ScenarioConductor#getScene()}
  * */
 public class Scene {
 	transient final Map<String,ExecuteTarget> links=new HashMap<>();
     transient boolean lastNowrap=false;
     transient StringBuilder currentLiteral;
     CompoundNBT executionData=new CompoundNBT();
-    transient final Act parent;
+    transient final ScenarioConductor parent;
     public transient boolean isNowait;
     private boolean isSaveNowait;
     private transient boolean isSlient;
@@ -63,9 +63,9 @@ public class Scene {
     		log.add(new StringBuilder(text));
     	}
     }
-    public Scene(Act parent) {
+    public Scene(ScenarioConductor paraData) {
 		super();
-		this.parent = parent;
+		this.parent = paraData;
 	}
 	public void clear() {
 		doResetScene=true;

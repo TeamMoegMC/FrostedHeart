@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -37,11 +38,7 @@ public class ExecuteStackElement extends ScenarioTarget{
 	public ExecuteStackElement(CompoundNBT n) {
 		this(n.getString("storage"),n.getInt("node"));
 	}
-	@Override
-	public void accept(ScenarioConductor runner) {
-		super.accept(runner);
-		runner.gotoNode(nodeNum);
-	}
+
 	public CompoundNBT save() {
 		CompoundNBT nbt=new CompoundNBT();
 		nbt.putString("storage", getName());
@@ -50,6 +47,11 @@ public class ExecuteStackElement extends ScenarioTarget{
 	}
 	public ExecuteStackElement next() {
 		return new ExecuteStackElement(this.getScenario(),nodeNum+1);
+	}
+	@Override
+	public void apply(IScenarioConductor conductor) {
+		super.apply(conductor);
+		conductor.setNodeNum(nodeNum);
 	}
 
 }

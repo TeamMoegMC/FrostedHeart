@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
+import net.minecraft.nbt.CompoundNBT;
+
 public class ExecuteTarget extends ScenarioTarget{
 
 	private final String label;

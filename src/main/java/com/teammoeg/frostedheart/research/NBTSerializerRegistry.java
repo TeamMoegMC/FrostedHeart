@@ -19,42 +19,38 @@
 
 package com.teammoeg.frostedheart.research;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
-import com.google.gson.JsonObject;
+import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.nbt.CompoundNBT;
 
-public class NBTSerializerRegistry<U> extends SerializerRegistry<U, CompoundNBT> {
+public class NBTSerializerRegistry<U> extends PacketBufferSerializerRegistry<U, CompoundNBT> {
 
-    Map<String, Function<CompoundNBT, U>> fromJson = new HashMap<>();
 
     public NBTSerializerRegistry() {
         super();
     }
-
     public U deserialize(CompoundNBT je) {
-        Function<CompoundNBT, U> func = fromJson.get(je.getString("type"));
+        Function<CompoundNBT, U> func = from.get(je.getString("type"));
         if (func == null)
             return null;
         return func.apply(je);
     }
 
     public U deserializeOrDefault(CompoundNBT je, U def) {
-        Function<CompoundNBT, U> func = fromJson.get(je.getString("type"));
+        Function<CompoundNBT, U> func = from.get(je.getString("type"));
         if (func == null)
             return def;
         return func.apply(je);
     }
-
-    @Override
-    protected void putSerializer(String type, Function<CompoundNBT, U> s) {
-        fromJson.put(type, s);
-    }
-
-    public void writeType(JsonObject jo, U obj) {
-        jo.addProperty("type", typeOf(obj));
-    }
+	@Override
+	protected void writeType(Pair<Integer, String> type, CompoundNBT obj) {
+		obj.putString("type", type.getSecond());
+	}
+	@Override
+	protected String readType(CompoundNBT obj) {
+		// TODO Auto-generated method stub
+		return obj.getString("type");
+	}
 }

@@ -38,13 +38,14 @@ public class ParagraphData implements IScenarioTarget{
 	public String getName() {
 		return name;
 	}
+
 	@Override
-	public void accept(ScenarioConductor t) {
+	public void apply(IScenarioConductor t) {
 		if(name!=null&&!getScenario().equals(t.getScenario())) {
 			t.setScenario(getScenario());
-			t.gotoNode(0);
+			t.setNodeNum(0);
 		}
 		if(paragraphNum!=0)
-			t.gotoNode(t.getScenario().paragraphs[paragraphNum-1]);
+			t.setNodeNum(t.getScenario().paragraphs[paragraphNum-1]);
 	}
 }

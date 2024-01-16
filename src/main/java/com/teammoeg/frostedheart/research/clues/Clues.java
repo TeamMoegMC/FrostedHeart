@@ -30,24 +30,28 @@ public class Clues {
     private static JsonSerializerRegistry<Clue> registry = new JsonSerializerRegistry<>();
 
     static {
-        register(CustomClue.class, "custom", CustomClue::new, CustomClue::new);
-        register(AdvancementClue.class, "advancement", AdvancementClue::new, AdvancementClue::new);
-        register(ItemClue.class, "item", ItemClue::new, ItemClue::new);
-        register(KillClue.class, "kill", KillClue::new, KillClue::new);
-        register(MinigameClue.class, "game", MinigameClue::new, MinigameClue::new);
+        register(CustomClue.class, "custom", CustomClue::new,Clue::serialize , CustomClue::new);
+        register(AdvancementClue.class, "advancement", AdvancementClue::new,Clue::serialize, AdvancementClue::new);
+        register(ItemClue.class, "item", ItemClue::new,Clue::serialize, ItemClue::new);
+        register(KillClue.class, "kill", KillClue::new,Clue::serialize, KillClue::new);
+        register(MinigameClue.class, "game", MinigameClue::new,Clue::serialize, MinigameClue::new);
     }
 
 
-    public static Clue read(JsonObject jo) {
-        return registry.deserialize(jo);
+    public static JsonObject write(Clue fromObj) {
+		return registry.write(fromObj);
+	}
+
+	public static Clue read(JsonObject jo) {
+        return registry.read(jo);
     }
 
     public static Clue read(PacketBuffer pb) {
         return registry.read(pb);
     }
 
-    public static void register(Class<? extends Clue> cls, String id, Function<JsonObject, Clue> j, Function<PacketBuffer, Clue> p) {
-        registry.register(cls, id, j, p);
+    public static void register(Class<? extends Clue> cls, String id, Function<JsonObject, Clue> j, Function<Clue,JsonObject> o, Function<PacketBuffer, Clue> p) {
+        registry.register(cls, id, j,o, p);
     }
 
     public static void writeId(Clue e, PacketBuffer pb) {

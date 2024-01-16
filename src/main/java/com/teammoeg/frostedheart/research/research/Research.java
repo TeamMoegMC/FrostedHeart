@@ -783,9 +783,9 @@ public class Research extends FHRegisteredItem implements Writeable {
         jo.addProperty("category", category.getId().toString());
         if (!parents.isEmpty())
             jo.add("parents", SerializeUtil.toJsonStringList(parents, FHRegistry::serializeSupplier));
-        jo.add("clues", SerializeUtil.toJsonList(clues, Clue::serialize));
+        jo.add("clues", SerializeUtil.toJsonList(clues, Clues::write));
         jo.add("ingredients", SerializeUtil.toJsonList(requiredItems, IngredientWithSize::serialize));
-        jo.add("effects", SerializeUtil.toJsonList(effects, Writeable::serialize));
+        jo.add("effects", SerializeUtil.toJsonList(effects, Effects::write));
         jo.addProperty("points", points);
         if (showfdesc)
             jo.addProperty("showAltDesc", true);

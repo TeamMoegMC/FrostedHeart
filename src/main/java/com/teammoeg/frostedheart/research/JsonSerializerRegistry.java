@@ -19,43 +19,26 @@
 
 package com.teammoeg.frostedheart.research;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.datafixers.util.Pair;
 
-public class JsonSerializerRegistry<U> extends SerializerRegistry<U, JsonObject> {
+public class JsonSerializerRegistry<U> extends PacketBufferSerializerRegistry<U, JsonObject> {
 
-    Map<String, Function<JsonObject, U>> fromJson = new HashMap<>();
+
 
     public JsonSerializerRegistry() {
         super();
     }
 
-    public U deserialize(JsonElement je) {
-        JsonObject jo = je.getAsJsonObject();
-        Function<JsonObject, U> func = fromJson.get(jo.get("type").getAsString());
-        if (func == null)
-            return null;
-        return func.apply(jo);
-    }
+	@Override
+	protected void writeType(Pair<Integer, String> type, JsonObject obj) {
+		obj.add("type", obj);
+	}
 
-    public U deserializeOrDefault(JsonElement je, U def) {
-        JsonObject jo = je.getAsJsonObject();
-        Function<JsonObject, U> func = fromJson.get(jo.get("type").getAsString());
-        if (func == null)
-            return def;
-        return func.apply(jo);
-    }
+	@Override
+	protected String readType(JsonObject obj) {
+		return obj.get("type").getAsString();
+	}
 
-    @Override
-    protected void putSerializer(String type, Function<JsonObject, U> s) {
-        fromJson.put(type, s);
-    }
 
-    public void writeType(JsonObject jo, U obj) {
-        jo.addProperty("type", typeOf(obj));
-    }
 }

@@ -31,10 +31,14 @@ public class Numbers {
     static JsonSerializerRegistry<IResearchNumber> registry = new JsonSerializerRegistry<>();
 
     static {
-        registry.register(ConstResearchNumber.class, "value", ConstResearchNumber::valueOf, ConstResearchNumber::valueOf);
-        registry.register(ExpResearchNumber.class, "exp", ExpResearchNumber::new, ExpResearchNumber::new);
+        registry.register(ConstResearchNumber.class, "value", ConstResearchNumber::valueOf,Numbers::nopserializer, ConstResearchNumber::valueOf);
+        registry.register(ExpResearchNumber.class, "exp", ExpResearchNumber::new,Numbers::nopserializer, ExpResearchNumber::new);
     }
-
+    public static JsonObject nopserializer(IResearchNumber obj) {
+    	JsonObject jo=new JsonObject();
+    	jo.add("exp", obj.serialize());
+    	return jo;
+    }
     public static IResearchNumber deserialize(JsonElement je) {
         if (je.isJsonPrimitive()) {
             JsonPrimitive jp = (JsonPrimitive) je;
@@ -43,23 +47,19 @@ public class Numbers {
             else if (jp.isNumber())
                 return new ConstResearchNumber(jp.getAsNumber());
         }
-        return registry.deserialize(je.getAsJsonObject());
+        return registry.read(je.getAsJsonObject());
     }
 
     public static IResearchNumber deserialize(PacketBuffer data) {
         return registry.read(data);
     }
 
-    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<PacketBuffer, IResearchNumber> packet) {
-        registry.register(cls, type, json, packet);
+    public static void registerNumberType(Class<? extends IResearchNumber> cls, String type, Function<JsonObject, IResearchNumber> json, Function<IResearchNumber,JsonObject> obj, Function<PacketBuffer, IResearchNumber> packet) {
+        registry.register(cls, type, json,obj, packet);
     }
 
     public static void writeId(IResearchNumber e, PacketBuffer pb) {
         registry.writeId(pb, e);
-    }
-
-    public static void writeType(IResearchNumber e, JsonObject jo) {
-        registry.writeType(jo, e);
     }
 
     private Numbers() {

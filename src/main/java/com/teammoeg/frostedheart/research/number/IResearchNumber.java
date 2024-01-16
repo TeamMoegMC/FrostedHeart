@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.research.number;
 
+import com.google.gson.JsonElement;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 
 public interface IResearchNumber {
@@ -31,4 +32,5 @@ public interface IResearchNumber {
     }
 
     double getVal(ResearchData rd);
+    JsonElement serialize();
 }
