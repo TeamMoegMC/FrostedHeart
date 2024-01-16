@@ -69,7 +69,7 @@ public class ScenarioConductor implements IScenarioConductor{
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
-    private transient boolean isQuestEnabled;
+    private transient boolean isActsEnabled;
     private transient ActNamespace lastQuest;
     //Server and Client info
     public transient UUID player;
@@ -101,9 +101,9 @@ public class ScenarioConductor implements IScenarioConductor{
     	//if(currentAct==null)
     	currentAct=acts.get(empty);
     }
-    public void enableQuest() {
-    	if(!isQuestEnabled) {
-    		isQuestEnabled=true;
+    public void enableActs() {
+    	if(!isActsEnabled) {
+    		isActsEnabled=true;
     		
     		acts.values().forEach(t->{
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {

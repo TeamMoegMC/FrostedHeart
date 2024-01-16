@@ -44,4 +44,7 @@ public class SceneCommand {
 		if(st!=null)
 			runner.getCurrentAct().subtitle=st;
 	}
+	public void startSystem(ScenarioConductor runner) {
+		runner.enableActs();
+	}
 }
