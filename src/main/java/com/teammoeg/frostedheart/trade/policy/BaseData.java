@@ -121,9 +121,9 @@ public abstract class BaseData implements Writeable {
         jo.addProperty("store", maxstore);
         jo.addProperty("recover", recover);
         jo.addProperty("price", price);
-        jo.add("actions", SerializeUtil.toJsonList(actions, PolicyAction::serialize));
-        jo.add("use_actions", SerializeUtil.toJsonList(soldactions, PolicyAction::serialize));
-        jo.add("restock_condition", SerializeUtil.toJsonList(restockconditions, PolicyCondition::serialize));
+        jo.add("actions", SerializeUtil.toJsonList(actions, Actions::serialize));
+        jo.add("use_actions", SerializeUtil.toJsonList(soldactions, Actions::serialize));
+        jo.add("restock_condition", SerializeUtil.toJsonList(restockconditions, Conditions::serialize));
         jo.addProperty("hide_stockout", hideStockout);
 
         return jo;

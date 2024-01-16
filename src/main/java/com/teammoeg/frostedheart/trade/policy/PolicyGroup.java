@@ -76,7 +76,7 @@ public abstract class PolicyGroup implements Writeable {
     @Override
     public JsonElement serialize() {
         JsonObject jo = new JsonObject();
-        jo.add("conditions", SerializeUtil.toJsonList(conditions, PolicyCondition::serialize));
+        jo.add("conditions", SerializeUtil.toJsonList(conditions, Conditions::serialize));
         return jo;
     }
 

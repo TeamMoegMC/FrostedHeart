@@ -39,23 +39,22 @@ public class Conditions {
     }
 
     public static PolicyCondition deserialize(JsonObject jo) {
-        return registry.deserialize(jo);
+        return registry.read(jo);
     }
 
     public static PolicyCondition deserialize(PacketBuffer data) {
         return registry.read(data);
     }
+    public static JsonObject serialize(PolicyCondition data) {
+        return registry.write(data);
+    }
 
     public static void registerType(Class<? extends PolicyCondition> cls, String type, Function<JsonObject, PolicyCondition> json, Function<PacketBuffer, PolicyCondition> packet) {
-        registry.register(cls, type, json, packet);
+        registry.register(cls, type, json,PolicyCondition::serialize, packet);
     }
 
     public static void writeId(PolicyCondition e, PacketBuffer pb) {
         registry.writeId(pb, e);
-    }
-
-    public static void writeType(PolicyCondition e, JsonObject jo) {
-        registry.writeType(jo, e);
     }
 
     private Conditions() {

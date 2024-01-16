@@ -47,9 +47,8 @@ public class SetFlagAction implements PolicyAction {
     }
 
     @Override
-    public JsonElement serialize() {
+    public JsonObject serialize() {
         JsonObject jo = new JsonObject();
-        Actions.writeType(this, jo);
         jo.addProperty("name", name);
         return jo;
     }

@@ -19,9 +19,13 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
+import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
-import com.teammoeg.frostedheart.util.Writeable;
 
-public interface PolicyAction extends Writeable {
-    public void deal(FHVillagerData data, int num);
+import net.minecraft.network.PacketBuffer;
+
+public interface PolicyAction {
+    void deal(FHVillagerData data, int num);
+    JsonObject serialize();
+	void write(PacketBuffer buffer);
 }

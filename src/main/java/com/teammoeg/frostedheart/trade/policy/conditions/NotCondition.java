@@ -43,9 +43,8 @@ public class NotCondition implements PolicyCondition {
     }
 
     @Override
-    public JsonElement serialize() {
+    public JsonObject serialize() {
         JsonObject jo = new JsonObject();
-        Conditions.writeType(this, jo);
         jo.add("condition", nested.serialize());
         return jo;
     }

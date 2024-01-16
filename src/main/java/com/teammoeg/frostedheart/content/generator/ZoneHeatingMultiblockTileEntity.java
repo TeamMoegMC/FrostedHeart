@@ -126,7 +126,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     protected Optional<TeamResearchData> getTeamData() {
         UUID owner = getOwner();
         if (owner != null)
-            return Optional.of(ResearchDataAPI.getData(owner));
+            return Optional.ofNullable(ResearchDataAPI.getData(owner));
         return Optional.empty();
     }
 

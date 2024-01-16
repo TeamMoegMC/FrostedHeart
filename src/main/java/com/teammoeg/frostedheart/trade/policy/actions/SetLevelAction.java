@@ -45,7 +45,7 @@ public class SetLevelAction extends AbstractAction {
     }
 
     @Override
-    public JsonElement serialize() {
+    public JsonObject serialize() {
         JsonObject jo = super.serialize().getAsJsonObject();
         jo.addProperty("level", value);
         return jo;

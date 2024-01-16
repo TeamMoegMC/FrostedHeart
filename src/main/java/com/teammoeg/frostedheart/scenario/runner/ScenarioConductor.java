@@ -398,19 +398,24 @@ public class ScenarioConductor implements IScenarioConductor{
 		}
 	}
 	public void queueQuest(ActNamespace quest,String scene,String label) {
-		if(quest.equals(getCurrentAct().name))return;
-		Act data=acts.get(quest);
-		pauseAct();
-		if(data==null){
-			data=new Act(this,quest);
-			acts.put(quest, data);
+		Act data=getCurrentAct();
+		if(!quest.equals(getCurrentAct().name)) {
+			acts.get(quest);
+			pauseAct();
+			if(data==null){
+				data=new Act(this,quest);
+				acts.put(quest, data);
+			}
 		}
-		data.paragraph.setScenario(FHScenario.loadScenario(scene));
-		data.paragraph.setParagraphNum(0);
+
 		if(label!=null) {
 			data.label=label;
 			new ExecuteTarget(scene,label).apply(data);
+		}else {
+			new ExecuteTarget(scene,null).apply(data);
 		}
+		data.paragraph.setScenario(data.getScenario());
+		data.paragraph.setParagraphNum(0);
 	}
 	public ExecuteStackElement getCurrentPosition() {
     	return new ExecuteStackElement(sp,nodeNum);

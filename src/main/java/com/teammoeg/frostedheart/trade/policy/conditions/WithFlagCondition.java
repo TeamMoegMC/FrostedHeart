@@ -43,9 +43,8 @@ public class WithFlagCondition implements PolicyCondition {
     }
 
     @Override
-    public JsonElement serialize() {
+    public JsonObject serialize() {
         JsonObject jo = new JsonObject();
-        Conditions.writeType(this, jo);
         jo.addProperty("name", name);
         return jo;
     }

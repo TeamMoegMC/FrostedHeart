@@ -51,7 +51,7 @@ public class SetFlagValueAction extends SetFlagAction {
     }
 
     @Override
-    public JsonElement serialize() {
+    public JsonObject serialize() {
         JsonObject jo = super.serialize().getAsJsonObject();
         jo.addProperty("value", value);
         return jo;

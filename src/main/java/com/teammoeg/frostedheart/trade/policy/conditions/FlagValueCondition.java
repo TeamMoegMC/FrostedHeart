@@ -43,8 +43,8 @@ public class FlagValueCondition extends WithFlagCondition {
     }
 
     @Override
-    public JsonElement serialize() {
-        JsonObject jo = (JsonObject) super.serialize();
+    public JsonObject serialize() {
+        JsonObject jo = super.serialize();
         jo.addProperty("value", value);
         return jo;
     }

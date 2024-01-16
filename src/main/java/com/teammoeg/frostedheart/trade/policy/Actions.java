@@ -38,7 +38,10 @@ public class Actions {
     }
 
     public static PolicyAction deserialize(JsonObject jo) {
-        return registry.deserialize(jo);
+        return registry.read(jo);
+    }
+    public static JsonObject serialize(PolicyAction jo) {
+        return registry.write(jo);
     }
 
     public static PolicyAction deserialize(PacketBuffer data) {
@@ -46,16 +49,13 @@ public class Actions {
     }
 
     public static void registerType(Class<? extends PolicyAction> cls, String type, Function<JsonObject, PolicyAction> json, Function<PacketBuffer, PolicyAction> packet) {
-        registry.register(cls, type, json, packet);
+        registry.register(cls, type, json,PolicyAction::serialize, packet);
     }
 
     public static void writeId(PolicyAction e, PacketBuffer pb) {
         registry.writeId(pb, e);
     }
 
-    public static void writeType(PolicyAction e, JsonObject jo) {
-        registry.writeType(jo, e);
-    }
 
     private Actions() {
     }
