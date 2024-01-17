@@ -43,7 +43,7 @@ public class CardPos {
     }
 
     public static CardPos valueOf(PacketBuffer pb) {
-        return valueOf(pb.readVarInt(), pb.readVarInt());
+        return valueOf(pb.readByte(), pb.readByte());
     }
 
     private CardPos(int x, int y) {
@@ -87,8 +87,8 @@ public class CardPos {
     }
 
     public void write(PacketBuffer pb) {
-        pb.writeVarInt(x);
-        pb.writeVarInt(y);
+        pb.writeByte(x);
+        pb.writeByte(y);
     }
 
 }

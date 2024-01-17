@@ -33,12 +33,12 @@ public class DataEntry {
     }
 
     public DataEntry(PacketBuffer buffer) {
-        this.type = FHDataType.values()[buffer.readVarInt()];
+        this.type = FHDataType.values()[buffer.readByte()];
         this.data = buffer.readString();
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeVarInt(type.ordinal());
+        buffer.writeByte(type.ordinal());
         buffer.writeString(data);
     }
 }

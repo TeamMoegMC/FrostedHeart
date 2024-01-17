@@ -166,7 +166,15 @@ public class ClientScene {
 	}
 
 	public static void cls() {
+		Minecraft mc=ClientUtils.mc();
+		List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
+		i.removeIf(l->l.getChatLineID()==fhchatid);
+		for(TextInfo t:msgQueue) {
+			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.getFinished(),0));
+		}
 		msgQueue.clear();
+		shouldWrap=false;
+		needUpdate=false;
 	}
 	public static void setText(String txt) {
 		cls();
@@ -229,15 +237,7 @@ public class ClientScene {
 	static final int fhchatid=0x05301110;
 	public static void process(String text, boolean isReline, boolean isNowait,boolean resetScene) {
 		if(resetScene) {
-			Minecraft mc=ClientUtils.mc();
-			List<ChatLine<IReorderingProcessor>> i=((NewChatGuiAccessor)mc.ingameGUI.getChatGUI()).getDrawnChatLines();
-			i.removeIf(l->l.getChatLineID()==fhchatid);
-			for(TextInfo t:msgQueue) {
-    			i.add(0,new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),t.getFinished(),0));
-    		}
-			msgQueue.clear();
-			shouldWrap=false;
-			needUpdate=false;
+			cls();
 		}
 		System.out.println("Received "+isReline+" "+text+" "+resetScene);
 		if(!text.isEmpty()) {

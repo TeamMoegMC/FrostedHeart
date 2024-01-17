@@ -17,7 +17,7 @@ public class PacketBufferSerializer<T> {
 	}
 
 	public T read(PacketBuffer pb) {
-	    int id = pb.readVarInt();
+	    int id = pb.readByte();
 	    if (id < 0 || id >= fromPacket.size())
 	        throw new IllegalArgumentException("Packet Error");
 	    return fromPacket.get(id).apply(pb);
@@ -28,7 +28,7 @@ public class PacketBufferSerializer<T> {
 		types.put(cls, id);
 	}
 	public T readOrDefault(PacketBuffer pb, T def) {
-	    int id = pb.readVarInt();
+	    int id = pb.readByte();
 	    if (id < 0 || id >= fromPacket.size())
 	        return def;
 	    return fromPacket.get(id).apply(pb);
@@ -37,7 +37,7 @@ public class PacketBufferSerializer<T> {
 	public void writeId(PacketBuffer pb, T obj) {
 		Integer dat=types.get(obj.getClass());
 		if(dat==null)dat=0;
-	    pb.writeVarInt(dat);
+	    pb.writeByte(dat);
 	}
 
 }

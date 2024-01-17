@@ -37,11 +37,13 @@ import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.ControlCommands;
 import com.teammoeg.frostedheart.scenario.commands.FTBQCommands;
-import com.teammoeg.frostedheart.scenario.commands.SceneCommand;
+import com.teammoeg.frostedheart.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
+import com.teammoeg.frostedheart.scenario.commands.client.VariableCommand;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.scenario.parser.providers.FTBQProvider;
+import com.teammoeg.frostedheart.scenario.parser.providers.ScenarioProvider;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -54,7 +56,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class FHScenario {
 	public static ScenarioExecutor server = new ScenarioExecutor();
 	public static Map<ServerPlayerEntity, ScenarioConductor> runners = new HashMap<>();
-	private static final List<Function<String, Scenario>> scenarioProviders = new ArrayList<>();
+	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
 
 	public static void startFor(ServerPlayerEntity pe) {
 		ScenarioConductor sr = runners.computeIfAbsent(pe, FHScenario::load);
@@ -65,19 +67,40 @@ public class FHScenario {
 	public static final ScenarioParser parser = new ScenarioParser();
 	static File scenarioPath = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhscenario");
 
-	public static void registerScenarioProvider(Function<String, Scenario> p) {
+	public static void registerScenarioProvider(ScenarioProvider p) {
 		scenarioProviders.add(p);
 	}
 
 	public static Scenario loadScenario(String name) {
 		System.out.println("trying to load scenario "+name);
-		try {
-			for (Function<String, Scenario> i : scenarioProviders) {
-				Scenario s = i.apply(name);
-				if (s != null)
-					return s;
+		String[] paths=name.split("\\?");
+		String[] args=new String[0];
+		if(paths.length>1&&!paths[1].isEmpty())
+			args=paths[1].split("&");
+		Map<String,String> params=new HashMap<>();
+		for(String arg:args) {
+			if(arg.isEmpty())continue;
+			String[] kv=arg.split("=");
+			if(kv.length>1) {
+				params.put(kv[0], kv[1]);
+			}else if(kv.length>0) {
+				params.put(kv[0], "");
 			}
-			return parser.parseFile(name, new File(scenarioPath, name + ".ks"));
+		}
+		try {
+			for (ScenarioProvider i : scenarioProviders) {
+				try {
+					Scenario s = i.apply(name,params);
+					if (s != null)
+						return s;
+				}catch(Exception e) {
+					new ScenarioExecutionException("Unexpected exception getting from provider '"+i.getName()+"' ,Exceptions should be caught within provider and return null. ",e).printStackTrace();
+				}catch(Throwable t) {
+					new ScenarioExecutionException();
+				}
+				
+			}
+			return parser.parseFile(name, new File(scenarioPath, paths[0] + ".ks"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -127,7 +150,8 @@ public class FHScenario {
 		register(TextualCommands.class);
 		register(ControlCommands.class);
 		register(FTBQCommands.class);
-		register(SceneCommand.class);
+		register(ActCommand.class);
+		register(VariableCommand.class)
 		registerScenarioProvider(new FTBQProvider());
 	}
 	static Path local;

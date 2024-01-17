@@ -29,31 +29,7 @@ import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 
 public class ControlCommands {
-	public void delay(ScenarioConductor runner,@Param("t")int t) {
-		//runner.waitClient();
-		runner.sendCachedSence();
-		runner.getScene().addWait(t);
-	}
-	public void wt(ScenarioConductor runner) {
-		runner.sendCachedSence();
-		runner.setStatus((RunStatus.WAITTRIGGER));
-	}
-	public void wa(ScenarioConductor runner) {
-		runner.sendCachedSence();
-		runner.setStatus((RunStatus.WAITACTION));
-	}
-	public void s(ScenarioConductor runner) {
-		runner.sendCachedSence();
-		runner.stop();
-	}
-	public void er(ScenarioConductor runner) {
-		runner.getScene().clear();
-		runner.sendCachedSence();
-	}
-	public void l(ScenarioConductor runner) {
-		runner.sendCachedSence();
-		runner.getScene().waitClient();
-	}
+
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.jump(new ExecuteTarget(scenario,label));
 	}
@@ -61,7 +37,7 @@ public class ControlCommands {
 		runner.call(scenario, label);
 	}
 	public void queue(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.getCurrentAct().queue(new ExecuteTarget(scenario,label));
+		runner.queue(new ExecuteTarget(scenario,label));
 	}
 	public void Return(ScenarioConductor runner) {
 		runner.popCallStack();
@@ -74,19 +50,5 @@ public class ControlCommands {
 		runner.getExecutionData().remove("mp");
 		runner.popCallStack();
 	}
-	public void link(ScenarioConductor runner,@Param("lid")String linkId,@Param("s")String scenario,@Param("l")String label) {
-		runner.sendCachedSence();
-		linkId=runner.createLink(linkId, scenario, label);
-		Map<String,String> pars=new HashMap<>();
-		pars.put("lid", linkId);
-		FHScenario.callClientCommand("link", runner, pars);
-	}
-	public void endlink(ScenarioConductor runner) {
-		runner.sendCachedSence();
-		Map<String,String> pars=new HashMap<>();
-		FHScenario.callClientCommand("endlink", runner, pars);
-	}
-	public void nolink(ScenarioConductor runner) {
-		runner.clearLink();
-	}
+
 }

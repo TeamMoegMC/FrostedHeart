@@ -75,18 +75,21 @@ public class ScenarioConductor implements IScenarioConductor{
     public transient UUID player;
     public transient boolean isSkip;
     private transient int clientStatus;
-    private static final ActNamespace empty=new ActNamespace();
+    private static final ActNamespace global=new ActNamespace();
+    private static final ActNamespace init=new ActNamespace(null,null);
     public CompoundNBT save() {
     	CompoundNBT data=new CompoundNBT();
     	data.put("vars", varData.snapshot);
     	ListNBT lacts=new ListNBT();
     	for(Act v:acts.values()) {
-    		lacts.add(v.save());
+    		if(v.name.isAct())
+    			lacts.add(v.save());
     	}
     	data.put("acts", lacts);
-    	data.putString("chapter", currentAct.name.chapter);
-    	data.putString("act", currentAct.name.act);
-    	
+    	if(getCurrentAct().name.isAct()) {
+    		data.putString("chapter", getCurrentAct().name.chapter);
+    		data.putString("act", getCurrentAct().name.act);
+    	}
     	return data;
     }
     public void load(CompoundNBT data) {
@@ -99,7 +102,7 @@ public class ScenarioConductor implements IScenarioConductor{
     	lastQuest=new ActNamespace(data.getString("chapter"),data.getString("act"));
     	//currentAct=acts.get();
     	//if(currentAct==null)
-    	currentAct=acts.get(empty);
+    	//currentAct=acts.get(empty);
     }
     public void enableActs() {
     	if(!isActsEnabled) {
@@ -122,15 +125,17 @@ public class ScenarioConductor implements IScenarioConductor{
     public ScenarioConductor(PlayerEntity player) {
 		super();
 		this.player = player.getUniqueID();
-		currentAct=new Act(this,empty);
-		if(acts.isEmpty()) {
-			acts.put(empty, currentAct);
-		}
+		setCurrentAct(new Act(this,init));
+		acts.put(init, getCurrentAct());
+		acts.put(global, new Act(this,global));
+		
 	}
     public ScenarioConductor(PlayerEntity player,CompoundNBT data) {
 		super();
 		this.player = player.getUniqueID();
 		load(data);
+		setCurrentAct(new Act(this,init));
+		acts.put(init, getCurrentAct());
 	}
 	public void call(String scenario, String label) {
 		call(new ExecuteTarget(scenario,label));
@@ -243,14 +248,15 @@ public class ScenarioConductor implements IScenarioConductor{
 		getScene().show();
 	}
 	public void addTrigger(IScenarioTrigger trig) {
-		if(currentAct.name.isAct()) {
-			currentAct.getScene().addTrigger(trig);
+		if(getCurrentAct().name.isAct()) {
+			getCurrentAct().getScene().addTrigger(trig);
 		}else {
 			triggers.add(trig);
 		}
 	}
 	public void queue(IScenarioTarget questExecuteTarget) {
-		toExecute.add(questExecuteTarget);
+		getCurrentAct().queue(questExecuteTarget);
+		
 	}
     /*public void restoreParagraph(ParagraphData paragraph) {
 		Scenario sp=paragraph.getScenario();
@@ -262,43 +268,38 @@ public class ScenarioConductor implements IScenarioConductor{
 	}*/
 
     private void runCode() {
-    	
-    	//while(isRunning()) {
+    	setStatus((RunStatus.RUNNING));
+    	while(isRunning()) {
 	    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
-	    		System.out.println(nodeNum);
-	    		Node node=getScenario().pieces.get(nodeNum);
+	    		Node node=getScenario().pieces.get(nodeNum++);
 	    		try {
 	    			getScene().appendLiteral(node.getLiteral(this));
 	    			node.run(this);
 	    		}catch(Throwable t) {
 	    			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
 	    			setStatus((RunStatus.STOPPED));
+		    		getScene().clear();
+		    		sendCachedSence();
 	    			break;
 	    		}
-	    		nodeNum++;
 		    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
-		    		sendCachedSence();
+		    		
 		    		setStatus((RunStatus.STOPPED));
+		    		getScene().clear();
+		    		sendCachedSence();
 		    		return;
 	    		}
 	    	}
-	    	if(isRunning())
-	    		setStatus((RunStatus.STOPPED));
-		//}
+		}
     }
     private void runScheduled() {
     	if(getStatus().shouldPause) {
-    		//getScene().tickTriggers(this, true);
     		IScenarioTarget nxt=toExecute.pollFirst();
     		if(nxt!=null) {
     			globalScope();
     			paragraph(-1);
     			jump(nxt);
     		}
-    		/*acts.values().forEach(t->{
-    			if(!t.name.equals(getCurrentAct().name))
-    				t.getScene().tickTriggers(this, false);
-    		});*/
     	}
     }
     /**
@@ -307,14 +308,12 @@ public class ScenarioConductor implements IScenarioConductor{
 	 * 
 	 * */
     private void run() {
-    	setStatus((RunStatus.RUNNING));
+    	
     	if(isConducting)return;
     	try {
     		isConducting=true;
-    		while(isRunning()) {
-    			runCode();
-    			runScheduled();
-    		}
+    		runCode();
+    		runScheduled();
     	}finally {
     		isConducting=false;
     	}
@@ -326,8 +325,8 @@ public class ScenarioConductor implements IScenarioConductor{
 		nodeNum=0;
 		varData.takeSnapshot();
 		getCurrentAct().newParagraph(sp, 0);
-		//for(Node n:sp.pieces)
-		//	System.out.println(n.getText());
+		for(Node n:sp.pieces)
+			System.out.println(n.getText());
 		run();
 	}
 
@@ -351,7 +350,7 @@ public class ScenarioConductor implements IScenarioConductor{
     		}
     	}
     	for(Act a:acts.values())
-	    	a.getScene().tickTriggers(this, currentAct==a);
+	    	a.getScene().tickTriggers(this, getCurrentAct()==a);
     	triggers.removeIf(t->!t.canUse());
     	if(getStatus()==RunStatus.WAITTIMER) {
     		if(getScene().tickWait()) {
@@ -362,7 +361,7 @@ public class ScenarioConductor implements IScenarioConductor{
     	}
     	//Execute Queued actions
     	if(getStatus().shouldPause&&!toExecute.isEmpty()) {
-    		runScheduled();
+    		run();
     	}
     }
 
@@ -389,7 +388,7 @@ public class ScenarioConductor implements IScenarioConductor{
 		Act data=acts.get(quest);
 		if(data!=null) {
 			pauseAct();
-			this.currentAct=data;
+			this.setCurrentAct(data);
 			data.prepareForRun();
 			this.sp=data.getScenario();
 			this.nodeNum=data.getNodeNum();
@@ -399,18 +398,18 @@ public class ScenarioConductor implements IScenarioConductor{
 		}
 	}
 	private void globalScope() {
-		currentAct=acts.get(empty);
+		setCurrentAct(acts.get(global));
 	}
 	public void enterAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
 		Act data=acts.get(quest);
 		pauseAct();
 		if(data!=null) {
-			this.currentAct=data;
+			this.setCurrentAct(data);
 		}else {
 			data=new Act(this,quest);
 			acts.put(quest, data);
-			this.currentAct=data;
+			this.setCurrentAct(data);
 		}
 	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
@@ -469,5 +468,8 @@ public class ScenarioConductor implements IScenarioConductor{
 	}
 	public LinkedList<ExecuteStackElement> getCallStack() {
 		return callStack;
+	}
+	private void setCurrentAct(Act currentAct) {
+		this.currentAct = currentAct;
 	}
 }

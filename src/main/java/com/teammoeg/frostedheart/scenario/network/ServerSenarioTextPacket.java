@@ -1,21 +1,9 @@
 package com.teammoeg.frostedheart.scenario.network;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
-import com.teammoeg.frostedheart.util.SerializeUtil;
-
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.EnumTypeAdapterFactory;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 public class ServerSenarioTextPacket {

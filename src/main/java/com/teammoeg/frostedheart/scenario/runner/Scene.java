@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioTextPacket;
+import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -35,6 +36,7 @@ public class Scene {
     LinkedList<StringBuilder> log=new LinkedList<>();
     private transient List<IScenarioTrigger> triggers=new ArrayList<>();
     List<String> savedLog=new ArrayList<>();
+    private transient Act act;
     private transient boolean doResetScene;
     public CompoundNBT save() {
     	CompoundNBT nbt=new CompoundNBT();
@@ -63,9 +65,10 @@ public class Scene {
     		log.add(new StringBuilder(text));
     	}
     }
-    public Scene(ScenarioConductor paraData) {
+    public Scene(ScenarioConductor paraData,Act act) {
 		super();
 		this.parent = paraData;
+		this.act=act;
 	}
 	public void clear() {
 		
@@ -176,7 +179,7 @@ public class Scene {
 	    				acttrigger=t;
 	    				break;
 	    			}
-					parent.queue(t);
+					parent.queue(new ActTarget(act.name,t));
     			}
     		}
     	}

@@ -71,14 +71,14 @@ public class CustomSerializerRegistry<T, U> {
     }
 
     public T read(PacketBuffer pb) {
-        int id = pb.readVarInt();
+        int id = pb.readByte();
         if (id < 0 || id >= fromPacket.size())
             throw new IllegalArgumentException("Packet Error");
         return fromPacket.get(id).apply(pb);
     }
 
     public T readOrDefault(PacketBuffer pb, T def) {
-        int id = pb.readVarInt();
+        int id = pb.readByte();
         if (id < 0 || id >= fromPacket.size())
             return def;
         return fromPacket.get(id).apply(pb);
@@ -99,7 +99,7 @@ public class CustomSerializerRegistry<T, U> {
     }
 
     public void writeId(PacketBuffer pb, T obj) {
-        pb.writeVarInt(idOf(obj));
+        pb.writeByte(idOf(obj));
     }
 
     public void writeType(JsonObject jo, T obj) {

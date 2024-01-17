@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
+import java.util.Objects;
+
 public class ActNamespace {
     public final String chapter;
     public final String act;
@@ -16,28 +18,18 @@ public class ActNamespace {
     
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((chapter == null) ? 0 : chapter.hashCode());
-		result = prime * result + ((act == null) ? 0 : act.hashCode());
-		return result;
+		return Objects.hash(act, chapter);
 	}
+
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
 		ActNamespace other = (ActNamespace) obj;
-		if (!chapter.equals(other.chapter))
-			return false;
-		if (!act.equals(other.act))
-			return false;
-		return true;
+		return Objects.equals(act, other.act) && Objects.equals(chapter, other.chapter);
 	}
 	public boolean isAct() {
-		return !act.isEmpty()&&!chapter.isEmpty();
+		return act!=null&&chapter!=null;
 	}
 }

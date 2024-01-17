@@ -44,7 +44,7 @@ public class InspireRecipe extends IESerializableRecipe {
 
         @Override
         public InspireRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            return new InspireRecipe(recipeId, Ingredient.read(buffer), buffer.readVarInt());
+            return new InspireRecipe(recipeId, Ingredient.read(buffer), buffer.readInt());
         }
 
         @Override
@@ -55,7 +55,7 @@ public class InspireRecipe extends IESerializableRecipe {
         @Override
         public void write(PacketBuffer buffer, InspireRecipe recipe) {
             recipe.item.write(buffer);
-            buffer.writeVarInt(recipe.inspire);
+            buffer.writeInt(recipe.inspire);
         }
 
     }

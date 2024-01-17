@@ -19,8 +19,7 @@
 
 package com.teammoeg.frostedheart.scenario.parser.providers;
 
-import java.util.function.Function;
-
+import java.util.Map;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 
@@ -30,14 +29,14 @@ import dev.ftb.mods.ftbquests.quest.ServerQuestFile;
 import dev.ftb.mods.ftbquests.quest.task.CheckmarkTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
 
-public class FTBQProvider implements Function<String, Scenario> {
+public class FTBQProvider extends StringScenarioProvider {
 
 	public FTBQProvider() {
 
 	}
 
 	@Override
-	public Scenario apply(String t) {
+	public String get(String t,Map<String,String> param) {
 		if(!t.startsWith("quest:"))
 			return null;
 		String qid=t.substring("quest:".length());
@@ -71,9 +70,16 @@ public class FTBQProvider implements Function<String, Scenario> {
 			
 			it++;
 		}
+		if(param.containsKey("call"))
+			b.append("@Return\n");
 		//b.append("@EndAct\n");
-		System.out.println(b.toString());
-		return FHScenario.parser.parseString(t,b.toString());
+		//System.out.println(b.toString());
+		return b.toString();
+	}
+
+	@Override
+	public String getName() {
+		return "FTB-Quests";
 	}
 
 }

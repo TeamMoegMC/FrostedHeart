@@ -53,7 +53,7 @@ public interface ITemperatureAdjust extends INBTSerializable<CompoundNBT> {
      * @return returns adjust
      */
     public static ITemperatureAdjust valueOf(PacketBuffer buffer) {
-        int packetId = buffer.readVarInt();
+        int packetId = buffer.readByte();
         switch (packetId) {
             case 1:
                 return new CubicTemperatureAdjust(buffer);

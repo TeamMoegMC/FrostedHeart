@@ -50,13 +50,13 @@ public class Act implements IScenarioConductor{
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
-		this.scene=new Scene(paraData);
+		this.scene=new Scene(paraData,this);
 		parent=paraData;
 		this.name=name;
 	}
     public Act(ScenarioConductor paraData,CompoundNBT data) {
 		super();
-		this.scene=new Scene(paraData);
+		this.scene=new Scene(paraData,this);
 		parent=paraData;
 		load(data);
 	}

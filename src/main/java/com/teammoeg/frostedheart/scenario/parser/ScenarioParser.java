@@ -255,7 +255,9 @@ public class ScenarioParser {
             	if(reader.isBegin())reader.next();
                 nodes.add(parseBarackCommand(reader));
             } else {
-                nodes.add(new LiteralNode(parseLiteral(reader)));
+            	String lit=parseLiteral(reader);
+            	if(lit!=null&&!lit.isEmpty())
+                nodes.add(new LiteralNode(lit));
             }
         }
         return nodes;

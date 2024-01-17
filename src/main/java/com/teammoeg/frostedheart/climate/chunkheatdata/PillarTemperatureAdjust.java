@@ -70,7 +70,7 @@ public class PillarTemperatureAdjust extends CubicTemperatureAdjust {
 
     @Override
     public void serialize(PacketBuffer buffer) {
-        buffer.writeVarInt(2);
+        buffer.writeByte(2);
         serializeData(buffer);
     }
 

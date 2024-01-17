@@ -114,7 +114,7 @@ public class CubicTemperatureAdjust implements ITemperatureAdjust {
 
     @Override
     public void serialize(PacketBuffer buffer) {
-        buffer.writeVarInt(1);//packet id
+        buffer.writeByte(1);//packet id
         serializeData(buffer);
     }
 

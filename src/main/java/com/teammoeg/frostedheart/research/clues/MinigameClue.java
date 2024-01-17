@@ -44,7 +44,7 @@ public class MinigameClue extends CustomClue {
 
     public MinigameClue(PacketBuffer pb) {
         super(pb);
-        setLevel(pb.readVarInt());
+        setLevel(pb.readByte());
     }
 
     @Override
@@ -83,7 +83,7 @@ public class MinigameClue extends CustomClue {
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        buffer.writeVarInt(getLevel());
+        buffer.writeByte(getLevel());
 
     }
 }

@@ -23,7 +23,7 @@ import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
-public class SceneCommand {
+public class ActCommand {
 	public void act(ScenarioConductor runner,@Param("c")String c,@Param("a")String a) {
 		runner.endAct();
 		runner.enterAct(new ActNamespace(c,a));
