@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.gui;
 import java.util.OptionalDouble;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL11C;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -61,20 +62,43 @@ public class FHGuiHelper {
     public static final RenderType BOLD_LINE_TYPE = RenderType.makeType("fh_line_bold",
             DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINES, 128, RenderStateAccess.getLineState(4));
 
-    private static void drawLine(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
-                                 int endX, int endY) {
+    private static void drawVertexLine(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
+                                 int endX, int endY,float z) {
+    	//RenderSystem.disableTexture();
         RenderSystem.enableColorMaterial();
-        renderBuffer.pos(mat, startX, startY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+        //RenderSystem.colorMask(false, false, false, false);
+        renderBuffer.pos(mat, startX, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
-        renderBuffer.pos(mat, endX, endY, 0F).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
+        renderBuffer.pos(mat, endX, endY,z).color(color.redi(), color.greeni(), color.bluei(), color.alphai())
                 .endVertex();
+        //RenderSystem.enableTexture();
+    }
+    private static void drawVertexLine2(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int startX, int startY,
+            int endX, int endY,float z) {
+		RenderSystem.disableTexture();
+		RenderSystem.enableColorMaterial();
+		//RenderSystem.colorMask(false, false, false, false);
+	
+		renderBuffer.pos(mat, startX, 0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		renderBuffer.pos(mat, endX,   0, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		renderBuffer.pos(mat, 0, startY, z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		renderBuffer.pos(mat, 0, endY  , z).color(color.redi(), color.greeni(), color.bluei(), color.alphai()).endVertex();
+		RenderSystem.enableTexture();
+	}
+    // draw a line from start to end by color, ABSOLUTE POSITION
+    public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY,float z) {
+    	Tessellator t=Tessellator.getInstance();
+        BufferBuilder vertexBuilderLines = t.getBuffer();
+        vertexBuilderLines.begin(GL11C.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+        drawVertexLine(matrixStack.getLast().getMatrix(), vertexBuilderLines, color, startX, startY, endX, endY,z);
+        t.draw();
     }
 
     // draw a line from start to end by color, ABSOLUTE POSITION
     public static void drawLine(MatrixStack matrixStack, Color4I color, int startX, int startY, int endX, int endY) {
         IVertexBuilder vertexBuilderLines = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource()
                 .getBuffer(BOLD_LINE_TYPE);
-        drawLine(matrixStack.getLast().getMatrix(), vertexBuilderLines, color, startX, startY, endX, endY);
+        drawVertexLine(matrixStack.getLast().getMatrix(), vertexBuilderLines, color, startX, startY, endX, endY,0f);
     }
 
     private static void drawRect(Matrix4f mat, IVertexBuilder renderBuffer, Color4I color, int x, int y, int w, int h) {

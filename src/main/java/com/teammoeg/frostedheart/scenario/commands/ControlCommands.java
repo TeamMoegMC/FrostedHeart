@@ -26,13 +26,13 @@ import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 public class ControlCommands {
 
 	public void jump(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.jump(new ExecuteTarget(scenario,label));
+		runner.jump(new ExecuteTarget(runner,scenario,label));
 	}
 	public void call(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
 		runner.call(scenario, label);
 	}
 	public void queue(ScenarioConductor runner,@Param("s")String scenario,@Param("l")String label) {
-		runner.queue(new ExecuteTarget(scenario,label));
+		runner.getCurrentAct().queue(new ExecuteTarget(runner,scenario,label));
 	}
 	public void Return(ScenarioConductor runner) {
 		runner.popCallStack();

@@ -36,7 +36,7 @@ public class FTBQCommands {
 	public void waitquestComplete(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
+		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
 			return quest.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
@@ -44,16 +44,17 @@ public class FTBQCommands {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
-		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
+		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
 			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
 	public void waittaskCompleteShow(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
+		//System.out.println("wtcs");
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
 		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
-		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
+		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
 			TeamData td=ServerQuestFile.INSTANCE.getData(r.getPlayer());
 			boolean rx=td.isCompleted(tsk);
 			
@@ -65,7 +66,7 @@ public class FTBQCommands {
 	public void waitquestStart(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargerTrigger(s,l,r->{
+		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
 			return qf.getData(r.getPlayer()).canStartTasks(quest);
 		}));
 	}

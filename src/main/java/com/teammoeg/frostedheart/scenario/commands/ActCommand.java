@@ -37,10 +37,6 @@ public class ActCommand {
 		runner.queueAct(new ActNamespace(c,a),s,l);
 	}
 	public void actTitle(ScenarioConductor runner,@Param("t")String t,@Param("st")String st) {
-		if(t==null)
-			t=runner.getCurrentAct().getTitle();
-		if(st==null)
-			st=runner.getCurrentAct().getSubtitle();
 		runner.getCurrentAct().setTitles(t, st);
 	}
 	public void startSystem(ScenarioConductor runner) {

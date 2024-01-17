@@ -40,7 +40,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * You should NOT store this object, always get it from {@link ScenarioConductor#getCurrentAct()}
  * */
 public class Act implements IScenarioConductor{
-	ParagraphData paragraph=new ParagraphData();
+	ParagraphData paragraph=new ParagraphData(this);
 	String label;
 	
 	ActNamespace name;
@@ -104,7 +104,7 @@ public class Act implements IScenarioConductor{
     	paragraph=new ParagraphData(nbt.getString("pname"),nbt.getInt("pn"));
     	ListNBT css=nbt.getList("callStack", Constants.NBT.TAG_COMPOUND);
     	for(INBT n:css) {
-    		callStack.add(new ExecuteStackElement((CompoundNBT) n));
+    		callStack.add(new ExecuteStackElement(this,(CompoundNBT) n));
     	}
     	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("quest"));
     	title=nbt.getString("title");
@@ -177,14 +177,35 @@ public class Act implements IScenarioConductor{
 	public String getSubtitle() {
 		return subtitle;
 	}
-	public void sendTitles() {
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(title,subtitle));
+	public void sendTitles(boolean updateT,boolean updateSt) {
+		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
 	public void setTitles(String t,String st) {
-		if(!title.equals(t)||!subtitle.equals(st)) {
+		boolean b1 = false,b2 = false;
+		if(t!=null&&!title.equals(t)) {
 			this.title=t;
-			this.subtitle=st;
-			sendTitles();
+			b1=true;
 		}
+		if(st!=null&&!subtitle.equals(st)) {
+			this.subtitle=st;
+			b2=true;
+		}
+		sendTitles(b1,b2);
+	}
+	public void setTitle(String title) {
+		if(title!=null&&!this.title.equals(title)) {
+			this.title=title;
+			sendTitles(true,false);
+		}
+	}
+	public void setSubtitle(String subtitle) {
+		if(subtitle!=null&&!this.subtitle.equals(subtitle)) {
+			this.subtitle=subtitle;
+			sendTitles(false,true);
+		}
+	}
+	@Override
+	public String getLang() {
+		return parent.getLang();
 	}
 }

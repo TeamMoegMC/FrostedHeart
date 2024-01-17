@@ -125,7 +125,7 @@ public class FHMain {
         if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
             pre = new FHRemote.FHPreRemote();
         System.out.println(local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
-        CreateCompat.init();
+        
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();
 
@@ -134,13 +134,7 @@ public class FHMain {
         mod.addListener(this::enqueueIMC);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
         mod.addListener(this::modification);
-        FHConfig.register();
-        TetraCompat.init();
-        FHProps.init();
-        FHItems.init();
-        FHBlocks.init();
-        FHMultiblocks.init();
-        FHContent.registerContainers();
+
         FHTileTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
         FHSounds.SOUNDS.register(mod);
@@ -148,13 +142,10 @@ public class FHMain {
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
-        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
-        TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
-        TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
-        TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
+
 //        FHStructures.STRUCTURE_DEFERRED_REGISTER.register(mod);
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
-        DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
+        
         JsonParser gs = new JsonParser();
         JsonObject jo = gs
                 .parse(new InputStreamReader(
@@ -167,9 +158,7 @@ public class FHMain {
                 || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
             throw new ChException.作弊者禁止进入();
         // remove primal winter blocks not to temper rankine world
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
+
     }
 
     @SuppressWarnings("unused")
@@ -209,6 +198,9 @@ public class FHMain {
                 }
             }
         }
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
+        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
     @SuppressWarnings("unused")
@@ -239,7 +231,15 @@ public class FHMain {
 
     @SuppressWarnings("unused")
     public void setup(final FMLCommonSetupEvent event) {
-
+    	CreateCompat.init();
+        FHConfig.register();
+        TetraCompat.init();
+        FHProps.init();
+        FHItems.init();
+        FHBlocks.init();
+        FHMultiblocks.init();
+        FHContent.registerContainers();
+        DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
         MinecraftForge.EVENT_BUS.addListener(this::serverStart);
         MinecraftForge.EVENT_BUS.addListener(this::serverSave);
         MinecraftForge.EVENT_BUS.addListener(this::serverStop);
@@ -248,6 +248,10 @@ public class FHMain {
         MinecraftForge.EVENT_BUS.addGenericListener(Fluid.class, this::missingMapping);
         MinecraftForge.EVENT_BUS.addGenericListener(Item.class, this::missingMappingR);
         MinecraftForge.EVENT_BUS.addGenericListener(Block.class, this::missingMappingB);
+        TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
+        TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
+        TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);
+        TeamEvent.OWNERSHIP_TRANSFERRED.register(FTBTeamsEvents::syncDataWhenTeamTransfer);
         if (ModList.get().isLoaded("projecte")) {
             MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
         } else

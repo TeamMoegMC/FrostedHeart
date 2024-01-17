@@ -26,16 +26,16 @@ import net.minecraft.nbt.CompoundNBT;
 
 public class ExecuteStackElement extends ScenarioTarget{
 	private final int nodeNum;
-	public ExecuteStackElement(String name, int nodeNum) {
-		super(name);
+	public ExecuteStackElement(IScenarioConductor par,String name, int nodeNum) {
+		super(par,name);
 		this.nodeNum = nodeNum;
 	}
 	public ExecuteStackElement(Scenario sc, int nodeNum) {
 		super(sc);
 		this.nodeNum = nodeNum;
 	}
-	public ExecuteStackElement(CompoundNBT n) {
-		this(n.getString("storage"),n.getInt("node"));
+	public ExecuteStackElement(IScenarioConductor par,CompoundNBT n) {
+		this(par,n.getString("storage"),n.getInt("node"));
 	}
 
 	public CompoundNBT save() {

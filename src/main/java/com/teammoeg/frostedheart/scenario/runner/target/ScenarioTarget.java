@@ -26,9 +26,11 @@ import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 public abstract class ScenarioTarget implements IScenarioTarget{
 	private final String name;
 	private transient Scenario sp;
-	public ScenarioTarget(String name) {
+	private transient IScenarioConductor cd;
+	public ScenarioTarget(IScenarioConductor cdr,String name) {
 		super();
 		this.name=name;
+		cd=cdr;
 	}
 	public ScenarioTarget(Scenario sc) {
 		super();
@@ -39,7 +41,7 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 		if(name==null)
 			return null;
 		if(sp==null)
-			sp=FHScenario.loadScenario(name);
+			sp=FHScenario.loadScenario(cd,name);
 		return sp;
 	}
 	@Override

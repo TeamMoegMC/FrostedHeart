@@ -21,24 +21,24 @@ public class ScenarioCommand {
 			Commands.argument("scenario", StringArgumentType.string()).then(
 				Commands.argument("label", StringArgumentType.string()).executes(ct->{
 					FHScenario.runners.get(ct.getSource().asPlayer()).jump(
-						new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
+						new ExecuteTarget(FHScenario.runners.get(ct.getSource().asPlayer()),StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
 					return Command.SINGLE_SUCCESS;
 				})
 				).executes(ct->{
 					FHScenario.runners.get(ct.getSource().asPlayer()).jump(
-						new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),null));
+						new ExecuteTarget(FHScenario.runners.get(ct.getSource().asPlayer()),StringArgumentType.getString(ct, "scenario"),null));
 					return Command.SINGLE_SUCCESS;
 				})
 			)).then(Commands.literal("queue").then(
 				Commands.argument("scenario", StringArgumentType.string()).then(
 					Commands.argument("label", StringArgumentType.string()).executes(ct->{
 						FHScenario.runners.get(ct.getSource().asPlayer()).queue(
-							new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
+							new ExecuteTarget(FHScenario.runners.get(ct.getSource().asPlayer()),StringArgumentType.getString(ct, "scenario"),StringArgumentType.getString(ct, "label")));
 						return Command.SINGLE_SUCCESS;
 					})
 					).executes(ct->{
 						FHScenario.runners.get(ct.getSource().asPlayer()).queue(
-							new ExecuteTarget(StringArgumentType.getString(ct, "scenario"),null));
+							new ExecuteTarget(FHScenario.runners.get(ct.getSource().asPlayer()),StringArgumentType.getString(ct, "scenario"),null));
 						return Command.SINGLE_SUCCESS;
 					})
 			)).then(Commands.literal("run").then(

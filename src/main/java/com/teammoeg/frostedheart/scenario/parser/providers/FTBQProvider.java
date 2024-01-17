@@ -42,19 +42,20 @@ public class FTBQProvider extends StringScenarioProvider {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(qid));
 		if(quest==null)return null;
 		StringBuilder b=new StringBuilder();
-		b.append("[WaitQuestStart q="+qid+" l=qstart][wt][label name=qstart]");
+		b.append("[WaitQuestStart q="+qid+" l=qstart][wt][label name=qstart]\n");
 		//b.append("@act c=").append(quest.getChapter().getCodeString()).append(" a=").append(quest.getCodeString()).append("\n");
-		b.append("@ActTitle t=\"").append(quest.title.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"")).append("\"");
+		/*b.append("@ActTitle t=\"").append(quest.title.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"")).append("\"");
 		if(quest.subtitle!=null&&!quest.subtitle.isEmpty()) {
 			b.append(" st=\"").append(quest.subtitle.replaceAll("\\\\", "\\\\\\\\").replaceAll("\"", "\\\"")).append("\"");
-		}
-		b.append("\n[p]\n");
+		}*/
+		//b.append("\n[p]\n");
 		for(String s:quest.description) {
 			b.append(s.replaceAll("\\[", "\\[").replaceAll("@", "\\@")).append("[p]\n");
 		}
 		int it=0;
 		for(Task tsk:quest.tasks) {
 			if(tsk instanceof CheckmarkTask) {
+				b.append("@actTitle st=\"").append(tsk.title==null||tsk.title.isEmpty()?"{message.frostedheart.complete_title}":tsk.title).append("\"\n");
 				b.append("[link l=tsk").append(it).append("]").append(tsk.title==null||tsk.title.isEmpty()?"{message.frostedheart.click_complete}":tsk.title).append("[endlink]")
 				.append("[wa]\n");
 			}else {

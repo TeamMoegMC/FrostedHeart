@@ -31,11 +31,14 @@ public class ClientScene implements IClientScene {
 		int line;
 		IReorderingProcessor text;
 
-		boolean addLimit() {
+		boolean addLimit(int amount,boolean toSpace) {
 			if (text instanceof SizedReorderingProcessor) {
 				SizedReorderingProcessor t = (SizedReorderingProcessor) text;
 				if (!t.isFinished) {
-					t.limit++;
+					if(toSpace)
+						t.limit=t.nextSpace();
+					else
+						t.limit+=amount;
 					return true;
 				}
 			}
@@ -70,7 +73,7 @@ public class ClientScene implements IClientScene {
 
 	public ClientScene() {
 		super();
-		setActHud("来到这个世界","完成对话。");
+		//setActHud("来到这个世界","完成对话。");
 	}
 
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
@@ -78,6 +81,8 @@ public class ClientScene implements IClientScene {
 	int page = 0;
 	int wait;
 	int ticksToContinue;
+	public int ticksActUpdate;
+	public int ticksActStUpdate;
 	boolean unFinished = false;
 	boolean hasText = false;
 	boolean canSkip = false;
@@ -94,14 +99,23 @@ public class ClientScene implements IClientScene {
 	}
 	@Override
 	public void showOneChar() {
-
+		int i=0;
+		for(TextInfo t:msgQueue) {
+			if(!t.hasText())break;
+			i++;
+		}
 		unFinished = false;
 		for (TextInfo t : msgQueue) {
-			if (t.addLimit()) {
+			i--;
+			if (t.addLimit(charsPerShow,showWordMode)) {
 				unFinished = true;
 				break;
 			}
 
+		}
+		if(i!=0) {
+			needUpdate=true;
+			System.out.println("Force update");
 		}
 		if (!unFinished && status==RunStatus.WAITCLIENT && ticksToContinue<=0) {
 			ticksToContinue = 40;
@@ -110,7 +124,7 @@ public class ClientScene implements IClientScene {
 			canSkip = true;
 		}
 	}
-
+	
 	@Override
 	public void reset() {
 		ticks = 0;
@@ -148,7 +162,22 @@ public class ClientScene implements IClientScene {
 			if (isFinished) return origin;
 			return this;
 		}
-
+		public int nextSpace() {
+			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
+			ReferenceValue<Integer> retTracker = new ReferenceValue<>();
+			origin.accept((i, s, c) -> {
+				if (c != 65533) {
+					renderTracker.setVal(renderTracker.getVal() + 1);
+				}
+				if (renderTracker.getVal() < limit) return true;
+				if(Character.isWhitespace(c)) {
+					retTracker.setVal(renderTracker.getVal());
+				}
+				return true;
+			});
+			retTracker.setIfAbsent(renderTracker::getVal);
+			return retTracker.getVal();
+		}
 		@Override
 		public boolean accept(ICharacterConsumer p_accept_1_) {
 			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
@@ -182,7 +211,9 @@ public class ClientScene implements IClientScene {
 	public boolean hasNext() {
 		return unFinished;
 	}
-
+	public int charsPerShow;
+	public int ticksBetweenShow;
+	public boolean showWordMode;
 	@Override
 	public boolean isTick() {
 		if (wait > 0) {
@@ -197,7 +228,7 @@ public class ClientScene implements IClientScene {
 			}
 		}
 		ticks++;
-		if (ticks >= 2) {
+		if (ticks >= ticksBetweenShow) {
 			ticks = 0;
 			return true;
 		}
@@ -243,9 +274,9 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void processClient(ITextComponent item, boolean isReline, boolean isNowait) {
 		if (getPreset() != null)
-			item = item.copyRaw().mergeStyle(getPreset());
+			item = item.deepCopy().mergeStyle(getPreset());
 		List<IReorderingProcessor> lines;
-		System.out.println(msgQueue.size() + ":" + shouldWrap);
+		//System.out.println(msgQueue.size() + ":" + shouldWrap);
 		if (!msgQueue.isEmpty() && !shouldWrap) {
 			TextInfo ti = msgQueue.remove(msgQueue.size() - 1);
 			int lastline = ti.line;
@@ -288,7 +319,7 @@ public class ClientScene implements IClientScene {
 		if (resetScene) {
 			cls();
 		}
-		System.out.println("Received " + isReline + " " + text + " " + resetScene);
+		//System.out.println("Received " + isReline + " " + text + " " + resetScene);
 		if (!text.isEmpty()) {
 			hasText = true;
 			ITextComponent item = ClientTextComponentUtils.parse(text);
@@ -313,6 +344,10 @@ public class ClientScene implements IClientScene {
 
 		w = MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
 		if (!mc.isGamePaused()) {
+			if(ticksActUpdate>0)
+				ticksActUpdate--;
+			if(ticksActStUpdate>0)
+				ticksActStUpdate--;
 			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
 			if (!msgQueue.isEmpty()) {
 				if (isTick())
@@ -334,21 +369,54 @@ public class ClientScene implements IClientScene {
 
 	@Override
 	public void setActHud(String title, String subtitle) {
-		if(!title.isEmpty())
-			this.currentActTitle=ClientTextComponentUtils.parse(title);//.deepCopy().mergeStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW).applyFormatting(TextFormatting.BOLD));
-		else
-			this.currentActTitle=null;
-		if(!subtitle.isEmpty())
-			this.currentActSubtitle=ClientTextComponentUtils.parse(subtitle);
-		else
-			this.currentActSubtitle=null;
+		if(title!=null) {
+			if(!title.isEmpty()) 
+				this.currentActTitle=ClientTextComponentUtils.parse(title);//.deepCopy().mergeStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW).applyFormatting(TextFormatting.BOLD));
+			else
+				this.currentActTitle=null;
+			ticksActUpdate=20;
+		}
+		if(subtitle!=null) {
+			if(!subtitle.isEmpty()) {
+				this.currentActSubtitle=ClientTextComponentUtils.parse(subtitle);
+			}else 
+				this.currentActSubtitle=null;
+			ticksActStUpdate=20;
+		}
+			
+		
+		
 	}
-
+	@Override
 	public Style getPreset() {
 		return preset;
 	}
-
+	@Override
 	public void setPreset(Style preset) {
 		this.preset = preset;
+	}
+	@Override
+	public int getCharsPerShow() {
+		return charsPerShow;
+	}
+	@Override
+	public void setCharsPerShow(int charsPerShow) {
+		this.charsPerShow = charsPerShow;
+	}
+	@Override
+	public int getTicksBetweenShow() {
+		return ticksBetweenShow;
+	}
+	@Override
+	public void setTicksBetweenShow(int ticksBetweenShow) {
+		this.ticksBetweenShow = ticksBetweenShow;
+	}
+	@Override
+	public boolean isShowWordMode() {
+		return showWordMode;
+	}
+	@Override
+	public void setShowWordMode(boolean showWordMode) {
+		this.showWordMode = showWordMode;
 	}
 }

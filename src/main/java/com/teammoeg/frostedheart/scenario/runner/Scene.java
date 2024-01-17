@@ -143,7 +143,7 @@ public class Scene {
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(tosend, true, true);
+			sendScene(tosend, true, false);
 		currentLiteral = null;
 	}
 	/**

@@ -7,4 +7,5 @@ public interface IScenarioConductor {
 	Scenario getScenario();
 	void setNodeNum(int num);
 	int getNodeNum();
+	String getLang();
 }

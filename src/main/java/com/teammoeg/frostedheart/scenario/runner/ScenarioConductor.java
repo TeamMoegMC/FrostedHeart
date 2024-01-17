@@ -63,7 +63,6 @@ public class ScenarioConductor implements IScenarioConductor{
 	private RunStatus status=RunStatus.STOPPED;
     //Text handling state machine
 	private transient LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
-
     private transient boolean isConducting;
     private transient int nextParagraph;
     //Sence control
@@ -104,6 +103,9 @@ public class ScenarioConductor implements IScenarioConductor{
     	//if(currentAct==null)
     	//currentAct=acts.get(empty);
     }
+    public String getLang() {
+    	return getPlayer().getLanguage();
+    }
     public void enableActs() {
     	if(!isActsEnabled) {
     		isActsEnabled=true;
@@ -122,7 +124,7 @@ public class ScenarioConductor implements IScenarioConductor{
     		}
     	}
     }
-    public ScenarioConductor(PlayerEntity player) {
+    public ScenarioConductor(ServerPlayerEntity player) {
 		super();
 		this.player = player.getUniqueID();
 		setCurrentAct(new Act(this,init));
@@ -130,7 +132,7 @@ public class ScenarioConductor implements IScenarioConductor{
 		acts.put(global, new Act(this,global));
 		
 	}
-    public ScenarioConductor(PlayerEntity player,CompoundNBT data) {
+    public ScenarioConductor(ServerPlayerEntity player,CompoundNBT data) {
 		super();
 		this.player = player.getUniqueID();
 		load(data);
@@ -138,7 +140,7 @@ public class ScenarioConductor implements IScenarioConductor{
 		acts.put(init, getCurrentAct());
 	}
 	public void call(String scenario, String label) {
-		call(new ExecuteTarget(scenario,label));
+		call(new ExecuteTarget(this,scenario,label));
 	}
 	public void callCommand(String name,Map<String,String> params) {
 		name=name.toLowerCase();
@@ -167,7 +169,7 @@ public class ScenarioConductor implements IScenarioConductor{
 		if(id==null||getScene().links.containsKey(id)) {
 			id=UUID.randomUUID().toString();
 		}
-		getScene().links.put(id, new ExecuteTarget(scenario,label));
+		getScene().links.put(id, new ExecuteTarget(this,scenario,label));
 		getScene().markChatboxDirty();
 		return id;
 	}
@@ -209,7 +211,7 @@ public class ScenarioConductor implements IScenarioConductor{
 	}
 	public void jump(String scenario,String label) {
 		if(scenario==null)
-			jump(new ExecuteTarget(scenario,label));
+			jump(new ExecuteTarget(this,scenario,label));
 		else
 			jump(new ExecuteTarget(getScenario(),label));
 	}
@@ -261,8 +263,8 @@ public class ScenarioConductor implements IScenarioConductor{
 		}
 	}
 	public void queue(IScenarioTarget questExecuteTarget) {
-		getCurrentAct().queue(questExecuteTarget);
-		
+		//getCurrentAct().queue(questExecuteTarget);
+		toExecute.add(questExecuteTarget);
 	}
     /*public void restoreParagraph(ParagraphData paragraph) {
 		Scenario sp=paragraph.getScenario();
@@ -356,13 +358,16 @@ public class ScenarioConductor implements IScenarioConductor{
 		}
     	for(IScenarioTrigger t:triggers) {
     		if(t.test(this)) {
-    			if(t.use())
+    			if(t.use()) {
     				this.queue(t);
+    				System.out.println("queued");
+    			}
     		}
     	}
+    	triggers.removeIf(t->!t.canUse());
     	for(Act a:acts.values())
 	    	a.getScene().tickTriggers(this, getCurrentAct()==a);
-    	triggers.removeIf(t->!t.canUse());
+    	
     	if(getStatus()==RunStatus.WAITTIMER) {
     		if(getScene().tickWait()) {
     			
@@ -371,9 +376,7 @@ public class ScenarioConductor implements IScenarioConductor{
     		}
     	}
     	//Execute Queued actions
-    	if(getStatus().shouldPause&&!toExecute.isEmpty()) {
-    		run();
-    	}
+    	runScheduled();
     }
 
 
@@ -438,9 +441,9 @@ public class ScenarioConductor implements IScenarioConductor{
 
 		if(label!=null) {
 			data.label=label;
-			new ExecuteTarget(scene,label).apply(data);
+			new ExecuteTarget(this,scene,label).apply(data);
 		}else {
-			new ExecuteTarget(scene,null).apply(data);
+			new ExecuteTarget(this,scene,null).apply(data);
 		}
 		data.paragraph.setScenario(data.getScenario());
 		data.paragraph.setParagraphNum(0);

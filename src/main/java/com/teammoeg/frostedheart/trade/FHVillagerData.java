@@ -67,7 +67,8 @@ public class FHVillagerData implements INamedContainerProvider {
     private static StatisticsManager getStats(PlayerEntity pe) {
         if (pe instanceof ServerPlayerEntity)
             return ((ServerPlayerEntity) pe).getStats();
-        return ((ClientPlayerEntity) pe).getStats();
+        return null;
+        //return pe.getStats();
     }
 
     public FHVillagerData(VillagerEntity parent) {
@@ -151,7 +152,9 @@ public class FHVillagerData implements INamedContainerProvider {
         if (!ResearchDataAPI.isResearchComplete(pe, "villager_language"))
             list.put(RelationModifier.UNKNOWN_LANGUAGE, -30);
         list.put(RelationModifier.CHARM, (int) ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_RELATION));
-        int killed = getStats(pe).getValue(Stats.ENTITY_KILLED, EntityType.VILLAGER);
+        int killed=0;
+        if(getStats(pe)!=null)
+        	killed = getStats(pe).getValue(Stats.ENTITY_KILLED, EntityType.VILLAGER);
         int kdc = (int) Math.min(killed, ResearchDataAPI.getVariantDouble(pe, ResearchVariant.VILLAGER_FORGIVENESS));
         list.put(RelationModifier.KILLED_HISTORY, (killed - kdc) * -5);
         if (parent.getGossip().getReputation(pe.getUniqueID(), e -> e == GossipType.MINOR_NEGATIVE) > 0)

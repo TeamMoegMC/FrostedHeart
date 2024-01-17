@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
+import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -399,14 +400,31 @@ public class FrostedHud {
         if (ClientScene.INSTANCE!=null) {
         	ITextComponent t=ClientScene.INSTANCE.getCurrentActTitle();
         	ITextComponent st=ClientScene.INSTANCE.getCurrentActSubtitle();
-        	int deflen=60;
-            if(t!=null) { 
-            	deflen=Math.max(deflen, mc.fontRenderer.getStringWidth(t.getString())-30);
-            	mc.fontRenderer.drawTextWithShadow(stack, t, BasePos.act_title.getX(), BasePos.act_title.getY(), 0xfeff06);
-            }
-            FHGuiHelper.drawLine(stack, Color4I.rgb(0xfeff06),BasePos.act_split.getX(),BasePos.act_split.getY(), x, BasePos.act_split.getY()+deflen);
-            if(st!=null)
-            	mc.fontRenderer.drawTextWithShadow(stack, st, BasePos.act_subtitle.getX(), BasePos.act_subtitle.getY(), 0xffffff);
+        	if(t!=null||st!=null) {
+        		int deflen=60;
+	        	
+	            if(t!=null) { 
+	            	int len=mc.fontRenderer.getStringWidth(t.getString());
+	            	deflen=Math.max(deflen, len-30);
+	            	if(ClientScene.INSTANCE.ticksActUpdate>0)
+		        		GuiHelper.pushScissor(mc.getMainWindow(), BasePos.act_title.getX(), BasePos.act_title.getY(), (int) (len*(1-ClientScene.INSTANCE.ticksActUpdate/20f)),40);
+	            	mc.fontRenderer.drawTextWithShadow(stack, t, BasePos.act_title.getX(), BasePos.act_title.getY(), 0xfeff06);
+	            	if(ClientScene.INSTANCE.ticksActUpdate>0)
+	            		GuiHelper.popScissor(mc.getMainWindow());
+	            }
+	            
+	            FHGuiHelper.drawLine(stack, Color4I.rgba(255, 255, 6, 255),BasePos.act_split.getX(),BasePos.act_split.getY(), BasePos.act_split.getX()+deflen, BasePos.act_split.getY(),1000);
+	            
+	            if(st!=null) {
+	            	int len=mc.fontRenderer.getStringWidth(st.getString());
+	            	if(ClientScene.INSTANCE.ticksActStUpdate>0)
+		        		GuiHelper.pushScissor(mc.getMainWindow(), BasePos.act_title.getX(), BasePos.act_title.getY(), (int) (len*(1-ClientScene.INSTANCE.ticksActStUpdate/20f)),40);
+	            	mc.fontRenderer.drawTextWithShadow(stack, st, BasePos.act_subtitle.getX(), BasePos.act_subtitle.getY(), 0xffffff);
+	            	if(ClientScene.INSTANCE.ticksActStUpdate>0)
+		            	GuiHelper.popScissor(mc.getMainWindow());
+	            }
+	            
+        	}
             
         }
         RenderSystem.disableBlend();

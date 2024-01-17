@@ -20,13 +20,14 @@
 package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class ExecuteTarget extends ScenarioTarget{
 
 	private final String label;
-	public ExecuteTarget(String name, String label) {
-		super(name);
+	public ExecuteTarget(IScenarioConductor par,String name, String label) {
+		super(par,name);
 
 		this.label = label;
 	}

@@ -30,4 +30,18 @@ public interface IClientScene {
 
 	void setPreset(Style style);
 
+	Style getPreset();
+
+	boolean isShowWordMode();
+
+	void setShowWordMode(boolean showWordMode);
+
+	void setTicksBetweenShow(int ticksBetweenShow);
+
+	int getTicksBetweenShow();
+
+	void setCharsPerShow(int charsPerShow);
+
+	int getCharsPerShow();
+
 }

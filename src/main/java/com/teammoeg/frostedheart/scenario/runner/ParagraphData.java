@@ -8,7 +8,8 @@ public class ParagraphData implements IScenarioTarget{
 	private String name;
 	private transient Scenario sp;
 	private int paragraphNum;
-	public ParagraphData() {
+	private transient IScenarioConductor cd;
+	public ParagraphData(IScenarioConductor cd) {
 		super();
 	}
 	public ParagraphData(String name, int paragraphNum) {
@@ -25,7 +26,7 @@ public class ParagraphData implements IScenarioTarget{
 	}
 	public Scenario getScenario() {
 		if(sp==null)
-			sp=FHScenario.loadScenario(name);
+			sp=FHScenario.loadScenario(cd,name);
 		return sp;
 	}
 

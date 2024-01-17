@@ -45,6 +45,7 @@ import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.scenario.parser.providers.ScenarioProvider;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -62,7 +63,7 @@ public class FHScenario {
 	public static void startFor(ServerPlayerEntity pe) {
 		ScenarioConductor sr = runners.computeIfAbsent(pe, FHScenario::load);
 
-		sr.run(loadScenario("init"));
+		sr.run(loadScenario(sr,"init"));
 	}
 
 	public static final ScenarioParser parser = new ScenarioParser();
@@ -72,7 +73,7 @@ public class FHScenario {
 		scenarioProviders.add(p);
 	}
 
-	public static Scenario loadScenario(String name) {
+	public static Scenario loadScenario(IScenarioConductor caller,String name) {
 		System.out.println("trying to load scenario "+name);
 		String[] paths=name.split("\\?");
 		String[] args=new String[0];
@@ -91,7 +92,7 @@ public class FHScenario {
 		try {
 			for (ScenarioProvider i : scenarioProviders) {
 				try {
-					Scenario s = i.apply(name,params);
+					Scenario s = i.apply(paths[0],params);
 					if (s != null)
 						return s;
 				}catch(Exception e) {
@@ -101,7 +102,12 @@ public class FHScenario {
 				}
 				
 			}
-			return parser.parseFile(name, new File(scenarioPath, paths[0] + ".ks"));
+			File f=new File(scenarioPath, caller.getLang()+"/"+paths[0] + ".ks");
+			if(!f.exists()) {
+				f=new File(scenarioPath, paths[0] + ".ks");;
+			}
+			if(f.exists())
+				return parser.parseFile(name, f);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -8,4 +8,7 @@ public interface IClientControlCommand {
 
 	void showTitle(IClientScene runner, String t, String st, Integer i1, Integer i2, Integer i3);
 
+
+	void speed(IClientScene runner, Double value, Integer s);
+
 }

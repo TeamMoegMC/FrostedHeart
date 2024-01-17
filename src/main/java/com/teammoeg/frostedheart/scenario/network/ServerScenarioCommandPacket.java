@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.util.SerializeUtil;
 
@@ -53,7 +54,7 @@ public class ServerScenarioCommandPacket {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            FHScenarioClient.callCommand(commandName, null, params);
+            FHScenarioClient.callCommand(commandName, ClientScene.INSTANCE, params);
         });
         context.get().setPacketHandled(true);
     }

@@ -46,17 +46,34 @@ public class ClientControl implements IClientControlCommand {
 	}
 	@Override
 	public void showTask(IClientScene runner,@Param("q")String q,@Param("t")int t) {
+		System.out.println("showtask");
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
+		ITextComponent itt;
 		if(tsk instanceof ItemTask) {
+			itt=GuiUtils.translateMessage("item_task",tsk.getTitle());
 			
-			runner.processClient(GuiUtils.translateMessage("item_task",tsk.getTitle()), true, true);
 		}else if(tsk instanceof KillTask) {
-			runner.processClient(GuiUtils.translateMessage("kill_task",tsk.getTitle()), true, true);
+			itt=GuiUtils.translateMessage("kill_task",tsk.getTitle());
 		}else {
-			runner.processClient(GuiUtils.translateMessage("other_task",tsk.getTitle()), true, true);
+			itt=GuiUtils.translateMessage("other_task",tsk.getTitle());
 		}
+		runner.cls();
+		runner.processClient(ClientTextComponentUtils.parse(itt.getString()), true, false);
+		runner.setActHud(null, tsk.getTitle().getString());
+	}
+	@Override
+	public void speed(IClientScene runner,@Param("v")Double value,@Param("space")Integer s) {
+		if(value!=null) {
+			if(value<=2) {
+				runner.setTicksBetweenShow((int) (2/value));
+			}else {
+				runner.setTicksBetweenShow(1);
+				runner.setCharsPerShow((int) (value/2));
+			}
+		}
+		
 	}
 	@Override
 	public void showTitle(IClientScene runner,@Param("t")String t,@Param("st")String st,@Param("in")Integer i1,@Param("show")Integer i2,@Param("out")Integer i3) {
