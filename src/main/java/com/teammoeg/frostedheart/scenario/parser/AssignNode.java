@@ -44,7 +44,7 @@ public class AssignNode implements Node {
 
     @Override
     public String getText() {
-        return "@eval exp=\"" + exp.replaceAll("\"", "\\\"") + "\" str=\"" + str.replaceAll("\"", "\\\"") + "\"";
+        return "@eval exp=\""+exp+"\" str=\""+str + "\", pat=\"" + pat + "\", pat2=\"" + pat2 + "\"";
     }
 
     @Override

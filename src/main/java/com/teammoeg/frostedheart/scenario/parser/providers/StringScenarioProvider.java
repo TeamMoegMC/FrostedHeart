@@ -11,10 +11,10 @@ public abstract class StringScenarioProvider implements ScenarioProvider {
 	}
 	public abstract String get(String t, Map<String, String> u);
 	@Override
-	public Scenario apply(String t, Map<String, String> u) {
+	public Scenario apply(String t, Map<String, String> u,String o) {
 		String ss=get(t,u);
 		if(ss==null)return null;
-		return FHScenario.parser.parseString(t,ss);
+		return FHScenario.parser.parseString(o,ss);
 	}
 
 }

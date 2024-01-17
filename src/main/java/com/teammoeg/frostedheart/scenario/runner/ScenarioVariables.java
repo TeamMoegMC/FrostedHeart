@@ -74,9 +74,10 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
 	public Double evalPathDouble(String path) {
         String[] paths = path.split("\\.");
         CompoundNBT nbt = getExecutionData();
-        for (int i = 0; i < paths.length - 1; i++) {
-            nbt = nbt.getCompound(paths[i]);
-        }
+        if(path.length()>1)
+	        for (int i = 0; i < paths.length - 1; i++) {
+	            nbt = nbt.getCompound(paths[i]);
+	        }
         return nbt.getDouble(paths[paths.length - 1]);
     }
 

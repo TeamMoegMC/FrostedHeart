@@ -59,8 +59,10 @@ public class IfNode implements Node {
 
     @Override
     public void run(ScenarioConductor runner) {
-
-        if (runner.eval(exp) <= 0) {
+    	double val=runner.eval(exp);
+    	//System.out.println(val+"/"+elseBlock);
+        if (val <= 0) {
+        	//System.out.println("else");
         	for(Entry<String, Integer> ent:elsifs.entrySet()) {
         		if(runner.eval(ent.getKey())>0) {
         			runner.gotoNode(ent.getValue());

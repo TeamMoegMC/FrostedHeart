@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
@@ -92,7 +93,8 @@ public class ScenarioConductor implements IScenarioConductor{
     	return data;
     }
     public void load(CompoundNBT data) {
-    	varData.snapshot=data.getCompound("vars");
+    	varData.extraData=data.getCompound("vars");
+    	varData.snapshot=varData.extraData;
     	ListNBT lacts=data.getList("acts", Constants.NBT.TAG_COMPOUND);
     	for(INBT v:lacts) {
     		Act i=new Act(this,(CompoundNBT) v);
@@ -180,7 +182,9 @@ public class ScenarioConductor implements IScenarioConductor{
 		jump(getCallStack().pollLast());
 	}
     public double eval(String exp) {
-        return Evaluator.eval(exp).eval(getVaribles());
+        com.teammoeg.frostedheart.util.evaluator.Node n= Evaluator.eval(exp);
+        //System.out.println(n);
+        return n.eval(getVaribles());
     }
 
 	public int getNodeNum() {
@@ -282,6 +286,7 @@ public class ScenarioConductor implements IScenarioConductor{
     	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
     		Node node=getScenario().pieces.get(nodeNum++);
     		try {
+    			//System.out.println(node.getText());
     			getScene().appendLiteral(node.getLiteral(this));
     			node.run(this);
     		}catch(Throwable t) {
@@ -360,7 +365,6 @@ public class ScenarioConductor implements IScenarioConductor{
     		if(t.test(this)) {
     			if(t.use()) {
     				this.queue(t);
-    				System.out.println("queued");
     			}
     		}
     	}
@@ -407,6 +411,7 @@ public class ScenarioConductor implements IScenarioConductor{
 			this.sp=data.getScenario();
 			this.nodeNum=data.getNodeNum();
 			this.status=data.getStatus();
+			data.sendTitles(true, true);
 			if(getStatus().shouldRun) {
 				getScene().forcedClear();
 				run();
@@ -418,35 +423,44 @@ public class ScenarioConductor implements IScenarioConductor{
 	}
 	public void enterAct(ActNamespace quest) {
 		if(quest.equals(getCurrentAct().name))return;
+		Act old=getCurrentAct();
 		Act data=acts.get(quest);
 		pauseAct();
 		if(data!=null) {
 			this.setCurrentAct(data);
+			data.paragraph.setScenario(this.getScenario());
+			data.paragraph.setParagraphNum(old.paragraph.getParagraphNum());
 		}else {
 			data=new Act(this,quest);
 			acts.put(quest, data);
+			data.paragraph.setScenario(this.getScenario());
+			data.paragraph.setParagraphNum(old.paragraph.getParagraphNum());
 			this.setCurrentAct(data);
 		}
 	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
 		Act data=getCurrentAct();
 		if(!quest.equals(getCurrentAct().name)) {
-			acts.get(quest);
-			pauseAct();
+			data=acts.get(quest);
 			if(data==null){
 				data=new Act(this,quest);
 				acts.put(quest, data);
 			}
 		}
-
+		if(scene==null)
+			scene=getScenario().name;
+		ExecuteTarget target;
 		if(label!=null) {
 			data.label=label;
-			new ExecuteTarget(this,scene,label).apply(data);
+			target=new ExecuteTarget(this,scene,label);
 		}else {
-			new ExecuteTarget(this,scene,null).apply(data);
+			target=new ExecuteTarget(this,scene,null);
 		}
-		data.paragraph.setScenario(data.getScenario());
+		target.apply(data);
+		System.out.println(target);
+		data.paragraph.setScenario(target.getScenario());
 		data.paragraph.setParagraphNum(0);
+		queue(new ActTarget(quest,target));
 	}
 	public ExecuteStackElement getCurrentPosition() {
     	return new ExecuteStackElement(sp,nodeNum);

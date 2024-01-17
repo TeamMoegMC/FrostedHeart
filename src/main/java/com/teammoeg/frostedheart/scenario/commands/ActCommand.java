@@ -32,7 +32,7 @@ public class ActCommand {
 	public void endAct(ScenarioConductor runner) {
 		runner.endAct();
 	}
-	public void queueAct(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
+	public void startAct(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
 		
 		runner.queueAct(new ActNamespace(c,a),s,l);
 	}

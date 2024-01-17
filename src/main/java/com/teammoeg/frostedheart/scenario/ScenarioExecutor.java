@@ -133,7 +133,6 @@ public class ScenarioExecutor<T> {
                 method.invoke(instance, pars);
             } catch (IllegalArgumentException | IllegalAccessException e) {
             	e.printStackTrace();
-            	System.out.println(e.getMessage());
                 throw new ScenarioExecutionException(e);
             } catch (InvocationTargetException e) {
                 throw new ScenarioExecutionException(e.getTargetException());

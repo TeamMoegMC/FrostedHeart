@@ -11,14 +11,15 @@ public class ParagraphData implements IScenarioTarget{
 	private transient IScenarioConductor cd;
 	public ParagraphData(IScenarioConductor cd) {
 		super();
+		this.cd=cd;
 	}
-	public ParagraphData(String name, int paragraphNum) {
-		super();
+	public ParagraphData(IScenarioConductor cd,String name, int paragraphNum) {
+		this(cd);
 		this.name = name;
 		this.paragraphNum = paragraphNum;
 	}
 	public ParagraphData copy() {
-		return new ParagraphData(name,paragraphNum);
+		return new ParagraphData(cd,name,paragraphNum);
 	}
 	public void setScenario(Scenario sc) {
 		this.sp=sc;

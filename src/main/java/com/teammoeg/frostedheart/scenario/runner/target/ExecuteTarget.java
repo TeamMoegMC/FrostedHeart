@@ -37,16 +37,21 @@ public class ExecuteTarget extends ScenarioTarget{
 		this.label = label;
 	}
 	@Override
-	public void accept(ScenarioConductor runner) {
-		super.accept(runner);
+	public void apply(IScenarioConductor runner) {
+		super.apply(runner);
 		if(label!=null) {
 			Integer ps=runner.getScenario().labels.get(label);
 			if(ps!=null) {
-				runner.gotoNode(ps);
+				runner.setNodeNum(ps);
 			}else {
 				System.out.println("Invalid label "+label );
 			}
 		}
 	}
+	@Override
+	public String toString() {
+		return "ExecuteTarget [label=" + label + ", getName()=" + getName() + "]";
+	}
+
 	
 }

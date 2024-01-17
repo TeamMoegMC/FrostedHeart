@@ -36,9 +36,9 @@ public class Scenario {
         this.pieces = pieces;
         this.paragraphs = paragraphs;
         this.labels = labels;
-        for(Node n:pieces) {
+        /*for(Node n:pieces) {
         	System.out.println(n.getText());
-        }
+        }*/
     }
 
     public Scenario(String name) {

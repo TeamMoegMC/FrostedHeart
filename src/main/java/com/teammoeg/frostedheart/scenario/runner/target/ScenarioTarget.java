@@ -37,7 +37,7 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 		this.sp=sc;
 		this.name=sc.name;
 	}
-	protected Scenario getScenario() {
+	public Scenario getScenario() {
 		if(name==null)
 			return null;
 		if(sp==null)
@@ -53,6 +53,10 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 	}
 	protected String getName() {
 		return name;
+	}
+	@Override
+	public String toString() {
+		return "[name=" + name + "]";
 	}
 
 }

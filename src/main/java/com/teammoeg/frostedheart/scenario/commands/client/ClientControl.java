@@ -46,7 +46,6 @@ public class ClientControl implements IClientControlCommand {
 	}
 	@Override
 	public void showTask(IClientScene runner,@Param("q")String q,@Param("t")int t) {
-		System.out.println("showtask");
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);

@@ -115,7 +115,7 @@ public class ClientScene implements IClientScene {
 		}
 		if(i!=0) {
 			needUpdate=true;
-			System.out.println("Force update");
+			//System.out.println("Force update");
 		}
 		if (!unFinished && status==RunStatus.WAITCLIENT && ticksToContinue<=0) {
 			ticksToContinue = 40;

@@ -79,7 +79,8 @@ public class Act implements IScenarioConductor{
     }
     public CompoundNBT save() {
     	CompoundNBT nbt=new CompoundNBT();
-    	nbt.putString("pname", paragraph.getName());
+    	if(paragraph.getName()!=null)
+    		nbt.putString("pname", paragraph.getName());
     	nbt.putInt("pn", paragraph.getParagraphNum());
     	ListNBT css=new ListNBT();
     	for(ExecuteStackElement cs:callStack) {
@@ -101,12 +102,15 @@ public class Act implements IScenarioConductor{
     	return nbt;
     }
     public void load(CompoundNBT nbt) {
-    	paragraph=new ParagraphData(nbt.getString("pname"),nbt.getInt("pn"));
+    	String pn=null;
+    	if(nbt.contains("pname"))
+    		pn=nbt.getString("pname");
+    	paragraph=new ParagraphData(this,pn,nbt.getInt("pn"));
     	ListNBT css=nbt.getList("callStack", Constants.NBT.TAG_COMPOUND);
     	for(INBT n:css) {
     		callStack.add(new ExecuteStackElement(this,(CompoundNBT) n));
     	}
-    	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("quest"));
+    	name=new ActNamespace(nbt.getString("chapter"),nbt.getString("act"));
     	title=nbt.getString("title");
     	if(nbt.contains("label"))
     		label=nbt.getString("label");
