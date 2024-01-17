@@ -310,7 +310,8 @@ public class ScenarioParser {
                 if (!hasQuote) {
                     hasQuote = true;
                 } else {
-                	reader.next();
+                	if(reader.hasNext())
+                		reader.next();
                     break;
                 }
                 continue;

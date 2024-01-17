@@ -61,10 +61,14 @@ public class ClientControl implements IClientControlCommand {
 	@Override
 	public void showTitle(IClientScene runner,@Param("t")String t,@Param("st")String st,@Param("in")Integer i1,@Param("show")Integer i2,@Param("out")Integer i3) {
 		ITextComponent t1=null,t2=null;
-		if(t!=null)
+		if(t!=null) {
 			t1=ClientTextComponentUtils.parse(t);
-		if(st!=null)
+			ClientUtils.mc().ingameGUI.renderTitles(t1,null,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+		}
+		if(st!=null) {
 			t2=ClientTextComponentUtils.parse(st);
-		ClientUtils.mc().ingameGUI.renderTitles(t1,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+			ClientUtils.mc().ingameGUI.renderTitles(null,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
+		}
+		
 	}
 }
