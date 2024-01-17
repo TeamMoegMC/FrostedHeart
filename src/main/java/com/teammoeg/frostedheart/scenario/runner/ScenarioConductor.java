@@ -276,28 +276,30 @@ public class ScenarioConductor implements IScenarioConductor{
     private void runCode() {
     	nextParagraph=-1;
     	setStatus((RunStatus.RUNNING));
-    	while(isRunning()) {
-	    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
-	    		Node node=getScenario().pieces.get(nodeNum++);
-	    		try {
-	    			getScene().appendLiteral(node.getLiteral(this));
-	    			node.run(this);
-	    		}catch(Throwable t) {
-	    			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
-	    			setStatus((RunStatus.STOPPED));
-		    		getScene().clear();
-		    		sendCachedSence();
-	    			break;
-	    		}
-		    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
-		    		
-		    		setStatus((RunStatus.STOPPED));
-		    		getScene().clear();
-		    		sendCachedSence();
-		    		return;
-	    		}
-	    	}
-		}
+    	
+    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
+    		Node node=getScenario().pieces.get(nodeNum++);
+    		try {
+    			getScene().appendLiteral(node.getLiteral(this));
+    			node.run(this);
+    		}catch(Throwable t) {
+    			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
+    			setStatus((RunStatus.STOPPED));
+	    		getScene().clear();
+	    		sendCachedSence();
+    			break;
+    		}
+	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
+	    		
+	    		setStatus((RunStatus.STOPPED));
+	    		getScene().clear();
+	    		sendCachedSence();
+	    		return;
+    		}
+    	}
+    	if(isRunning())
+    		setStatus((RunStatus.STOPPED));
+		
     }
     private void runScheduled() {
     	if(getStatus().shouldPause) {
@@ -319,8 +321,10 @@ public class ScenarioConductor implements IScenarioConductor{
     	if(isConducting)return;
     	try {
     		isConducting=true;
-    		runCode();
-    		runScheduled();
+    		while(isRunning()){
+	    		runCode();
+	    		runScheduled();
+    		}
     	}finally {
     		isConducting=false;
     	}
