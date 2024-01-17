@@ -34,23 +34,23 @@ import net.minecraft.util.text.Style;
 import net.minecraft.util.text.event.ClickEvent;
 
 public class ClientControl {
-	public void link(ScenarioConductor runner,@Param("lid")String linkId) {
-		ClientScene.preset=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true);
+	public void link(ClientScene runner,@Param("lid")String linkId) {
+		runner.preset=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true);
 	}
-	public void endlink(ScenarioConductor runner) {
-		ClientScene.preset=null;
+	public void endlink(ClientScene runner) {
+		runner.preset=null;
 	}
-	public void showTask(ScenarioConductor runner,@Param("q")String q,@Param("t")int t) {
+	public void showTask(ClientScene runner,@Param("q")String q,@Param("t")int t) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
 		if(tsk instanceof ItemTask) {
 			
-			ClientScene.processClient(GuiUtils.translateMessage("item_task",tsk.getTitle()), true, true);
+			runner.processClient(GuiUtils.translateMessage("item_task",tsk.getTitle()), true, true);
 		}else if(tsk instanceof KillTask) {
-			ClientScene.processClient(GuiUtils.translateMessage("kill_task",tsk.getTitle()), true, true);
+			runner.processClient(GuiUtils.translateMessage("kill_task",tsk.getTitle()), true, true);
 		}else {
-			ClientScene.processClient(GuiUtils.translateMessage("other_task",tsk.getTitle()), true, true);
+			runner.processClient(GuiUtils.translateMessage("other_task",tsk.getTitle()), true, true);
 		}
 	}
 }

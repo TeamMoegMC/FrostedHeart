@@ -24,12 +24,11 @@ import java.util.Map;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.client.ClientControl;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 public class FHScenarioClient {
-    static ScenarioExecutor client = new ScenarioExecutor();
+    static ScenarioExecutor<ClientScene> client = new ScenarioExecutor<>(ClientScene.class);
     public static boolean sendInitializePacket=false;
-    public static void callCommand(String name, ScenarioConductor runner, Map<String, String> params) {
+    public static void callCommand(String name, ClientScene runner, Map<String, String> params) {
         client.callCommand(name, runner, params);
     }
 
@@ -37,7 +36,7 @@ public class FHScenarioClient {
         client.register(clazz);
     }
 
-    public static void registerCommand(String cmdName, ScenarioMethod method) {
+    public static void registerCommand(String cmdName, ScenarioMethod<ClientScene> method) {
         client.registerCommand(cmdName, method);
     }
     static {

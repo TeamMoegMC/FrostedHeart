@@ -164,4 +164,19 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     public void set(String key, double v) {
     	setPathNumber(key, v);
     }
+	public void remove(String path) {
+        String[] paths = path.split("\\.");
+        CompoundNBT nbt = getExecutionData();
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (nbt.contains(paths[i], 10)) {
+                nbt = nbt.getCompound(paths[i]);
+            } else if (!nbt.contains(paths[i])) {
+                CompoundNBT cnbt = new CompoundNBT();
+                nbt.put(paths[i], cnbt);
+                nbt = cnbt;
+            } else
+                throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
+        }
+        nbt.remove(paths[paths.length - 1]);
+	}
 }

@@ -42,7 +42,7 @@ public class ControlCommands {
 
 	}
 	public void endmacro(ScenarioConductor runner) {
-		runner.getExecutionData().remove("mp");
+		runner.getVaribles().remove("mp");
 		runner.popCallStack();
 	}
 

@@ -38,7 +38,7 @@ import com.teammoeg.frostedheart.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.scenario.commands.ControlCommands;
 import com.teammoeg.frostedheart.scenario.commands.FTBQCommands;
 import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
-import com.teammoeg.frostedheart.scenario.commands.client.VariableCommand;
+import com.teammoeg.frostedheart.scenario.commands.VariableCommand;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
@@ -54,7 +54,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class FHScenario {
-	public static ScenarioExecutor server = new ScenarioExecutor();
+	public static ScenarioExecutor<ScenarioConductor> server = new ScenarioExecutor<>(ScenarioConductor.class);
 	public static Map<ServerPlayerEntity, ScenarioConductor> runners = new HashMap<>();
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
 
@@ -117,7 +117,7 @@ public class FHScenario {
 
 	public static void callClientCommand(String name, ScenarioConductor runner, Map<String, String> params) {
 		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
-				new ServerScenarioCommandPacket(name.toLowerCase(), params, runner.getExecutionData()));
+				new ServerScenarioCommandPacket(name.toLowerCase(), params));
 	}
 
 	public static void callClientCommand(String name, ScenarioConductor runner, String... params) {
@@ -127,7 +127,7 @@ public class FHScenario {
 		}
 
 		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
-				new ServerScenarioCommandPacket(name.toLowerCase(), data, runner.getExecutionData()));
+				new ServerScenarioCommandPacket(name.toLowerCase(), data));
 	}
 
 	public static void registerClientDelegate(Class<?> cls) {
@@ -142,7 +142,7 @@ public class FHScenario {
 
 	}
 
-	public static void registerCommand(String cmdName, ScenarioMethod method) {
+	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioConductor> method) {
 		server.registerCommand(cmdName, method);
 	}
 

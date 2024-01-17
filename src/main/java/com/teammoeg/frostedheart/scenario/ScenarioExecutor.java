@@ -35,8 +35,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
-public class ScenarioExecutor {
-    private static class MethodInfo implements ScenarioMethod {
+public class ScenarioExecutor<T> {
+    private static class MethodInfo<T> implements ScenarioMethod<T> {
         private static class ParamInfo {
             String[] paramName;
             Function<String, Object> convertion;
@@ -109,7 +109,7 @@ public class ScenarioExecutor {
 		}
 
 		@Override
-        public void execute(ScenarioConductor runner, Map<String, String> param) {
+        public void execute(T runner, Map<String, String> param) {
             Object[] pars = new Object[params.length + 1];
             for (int i = 0; i < params.length; i++) {
             	String par=null;
@@ -141,20 +141,25 @@ public class ScenarioExecutor {
         }
     }
     @FunctionalInterface
-    public interface ScenarioMethod {
-        void execute(ScenarioConductor runner, Map<String, String> param);
+    public interface ScenarioMethod<T> {
+        void execute(T runner, Map<String, String> param);
     }
     static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
-    private static Function<String, Object> string = s -> s;
+    Class<T> objcls;
+    public ScenarioExecutor(Class<T> objcls) {
+		super();
+		this.objcls = objcls;
+	}
+	private static Function<String, Object> string = s -> s;
     private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
     private static Function<String, Object> integer = s -> ((Double) Double.parseDouble(s)).intValue();
 
     private static Function<String, Object> fnumber = s -> ((Double) Double.parseDouble(s)).floatValue();
 
-    Map<String, ScenarioMethod> commands = new HashMap<>();
+    Map<String, ScenarioMethod<T>> commands = new HashMap<>();
 
-    public void callCommand(String name, ScenarioConductor runner, Map<String, String> params) {
-        ScenarioMethod command = commands.get(name);
+    public void callCommand(String name, T runner, Map<String, String> params) {
+        ScenarioMethod<T> command = commands.get(name);
         if (command == null) {
             throw new ScenarioExecutionException("Can not find command " + name);
         }
@@ -175,7 +180,7 @@ public class ScenarioExecutor {
 
     }
 
-    public void registerCommand(String cmdName, ScenarioMethod method) {
+    public void registerCommand(String cmdName, ScenarioMethod<T> method) {
         commands.put(cmdName.toLowerCase(), method);
     }
 
@@ -183,8 +188,8 @@ public class ScenarioExecutor {
         for (Method met : clazz.getClass().getMethods()) {
             if (Modifier.isPublic(met.getModifiers())) {
                 try {
-                	if(met.getParameterCount()>0&&met.getParameters()[0].getType()==ScenarioConductor.class)
-                		registerCommand(met.getName(), new MethodInfo(Modifier.isStatic(met.getModifiers()) ? null :clazz,  met));
+                	if(met.getParameterCount()>0&&met.getParameters()[0].getType().isAssignableFrom(objcls))
+                		registerCommand(met.getName(), new MethodInfo<T>(Modifier.isStatic(met.getModifiers()) ? null :clazz,  met));
                 } catch (ScenarioExecutionException ex) {
                     ex.printStackTrace();
                     LOGGER.warn(ex.getMessage());

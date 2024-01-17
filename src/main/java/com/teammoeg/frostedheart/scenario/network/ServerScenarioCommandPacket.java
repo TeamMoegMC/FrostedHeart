@@ -33,25 +33,21 @@ import net.minecraftforge.fml.network.NetworkEvent;
 public class ServerScenarioCommandPacket {
     private String commandName;
     Map<String, String> params;
-    CompoundNBT data;
 
     public ServerScenarioCommandPacket(PacketBuffer buffer) {
         commandName = buffer.readString();
         params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readString);
-        data = buffer.readCompoundTag();
     }
 
-    public ServerScenarioCommandPacket(String commandName, Map<String, String> params, CompoundNBT data) {
+    public ServerScenarioCommandPacket(String commandName, Map<String, String> params) {
         super();
         this.commandName = commandName;
         this.params = params;
-        this.data = data;
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeString(commandName);
         SerializeUtil.writeStringMap(buffer, params, (v, p) -> p.writeString(v));
-        buffer.writeCompoundTag(data);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {

@@ -123,8 +123,8 @@ public class Act implements IScenarioConductor{
 		saveActState();
 		paragraph.setParagraphNum(pn);
 		paragraph.setScenario(sp);
-		getScene().waitClient();
-		getScene().clear();
+		
+		getScene().paragraph();
     }
 	public Scene getScene() {
 		return scene;

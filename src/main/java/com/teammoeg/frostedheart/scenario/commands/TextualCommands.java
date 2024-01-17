@@ -36,9 +36,8 @@ public class TextualCommands {
 		runner.clearLink();
 	}
 	public void delay(ScenarioConductor runner,@Param("t")int t) {
-		//runner.waitClient();
-		runner.sendCachedSence();
 		runner.getScene().addWait(t);
+		runner.sendCachedSence();
 	}
 	public void er(ScenarioConductor runner) {
 		runner.getScene().clear();
@@ -49,16 +48,16 @@ public class TextualCommands {
 		runner.sendCachedSence();
 	}
 	public void wt(ScenarioConductor runner) {
-		runner.sendCachedSence();
 		runner.setStatus((RunStatus.WAITTRIGGER));
+		runner.sendCachedSence();
 	}
 	public void wa(ScenarioConductor runner) {
-		runner.sendCachedSence();
 		runner.setStatus((RunStatus.WAITACTION));
+		runner.sendCachedSence();
 	}
 	public void s(ScenarioConductor runner) {
-		runner.sendCachedSence();
 		runner.stop();
+		runner.getScene().clear();
 	}
 
 }

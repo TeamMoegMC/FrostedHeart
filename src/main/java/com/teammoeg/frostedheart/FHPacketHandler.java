@@ -37,7 +37,7 @@ import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
-import com.teammoeg.frostedheart.scenario.network.ServerSenarioTextPacket;
+import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
 import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.trade.network.TradeCommitPacket;
@@ -117,8 +117,8 @@ public class FHPacketHandler {
         	ClientScenarioResponsePacket::new, ClientScenarioResponsePacket::handle);
         CHANNEL.registerMessage(id++, ServerScenarioCommandPacket.class, ServerScenarioCommandPacket::encode,
         	ServerScenarioCommandPacket::new, ServerScenarioCommandPacket::handle);
-        CHANNEL.registerMessage(id++, ServerSenarioTextPacket.class, ServerSenarioTextPacket::encode,
-        	ServerSenarioTextPacket::new, ServerSenarioTextPacket::handle);
+        CHANNEL.registerMessage(id++, ServerSenarioScenePacket.class, ServerSenarioScenePacket::encode,
+        	ServerSenarioScenePacket::new, ServerSenarioScenePacket::handle);
         CHANNEL.registerMessage(id++, FHClientReadyPacket.class, FHClientReadyPacket::encode,
         		FHClientReadyPacket::new, FHClientReadyPacket::handle);
         CHANNEL.registerMessage(id++, ClientLinkClickedPacket.class, ClientLinkClickedPacket::encode, ClientLinkClickedPacket::new, 

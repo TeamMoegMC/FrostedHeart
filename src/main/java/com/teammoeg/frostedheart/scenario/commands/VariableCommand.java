@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.scenario.commands.client;
+package com.teammoeg.frostedheart.scenario.commands;
 
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;

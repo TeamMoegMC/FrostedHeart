@@ -65,7 +65,7 @@ public class ScenarioConductor implements IScenarioConductor{
 	private transient LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
 
     private transient boolean isConducting;
-    
+    private transient int nextParagraph;
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
@@ -168,6 +168,7 @@ public class ScenarioConductor implements IScenarioConductor{
 			id=UUID.randomUUID().toString();
 		}
 		getScene().links.put(id, new ExecuteTarget(scenario,label));
+		getScene().markChatboxDirty();
 		return id;
 	}
     public void popCallStack() {
@@ -180,10 +181,6 @@ public class ScenarioConductor implements IScenarioConductor{
         return Evaluator.eval(exp).eval(getVaribles());
     }
 
-	public CompoundNBT getExecutionData() {
-        return getScene().executionData;
-    }
-	
 	public int getNodeNum() {
         return nodeNum;
     }
@@ -217,12 +214,15 @@ public class ScenarioConductor implements IScenarioConductor{
 			jump(new ExecuteTarget(getScenario(),label));
 	}
 	public void newLine() {
-		getScene().showln();
+		getScene().sendNewLine();
+		//getScene().sendCurrent();
 	}
 	public void notifyClientResponse(boolean isSkip,int status) {
 		this.isSkip=isSkip;
 		this.clientStatus=status;
 		if(this.getStatus()==RunStatus.WAITCLIENT) {
+			if(nextParagraph>=0)
+				doParagraph(nextParagraph);
 			run();
 		}else if(this.getStatus()==RunStatus.WAITTIMER&&isSkip) {
 			this.stopWait();
@@ -230,7 +230,7 @@ public class ScenarioConductor implements IScenarioConductor{
 		}
     }
     public void stopWait() {
-		getScene().waiting=0;
+		getScene().stopWait();
 	}
 	public void onLinkClicked(String link) {
 		ExecuteTarget jt=getScene().links.get(link);
@@ -238,14 +238,19 @@ public class ScenarioConductor implements IScenarioConductor{
 			jump(jt);
 		}
 	}
-
-    public void paragraph(int pn) {
-    	varData.takeSnapshot();
+	private void doParagraph(int pn) {
+		varData.takeSnapshot();
     	getCurrentAct().newParagraph(getScenario(), pn);
-		
+    	nextParagraph=-1;
+	}
+    public void paragraph(int pn) {
+    	if(getScene().shouldWaitClient()) {
+    		getScene().waitClientIfNeeded();
+    		nextParagraph=pn;
+    	}else doParagraph(pn);
 	}
 	public void sendCachedSence() {
-		getScene().show();
+		getScene().sendCurrent();
 	}
 	public void addTrigger(IScenarioTrigger trig) {
 		if(getCurrentAct().name.isAct()) {
@@ -268,6 +273,7 @@ public class ScenarioConductor implements IScenarioConductor{
 	}*/
 
     private void runCode() {
+    	nextParagraph=-1;
     	setStatus((RunStatus.RUNNING));
     	while(isRunning()) {
 	    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
@@ -296,8 +302,8 @@ public class ScenarioConductor implements IScenarioConductor{
     	if(getStatus().shouldPause) {
     		IScenarioTarget nxt=toExecute.pollFirst();
     		if(nxt!=null) {
-    			globalScope();
-    			paragraph(-1);
+    			//globalScope();
+    			//paragraph(-1);
     			jump(nxt);
     		}
     	}
@@ -393,8 +399,10 @@ public class ScenarioConductor implements IScenarioConductor{
 			this.sp=data.getScenario();
 			this.nodeNum=data.getNodeNum();
 			this.status=data.getStatus();
-			if(getStatus().shouldRun)
+			if(getStatus().shouldRun) {
+				getScene().forcedClear();
 				run();
+			}
 		}
 	}
 	private void globalScope() {

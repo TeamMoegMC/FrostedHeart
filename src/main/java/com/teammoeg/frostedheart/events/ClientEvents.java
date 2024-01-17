@@ -450,7 +450,8 @@ public class ClientEvents {
         if (event.phase == Phase.START) {
             if (ClientUtils.mc().world != null) {
                 Minecraft mc = ClientUtils.mc();
-                ClientScene.render(mc);
+                if(ClientScene.INSTANCE!=null)
+                	ClientScene.INSTANCE.render(mc);
 
             }
             PlayerEntity pe = ClientUtils.getPlayer();
@@ -489,7 +490,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onWorldRender(RenderWorldLastEvent event) {
         if(FHScenarioClient.sendInitializePacket) {
-        	ClientScene.reset();
+        	ClientScene.INSTANCE=new ClientScene();
         	FHScenarioClient.sendInitializePacket=false;
         	FHPacketHandler.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
         }
@@ -510,7 +511,8 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onClientKey(KeyInputEvent event) {
     	if(event.getAction()==GLFW.GLFW_PRESS&&ClientRegistryEvents.key_skipDialog.isPressed()) {
-    		ClientScene.sendContinuePacket(true);
+    		if(ClientScene.INSTANCE!=null)
+    			ClientScene.INSTANCE.sendContinuePacket(true);
     		//event.setCanceled(true);
     	}
     }
