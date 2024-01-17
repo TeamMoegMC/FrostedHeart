@@ -275,7 +275,7 @@ public class ScenarioConductor implements IScenarioConductor{
 
     private void runCode() {
     	nextParagraph=-1;
-    	setStatus((RunStatus.RUNNING));
+    	
     	
     	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
     		Node node=getScenario().pieces.get(nodeNum++);
@@ -317,10 +317,11 @@ public class ScenarioConductor implements IScenarioConductor{
 	 * 
 	 * */
     private void run() {
-    	
+    	setStatus((RunStatus.RUNNING));
     	if(isConducting)return;
     	try {
     		isConducting=true;
+    		
     		while(isRunning()){
 	    		runCode();
 	    		runScheduled();
