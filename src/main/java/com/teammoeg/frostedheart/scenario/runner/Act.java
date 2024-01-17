@@ -20,16 +20,20 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.LinkedList;
+
+import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
+import com.teammoeg.thermopolium.network.PacketHandler;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 /**
  * An act is a basic unit of execution code
@@ -44,9 +48,10 @@ public class Act implements IScenarioConductor{
 	private transient int nodeNum=-1;//Program register
 	private RunStatus status=RunStatus.STOPPED;
     private final Scene scene;
-    public String title="";
-    public String subtitle="";
-    private LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
+    private String title="";
+    private String subtitle="";
+
+	private LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
@@ -121,7 +126,7 @@ public class Act implements IScenarioConductor{
     }
 	public void newParagraph(Scenario sp,int pn) {
 		saveActState();
-		paragraph.setParagraphNum(pn);
+		paragraph.setParagraphNum(pn);	
 		paragraph.setScenario(sp);
 		
 		getScene().paragraph();
@@ -165,5 +170,21 @@ public class Act implements IScenarioConductor{
 	}
 	public void setStatus(RunStatus status) {
 		this.status = status;
+	}
+    public String getTitle() {
+		return title;
+	}
+	public String getSubtitle() {
+		return subtitle;
+	}
+	public void sendTitles() {
+		PacketHandler.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(title,subtitle));
+	}
+	public void setTitles(String t,String st) {
+		if(!title.equals(t)||!subtitle.equals(st)) {
+			this.title=t;
+			this.subtitle=st;
+			sendTitles();
+		}
 	}
 }

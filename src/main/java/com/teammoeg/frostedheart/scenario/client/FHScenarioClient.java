@@ -26,9 +26,9 @@ import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.client.ClientControl;
 
 public class FHScenarioClient {
-    static ScenarioExecutor<ClientScene> client = new ScenarioExecutor<>(ClientScene.class);
+    static ScenarioExecutor<IClientScene> client = new ScenarioExecutor<>(IClientScene.class);
     public static boolean sendInitializePacket=false;
-    public static void callCommand(String name, ClientScene runner, Map<String, String> params) {
+    public static void callCommand(String name, IClientScene runner, Map<String, String> params) {
         client.callCommand(name, runner, params);
     }
 
@@ -36,7 +36,7 @@ public class FHScenarioClient {
         client.register(clazz);
     }
 
-    public static void registerCommand(String cmdName, ScenarioMethod<ClientScene> method) {
+    public static void registerCommand(String cmdName, ScenarioMethod<IClientScene> method) {
         client.registerCommand(cmdName, method);
     }
     static {

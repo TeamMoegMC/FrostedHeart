@@ -212,7 +212,9 @@ public class ScenarioParser {
             reader.skipWhitespace();
             String val = parseLiteralOrString(reader, -1);
             params.put(name, val);
+            
             reader.skipWhitespace();
+            
             if (!reader.hasNext()||reader.eat('#')) return createCommand(command, params);
         }
         return new LiteralNode(reader.fromStart());
@@ -247,19 +249,21 @@ public class ScenarioParser {
         while (reader.hasNext()) {
         	if(reader.peekLast()=='#') {
         		break;
-        	}else
-            if (reader.peekLast() == '@') {
+        	}else if (reader.peekLast() == '@') {
             	if(reader.isBegin())reader.next();
                 nodes.add(parseAtCommand(reader));
             } else if (reader.peekLast() == '[') {
             	if(reader.isBegin())reader.next();
                 nodes.add(parseBarackCommand(reader));
-            }else if(reader.peekLast()=='*') {
-            	nodes.add(new LabelNode(parseLiteral(reader)));
-            }else {
+            }else{
             	String lit=parseLiteral(reader);
-            	if(lit!=null&&!lit.isEmpty())
-                nodes.add(new LiteralNode(lit));
+            	
+            	if(lit!=null&&!lit.isEmpty()) {
+            		if(lit.startsWith("*")) {
+            			nodes.add(new LabelNode(lit));
+                	}else
+            		nodes.add(new LiteralNode(lit));
+            	}
             }
         }
         return nodes;
@@ -306,6 +310,7 @@ public class ScenarioParser {
                 if (!hasQuote) {
                     hasQuote = true;
                 } else {
+                	reader.next();
                     break;
                 }
                 continue;

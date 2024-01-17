@@ -344,8 +344,9 @@ public class ClientEvents {
                     if (FrostedHud.renderForecast)
                         FrostedHud.renderForecast(stack, anchorX, anchorY, mc, renderViewPlayer);
                     FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
+                    FrostedHud.renderScenarioAct(stack, anchorX, anchorY, mc, renderViewPlayer);
                 }
-
+                
                 event.setCanceled(true);
             }
             if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience) {

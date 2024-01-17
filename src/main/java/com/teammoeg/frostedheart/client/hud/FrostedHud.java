@@ -19,6 +19,14 @@
 
 package com.teammoeg.frostedheart.client.hud;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.lwjgl.opengl.GL11;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHConfig;
@@ -33,6 +41,9 @@ import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
+import com.teammoeg.frostedheart.scenario.client.ClientScene;
+
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import gloridifice.watersource.registry.EffectRegistry;
 import net.minecraft.client.Minecraft;
@@ -54,13 +65,7 @@ import net.minecraft.util.FoodStats;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import org.lwjgl.opengl.GL11;
-
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import net.minecraft.util.text.ITextComponent;
 
 public class FrostedHud {
     static final class Atlases {
@@ -132,6 +137,10 @@ public class FrostedHud {
         static final Point forecast_temp = new Point(forecast_window.getX() + 7, 4);
         static final Point forecast_unit = new Point(forecast_window.getX() + 34, 4);
         static final Point forecast_marker = new Point(-158, 0);
+        static final Point act_title = new Point(5, 45);
+        static final Point act_split = new Point(5, 54);
+        
+        static final Point act_subtitle = new Point(5, 60);
     }
     static final class HUDElements {
         static final UV hotbar_slot = new UV(1, 1, 20, 20);
@@ -367,6 +376,38 @@ public class FrostedHud {
             int airCol = airState / 10;
             int airRow = airState % 10;
             Atlases.oxygen_bar.blit(mc, stack, x, y, BarPos.right_half_3, airCol, airRow, 160, 320);
+        }
+        RenderSystem.disableBlend();
+        mc.getProfiler().endSection();
+    }
+    public static void renderScenarioAct(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
+        mc.getProfiler().startSection("frostedheart_scenario_act");
+       /* double guiScale = mc.getMainWindow().getGuiScaleFactor();
+        int ww = mc.getMainWindow().getScaledWidth();
+		int wh = mc.getMainWindow().getScaledHeight();
+    	float scale = (float) (FTBChunksClientConfig.MINIMAP_SCALE.get() * 4D / guiScale);
+    	float minimapRotation = (FTBChunksClientConfig.MINIMAP_LOCKED_NORTH.get() ? 180F : -mc.player.rotationYaw) % 360F;
+
+    	int s = (int) (64D * scale);
+    	double s2d = s / 2D;
+    	float s2f = s / 2F;
+    	int x = FTBChunksClientConfig.MINIMAP_POSITION.get().getX(ww, s);
+    	int y = FTBChunksClientConfig.MINIMAP_POSITION.get().getY(wh, s);//Render our act screen in lower than map;
+    	*/
+        RenderSystem.enableBlend();
+
+        if (ClientScene.INSTANCE!=null) {
+        	ITextComponent t=ClientScene.INSTANCE.getCurrentActTitle();
+        	ITextComponent st=ClientScene.INSTANCE.getCurrentActSubtitle();
+        	int deflen=60;
+            if(t!=null) { 
+            	deflen=Math.max(deflen, mc.fontRenderer.getStringWidth(t.getString())-30);
+            	mc.fontRenderer.drawTextWithShadow(stack, t, BasePos.act_title.getX(), BasePos.act_title.getY(), 0xfeff06);
+            }
+            FHGuiHelper.drawLine(stack, Color4I.rgb(0xfeff06),BasePos.act_split.getX(),BasePos.act_split.getY(), x, BasePos.act_split.getY()+deflen);
+            if(st!=null)
+            	mc.fontRenderer.drawTextWithShadow(stack, st, BasePos.act_subtitle.getX(), BasePos.act_subtitle.getY(), 0xffffff);
+            
         }
         RenderSystem.disableBlend();
         mc.getProfiler().endSection();

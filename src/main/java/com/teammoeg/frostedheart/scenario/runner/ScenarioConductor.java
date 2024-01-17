@@ -247,6 +247,7 @@ public class ScenarioConductor implements IScenarioConductor{
     	if(getScene().shouldWaitClient()) {
     		getScene().waitClientIfNeeded();
     		nextParagraph=pn;
+    		getScene().sendCurrent();
     	}else doParagraph(pn);
 	}
 	public void sendCachedSence() {
@@ -331,8 +332,7 @@ public class ScenarioConductor implements IScenarioConductor{
 		nodeNum=0;
 		varData.takeSnapshot();
 		getCurrentAct().newParagraph(sp, 0);
-		for(Node n:sp.pieces)
-			System.out.println(n.getText());
+
 		run();
 	}
 

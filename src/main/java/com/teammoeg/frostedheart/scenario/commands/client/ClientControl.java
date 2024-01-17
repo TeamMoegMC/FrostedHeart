@@ -19,28 +19,33 @@
 
 package com.teammoeg.frostedheart.scenario.commands.client;
 
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.scenario.client.IClientScene;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
+import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.QuestFile;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.event.ClickEvent;
 
-public class ClientControl {
-	public void link(ClientScene runner,@Param("lid")String linkId) {
-		runner.preset=Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true);
+public class ClientControl implements IClientControlCommand {
+	public void link(IClientScene runner,@Param("lid")String linkId) {
+		runner.setPreset(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"fh$scenario$link:"+linkId)).setUnderlined(true));
 	}
-	public void endlink(ClientScene runner) {
-		runner.preset=null;
+	public void endlink(IClientScene runner) {
+		runner.setPreset(null);
 	}
-	public void showTask(ClientScene runner,@Param("q")String q,@Param("t")int t) {
+	@Override
+	public void showTask(IClientScene runner,@Param("q")String q,@Param("t")int t) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
@@ -52,5 +57,14 @@ public class ClientControl {
 		}else {
 			runner.processClient(GuiUtils.translateMessage("other_task",tsk.getTitle()), true, true);
 		}
+	}
+	@Override
+	public void showTitle(IClientScene runner,@Param("t")String t,@Param("st")String st,@Param("in")Integer i1,@Param("show")Integer i2,@Param("out")Integer i3) {
+		ITextComponent t1=null,t2=null;
+		if(t!=null)
+			t1=ClientTextComponentUtils.parse(t);
+		if(st!=null)
+			t2=ClientTextComponentUtils.parse(st);
+		ClientUtils.mc().ingameGUI.renderTitles(t1,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
 	}
 }

@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.scenario.commands.ControlCommands;
 import com.teammoeg.frostedheart.scenario.commands.FTBQCommands;
 import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.scenario.commands.VariableCommand;
+import com.teammoeg.frostedheart.scenario.commands.client.IClientControlCommand;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
@@ -139,7 +140,6 @@ public class FHScenario {
 				});
 			}
 		}
-
 	}
 
 	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioConductor> method) {
@@ -152,6 +152,7 @@ public class FHScenario {
 		register(FTBQCommands.class);
 		register(ActCommand.class);
 		register(VariableCommand.class);
+		registerClientDelegate(IClientControlCommand.class);
 		registerScenarioProvider(new FTBQProvider());
 	}
 	static Path local;

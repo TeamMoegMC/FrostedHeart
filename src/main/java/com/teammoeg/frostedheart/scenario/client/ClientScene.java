@@ -20,9 +20,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.network.PacketDistributor;
 
-public class ClientScene {
+public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
 
 	static class TextInfo {
@@ -67,6 +68,11 @@ public class ClientScene {
 		}
 	}
 
+	public ClientScene() {
+		super();
+		setActHud("来到这个世界","完成对话。");
+	}
+
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
 	int ticks;
 	int page = 0;
@@ -75,7 +81,18 @@ public class ClientScene {
 	boolean unFinished = false;
 	boolean hasText = false;
 	boolean canSkip = false;
+	ITextComponent currentActTitle;
 
+
+	ITextComponent currentActSubtitle;
+	public ITextComponent getCurrentActTitle() {
+		return currentActTitle;
+	}
+
+	public ITextComponent getCurrentActSubtitle() {
+		return currentActSubtitle;
+	}
+	@Override
 	public void showOneChar() {
 
 		unFinished = false;
@@ -94,6 +111,7 @@ public class ClientScene {
 		}
 	}
 
+	@Override
 	public void reset() {
 		ticks = 0;
 		page = 0;
@@ -104,6 +122,7 @@ public class ClientScene {
 		hasText = false;
 	}
 
+	@Override
 	public void sendContinuePacket(boolean isSkip) {
 		// if(canSkip)
 		FHPacketHandler.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
@@ -159,10 +178,12 @@ public class ClientScene {
 
 	}
 
+	@Override
 	public boolean hasNext() {
 		return unFinished;
 	}
 
+	@Override
 	public boolean isTick() {
 		if (wait > 0) {
 			wait--;
@@ -183,6 +204,7 @@ public class ClientScene {
 		return false;
 	}
 
+	@Override
 	public void cls() {
 		Minecraft mc = ClientUtils.mc();
 		List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
@@ -195,6 +217,7 @@ public class ClientScene {
 		needUpdate = false;
 	}
 
+	@Override
 	public void setText(String txt) {
 		cls();
 		process(txt, true, false, true,RunStatus.WAITCLIENT);
@@ -214,12 +237,13 @@ public class ClientScene {
 
 	// fh$scenario$link:
 	int w;
-	public Style preset = null;
+	private Style preset = null;
 	public boolean shouldWrap;
 
+	@Override
 	public void processClient(ITextComponent item, boolean isReline, boolean isNowait) {
-		if (preset != null)
-			item = item.copyRaw().mergeStyle(preset);
+		if (getPreset() != null)
+			item = item.copyRaw().mergeStyle(getPreset());
 		List<IReorderingProcessor> lines;
 		System.out.println(msgQueue.size() + ":" + shouldWrap);
 		if (!msgQueue.isEmpty() && !shouldWrap) {
@@ -259,6 +283,7 @@ public class ClientScene {
 	final int fhchatid = 0x05301110;
 	RunStatus status;
 
+	@Override
 	public void process(String text, boolean isReline, boolean isNowait, boolean resetScene, RunStatus status) {
 		if (resetScene) {
 			cls();
@@ -305,5 +330,25 @@ public class ClientScene {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void setActHud(String title, String subtitle) {
+		if(!title.isEmpty())
+			this.currentActTitle=ClientTextComponentUtils.parse(title);//.deepCopy().mergeStyle(Style.EMPTY.applyFormatting(TextFormatting.YELLOW).applyFormatting(TextFormatting.BOLD));
+		else
+			this.currentActTitle=null;
+		if(!subtitle.isEmpty())
+			this.currentActSubtitle=ClientTextComponentUtils.parse(subtitle);
+		else
+			this.currentActSubtitle=null;
+	}
+
+	public Style getPreset() {
+		return preset;
+	}
+
+	public void setPreset(Style preset) {
+		this.preset = preset;
 	}
 }

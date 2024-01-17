@@ -86,7 +86,7 @@ public class Scene {
 		clear();
 		isSaveNowait = isNowait;
 		savedLog.clear();
-		if(log.peekLast().length()==0)
+		if(!log.isEmpty()&&log.peekLast().length()==0)
 			log.pollLast();
 		for (StringBuilder sb : log)
 			savedLog.add(sb.toString());

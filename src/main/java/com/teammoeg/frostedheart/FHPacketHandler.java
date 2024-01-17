@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
+import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
 import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.trade.network.BargainResponse;
@@ -123,6 +124,9 @@ public class FHPacketHandler {
         		FHClientReadyPacket::new, FHClientReadyPacket::handle);
         CHANNEL.registerMessage(id++, ClientLinkClickedPacket.class, ClientLinkClickedPacket::encode, ClientLinkClickedPacket::new, 
         		ClientLinkClickedPacket::handle);
+        CHANNEL.registerMessage(id++, ServerSenarioActPacket.class, ServerSenarioActPacket::encode, ServerSenarioActPacket::new, 
+        	ServerSenarioActPacket::handle);
+        
         
     }
 
