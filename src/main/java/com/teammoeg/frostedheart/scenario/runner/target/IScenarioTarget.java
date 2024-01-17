@@ -5,8 +5,6 @@ import java.util.function.Consumer;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
-import net.minecraft.nbt.CompoundNBT;
-
 public interface IScenarioTarget extends Consumer<ScenarioConductor> {
 	void apply(IScenarioConductor conductor);
 

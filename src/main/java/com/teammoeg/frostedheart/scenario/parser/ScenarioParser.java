@@ -182,7 +182,7 @@ public class ScenarioParser {
             		macro--;
             	}
             }else if(n instanceof IncludeNode) {
-            	IncludeNode in=(IncludeNode) n;
+            	//IncludeNode in=(IncludeNode) n;
             }
         }
         if(!ifstack.isEmpty()) {

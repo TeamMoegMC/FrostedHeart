@@ -19,12 +19,7 @@
 
 package com.teammoeg.frostedheart.scenario.commands;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.Param;
-import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 

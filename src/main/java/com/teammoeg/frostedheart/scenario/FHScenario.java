@@ -29,23 +29,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Function;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
+import com.teammoeg.frostedheart.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.scenario.commands.ControlCommands;
 import com.teammoeg.frostedheart.scenario.commands.FTBQCommands;
-import com.teammoeg.frostedheart.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.scenario.commands.client.VariableCommand;
 import com.teammoeg.frostedheart.scenario.network.ServerScenarioCommandPacket;
+import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.scenario.parser.providers.ScenarioProvider;
-import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;

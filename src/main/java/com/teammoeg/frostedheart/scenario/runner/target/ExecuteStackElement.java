@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import net.minecraft.nbt.CompoundNBT;
 

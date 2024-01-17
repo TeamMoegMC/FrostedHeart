@@ -22,8 +22,6 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
-import net.minecraft.nbt.CompoundNBT;
-
 public class ExecuteTarget extends ScenarioTarget{
 
 	private final String label;
@@ -44,6 +42,8 @@ public class ExecuteTarget extends ScenarioTarget{
 			Integer ps=runner.getScenario().labels.get(label);
 			if(ps!=null) {
 				runner.gotoNode(ps);
+			}else {
+				System.out.println("Invalid label "+label );
 			}
 		}
 	}

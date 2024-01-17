@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.scenario.parser.providers;
 
 import java.util.Map;
-import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.parser.Scenario;
 
 import dev.ftb.mods.ftbquests.quest.Quest;
 import dev.ftb.mods.ftbquests.quest.QuestFile;

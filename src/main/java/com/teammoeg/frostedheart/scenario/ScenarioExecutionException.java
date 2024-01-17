@@ -21,7 +21,12 @@ package com.teammoeg.frostedheart.scenario;
 
 public class ScenarioExecutionException extends RuntimeException {
 
-    public ScenarioExecutionException() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2921829910823307588L;
+
+	public ScenarioExecutionException() {
         // TODO Auto-generated constructor stub
     }
 
