@@ -151,7 +151,7 @@ public class FHScenario {
 		register(ControlCommands.class);
 		register(FTBQCommands.class);
 		register(ActCommand.class);
-		register(VariableCommand.class)
+		register(VariableCommand.class);
 		registerScenarioProvider(new FTBQProvider());
 	}
 	static Path local;
