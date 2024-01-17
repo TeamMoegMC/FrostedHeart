@@ -31,7 +31,12 @@ public class LabelNode implements Node {
         name = params.get("name");
     }
 
-    @Override
+    public LabelNode(String name) {
+		super();
+		this.name = name;
+	}
+
+	@Override
     public String getLiteral(ScenarioConductor runner) {
         return "";
     }

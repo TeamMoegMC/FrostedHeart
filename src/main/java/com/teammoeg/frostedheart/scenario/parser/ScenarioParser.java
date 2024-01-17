@@ -254,7 +254,9 @@ public class ScenarioParser {
             } else if (reader.peekLast() == '[') {
             	if(reader.isBegin())reader.next();
                 nodes.add(parseBarackCommand(reader));
-            } else {
+            }else if(reader.peekLast()=='*') {
+            	nodes.add(new LabelNode(parseLiteral(reader)));
+            }else {
             	String lit=parseLiteral(reader);
             	if(lit!=null&&!lit.isEmpty())
                 nodes.add(new LiteralNode(lit));
@@ -308,7 +310,7 @@ public class ScenarioParser {
                 }
                 continue;
             }
-            if (!hasQuote && (r == ch || Character.isWhitespace(r))) {
+            if (!hasQuote && (r == ch || Character.isWhitespace(r) || r=='#')) {
                 break;
             }
             all.append(r);
