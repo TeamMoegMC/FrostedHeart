@@ -25,13 +25,17 @@ import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.client.ClientControl;
 
+import net.minecraft.util.ResourceLocation;
+
 public class FHScenarioClient {
     static ScenarioExecutor<IClientScene> client = new ScenarioExecutor<>(IClientScene.class);
     public static boolean sendInitializePacket=false;
     public static void callCommand(String name, IClientScene runner, Map<String, String> params) {
         client.callCommand(name, runner, params);
     }
-
+    public static ResourceLocation getPathOf(ResourceLocation orig,String path) {
+    	return new ResourceLocation(orig.getNamespace(),path+orig.getPath());
+    }
     public static void register(Class<?> clazz) {
         client.register(clazz);
     }

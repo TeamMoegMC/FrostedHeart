@@ -2,10 +2,13 @@ package com.teammoeg.frostedheart.scenario.client;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.util.ReferenceValue;
@@ -25,13 +28,13 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
-
-	static class TextInfo {
+	public static ImageScreenDialog instance;
+	public static LinkedList<LayerManager> layers=new LinkedList<>();
+	public static class TextInfo {
 		ITextComponent parent;
 		int line;
 		IReorderingProcessor text;
-
-		boolean addLimit(int amount,boolean toSpace) {
+		public boolean addLimit(int amount,boolean toSpace) {
 			if (text instanceof SizedReorderingProcessor) {
 				SizedReorderingProcessor t = (SizedReorderingProcessor) text;
 				if (!t.isFinished) {
@@ -50,14 +53,21 @@ public class ClientScene implements IClientScene {
 			this.parent = parent;
 			this.line = line;
 			this.text = text;
+			
 		}
 
-		IReorderingProcessor asFinished() {
+		public int getMaxLen() {
+			return ClientUtils.mc().fontRenderer.getStringWidth(ClientScene.toString(getFinished()))+30;
+		}
+		public int getCurLen() {
+			return ClientUtils.mc().fontRenderer.getStringWidth(ClientScene.toString(text))+30;
+		}
+		public IReorderingProcessor asFinished() {
 			return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).asFinished() : text;
 
 		}
 
-		boolean isFinished() {
+		public boolean isFinished() {
 			return !(text instanceof SizedReorderingProcessor) || ((SizedReorderingProcessor) text).isFinished;
 		}
 
@@ -211,8 +221,8 @@ public class ClientScene implements IClientScene {
 	public boolean hasNext() {
 		return unFinished;
 	}
-	public int charsPerShow;
-	public int ticksBetweenShow;
+	public int charsPerShow=1;
+	public int ticksBetweenShow=2;
 	public boolean showWordMode;
 	@Override
 	public boolean isTick() {
@@ -267,7 +277,6 @@ public class ClientScene implements IClientScene {
 	}
 
 	// fh$scenario$link:
-	int w;
 	private Style preset = null;
 	public boolean shouldWrap;
 
@@ -283,7 +292,7 @@ public class ClientScene implements IClientScene {
 			int lastLimit = countCh(ti.text);
 			System.out.println(lastLimit);
 			IFormattableTextComponent ntext = ti.parent.deepCopy().appendSibling(item);
-			lines = RenderComponentsUtil.func_238505_a_(ntext, w, ClientUtils.mc().fontRenderer);
+			lines = RenderComponentsUtil.func_238505_a_(ntext, getDialogWidth(), ClientUtils.mc().fontRenderer);
 			for (int i = lastline; i < lines.size(); i++) {
 
 				IReorderingProcessor line = lines.get(i);
@@ -300,7 +309,7 @@ public class ClientScene implements IClientScene {
 				msgQueue.add(new TextInfo(ntext, i, line));
 			}
 		} else {
-			lines = RenderComponentsUtil.func_238505_a_(item, w, ClientUtils.mc().fontRenderer);
+			lines = RenderComponentsUtil.func_238505_a_(item, getDialogWidth(), ClientUtils.mc().fontRenderer);
 			int i = 0;
 			for (IReorderingProcessor line : lines) {
 				msgQueue.add(new TextInfo(item, i++, isNowait ? line : new SizedReorderingProcessor(line)));
@@ -330,7 +339,7 @@ public class ClientScene implements IClientScene {
 
 	}
 
-	public String toString(IReorderingProcessor ipp) {
+	public static String toString(IReorderingProcessor ipp) {
 		StringBuilder sb = new StringBuilder();
 		ipp.accept((i, s, c) -> {
 			sb.appendCodePoint(c);
@@ -339,10 +348,19 @@ public class ClientScene implements IClientScene {
 		return sb.toString();
 
 	}
+	public static String toCurrentString(IReorderingProcessor ipp) {
+		StringBuilder sb = new StringBuilder();
+		ipp.accept((i, s, c) -> {
+			sb.appendCodePoint(c);
+			return true;
+		});
+		return sb.toString();
 
+	}
+	int w;
+	
 	public void render(Minecraft mc) {
-
-		w = MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
+		w=MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
 		if (!mc.isGamePaused()) {
 			if(ticksActUpdate>0)
 				ticksActUpdate--;
@@ -352,15 +370,23 @@ public class ClientScene implements IClientScene {
 			if (!msgQueue.isEmpty()) {
 				if (isTick())
 					showOneChar();
-				if (needUpdate || mc.ingameGUI.getTicks() % 20 == 0) {
+				IScenarioDialog dialogBox=null;
+				if(mc.currentScreen instanceof IScenarioDialog) {
+					dialogBox=(IScenarioDialog) mc.currentScreen;
+				}
+				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
 					needUpdate = false;
-					i.removeIf(l -> l.getChatLineID() == fhchatid);
-					for (TextInfo t : msgQueue) {
-						if (t.hasText()) {
-							// if(hasText) {
-							i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(), t.asFinished(), fhchatid));
-							// }
+					if (dialogBox==null) {
+						i.removeIf(l -> l.getChatLineID() == fhchatid);
+						for (TextInfo t : msgQueue) {
+							if (t.hasText()) {
+								// if(hasText) {
+								i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(), t.asFinished(), fhchatid));
+								// }
+							}
 						}
+					}else {
+						dialogBox.updateTextLines(msgQueue);
 					}
 				}
 			}
@@ -418,5 +444,12 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void setShowWordMode(boolean showWordMode) {
 		this.showWordMode = showWordMode;
+	}
+
+	int getDialogWidth() {
+		if(ClientUtils.mc().currentScreen instanceof IScenarioDialog) {
+			return ((IScenarioDialog) ClientUtils.mc().currentScreen).getDialogWidth();
+		}else
+			return w;
 	}
 }

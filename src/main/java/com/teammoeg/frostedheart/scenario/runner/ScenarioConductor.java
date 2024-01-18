@@ -286,7 +286,7 @@ public class ScenarioConductor implements IScenarioConductor{
     	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
     		Node node=getScenario().pieces.get(nodeNum++);
     		try {
-    			//System.out.println(node.getText());
+    			System.out.println(node.getText());
     			getScene().appendLiteral(node.getLiteral(this));
     			node.run(this);
     		}catch(Throwable t) {

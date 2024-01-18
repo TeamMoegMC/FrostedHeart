@@ -19,11 +19,19 @@
 
 package com.teammoeg.frostedheart.scenario.commands.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.TextContent;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
@@ -33,9 +41,17 @@ import dev.ftb.mods.ftbquests.quest.QuestFile;
 import dev.ftb.mods.ftbquests.quest.task.ItemTask;
 import dev.ftb.mods.ftbquests.quest.task.KillTask;
 import dev.ftb.mods.ftbquests.quest.task.Task;
+import net.minecraft.client.audio.BackgroundMusicSelector;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.ISound.AttenuationType;
+import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.event.ClickEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
@@ -85,6 +101,122 @@ public class ClientControl implements IClientControlCommand {
 			t2=ClientTextComponentUtils.parse(st);
 			ClientUtils.mc().ingameGUI.renderTitles(null,t2,i1==null?-1:i1,i2==null?-1:i2, i3==null?-1:i3);
 		}
+		
+	}
+	@Override
+	public void fullScreenDialog(IClientScene runner,@Param("show")Integer show,@Param("x")Integer x,@Param("y")Integer y,@Param("w")Integer w,@Param("m")Integer m) {
+		if(show!=null) {
+			if(show>0&&ClientScene.instance==null) {
+				ClientScene.instance=new ImageScreenDialog(GuiUtils.str(""));
+				ClientUtils.mc().displayGuiScreen(ClientScene.instance);
+			}else {
+				ClientScene.instance.closeScreen();
+				ClientScene.instance=null;
+			}
+		}
+		if(ClientScene.instance==null)
+			return;
+		if(x!=null)
+			ClientScene.instance.dialogX=x;
+		if(y!=null)
+			ClientScene.instance.dialogY=y;
+		if(w!=null)
+			ClientScene.instance.dialogW=w;
+		if(m!=null)
+			ClientScene.instance.alignMiddle=m>0;
+	}
+	@Override
+	public void startLayer(IClientScene runner,@Param("n")@Param("name")String name) {
+		if(ClientScene.instance==null)
+			return;
+		LayerManager lm=ClientScene.layers.peekLast();
+		if(lm==null) {
+			lm=ClientScene.instance.primary.copy();
+		}else{
+			if(name!=null) {
+				lm=lm.getLayer(name);
+			}else {
+				lm=new LayerManager();
+			}
+		}
+		ClientScene.layers.add(lm);
+	}
+	@Override
+	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name) {
+		if(ClientScene.instance==null)
+			return;
+		LayerManager lm=ClientScene.layers.pollLast();
+		lm.commitChanges();
+		if(ClientScene.layers.isEmpty()) {
+			ClientScene.instance.primary=lm;
+		}else {
+			ClientScene.layers.peekLast().addLayer(name, lm);
+		}
+	}
+	@Override
+	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")int x,@Param("y")int y,@Param("w")Integer w,@Param("h")Integer h,@Param("u")int u,@Param("v")int v,@Param("uw")int uw,@Param("uh")int uh,@Param("tw")int tw,@Param("th")int th,@Param("z")int z,@Param("opacity")Integer opacity) {
+		if(ClientScene.instance==null)
+			return;
+		if(w==null)
+			w=-1;
+		if(h==null)
+			h=-1;
+		if(opacity==null)
+			opacity=1;
+		ResourceLocation ip=FHScenarioClient.getPathOf(new ResourceLocation(path), "textures/gui/");
+		ImageContent ic=new ImageContent(ip,x,y,w,h,u,v,uw,uh,tw,th);
+		ic.setZ(z);
+		ic.setOpacity(opacity);
+		ClientScene.layers.peekLast().addLayer(name,ic);
+	}
+	@Override
+	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")int x,@Param("y")int y,@Param("w")Integer w,@Param("h")Integer h,@Param("z")int z,@Param("opacity")Integer opacity,@Param("shadow")int shadow) {
+		if(ClientScene.instance==null)
+			return;
+		if(w==null)
+			w=-1;
+		if(h==null)
+			h=-1;
+		if(opacity==null)
+			opacity=1;
+		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text), x, y, w, h, shadow>0);
+		tc.setOpacity(opacity);
+		tc.setZ(z);
+		ClientScene.layers.peekLast().addLayer(name,tc);
+		
+	}
+	@Override
+	public void freeLayer(IClientScene runner,@Param("n")@Param("name")String name) {
+		if(ClientScene.instance==null)
+			return;
+
+		ClientScene.layers.peekLast().freeLayer(name);
+		
+	}
+	@Override
+	public void bgm(IClientScene runner,@Param("n")@Param("name")String name) {
+		//ISound sound=SimpleSound.music();
+		ClientUtils.mc().getMusicTicker().stop();
+		ClientUtils.mc().getMusicTicker().selectRandomBackgroundMusic(new BackgroundMusicSelector(new SoundEvent(FHScenarioClient.getPathOf(new ResourceLocation(name),"")), 0, 0, true));
+	
+	}
+	@Override
+	public void stopbgm(IClientScene runner) {
+		//ISound sound=SimpleSound.music();
+		ClientUtils.mc().getMusicTicker().stop();
+	}
+	List<ISound> current=new ArrayList<>();
+	@Override
+	public void sound(IClientScene runner,@Param("n")@Param("name")String name,@Param("repeat")int rep) {
+		//ISound sound=SimpleSound.music();
+		ISound sound=new SimpleSound(FHScenarioClient.getPathOf(new ResourceLocation(name),""), SoundCategory.MASTER,1, 1, rep>0, 0, AttenuationType.LINEAR, 0, 0, 0, true);
+		ClientUtils.mc().getSoundHandler().play(sound);
+		current.add(sound);
+	}
+	@Override
+	public void stopAllsounds(IClientScene runner) {
+		current.forEach(ClientUtils.mc().getSoundHandler()::stop);
+		current.clear();
 		
 	}
 }

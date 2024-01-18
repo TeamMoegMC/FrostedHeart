@@ -11,4 +11,25 @@ public interface IClientControlCommand {
 
 	void speed(IClientScene runner, Double value, Integer s);
 
+	void fullScreenDialog(IClientScene runner, Integer show, Integer x, Integer y, Integer w, Integer m);
+
+	void TextLayer(IClientScene runner, String name, String text, int x, int y, Integer w, Integer h, int z, Integer opacity, int shadow);
+
+	void ImageLayer(IClientScene runner, String name, String path, int x, int y, Integer w, Integer h, int u, int v, int uw, int uh, int tw, int th, int z, Integer opacity);
+
+	void showLayer(IClientScene runner, String name);
+
+	void startLayer(IClientScene runner, String name);
+
+	void freeLayer(IClientScene runner, String name);
+
+	void bgm(IClientScene runner, String name);
+
+	void stopbgm(IClientScene runner);
+
+	void sound(IClientScene runner, String name, int rep);
+
+	void stopAllsounds(IClientScene runner);
+
+
 }
