@@ -38,10 +38,11 @@ public abstract class LayerContent implements RenderableContent {
 		this.z = z;
 	}
 	@Override
-	public final void render(ImageScreenDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,float opacity) {
-		GuiHelper.pushScissor(screen.getMinecraft().getMainWindow(), x, y, width, height);
-		this.renderContents(screen, matrixStack, mouseX, mouseY, partialTicks,opacity*this.opacity);
-		GuiHelper.popScissor(screen.getMinecraft().getMainWindow());
+	public final void render(RenderParams params) {
+		params=params.copyWithCurrent(this);
+		GuiHelper.pushScissor(params.getMinecraft().getMainWindow(), params.getX(), params.getY(), params.getWidth(), params.getHeight());
+		this.renderContents(params);
+		GuiHelper.popScissor(params.getMinecraft().getMainWindow());
 	}
 	public float getOpacity() {
 		return opacity;
@@ -49,7 +50,7 @@ public abstract class LayerContent implements RenderableContent {
 	public void setOpacity(float opacity) {
 		this.opacity = opacity;
 	}
-	public abstract void renderContents(ImageScreenDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,float opacity);
+	public abstract void renderContents(RenderParams params);
 
 	public int getX() {
 		return x;

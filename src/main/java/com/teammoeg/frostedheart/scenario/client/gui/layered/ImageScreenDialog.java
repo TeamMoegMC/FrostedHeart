@@ -20,11 +20,12 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	public int dialogW;
 	public boolean alignMiddle=true;
 	public LayerManager primary=new LayerManager();
-
+	public int escapes;
 	@Override
 	public boolean shouldCloseOnEsc() {
 		// TODO Auto-generated method stub
-		return false;
+		escapes++;
+		return escapes>5;
 	}
 	public ImageScreenDialog(ITextComponent titleIn) {
 		super(titleIn);
@@ -36,7 +37,6 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	public void init(Minecraft minecraft, int width, int height) {
 		// TODO Auto-generated method stub
 		super.init(minecraft, width, height);
-		System.out.println(width);
 		dialogW=width-60;
 		dialogY=height-60;
 	}
@@ -62,20 +62,27 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-		AbstractGui.fill(matrixStack, 0, 0, width, height, 0xFF000000);
-		primary.render(ClientScene.instance, matrixStack, mouseX, mouseY, partialTicks, 1);
+		AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
+		primary.render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
 		int y=dialogY;
 		int h=9*chatlist.size()+4;
+		 RenderSystem.enableBlend();
+		 RenderSystem.enableAlphaTest();
 		this.fillGradient(matrixStack, dialogX-2, dialogY-2, dialogW+4, h, 0xC0101010, 0xD0101010);
 		for(TextInfo i:chatlist) {
 			int x=(dialogW-i.getCurLen())/2+dialogX;
 			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, i.asFinished(), x, y, 0xffffffff);
 			y+=9;
 		}
+		RenderSystem.disableBlend();
 	}
 
 	@Override
 	public int getDialogWidth() {
 		return dialogW;
+	}
+	@Override
+	public void tickDialog() {
+		primary.tick();
 	}
 }

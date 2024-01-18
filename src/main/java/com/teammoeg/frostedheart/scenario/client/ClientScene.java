@@ -28,7 +28,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
-	public static ImageScreenDialog instance;
+	public static ImageScreenDialog dialog;
 	public static LinkedList<LayerManager> layers=new LinkedList<>();
 	public static class TextInfo {
 		ITextComponent parent;
@@ -85,7 +85,12 @@ public class ClientScene implements IClientScene {
 		super();
 		//setActHud("来到这个世界","完成对话。");
 	}
-
+	public static int fromRelativeXW(float val) {
+		return (int) (val*ClientUtils.mc().getMainWindow().getScaledWidth());
+	}
+	public static int fromRelativeYH(float val) {
+		return (int) (val*ClientUtils.mc().getMainWindow().getScaledHeight());
+	}
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
 	int ticks;
 	int page = 0;
@@ -373,6 +378,7 @@ public class ClientScene implements IClientScene {
 				IScenarioDialog dialogBox=null;
 				if(mc.currentScreen instanceof IScenarioDialog) {
 					dialogBox=(IScenarioDialog) mc.currentScreen;
+					dialogBox.tickDialog();
 				}
 				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
 					needUpdate = false;

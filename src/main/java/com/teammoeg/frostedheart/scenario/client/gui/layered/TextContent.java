@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.gui.RenderComponentsUtil;
 import net.minecraft.util.IReorderingProcessor;
@@ -34,17 +35,20 @@ public class TextContent extends LayerContent{
 	}
 	public ITextComponent text;
 	@Override
-	public void renderContents(ImageScreenDialog screen, MatrixStack matrixStack,int mouseX,int mouseY, float partialTicks,float opacity) {
-		List<IReorderingProcessor> li=RenderComponentsUtil.func_238505_a_(text,this.width ,screen.getMinecraft().fontRenderer);
-		int y=this.y;
-		
+	public void renderContents(RenderParams params) {
+		List<IReorderingProcessor> li=RenderComponentsUtil.func_238505_a_(text,params.getContentWidth() ,params.getMinecraft().fontRenderer);
+		int y=params.getContentY();
+		 RenderSystem.enableBlend();
+		 RenderSystem.enableAlphaTest();
 		for(IReorderingProcessor i:li) {
 			if(shadow)
-				screen.getMinecraft().fontRenderer.drawTextWithShadow(matrixStack, i, x+0, y, 0xFFFFFF|(((int)(0xFF*opacity))<<24));
+				params.getMinecraft().fontRenderer.drawTextWithShadow(params.getMatrixStack(), i, params.getContentX()+0, y, 0xFFFFFF|(((int)(0xFF*params.getOpacity()))<<24));
 			else
-				screen.getMinecraft().fontRenderer.func_238422_b_(matrixStack, i, x+0, y, 0xFFFFFF|(((int)(0xFF*opacity))<<24));
+				params.getMinecraft().fontRenderer.func_238422_b_(params.getMatrixStack(), i, params.getContentX()+0, y, 0xFFFFFF|(((int)(0xFF*params.getOpacity()))<<24));
 			y+=9;
+			if(y>params.getContentHeight()+params.getContentY())break;
 		}
+		RenderSystem.disableBlend();
 	}
 	@Override
 	public void tick() {

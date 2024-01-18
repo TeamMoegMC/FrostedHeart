@@ -33,11 +33,10 @@ public class ImageContent extends LayerContent {
 	}
 
 	@Override
-	public void renderContents(ImageScreenDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks, float opacity) {
+	public void renderContents(RenderParams params) {
 
 		ClientUtils.bindTexture(showingImage);
-
-		blit(matrixStack, x, y, width, height, u, v, uw, uh, tw, th, opacity);
+		blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 	}
 
 	public static void blit(MatrixStack matrixStack, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight,float opacity) {
@@ -51,6 +50,7 @@ public class ImageContent extends LayerContent {
 	}
 
 	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV, float opacity) {
+		//RenderSystem.enableAlphaTest();
 		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
 		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
 		bufferbuilder.pos(matrix, (float) x1, (float) y2, (float) blitOffset).color(1, 1, 1, opacity).tex(minU, maxV).endVertex();
@@ -58,8 +58,10 @@ public class ImageContent extends LayerContent {
 		bufferbuilder.pos(matrix, (float) x2, (float) y1, (float) blitOffset).color(1, 1, 1, opacity).tex(maxU, minV).endVertex();
 		bufferbuilder.pos(matrix, (float) x1, (float) y1, (float) blitOffset).color(1, 1, 1, opacity).tex(minU, minV).endVertex();
 		bufferbuilder.finishDrawing();
-		RenderSystem.enableAlphaTest();
+		 RenderSystem.enableBlend();
+		 RenderSystem.enableAlphaTest();
 		WorldVertexBufferUploader.draw(bufferbuilder);
+		RenderSystem.disableBlend();
 	}
 
 	public ImageContent(ResourceLocation showingImage, int x, int y, int w, int h, int u, int v, int uw, int uh, int tw, int th) {
