@@ -80,6 +80,7 @@ public class FHResearchDataManager {
         TeamResearchData cn = data.get(team.getId());
         if (cn == null) {
             GameProfile owner = server.getPlayerProfileCache().getProfileByUUID(team.getOwner());
+            
             if (owner != null)
                 for (Entry<UUID, TeamResearchData> dat : data.entrySet()) {
                     if (owner.getName().equals(dat.getValue().getOwnerName())) {
@@ -90,7 +91,7 @@ public class FHResearchDataManager {
         }
         cn = data.computeIfAbsent(team.getId(),
                 c -> new TeamResearchData(() -> team));
-        if (cn.getOwnerName() == null) {
+        if ((server.isSinglePlayer()||!server.isServerInOnlineMode())&&cn.getOwnerName() == null) {
             PlayerProfileCache cache = server.getPlayerProfileCache();
             if (cache != null) {
                 GameProfile gp = cache.getProfileByUUID(team.getOwner());
