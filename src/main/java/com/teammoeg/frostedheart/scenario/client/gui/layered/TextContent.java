@@ -33,6 +33,7 @@ public class TextContent extends LayerContent{
 	float resize=1;
 	public boolean centerH;
 	public boolean centerV;
+	public int color=0xFFFFFF;
 	public boolean isShadow() {
 		return shadow;
 	}
@@ -49,8 +50,8 @@ public class TextContent extends LayerContent{
 		int ty=params.getContentY();
 		if(centerV)
 			ty=Math.max((int) ((params.getContentHeight()-li.size()*9*resize)/2),0)+params.getContentY();
-		 RenderSystem.enableBlend();
-		 RenderSystem.enableAlphaTest();
+		// RenderSystem.enableBlend();
+		 //RenderSystem.enableAlphaTest();
 		 params.getMatrixStack().push();
 		 params.getMatrixStack().translate(params.getContentX(),ty, 0);
 		 params.getMatrixStack().scale(resize, resize, resize);
@@ -61,15 +62,15 @@ public class TextContent extends LayerContent{
 				tx=(int) Math.max(0,(params.getContentWidth()/resize-w)/2);
 			}
 			if(shadow)
-				params.getMinecraft().fontRenderer.drawTextWithShadow(params.getMatrixStack(), i, tx, y, 0xFFFFFF|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getMinecraft().fontRenderer.drawTextWithShadow(params.getMatrixStack(), i, tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
 			else
-				params.getMinecraft().fontRenderer.func_238422_b_(params.getMatrixStack(), i,tx, y, 0xFFFFFF|(((int)(0xFF*params.getOpacity()))<<24));
+				params.getMinecraft().fontRenderer.func_238422_b_(params.getMatrixStack(), i,tx, y, color|(((int)(0xFF*params.getOpacity()))<<24));
 			y+=9;
 			if(y>params.getContentHeight()+params.getContentY())break;
 		}
 		params.getMatrixStack().pop();
 		 
-		RenderSystem.disableBlend();
+		//RenderSystem.disableBlend();
 	}
 	@Override
 	public void tick() {

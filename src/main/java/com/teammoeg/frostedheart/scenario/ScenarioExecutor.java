@@ -151,7 +151,11 @@ public class ScenarioExecutor<T> {
 	}
 	private static Function<String, Object> string = s -> s;
     private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
-    private static Function<String, Object> integer = s -> ((Double) Double.parseDouble(s)).intValue();
+    private static Function<String, Object> integer = s ->{ 
+    	if(s==null)return s;
+    	if(s.toLowerCase().startsWith("0x"))return Integer.parseInt(s.substring(2),16);
+    	return ((Double) Double.parseDouble(s)).intValue();
+    	};
 
     private static Function<String, Object> fnumber = s -> ((Double) Double.parseDouble(s)).floatValue();
 

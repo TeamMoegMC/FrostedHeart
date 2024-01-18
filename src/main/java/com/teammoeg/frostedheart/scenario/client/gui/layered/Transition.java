@@ -25,8 +25,8 @@ public enum Transition implements TransitionFunction{
 		n.x=(int) (n.x+(1-t)*o.getScreenWidth());
 	}),
 	left((o,n,t)->{
-		o.y=(int) (o.y+t*o.getScreenWidth());
-		n.y=(int) (n.y-(1-t)*o.getScreenWidth());
+		o.x=(int) (o.x+t*o.getScreenWidth());
+		n.x=(int) (n.x-(1-t)*o.getScreenWidth());
 	}),
 	nup((o,n,t)->{
 		n.y=(int) (n.y+(1-t)*o.getScreenHeight());
@@ -38,7 +38,7 @@ public enum Transition implements TransitionFunction{
 		n.x=(int) (n.x+(1-t)*o.getScreenWidth());
 	}),
 	nleft((o,n,t)->{
-		n.y=(int) (n.y-(1-t)*o.getScreenWidth());
+		n.x=(int) (n.x-(1-t)*o.getScreenWidth());
 	})
 	;
 

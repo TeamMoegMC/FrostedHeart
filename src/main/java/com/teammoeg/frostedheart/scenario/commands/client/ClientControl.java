@@ -187,7 +187,7 @@ public class ClientControl implements IClientControlCommand {
 		ClientScene.layers.peekLast().addLayer(name,ic);
 	}
 	@Override
-	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")float resize,@Param("cv")int cv,@Param("ch")int ch) {
+	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")float resize,@Param("cv")int cv,@Param("ch")int ch,@Param("clr")Integer color) {
 		if(ClientScene.dialog==null)
 			return;
 		if(w==null)
@@ -198,12 +198,15 @@ public class ClientControl implements IClientControlCommand {
 			opacity=1f;
 		if(resize==0)
 			resize=1;
+		if(color==null)
+			color=0xFFFFFF;
 		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text),(x),(y),(w),(h), shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
 		tc.setResize(resize);
 		tc.centerH=ch>0;
 		tc.centerV=cv>0;
+		tc.color=0xFFFFFF&color;
 		ClientScene.layers.peekLast().addLayer(name,tc);
 		
 	}

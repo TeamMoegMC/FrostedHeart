@@ -34,7 +34,8 @@ public interface IClientControlCommand {
 
 
 	void TextLayer(IClientScene runner, String name, String text, float x, float y, Float w, Float h, int z,
-			Float opacity, int shadow, float resize, int cv, int ch);
+			Float opacity, int shadow, float resize, int cv, int ch,Integer color);
+
 
 
 }
