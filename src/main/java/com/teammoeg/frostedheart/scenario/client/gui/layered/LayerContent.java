@@ -8,13 +8,12 @@ import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 public abstract class LayerContent implements RenderableContent {
 
 
-
-	int x,y,width,height,z,order;
-	float opacity=1;
+	int z,order;
+	float x,y,width,height,opacity=1;
 	public LayerContent() {
 		this(0,0,-1,-1);
 	}
-	public LayerContent(int x, int y, int w, int h) {
+	public LayerContent(float x, float y, float w, float h) {
 		super();
 		this.x = x;
 		this.y = y;
@@ -29,7 +28,7 @@ public abstract class LayerContent implements RenderableContent {
 	}
 
 
-	protected LayerContent(int x, int y, int width, int height, int z) {
+	protected LayerContent(float x, float y, float width, float height, int z) {
 		super();
 		this.x = x;
 		this.y = y;
@@ -52,47 +51,20 @@ public abstract class LayerContent implements RenderableContent {
 	}
 	public abstract void renderContents(RenderParams params);
 
-	public int getX() {
-		return x;
-	}
+	
 
-
-	public void setX(int x) {
-		this.x = x;
-	}
-
-
-	public int getY() {
-		return y;
-	}
-
-
-	public void setY(int y) {
-		this.y = y;
-	}
-
-
-	public int getWidth() {
-		return width;
-	}
-
-
-	public void setWidth(int width) {
+	public void setWidth(float width) {
 		if(width<0) {
-			width=ClientUtils.mc().getMainWindow().getScaledWidth();
+			width=1;
 		}
 		this.width = width;
 	}
 
 
-	public int getHeight() {
-		return height;
-	}
 
-
-	public void setHeight(int height) {
+	public void setHeight(float height) {
 		if(height<0) {
-			height=ClientUtils.mc().getMainWindow().getScaledHeight();
+			height=1;
 		}
 		this.height = height;
 	}
@@ -111,6 +83,24 @@ public abstract class LayerContent implements RenderableContent {
 	}
 	public void setOrder(int order) {
 		this.order = order;
+	}
+	public float getX() {
+		return x;
+	}
+	public void setX(float x) {
+		this.x = x;
+	}
+	public float getY() {
+		return y;
+	}
+	public void setY(float y) {
+		this.y = y;
+	}
+	public float getWidth() {
+		return width;
+	}
+	public float getHeight() {
+		return height;
 	}
 
 

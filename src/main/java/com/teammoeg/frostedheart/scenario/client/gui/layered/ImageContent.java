@@ -16,7 +16,7 @@ public class ImageContent extends LayerContent {
 	public ResourceLocation showingImage;
 	int u, v, uw, uh, tw, th;
 
-	public ImageContent(int x, int y, int width, int height, int z, ResourceLocation showingImage, int u, int v, int uw, int uh, int tw, int th) {
+	public ImageContent(float x, float y, float width, float height, int z, ResourceLocation showingImage, int u, int v, int uw, int uh, int tw, int th) {
 		super(x, y, width, height, z);
 		this.showingImage = showingImage;
 		this.u = u;
@@ -64,7 +64,7 @@ public class ImageContent extends LayerContent {
 		RenderSystem.disableBlend();
 	}
 
-	public ImageContent(ResourceLocation showingImage, int x, int y, int w, int h, int u, int v, int uw, int uh, int tw, int th) {
+	public ImageContent(ResourceLocation showingImage, float x, float y, float w, float h, int u, int v, int uw, int uh, int tw, int th) {
 		super(x, y, w, h);
 		this.showingImage = showingImage;
 		this.u = u;

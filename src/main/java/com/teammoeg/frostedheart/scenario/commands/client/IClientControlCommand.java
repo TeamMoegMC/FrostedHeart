@@ -12,8 +12,6 @@ public interface IClientControlCommand {
 	void speed(IClientScene runner, Double value, Integer s);
 
 
-	void TextLayer(IClientScene runner, String name, String text, float x, float y, Float w, Float h, int z, Float opacity, int shadow);
-
 	void ImageLayer(IClientScene runner, String name, String path, float x, float y, Float w, Float h, int u, int v, int uw, int uh, int tw, int th, int z, Float opacity);
 
 	void startLayer(IClientScene runner, String name);
@@ -33,6 +31,10 @@ public interface IClientControlCommand {
 	void fullScreenDialog(IClientScene runner, Integer show, Float x, Float y, Float w, Integer m);
 
 	void stopAllsounds(IClientScene runner);
+
+
+	void TextLayer(IClientScene runner, String name, String text, float x, float y, Float w, Float h, int z,
+			Float opacity, int shadow, float resize, int cv, int ch);
 
 
 }

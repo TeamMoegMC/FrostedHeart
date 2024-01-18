@@ -118,11 +118,11 @@ public class ClientControl implements IClientControlCommand {
 		if(ClientScene.dialog==null)
 			return;
 		if(x!=null)
-			ClientScene.dialog.dialogX=ClientScene.fromRelativeXW(x);
+			ClientScene.dialog.dialogX=(x);
 		if(y!=null)
-			ClientScene.dialog.dialogY=ClientScene.fromRelativeYH(y);
+			ClientScene.dialog.dialogY=(y);
 		if(w!=null)
-			ClientScene.dialog.dialogW=ClientScene.fromRelativeXW(w);
+			ClientScene.dialog.dialogW=(w);
 		if(m!=null)
 			ClientScene.dialog.alignMiddle=m>0;
 	}
@@ -153,10 +153,10 @@ public class ClientControl implements IClientControlCommand {
 			h=1f;
 		if(time<=0)
 			time=10;
-		lm.setX(ClientScene.fromRelativeXW(x));
-		lm.setY(ClientScene.fromRelativeYH(y));
-		lm.setWidth(ClientScene.fromRelativeXW(w));
-		lm.setHeight(ClientScene.fromRelativeYH(h));
+		lm.setX((x));
+		lm.setY((y));
+		lm.setWidth((w));
+		lm.setHeight((h));
 		if(transition!=null) {
 			lm.setTrans(Transition.valueOf(transition.toLowerCase()), time);
 			
@@ -181,13 +181,13 @@ public class ClientControl implements IClientControlCommand {
 		if(opacity==null)
 			opacity=1f;
 		ResourceLocation ip=FHScenarioClient.getPathOf(new ResourceLocation(path), "textures/gui/");
-		ImageContent ic=new ImageContent(ip,ClientScene.fromRelativeXW(x),ClientScene.fromRelativeYH(y),ClientScene.fromRelativeXW(w),ClientScene.fromRelativeYH(h),u,v,uw,uh,tw,th);
+		ImageContent ic=new ImageContent(ip,x,(y),(w),(h),u,v,uw,uh,tw,th);
 		ic.setZ(z);
 		ic.setOpacity(opacity);
 		ClientScene.layers.peekLast().addLayer(name,ic);
 	}
 	@Override
-	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow) {
+	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")float resize,@Param("cv")int cv,@Param("ch")int ch) {
 		if(ClientScene.dialog==null)
 			return;
 		if(w==null)
@@ -196,9 +196,14 @@ public class ClientControl implements IClientControlCommand {
 			h=1f;
 		if(opacity==null)
 			opacity=1f;
-		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text),ClientScene.fromRelativeXW(x),ClientScene.fromRelativeYH(y),ClientScene.fromRelativeXW(w),ClientScene.fromRelativeYH(h), shadow>0);
+		if(resize==0)
+			resize=1;
+		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text),(x),(y),(w),(h), shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
+		tc.setResize(resize);
+		tc.centerH=ch>0;
+		tc.centerV=cv>0;
 		ClientScene.layers.peekLast().addLayer(name,tc);
 		
 	}

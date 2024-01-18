@@ -15,9 +15,9 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextComponent;
 
 public class ImageScreenDialog extends Screen implements IScenarioDialog {
-	public int dialogX=30;
-	public int dialogY;
-	public int dialogW;
+	public float dialogX=0.1f;
+	public float dialogY;
+	public float dialogW;
 	public boolean alignMiddle=true;
 	public LayerManager primary=new LayerManager();
 	public int escapes;
@@ -37,8 +37,8 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	public void init(Minecraft minecraft, int width, int height) {
 		// TODO Auto-generated method stub
 		super.init(minecraft, width, height);
-		dialogW=width-60;
-		dialogY=height-60;
+		dialogW=0.8f;
+		dialogY=0.85f;
 	}
 	List<TextInfo> chatlist=new ArrayList<>();
 	@Override
@@ -62,27 +62,32 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-		AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
+		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
+		this.width=ClientScene.fromRelativeXW(1);
+		this.height=ClientScene.fromRelativeYH(1);
 		primary.render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
-		int y=dialogY;
+		int y=ClientScene.fromRelativeYH(dialogY);
 		int h=9*chatlist.size()+4;
-		 RenderSystem.enableBlend();
-		 RenderSystem.enableAlphaTest();
-		this.fillGradient(matrixStack, dialogX-2, dialogY-2, dialogW+4, h, 0xC0101010, 0xD0101010);
+
+		this.fillGradient(matrixStack, ClientScene.fromRelativeXW(dialogX)-2, ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+4, h, 0xC0101010, 0xD0101010);
 		for(TextInfo i:chatlist) {
-			int x=(dialogW-i.getCurLen())/2+dialogX;
+			int x=(ClientScene.fromRelativeXW(dialogW)-i.getCurLen())/2+ClientScene.fromRelativeXW(dialogX);
 			this.minecraft.fontRenderer.drawTextWithShadow(matrixStack, i.asFinished(), x, y, 0xffffffff);
 			y+=9;
 		}
-		RenderSystem.disableBlend();
 	}
 
 	@Override
 	public int getDialogWidth() {
-		return dialogW;
+		return ClientScene.fromRelativeXW(dialogW);
 	}
 	@Override
 	public void tickDialog() {
 		primary.tick();
+	}
+	@Override
+	public void closeScreen() {
+		ClientScene.dialog=null;
+		super.closeScreen();
 	}
 }

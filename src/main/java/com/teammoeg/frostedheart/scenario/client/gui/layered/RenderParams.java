@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.scenario.client.ClientScene;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import net.minecraft.client.Minecraft;
@@ -78,7 +79,7 @@ public class RenderParams {
 		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,contentWidth,contentHeight,offsetX,offsetY);
 	}
 	public RenderParams copyWithCurrent(LayerContent layer) {
-		return new RenderParams(screen, matrixStack, mouseX-layer.x, mouseY-layer.y, partialTicks, opacity*layer.opacity, x+layer.x, y+layer.y, Math.min(layer.width,width-layer.x), Math.min(layer.height,height-layer.y),layer.width,layer.height);
+		return new RenderParams(screen, matrixStack, mouseX-ClientScene.fromRelativeXW(layer.x), mouseY-ClientScene.fromRelativeYH(layer.y), partialTicks, opacity*layer.opacity, x+ClientScene.fromRelativeXW(layer.x), y+ClientScene.fromRelativeYH(layer.y), Math.min(ClientScene.fromRelativeXW(layer.width),width-ClientScene.fromRelativeXW(layer.x)), Math.min(ClientScene.fromRelativeYH(layer.height),height-ClientScene.fromRelativeYH(layer.y)),ClientScene.fromRelativeXW(layer.width),ClientScene.fromRelativeYH(layer.height));
 	}
 	public ImageScreenDialog getScreen() {
 		return screen;
