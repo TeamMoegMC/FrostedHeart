@@ -35,6 +35,7 @@ public class LayerManager extends LayerContent {
 	@Override
 	public void tick() {
 		transTicks++;
+		System.out.println(transTicks+"/"+maxTransTicks);
 		if(transTicks>=maxTransTicks) {
 			maxTransTicks=transTicks=0;
 			trans=null;
@@ -74,7 +75,9 @@ public class LayerManager extends LayerContent {
 		if(trans!=null) {
 			RenderParams prev=params.copyWithCurrent(this);
 			RenderParams next=params.copyWithCurrent(this);
-			trans.compute(prev, next, (transTicks+params.partialTicks)/maxTransTicks);
+			float val=(transTicks+params.partialTicks)/maxTransTicks;
+			System.out.println(val);
+			trans.compute(prev, next, val);
 			if(prev.forceFirst) {
 				if(pq!=null)
 					pq.forEach(t->t.render(next));

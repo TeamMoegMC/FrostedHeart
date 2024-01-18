@@ -259,6 +259,10 @@ public class ClientScene implements IClientScene {
 			i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(), t.getFinished(), 0));
 		}
 		msgQueue.clear();
+		if(mc.currentScreen instanceof IScenarioDialog) {
+			IScenarioDialog dialogBox=(IScenarioDialog) mc.currentScreen;
+			dialogBox.updateTextLines(msgQueue);
+		}
 		shouldWrap = false;
 		needUpdate = false;
 	}
@@ -372,14 +376,15 @@ public class ClientScene implements IClientScene {
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
 			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
+			IScenarioDialog dialogBox=null;
+			if(mc.currentScreen instanceof IScenarioDialog) {
+				dialogBox=(IScenarioDialog) mc.currentScreen;
+				dialogBox.tickDialog();
+			}
 			if (!msgQueue.isEmpty()) {
 				if (isTick())
 					showOneChar();
-				IScenarioDialog dialogBox=null;
-				if(mc.currentScreen instanceof IScenarioDialog) {
-					dialogBox=(IScenarioDialog) mc.currentScreen;
-					dialogBox.tickDialog();
-				}
+
 				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
 					needUpdate = false;
 					if (dialogBox==null) {

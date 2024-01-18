@@ -234,6 +234,7 @@ public class ScenarioConductor implements IScenarioConductor{
 			this.stopWait();
 			run();
 		}
+		
     }
     public void stopWait() {
 		getScene().stopWait();
