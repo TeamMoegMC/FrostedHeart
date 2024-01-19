@@ -41,8 +41,8 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		for(int i=0;i<ja.size();i++) {
 			JsonObject cr=ja.get(i).getAsJsonObject();
 			switch(cr.get("type").getAsString()) {
-			case "bitmap":readBitmap(cr);
-			case "legacy_unicode":readUnicode(cr);
+			case "bitmap":readBitmap(cr);break;
+			case "legacy_unicode":readUnicode(cr);break;
 			}
 		}
 		System.out.println("loaded "+data.size());
