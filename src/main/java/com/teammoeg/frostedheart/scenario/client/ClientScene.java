@@ -385,6 +385,7 @@ public class ClientScene implements IClientScene {
 	public void render(Minecraft mc) {
 		w=MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
 		if (!mc.isGamePaused()) {
+
 			if(ticksActUpdate>0)
 				ticksActUpdate--;
 			if(ticksActStUpdate>0)
@@ -394,6 +395,7 @@ public class ClientScene implements IClientScene {
 			if(mc.currentScreen instanceof IScenarioDialog) {
 				dialogBox=(IScenarioDialog) mc.currentScreen;
 				dialogBox.tickDialog();
+				
 			}
 			if (!msgQueue.isEmpty()) {
 				if (isTick())

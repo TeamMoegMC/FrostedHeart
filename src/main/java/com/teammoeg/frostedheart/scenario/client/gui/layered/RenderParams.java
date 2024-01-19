@@ -78,7 +78,7 @@ public class RenderParams {
 	public RenderParams copy() {
 		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,contentWidth,contentHeight,offsetX,offsetY);
 	}
-	public RenderParams copyWithCurrent(LayerContent layer) {
+	public RenderParams copyWithCurrent(GLLayerContent layer) {
 		return new RenderParams(screen, matrixStack, mouseX-ClientScene.fromRelativeXW(layer.x), mouseY-ClientScene.fromRelativeYH(layer.y), partialTicks, opacity*layer.opacity, x+ClientScene.fromRelativeXW(layer.x), y+ClientScene.fromRelativeYH(layer.y), Math.min(ClientScene.fromRelativeXW(layer.width),width-ClientScene.fromRelativeXW(layer.x)), Math.min(ClientScene.fromRelativeYH(layer.height),height-ClientScene.fromRelativeYH(layer.y)),ClientScene.fromRelativeXW(layer.width),ClientScene.fromRelativeYH(layer.height));
 	}
 	public ImageScreenDialog getScreen() {

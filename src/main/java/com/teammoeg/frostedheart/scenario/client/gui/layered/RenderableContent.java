@@ -5,8 +5,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 interface RenderableContent{
 	void tick();
 	RenderableContent copy();
-	int getZ();
-	int getOrder();
-	void setOrder(int value);
 	void render(RenderParams params);
+	void prerender(PrerenderParams params);
 }

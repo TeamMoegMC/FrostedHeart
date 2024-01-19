@@ -1,19 +1,16 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 
-public abstract class LayerContent implements RenderableContent {
+public abstract class GLLayerContent extends OrderedRenderableContent {
 
 
-	int z,order;
 	float x,y,width,height,opacity=1;
-	public LayerContent() {
+	public GLLayerContent() {
 		this(0,0,-1,-1);
 	}
-	public LayerContent(float x, float y, float w, float h) {
+	public GLLayerContent(float x, float y, float w, float h) {
 		super();
 		this.x = x;
 		this.y = y;
@@ -28,7 +25,7 @@ public abstract class LayerContent implements RenderableContent {
 	}
 
 
-	protected LayerContent(float x, float y, float width, float height, int z) {
+	protected GLLayerContent(float x, float y, float width, float height, int z) {
 		super();
 		this.x = x;
 		this.y = y;
@@ -37,7 +34,7 @@ public abstract class LayerContent implements RenderableContent {
 		this.z = z;
 	}
 	@Override
-	public final void render(RenderParams params) {
+	public void render(RenderParams params) {
 		params=params.copyWithCurrent(this);
 		GuiHelper.pushScissor(params.getMinecraft().getMainWindow(), params.getX(), params.getY(), params.getWidth(), params.getHeight());
 		this.renderContents(params);
@@ -69,20 +66,8 @@ public abstract class LayerContent implements RenderableContent {
 		this.height = height;
 	}
 
-
-	public int getZ() {
-		return z;
-	}
-
-
-	public void setZ(int z) {
-		this.z = z;
-	}
-	public int getOrder() {
-		return order;
-	}
-	public void setOrder(int order) {
-		this.order = order;
+	@Override
+	public void prerender(PrerenderParams params) {
 	}
 	public float getX() {
 		return x;

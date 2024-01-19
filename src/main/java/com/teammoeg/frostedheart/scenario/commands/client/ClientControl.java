@@ -28,7 +28,8 @@ import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.GLImageContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.GraphicsImageContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.TextContent;
@@ -158,20 +159,27 @@ public class ClientControl implements IClientControlCommand {
 		}
 	}
 	@Override
-	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("u")int u,@Param("v")int v,@Param("uw")int uw,@Param("uh")int uh,@Param("tw")int tw,@Param("th")int th,@Param("z")int z,@Param("opacity")Float opacity) {
+	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("sx")int u,@Param("sy")int v,@Param("sw")Integer uw,@Param("sh")Integer uh,@Param("z")int z,@Param("opacity")Float opacity) {
 		if(ClientScene.dialog==null)
 			return;
 		if(w==null)
-			w=1f;
+			w=-1f;
 		if(h==null)
-			h=1f;
-		
+			h=-1f;
+		if(uw==null)
+			uw=-1;
+		if(uh==null)
+			uh=-1;
 		if(opacity==null)
 			opacity=1f;
 		ResourceLocation ip=FHScenarioClient.getPathOf(new ResourceLocation(path), "textures/gui/");
-		ImageContent ic=new ImageContent(ip,x,(y),(w),(h),u,v,uw,uh,tw,th);
+		GraphicsImageContent ic=new GraphicsImageContent(ip,(int)x,(int)(y),(int)(float)(w),(int)(float)(h));
 		ic.setZ(z);
 		ic.setOpacity(opacity);
+		ic.ix=u;
+		ic.iy=v;
+		ic.iw=uw;
+		ic.ih=uh;
 		ClientScene.layers.peekLast().addLayer(name,ic);
 	}
 	@Override

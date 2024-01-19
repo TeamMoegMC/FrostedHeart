@@ -11,8 +11,8 @@ import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
-public class TextContent extends LayerContent{
-
+public class TextContent extends GLLayerContent{
+	
 	public TextContent(ITextComponent text, float x, float y, float w, float h, boolean b) {
 		super(x, y, w, h);
 		this.shadow = b;

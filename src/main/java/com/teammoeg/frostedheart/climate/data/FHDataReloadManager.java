@@ -28,19 +28,22 @@ import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.resource.IResourceType;
+import net.minecraftforge.resource.ISelectiveResourceReloadListener;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.function.Predicate;
 
 
 @SuppressWarnings("deprecation")
-public class FHDataReloadManager implements IResourceManagerReloadListener {
+public class FHDataReloadManager implements ISelectiveResourceReloadListener {
     public static final FHDataReloadManager INSTANCE = new FHDataReloadManager();
     private static final JsonParser parser = new JsonParser();
 
     @Override
-    public void onResourceManagerReload(IResourceManager manager) {
+    public void  onResourceManagerReload(IResourceManager manager, Predicate<IResourceType> resourcePredicate) {
         FHDataManager.reset();
         StructureUtils.addBanedBlocks();
         WorldTemperature.clear();

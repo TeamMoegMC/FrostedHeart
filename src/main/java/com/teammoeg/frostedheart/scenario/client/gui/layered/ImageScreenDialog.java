@@ -60,9 +60,10 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		
 		
 	}
-
+	float lpartialTicks;
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
+		partialTicks=Math.max(lpartialTicks, partialTicks);
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
 		matrixStack.push();
@@ -91,11 +92,13 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 	@Override
 	public void tickDialog() {
+		lpartialTicks=0;
 		primary.tick();
 	}
 	@Override
 	public void closeScreen() {
 		ClientScene.dialog=null;
+		primary.close();
 		super.closeScreen();
 	}
 }
