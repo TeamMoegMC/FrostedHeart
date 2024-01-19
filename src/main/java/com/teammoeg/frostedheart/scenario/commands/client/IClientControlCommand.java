@@ -9,8 +9,6 @@ public interface IClientControlCommand {
 	void showTitle(IClientScene runner, String t, String st, Integer i1, Integer i2, Integer i3);
 
 
-	void speed(IClientScene runner, Double value, Integer s);
-
 	void fullScreenDialog(IClientScene runner, Integer show, Integer x, Integer y, Integer w, Integer m);
 
 	void TextLayer(IClientScene runner, String name, String text, int x, int y, Integer w, Integer h, int z, Integer opacity, int shadow);
@@ -30,6 +28,8 @@ public interface IClientControlCommand {
 	void sound(IClientScene runner, String name, int rep);
 
 	void stopAllsounds(IClientScene runner);
+
+	void speed(IClientScene runner, double value, Integer s);
 
 
 }

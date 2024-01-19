@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
@@ -66,7 +67,6 @@ public class ClientScene implements IClientScene {
 			return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).asFinished() : text;
 
 		}
-
 		public boolean isFinished() {
 			return !(text instanceof SizedReorderingProcessor) || ((SizedReorderingProcessor) text).isFinished;
 		}
@@ -83,9 +83,9 @@ public class ClientScene implements IClientScene {
 
 	public ClientScene() {
 		super();
-		//setActHud("来到这个世界","完成对话。");
+		this.setSpeed(1);
 	}
-
+	LinkedList<ITextComponent> origmsgQueue=new LinkedList<>();
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
 	int ticks;
 	int page = 0;
@@ -107,6 +107,16 @@ public class ClientScene implements IClientScene {
 	public ITextComponent getCurrentActSubtitle() {
 		return currentActSubtitle;
 	}
+	public void setSpeed(double value) {
+		value*=FHConfig.CLIENT.textSpeed.get();
+		if(value<=2) {
+			setTicksBetweenShow((int) (2/value));
+		}else {
+			setTicksBetweenShow(1);
+			setCharsPerShow((int) (value/2));
+		}
+		
+	}
 	@Override
 	public void showOneChar() {
 		int i=0;
@@ -127,12 +137,7 @@ public class ClientScene implements IClientScene {
 			needUpdate=true;
 			//System.out.println("Force update");
 		}
-		if (!unFinished && status==RunStatus.WAITCLIENT && ticksToContinue<=0) {
-			ticksToContinue = 40;
-			hasText = false;
-		} else if (status==RunStatus.WAITCLIENT||status==RunStatus.WAITTIMER) {
-			canSkip = true;
-		}
+
 	}
 	
 	@Override
@@ -230,6 +235,13 @@ public class ClientScene implements IClientScene {
 			wait--;
 			return false;
 		}
+		if (!unFinished && status==RunStatus.WAITCLIENT && ticksToContinue<=0) {
+			ticksToContinue = FHConfig.CLIENT.autoModeInterval.get();
+			hasText = false;
+			canSkip = true;
+		} else if (status==RunStatus.WAITCLIENT||status==RunStatus.WAITTIMER) {
+			canSkip = true;
+		}
 		if (ticksToContinue > 0) {
 			ticksToContinue--;
 			if (ticksToContinue <= 0) {
@@ -317,6 +329,7 @@ public class ClientScene implements IClientScene {
 		}
 		needUpdate = true;
 		shouldWrap = isReline;
+		unFinished=true;
 	}
 
 	boolean needUpdate = false;

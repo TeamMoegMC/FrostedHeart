@@ -79,15 +79,8 @@ public class ClientControl implements IClientControlCommand {
 		runner.setActHud(null, tsk.getTitle().getString());
 	}
 	@Override
-	public void speed(IClientScene runner,@Param("v")Double value,@Param("space")Integer s) {
-		if(value!=null) {
-			if(value<=2) {
-				runner.setTicksBetweenShow((int) (2/value));
-			}else {
-				runner.setTicksBetweenShow(1);
-				runner.setCharsPerShow((int) (value/2));
-			}
-		}
+	public void speed(IClientScene runner,@Param("v")double value,@Param("space")Integer s) {
+		runner.setSpeed(value);
 		
 	}
 	@Override
