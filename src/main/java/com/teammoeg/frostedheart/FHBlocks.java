@@ -19,16 +19,11 @@
 
 package com.teammoeg.frostedheart;
 
-import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
-import static com.teammoeg.frostedheart.util.FHProps.cropProps;
-import static com.teammoeg.frostedheart.util.FHProps.metalDecoProps;
-import static com.teammoeg.frostedheart.util.FHProps.ore_gravel;
-import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
-
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.adventure.block.bloodBlock;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
@@ -52,11 +47,13 @@ import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraftforge.common.ToolType;
 
+import static com.teammoeg.frostedheart.util.FHProps.*;
+
 public class FHBlocks {
 
 
     public static Block generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
-
+    public static Block blood_block = new bloodBlock("blood_block", redStoneProps, FHBlockItem::new);
     public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
     public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
     public static Block rye_block = new RyeBlock("rye_block", WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps, FHBlockItem::new);
