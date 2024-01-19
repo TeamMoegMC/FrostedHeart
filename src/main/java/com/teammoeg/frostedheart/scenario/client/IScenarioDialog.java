@@ -7,4 +7,5 @@ import com.teammoeg.frostedheart.scenario.client.ClientScene.TextInfo;
 public interface IScenarioDialog {
 	void updateTextLines(List<TextInfo> queue) ;
 	int getDialogWidth();
+	void tickDialog();
 }

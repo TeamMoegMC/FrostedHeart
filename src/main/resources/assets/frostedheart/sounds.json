@@ -7,6 +7,9 @@
     "subtitle": "subtitle.frostedheart.mechanical_calculator_roll",
     "sounds": [ "frostedheart:mech_calc_roll" ]
   },
+  "the_fall_of_arcana": {
+    "sounds": [ {"name":"frostedheart:the_fall_of_arcana","stream":true}]
+  },
   "ice_cracking": {
     "subtitle": "subtitle.frostedheart.ice_cracking",
     "sounds": [

@@ -9,13 +9,8 @@ public interface IClientControlCommand {
 	void showTitle(IClientScene runner, String t, String st, Integer i1, Integer i2, Integer i3);
 
 
-	void fullScreenDialog(IClientScene runner, Integer show, Integer x, Integer y, Integer w, Integer m);
 
-	void TextLayer(IClientScene runner, String name, String text, int x, int y, Integer w, Integer h, int z, Integer opacity, int shadow);
-
-	void ImageLayer(IClientScene runner, String name, String path, int x, int y, Integer w, Integer h, int u, int v, int uw, int uh, int tw, int th, int z, Integer opacity);
-
-	void showLayer(IClientScene runner, String name);
+	void ImageLayer(IClientScene runner, String name, String path, float x, float y, Float w, Float h, int u, int v, int uw, int uh, int tw, int th, int z, Float opacity);
 
 	void startLayer(IClientScene runner, String name);
 
@@ -27,9 +22,22 @@ public interface IClientControlCommand {
 
 	void sound(IClientScene runner, String name, int rep);
 
+
+
+	void showLayer(IClientScene runner, String name, String transition, int time, float x, float y, Float w, Float h);
+
+	void fullScreenDialog(IClientScene runner, Integer show, Float x, Float y, Float w, Integer m);
+
 	void stopAllsounds(IClientScene runner);
 
 	void speed(IClientScene runner, double value, Integer s);
+
+
+
+
+	void TextLayer(IClientScene runner, String name, String text, float x, float y, Float w, Float h, int z,
+			Float opacity, int shadow, float resize, int cv, int ch,Integer color);
+
 
 
 }

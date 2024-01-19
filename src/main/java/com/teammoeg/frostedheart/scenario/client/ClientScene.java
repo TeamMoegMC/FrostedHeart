@@ -29,7 +29,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
-	public static ImageScreenDialog instance;
+	public static ImageScreenDialog dialog;
 	public static LinkedList<LayerManager> layers=new LinkedList<>();
 	public static class TextInfo {
 		ITextComponent parent;
@@ -84,6 +84,12 @@ public class ClientScene implements IClientScene {
 	public ClientScene() {
 		super();
 		this.setSpeed(1);
+	}
+	public static int fromRelativeXW(float val) {
+		return (int) (val*ClientUtils.mc().getMainWindow().getScaledWidth());
+	}
+	public static int fromRelativeYH(float val) {
+		return (int) (val*ClientUtils.mc().getMainWindow().getScaledHeight());
 	}
 	LinkedList<ITextComponent> origmsgQueue=new LinkedList<>();
 	LinkedList<TextInfo> msgQueue = new LinkedList<>();
@@ -266,6 +272,10 @@ public class ClientScene implements IClientScene {
 			i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(), t.getFinished(), 0));
 		}
 		msgQueue.clear();
+		if(mc.currentScreen instanceof IScenarioDialog) {
+			IScenarioDialog dialogBox=(IScenarioDialog) mc.currentScreen;
+			dialogBox.updateTextLines(msgQueue);
+		}
 		shouldWrap = false;
 		needUpdate = false;
 	}
@@ -380,13 +390,15 @@ public class ClientScene implements IClientScene {
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
 			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
+			IScenarioDialog dialogBox=null;
+			if(mc.currentScreen instanceof IScenarioDialog) {
+				dialogBox=(IScenarioDialog) mc.currentScreen;
+				dialogBox.tickDialog();
+			}
 			if (!msgQueue.isEmpty()) {
 				if (isTick())
 					showOneChar();
-				IScenarioDialog dialogBox=null;
-				if(mc.currentScreen instanceof IScenarioDialog) {
-					dialogBox=(IScenarioDialog) mc.currentScreen;
-				}
+
 				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
 					needUpdate = false;
 					if (dialogBox==null) {

@@ -138,10 +138,10 @@ public class FrostedHud {
         static final Point forecast_temp = new Point(forecast_window.getX() + 7, 4);
         static final Point forecast_unit = new Point(forecast_window.getX() + 34, 4);
         static final Point forecast_marker = new Point(-158, 0);
-        static final Point act_title = new Point(5, 45);
-        static final Point act_split = new Point(5, 54);
+        static final Point act_title = new Point(5, 70);
+        static final Point act_split = new Point(5, 80);
         
-        static final Point act_subtitle = new Point(5, 60);
+        static final Point act_subtitle = new Point(5, 83);
     }
     static final class HUDElements {
         static final UV hotbar_slot = new UV(1, 1, 20, 20);

@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.TextContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.Transition;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
@@ -97,34 +98,34 @@ public class ClientControl implements IClientControlCommand {
 		
 	}
 	@Override
-	public void fullScreenDialog(IClientScene runner,@Param("show")Integer show,@Param("x")Integer x,@Param("y")Integer y,@Param("w")Integer w,@Param("m")Integer m) {
+	public void fullScreenDialog(IClientScene runner,@Param("show")Integer show,@Param("x")Float x,@Param("y")Float y,@Param("w")Float w,@Param("m")Integer m) {
 		if(show!=null) {
-			if(show>0&&ClientScene.instance==null) {
-				ClientScene.instance=new ImageScreenDialog(GuiUtils.str(""));
-				ClientUtils.mc().displayGuiScreen(ClientScene.instance);
+			if(show>0&&ClientScene.dialog==null) {
+				ClientScene.dialog=new ImageScreenDialog(GuiUtils.str(""));
+				ClientUtils.mc().displayGuiScreen(ClientScene.dialog);
 			}else {
-				ClientScene.instance.closeScreen();
-				ClientScene.instance=null;
+				ClientScene.dialog.closeScreen();
+				ClientScene.dialog=null;
 			}
 		}
-		if(ClientScene.instance==null)
+		if(ClientScene.dialog==null)
 			return;
 		if(x!=null)
-			ClientScene.instance.dialogX=x;
+			ClientScene.dialog.dialogX=(x);
 		if(y!=null)
-			ClientScene.instance.dialogY=y;
+			ClientScene.dialog.dialogY=(y);
 		if(w!=null)
-			ClientScene.instance.dialogW=w;
+			ClientScene.dialog.dialogW=(w);
 		if(m!=null)
-			ClientScene.instance.alignMiddle=m>0;
+			ClientScene.dialog.alignMiddle=m>0;
 	}
 	@Override
 	public void startLayer(IClientScene runner,@Param("n")@Param("name")String name) {
-		if(ClientScene.instance==null)
+		if(ClientScene.dialog==null)
 			return;
 		LayerManager lm=ClientScene.layers.peekLast();
 		if(lm==null) {
-			lm=ClientScene.instance.primary.copy();
+			lm=ClientScene.dialog.primary;
 		}else{
 			if(name!=null) {
 				lm=lm.getLayer(name);
@@ -135,52 +136,76 @@ public class ClientControl implements IClientControlCommand {
 		ClientScene.layers.add(lm);
 	}
 	@Override
-	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name) {
-		if(ClientScene.instance==null)
+	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("trans")String transition,@Param("t")int time,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h) {
+		if(ClientScene.dialog==null)
 			return;
 		LayerManager lm=ClientScene.layers.pollLast();
+		if(w==null)
+			w=1f;
+		if(h==null)
+			h=1f;
+		if(time<=0)
+			time=10;
+		lm.setX((x));
+		lm.setY((y));
+		lm.setWidth((w));
+		lm.setHeight((h));
+		if(transition!=null) {
+			lm.setTrans(Transition.valueOf(transition.toLowerCase()), time);
+			
+		}
+		
 		lm.commitChanges();
 		if(ClientScene.layers.isEmpty()) {
-			ClientScene.instance.primary=lm;
+			ClientScene.dialog.primary=lm;
 		}else {
 			ClientScene.layers.peekLast().addLayer(name, lm);
 		}
 	}
 	@Override
-	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")int x,@Param("y")int y,@Param("w")Integer w,@Param("h")Integer h,@Param("u")int u,@Param("v")int v,@Param("uw")int uw,@Param("uh")int uh,@Param("tw")int tw,@Param("th")int th,@Param("z")int z,@Param("opacity")Integer opacity) {
-		if(ClientScene.instance==null)
+	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("u")int u,@Param("v")int v,@Param("uw")int uw,@Param("uh")int uh,@Param("tw")int tw,@Param("th")int th,@Param("z")int z,@Param("opacity")Float opacity) {
+		if(ClientScene.dialog==null)
 			return;
 		if(w==null)
-			w=-1;
+			w=1f;
 		if(h==null)
-			h=-1;
+			h=1f;
+		
 		if(opacity==null)
-			opacity=1;
+			opacity=1f;
 		ResourceLocation ip=FHScenarioClient.getPathOf(new ResourceLocation(path), "textures/gui/");
-		ImageContent ic=new ImageContent(ip,x,y,w,h,u,v,uw,uh,tw,th);
+		ImageContent ic=new ImageContent(ip,x,(y),(w),(h),u,v,uw,uh,tw,th);
 		ic.setZ(z);
 		ic.setOpacity(opacity);
 		ClientScene.layers.peekLast().addLayer(name,ic);
 	}
 	@Override
-	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")int x,@Param("y")int y,@Param("w")Integer w,@Param("h")Integer h,@Param("z")int z,@Param("opacity")Integer opacity,@Param("shadow")int shadow) {
-		if(ClientScene.instance==null)
+	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")float resize,@Param("cv")int cv,@Param("ch")int ch,@Param("clr")Integer color) {
+		if(ClientScene.dialog==null)
 			return;
 		if(w==null)
-			w=-1;
+			w=1f;
 		if(h==null)
-			h=-1;
+			h=1f;
 		if(opacity==null)
-			opacity=1;
-		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text), x, y, w, h, shadow>0);
+			opacity=1f;
+		if(resize==0)
+			resize=1;
+		if(color==null)
+			color=0xFFFFFF;
+		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text),(x),(y),(w),(h), shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
+		tc.setResize(resize);
+		tc.centerH=ch>0;
+		tc.centerV=cv>0;
+		tc.color=0xFFFFFF&color;
 		ClientScene.layers.peekLast().addLayer(name,tc);
 		
 	}
 	@Override
 	public void freeLayer(IClientScene runner,@Param("n")@Param("name")String name) {
-		if(ClientScene.instance==null)
+		if(ClientScene.dialog==null)
 			return;
 
 		ClientScene.layers.peekLast().freeLayer(name);

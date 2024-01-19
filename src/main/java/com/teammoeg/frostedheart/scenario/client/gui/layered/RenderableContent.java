@@ -8,5 +8,5 @@ interface RenderableContent{
 	int getZ();
 	int getOrder();
 	void setOrder(int value);
-	void render(ImageScreenDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks, float opacity);
+	void render(RenderParams params);
 }
