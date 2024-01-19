@@ -150,12 +150,7 @@ public class ClientControl implements IClientControlCommand {
 		lm.setY((y));
 		lm.setWidth((w));
 		lm.setHeight((h));
-		if(transition!=null) {
-			lm.setTrans(Transition.valueOf(transition.toLowerCase()), time);
-			
-		}
-		
-		lm.commitChanges();
+		lm.commitChanges(transition!=null?Transition.valueOf(transition.toLowerCase()):null,time);
 		if(ClientScene.layers.isEmpty()) {
 			ClientScene.dialog.primary=lm;
 		}else {

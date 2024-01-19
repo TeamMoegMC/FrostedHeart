@@ -27,15 +27,10 @@ public class LayerManager extends LayerContent {
 	public LayerManager(int x, int y, int w, int h) {
 		super(x, y, w, h);
 	}
-	public void setTrans(TransitionFunction t,int ticks) {
-		this.trans=t;
-		this.transTicks=0;
-		this.maxTransTicks=ticks;
-	}
+
 	@Override
 	public void tick() {
 		transTicks++;
-		System.out.println(transTicks+"/"+maxTransTicks);
 		if(transTicks>=maxTransTicks) {
 			maxTransTicks=transTicks=0;
 			trans=null;
@@ -57,9 +52,13 @@ public class LayerManager extends LayerContent {
 			return ((LayerManager) v);
 		return new LayerManager();
 	}
-	public void commitChanges() {
-		if(trans!=null)
+	public synchronized void commitChanges(TransitionFunction t,int ticks) {
+		if(trans!=null) {
+			this.trans=t;
+			this.transTicks=0;
 			opq=pq;
+		}
+		this.maxTransTicks=ticks;
 		if(!names.isEmpty()) {
 			pq=new PriorityQueue<>(Comparator.comparingInt(RenderableContent::getZ).thenComparing(RenderableContent::getOrder));
 			int i=0;
@@ -71,27 +70,26 @@ public class LayerManager extends LayerContent {
 		}
 	}
 	@Override
-	public void renderContents(RenderParams params) {
+	public synchronized void renderContents(RenderParams params) {
 		if(trans!=null) {
 			RenderParams prev=params.copyWithCurrent(this);
 			RenderParams next=params.copyWithCurrent(this);
 			float val=(transTicks+params.partialTicks)/maxTransTicks;
-			System.out.println(val);
 			trans.compute(prev, next, val);
 			if(prev.forceFirst) {
 				if(pq!=null)
-					pq.forEach(t->t.render(next));
+					pq.forEach(t->{t.render(next);params.getMatrixStack().translate(0, 0, 1);});
 				if(opq!=null)
-					opq.forEach(t->t.render(prev));
+					opq.forEach(t->{t.render(prev);params.getMatrixStack().translate(0, 0, 1);});
 			}else {
 				if(opq!=null)
-					opq.forEach(t->t.render(prev));
+					opq.forEach(t->{t.render(prev);params.getMatrixStack().translate(0, 0, 1);});
 				if(pq!=null)
-					pq.forEach(t->t.render(next));
+					pq.forEach(t->{t.render(next);params.getMatrixStack().translate(0, 0, 1);});
 			}
 		}else {
 			if(pq!=null)
-				pq.forEach(t->t.render(params));
+				pq.forEach(t->{t.render(params);params.getMatrixStack().translate(0, 0, 1);});
 		}
 	}
 

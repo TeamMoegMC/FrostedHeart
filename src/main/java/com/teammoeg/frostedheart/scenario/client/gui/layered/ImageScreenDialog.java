@@ -65,12 +65,14 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
+		matrixStack.push();
 		primary.render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
 		int y=ClientScene.fromRelativeYH(dialogY);
 		int h=9*chatlist.size()+4;
 		
 		RenderSystem.enableAlphaTest();
 		RenderSystem.enableBlend();
+		matrixStack.translate(0, 0, 1);
 		if(!chatlist.isEmpty())
 			AbstractGui.fill(matrixStack, ClientScene.fromRelativeXW(dialogX)-2,ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+2+ClientScene.fromRelativeXW(dialogX), h+ClientScene.fromRelativeYH(dialogY)-2, 0xC0000000);
 		//this.fillGradient(matrixStack, ClientScene.fromRelativeXW(dialogX)-2, ClientScene.fromRelativeYH(dialogY)-2, ClientScene.fromRelativeXW(dialogW)+4, h, 0xC0101010, 0xD0101010);
@@ -80,6 +82,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 			y+=9;
 		}
 		RenderSystem.disableBlend();
+		matrixStack.pop();
 	}
 
 	@Override
