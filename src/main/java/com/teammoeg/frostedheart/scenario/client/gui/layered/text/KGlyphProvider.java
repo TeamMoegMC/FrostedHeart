@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered.text;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Collection;
 
 import javax.imageio.ImageIO;
 
@@ -14,11 +15,13 @@ import com.teammoeg.frostedheart.util.FileUtil;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.client.resources.ReloadListener;
+import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
 
-public class KGlyphProvider implements IResourceManagerReloadListener{
+public class KGlyphProvider extends ReloadListener<Object>{
 	public static KGlyphProvider INSTANCE=new KGlyphProvider();
 	private Int2ObjectMap<GlyphData> data=new Int2ObjectOpenHashMap<>();
 	private Int2ObjectMap<GlyphData> unicodeData=new Int2ObjectOpenHashMap<>();
@@ -33,6 +36,7 @@ public class KGlyphProvider implements IResourceManagerReloadListener{
 		return data.get(code);
 	}
 	public void readFont(JsonObject jo) {
+		System.out.println("loading fonts...");
 		JsonArray ja=jo.get("providers").getAsJsonArray();
 		for(int i=0;i<ja.size();i++) {
 			JsonObject cr=ja.get(i).getAsJsonObject();
@@ -41,6 +45,7 @@ public class KGlyphProvider implements IResourceManagerReloadListener{
 			case "legacy_unicode":readUnicode(cr);
 			}
 		}
+		System.out.println("loaded "+data.size());
 	}
 	public void readBitmap(JsonObject unicode) {
 		int height=9;
@@ -74,6 +79,7 @@ public class KGlyphProvider implements IResourceManagerReloadListener{
 		
 	}
 	public void readUnicode(JsonObject unicode) {
+		System.out.println(unicode);
 		String sizes=unicode.get("sizes").getAsString();
 		String template=unicode.get("template").getAsString();
 		ResourceLocation rrl=new ResourceLocation(template);
@@ -101,13 +107,18 @@ public class KGlyphProvider implements IResourceManagerReloadListener{
 
 		
 	}
-	@Override
 	public void onResourceManagerReload(IResourceManager resourceManager) {
+		System.out.println("123456");
 		rm=resourceManager;
 		JsonParser jp=new JsonParser();
 		try {
-			readFont(jp.parse(FileUtil.readString(
-			rm.getResource(new ResourceLocation("minecraft","font/default.json")).getInputStream())).getAsJsonObject());
+			Collection<ResourceLocation> cls=rm.getAllResourceLocations("font", (p_215274_0_) -> p_215274_0_.endsWith(".json"));
+			for(ResourceLocation rl:cls) {
+				System.out.println(rl);
+				if(rl.getPath().contains("default"))
+				readFont(jp.parse(FileUtil.readString(
+					rm.getResource(rl).getInputStream())).getAsJsonObject());
+			}
 		} catch (JsonSyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -115,5 +126,15 @@ public class KGlyphProvider implements IResourceManagerReloadListener{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	@Override
+	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		onResourceManagerReload(resourceManagerIn);
+		return new Object();
+	}
+	@Override
+	protected void apply(Object objectIn, IResourceManager resourceManagerIn, IProfiler profilerIn) {
+		// TODO Auto-generated method stub
+		
 	}
 }

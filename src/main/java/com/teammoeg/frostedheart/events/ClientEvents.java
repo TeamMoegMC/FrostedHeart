@@ -452,7 +452,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void addReloadListeners(AddReloadListenerEvent event) {
 
-        event.addListener(KGlyphProvider.INSTANCE);
+       // event.addListener(KGlyphProvider.INSTANCE);
 
     }
     @SubscribeEvent

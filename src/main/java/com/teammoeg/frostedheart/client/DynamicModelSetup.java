@@ -26,6 +26,10 @@ import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
 import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.text.KGlyphProvider;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 
 public class DynamicModelSetup {
@@ -46,5 +50,8 @@ public class DynamicModelSetup {
                 new ResourceLocation(FHMain.MODID, "block/mechanical_calculator_movable.obj"),
                 "mechanical_calculator_movable", ModelType.IE_OBJ
         );
+    }
+    public static void addListener() {
+    	((IReloadableResourceManager)Minecraft.getInstance().getResourceManager()).addReloadListener(KGlyphProvider.INSTANCE);
     }
 }

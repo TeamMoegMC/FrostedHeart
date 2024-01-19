@@ -133,6 +133,7 @@ public class FHMain {
         mod.addListener(this::processIMC);
         mod.addListener(this::enqueueIMC);
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::setup);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> DynamicModelSetup::addListener);
         mod.addListener(this::modification);
         FHConfig.register();
         TetraCompat.init();
