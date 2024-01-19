@@ -34,7 +34,7 @@ public class LayerManager extends GLLayerContent {
 	@Override
 	public void tick() {
 		transTicks++;
-		System.out.println(transTicks + "/" + maxTransTicks);
+
 		if (transTicks >= maxTransTicks) {
 			maxTransTicks = transTicks = 0;
 			trans = null;

@@ -104,7 +104,7 @@ public class ClientControl implements IClientControlCommand {
 			if(show>0&&ClientScene.dialog==null) {
 				ClientScene.dialog=new ImageScreenDialog(GuiUtils.str(""));
 				ClientUtils.mc().displayGuiScreen(ClientScene.dialog);
-			}else {
+			}else if(ClientScene.dialog!=null){
 				ClientScene.dialog.closeScreen();
 				ClientScene.dialog=null;
 			}

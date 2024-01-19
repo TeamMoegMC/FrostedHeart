@@ -45,17 +45,17 @@ public class GraphicsImageContent extends GraphicLayerContent {
 		BufferedImage image;
 		if(Minecraft.getInstance().getResourceManager().hasResource(showingImage)) {
 			try {
-				RenderComponentsUtil.func_238505_a_(GuiUtils.str("test测试1234"), 1000, Minecraft.getInstance().fontRenderer)
-				.get(0).accept(new GraphicGlyphRenderer(10, params.getG2d(), 10))
-				;
+
 				image = ImageIO.read(Minecraft.getInstance().getResourceManager().getResource(showingImage).getInputStream());
 				if(iw<0)
 					iw=image.getWidth();
 				if(ih<0)
 					ih=image.getHeight();
-				params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-				params.getG2d().drawImage(image, x, y, x+width, y+height, ix, iy, iw, ih, null);
-				params.getG2d().setComposite(AlphaComposite.SrcOver);
+				//params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+				//params.getG2d().drawImage(image, x, y, x+width, y+height, ix, iy, iw, ih, null);
+				//params.getG2d().setComposite(AlphaComposite.SrcOver);
+				RenderComponentsUtil.func_238505_a_(GuiUtils.str("test测试1234"), 1000, Minecraft.getInstance().fontRenderer)
+				.get(0).accept(new GraphicGlyphRenderer(10, params.getG2d(), 10));
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.out.println(showingImage+" load error");

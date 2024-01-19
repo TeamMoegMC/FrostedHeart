@@ -15,6 +15,7 @@ import com.teammoeg.frostedheart.util.FileUtil;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
@@ -51,20 +52,27 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		int height=9;
 		if(unicode.has("height"))
 			height=unicode.get("height").getAsInt();
-		int width=unicode.get("ascent").getAsInt();
+		int ascent=unicode.get("ascent").getAsInt();
 		ResourceLocation file=new ResourceLocation(unicode.get("file").getAsString());
 
 		
 		try {
 			BufferedImage image=ImageIO.read(rm.getResource(new ResourceLocation(file.getNamespace(),"textures/"+file.getPath())).getInputStream());
+			
 			JsonArray ja=unicode.get("chars").getAsJsonArray();
 			if(image!=null) {
-			for(int i=0;i<ja.size();i++) {
-				String codepoints=ja.get(i).getAsString();
-					for(int j=0;j<codepoints.length();j++) {
-						int n=codepoints.codePointAt(j);
+				int i=image.getWidth();
+				int j=image.getHeight();
+				int k=i/ja.get(0).getAsString().length();
+				int l=j/ja.size();
+				float f=height*1f/l;
+			for(int i1=0;i1<ja.size();i1++) {
+				String codepoints=ja.get(i1).getAsString();
+					for(int k1=0;k1<codepoints.codePointCount(0, codepoints.length());k1++) {
+						int n=codepoints.codePointAt(k1);
 						if(n==0)continue;
-						GlyphData gd=new GlyphData(j*width,i*height,width,height);
+						int i2=getCharacterWidth(image,k,l,k1,i1);
+						GlyphData gd=new GlyphData(k1*k,i1*l,k,l,(int)(0.5D + i2 * f) + 1, ascent,f);
 						gd.image=image;
 						data.putIfAbsent(n, gd);
 					}
@@ -78,25 +86,46 @@ public class KGlyphProvider extends ReloadListener<Object>{
 
 		
 	}
+	
+    private int getCharacterWidth(BufferedImage nativeImageIn, int charWidthIn, int charHeightInsp, int columnIn, int rowIn) {
+        int i;
+        
+        for(i = charWidthIn - 1; i >= 0; --i) {
+        	
+
+           for(int k = rowIn * charHeightInsp ; k < rowIn * charHeightInsp +charHeightInsp; ++k) {
+              if ((nativeImageIn.getRGB(i+columnIn * charWidthIn, k)&0xFF000000) != 0) {
+                 return i + 1;
+              }
+           }
+        }
+
+        return i + 1;
+     }
 	public void readUnicode(JsonObject unicode) {
-		System.out.println(unicode);
 		String sizes=unicode.get("sizes").getAsString();
 		String template=unicode.get("template").getAsString();
-		ResourceLocation rrl=new ResourceLocation(template);
+		
 		byte[] sizesb=new byte[65536];
 		try {
 			rm.getResource(new ResourceLocation(sizes)).getInputStream().read(sizesb);
 			for(int i=0;i<=0xFF;i++) {
-				BufferedImage image=ImageIO.read(rm.getResource(new ResourceLocation(rrl.getNamespace(),"textures/"+String.format(rrl.getPath(),String.format("%02x",i)))).getInputStream());
+				String hex=String.format("%02x",i);
+				ResourceLocation rrl=new ResourceLocation(String.format(template,hex));
+				ResourceLocation imgloc=new ResourceLocation(rrl.getNamespace(),"textures/"+rrl.getPath());
+				if(!rm.hasResource(imgloc))continue;
+				BufferedImage image=ImageIO.read(rm.getResource(imgloc).getInputStream());
 				if(image!=null) {
 					for(int j=0;j<=0Xff;j++) {
-						GlyphData gd=new GlyphData((j&0xF)<<4,(j&0xF0));
-						int n=i<<8+j;
+						GlyphData gd=new GlyphData((j&0xF)*16,(j&0xF0));
+						int n=(i*0x100)+j;
 						gd.image=image;
 						gd.parseSize(sizesb[n]);
 						unicodeData.put(n, gd);
 						data.putIfAbsent(n, gd);
 					}
+				}else {
+					System.out.println("error loading "+rrl);
 				}
 			}
 
