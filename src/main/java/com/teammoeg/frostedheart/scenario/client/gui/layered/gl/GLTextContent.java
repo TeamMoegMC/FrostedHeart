@@ -1,19 +1,21 @@
-package com.teammoeg.frostedheart.scenario.client.gui.layered;
+package com.teammoeg.frostedheart.scenario.client.gui.layered.gl;
 
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 
 import net.minecraft.client.gui.RenderComponentsUtil;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
-public class TextContent extends GLLayerContent{
+public class GLTextContent extends GLLayerContent{
 	
-	public TextContent(ITextComponent text, float x, float y, float w, float h, boolean b) {
+	public GLTextContent(ITextComponent text, float x, float y, float w, float h, boolean b) {
 		super(x, y, w, h);
 		this.shadow = b;
 		this.text = text;
@@ -21,9 +23,9 @@ public class TextContent extends GLLayerContent{
 
 	@Override
 	public RenderableContent copy() {
-		return new TextContent(text,x, y, width, height, z, shadow,resize);
+		return new GLTextContent(text,x, y, width, height, z, shadow,resize);
 	}
-	public TextContent(ITextComponent text,float x, float y, float width, float height, int z, boolean shadow, float resize) {
+	public GLTextContent(ITextComponent text,float x, float y, float width, float height, int z, boolean shadow, float resize) {
 		super(x, y, width, height, z);
 		this.shadow = shadow;
 		this.resize = resize;

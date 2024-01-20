@@ -40,6 +40,8 @@ public interface IClientControlCommand {
 
 	void ImageLayer(IClientScene runner, String name, String path, float x, float y, Float w, Float h, int u, int v, Integer uw, Integer uh, int z, Float opacity);
 
+	void FillRect(IClientScene runner, String name, float x, float y, Float w, Float h, int z, Integer color);
+
 
 
 }

@@ -44,7 +44,11 @@ public class TextualCommands {
 		runner.sendCachedSence();
 	}
 	public void l(ScenarioConductor runner) {
-		runner.getScene().waitClient();
+		runner.getScene().waitClient(true);
+		runner.sendCachedSence();
+	}
+	public void wc(ScenarioConductor runner) {
+		runner.getScene().waitClient(false);
 		runner.sendCachedSence();
 	}
 	public void wt(ScenarioConductor runner) {

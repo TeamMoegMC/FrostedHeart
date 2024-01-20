@@ -1,7 +1,8 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered;
 
 public abstract class OrderedRenderableContent implements RenderableContent {
-	int z,order;
+	protected int z;
+	protected int order;
 	public OrderedRenderableContent() {
 	}
 	public OrderedRenderableContent(int z) {

@@ -63,7 +63,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	float lpartialTicks;
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		//AbstractGui.fill(matrixStack, 0, 0, width, height, 0xffffffff);
-		partialTicks=Math.max(lpartialTicks, partialTicks);
+		partialTicks=Math.max(Math.min(Math.max(lpartialTicks, partialTicks),1),0);
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
 		matrixStack.push();

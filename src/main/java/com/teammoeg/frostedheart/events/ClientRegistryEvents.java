@@ -44,7 +44,7 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.text.KGlyphProvider;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.trade.gui.TradeScreen;
 import com.teammoeg.frostedheart.util.FHLogger;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;

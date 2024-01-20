@@ -16,7 +16,8 @@ public class PrerenderParams {
 	public PrerenderParams() {
 		image=new BufferedImage(2048,2048, BufferedImage.TYPE_INT_ARGB);
 		g2d=image.createGraphics();
-		//g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints);
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT);
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 	}
 	public Graphics2D getG2d() {
 		return g2d;

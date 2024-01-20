@@ -46,7 +46,7 @@ import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.text.KGlyphProvider;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.util.FHVersion;

@@ -39,6 +39,20 @@ public enum Transition implements TransitionFunction{
 	}),
 	nleft((o,n,t)->{
 		n.x=(int) (n.x-(1-t)*o.getScreenWidth());
+	}),
+	overup((o,n,t)->{
+		//n.setY((int) ((1-t)*n.height));
+		n.setContentY((int) ((1-t)*n.height));
+
+	}),
+	overdown((o,n,t)->{
+		n.height=(int) (t*n.height);
+	}),
+	overright((o,n,t)->{
+		n.width=(int) (t*n.width);
+	}),
+	overleft((o,n,t)->{
+		n.setContentX((int) ((1-t)*n.width));
 	})
 	;
 

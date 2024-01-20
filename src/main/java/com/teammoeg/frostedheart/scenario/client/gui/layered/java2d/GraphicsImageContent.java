@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.scenario.client.gui.layered;
+package com.teammoeg.frostedheart.scenario.client.gui.layered.java2d;
 
 import java.awt.AlphaComposite;
 import java.awt.image.BufferedImage;
@@ -6,11 +6,9 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.text.GraphicGlyphRenderer;
-
+import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.RenderComponentsUtil;
 import net.minecraft.util.ResourceLocation;
 
 public class GraphicsImageContent extends GraphicLayerContent {
@@ -51,11 +49,10 @@ public class GraphicsImageContent extends GraphicLayerContent {
 					iw=image.getWidth();
 				if(ih<0)
 					ih=image.getHeight();
-				//params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-				//params.getG2d().drawImage(image, x, y, x+width, y+height, ix, iy, iw, ih, null);
-				//params.getG2d().setComposite(AlphaComposite.SrcOver);
-				RenderComponentsUtil.func_238505_a_(GuiUtils.str("test测试1234"), 1000, Minecraft.getInstance().fontRenderer)
-				.get(0).accept(new GraphicGlyphRenderer(10, params.getG2d(), 10));
+				params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+				params.getG2d().drawImage(image, x, y, x+width, y+height, ix, iy, iw, ih, null);
+				params.getG2d().setComposite(AlphaComposite.SrcOver);
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 				System.out.println(showingImage+" load error");

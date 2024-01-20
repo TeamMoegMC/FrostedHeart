@@ -1,4 +1,8 @@
-package com.teammoeg.frostedheart.scenario.client.gui.layered;
+package com.teammoeg.frostedheart.scenario.client.gui.layered.gl;
+
+import com.teammoeg.frostedheart.scenario.client.gui.layered.OrderedRenderableContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
@@ -6,7 +10,10 @@ import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 public abstract class GLLayerContent extends OrderedRenderableContent {
 
 
-	float x,y,width,height,opacity=1;
+	protected float x,y;
+	protected float width;
+	protected float height;
+	protected float opacity=1;
 	public GLLayerContent() {
 		this(0,0,-1,-1);
 	}

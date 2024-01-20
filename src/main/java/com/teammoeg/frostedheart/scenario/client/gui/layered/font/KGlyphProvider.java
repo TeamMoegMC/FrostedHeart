@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.scenario.client.gui.layered.text;
+package com.teammoeg.frostedheart.scenario.client.gui.layered.font;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;

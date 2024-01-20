@@ -1,4 +1,7 @@
-package com.teammoeg.frostedheart.scenario.client.gui.layered;
+package com.teammoeg.frostedheart.scenario.client.gui.layered.java2d;
+
+import com.teammoeg.frostedheart.scenario.client.gui.layered.OrderedRenderableContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 
 public abstract class GraphicLayerContent extends OrderedRenderableContent {
 
@@ -23,6 +26,15 @@ public abstract class GraphicLayerContent extends OrderedRenderableContent {
 	}
 
 
+	public GraphicLayerContent(int x, int y, int width, int height,int z, float opacity) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.opacity = opacity;
+		this.z=z;
+	}
 	protected GraphicLayerContent(int x, int y, int width, int height, int z) {
 		super();
 		this.x = x;

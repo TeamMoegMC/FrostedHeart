@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
 import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.text.KGlyphProvider;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.font.KGlyphProvider;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.IReloadableResourceManager;

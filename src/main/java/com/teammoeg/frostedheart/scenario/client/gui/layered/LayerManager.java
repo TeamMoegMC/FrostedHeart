@@ -5,6 +5,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLImageContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLLayerContent;
+
 public class LayerManager extends GLLayerContent {
 	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
 	PriorityQueue<OrderedRenderableContent> pq;

@@ -102,6 +102,7 @@ public class ClientScene implements IClientScene {
 	boolean unFinished = false;
 	boolean hasText = false;
 	boolean canSkip = false;
+	public boolean sendImmediately=false;
 	ITextComponent currentActTitle;
 
 
@@ -242,7 +243,11 @@ public class ClientScene implements IClientScene {
 			return false;
 		}
 		if (!unFinished && status==RunStatus.WAITCLIENT && ticksToContinue<=0) {
-			ticksToContinue = FHConfig.CLIENT.autoModeInterval.get();
+			if(sendImmediately) {
+				sendContinuePacket(false);
+			}else {
+				ticksToContinue = FHConfig.CLIENT.autoModeInterval.get();
+			}
 			hasText = false;
 			canSkip = true;
 		} else if (status==RunStatus.WAITCLIENT||status==RunStatus.WAITTIMER) {

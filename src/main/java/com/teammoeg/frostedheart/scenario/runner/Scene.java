@@ -35,7 +35,7 @@ public class Scene {
 	List<String> savedLog = new ArrayList<>();
 	private transient Act act;
 	private transient boolean requireClear;
-
+	public boolean isClick=true;
 	public CompoundNBT save() {
 		CompoundNBT nbt = new CompoundNBT();
 		nbt.putBoolean("nowait", isSaveNowait);
@@ -115,8 +115,9 @@ public class Scene {
 	}
 
 	private void sendScene(String text, boolean wrap, boolean reset) {
-
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> parent.getPlayer()), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus()));
+	
+		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> parent.getPlayer()), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
+		isClick=true;
 	}
 	/**
 	 * sync all remaining cached text and send a 'clear current dialog' message to client
@@ -173,9 +174,11 @@ public class Scene {
 			parent.setStatus(RunStatus.WAITCLIENT);
 	}
 
-	public void waitClient() {
-		if (!isSlient)
+	public void waitClient(boolean isClick) {
+		if (!isSlient) {
 			parent.setStatus(RunStatus.WAITCLIENT);
+			this.isClick=isClick;
+		}
 	}
 
 	public void addWait(int time) {
