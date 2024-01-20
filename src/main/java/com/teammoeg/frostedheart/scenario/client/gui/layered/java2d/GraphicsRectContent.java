@@ -34,6 +34,7 @@ public class GraphicsRectContent extends GraphicLayerContent {
 	public void prerender(PrerenderParams params) {
 		params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
 		params.getG2d().setColor(new Color(color,true));
+		
 		params.getG2d().fillRect(x, y, width, height);
 		params.getG2d().setComposite(AlphaComposite.SrcOver);
 

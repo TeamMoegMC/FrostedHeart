@@ -68,7 +68,7 @@ public class FHScenario {
 
 	public static final ScenarioParser parser = new ScenarioParser();
 	static File scenarioPath = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhscenario");
-
+	
 	public static void registerScenarioProvider(ScenarioProvider p) {
 		scenarioProviders.add(p);
 	}

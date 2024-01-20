@@ -204,15 +204,18 @@ public class ScenarioParser {
         if(!reader.hasNext()) return createCommand(command, params);
         while (reader.hasNext()) {
             String name = parseLiteralOrString(reader, '=');
+            
             if (reader.last() != '=') {
                 reader.skipWhitespace();
-                if (reader.last() != '=')
+                if (reader.peek() != '=') {
                     break;
+                }
+				reader.next();
             }
             reader.skipWhitespace();
+            
             String val = parseLiteralOrString(reader, -1);
             params.put(name, val);
-            
             reader.skipWhitespace();
             
             if (!reader.hasNext()||reader.eat('#')) return createCommand(command, params);
@@ -231,13 +234,17 @@ public class ScenarioParser {
             String name = parseLiteralOrString(reader, '=');
             if (reader.last() != '=') {
                 reader.skipWhitespace();
-                if (reader.last() != '=')
+                if (reader.peek() != '=') {
                     break;
+                }
+				reader.next();
             }
+            reader.skipWhitespace();
             reader.skipWhitespace();
             String val = parseLiteralOrString(reader, ']');
             params.put(name, val);
             reader.skipWhitespace();
+            if(reader.peek()==']')reader.next();
             if (reader.last() == ']') return createCommand(command, params);
         }
         return new LiteralNode(reader.fromStart());
@@ -323,4 +330,8 @@ public class ScenarioParser {
         }
         return all.toString();
     }
+   /* public static void main(String[] args) {
+    	for(Node n:new ScenarioParser().parseString("test", "@t").pieces)
+    		System.out.println(n.getText());
+    }*/
 }

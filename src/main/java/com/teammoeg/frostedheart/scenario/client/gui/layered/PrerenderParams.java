@@ -14,7 +14,7 @@ public class PrerenderParams {
 	int width=2048;
 	int height=1152;
 	public PrerenderParams() {
-		image=new BufferedImage(2048,2048, BufferedImage.TYPE_INT_ARGB);
+		image=new BufferedImage(width,width, BufferedImage.TYPE_INT_ARGB);
 		g2d=image.createGraphics();
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT);
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
