@@ -36,12 +36,14 @@ public class LayerManager extends GLLayerContent {
 
 	@Override
 	public void tick() {
-		transTicks++;
+		if(maxTransTicks>0) {
+			transTicks++;
 
-		if (transTicks >= maxTransTicks) {
-			maxTransTicks = transTicks = 0;
-			trans = null;
-			opq = null;
+			if (transTicks >= maxTransTicks) {
+				maxTransTicks = transTicks = 0;
+				trans = null;
+				opq = null;
+			}
 		}
 		for (RenderableContent i : names.values()) {
 			i.tick();

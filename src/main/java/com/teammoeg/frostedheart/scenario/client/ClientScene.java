@@ -10,6 +10,9 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
+import com.teammoeg.frostedheart.scenario.client.text.IScenarioDialog;
+import com.teammoeg.frostedheart.scenario.client.text.TextInfo;
+import com.teammoeg.frostedheart.scenario.client.text.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.util.ReferenceValue;
@@ -18,7 +21,6 @@ import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.RenderComponentsUtil;
-import net.minecraft.util.ICharacterConsumer;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
@@ -31,56 +33,6 @@ public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
 	public static ImageScreenDialog dialog;
 	public static LinkedList<LayerManager> layers=new LinkedList<>();
-	public static class TextInfo {
-		ITextComponent parent;
-		int line;
-		IReorderingProcessor text;
-		public boolean addLimit(int amount,boolean toSpace) {
-			if (text instanceof SizedReorderingProcessor) {
-				SizedReorderingProcessor t = (SizedReorderingProcessor) text;
-				if (!t.isFinished) {
-					if(toSpace)
-						t.limit=t.nextSpace();
-					else
-						t.limit+=amount;
-					return true;
-				}
-			}
-			return false;
-		}
-
-		public TextInfo(ITextComponent parent, int line, IReorderingProcessor text) {
-			super();
-			this.parent = parent;
-			this.line = line;
-			this.text = text;
-			
-		}
-
-		public int getMaxLen() {
-			return ClientUtils.mc().fontRenderer.getStringWidth(ClientScene.toString(getFinished()))+30;
-		}
-		public int getCurLen() {
-			return ClientUtils.mc().fontRenderer.getStringWidth(ClientScene.toString(text))+30;
-		}
-		public IReorderingProcessor asFinished() {
-			return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).asFinished() : text;
-
-		}
-		public boolean isFinished() {
-			return !(text instanceof SizedReorderingProcessor) || ((SizedReorderingProcessor) text).isFinished;
-		}
-
-		public boolean hasText() {
-			return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).hasText() : true;
-		}
-
-		public IReorderingProcessor getFinished() {
-			// TODO Auto-generated method stub
-			return (text instanceof SizedReorderingProcessor) ? ((SizedReorderingProcessor) text).origin : text;
-		}
-	}
-
 	public ClientScene() {
 		super();
 		this.setSpeed(1);
@@ -154,6 +106,7 @@ public class ClientScene implements IClientScene {
 		wait = 0;
 		ticksToContinue = 0;
 		msgQueue.clear();
+		origmsgQueue.clear();
 		unFinished = false;
 		hasText = false;
 	}
@@ -164,69 +117,6 @@ public class ClientScene implements IClientScene {
 		FHPacketHandler.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
 		status=RunStatus.RUNNING;
 		canSkip=false;
-	}
-
-	public static class SizedReorderingProcessor implements IReorderingProcessor {
-		IReorderingProcessor origin;
-		int limit = 0;
-		boolean isFinished = false;
-
-		public SizedReorderingProcessor(IReorderingProcessor origin) {
-			super();
-			this.origin = origin;
-		}
-
-		public boolean hasText() {
-			return limit > 0;
-		}
-
-		public IReorderingProcessor asFinished() {
-			if (isFinished) return origin;
-			return this;
-		}
-		public int nextSpace() {
-			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
-			ReferenceValue<Integer> retTracker = new ReferenceValue<>();
-			origin.accept((i, s, c) -> {
-				if (c != 65533) {
-					renderTracker.setVal(renderTracker.getVal() + 1);
-				}
-				if (renderTracker.getVal() < limit) return true;
-				if(Character.isWhitespace(c)) {
-					retTracker.setVal(renderTracker.getVal());
-				}
-				return true;
-			});
-			retTracker.setIfAbsent(renderTracker::getVal);
-			return retTracker.getVal();
-		}
-		@Override
-		public boolean accept(ICharacterConsumer p_accept_1_) {
-			ReferenceValue<Integer> renderTracker = new ReferenceValue<>(0);
-			return origin.accept((i, s, c) -> {
-				isFinished = true;
-				if (renderTracker.getVal() < limit) {
-					p_accept_1_.accept(i, s, c);
-				} else {
-					isFinished = false;
-				}
-				if (c != 65533) {
-					renderTracker.setVal(renderTracker.getVal() + 1);
-				}
-				return true;
-			});
-		}
-
-		public void checkIsFinished() {
-			origin.accept((i, s, c) -> {
-				isFinished = true;
-				if (i >= limit) {
-					isFinished = false;
-				}
-				return true;
-			});
-		}
-
 	}
 
 	@Override
@@ -273,9 +163,11 @@ public class ClientScene implements IClientScene {
 		Minecraft mc = ClientUtils.mc();
 		List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
 		i.removeIf(l -> l.getChatLineID() == fhchatid);
-		for (TextInfo t : msgQueue) {
-			i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(), t.getFinished(), 0));
+		for(ITextComponent ic:origmsgQueue) {
+			for(IReorderingProcessor j:RenderComponentsUtil.func_238505_a_(ic,w, ClientUtils.mc().fontRenderer))
+				i.add(0, new ChatLine<IReorderingProcessor>(mc.ingameGUI.getTicks(),j, 0));
 		}
+		origmsgQueue.clear();
 		msgQueue.clear();
 		if(mc.currentScreen instanceof IScenarioDialog) {
 			IScenarioDialog dialogBox=(IScenarioDialog) mc.currentScreen;
@@ -312,30 +204,27 @@ public class ClientScene implements IClientScene {
 		if (getPreset() != null)
 			item = item.deepCopy().mergeStyle(getPreset());
 		List<IReorderingProcessor> lines;
-		//System.out.println(msgQueue.size() + ":" + shouldWrap);
 		if (!msgQueue.isEmpty() && !shouldWrap) {
 			TextInfo ti = msgQueue.remove(msgQueue.size() - 1);
 			int lastline = ti.line;
 			int lastLimit = countCh(ti.text);
-			System.out.println(lastLimit);
 			IFormattableTextComponent ntext = ti.parent.deepCopy().appendSibling(item);
+			origmsgQueue.pollLast();
+			origmsgQueue.add(ntext);
 			lines = RenderComponentsUtil.func_238505_a_(ntext, getDialogWidth(), ClientUtils.mc().fontRenderer);
 			for (int i = lastline; i < lines.size(); i++) {
-
 				IReorderingProcessor line = lines.get(i);
-
-				// System.out.println(i);
-				// System.out.println(toString(line));
 				if (!isNowait) {
 					SizedReorderingProcessor sized = new SizedReorderingProcessor(line);
 					if (i == lastline)
-						sized.limit = lastLimit;
+						sized.setLimit(lastLimit);
 					line = sized;
 				}
 				// System.out.println(toString(line));
 				msgQueue.add(new TextInfo(ntext, i, line));
 			}
 		} else {
+			origmsgQueue.add(item);
 			lines = RenderComponentsUtil.func_238505_a_(item, getDialogWidth(), ClientUtils.mc().fontRenderer);
 			int i = 0;
 			for (IReorderingProcessor line : lines) {

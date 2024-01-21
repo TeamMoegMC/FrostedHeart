@@ -48,15 +48,8 @@ public class GlyphData {
 		BufferedImage currentImage=image;
 		if(color!=0xFFFFFFFF) {
 			if(color==0xFF000000) {
-				System.out.println("Shadow");
 				if(shadowGraphics==null) {
 					shadowGraphics=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-					//Graphics2D cg=shadowGraphics.createGraphics();
-					////cg.setComposite(AlphaComposite.Src);
-					//cg.drawImage(image, 0, 0, width,height,this.x,this.y,this.x+width,this.y+height,null);
-					//cg.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR));
-					//cg.fillRect(0, 0, width, height);
-					//cg.dispose();
 					for (int x0 = 0; x0 < width; x0++) {
 						for (int y0 = 0; y0 < height; y0++) {
 							int srgb = image.getRGB(x0+this.x, y0+this.y);
@@ -69,22 +62,20 @@ public class GlyphData {
 				crx=cry=0;
 				currentImage=shadowGraphics;
 			}else if(color!=cachedColor) {
-				System.out.println("Cache");
 				if(chachedGraphics==null) {
 					chachedGraphics=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 				}
-				Graphics2D cg=chachedGraphics.createGraphics();
-				cg.setComposite(AlphaComposite.getInstance(AlphaComposite.CLEAR));
-				cg.fillRect(0, 0, chachedGraphics.getWidth(), chachedGraphics.getHeight());
-				cg.dispose();
 				for (int x0 = 0; x0 < width; x0++) {
 					for (int y0 = 0; y0 < height; y0++) {
 						int srgb = image.getRGB(x0+this.x, y0+this.y);
-						if (srgb != 0) {
+						if ((srgb&0xFF000000) != 0) {
 							chachedGraphics.setRGB(x0, y0, color);
 						}
 					}
 				}
+				crx=cry=0;
+				currentImage=chachedGraphics;
+			}else {
 				crx=cry=0;
 				currentImage=chachedGraphics;
 			}
