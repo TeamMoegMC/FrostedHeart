@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.climate.player;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
@@ -177,7 +179,9 @@ public class TemperatureUpdate {
                 //Temperature from climate
                 envtemp += WorldTemperature.getClimateTemperature(world);
                 //Surrounding temperature
-                float bt = new SurroundingTemperatureSimulator(player).getBlockTemperature(player.getPosX(), player.getPosYEye(), player.getPosZ());
+                Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getPosX(), player.getPosYEye(), player.getPosZ());
+                float bt=btp.getFirst();
+                float wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
                 //Day-night temperature
                 float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
                 float gameTime = world.getDayTime() % 24000L;
