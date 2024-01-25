@@ -144,6 +144,13 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore, RenderType.getCutout());
 
         RenderTypeLookup.setRenderLayer(FHBlocks.blood_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.bone_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.desk, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.small_garage, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.package_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.pebble_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.odd_mark, RenderType.getCutout());
+
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);

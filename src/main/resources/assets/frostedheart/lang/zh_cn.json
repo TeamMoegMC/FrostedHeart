@@ -110,6 +110,12 @@
   "block.frostedheart.incubator": "培养箱",
   "block.frostedheart.heat_incubator": "蒸汽培养箱",
   "block.frostedheart.blood_block": "血",
+  "block.frostedheart.bone_block": "骨堆",
+  "block.frostedheart.desk": "废弃桌子",
+  "block.frostedheart.small_garage": "小型杂物堆",
+  "block.frostedheart.package_block": "废弃包裹",
+  "block.frostedheart.pebble_block": "鹅卵石",
+  "block.frostedheart.odd_mark": "可疑的痕迹",
 
   "clue.frostedheart.item": "研究物品",
   "clue.frostedheart.consume_item": "提交物品",

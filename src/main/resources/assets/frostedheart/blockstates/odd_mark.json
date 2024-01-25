@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "marktype=0,markcolor=0": {
+      "model": "frostedheart:block/odd_mark/block_00"
+    },
+    "marktype=1,markcolor=0": {
+      "model": "frostedheart:block/odd_mark/block_10"
+    },
+    "marktype=2,markcolor=0": {
+      "model": "frostedheart:block/odd_mark/block_20"
+    },
+    "marktype=3,markcolor=0": {
+      "model": "frostedheart:block/odd_mark/block_30"
+    },
+    "marktype=4,markcolor=0": {
+      "model": "frostedheart:block/odd_mark/block_40"
+    },
+    "marktype=0,markcolor=1": {
+      "model": "frostedheart:block/odd_mark/block_01"
+    },
+    "marktype=1,markcolor=1": {
+      "model": "frostedheart:block/odd_mark/block_11"
+    },
+    "marktype=2,markcolor=1": {
+      "model": "frostedheart:block/odd_mark/block_21"
+    },
+    "marktype=3,markcolor=1": {
+      "model": "frostedheart:block/odd_mark/block_31"
+    },
+    "marktype=4,markcolor=1": {
+      "model": "frostedheart:block/odd_mark/block_41"
+    }
+  }
+}

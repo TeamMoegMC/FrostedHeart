@@ -30,6 +30,12 @@
   "block.frostedheart.incubator": "Incubator",
   "block.frostedheart.heat_incubator": "Steam Incubator",
   "block.frostedheart.blood_block": "Blood",
+  "block.frostedheart.bone_block": "Bone",
+  "block.frostedheart.desk": "Old Desk",
+  "block.frostedheart.small_garage": "Garage",
+  "block.frostedheart.package_block": "Package",
+  "block.frostedheart.pebble_block": "Pebble",
+  "block.frostedheart.odd_mark": "Odd Mark",
   
    "tetra/schematic/single/head/core_spade/basic_core_spade.name": "Core Spade Head",
   
