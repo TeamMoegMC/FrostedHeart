@@ -57,6 +57,31 @@ public class FHProps {
             .doesNotBlockMovement()
             .zeroHardnessAndResistance()
             .sound(SoundType.STONE);
+
+    public static final AbstractBlock.Properties stoneProps = AbstractBlock.Properties
+            .create(Material.ROCK)
+            .sound(SoundType.STONE)
+            .doesNotBlockMovement()
+            .setRequiresTool()
+            .harvestTool(ToolType.PICKAXE)
+            .hardnessAndResistance(2, 10);
+
+    public static final AbstractBlock.Properties woodenProps = AbstractBlock.Properties
+            .create(Material.WOOD)
+            .doesNotBlockMovement()
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .sound(SoundType.WOOD)
+            .hardnessAndResistance(0.6F);
+
+    public static final AbstractBlock.Properties grassProps = AbstractBlock.Properties
+            .create(Material.PLANTS)
+            .doesNotBlockMovement()
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .sound(SoundType.PLANT)
+            .hardnessAndResistance(0.3F);
+
     public static final Item.Properties itemProps = new Item.Properties().group(FHMain.itemGroup);
     public static final AbstractBlock.Properties berryBushBlocks = AbstractBlock.Properties.create(Material.PLANTS).tickRandomly().doesNotBlockMovement().sound(SoundType.SWEET_BERRY_BUSH);
     public static void init() {

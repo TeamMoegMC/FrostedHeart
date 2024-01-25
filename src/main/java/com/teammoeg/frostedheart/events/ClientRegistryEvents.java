@@ -145,7 +145,7 @@ public class ClientRegistryEvents {
 
         RenderTypeLookup.setRenderLayer(FHBlocks.blood_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.bone_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.desk, RenderType.getCutout());
+        //RenderTypeLookup.setRenderLayer(FHBlocks.desk, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.small_garage, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.package_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.pebble_block, RenderType.getCutout());

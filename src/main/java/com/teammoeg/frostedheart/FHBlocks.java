@@ -53,14 +53,14 @@ public class FHBlocks {
 
 
     public static Block generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
-    public static Block blood_block = new bloodBlock("blood_block", redStoneProps, FHBlockItem::new);
-    public static Block bone_block = new BoneBlock("bone_block", redStoneProps, FHBlockItem::new);
-    public static Block desk = new DeskBlock("desk", redStoneProps, FHBlockItem::new);
-    public static Block small_garage = new SmallGarage("small_garage", redStoneProps, FHBlockItem::new);
-    public static Block package_block = new PackageBlock("package_block", redStoneProps, FHBlockItem::new);
-    public static Block pebble_block = new PebbleBlock("pebble_block", redStoneProps, FHBlockItem::new);
+    public static Block blood_block = new bloodBlock("blood_block", stoneProps, FHBlockItem::new);
+    public static Block bone_block = new BoneBlock("bone_block", grassProps, FHBlockItem::new);
+    //public static Block desk = new DeskBlock("desk", redStoneProps, FHBlockItem::new);
+    public static Block small_garage = new SmallGarage("small_garage", grassProps, FHBlockItem::new);
+    public static Block package_block = new PackageBlock("package_block", woodenProps, FHBlockItem::new);
+    public static Block pebble_block = new PebbleBlock("pebble_block", stoneProps, FHBlockItem::new);
     public static Block odd_mark = new OddMark("odd_mark", redStoneProps, FHBlockItem::new);
-    public static Block wooden_box = new WoodenBox("wooden_box", redStoneProps, FHBlockItem::new);
+    public static Block wooden_box = new WoodenBox("wooden_box", woodenProps, FHBlockItem::new);
     public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
     public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
     public static Block rye_block = new RyeBlock("rye_block", WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps, FHBlockItem::new);
