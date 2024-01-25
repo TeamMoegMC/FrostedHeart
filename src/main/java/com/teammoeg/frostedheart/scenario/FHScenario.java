@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.ActCommand;
 import com.teammoeg.frostedheart.scenario.commands.ControlCommands;
 import com.teammoeg.frostedheart.scenario.commands.FTBQCommands;
+import com.teammoeg.frostedheart.scenario.commands.MCCommands;
 import com.teammoeg.frostedheart.scenario.commands.TextualCommands;
 import com.teammoeg.frostedheart.scenario.commands.VariableCommand;
 import com.teammoeg.frostedheart.scenario.commands.client.IClientControlCommand;
@@ -160,6 +161,7 @@ public class FHScenario {
 		register(VariableCommand.class);
 		registerClientDelegate(IClientControlCommand.class);
 		registerScenarioProvider(new FTBQProvider());
+		register(MCCommands.class);
 	}
 	static Path local;
 	static final FolderName dataFolder = new FolderName("fhscenario");
