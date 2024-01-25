@@ -60,6 +60,7 @@ public class FHBlocks {
     public static Block package_block = new PackageBlock("package_block", redStoneProps, FHBlockItem::new);
     public static Block pebble_block = new PebbleBlock("pebble_block", redStoneProps, FHBlockItem::new);
     public static Block odd_mark = new OddMark("odd_mark", redStoneProps, FHBlockItem::new);
+    public static Block wooden_box = new WoodenBox("wooden_box", redStoneProps, FHBlockItem::new);
     public static Block generator_core_t1 = new FHBaseBlock("generator_core_t1", stoneDecoProps, FHBlockItem::new);
     public static Block generator_amplifier_r1 = new FHBaseBlock("generator_amplifier_r1", stoneDecoProps, FHBlockItem::new);
     public static Block rye_block = new RyeBlock("rye_block", WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps, FHBlockItem::new);

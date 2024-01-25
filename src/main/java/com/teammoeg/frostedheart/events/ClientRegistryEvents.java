@@ -150,6 +150,7 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.package_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.pebble_block, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.odd_mark, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.wooden_box, RenderType.getCutout());
 
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
