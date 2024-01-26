@@ -24,6 +24,7 @@ import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -157,12 +158,15 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 			//World worldIn, @Nullable PlayerEntity playerIn, Hand handIn, ItemStack stackIn, BlockRayTraceResult rayTraceResultIn
 			//BlockItemUseContext buc=new BlockItemUseContext(worldIn, null,Hand.MAIN_HAND ,new ItemStack(Blocks.SNOW_BLOCK.asItem()),BlockRayTraceResult);
 			int layers=0;
-			if(worldIn.getHeight(Type.MOTION_BLOCKING, pos).getY()<=pos.getY()) {
+			if(worldIn.getHeight(Type.WORLD_SURFACE, pos).getY()-1<=pos.getY()) {
 				layers=16+skyLight- random.nextInt(3);
 				//layers-=countExposedFaces(worldIn, cpos)*2;
 			}else {
 				layers=skyLight- random.nextInt(3)-countExposedFaces(worldIn, cpos);
 			}
+			if(state.isIn(BlockTags.LEAVES)||stateDown.isIn(BlockTags.LEAVES))
+				while(layers>=16)
+					layers-=8;
 			if(layers<=0)
 				layers=1;
 			while(layers>0) {
@@ -174,9 +178,28 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 				if(layers>8) {
 					layers-=8;
 					clayers=8;
+					/*if(layers<=2) {
+						clayers-=random.nextInt(3)+1;
+						layers=0;
+					}*/
 				}else {
 					clayers=layers;
+					if(clayers>=8) {
+						clayers--;
+					}
 					layers=0;
+				}
+				if(cstate.matchesBlock(Blocks.SNOW)) {
+					BlockState upstate=worldIn.getBlockState(cpos);
+					if(upstate.matchesBlock(Blocks.SNOW))
+						continue;
+					int crlayers=cstate.get(BlockStateProperties.LAYERS_1_8);
+				
+					clayers+=crlayers;
+					if(clayers>8) {
+						layers+=clayers-8;
+						clayers=8;
+					}
 				}
 				if(!cstate.getMaterial().isReplaceable()/*cstate.getBlock()!=Blocks.SNOW&&!cstate.isAir()&&!cstate.getCollisionShape(worldIn, cpos).isEmpty()*/) {
 					if(!ModSnowBlock.convert(worldIn, ccpos, cstate, clayers, 4)) {
