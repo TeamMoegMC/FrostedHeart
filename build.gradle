@@ -213,7 +213,7 @@ dependencies {
     compileOnly fg.deobf("curse.maven:chisel-235279:3376782")
     compileOnly fg.deobf("curse.maven:ctm-267602:3137659")
     implementation fg.deobf("curse.maven:kiwi-303657:3377053")
-    compileOnly fg.deobf("curse.maven:snowrealmagic-308663:3295579")
+    implementation fg.deobf("curse.maven:snowrealmagic-308663:3295579")
     implementation fg.deobf("curse.maven:tetra-289712:3585032")
     implementation fg.deobf("curse.maven:mgui-351914:3456505")
     compileOnly fg.deobf("curse.maven:selene-499980:3517008")

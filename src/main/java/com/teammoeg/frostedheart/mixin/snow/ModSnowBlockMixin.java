@@ -27,8 +27,14 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 import snownee.snow.ModUtil;
 import snownee.snow.SnowCommonConfig;
 import snownee.snow.block.ModSnowBlock;
@@ -40,7 +46,13 @@ public abstract class ModSnowBlockMixin extends SnowBlock {
     public ModSnowBlockMixin(Properties properties) {
         super(properties);
     }
-
+    @Inject(remap = false,method="convert", at =  @At(value = "INVOKE",target="Lnet/minecraft/util/math/BlockPos;down()Lnet/minecraft/util/math/BlockPos;",remap=true,ordinal=0),cancellable=true )
+    private static void fh$convert(IWorld world, BlockPos pos, BlockState state, int layers, int flags, CallbackInfoReturnable<Boolean> cbi) {
+  
+    	cbi.setReturnValue(false);
+    	cbi.cancel();
+    	
+    }
     /**
      * @author yuesha-yc
      * @reason change snow collision shape to always be empty

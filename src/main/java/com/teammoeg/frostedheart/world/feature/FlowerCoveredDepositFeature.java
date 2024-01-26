@@ -19,14 +19,18 @@
 
 package com.teammoeg.frostedheart.world.feature;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import com.mojang.serialization.Codec;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ISeedReader;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -37,7 +41,7 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
     public FlowerCoveredDepositFeature(Codec<BlockStateFeatureConfig> codec) {
         super(codec);
     }
-
+    
     @Override
     public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, BlockStateFeatureConfig config) {
         while (true) {
@@ -69,7 +73,7 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                 int zWidth = 3 + rand.nextInt(2);
                 int depth = 1 + rand.nextInt(3);
                 double radius = (xWidth + zWidth + depth) * 0.333F + 0.5D;
-                int flowerCount = 0;
+                /*int flowerCount = 0;
                 for (BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.add(-xWidth, 0, -zWidth), pos.add(xWidth, 0, zWidth))) {
                     // randomly place flower
                     if (rand.nextInt(5) == 0 && blockpos.distanceSq(pos) <= (radius * radius)) {
@@ -85,19 +89,38 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                     if (flowerCount == 3) {
                         break;
                     }
-                }
+                }*/
 
                 // move pos down by two blocks to hide clay
+                BlockPos opos=pos;
                 pos = pos.down(2);
+                //pos=pos.up();
+                Set<BlockPos> empties=new HashSet<>();
+                Set<BlockPos> filled=new HashSet<>();
                 for (BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.add(-xWidth, -depth, -zWidth), pos.add(xWidth, 0, zWidth))) {
-                    if (blockpos.distanceSq(pos.up(2)) <= (radius * radius)) {
+                    if (blockpos.distanceSq(pos) <= (radius * radius)) {
                         if (
                                 config.state.isValidPosition(reader, blockpos)
-                                        && !reader.isAirBlock(blockpos.up())  // not exposed in air or snow
-                                        && !reader.getBlockState(blockpos.up()).getBlock().matchesBlock(Blocks.SNOW)
-                        )
-                            reader.setBlockState(blockpos, config.state, 4);
+                                && !reader.getBlockState(blockpos).getBlock().matchesBlock(Blocks.SNOW)
+                                && !reader.getBlockState(blockpos).getBlock().isIn(BlockTags.ICE)
+                                && !reader.getBlockState(blockpos).getBlock().matchesBlock(Blocks.AIR)
+                                        //&& !reader.isAirBlock(blockpos.up())  // not exposed in air or snow
+                                        //&& !reader.getBlockState(blockpos.up()).getBlock().matchesBlock(Blocks.SNOW)
+                        ) {
+                        	BlockPos upos=blockpos.up(2);
+                        	for(Direction d:Direction.Plane.HORIZONTAL) {
+                        		empties.add(upos.offset(d));
+                        	}
+                        	filled.add(upos);
+                            reader.setBlockState(upos, config.state, 4);
+                        }
                     }
+                }
+                empties.removeAll(filled);
+                for(BlockPos bp:empties) {
+                	if(reader.getBlockState(bp).isAir()) {
+                		reader.setBlockState(bp, Blocks.SNOW.getDefaultState().with(BlockStateProperties.LAYERS_1_8, 8),4);
+                	}
                 }
 
                 return true;

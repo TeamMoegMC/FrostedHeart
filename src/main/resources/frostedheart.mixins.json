@@ -95,6 +95,7 @@
     "minecraft.NewChatGuiAccessor",
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
+    "primalwinter.ImprovedFreezeTopLayerFeatureMixin",
     "projecte.MixinPhilosopherStone",
     "projecte.MixinTransmutationStone",
     "projecte.MixinTransmutationTablet",
