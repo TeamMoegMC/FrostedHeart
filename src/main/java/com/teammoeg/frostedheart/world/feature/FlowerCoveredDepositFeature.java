@@ -111,6 +111,7 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                         	for(Direction d:Direction.Plane.HORIZONTAL) {
                         		empties.add(upos.offset(d));
                         	}
+                        	empties.add(upos.up());
                         	filled.add(upos);
                             reader.setBlockState(upos, config.state, 4);
                         }
@@ -118,8 +119,9 @@ public class FlowerCoveredDepositFeature extends Feature<BlockStateFeatureConfig
                 }
                 empties.removeAll(filled);
                 for(BlockPos bp:empties) {
-                	if(reader.getBlockState(bp).isAir()) {
+                	while(reader.getBlockState(bp).isAir()) {
                 		reader.setBlockState(bp, Blocks.SNOW.getDefaultState().with(BlockStateProperties.LAYERS_1_8, 8),4);
+                		bp=bp.down();
                 	}
                 }
 

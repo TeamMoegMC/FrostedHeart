@@ -147,6 +147,8 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 			worldIn.setBlockState(pos, Blocks.ICE.getDefaultState(), 2);
 			if (!(state.getBlock() instanceof FlowingFluidBlock)) {
 				worldIn.getPendingBlockTicks().scheduleTick(pos, Blocks.ICE, 0);
+			}else {
+				worldIn.setBlockState(pos.up(), Blocks.SNOW.getDefaultState().with(BlockStateProperties.LAYERS_1_8, random.nextInt(3)+1), 2);
 			}
 		} else if (fluidState.getFluid() == Fluids.LAVA && state.getBlock() instanceof FlowingFluidBlock) {
 			worldIn.setBlockState(pos, Blocks.OBSIDIAN.getDefaultState(), 2);
@@ -155,9 +157,11 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 			//World worldIn, @Nullable PlayerEntity playerIn, Hand handIn, ItemStack stackIn, BlockRayTraceResult rayTraceResultIn
 			//BlockItemUseContext buc=new BlockItemUseContext(worldIn, null,Hand.MAIN_HAND ,new ItemStack(Blocks.SNOW_BLOCK.asItem()),BlockRayTraceResult);
 			int layers=0;
-			if(worldIn.getHeight(Type.MOTION_BLOCKING, pos).getY()>=pos.getY()) {
+			if(worldIn.getHeight(Type.MOTION_BLOCKING, pos).getY()<=pos.getY()) {
 				layers=16+skyLight- random.nextInt(3);
-				layers-=countExposedFaces(worldIn, cpos)*2;
+				//layers-=countExposedFaces(worldIn, cpos)*2;
+			}else {
+				layers=skyLight- random.nextInt(3)-countExposedFaces(worldIn, cpos);
 			}
 			if(layers<=0)
 				layers=1;
