@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.scenario.client.text;
+package com.teammoeg.frostedheart.scenario.client.dialog;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;

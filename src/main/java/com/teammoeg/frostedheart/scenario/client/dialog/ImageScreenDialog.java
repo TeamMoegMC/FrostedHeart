@@ -1,12 +1,12 @@
-package com.teammoeg.frostedheart.scenario.client.gui.layered;
+package com.teammoeg.frostedheart.scenario.client.dialog;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.scenario.client.text.IScenarioDialog;
-import com.teammoeg.frostedheart.scenario.client.text.TextInfo;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -22,7 +22,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	public float dialogY;
 	public float dialogW;
 	public boolean alignMiddle=true;
-	public LayerManager primary=new LayerManager();
+	private LayerManager primary=new LayerManager();
 	public static final int MAX_ESCAPE=5;
 	public int escapes=MAX_ESCAPE;
 	int ticksSinceLastSpace=0;
@@ -81,7 +81,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		this.width=ClientScene.fromRelativeXW(1);
 		this.height=ClientScene.fromRelativeYH(1);
 		matrixStack.push();
-		primary.render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
+		getPrimary().render(new RenderParams(this,matrixStack,mouseX,mouseY,partialTicks));
 		int y=ClientScene.fromRelativeYH(dialogY);
 		int h=9*chatlist.size()+4;
 		
@@ -128,7 +128,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	@Override
 	public void tickDialog() {
 		cpartialTicks=0;
-		primary.tick();
+		getPrimary().tick();
 		if(escapes!=MAX_ESCAPE) {
 			ticksSinceLastSpace--;
 			if(ticksSinceLastSpace<=0)
@@ -138,8 +138,18 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	@Override
 	public void closeScreen() {
 		ClientScene.dialog=null;
-		primary.close();
+		getPrimary().close();
 		super.closeScreen();
+	}
+	public LayerManager getPrimary() {
+		return primary;
+	}
+	public void setPrimary(LayerManager primary) {
+		this.primary = primary;
+	}
+	@Override
+	public boolean hasDialog() {
+		return true;
 	}
 
 }

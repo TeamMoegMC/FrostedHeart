@@ -8,11 +8,11 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo;
+import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
-import com.teammoeg.frostedheart.scenario.client.text.IScenarioDialog;
-import com.teammoeg.frostedheart.scenario.client.text.TextInfo;
-import com.teammoeg.frostedheart.scenario.client.text.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.util.ReferenceValue;
@@ -31,7 +31,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
-	public static ImageScreenDialog dialog;
+	public static IScenarioDialog dialog;
 	public static LinkedList<LayerManager> layers=new LinkedList<>();
 	public ClientScene() {
 		super();
@@ -169,7 +169,7 @@ public class ClientScene implements IClientScene {
 		}
 		origmsgQueue.clear();
 		msgQueue.clear();
-		if(mc.currentScreen instanceof IScenarioDialog) {
+		if(mc.currentScreen instanceof IScenarioDialog&&((IScenarioDialog) mc.currentScreen).hasDialog()) {
 			IScenarioDialog dialogBox=(IScenarioDialog) mc.currentScreen;
 			dialogBox.updateTextLines(msgQueue);
 		}
@@ -297,7 +297,7 @@ public class ClientScene implements IClientScene {
 
 				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
 					needUpdate = false;
-					if (dialogBox==null) {
+					if (dialogBox==null||!dialogBox.hasDialog()) {
 						i.removeIf(l -> l.getChatLineID() == fhchatid);
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
@@ -368,7 +368,7 @@ public class ClientScene implements IClientScene {
 	}
 
 	int getDialogWidth() {
-		if(ClientUtils.mc().currentScreen instanceof IScenarioDialog) {
+		if(ClientUtils.mc().currentScreen instanceof IScenarioDialog&&((IScenarioDialog) ClientUtils.mc().currentScreen).hasDialog()) {
 			return ((IScenarioDialog) ClientUtils.mc().currentScreen).getDialogWidth();
 		}else
 			return w;

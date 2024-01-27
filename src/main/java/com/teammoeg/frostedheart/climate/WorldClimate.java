@@ -402,7 +402,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     public static float getTemp(IWorld world) {
         return get(world).getTemp();
     }
-    public static float getWind(IWorld world) {
+    public static int getWind(IWorld world) {
         return get(world).getWind();
     }
 

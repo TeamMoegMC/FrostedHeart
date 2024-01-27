@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.Transition;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLImageContent;
@@ -102,25 +102,32 @@ public class ClientControl implements IClientControlCommand {
 	}
 	@Override
 	public void fullScreenDialog(IClientScene runner,@Param("show")Integer show,@Param("x")Float x,@Param("y")Float y,@Param("w")Float w,@Param("m")Integer m) {
+		ImageScreenDialog id=null;
 		if(show!=null) {
-			if(show>0&&ClientScene.dialog==null) {
-				ClientScene.dialog=new ImageScreenDialog(GuiUtils.str(""));
-				ClientUtils.mc().displayGuiScreen(ClientScene.dialog);
+			if(show>0) {
+				if(!(ClientScene.dialog instanceof ImageScreenDialog)) {
+					id=new ImageScreenDialog(GuiUtils.str(""));
+					ClientScene.dialog=id;
+				}else {
+					id=(ImageScreenDialog) ClientScene.dialog;
+				}
+				
+				ClientUtils.mc().displayGuiScreen(id);
 			}else if(ClientScene.dialog!=null){
 				ClientScene.dialog.closeScreen();
 				ClientScene.dialog=null;
 			}
 		}
-		if(ClientScene.dialog==null)
+		if(id==null)
 			return;
 		if(x!=null)
-			ClientScene.dialog.dialogX=(x);
+			id.dialogX=(x);
 		if(y!=null)
-			ClientScene.dialog.dialogY=(y);
+			id.dialogY=(y);
 		if(w!=null)
-			ClientScene.dialog.dialogW=(w);
+			id.dialogW=(w);
 		if(m!=null)
-			ClientScene.dialog.alignMiddle=m>0;
+			id.alignMiddle=m>0;
 	}
 	@Override
 	public void startLayer(IClientScene runner,@Param("n")@Param("name")String name) {
@@ -128,7 +135,7 @@ public class ClientControl implements IClientControlCommand {
 			return;
 		LayerManager lm=ClientScene.layers.peekLast();
 		if(lm==null) {
-			lm=ClientScene.dialog.primary;
+			lm=ClientScene.dialog.getPrimary();
 		}else{
 			if(name!=null) {
 				lm=lm.getLayer(name);
@@ -155,7 +162,7 @@ public class ClientControl implements IClientControlCommand {
 		lm.setHeight((h));
 		lm.commitChanges(transition!=null?Transition.valueOf(transition.toLowerCase()):null,time);
 		if(ClientScene.layers.isEmpty()) {
-			ClientScene.dialog.primary=lm;
+			ClientScene.dialog.setPrimary(lm);
 		}else {
 			ClientScene.layers.peekLast().addLayer(name, lm);
 		}

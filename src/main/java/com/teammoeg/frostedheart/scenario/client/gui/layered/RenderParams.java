@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLLayerContent;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
