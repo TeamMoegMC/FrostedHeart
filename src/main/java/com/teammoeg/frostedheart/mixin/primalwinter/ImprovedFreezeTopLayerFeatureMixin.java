@@ -169,6 +169,13 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 					layers-=8;
 			if(layers<=0)
 				layers=1;
+			BlockState crs=stateDown;
+			BlockPos dpos=posDown;
+			while(crs.matchesBlock(Blocks.AIR)||crs.matchesBlock(Blocks.SNOW)||crs.matchesBlock(Blocks.SNOW_BLOCK)) {
+				worldIn.setBlockState(dpos, Blocks.SNOW.getDefaultState().with(BlockStateProperties.LAYERS_1_8, 8), 4);
+				dpos=dpos.down();
+				crs=worldIn.getBlockState(dpos);
+			}
 			while(layers>0) {
 				BlockPos ccpos=cpos;
 				cpos=cpos.up();
@@ -189,10 +196,14 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 					}
 					layers=0;
 				}
+
 				if(cstate.matchesBlock(Blocks.SNOW)) {
+					
 					BlockState upstate=worldIn.getBlockState(cpos);
-					if(upstate.matchesBlock(Blocks.SNOW))
+					if(upstate.matchesBlock(Blocks.SNOW)) {
+					//	clayers=8;
 						continue;
+					}
 					int crlayers=cstate.get(BlockStateProperties.LAYERS_1_8);
 				
 					clayers+=crlayers;
@@ -217,14 +228,13 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 
 				
 				worldIn.setBlockState(ccpos, Blocks.SNOW.getDefaultState().with(BlockStateProperties.LAYERS_1_8, clayers), 3);
-
-				// Replace the below block as well
-				Block replacementBlock = ModBlocks.SNOWY_TERRAIN_BLOCKS.getOrDefault(stateDown.getBlock(), () -> null).get();
-				if (replacementBlock != null) {
-					BlockState replacementState = replacementBlock.getDefaultState();
-					worldIn.setBlockState(posDown, replacementState, 2);
-				}
 				
+			}
+			// Replace the below block as well
+			Block replacementBlock = ModBlocks.SNOWY_TERRAIN_BLOCKS.getOrDefault(stateDown.getBlock(), () -> null).get();
+			if (replacementBlock != null) {
+				BlockState replacementState = replacementBlock.getDefaultState();
+				worldIn.setBlockState(posDown, replacementState, 2);
 			}
 		}
 	}
