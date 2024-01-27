@@ -204,13 +204,13 @@ public abstract class ImprovedFreezeTopLayerFeatureMixin extends Feature<NoFeatu
 					//	clayers=8;
 						continue;
 					}
-					int crlayers=cstate.get(BlockStateProperties.LAYERS_1_8);
+					/*int crlayers=cstate.get(BlockStateProperties.LAYERS_1_8);
 				
 					clayers+=crlayers;
 					if(clayers>8) {
 						layers+=clayers-8;
 						clayers=8;
-					}
+					}*/
 				}
 				if(!cstate.getMaterial().isReplaceable()/*cstate.getBlock()!=Blocks.SNOW&&!cstate.isAir()&&!cstate.getCollisionShape(worldIn, cpos).isEmpty()*/) {
 					if(!ModSnowBlock.convert(worldIn, ccpos, cstate, clayers, 4)) {

@@ -20,6 +20,9 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import com.teammoeg.frostedheart.world.FHFeatures;
+
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
@@ -56,7 +59,8 @@ public class MinecraftServerMixin {
                 
                 while(h >= seaLevel) {
                 	bm.setY(h);
-                	if(serverWorld.getBlockState(bm).isIn(BlockTags.VALID_SPAWN)) {
+                	BlockState ss=serverWorld.getBlockState(bm);
+                	if(ss.isIn(BlockTags.VALID_SPAWN)&&!ss.matchesBlock(Blocks.SNOW)) {
 	                    pq.add(h);
 	                    break;
                 	}
