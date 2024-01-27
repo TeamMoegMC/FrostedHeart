@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.simibubi.create.foundation.utility.VoxelShaper;
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
@@ -13,6 +14,7 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -26,10 +28,7 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
+import net.minecraft.world.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -96,6 +95,18 @@ public class SteamCoreBlock extends FHKineticBlock implements ISteamEnergyBlock 
             return ((SteamCoreTileEntity) te).onClick(player, item);
         }
         return superResult;
+    }
+
+    @Override
+    public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
+        super.onBlockHarvested(worldIn, pos, state, player);
+        spawnAsEntity(worldIn, pos, new ItemStack(FHBlocks.steam_core, 1));
+    }
+
+    @Override
+    public void onExplosionDestroy(World worldIn, BlockPos pos, Explosion explosionIn) {
+        super.onExplosionDestroy(worldIn, pos, explosionIn);
+        spawnAsEntity(worldIn, pos, new ItemStack(FHBlocks.steam_core, 1));
     }
 
     @Override
