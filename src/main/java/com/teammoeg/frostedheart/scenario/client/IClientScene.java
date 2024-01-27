@@ -44,4 +44,6 @@ public interface IClientScene {
 
 	int getCharsPerShow();
 
+	void setSpeed(double value);
+
 }

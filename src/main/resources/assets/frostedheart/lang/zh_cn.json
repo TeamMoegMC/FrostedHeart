@@ -348,6 +348,7 @@
   "message.frostedheart.kill_task": "击杀[&e%s&r]以继续",
   "message.frostedheart.other_task": "完成[&e%s&r]以继续",
   "message.frostedheart.complete_title": "完成任务",
+  "message.frostedheart.escape_count": "再按%s次ESC关闭界面",
   "key.frostedheart.skip_dialog": "跳过对话",
   "key.categories.frostedheart": "寒霜之心",
   "research.category.desc.frostedheart.ars": "装备和工具",

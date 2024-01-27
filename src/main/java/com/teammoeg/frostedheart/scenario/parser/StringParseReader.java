@@ -54,6 +54,7 @@ public class StringParseReader {
     }
 
     public char peek() {
+    	if(idx+1>=str.length())return 0;
         return str.charAt(idx + 1);
     }
 
@@ -81,7 +82,7 @@ public class StringParseReader {
             idx++;
             hasChangedIndex = true;
         }
-        if (hasChangedIndex)
-            idx--;
+       // if (hasChangedIndex&&hasNext())
+       //     idx--;
     }
 }

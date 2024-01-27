@@ -1,8 +1,6 @@
-package com.teammoeg.frostedheart.scenario.client;
+package com.teammoeg.frostedheart.scenario.client.text;
 
 import java.util.List;
-
-import com.teammoeg.frostedheart.scenario.client.ClientScene.TextInfo;
 
 public interface IScenarioDialog {
 	void updateTextLines(List<TextInfo> queue) ;

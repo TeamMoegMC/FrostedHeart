@@ -149,11 +149,16 @@ public class WorldTemperature {
 
     public static float getClimateTemperature(IWorldReader w) {
         if (w instanceof World) {
-            return WorldClimate.getTemp((World) w) * 0.25f;
+            return WorldClimate.getTemp((World) w);
         }
         return 0;
     }
-
+    public static int getClimateWind(IWorldReader w) {
+        if (w instanceof World) {
+            return WorldClimate.getWind((World) w);
+        }
+        return 0;
+    }
     /**
      * Get World temperature for a specific world, affected by weather and so on
      *

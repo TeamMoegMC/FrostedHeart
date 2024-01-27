@@ -402,6 +402,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     public static float getTemp(IWorld world) {
         return get(world).getTemp();
     }
+    public static float getWind(IWorld world) {
+        return get(world).getWind();
+    }
 
     public static long getWorldDay(IWorld w) {
         return get(w).getDay();
@@ -559,7 +562,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      * @param lasthumid prev humidity
      * @return a newly computed instance of DayTemperatureData for the day specified.
      */
-    private DayTemperatureData generateDay(long day, float lastnoise, float lasthumid) {
+    private DayTemperatureData generateDay(long day, float lastnoise, float lasthumid,int lastWind) {
         DayTemperatureData dtd = new DayTemperatureData();
         Random rnd = new Random();
         long startTime = day * 1200;
@@ -570,10 +573,13 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             Pair<Float, ClimateType> temp = this.computeTemp(startTime + i * 50);
             dtd.setTemp(i, temp.getFirst()); // Removed daynoise
             dtd.setType(i, temp.getSecond());
+            dtd.setWind(i, getWind(lastWind,temp.getSecond(),temp.getFirst()));
         }
         return dtd;
     }
-
+    private int getWind(int lastWind,ClimateType climate,float temp) {
+    	return 30;
+    }
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
         return cap == CAPABILITY ? capability.cast() : LazyOptional.empty();
@@ -705,7 +711,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     public float getTemp() {
         return daycache.getTemp(hourInDay);
     }
-
+    public int getWind() {
+        return daycache.getWind(hourInDay);
+    }
     private int getTemperatureLevel(float temp) {
         if (temp >= WorldTemperature.WARM_PERIOD_PEAK - 2) {
             return 2;
@@ -727,11 +735,11 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      */
     protected void populateDays() {
         if (dailyTempData.isEmpty()) {
-            dailyTempData.offer(generateDay(clockSource.getDate(), 0, 0));
+            dailyTempData.offer(generateDay(clockSource.getDate(), 0, 0,30));
         }
         while (dailyTempData.size() <= DAY_CACHE_LENGTH) {
             DayTemperatureData last = dailyTempData.peekLast();
-            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity));
+            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity,last.getWind(23)));
         }
     }
 
@@ -908,7 +916,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         while (dailyTempData.peek().day < date - 1) {
             dailyTempData.poll();
             DayTemperatureData last = dailyTempData.peekLast();
-            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity));
+            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity,last.getWind(23)));
         }
         populateDays();
         daycache = dailyTempData.get(1);

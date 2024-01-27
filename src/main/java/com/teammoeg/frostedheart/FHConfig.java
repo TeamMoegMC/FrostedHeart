@@ -39,7 +39,9 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue enableFrozenVignette;
         public final ForgeConfigSpec.BooleanValue enableHeatVignette;
         public final ForgeConfigSpec.BooleanValue enableFrozenSound;
-
+        public final ForgeConfigSpec.BooleanValue autoMode;
+        public final ForgeConfigSpec.IntValue autoModeInterval;
+        public final ForgeConfigSpec.DoubleValue textSpeed; 
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -73,6 +75,15 @@ public class FHConfig {
             enableFrozenSound = builder
                     .comment("Enables the frozen sound when player is freezing. ")
                     .define("enableFrozenSound", true);
+            builder.push("scenario");
+            autoMode=builder.comment("EnableaAuto click when scenario requires")
+            	.define("autoMode", true);
+            autoModeInterval=builder.comment("Tick before click when a click is required to progress")
+            	.defineInRange("autoModeInterval",40,0,500);
+            textSpeed=builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
+            	.defineInRange("textSpeed", 1d, 0.000001, 100000);
+            builder.pop();
+            
         }
     }
 

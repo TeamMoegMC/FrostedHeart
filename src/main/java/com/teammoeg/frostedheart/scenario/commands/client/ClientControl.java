@@ -28,11 +28,14 @@ import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.TextContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.Transition;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLImageContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLTextContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsImageContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsRectContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsTextContent;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
@@ -80,15 +83,8 @@ public class ClientControl implements IClientControlCommand {
 		runner.setActHud(null, tsk.getTitle().getString());
 	}
 	@Override
-	public void speed(IClientScene runner,@Param("v")Double value,@Param("space")Integer s) {
-		if(value!=null) {
-			if(value<=2) {
-				runner.setTicksBetweenShow((int) (2/value));
-			}else {
-				runner.setTicksBetweenShow(1);
-				runner.setCharsPerShow((int) (value/2));
-			}
-		}
+	public void speed(IClientScene runner,@Param("v")double value,@Param("space")Integer s) {
+		runner.setSpeed(value);
 		
 	}
 	@Override
@@ -110,7 +106,7 @@ public class ClientControl implements IClientControlCommand {
 			if(show>0&&ClientScene.dialog==null) {
 				ClientScene.dialog=new ImageScreenDialog(GuiUtils.str(""));
 				ClientUtils.mc().displayGuiScreen(ClientScene.dialog);
-			}else {
+			}else if(ClientScene.dialog!=null){
 				ClientScene.dialog.closeScreen();
 				ClientScene.dialog=null;
 			}
@@ -157,12 +153,7 @@ public class ClientControl implements IClientControlCommand {
 		lm.setY((y));
 		lm.setWidth((w));
 		lm.setHeight((h));
-		if(transition!=null) {
-			lm.setTrans(Transition.valueOf(transition.toLowerCase()), time);
-			
-		}
-		
-		lm.commitChanges();
+		lm.commitChanges(transition!=null?Transition.valueOf(transition.toLowerCase()):null,time);
 		if(ClientScene.layers.isEmpty()) {
 			ClientScene.dialog.primary=lm;
 		}else {
@@ -170,20 +161,27 @@ public class ClientControl implements IClientControlCommand {
 		}
 	}
 	@Override
-	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("u")int u,@Param("v")int v,@Param("uw")int uw,@Param("uh")int uh,@Param("tw")int tw,@Param("th")int th,@Param("z")int z,@Param("opacity")Float opacity) {
+	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("sx")int u,@Param("sy")int v,@Param("sw")Integer uw,@Param("sh")Integer uh,@Param("z")int z,@Param("opacity")Float opacity) {
 		if(ClientScene.dialog==null)
 			return;
 		if(w==null)
-			w=1f;
+			w=-1f;
 		if(h==null)
-			h=1f;
-		
+			h=-1f;
+		if(uw==null)
+			uw=-1;
+		if(uh==null)
+			uh=-1;
 		if(opacity==null)
 			opacity=1f;
 		ResourceLocation ip=FHScenarioClient.getPathOf(new ResourceLocation(path), "textures/gui/");
-		ImageContent ic=new ImageContent(ip,x,(y),(w),(h),u,v,uw,uh,tw,th);
+		GraphicsImageContent ic=new GraphicsImageContent(ip,(int)x,(int)(y),(int)(float)(w),(int)(float)(h));
 		ic.setZ(z);
 		ic.setOpacity(opacity);
+		ic.ix=u;
+		ic.iy=v;
+		ic.iw=uw;
+		ic.ih=uh;
 		ClientScene.layers.peekLast().addLayer(name,ic);
 	}
 	@Override
@@ -191,22 +189,34 @@ public class ClientControl implements IClientControlCommand {
 		if(ClientScene.dialog==null)
 			return;
 		if(w==null)
-			w=1f;
+			w=-1f;
 		if(h==null)
-			h=1f;
+			h=-1f;
 		if(opacity==null)
 			opacity=1f;
 		if(resize==0)
-			resize=1;
+			resize=9;
 		if(color==null)
 			color=0xFFFFFF;
-		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text),(x),(y),(w),(h), shadow>0);
+		GraphicsTextContent tc=new GraphicsTextContent(ClientTextComponentUtils.parse(text),(int)(x),(int)(y),(int)(float)(w),(int)(float)(h), shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
-		tc.setResize(resize);
-		tc.centerH=ch>0;
-		tc.centerV=cv>0;
-		tc.color=0xFFFFFF&color;
+		tc.size=(int) resize;
+		ClientScene.layers.peekLast().addLayer(name,tc);
+		
+	}
+	@Override
+	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("clr")Integer color) {
+		if(ClientScene.dialog==null)
+			return;
+		if(w==null)
+			w=-1f;
+		if(h==null)
+			h=-1f;
+		if(color==null)
+			color=0xFFFFFFFF;
+		GraphicsRectContent tc=new GraphicsRectContent(color,(int)(x),(int)(y),(int)(float)(w),(int)(float)(h));
+		tc.setZ(z);
 		ClientScene.layers.peekLast().addLayer(name,tc);
 		
 	}
