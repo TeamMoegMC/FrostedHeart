@@ -286,7 +286,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (ModList.get().isLoaded("tetra") && event.getItemStack().getItem() instanceof IModularItem) {
+        if (event.getItemStack().getItem() instanceof IModularItem) {
             Set<ToolType> tt = event.getItemStack().getToolTypes();
             int type = 0;
             if (tt.contains(TetraCompat.coreSpade))
@@ -298,7 +298,7 @@ public class CommonEvents {
             if (type != 0)
                 if (!event.getPlayer().getCooldownTracker().hasCooldown(event.getItemStack().getItem())) {
                     event.getPlayer().getCooldownTracker().setCooldown(event.getItemStack().getItem(), 10);
-                    if ((type == 3 && event.getWorld().getRandom().nextBoolean()) || (type != 3 && event.getWorld().getRandom().nextInt(3) == 0))
+                    if ((type == 3 && event.getWorld().getRandom().nextBoolean()) || (type != 3 && event.getWorld().getRandom().nextBoolean()))
                         ((IModularItem) event.getItemStack().getItem()).tickProgression(event.getPlayer(), event.getItemStack(), 1);
                     switch (type) {
                         case 1:

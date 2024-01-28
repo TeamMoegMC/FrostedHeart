@@ -117,12 +117,11 @@ public class PlayerEvents {
 
                 // Morning forecast wakeup time
                 if (serverPlayer.world.getDayTime() % 24000 == 40) {
-                    float morningTemp = Math.round(WorldClimate.getTemp(serverPlayer.world) * 10) / 10.0F;
-                    float noonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F;
-                    float nightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 12) * 10) / 10.0F;
-                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
-                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
-                            / 10.0F;
+                    float morningTemp = Math.round(WorldClimate.getTemp(serverPlayer.world) * 10) / 10.0F-10;
+                    float noonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F-10;
+                    float nightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 12) * 10) / 10.0F-10;
+                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F-10;
+                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10) / 10.0F-10;
                     TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp, noonTemp,
                             nightTemp, midnightTemp, tomorrowMorningTemp);
                     boolean snow = morningTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -144,14 +143,14 @@ public class PlayerEvents {
 
                 // Night forecast bedtime
                 if (serverPlayer.world.getDayTime() % 24000 == 12542) {
-                    float nightTemp = Math.round(WorldClimate.getTemp(serverPlayer.world) * 10) / 10.0F;
-                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F;
+                    float nightTemp = Math.round(WorldClimate.getTemp(serverPlayer.world) * 10) / 10.0F-10;
+                    float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F-10;
                     float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 12) * 10)
-                            / 10.0F;
+                            / 10.0F-10;
                     float tomorrowNoonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 18) * 10)
-                            / 10.0F;
+                            / 10.0F-10;
                     float tomorrowNightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
-                            / 10.0F;
+                            / 10.0F-10;
                     TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp, midnightTemp,
                             tomorrowMorningTemp, tomorrowNoonTemp, tomorrowNightTemp);
                     boolean snow = nightTemp < WorldTemperature.SNOW_TEMPERATURE
