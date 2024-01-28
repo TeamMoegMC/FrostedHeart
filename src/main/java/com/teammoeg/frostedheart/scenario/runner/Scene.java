@@ -83,7 +83,6 @@ public class Scene {
 	}
 
 	public void paragraph() {
-		clear();
 		isSaveNowait = isNowait;
 		savedLog.clear();
 		if(!log.isEmpty()&&log.peekLast().length()==0)

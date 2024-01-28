@@ -68,7 +68,7 @@ public class ScenarioConductor implements IScenarioConductor{
     //Text handling state machine
 	private transient LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
     private transient boolean isConducting;
-    private transient int nextParagraph;
+    private transient boolean clearAfterClick;
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
@@ -252,8 +252,8 @@ public class ScenarioConductor implements IScenarioConductor{
 		this.isSkip=isSkip;
 		this.clientStatus=status;
 		if(this.getStatus()==RunStatus.WAITCLIENT) {
-			if(nextParagraph>=0)
-				doParagraph(nextParagraph);
+			if(clearAfterClick)
+				doParagraph();
 			run();
 		}else if(this.getStatus()==RunStatus.WAITTIMER&&isSkip) {
 			this.stopWait();
@@ -270,17 +270,17 @@ public class ScenarioConductor implements IScenarioConductor{
 			jump(jt);
 		}
 	}
-	private void doParagraph(int pn) {
-		varData.takeSnapshot();
-    	getCurrentAct().newParagraph(getScenario(), pn);
-    	nextParagraph=-1;
+	private void doParagraph() {
+		getScene().clear();
 	}
     public void paragraph(int pn) {
+		varData.takeSnapshot();
+    	getCurrentAct().newParagraph(getScenario(), pn);
     	if(getScene().shouldWaitClient()) {
     		getScene().waitClientIfNeeded();
-    		nextParagraph=pn;
+    		clearAfterClick=true;
     		getScene().sendCurrent();
-    	}else doParagraph(pn);
+    	}else doParagraph();
 	}
 	public void sendCachedSence() {
 		getScene().sendCurrent();
@@ -306,7 +306,7 @@ public class ScenarioConductor implements IScenarioConductor{
 	}*/
 
     private void runCode() {
-    	nextParagraph=-1;
+    	clearAfterClick=false;
     	
     	
     	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
