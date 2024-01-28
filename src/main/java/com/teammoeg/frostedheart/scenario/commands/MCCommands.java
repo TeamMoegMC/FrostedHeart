@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.scenario.commands;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -23,5 +24,8 @@ public class MCCommands {
 		if(nbt!=null)
 			is.setTag(JsonToNBT.getTagFromJson(nbt));
 		FHUtils.giveItem(runner.getPlayer(), is);
+	}
+	public void setResearchAttribute(ScenarioConductor runner,@Param("k")String key,@Param("v")double value) {
+		 ResearchDataAPI.putVariantDouble(runner.getPlayer(), key, value);
 	}
 }

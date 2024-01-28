@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
@@ -47,6 +48,7 @@ import com.teammoeg.frostedheart.trade.network.TradeUpdatePacket;
 import com.teammoeg.frostedheart.util.FHVersion;
 
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -60,7 +62,7 @@ public class FHPacketHandler {
     }
 
     public static void register() {
-        String VERSION = FHMain.local.fetchVersion().orElse(FHVersion.empty).getOriginal();
+        String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
         System.out.println("[TWR Version Check] FH Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
                 VERSION::equals, VERSION::equals);
@@ -79,10 +81,19 @@ public class FHPacketHandler {
         // CHANNEL.registerMessage(id++, TemperatureChangePacket.class,
         // TemperatureChangePacket::encode, TemperatureChangePacket::new,
         // TemperatureChangePacket::handle);
+        
+        //Climate System
         CHANNEL.registerMessage(id++, FHBodyDataSyncPacket.class, FHBodyDataSyncPacket::encode, FHBodyDataSyncPacket::new,
                 FHBodyDataSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHDatapackSyncPacket.class, FHDatapackSyncPacket::encode,
                 FHDatapackSyncPacket::new, FHDatapackSyncPacket::handle);
+
+        CHANNEL.registerMessage(id++, FHClimatePacket.class, FHClimatePacket::encode, FHClimatePacket::new,
+                FHClimatePacket::handle);
+        CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class, FHTemperatureDisplayPacket::encode,
+                FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
+        
+        //Research System
         CHANNEL.registerMessage(id++, FHResearchRegistrtySyncPacket.class, FHResearchRegistrtySyncPacket::encode,
                 FHResearchRegistrtySyncPacket::new, FHResearchRegistrtySyncPacket::handle);
         CHANNEL.registerMessage(id++, FHResearchDataSyncPacket.class, FHResearchDataSyncPacket::encode,
@@ -91,8 +102,8 @@ public class FHPacketHandler {
                 FHResearchDataUpdatePacket::new, FHResearchDataUpdatePacket::handle);
         CHANNEL.registerMessage(id++, FHClueProgressSyncPacket.class, FHClueProgressSyncPacket::encode,
                 FHClueProgressSyncPacket::new, FHClueProgressSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHClimatePacket.class, FHClimatePacket::encode, FHClimatePacket::new,
-                FHClimatePacket::handle);
+        CHANNEL.registerMessage(id++, FHResearchAttributeSyncPacket.class, FHResearchAttributeSyncPacket::encode,
+        		FHResearchAttributeSyncPacket::new, FHResearchAttributeSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHEffectTriggerPacket.class, FHEffectTriggerPacket::encode,
                 FHEffectTriggerPacket::new, FHEffectTriggerPacket::handle);
         CHANNEL.registerMessage(id++, FHResearchControlPacket.class, FHResearchControlPacket::encode,
@@ -105,8 +116,8 @@ public class FHPacketHandler {
                 FHEffectProgressSyncPacket::new, FHEffectProgressSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHEnergyDataSyncPacket.class, FHEnergyDataSyncPacket::encode,
                 FHEnergyDataSyncPacket::new, FHEnergyDataSyncPacket::handle);
-        CHANNEL.registerMessage(id++, FHTemperatureDisplayPacket.class, FHTemperatureDisplayPacket::encode,
-                FHTemperatureDisplayPacket::new, FHTemperatureDisplayPacket::handle);
+        
+        //Trade System
         CHANNEL.registerMessage(id++, BargainRequestPacket.class, BargainRequestPacket::encode,
                 BargainRequestPacket::new, BargainRequestPacket::handle);
         CHANNEL.registerMessage(id++, BargainResponse.class, BargainResponse::encode,
@@ -115,6 +126,8 @@ public class FHPacketHandler {
                 TradeCommitPacket::new, TradeCommitPacket::handle);
         CHANNEL.registerMessage(id++, TradeUpdatePacket.class, TradeUpdatePacket::encode,
                 TradeUpdatePacket::new, TradeUpdatePacket::handle);
+        
+        //Scenario System
         CHANNEL.registerMessage(id++, ClientScenarioResponsePacket.class, ClientScenarioResponsePacket::encode,
         	ClientScenarioResponsePacket::new, ClientScenarioResponsePacket::handle);
         CHANNEL.registerMessage(id++, ServerScenarioCommandPacket.class, ServerScenarioCommandPacket::encode,

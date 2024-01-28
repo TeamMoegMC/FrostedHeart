@@ -40,6 +40,8 @@ import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 
@@ -959,9 +961,7 @@ public class FrostedHud {
 
         // Forecast
         boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
-        boolean hasRadar = player.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
-        boolean hasHelmet = player.inventory.armorInventory.get(3).getItem() == FHItems.weatherHelmet;
-        renderForecast = configAllows && (hasRadar || hasHelmet);
+        renderForecast = configAllows && ClientResearchDataAPI.getVariants().getDouble("has_forecast")>0;
     }
 
     private static void renderTemp(MatrixStack stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,

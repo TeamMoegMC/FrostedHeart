@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.research.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +28,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
@@ -36,6 +38,7 @@ import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
@@ -258,7 +261,7 @@ public class TeamResearchData {
         }
         if (data.contains("owner"))
             ownerName = data.getString("owner");
-        variants = data.getCompound("vars");
+        setVariants(data.getCompound("vars"));
         if (data.contains("uuid"))
             id = data.getUniqueId("uuid");
         ListNBT li = data.getList("researches", 10);
@@ -440,7 +443,11 @@ public class TeamResearchData {
             }
     }
 
-
+    public void sendVariantPacket() {
+    	FHResearchAttributeSyncPacket pack=new FHResearchAttributeSyncPacket(variants);
+    	for(ServerPlayerEntity spe:getTeam().map(Team::getOnlineMembers).orElseGet(()->Arrays.asList()))
+    		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->spe), pack);
+    }
     public boolean hasVariant(ResearchVariant name) {
         return variants.contains(name.getToken());
     }
@@ -695,4 +702,8 @@ public class TeamResearchData {
     public void triggerClue(String lid) {
         triggerClue(FHResearch.clues.getByName(lid));
     }
+
+	public void setVariants(CompoundNBT variants) {
+		this.variants = variants;
+	}
 }
