@@ -73,21 +73,12 @@ public class PrerenderParams {
 	public int loadTexture() {
 		g2d.dispose();
 		image.flush();
-		BufferedImage cur=new BufferedImage(width,width, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D gd=cur.createGraphics();
-		gd.drawImage(image, 0, 0, null);
-		gd.dispose();
-		try {
-			ImageIO.write(cur, "png", new File("test_draw.png"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		BufferedImage cur=image;
 		int[] pixels = new int[cur.getWidth() * cur.getHeight()];
 		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
 
-		ByteBuffer buffer = BufferUtils.createByteBuffer(cur.getWidth() * cur.getHeight() * 4);
-
+		ByteBuffer buffer = BufferUtils.createByteBuffer(cur.getWidth() * cur.getHeight() * 4+4);
+		
 		for (int y = 0; y < cur.getHeight(); y++) {
 			for (int x = 0; x < cur.getWidth(); x++) {
 				int pixel = pixels[y * cur.getWidth() + x];

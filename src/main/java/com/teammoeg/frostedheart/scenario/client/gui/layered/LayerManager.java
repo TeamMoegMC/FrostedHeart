@@ -77,7 +77,7 @@ public class LayerManager extends GLLayerContent {
 				((LayerManager) ctx).close();
 			}
 	}
-	private static boolean loadedTex=false;
+	private static boolean loadedTex=true;
 	public synchronized void commitChanges(TransitionFunction t, int ticks) {
 
 		if (t != null) {
@@ -103,10 +103,12 @@ public class LayerManager extends GLLayerContent {
 			PrerenderParams prerender=new PrerenderParams();
 			pq.forEach(s->s.prerender(prerender));
 			int tex=prerender.loadTexture();
+			//System.out.println("Loading tex");
 			if(!loadedTex) {//MAGIC CODE: removing this would cause strange drawing issue.
 				loadedTex=true;
 				PrerenderParams.freeTexture(tex);
 				tex=prerender.loadTexture();
+				System.out.println("Double loading");
 			}
 			nglc.texture=tex;
 		}
