@@ -19,49 +19,42 @@
 
 package com.teammoeg.frostedheart.scenario.network;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.scenario.FHScenario;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVariables;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-public class ServerScenarioCommandPacket {
-    private String commandName;
-    Map<String, String> params;
+public class FHClientSettingsPacket {
+    double scale;
 
-    public ServerScenarioCommandPacket(PacketBuffer buffer) {
-        commandName = buffer.readString();
-        params = SerializeUtil.readStringMap(buffer, new HashMap<>(), PacketBuffer::readString);
+    public FHClientSettingsPacket(PacketBuffer buffer) {
+        scale=buffer.readDouble();
     }
 
-    public ServerScenarioCommandPacket(String commandName, Map<String, String> params) {
+
+    public FHClientSettingsPacket() {
         super();
-        this.commandName = commandName;
-        this.params = params;
+        this.scale=Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
     }
+
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeString(commandName);
-        SerializeUtil.writeStringMap(buffer, params, (v, p) -> p.writeString(v));
+        buffer.writeDouble(scale);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-        	//System.out.println(this);
-            FHScenarioClient.callCommand(commandName, ClientScene.INSTANCE, params);
+            ScenarioVariables sv=FHScenario.runners.get(context.get().getSender()).getVaribles();
+            sv.getExecutionData().putDouble("uiScale", scale);
+            if(sv.getSnapshot()!=null)
+            	sv.getSnapshot().putDouble("uiScale", scale);
+            	
         });
         context.get().setPacketHandled(true);
     }
-
-	@Override
-	public String toString() {
-		return "ServerScenarioCommandPacket [commandName=" + commandName + ", params=" + params + "]";
-	}
 }

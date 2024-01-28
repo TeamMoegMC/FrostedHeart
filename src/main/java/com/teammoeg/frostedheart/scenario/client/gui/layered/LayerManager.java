@@ -77,6 +77,7 @@ public class LayerManager extends GLLayerContent {
 				((LayerManager) ctx).close();
 			}
 	}
+	private static boolean loadedTex=false;
 	public synchronized void commitChanges(TransitionFunction t, int ticks) {
 
 		if (t != null) {
@@ -101,7 +102,13 @@ public class LayerManager extends GLLayerContent {
 			}
 			PrerenderParams prerender=new PrerenderParams();
 			pq.forEach(s->s.prerender(prerender));
-			nglc.texture=prerender.loadTexture();
+			int tex=prerender.loadTexture();
+			if(!loadedTex) {//MAGIC CODE: removing this would cause strange drawing issue.
+				loadedTex=true;
+				PrerenderParams.freeTexture(tex);
+				tex=prerender.loadTexture();
+			}
+			nglc.texture=tex;
 		}
 	}
 

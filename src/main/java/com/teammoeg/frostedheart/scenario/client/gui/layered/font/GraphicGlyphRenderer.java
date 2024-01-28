@@ -47,6 +47,9 @@ public class GraphicGlyphRenderer implements ICharacterConsumer{
 		if(p_accept_2_.getObfuscated()) {
 			
 		}
+		if(glyph==null||p_accept_3_==32) {
+			glyph=GlyphData.EMPTY;
+		}
 		int advance=0;
 		empty.setTransform(g2d.getTransform());
 		if(p_accept_2_.getItalic())

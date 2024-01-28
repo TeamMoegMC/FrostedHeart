@@ -117,11 +117,11 @@ public class ScenarioExecutor<T> {
             		par = param.get(name);
             		if(par!=null)break;
             	}
-                if (par != null) {
+                if (par != null&&!par.isEmpty()) {
                     try {
                         pars[i + 1] = params[i].convertion.apply(par);
                     } catch (NumberFormatException | ClassCastException ex) {
-                        throw new ScenarioExecutionException("Exception converting param " + params[i].paramName, ex);
+                        throw new ScenarioExecutionException("Exception converting param " + Arrays.toString(params[i].paramName), ex);
                     }
                 }else {
                 	if(params[i].def!=null)

@@ -21,8 +21,9 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	public float dialogX=0.1f;
 	public float dialogY;
 	public float dialogW;
-	public boolean alignMiddle=true;
+	
 	private LayerManager primary=new LayerManager();
+	public boolean alignMiddle=true;
 	public static final int MAX_ESCAPE=5;
 	public int escapes=MAX_ESCAPE;
 	int ticksSinceLastSpace=0;
@@ -137,7 +138,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 	}
 	@Override
 	public void closeScreen() {
-		ClientScene.dialog=null;
+		ClientScene.INSTANCE.dialog=null;
 		getPrimary().close();
 		super.closeScreen();
 	}

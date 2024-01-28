@@ -14,6 +14,8 @@ import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo;
 import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
+import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
+import com.teammoeg.frostedheart.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.util.ReferenceValue;
 
@@ -31,8 +33,8 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
-	public static IScenarioDialog dialog;
-	public static LinkedList<LayerManager> layers=new LinkedList<>();
+	public IScenarioDialog dialog;
+	public LinkedList<LayerManager> layers=new LinkedList<>();
 	public ClientScene() {
 		super();
 		this.setSpeed(1);
@@ -169,9 +171,8 @@ public class ClientScene implements IClientScene {
 		}
 		origmsgQueue.clear();
 		msgQueue.clear();
-		if(mc.currentScreen instanceof IScenarioDialog&&((IScenarioDialog) mc.currentScreen).hasDialog()) {
-			IScenarioDialog dialogBox=(IScenarioDialog) mc.currentScreen;
-			dialogBox.updateTextLines(msgQueue);
+		if(dialog!=null&&dialog.hasDialog()) {
+			dialog.updateTextLines(msgQueue);
 		}
 		shouldWrap = false;
 		needUpdate = false;
@@ -275,20 +276,22 @@ public class ClientScene implements IClientScene {
 
 	}
 	int w;
-	
-	public void render(Minecraft mc) {
+	double lastScale=0;
+	public void tick(Minecraft mc) {
 		w=MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
 		if (!mc.isGamePaused()) {
-
+			if(lastScale!=mc.getMainWindow().getGuiScaleFactor()) {
+				lastScale=mc.getMainWindow().getGuiScaleFactor();
+				this.sendClientUpdate();
+			}
 			if(ticksActUpdate>0)
 				ticksActUpdate--;
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
 			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
 			IScenarioDialog dialogBox=null;
-			if(mc.currentScreen instanceof IScenarioDialog) {
-				dialogBox=(IScenarioDialog) mc.currentScreen;
-				dialogBox.tickDialog();
+			if(dialog!=null) {
+				dialog.tickDialog();
 				
 			}
 			if (!msgQueue.isEmpty()) {
@@ -313,7 +316,12 @@ public class ClientScene implements IClientScene {
 			}
 		}
 	}
-
+	public void sendClientReady() {
+		FHPacketHandler.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+	}
+	public void sendClientUpdate() {
+		FHPacketHandler.sendToServer(new FHClientSettingsPacket());
+	}
 	@Override
 	public void setActHud(String title, String subtitle) {
 		if(title!=null) {
@@ -368,9 +376,9 @@ public class ClientScene implements IClientScene {
 	}
 
 	int getDialogWidth() {
-		if(ClientUtils.mc().currentScreen instanceof IScenarioDialog&&((IScenarioDialog) ClientUtils.mc().currentScreen).hasDialog()) {
-			return ((IScenarioDialog) ClientUtils.mc().currentScreen).getDialogWidth();
-		}else
-			return w;
+		if(dialog!=null&&dialog.hasDialog()) {
+			return dialog.getDialogWidth();
+		}
+		return w;
 	}
 }

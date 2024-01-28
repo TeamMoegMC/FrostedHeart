@@ -20,12 +20,15 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.FHScenario;
@@ -132,6 +135,7 @@ public class ScenarioConductor implements IScenarioConductor{
 		setCurrentAct(new Act(this,init));
 		acts.put(init, getCurrentAct());
 		acts.put(global, new Act(this,global));
+
 		
 	}
     public ScenarioConductor(ServerPlayerEntity player,CompoundNBT data) {
@@ -144,17 +148,38 @@ public class ScenarioConductor implements IScenarioConductor{
 	public void call(String scenario, String label) {
 		call(new ExecuteTarget(this,scenario,label));
 	}
+	Pattern cmd=Pattern.compile("\\@([^@$;]+);");
+	Pattern cmd2=Pattern.compile("\\$([^@$;]+);");
 	public void callCommand(String name,Map<String,String> params) {
 		name=name.toLowerCase();
+		Map<String,String> cparams=new HashMap<>();
+		for(Entry<String, String> i:params.entrySet()) {
+			String val=i.getValue();
+			Matcher m=cmd.matcher(val);
+	        StringBuffer sb=new StringBuffer();
+            while(m.find()){
+                String replacement = ""+eval(m.group(1));
+                m.appendReplacement(sb, replacement);
+            }
+            m.appendTail(sb);
+			m=cmd2.matcher(sb.toString());
+			sb=new StringBuffer();
+            while(m.find()){
+                String replacement = ""+eval(m.group(1));
+                m.appendReplacement(sb, replacement);
+            }
+            m.appendTail(sb);
+			cparams.put(i.getKey(), sb.toString());
+		}
 		if(macros.containsKey(name)) {
 			CompoundNBT mp=new CompoundNBT();
-			for(Entry<String, String> e:params.entrySet()) {
+			for(Entry<String, String> e:cparams.entrySet()) {
 				mp.putString(e.getKey(), e.getValue());
 			}
 			varData.extraData.put("mp", mp);
 			call(macros.get(name));
 		}else
-			FHScenario.callCommand(name, this, params);
+			FHScenario.callCommand(name, this, cparams);
 	}
 
 	public void addCallStack() {

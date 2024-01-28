@@ -137,7 +137,6 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		
 	}
 	public void onResourceManagerReload(IResourceManager resourceManager) {
-		System.out.println("123456");
 		rm=resourceManager;
 		JsonParser jp=new JsonParser();
 		try {
@@ -159,6 +158,9 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	@Override
 	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		onResourceManagerReload(resourceManagerIn);
+		for(int i='A';i<'z';i++) {
+			System.out.println(data.get(i));
+		}
 		return new Object();
 	}
 	@Override

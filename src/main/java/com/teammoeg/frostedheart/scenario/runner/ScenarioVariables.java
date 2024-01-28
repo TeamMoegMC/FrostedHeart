@@ -38,6 +38,7 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
     		return new CompoundNBT();
     	return snapshot;
     }
+    
     @Override
 	public void load(CompoundNBT data) {
     	extraData=data;
@@ -179,5 +180,11 @@ public class ScenarioVariables implements IEnvironment, IScenarioVaribles  {
                 throw new IllegalArgumentException(String.join(".", Arrays.copyOfRange(paths, 0, i + 1)) + " is not an object");
         }
         nbt.remove(paths[paths.length - 1]);
+	}
+	public CompoundNBT getExtraData() {
+		return extraData;
+	}
+	public CompoundNBT getSnapshot() {
+		return snapshot;
 	}
 }

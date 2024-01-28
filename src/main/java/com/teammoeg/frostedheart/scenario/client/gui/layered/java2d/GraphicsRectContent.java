@@ -2,6 +2,8 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered.java2d;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+
+import com.teammoeg.frostedheart.client.util.Rect;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 
@@ -34,8 +36,8 @@ public class GraphicsRectContent extends GraphicLayerContent {
 	public void prerender(PrerenderParams params) {
 		params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
 		params.getG2d().setColor(new Color(color,true));
-		
-		params.getG2d().fillRect(x, y, width, height);
+		Rect r=params.calculateRect(x, y, width, height);
+		params.getG2d().fillRect(r.getX(),r.getY(),r.getW(),r.getH());
 		params.getG2d().setComposite(AlphaComposite.SrcOver);
 
 	}

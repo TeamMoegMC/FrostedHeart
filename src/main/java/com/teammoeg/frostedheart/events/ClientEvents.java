@@ -46,6 +46,7 @@ import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
+import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
@@ -341,6 +342,7 @@ public class ClientEvents {
                 if (FrostedHud.renderHeatVignette)
                     FrostedHud.renderHeatVignette(stack, anchorX, anchorY, mc, renderViewPlayer);
 
+
             }
             if (event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR && FrostedHud.renderHotbar) {
                 if (mc.playerController.getCurrentGameType() == GameType.SPECTATOR) {
@@ -351,7 +353,9 @@ public class ClientEvents {
                     FrostedHud.renderHotbar(stack, anchorX, anchorY, mc, renderViewPlayer, partialTicks);
                     FrostedHud.renderScenarioAct(stack, anchorX, anchorY, mc, renderViewPlayer);
                 }
-                
+                if(ClientScene.INSTANCE.dialog instanceof HUDDialog) {
+                	((HUDDialog)ClientScene.INSTANCE.dialog).render(stack, 0, 0, partialTicks);
+                }
                 event.setCanceled(true);
             }
             if (event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE && FrostedHud.renderExperience) {
@@ -462,7 +466,7 @@ public class ClientEvents {
             if (ClientUtils.mc().world != null) {
                 Minecraft mc = ClientUtils.mc();
                 if(ClientScene.INSTANCE!=null)
-                	ClientScene.INSTANCE.render(mc);
+                	ClientScene.INSTANCE.tick(mc);
 
             }
             PlayerEntity pe = ClientUtils.getPlayer();
@@ -503,7 +507,8 @@ public class ClientEvents {
         if(FHScenarioClient.sendInitializePacket) {
         	ClientScene.INSTANCE=new ClientScene();
         	FHScenarioClient.sendInitializePacket=false;
-        	FHPacketHandler.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+        	ClientScene.INSTANCE.sendClientReady();
+        	
         }
     }
 

@@ -1,12 +1,18 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered.font;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 public class GlyphData {
+	static GlyphData EMPTY=new GlyphData(0,0,7,9,5,0,1) {
+
+		@Override
+		public int renderFont(Graphics2D g2d, int x, int y, int hsize, int color) {
+			return (int) (advance * 1f / height * hsize);
+		}
+		
+	};
 	int width;
 	int height;
 	int x;
