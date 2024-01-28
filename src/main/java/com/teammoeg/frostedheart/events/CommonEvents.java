@@ -479,32 +479,31 @@ public class CommonEvents {
             if (growBlock instanceof IGrowable) {
                 if (growBlock instanceof SaplingBlock) {
                     if (temp < -5) {
-                        TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_not_growable", true, -6);
+                    	player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(-6)), true);
                     }
                 } else if (growBlock instanceof FHCropBlock) {
                     int growTemp = ((FHCropBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_not_growable", true, growTemp);
+                        player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
                     }
                 } else if (growBlock instanceof FHBerryBushBlock) {
                     int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature();
                     if (temp < growTemp) {
                         event.setCanceled(true);
-                        TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_not_growable", true, growTemp);
+                        player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(growTemp)), true);
                     }
                 } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                     if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE) {
                         event.setCanceled(true);
-                        TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_not_growable", true,
-                                WorldTemperature.HEMP_GROW_TEMPERATURE);
+                        player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE)), true);
                     }
                 } else if (growBlock == Blocks.NETHERRACK) {
 
                 } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                     event.setCanceled(true);
-                    TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_not_growable", true,
-                            WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE);
+                    player.sendStatusMessage(GuiUtils.translateMessage("crop_not_growable", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE)), true);
+
                 }
             }
         }
@@ -649,25 +648,22 @@ public class CommonEvents {
                 int growTemp = ((FHCropBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    TmeperatureDisplayHelper.sendTemperatureStatus(player,
-                            "crop_no_bonemeal", false, growTemp);
+                    player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
                 }
             } else if (growBlock instanceof FHBerryBushBlock) {
                 int growTemp = ((FHBerryBushBlock) growBlock).getGrowTemperature() + WorldTemperature.BONEMEAL_TEMPERATURE;
                 if (temp < growTemp) {
                     event.setCanceled(true);
-                    TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_no_bonemeal", false, growTemp);
+                    player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(growTemp)), true);
                 }
             } else if (growBlock.matchesBlock(IEBlocks.Misc.hempPlant)) {
                 if (temp < WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
                     event.setCanceled(true);
-                    TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_no_bonemeal", false,
-                            WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE);
+                    player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.HEMP_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
                 }
             } else if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE) {
                 event.setCanceled(true);
-                TmeperatureDisplayHelper.sendTemperatureStatus(player, "crop_no_bonemeal", false,
-                        WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE);
+                player.sendStatusMessage(GuiUtils.translateMessage("crop_no_bonemeal", ChunkHeatData.toDisplaySoil(WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE + WorldTemperature.BONEMEAL_TEMPERATURE)), true);
             }
         }
     }

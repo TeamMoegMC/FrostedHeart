@@ -36,8 +36,8 @@ public class GuiUtils {
         return new StringTextComponent(s);
     }
 
-    public static ITextComponent translate(String string) {
-        return new TranslationTextComponent(string);
+    public static ITextComponent translate(String string, Object... args) {
+        return new TranslationTextComponent(string, args);
     }
 
     public static TranslationTextComponent translateGui(String name, Object... args) {

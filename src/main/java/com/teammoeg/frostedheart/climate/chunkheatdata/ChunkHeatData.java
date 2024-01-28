@@ -263,7 +263,13 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
     public static float getTemperature(IWorldReader world, BlockPos pos) {
         return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
     }
-
+    public static String toDisplaySoil(float temp) {
+    	temp=Math.max(temp, -20);
+    	temp=Math.min(temp, 30);
+    	temp+=20;
+    	temp*=2;
+    	return (int)temp+"%";
+    }
     /**
      * Used on a ServerWorld context to set temperature in certain 3D region in a
      * ChunkData instance
