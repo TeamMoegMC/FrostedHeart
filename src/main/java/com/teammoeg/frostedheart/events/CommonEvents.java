@@ -43,6 +43,7 @@ import com.teammoeg.frostedheart.command.ScenarioCommand;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
+import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
@@ -330,6 +331,9 @@ public class CommonEvents {
         cnbt.putLong("penergy", olddata.getLong("penergy"));
         cnbt.putLong("cenergy", olddata.getLong("cenergy"));
         Temperature.setFHData(ev.getPlayer(), cnbt);
+
+        DailyKitchen.copyData(ev.getOriginal().getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY), ev.getPlayer().getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY));
+
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {
             DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());
@@ -379,6 +383,8 @@ public class CommonEvents {
                 }
                 Temperature.setBody((ServerPlayerEntity) event.getEntityLiving(), current);
             }
+
+            DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), it);
         }
     }
 

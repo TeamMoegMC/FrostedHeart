@@ -371,6 +371,8 @@
   "message.frostedheart.other_task": "Complete &e%s&r to continue",
   "message.frostedheart.complete_title": "Complete task",
   "message.frostedheart.escape_count": "Press ESC %s more to close",
+  "message.frostedheart.wanted_foods": "Today I wants to eat...",
+  "message.frostedheart.eat_wanted_food": "Yummy! You feel good.",
   "key.frostedheart.skip_dialog": "Skip dialog",
   "key.categories.frostedheart": "Frosted Heart",
   "research.category.desc.frostedheart.ars": "Techniques and artistry",
