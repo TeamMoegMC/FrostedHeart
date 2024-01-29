@@ -228,7 +228,9 @@ public class ScenarioParser {
         Map<String, String> params = new HashMap<>();
         reader.saveIndex();
         String command = parseLiteralOrString(reader, ']');
+        if(reader.peekLast()==']') return createCommand(command, params);
         reader.skipWhitespace();
+        
         if(reader.peekLast()==']') return createCommand(command, params);
         while (reader.hasNext()) {
             String name = parseLiteralOrString(reader, '=');
@@ -330,8 +332,8 @@ public class ScenarioParser {
         }
         return all.toString();
     }
-   /* public static void main(String[] args) {
-    	for(Node n:new ScenarioParser().parseString("test", "@t").pieces)
+  /* public static void main(String[] args) throws IOException {
+    	for(Node n:new ScenarioParser().parseFile("prelogue", new File("config\\fhscenario\\prelogue.ks")).pieces)
     		System.out.println(n.getText());
     }*/
 }
