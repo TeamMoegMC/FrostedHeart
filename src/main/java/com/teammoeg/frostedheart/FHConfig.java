@@ -41,7 +41,7 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue enableFrozenSound;
         public final ForgeConfigSpec.BooleanValue autoMode;
         public final ForgeConfigSpec.IntValue autoModeInterval;
-        public final ForgeConfigSpec.DoubleValue textSpeed; 
+        public final ForgeConfigSpec.DoubleValue textSpeed;
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -83,13 +83,15 @@ public class FHConfig {
             textSpeed=builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
             	.defineInRange("textSpeed", 1d, 0.000001, 100000);
             builder.pop();
-            
+
+
         }
     }
 
     public static class Common {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
+        public final ForgeConfigSpec.BooleanValue enableDailyKitchen;
 
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
@@ -98,6 +100,9 @@ public class FHConfig {
             blackmods = builder
                     .comment("BlackListed mods to kick player")
                     .defineList("Mod Blacklist", new ArrayList<>(), s -> true);
+            enableDailyKitchen = builder
+                    .comment("Enables sending wanted food message. ")
+                    .define("enableDailyKitchen", true);
         }
     }
 

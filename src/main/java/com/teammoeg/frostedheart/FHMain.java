@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -268,6 +269,7 @@ public class FHMain {
         SurroundingTemperatureSimulator.init();
         // modify default value
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
+        DailyKitchen.setupWantedFoodCapability();
 
     }
 }
