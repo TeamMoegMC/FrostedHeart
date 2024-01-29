@@ -98,7 +98,7 @@ public class GlyphData {
 	public void parseSize(byte data) {
 		int sx = (data >> 4) & 15;
 		x += sx;
-		width = (data & 15) + 1 - sx;
+		width = (data & 15) + 1;
 		height = 16;
 		advance = width;
 	}

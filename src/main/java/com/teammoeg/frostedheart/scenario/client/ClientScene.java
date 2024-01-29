@@ -289,7 +289,6 @@ public class ClientScene implements IClientScene {
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
 			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
-			IScenarioDialog dialogBox=null;
 			if(dialog!=null) {
 				dialog.tickDialog();
 				
@@ -300,7 +299,7 @@ public class ClientScene implements IClientScene {
 
 				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
 					needUpdate = false;
-					if (dialogBox==null||!dialogBox.hasDialog()) {
+					if (dialog==null||!dialog.hasDialog()) {
 						i.removeIf(l -> l.getChatLineID() == fhchatid);
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
@@ -310,7 +309,7 @@ public class ClientScene implements IClientScene {
 							}
 						}
 					}else {
-						dialogBox.updateTextLines(msgQueue);
+						dialog.updateTextLines(msgQueue);
 					}
 				}
 			}
