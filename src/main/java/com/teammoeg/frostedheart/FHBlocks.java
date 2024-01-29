@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
 
+import com.teammoeg.frostedheart.town.Farm.FarmBlock;
 import com.teammoeg.frostedheart.town.house.HouseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -150,6 +151,13 @@ public class FHBlocks {
             .hardnessAndResistance(2, 10)
             .notSolid(), FHBlockItem::new);
     public static Block house = new HouseBlock("house", Block.Properties
+            .create(Material.WOOD)
+            .sound(SoundType.WOOD)
+            .setRequiresTool()
+            .harvestTool(ToolType.AXE)
+            .hardnessAndResistance(2, 6)
+            .notSolid(), FHBlockItem::new);
+    public static Block farm = new FarmBlock("farm_block", Block.Properties
             .create(Material.WOOD)
             .sound(SoundType.WOOD)
             .setRequiresTool()

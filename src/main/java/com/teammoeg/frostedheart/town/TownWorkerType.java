@@ -37,6 +37,11 @@ public enum TownWorkerType {
         double cost = 1;
         double actualCost = resource.cost(TownResourceType.PREP_FOOD, cost, false);
         return cost == actualCost;
+    }, 0),
+    FARM(FHBlocks.farm, (resource, workData) -> {
+        double cost = 1;
+        double actualCost = resource.cost(TownResourceType.PREP_FOOD, cost, false);
+        return cost == actualCost;
     }, 0);
 
     /**

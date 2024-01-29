@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEnti
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
 
+import com.teammoeg.frostedheart.town.Farm.FarmBlockTileEntity;
 import com.teammoeg.frostedheart.town.house.HouseTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
@@ -105,7 +106,9 @@ public class FHTileTypes {
     public static final RegistryObject<TileEntityType<HouseTileEntity>> HOUSE = REGISTER.register(
             "house", makeType(HouseTileEntity::new, () -> FHBlocks.house)
     );
-
+    public static final RegistryObject<TileEntityType<FarmBlockTileEntity>> FARM = REGISTER.register(
+            "farm_block", makeType(FarmBlockTileEntity::new, () -> FHBlocks.farm)
+    );
     private static <T extends TileEntity> Supplier<TileEntityType<T>> makeType(Supplier<T> create, Supplier<Block> valid) {
         return makeTypeMultipleBlocks(create, () -> ImmutableSet.of(valid.get()));
     }

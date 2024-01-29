@@ -155,7 +155,7 @@ public class WorldTemperature {
     }
     public static int getClimateWind(IWorldReader w) {
         if (w instanceof World) {
-            return WorldClimate.getWind((World) w);
+            return (int)WorldClimate.getWind((World) w);
         }
         return 0;
     }
