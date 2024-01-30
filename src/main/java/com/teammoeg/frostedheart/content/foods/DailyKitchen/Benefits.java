@@ -3,7 +3,6 @@ package com.teammoeg.frostedheart.content.foods.DailyKitchen;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.potion.Effect;
@@ -23,7 +22,7 @@ public class Benefits {
 
     public Benefits(ServerPlayerEntity player){
         this.player = player;
-        this.capability = (WantedFoodCapability)player.getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY).orElse(null);
+        this.capability = (WantedFoodCapability)player.getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY).orElse(new WantedFoodCapability());
         this.eatenFoodsAmount = capability.getEatenFoodsAmount();
         this.benefitLevel = Math.min((eatenFoodsAmount/10), 7);
         this.basicEffectDuration = Math.min(3600+150*eatenFoodsAmount, 20000);//can't be more than one day
