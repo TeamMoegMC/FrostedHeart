@@ -28,7 +28,7 @@ public class FHNBT {
     public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
 
     public static ItemStack ArmorLiningNBT(ItemStack stack) {
-        stack.getOrCreateTag().putString("inner_cover", "frostedheart:gambeson");
+        stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");
         stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor
         return ArmorNBT(stack, 107, 6);
     }

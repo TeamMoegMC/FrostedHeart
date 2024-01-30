@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.client.ClientControl;
 
+import blusunrize.immersiveengineering.client.ClientUtils;
 import net.minecraft.util.ResourceLocation;
 
 public class FHScenarioClient {
@@ -34,6 +35,10 @@ public class FHScenarioClient {
         client.callCommand(name, runner, params);
     }
     public static ResourceLocation getPathOf(ResourceLocation orig,String path) {
+    	ResourceLocation rl= new ResourceLocation(orig.getNamespace(),path+ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()+"/"+orig.getPath());
+    	if(ClientUtils.mc().getResourceManager().hasResource(rl)) {
+    		return rl;
+    	}
     	return new ResourceLocation(orig.getNamespace(),path+orig.getPath());
     }
     public static void register(Class<?> clazz) {

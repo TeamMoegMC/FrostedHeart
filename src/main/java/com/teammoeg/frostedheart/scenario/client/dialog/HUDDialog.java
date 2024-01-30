@@ -55,7 +55,7 @@ public class HUDDialog implements IScenarioDialog{
 	}
 
 	@Override
-	public void closeScreen() {
+	public void closeDialog() {
 		ClientScene.INSTANCE.dialog=null;
 	}
 

@@ -491,9 +491,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 //    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-23,s+100*50,s+136*50,true));
         //model : 8->0 : 0->-30 : -30->-50= 1 : 2 : 2
         int f12cptime = 12 * 50;//1/2 storm period time
-        long warmpeak = s + 48 * 50;//warm period time-1/4 storm period time
-        long coldpeak = (long) (warmpeak + 2.5 * f12cptime);
-        long coldend = (long) (coldpeak + 2 * f12cptime);
+        long warmpeak = s + 56 * 50;//warm period time-1/4 storm period time
+        long coldpeak = (long) (warmpeak + 3 * f12cptime);
+        long coldend = (long) (coldpeak + 1 * f12cptime);
         //this.tempEventStream.add(new TempEvent(s-2*50,s+12*50,0,s+24*50,0,s+36*50,s+42*50,true,true));
         this.tempEventStream.add(new ClimateEvent(s + 0 * 50, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
         lasthour = -1;

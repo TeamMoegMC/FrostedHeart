@@ -29,6 +29,7 @@ import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
 import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.Transition;
@@ -109,7 +110,7 @@ public class ClientControl implements IClientControlCommand {
 					id=(HUDDialog) ClientScene.INSTANCE.dialog;
 				}
 			}else if(ClientScene.INSTANCE.dialog!=null){
-				ClientScene.INSTANCE.dialog.closeScreen();
+				ClientScene.INSTANCE.dialog.closeDialog();
 				ClientScene.INSTANCE.dialog=null;
 			}
 		}
@@ -121,16 +122,23 @@ public class ClientControl implements IClientControlCommand {
 			if(show>0) {
 				if(!(ClientScene.INSTANCE.dialog instanceof ImageScreenDialog)) {
 					id=new ImageScreenDialog(GuiUtils.str(""));
+					if(ClientScene.INSTANCE.dialog!=null)
+						ClientScene.INSTANCE.dialog.closeDialog();
 					ClientScene.INSTANCE.dialog=id;
+					ClientUtils.mc().displayGuiScreen(id);
 				}else {
 					id=(ImageScreenDialog) ClientScene.INSTANCE.dialog;
 				}
 				
-				ClientUtils.mc().displayGuiScreen(id);
-			}else if(ClientScene.INSTANCE.dialog!=null){
-				ClientScene.INSTANCE.dialog.closeScreen();
-				ClientScene.INSTANCE.dialog=null;
+				
+			}else {
+				if(ClientScene.INSTANCE.dialog!=null){
+					ClientScene.INSTANCE.dialog.closeDialog();
+				}
+				/*while(ClientUtils.mc().currentScreen instanceof IScenarioDialog)
+					ClientUtils.mc().currentScreen.closeScreen();*/
 			}
+			
 		}
 		if(id==null)
 			return;

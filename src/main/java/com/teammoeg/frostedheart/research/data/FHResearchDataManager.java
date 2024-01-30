@@ -91,6 +91,7 @@ public class FHResearchDataManager {
         }
         cn = data.computeIfAbsent(team.getId(),
                 c -> new TeamResearchData(() -> team));
+        dataByResearchId.putIfAbsent(cn.getId(), cn);
         if ((server.isSinglePlayer()||!server.isServerInOnlineMode())&&cn.getOwnerName() == null) {
             PlayerProfileCache cache = server.getPlayerProfileCache();
             if (cache != null) {

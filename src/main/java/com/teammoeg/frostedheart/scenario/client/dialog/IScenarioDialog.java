@@ -10,6 +10,6 @@ public interface IScenarioDialog {
 	void tickDialog();
 	LayerManager getPrimary();
 	void setPrimary(LayerManager primary);
-	void closeScreen();
+	void closeDialog();
 	boolean hasDialog();
 }

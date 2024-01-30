@@ -142,6 +142,10 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		getPrimary().close();
 		super.closeScreen();
 	}
+	@Override
+	public void closeDialog() {
+		closeScreen();
+	}
 	public LayerManager getPrimary() {
 		return primary;
 	}

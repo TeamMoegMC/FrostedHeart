@@ -85,7 +85,7 @@ public class ScenarioExecutor<T> {
                     if(partype.isPrimitive())
                     	def=()->0d;
                 } else if (partype.isAssignableFrom(String.class)) {
-                    converter = string;
+                    converter = null;
                 } else if (partype.isAssignableFrom(Integer.class) || partype == int.class) {
                     converter = integer;
                     if(partype.isPrimitive())
@@ -117,9 +117,12 @@ public class ScenarioExecutor<T> {
             		par = param.get(name);
             		if(par!=null)break;
             	}
-                if (par != null&&!par.isEmpty()) {
+                if (par != null) {
                     try {
-                        pars[i + 1] = params[i].convertion.apply(par);
+                    	if(params[i].convertion==null) {
+                    		pars[i+1]=par;
+                    	}else if(!par.isEmpty())
+                    		pars[i + 1] = params[i].convertion.apply(par);
                     } catch (NumberFormatException | ClassCastException ex) {
                         throw new ScenarioExecutionException("Exception converting param " + Arrays.toString(params[i].paramName), ex);
                     }
@@ -149,7 +152,6 @@ public class ScenarioExecutor<T> {
 		super();
 		this.objcls = objcls;
 	}
-	private static Function<String, Object> string = s -> s;
     private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
     private static Function<String, Object> integer = s ->{ 
     	if(s==null)return s;

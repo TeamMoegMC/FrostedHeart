@@ -52,7 +52,7 @@ public class GraphicsImageContent extends GraphicLayerContent {
 					ih=image.getHeight();
 				Rect r=params.calculateRect(x, y, width, height);
 				params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-				params.getG2d().drawImage(image,r.getX(),r.getY(),r.getW(),r.getH(), ix, iy, iw, ih, null);
+				params.getG2d().drawImage(image,r.getX(),r.getY(),r.getW()+r.getX(),r.getH()+r.getY(), ix, iy, iw+ix, ih+iy, null);
 				params.getG2d().setComposite(AlphaComposite.SrcOver);
 				
 			} catch (IOException e) {
