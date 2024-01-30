@@ -204,13 +204,9 @@ public class ScenarioParser {
         if(!reader.hasNext()) return createCommand(command, params);
         while (reader.hasNext()) {
             String name = parseLiteralOrString(reader, '=');
-            
-            if (reader.last() != '=') {
-                reader.skipWhitespace();
-                if (reader.peek() != '=') {
-                    break;
-                }
-				reader.next();
+            reader.skipWhitespace();
+            if (!reader.eat('=')) {
+                 break;
             }
             reader.skipWhitespace();
             
@@ -228,26 +224,20 @@ public class ScenarioParser {
         Map<String, String> params = new HashMap<>();
         reader.saveIndex();
         String command = parseLiteralOrString(reader, ']');
-        if(reader.peekLast()==']') return createCommand(command, params);
         reader.skipWhitespace();
         
-        if(reader.peekLast()==']') return createCommand(command, params);
+        if(reader.eat(']')) return createCommand(command, params);
         while (reader.hasNext()) {
             String name = parseLiteralOrString(reader, '=');
-            if (reader.last() != '=') {
-                reader.skipWhitespace();
-                if (reader.peek() != '=') {
-                    break;
-                }
-				reader.next();
-            }
             reader.skipWhitespace();
+            if (!reader.eat('=')) {
+                break;
+            }
             reader.skipWhitespace();
             String val = parseLiteralOrString(reader, ']');
             params.put(name, val);
             reader.skipWhitespace();
-            if(reader.peek()==']')reader.next();
-            if (reader.last() == ']') return createCommand(command, params);
+            if(reader.eat(']'))return createCommand(command, params);
         }
         return new LiteralNode(reader.fromStart());
     }
@@ -256,17 +246,14 @@ public class ScenarioParser {
         StringParseReader reader = new StringParseReader(line);
         List<Node> nodes = new ArrayList<>();
         while (reader.hasNext()) {
-        	if(reader.peekLast()=='#') {
+        	if(reader.eat('#')) {
         		break;
-        	}else if (reader.peekLast() == '@') {
-            	if(reader.isBegin())reader.next();
+        	}else if (reader.eat('@')) {
                 nodes.add(parseAtCommand(reader));
-            } else if (reader.peekLast() == '[') {
-            	if(reader.isBegin())reader.next();
+            } else if (reader.eat('[')) {
                 nodes.add(parseBarackCommand(reader));
             }else{
             	String lit=parseLiteral(reader);
-            	
             	if(lit!=null&&!lit.isEmpty()) {
             		if(lit.startsWith("*")) {
             			nodes.add(new LabelNode(lit));
@@ -282,20 +269,23 @@ public class ScenarioParser {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         while (reader.hasNext()) {
-            char r = reader.next();
+            char r = reader.read();
             if (!isEscaping && r == '\\') {
                 isEscaping = true;
+                reader.eat();
                 continue;
             }
             if (isEscaping) {
                 all.append(r);
                 isEscaping = false;
+                reader.eat();
                 continue;
             }
             if (r == '[' || r == '@'||r=='#') {
                 break;
             }
             all.append(r);
+            reader.eat();
         }
         return all.toString();
     }
@@ -305,9 +295,10 @@ public class ScenarioParser {
         boolean isEscaping = false;
         boolean hasQuote = false;
         while (reader.hasNext()) {
-            char r = reader.next();
+            char r = reader.read();
             if (!isEscaping && r == '\\') {
                 isEscaping = true;
+                reader.eat();
                 continue;
             }
             if (isEscaping) {
@@ -319,8 +310,7 @@ public class ScenarioParser {
                 if (!hasQuote) {
                     hasQuote = true;
                 } else {
-                	if(reader.hasNext())
-                		reader.next();
+                	reader.eat();
                     break;
                 }
                 continue;
@@ -329,6 +319,7 @@ public class ScenarioParser {
                 break;
             }
             all.append(r);
+            reader.eat();
         }
         return all.toString();
     }
