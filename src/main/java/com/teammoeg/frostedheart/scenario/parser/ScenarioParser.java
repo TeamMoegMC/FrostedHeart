@@ -33,6 +33,7 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.reader.StringListStringSource;
+import com.teammoeg.frostedheart.scenario.parser.reader.StringParseReader;
 import com.teammoeg.frostedheart.scenario.parser.reader.CodeLineSource;
 import com.teammoeg.frostedheart.scenario.parser.reader.ReaderLineSource;
 import com.teammoeg.frostedheart.scenario.parser.reader.StringLineSource;

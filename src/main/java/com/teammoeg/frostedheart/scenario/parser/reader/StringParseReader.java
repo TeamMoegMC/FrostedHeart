@@ -17,9 +17,9 @@
  *
  */
 
-package com.teammoeg.frostedheart.scenario.parser;
+package com.teammoeg.frostedheart.scenario.parser.reader;
 
-import com.teammoeg.frostedheart.scenario.parser.reader.CodeLineSource;
+import com.teammoeg.frostedheart.scenario.parser.ScenarioParseException;
 
 public class StringParseReader {
     public final CodeLineSource strs;
