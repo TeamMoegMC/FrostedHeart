@@ -21,6 +21,7 @@ public class GlyphData {
 	int ascent;
 	float scale=1;
 	boolean hasAscent;
+	public boolean isUnicode=false;
 	BufferedImage image;
 	int cachedColor=0xFFFFFFFF;
 	BufferedImage chachedGraphics;
@@ -47,8 +48,8 @@ public class GlyphData {
 	}
 
 	public int renderFont(Graphics2D g2d, int x, int y, int hsize,int color) {
-		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		if(!isUnicode)
+			g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		int crx=this.x;
 		int cry=this.y;
 		BufferedImage currentImage=image;
@@ -90,7 +91,6 @@ public class GlyphData {
 		// AlphaComposite.
 		g2d.drawImage(currentImage, x, y, x + (int) (width * 1f / height * hsize*scale), y + (int)(hsize*scale),crx , cry, crx + width,
 				cry + height, null);
-		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_DEFAULT);
 		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 		return (int) (advance * 1f / height * hsize);
 	}
@@ -98,9 +98,9 @@ public class GlyphData {
 	public void parseSize(byte data) {
 		int sx = (data >> 4) & 15;
 		x += sx;
-		width = (data & 15) + 1;
+		width = (data & 15) + 1-sx;
 		height = 16;
-		advance = width;
+		advance = width+2;
 	}
 
 	@Override

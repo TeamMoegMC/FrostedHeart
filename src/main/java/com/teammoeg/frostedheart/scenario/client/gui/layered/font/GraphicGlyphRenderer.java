@@ -55,11 +55,13 @@ public class GraphicGlyphRenderer implements ICharacterConsumer{
 		if(p_accept_2_.getItalic())
 			g2d.setTransform(italic);
 		if(shadow) {
-			int shadowX=1;
+			int shadowX=2;
+			int shadowY=2;
 			if(p_accept_2_.getBold()) {
-				shadowX++;
+				shadowX+=1;
+				shadowY+=1;
 			}
-			glyph.renderFont(g2d, x+shadowX, y+1, size,0xFF000000);
+			glyph.renderFont(g2d, x+shadowX, y+shadowY, size,0xFF000000);
 			advance++;
 		}
 		advance+=glyph.renderFont(g2d, x, y, size,c);

@@ -122,6 +122,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 						gd.image=image;
 						gd.parseSize(sizesb[n]);
 						unicodeData.put(n, gd);
+						gd.isUnicode=true;
 						data.putIfAbsent(n, gd);
 					}
 				}else {
@@ -159,7 +160,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		onResourceManagerReload(resourceManagerIn);
 		for(int i='A';i<'z';i++) {
-			System.out.println(data.get(i));
+			System.out.println(Character.toString((char)i)+unicodeData.get(i));
 		}
 		return new Object();
 	}
