@@ -15,11 +15,9 @@ import com.teammoeg.frostedheart.util.FileUtil;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
-import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
 
 public class KGlyphProvider extends ReloadListener<Object>{
