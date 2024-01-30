@@ -19,34 +19,38 @@
 
 package com.teammoeg.frostedheart.scenario.parser;
 
+import com.teammoeg.frostedheart.scenario.parser.reader.CodeLineSource;
+
 public class StringParseReader {
-    public final String str;
-    int idx = 0;
-    int srecord = 0;
-
-    public StringParseReader(String str) {
+    public final CodeLineSource strs;
+    private String str;
+    private int idx = 0;
+    private int srecord = 0;
+    private int lineNo=0;
+    public StringParseReader(CodeLineSource str) {
         super();
-        this.str = str;
+        this.strs = str;
     }
-
+    public boolean nextLine(){
+    	str=null;
+    	idx=0;
+		srecord=0;
+    	if(strs.hasNext()) {
+    		lineNo++;
+    		str=strs.read();
+    		return true;
+    	}
+    	return false;
+    }
     public String fromStart() {
         return str.substring(srecord, idx);
     }
-
-    public boolean hasNext() {
-        return idx < str.length()-1;
-    }
-
-    public boolean isBegin() {
-        return idx == 0;
+    public boolean has() {
+        return str!=null&&idx < str.length();
     }
 
     public char read() {
         return str.charAt(idx);
-    }
-
-    public void loadIndex() {
-        idx = srecord;
     }
 
     public char eat() {
@@ -67,12 +71,11 @@ public class StringParseReader {
     }
 
     public void skipWhitespace() {
-        boolean hasChangedIndex = false;
-        while (hasNext()&&Character.isWhitespace(read())) {
+        while (has()&&Character.isWhitespace(read())) {
             idx++;
-            hasChangedIndex = true;
         }
-       // if (hasChangedIndex&&hasNext())
-       //     idx--;
+    }
+    public ScenarioParseException generateException(Throwable nested) {
+    	return new ScenarioParseException("At File: "+strs.getName()+" Line:"+lineNo+":"+idx+" "+nested.getMessage(),nested);
     }
 }
