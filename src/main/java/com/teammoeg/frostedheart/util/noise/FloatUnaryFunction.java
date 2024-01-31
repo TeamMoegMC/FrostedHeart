@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 TeamMoeg
+ * Copyright (c) 2021-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -17,17 +17,9 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.noise;
 
-public interface VariantProvider {
-    Double get(String k);
-
-    default double getOrDefault(String k, double def) {
-        Double d = get(k);
-        if (d == null)
-            return def;
-        return d;
-    }
-
-    ;
+@FunctionalInterface
+public interface FloatUnaryFunction {
+    float applyAsFloat(float f);
 }

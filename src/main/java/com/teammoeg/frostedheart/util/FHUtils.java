@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.util;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
@@ -64,6 +65,9 @@ public class FHUtils {
     }
 
     private static final ResourceLocation emptyLoot = new ResourceLocation("frostedheart:empty");
+	public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
+	public static final String FIRST_LOGIN_GIVE_NUTRITION = FHMain.MODID + "first_login_give_nutrition";
+	public static final String FIRST_LOGIN_GIVE_MANUAL = "first";
 
     public static void applyEffectTo(EffectInstance effectinstance, PlayerEntity playerentity) {
         if (effectinstance.getPotion().isInstant()) {
@@ -222,5 +226,21 @@ public class FHUtils {
             }
         }
     }
+
+	public static ItemStack Damage(ItemStack stack, int dmg) {
+	    stack.setDamage(dmg);
+	    return stack;
+	}
+
+	public static ItemStack ArmorNBT(ItemStack stack, int base, int mult) {
+	    stack.setDamage((int) (stack.getMaxDamage() - base - Math.random() * mult));
+	    return stack;
+	}
+
+	public static ItemStack ArmorLiningNBT(ItemStack stack) {
+	    stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");
+	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor
+	    return ArmorNBT(stack, 107, 6);
+	}
 
 }

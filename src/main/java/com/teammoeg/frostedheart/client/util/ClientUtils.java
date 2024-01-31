@@ -31,6 +31,7 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particles.ParticleTypes;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -39,17 +40,21 @@ public class ClientUtils {
     public static boolean applyspg;
 
     public static ClientPlayerEntity getPlayer() {
-        return Minecraft.getInstance().player;
+        return mc().player;
     }
 
     public static World getWorld() {
-        return Minecraft.getInstance().world;
+        return mc().world;
     }
-
+    public static float partialTicks() {
+    	return mc().getRenderPartialTicks();
+    }
     public static Minecraft mc() {
         return Minecraft.getInstance();
     }
-
+    public static void bindTexture(ResourceLocation texture) {
+    	mc().getTextureManager().bindTexture(texture);
+    }
     public static void refreshResearchGui() {
         Screen cur = mc().currentScreen;
         if (cur instanceof IScreenWrapper) {

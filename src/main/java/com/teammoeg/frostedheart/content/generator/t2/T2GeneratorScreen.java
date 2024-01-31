@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.client.utils.GuiHelper;

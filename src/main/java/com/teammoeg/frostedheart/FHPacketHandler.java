@@ -45,7 +45,7 @@ import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.trade.network.BargainResponse;
 import com.teammoeg.frostedheart.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.trade.network.TradeUpdatePacket;
-import com.teammoeg.frostedheart.util.FHVersion;
+import com.teammoeg.frostedheart.util.version.FHVersion;
 
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraftforge.fml.ModList;

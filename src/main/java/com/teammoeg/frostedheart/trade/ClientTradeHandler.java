@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.trade;
 
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.trade.gui.TradeScreen;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.gui.screen.Screen;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;

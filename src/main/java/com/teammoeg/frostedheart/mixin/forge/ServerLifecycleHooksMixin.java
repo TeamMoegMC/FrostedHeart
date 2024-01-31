@@ -20,9 +20,10 @@
 package com.teammoeg.frostedheart.mixin.forge;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.ZipFile;
+import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.version.FHVersion;
+
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.fml.loading.FMLPaths;

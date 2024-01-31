@@ -6,7 +6,7 @@ import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLLayerContent;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import net.minecraft.client.Minecraft;
 
 public class RenderParams {

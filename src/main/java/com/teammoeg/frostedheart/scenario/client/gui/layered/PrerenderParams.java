@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.teammoeg.frostedheart.client.util.Rect;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 
 public class PrerenderParams {
 	Graphics2D g2d;

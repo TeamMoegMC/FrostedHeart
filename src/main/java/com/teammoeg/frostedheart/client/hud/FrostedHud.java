@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
+import com.teammoeg.frostedheart.client.util.FHGuiHelper;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
@@ -42,7 +43,6 @@ import com.teammoeg.frostedheart.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;

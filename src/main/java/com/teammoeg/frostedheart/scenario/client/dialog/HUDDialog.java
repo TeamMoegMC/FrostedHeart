@@ -7,7 +7,7 @@ import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 
 public class HUDDialog implements IScenarioDialog{
 	private LayerManager primary=new LayerManager();

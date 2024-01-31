@@ -61,7 +61,6 @@ import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import com.teammoeg.frostedheart.world.FHFeatures;
@@ -160,17 +159,17 @@ public class CommonEvents {
         } else {
             nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
         }
-        if (!persistent.contains(FHNBT.FIRST_LOGIN_GIVE_MANUAL)) {
-            persistent.putBoolean(FHNBT.FIRST_LOGIN_GIVE_MANUAL, false);
+        if (!persistent.contains(FHUtils.FIRST_LOGIN_GIVE_MANUAL)) {
+            persistent.putBoolean(FHUtils.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(
                     new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
-            event.getPlayer().inventory.armorInventory.set(3, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
+            event.getPlayer().inventory.armorInventory.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_head"))));
-            event.getPlayer().inventory.armorInventory.set(2, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
+            event.getPlayer().inventory.armorInventory.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_chest"))));
-            event.getPlayer().inventory.armorInventory.set(1, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
+            event.getPlayer().inventory.armorInventory.set(1, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_leg"))));
-            event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
+            event.getPlayer().inventory.armorInventory.set(0, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_foot"))));
             if (event.getPlayer().abilities.isCreativeMode) {
                 event.getPlayer().sendMessage(new TranslationTextComponent("message.frostedheart.creative_help")

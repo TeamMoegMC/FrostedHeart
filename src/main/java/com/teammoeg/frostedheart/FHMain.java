@@ -54,11 +54,10 @@ import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
-import com.teammoeg.frostedheart.util.ChException;
 import com.teammoeg.frostedheart.util.FHProps;
-import com.teammoeg.frostedheart.util.FHRemote;
-import com.teammoeg.frostedheart.util.FHVersion;
 import com.teammoeg.frostedheart.util.VersionRemap;
+import com.teammoeg.frostedheart.util.version.FHRemote;
+import com.teammoeg.frostedheart.util.version.FHVersion;
 import com.teammoeg.frostedheart.world.FHBiomes;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
@@ -97,17 +96,17 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod(FHMain.MODID)
 public class FHMain {
-    public static final Logger LOGGER = LogManager.getLogger();
+   
 
     public static final String MODID = "frostedheart";
     public static final String MODNAME = "Frosted Heart";
+    public static final Logger LOGGER = LogManager.getLogger(MODNAME);
     public static FHRemote remote;
     public static FHRemote local;
     public static FHRemote pre;
     public static File lastbkf;
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
-
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
         @Nonnull
@@ -167,7 +166,7 @@ public class FHMain {
         if (!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone"))
                 || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))
                 || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
-            throw new ChException.作弊者禁止进入();
+            throw new RuntimeException("Unsupported projecte");
         // remove primal winter blocks not to temper rankine world
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
         ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);

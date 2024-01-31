@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.io;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

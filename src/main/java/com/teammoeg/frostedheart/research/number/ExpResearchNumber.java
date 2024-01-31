@@ -23,13 +23,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.research.data.ResearchData;
-import com.teammoeg.frostedheart.util.Calculator;
 import com.teammoeg.frostedheart.util.Writeable;
+import com.teammoeg.frostedheart.util.evaluator.Evaluator;
+import com.teammoeg.frostedheart.util.evaluator.Node;
 
 import net.minecraft.network.PacketBuffer;
 
 public class ExpResearchNumber implements IResearchNumber {
-    Calculator.Node calc;
+    Node calc;
     String exp;
 
     public ExpResearchNumber(JsonObject buffer) {
@@ -43,7 +44,7 @@ public class ExpResearchNumber implements IResearchNumber {
     public ExpResearchNumber(String exp) {
         super();
         this.exp = exp;
-        calc = Calculator.eval(exp);
+        calc = Evaluator.eval(exp);
     }
 
     @Override

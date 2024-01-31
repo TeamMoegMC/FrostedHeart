@@ -26,7 +26,6 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
 import com.teammoeg.frostedheart.loot.*;
-import com.teammoeg.frostedheart.util.FHLogger;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
@@ -83,7 +82,7 @@ public class CommonRegistryEvents {
             try {
                 event.getRegistry().register(block);
             } catch (Throwable e) {
-                FHLogger.error("Failed to register a block. ({})", block);
+            	FHMain.LOGGER.error("Failed to register a block. ({})", block);
                 throw e;
             }
         }
@@ -100,7 +99,7 @@ public class CommonRegistryEvents {
             try {
                 event.getRegistry().register(fluid);
             } catch (Throwable e) {
-                FHLogger.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
+            	FHMain.LOGGER.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
                 throw e;
             }
         }
@@ -112,7 +111,7 @@ public class CommonRegistryEvents {
             try {
                 event.getRegistry().register(item);
             } catch (Throwable e) {
-                FHLogger.error("Failed to register an item. ({}, {})", item, item.getRegistryName());
+            	FHMain.LOGGER.error("Failed to register an item. ({}, {})", item, item.getRegistryName());
                 throw e;
             }
         }

@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.mixin.minecraft;
 
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.util.FHGameRule;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IServerWorldInfo;
@@ -67,7 +67,7 @@ public abstract class MixinServerWorld extends World {
      */
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;hasSkyLight()Z"))
     private void tick(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
-        if (!((FHGameRule) this.getGameRules()).isWeatherCycle())//vanilla rules
+        if (!this.getGameRules().getBoolean(GameRules.DO_WEATHER_CYCLE))//vanilla rules
             return;
 
         // ignore nether and end etc.

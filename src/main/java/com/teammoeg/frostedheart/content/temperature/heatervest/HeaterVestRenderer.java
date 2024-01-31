@@ -30,7 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.util.FHNBT;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -61,8 +61,8 @@ public class HeaterVestRenderer<E extends LivingEntity, M extends BipedModel<E>>
     @ParametersAreNonnullByDefault
     public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, E living, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
         ItemStack chest = living.getItemStackFromSlot(EquipmentSlotType.CHEST);
-        if (!chest.isEmpty() && (chest.getItem() == FHItems.heater_vest || ItemNBTHelper.hasKey(chest, FHNBT.NBT_HEATER_VEST))) {
-            ItemStack heaterVest = chest.getItem() == FHItems.heater_vest ? chest : ItemNBTHelper.getItemStack(chest, FHNBT.NBT_HEATER_VEST);
+        if (!chest.isEmpty() && (chest.getItem() == FHItems.heater_vest || ItemNBTHelper.hasKey(chest, FHUtils.NBT_HEATER_VEST))) {
+            ItemStack heaterVest = chest.getItem() == FHItems.heater_vest ? chest : ItemNBTHelper.getItemStack(chest, FHUtils.NBT_HEATER_VEST);
             addWornHeaterVest(living, heaterVest);
         } else if (ModList.get().isLoaded("curios")) {
             ItemStack heaterVest = CuriosCompat.getHeaterVest(living);

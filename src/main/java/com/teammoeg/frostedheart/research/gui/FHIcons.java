@@ -48,7 +48,7 @@ import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import blusunrize.immersiveengineering.client.ClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.icon.ItemIcon;

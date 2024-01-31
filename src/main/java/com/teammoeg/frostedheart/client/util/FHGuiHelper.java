@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.gui;
+package com.teammoeg.frostedheart.client.util;
 
 import java.util.OptionalDouble;
 

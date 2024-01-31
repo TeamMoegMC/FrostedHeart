@@ -2,11 +2,11 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered.gl;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
@@ -40,6 +40,7 @@ public class GLImageContent extends GLLayerContent {
 		//RenderSystem.colorMask(false, false, false, false);
 		if(texture==0) {
 			if(showingImage!=null) {
+				
 				ClientUtils.bindTexture(showingImage);
 				blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 			}

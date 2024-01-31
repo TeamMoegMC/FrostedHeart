@@ -45,7 +45,8 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
 import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.util.FHNBT;
+import com.teammoeg.frostedheart.util.FHUtils;
+
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
@@ -283,9 +284,9 @@ public class JEICompat implements IModPlugin {
         registration.addRecipes(new ArrayList<>(SmokingDefrostRecipe.recipeList.values()), SmokingDefrostCategory.UID);
         registration.addRecipes(new ArrayList<>(CampfireDefrostRecipe.recipeList.values()), ChargerDefrostCategory.UID);
         registration.addRecipes(Arrays.asList(
-                        new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.red_mushroombed), 0),
+                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.red_mushroombed), 0),
                                 new ItemStack(Items.RED_MUSHROOM, 10)),
-                        new CuttingRecipe(FHNBT.Damage(new ItemStack(FHItems.brown_mushroombed), 0),
+                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.brown_mushroombed), 0),
                                 new ItemStack(Items.BROWN_MUSHROOM, 10))),
                 CuttingCategory.UID);
         registration.addRecipes(new ArrayList<>(SaunaRecipe.recipeList.values()), SaunaCategory.UID);

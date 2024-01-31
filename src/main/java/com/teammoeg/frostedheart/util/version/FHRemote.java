@@ -17,10 +17,13 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.version;
 
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.io.FileUtil;
+
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
 

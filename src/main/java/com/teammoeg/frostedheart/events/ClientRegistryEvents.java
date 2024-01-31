@@ -44,9 +44,7 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.font.KGlyphProvider;
 import com.teammoeg.frostedheart.trade.gui.TradeScreen;
-import com.teammoeg.frostedheart.util.FHLogger;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
@@ -63,10 +61,8 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.ArmorItem;
-import net.minecraft.resources.IReloadableResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -170,9 +166,9 @@ public class ClientRegistryEvents {
                 ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
                 IBakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
                 if (model == null) {
-                    FHLogger.warn("Did not find the expected vanilla baked model for " + item + " in registry");
+                    FHMain.LOGGER.warn("Did not find the expected vanilla baked model for " + item + " in registry");
                 } else if (model instanceof LiningModel) {
-                    FHLogger.warn("Tried to replace " + item + " twice");
+                	FHMain.LOGGER.warn("Tried to replace " + item + " twice");
                 } else {
                     // Replace the model with our IBakedModel
                     LiningModel customModel = new LiningModel(model);

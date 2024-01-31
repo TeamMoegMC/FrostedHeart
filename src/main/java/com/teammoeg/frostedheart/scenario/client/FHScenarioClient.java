@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.client.ClientControl;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import net.minecraft.util.ResourceLocation;
 
 public class FHScenarioClient {
