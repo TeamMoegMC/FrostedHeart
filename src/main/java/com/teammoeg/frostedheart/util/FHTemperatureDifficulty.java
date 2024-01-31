@@ -17,13 +17,13 @@
  *
  */
 
-package com.teammoeg.frostedheart;
+package com.teammoeg.frostedheart.util;
 
 import java.util.function.Function;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 
-public enum FHDifficulty {
+public enum FHTemperatureDifficulty {
     Easy(s -> 0.05F),
     Normal(s -> 0.036F),
     Hard(s -> s.isSprinting() ? 0.036F : 0.024F),
@@ -31,7 +31,7 @@ public enum FHDifficulty {
 
     public final Function<ServerPlayerEntity, Float> self_heat;
 
-    private FHDifficulty(Function<ServerPlayerEntity, Float> self_heat) {
+    private FHTemperatureDifficulty(Function<ServerPlayerEntity, Float> self_heat) {
         this.self_heat = self_heat;
 
     }

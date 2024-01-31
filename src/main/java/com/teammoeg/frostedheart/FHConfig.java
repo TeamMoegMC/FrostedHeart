@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.frostedheart.util.FHTemperatureDifficulty;
+
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -110,7 +112,7 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue alwaysKeepInventory;
         public final ForgeConfigSpec.BooleanValue fixEssJeiIssue;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> developers;
-        public final ForgeConfigSpec.EnumValue<FHDifficulty> tdiffculty;
+        public final ForgeConfigSpec.EnumValue<FHTemperatureDifficulty> tdiffculty;
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
         public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
@@ -134,7 +136,7 @@ public class FHConfig {
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
             tdiffculty = builder.comment("Temperature System difficulty", "Easy=Strong body", "Normal=Average", "Hard=Reality", "Hardcore=Sick body")
-                    .defineEnum("temperatureDifficulty", FHDifficulty.Normal);
+                    .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
             steamCoreMaxPower = builder.comment("The max power which steam core can store.Steam Core will cost the power stored without any heat source connected.")
