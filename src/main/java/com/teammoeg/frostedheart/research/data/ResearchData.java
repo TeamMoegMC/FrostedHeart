@@ -31,9 +31,9 @@ import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
-import com.teammoeg.frostedheart.util.SerializeUtil;
-import com.teammoeg.frostedheart.util.SerializeUtil.CompoundBuilder;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil.CompoundBuilder;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;

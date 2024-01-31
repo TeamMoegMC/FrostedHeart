@@ -20,7 +20,8 @@
 package com.teammoeg.frostedheart.loot;
 
 import com.google.gson.*;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.loot.LootContext;

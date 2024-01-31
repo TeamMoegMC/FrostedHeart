@@ -44,8 +44,8 @@ import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
 import com.teammoeg.frostedheart.research.research.Research;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import com.teammoeg.frostedheart.client.util.ClientUtils;

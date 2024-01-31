@@ -21,7 +21,8 @@ package com.teammoeg.frostedheart.mixin.minecraft;
 
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.TradeHandler;
-import com.teammoeg.frostedheart.util.VillagerDataHolder;
+import com.teammoeg.frostedheart.util.mixin.VillagerDataHolder;
+
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.merchant.villager.AbstractVillagerEntity;
 import net.minecraft.entity.merchant.villager.VillagerEntity;

@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 

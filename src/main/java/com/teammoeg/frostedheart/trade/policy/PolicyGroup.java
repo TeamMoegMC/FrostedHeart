@@ -24,8 +24,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
 import net.minecraft.network.PacketBuffer;
 
 import java.util.List;

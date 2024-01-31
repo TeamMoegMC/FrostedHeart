@@ -40,8 +40,8 @@ import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.util.LazyOptional;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

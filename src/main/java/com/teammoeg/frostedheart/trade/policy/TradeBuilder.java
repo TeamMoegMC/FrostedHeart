@@ -27,7 +27,8 @@ import com.teammoeg.frostedheart.trade.policy.actions.SetFlagAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagValueAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetLevelAction;
 import com.teammoeg.frostedheart.trade.policy.conditions.*;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.Item;

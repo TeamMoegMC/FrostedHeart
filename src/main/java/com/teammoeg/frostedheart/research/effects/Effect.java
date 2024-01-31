@@ -39,8 +39,8 @@ import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHEffectProgressSyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.PlayerEntity;

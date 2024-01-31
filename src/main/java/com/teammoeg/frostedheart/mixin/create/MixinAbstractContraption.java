@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.mixin.create;
 
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.teammoeg.frostedheart.util.ContraptionCostUtils;
+import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 import com.teammoeg.frostedheart.util.mixin.IStressContraption;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;

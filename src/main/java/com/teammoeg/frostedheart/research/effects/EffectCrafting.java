@@ -38,8 +38,8 @@ import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import net.minecraft.entity.player.PlayerEntity;

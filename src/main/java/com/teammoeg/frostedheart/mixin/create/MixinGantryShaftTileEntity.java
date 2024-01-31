@@ -23,7 +23,7 @@ import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.gantry.GantryContraption;
 import com.simibubi.create.content.contraptions.relays.advanced.GantryShaftTileEntity;
-import com.teammoeg.frostedheart.util.ContraptionCostUtils;
+import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
 import com.teammoeg.frostedheart.util.mixin.IGantryShaft;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;

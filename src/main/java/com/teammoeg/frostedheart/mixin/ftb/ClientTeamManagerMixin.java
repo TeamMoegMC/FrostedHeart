@@ -20,7 +20,8 @@
 package com.teammoeg.frostedheart.mixin.ftb;
 
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.util.FTBFixUtils;
+import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
+
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.KnownClientPlayer;

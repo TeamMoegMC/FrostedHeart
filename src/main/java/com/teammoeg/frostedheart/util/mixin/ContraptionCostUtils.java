@@ -17,14 +17,14 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
 import com.simibubi.create.foundation.block.BlockStressValues;
-import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
-import com.teammoeg.frostedheart.util.mixin.IStressContraption;
+import com.teammoeg.thermopolium.data.recipes.SerializeUtil;
+
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.gen.feature.template.Template.BlockInfo;
 import org.apache.commons.lang3.tuple.MutablePair;

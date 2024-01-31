@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.util.BreedUtil;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.*;
 import net.minecraft.entity.passive.horse.AbstractHorseEntity;
@@ -30,6 +29,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import com.teammoeg.frostedheart.util.mixin.BreedUtil;
 
 @Mixin({PigEntity.class, ChickenEntity.class, FoxEntity.class, RabbitEntity.class, CatEntity.class, LlamaEntity.class, AbstractHorseEntity.class})
 public abstract class BreedableEntityMixin extends AnimalEntity {
