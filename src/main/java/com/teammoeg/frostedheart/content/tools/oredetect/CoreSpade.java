@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.content.tools.oredetect;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
@@ -90,7 +92,7 @@ public class CoreSpade extends FHLeveledTool {
                             int BlockY = y + y2;
                             int BlockZ = z + z2;
                             ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
-                            if (!ore.getRegistryName().getNamespace().equals("minecraft") && tagdet.test(ore.getTags())) {
+                            if (!RegistryUtils.getRegistryName(ore).getNamespace().equals("minecraft") && tagdet.test(ore.getTags())) {
                                 founded.merge(ore.getTranslationKey(), 1, Integer::sum);
                             }
                         }

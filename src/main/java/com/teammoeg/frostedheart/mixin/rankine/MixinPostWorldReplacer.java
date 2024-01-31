@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.mixin.rankine;
 import com.cannolicatfish.rankine.init.RankineLists;
 import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.cannolicatfish.rankine.world.gen.feature.PostWorldReplacerFeature;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.SnowyDirtBlock;
@@ -54,7 +56,7 @@ public class MixinPostWorldReplacer {
                 for (int y = 52; y < endY; ++y) {
                     BlockPos TARGET_POS = new BlockPos(x, y, z);
                     Block TARGET = reader.getBlockState(TARGET_POS).getBlock();
-                    ResourceLocation TARGET_BIOME = reader.getBiome(TARGET_POS).getRegistryName();
+                    ResourceLocation TARGET_BIOME = RegistryUtils.getRegistryName(reader.getBiome(TARGET_POS));
                     if (WorldgenUtils.GEN_BIOMES.contains(TARGET_BIOME)) {
                         int genBiomesIndex = WorldgenUtils.GEN_BIOMES.indexOf(TARGET_BIOME);
 

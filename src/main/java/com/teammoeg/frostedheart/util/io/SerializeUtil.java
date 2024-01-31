@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.Writeable;
 
 import net.minecraft.item.ItemStack;
@@ -192,9 +193,9 @@ public class SerializeUtil {
     public static JsonElement toJson(ItemStack stack) {
         boolean hasCount = stack.getCount() > 1, hasTag = stack.hasTag();
         if (!hasCount && !hasTag)
-            return new JsonPrimitive(stack.getItem().getRegistryName().toString());
+            return new JsonPrimitive(RegistryUtils.getRegistryName(stack.getItem()).toString());
         JsonObject jo = new JsonObject();
-        jo.addProperty("id", stack.getItem().getRegistryName().toString());
+        jo.addProperty("id", RegistryUtils.getRegistryName(stack.getItem()).toString());
         if (hasCount)
             jo.addProperty("count", stack.getCount());
         if (hasTag)

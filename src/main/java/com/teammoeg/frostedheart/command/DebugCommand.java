@@ -35,6 +35,7 @@ import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.util.ReferenceValue;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.thermopolium.items.StewItem;
@@ -114,7 +115,7 @@ public class DebugCommand {
                             items.add(ix);
                             Food f = ix.getFood();
                             if (f != null)
-                                ps.println(ix.getRegistryName() + "," + f.getHealing());
+                                ps.println(RegistryUtils.getRegistryName(ix) + "," + f.getHealing());
                         }
                     } catch (Exception e) {
                         // TODO Auto-generated catch block

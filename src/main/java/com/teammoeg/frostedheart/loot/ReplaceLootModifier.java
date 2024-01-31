@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart.loot;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
@@ -50,7 +52,7 @@ public class ReplaceLootModifier extends LootModifier {
         JsonObject toJson() {
             JsonObject jo = new JsonObject();
             jo.add("from", from.serialize());
-            jo.addProperty("to", to.getRegistryName().toString());
+            jo.addProperty("to", RegistryUtils.getRegistryName(to).toString());
             return jo;
         }
     }

@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.world.structure.ObservatoryPiece;
 import com.teammoeg.frostedheart.world.structure.ObservatoryStructure;
 
@@ -50,7 +51,7 @@ public class FHStructures {
     }
 
     public static void registerStructureGenerate() {
-        Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.OBSERVATORY.getRegistryName().toString(), FHStructures.OBSERVATORY);
+        Structure.NAME_STRUCTURE_BIMAP.put(RegistryUtils.getRegistryName(FHStructures.OBSERVATORY).toString(), FHStructures.OBSERVATORY);
 //        Structure.NAME_STRUCTURE_BIMAP.put(FHStructures.VOLCANIC_VENT.getRegistryName().toString(), FHStructures.VOLCANIC_VENT);
 
         HashMap<Structure<?>, StructureSeparationSettings> StructureSettingMap = new HashMap<>();

@@ -36,6 +36,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
@@ -86,7 +87,7 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 		// super.itemModel(FHBlocks.mech_calc,models().withExistingParent("block/mechanical_calculator",
 		// modLoc("block/mechanical_calculator")));
 		for (Block blk : new Block[] { FHBlocks.fluorite_ore, FHBlocks.halite_ore }) {
-			String regName = blk.getRegistryName().getPath();
+			String regName = RegistryUtils.getRegistryName(blk).getPath();
 			getVariantBuilder(blk).forAllStates(state -> {
 				int i = state.get(RankineOreBlock.TYPE);
 				try {

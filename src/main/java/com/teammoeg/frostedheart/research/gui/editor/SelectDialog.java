@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -149,7 +150,7 @@ public class SelectDialog<T> extends EditDialog {
         ).open();
     };
     public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName, e -> new String[]{e.getName().getString(), e.getRegistryName().toString()}
+        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName, e -> new String[]{e.getName().getString(), RegistryUtils.getRegistryName(e).toString()}
         ).open();
     };
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {

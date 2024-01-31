@@ -25,6 +25,8 @@ import com.google.common.base.Optional;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.climate.data.JsonHelper;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.entity.MobEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -93,7 +95,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
     }
 
     public ResourceLocation getBuffType() {
-        return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e -> e.getItem().getRegistryName())
+        return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e -> RegistryUtils.getRegistryName(e.getItem()))
                 .or(new ResourceLocation("minecraft", "air"));
     }
 
@@ -126,7 +128,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
         if (!armoritem.isEmpty() && !buffstack.isEmpty()) {
             ItemStack ret = armoritem.copy();
             ret.setCount(1);
-            ItemNBTHelper.putString(ret, "inner_cover", buffstack.getItem().getRegistryName().toString());
+            ItemNBTHelper.putString(ret, "inner_cover", RegistryUtils.getRegistryName(buffstack.getItem()).toString());
             CompoundNBT nbt = buffstack.getTag();
             ret.getTag().put("inner_cover_tag", nbt != null ? nbt : new CompoundNBT());
             return ret;

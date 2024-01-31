@@ -55,6 +55,7 @@ import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.FHProps;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.VersionRemap;
 import com.teammoeg.frostedheart.util.version.FHRemote;
 import com.teammoeg.frostedheart.util.version.FHVersion;
@@ -205,7 +206,7 @@ public class FHMain {
     public void modification(FMLLoadCompleteEvent event) {
         for (Item i : ForgeRegistries.ITEMS.getValues()) {
             if (i.isFood()) {
-                if (i.getRegistryName().getNamespace().equals("crockpot")) {
+                if (RegistryUtils.getRegistryName(i).getNamespace().equals("crockpot")) {
                     ((FoodAccess) i.getFood()).getEffectsSuppliers().removeIf(t -> t.getFirst().get().getPotion().isBeneficial());
                 }
             }

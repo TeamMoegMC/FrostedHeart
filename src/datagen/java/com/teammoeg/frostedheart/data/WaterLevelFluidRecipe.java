@@ -1,6 +1,7 @@
 package com.teammoeg.frostedheart.data;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import gloridifice.watersource.registry.RecipeSerializersRegistry;
 import net.minecraft.data.IFinishedRecipe;
@@ -31,7 +32,7 @@ public class WaterLevelFluidRecipe implements IFinishedRecipe {
 		json.add("ingredient",igd.serialize());
 		json.addProperty("waterLevel", wl);
 		json.addProperty("waterSaturationLevel",ws);
-		json.addProperty("fluid", f.getRegistryName().toString());
+		json.addProperty("fluid", RegistryUtils.getRegistryName(f).toString());
 	}
 
 	@Override

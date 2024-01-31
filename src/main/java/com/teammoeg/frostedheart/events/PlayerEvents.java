@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
@@ -62,7 +63,7 @@ public class PlayerEvents {
     @SuppressWarnings("resource")
     public static void onRC(PlayerInteractEvent.RightClickItem rci) {
         if (!rci.getWorld().isRemote
-                && rci.getItemStack().getItem().getRegistryName().getNamespace().equals("projecte")) {
+                && RegistryUtils.getRegistryName(rci.getItemStack().getItem()).getNamespace().equals("projecte")) {
             rci.setCancellationResult(ActionResultType.SUCCESS);
             rci.setCanceled(true);
             World world = rci.getWorld();

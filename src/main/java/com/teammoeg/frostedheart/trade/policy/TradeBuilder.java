@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.trade.policy.actions.SetFlagAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagValueAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetLevelAction;
 import com.teammoeg.frostedheart.trade.policy.conditions.*;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.data.IFinishedRecipe;
@@ -334,7 +335,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, Item item) {
-            return this.buy(item.getRegistryName().toString(), maxstore, recover, price, Ingredient.fromItems(item));
+            return this.buy(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, Ingredient.fromItems(item));
         }
 
         /**
@@ -347,7 +348,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns buy
          */
         public GroupBuilder buy(int maxstore, float recover, int price, ItemStack item) {
-            return this.buy(item.getItem().getRegistryName().toString(), maxstore, recover, price, Ingredient.fromStacks(item));
+            return this.buy(RegistryUtils.getRegistryName(item.getItem()).toString(), maxstore, recover, price, Ingredient.fromStacks(item));
         }
 
         /**
@@ -493,7 +494,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, Item item) {
-            return this.sell(item.getRegistryName().toString(), maxstore, recover, price, new ItemStack(item));
+            return this.sell(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item));
         }
 
         /**
@@ -507,7 +508,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, Item item, int count) {
-            return this.sell(item.getRegistryName().toString(), maxstore, recover, price, new ItemStack(item, count));
+            return this.sell(RegistryUtils.getRegistryName(item).toString(), maxstore, recover, price, new ItemStack(item, count));
         }
 
         /**
@@ -520,7 +521,7 @@ public class TradeBuilder implements IFinishedRecipe {
          * @return returns sell
          */
         public GroupBuilder sell(int maxstore, float recover, int price, ItemStack item) {
-            return this.sell(item.getItem().getRegistryName().toString(), maxstore, recover, price, item);
+            return this.sell(RegistryUtils.getRegistryName(item.getItem()).toString(), maxstore, recover, price, item);
         }
 
         /**
@@ -664,7 +665,7 @@ public class TradeBuilder implements IFinishedRecipe {
         if (weight > 0)
             arg0.addProperty("weight", weight);
         if (prof != null && prof != VillagerProfession.NONE)
-            arg0.addProperty("profession", prof.getRegistryName().toString());
+            arg0.addProperty("profession", RegistryUtils.getRegistryName(prof).toString());
         if (exp != null)
             arg0.add("exps", SerializeUtil.toJsonList(Arrays.stream(exp).boxed().collect(Collectors.toList()), JsonPrimitive::new));
     }
