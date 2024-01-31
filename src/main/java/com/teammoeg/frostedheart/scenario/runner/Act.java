@@ -213,4 +213,8 @@ public class Act implements IScenarioConductor{
 	public String getLang() {
 		return parent.getLang();
 	}
+	@Override
+	public void sendMessage(String s) {
+		parent.sendMessage(s);
+	}
 }

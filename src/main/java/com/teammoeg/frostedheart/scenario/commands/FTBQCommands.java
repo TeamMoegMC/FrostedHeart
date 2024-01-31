@@ -70,7 +70,7 @@ public class FTBQCommands {
 			return qf.getData(r.getPlayer()).canStartTasks(quest);
 		}));
 	}
-	public void completequest(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
+	public void completequest(ScenarioConductor runner,@Param("q")String q) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(q));
 		TeamData td=ServerQuestFile.INSTANCE.getData(runner.getPlayer());
 		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE);

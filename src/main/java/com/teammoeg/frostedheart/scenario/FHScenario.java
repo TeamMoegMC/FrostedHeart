@@ -75,7 +75,6 @@ public class FHScenario {
 	}
 
 	public static Scenario loadScenario(IScenarioConductor caller,String name) {
-		System.out.println("trying to load scenario "+name);
 		String[] paths=name.split("\\?");
 		String[] args=new String[0];
 		if(paths.length>1&&!paths[1].isEmpty())
@@ -98,8 +97,6 @@ public class FHScenario {
 						return s;
 				}catch(Exception e) {
 					new ScenarioExecutionException("Unexpected exception getting from provider '"+i.getName()+"' ,Exceptions should be caught within provider and return null. ",e).printStackTrace();
-				}catch(Throwable t) {
-					new ScenarioExecutionException();
 				}
 				
 			}
@@ -110,7 +107,9 @@ public class FHScenario {
 			if(f.exists())
 				return parser.parseFile(name, f);
 		} catch (Exception e) {
+			caller.sendMessage("Exception loading scenario: "+e.getMessage()+" see log for more detail");
 			e.printStackTrace();
+			
 		}
 		return new Scenario(name);
 	}

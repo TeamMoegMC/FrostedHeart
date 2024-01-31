@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
@@ -316,6 +317,7 @@ public class ScenarioConductor implements IScenarioConductor{
     			node.run(this);
     		}catch(Throwable t) {
     			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
+    			this.sendMessage("Execution Exception when executing scenario: "+t.getMessage()+" see logs for more detail");
     			setStatus((RunStatus.STOPPED));
 	    		getScene().clear();
 	    		sendCachedSence();
@@ -420,6 +422,7 @@ public class ScenarioConductor implements IScenarioConductor{
 			}else {//Save current state if stopped or waiting trigger.
 				olddata.saveActState();
 			}
+			olddata.getScene().clear();
 			acts.put(old, olddata);
 			globalScope();
 		}else {
@@ -526,5 +529,9 @@ public class ScenarioConductor implements IScenarioConductor{
 	}
 	private void setCurrentAct(Act currentAct) {
 		this.currentAct = currentAct;
+	}
+	@Override
+	public void sendMessage(String s) {
+		getPlayer().sendStatusMessage(GuiUtils.str(s), false);
 	}
 }
