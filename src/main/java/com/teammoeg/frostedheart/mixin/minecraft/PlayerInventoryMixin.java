@@ -19,16 +19,18 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.util.INameable;
-import net.minecraftforge.common.util.FakePlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
+
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.util.INameable;
+import net.minecraftforge.common.util.FakePlayer;
 
 @Mixin(PlayerInventory.class)
 public abstract class PlayerInventoryMixin implements IInventory, INameable {

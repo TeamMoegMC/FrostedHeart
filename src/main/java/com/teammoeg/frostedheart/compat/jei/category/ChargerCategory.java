@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
+import java.util.Arrays;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
@@ -26,6 +28,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerRecipe;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -39,16 +42,14 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
-import java.util.Arrays;
-
 public class ChargerCategory implements IRecipeCategory<ChargerRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "charge");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock charger = new StaticBlock(FHBlocks.charger.getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock charger = new StaticBlock(FHBlocks.charger.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
 
     public ChargerCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.charger));
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.charger.get()));
         this.BACKGROUND = new EmptyBackground(177, 70);
     }
 

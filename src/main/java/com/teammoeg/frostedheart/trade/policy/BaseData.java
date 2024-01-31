@@ -19,6 +19,11 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
@@ -27,11 +32,6 @@ import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public abstract class BaseData implements Writeable {
     private String id;

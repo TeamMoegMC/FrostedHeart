@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;

@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 
 import blusunrize.immersiveengineering.common.util.Utils;

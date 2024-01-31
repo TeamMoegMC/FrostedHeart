@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.climate.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
@@ -30,8 +32,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public class FHTemperatureDisplayPacket {
     private final int[] temp;

@@ -26,7 +26,6 @@ import java.util.function.Function;
 import com.teammoeg.frostedheart.base.item.FHArmorMaterial;
 import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
 import com.teammoeg.frostedheart.content.foods.FHSoupItem;
 import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
@@ -73,7 +72,7 @@ public class FHItems {
 
     public static RegistryObject<Item> charcoal_stick = register("charcoal_stick",n->new FHBaseItem( createProps()));
     public static RegistryObject<Item> energy_core = register("energy_core",n->new FHBaseItem( createProps()));
-    public static RegistryObject<Item> wolfberries = register("wolfberries",n->new FoodBlockItem(FHBlocks.wolfberry_bush_block, createProps(), FHFoods.WOLFBERRIES));
+   // public static RegistryObject<Item> wolfberries = register("wolfberries",);
     public static RegistryObject<Item> dried_wolfberries = register("dried_wolfberries",n->new FHBaseItem( createProps().food(FHFoods.DRIED_WOLFBERRIES)));
     public static RegistryObject<Item> rye = register("rye",n->new FHBaseItem( createProps()));
     public static RegistryObject<Item> generator_ash = register("generator_ash",n->new FHBaseItem( createProps()));

@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import net.minecraft.block.PortalSize;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import net.minecraft.block.PortalSize;
 
 @Mixin(PortalSize.class)
 public class PortalSizeMixin {

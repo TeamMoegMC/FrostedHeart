@@ -19,17 +19,19 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.gen.feature.template.Template;
-import net.minecraft.world.gen.feature.template.TemplateManager;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
-import javax.annotation.Nullable;
-import java.util.Map;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.gen.feature.template.Template;
+import net.minecraft.world.gen.feature.template.TemplateManager;
 
 @Mixin(TemplateManager.class)
 public abstract class TemplateManagerMixin {

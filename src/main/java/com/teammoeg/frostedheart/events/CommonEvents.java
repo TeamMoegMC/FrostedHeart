@@ -19,11 +19,20 @@
 
 package com.teammoeg.frostedheart.events;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import static net.minecraft.entity.EntityType.*;
+import static net.minecraft.world.biome.Biome.Category.*;
+
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
@@ -62,11 +71,17 @@ import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
+
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.IGrowable;
+import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -127,7 +142,6 @@ import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -135,12 +149,6 @@ import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
-
-import javax.annotation.Nonnull;
-import java.util.Set;
-
-import static net.minecraft.entity.EntityType.*;
-import static net.minecraft.world.biome.Biome.Category.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {
@@ -530,7 +538,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onHeal(LivingHealEvent event) {
-        EffectInstance ei = event.getEntityLiving().getActivePotionEffect(FHEffects.SCURVY);
+        EffectInstance ei = event.getEntityLiving().getActivePotionEffect(FHEffects.SCURVY.get());
         if (ei != null)
             event.setAmount(event.getAmount() * (0.2f / (ei.getAmplifier() + 1)));
     }
@@ -579,7 +587,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onPotionRemove(PotionRemoveEvent event) {
-        if (event.getPotion() == FHEffects.ION)
+        if (event.getPotion() == FHEffects.ION.get())
             event.setCanceled(true);
 
     }

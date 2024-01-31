@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.trade.policy.actions;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
+
 import net.minecraft.network.PacketBuffer;
 
 public class AddFlagValueAction extends SetFlagValueAction {

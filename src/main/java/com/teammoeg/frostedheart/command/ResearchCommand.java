@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.research.Research;
+
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.command.CommandSource;

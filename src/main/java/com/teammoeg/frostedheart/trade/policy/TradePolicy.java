@@ -19,14 +19,20 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.entity.merchant.villager.VillagerProfession;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -36,11 +42,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.WeightedRandom;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 public class TradePolicy extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<TradePolicy> {

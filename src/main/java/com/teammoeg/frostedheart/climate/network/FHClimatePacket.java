@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.climate.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.climate.ClimateType;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
@@ -27,8 +29,6 @@ import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public class FHClimatePacket {
     private final short[] data;

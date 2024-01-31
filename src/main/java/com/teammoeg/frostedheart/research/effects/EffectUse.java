@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
-import com.teammoeg.frostedheart.research.gui.TechIcons;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.temperature;
 
-import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
+import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.*;
 
 import java.util.List;
 
@@ -27,7 +27,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.simibubi.create.content.contraptions.fluids.potion.PotionFluidHandler;
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;

@@ -1,17 +1,21 @@
 package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
-import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
@@ -31,26 +35,16 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.function.BiFunction;
-
 public class SteamCoreBlock extends FHKineticBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
 
 
-    public SteamCoreBlock(String name, Properties blockProps,
-                          BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public SteamCoreBlock( Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
     }
 
-    public SteamCoreBlock(Properties properties) {
-        super("steam_core", properties, FHBlockItem::new);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
-    }
 
     @Nullable
     @Override

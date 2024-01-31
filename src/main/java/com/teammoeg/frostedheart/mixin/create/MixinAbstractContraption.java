@@ -19,19 +19,21 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
-import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
-import com.teammoeg.frostedheart.util.mixin.IStressContraption;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import com.teammoeg.frostedheart.util.mixin.ContraptionCostUtils;
+import com.teammoeg.frostedheart.util.mixin.IStressContraption;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.World;
 
 @Mixin(AbstractContraptionEntity.class)
 public abstract class MixinAbstractContraption extends Entity implements IStressContraption {

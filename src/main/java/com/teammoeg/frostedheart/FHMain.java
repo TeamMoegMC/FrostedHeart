@@ -24,12 +24,10 @@ import java.io.InputStreamReader;
 
 import javax.annotation.Nonnull;
 
-import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.alcatrazescapee.primalwinter.common.ModBlocks;
-import com.cannolicatfish.rankine.ProjectRankine;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -42,13 +40,12 @@ import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
-import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
+import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
 import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
-import com.teammoeg.frostedheart.mixin.minecraft.FlowerPotMixin;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
@@ -67,7 +64,6 @@ import dev.ftb.mods.ftbteams.event.TeamEvent;
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.FlowerPotBlock;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -112,7 +108,7 @@ public class FHMain {
         @Override
         @Nonnull
         public ItemStack createIcon() {
-            return new ItemStack(FHBlocks.generator_core_t1.asItem());
+            return new ItemStack(FHBlocks.generator_core_t1.get().asItem());
         }
     };
 
@@ -140,16 +136,17 @@ public class FHMain {
         TetraCompat.init();
         FHProps.init();
         FHItems.registry.register(mod);
-        FHBlocks.init();
+        FHBlocks.registry.register(mod);
         FHMultiblocks.init();
-        FHContent.registerContainers();
+        FHContainer.registerContainers();
         FHTileTypes.REGISTER.register(mod);
         FHFluids.FLUIDS.register(mod);
         FHSounds.SOUNDS.register(mod);
-        FHContent.CONTAINERS.register(mod);
+        FHContainer.CONTAINERS.register(mod);
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
+        FHEffects.EFFECTS.register(mod);
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
         TeamEvent.DELETED.register(FTBTeamsEvents::syncDataWhenTeamDeleted);

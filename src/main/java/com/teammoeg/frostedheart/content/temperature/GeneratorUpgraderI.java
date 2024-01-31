@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;

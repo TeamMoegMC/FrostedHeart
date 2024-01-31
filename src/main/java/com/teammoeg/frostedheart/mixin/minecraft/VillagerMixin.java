@@ -19,6 +19,15 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import javax.annotation.Nullable;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.TradeHandler;
 import com.teammoeg.frostedheart.util.mixin.VillagerDataHolder;
@@ -35,14 +44,6 @@ import net.minecraft.stats.Stats;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import javax.annotation.Nullable;
 
 @Mixin(VillagerEntity.class)
 public abstract class VillagerMixin extends AbstractVillagerEntity implements VillagerDataHolder {

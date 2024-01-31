@@ -19,13 +19,18 @@
 
 package com.teammoeg.frostedheart.events;
 
-import blusunrize.immersiveengineering.api.ManualHelper;
-import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
-import blusunrize.immersiveengineering.common.gui.GuiHandler;
-import blusunrize.lib.manual.ManualEntry;
-import blusunrize.lib.manual.ManualInstance;
-import blusunrize.lib.manual.Tree;
-import com.teammoeg.frostedheart.*;
+import static net.minecraft.inventory.container.PlayerContainer.*;
+
+import java.util.Map;
+import java.util.function.Function;
+
+import org.lwjgl.glfw.GLFW;
+
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHContainer;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.model.LiningFinalizedModel;
 import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.BreathParticle;
@@ -35,7 +40,6 @@ import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
 import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
-import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.compat.tetra.TetraClient;
 import com.teammoeg.frostedheart.content.decoration.RelicChestScreen;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
@@ -46,10 +50,16 @@ import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaScreen;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRenderer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.trade.gui.TradeScreen;
+
+import blusunrize.immersiveengineering.api.ManualHelper;
+import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
+import blusunrize.immersiveengineering.common.gui.GuiHandler;
+import blusunrize.lib.manual.ManualEntry;
+import blusunrize.lib.manual.ManualInstance;
+import blusunrize.lib.manual.Tree;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.MenuScreenWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.client.gui.screen.Screen;
@@ -64,28 +74,17 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.Map;
-import java.util.function.Function;
-
-import org.lwjgl.glfw.GLFW;
-
-import static net.minecraft.inventory.container.PlayerContainer.LOCATION_BLOCKS_TEXTURE;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientRegistryEvents {
@@ -125,27 +124,27 @@ public class ClientRegistryEvents {
         registerIEScreen(new ResourceLocation(FHMain.MODID, "relic_chest"), RelicChestScreen::new);
         ClientRegistryEvents.
                 registerIEScreen(new ResourceLocation(FHMain.MODID, "draw_desk"), FTBScreenFactory(DrawDeskScreen::new));
-        registerFTBScreen(FHContent.TRADE_GUI.get(), TradeScreen::new);
+        registerFTBScreen(FHContainer.TRADE_GUI.get(), TradeScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "sauna_vent"), SaunaScreen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "incubator"), IncubatorT1Screen::new);
         registerIEScreen(new ResourceLocation(FHMain.MODID, "heat_incubator"), IncubatorT2Screen::new);
 
         // Register translucent render type
 
-        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.wolfberry_bush_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.rye_block.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.white_turnip_block.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.wolfberry_bush_block.get(), RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHMultiblocks.generator, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHMultiblocks.generator_t2, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.charger, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.steam_core, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.drawing_desk.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.charger.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.mech_calc.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.steam_core.get(), RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHMultiblocks.radiator, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore, RenderType.getCutout());
-        RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.debug_heater.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.getCutout());
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);

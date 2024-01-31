@@ -43,8 +43,6 @@ import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -131,7 +129,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                 for (Direction dir : HORIZONTALS) {
                     BlockPos act = crn.offset(dir);
                     // if crn connected to plank
-                    if (l.isBlockPresent(act) && (l.getBlockState(act).isIn(BlockTags.PLANKS) || l.getBlockState(act).getBlock().matchesBlock(FHBlocks.sauna))) {
+                    if (l.isBlockPresent(act) && (l.getBlockState(act).isIn(BlockTags.PLANKS) || l.getBlockState(act).getBlock().matchesBlock(FHBlocks.sauna.get()))) {
                         findNext(l, act, orig, poss, edges);
                     }
                     // otherwise, crn is an edge block
@@ -197,15 +195,15 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {
-            p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));
+            p.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 200, 0, true, false));
         }
 
         // add sauna effect
-        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA)) {
+        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA.get())) {
             // initial reward
             EnergyCore.addEnergy(p, 1000);
             // whole day reward
-            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA, 23000, 0, true, false));
+            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA.get(), 23000, 0, true, false));
         }
         // add temperature
         float lenvtemp = Temperature.getEnv(p);//get a smooth change in display

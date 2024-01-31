@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;

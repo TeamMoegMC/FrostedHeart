@@ -19,8 +19,9 @@
 
 package com.teammoeg.frostedheart.events;
 
+import static com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen.*;
+
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -29,13 +30,12 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.STitlePacket;
 import net.minecraft.potion.EffectInstance;
@@ -46,17 +46,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import top.theillusivec4.diet.api.DietCapability;
-import top.theillusivec4.diet.api.IDietTracker;
-
-import java.util.*;
-
-import static com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen.generateWantedFood;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class PlayerEvents {

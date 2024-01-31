@@ -19,16 +19,20 @@
 
 package com.teammoeg.frostedheart.client.renderer;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
+import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
+
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
 import blusunrize.immersiveengineering.api.IEProperties.Model;
 import blusunrize.immersiveengineering.api.IEProperties.VisibilityList;
 import blusunrize.immersiveengineering.api.utils.client.SinglePropertyModelData;
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;
 import blusunrize.immersiveengineering.client.utils.RenderUtils;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.content.steamenergy.HeatPipeBlock;
-import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
@@ -38,9 +42,6 @@ import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class HeatPipeRenderer extends TileEntityRenderer<HeatPipeTileEntity> {
     public static DynamicModel<Void> RIM;
@@ -55,10 +56,10 @@ public class HeatPipeRenderer extends TileEntityRenderer<HeatPipeTileEntity> {
         BlockState state = te.getBlockState();
         BlockPos pos = te.getPos();
         World w = te.getWorld();
-        if (state.getBlock() != FHBlocks.heat_pipe)
+        if (state.getBlock() != FHBlocks.heat_pipe.get())
             return;
         List<String> renderedParts = new ArrayList<>();
-        HeatPipeBlock pipe = (HeatPipeBlock) FHBlocks.heat_pipe;
+        HeatPipeBlock pipe = (HeatPipeBlock) FHBlocks.heat_pipe.get();
         for (Direction d : Direction.values())
             if (pipe.shouldDrawRim(w, pos, state, d))
                 renderedParts.add(d.getName2());

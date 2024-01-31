@@ -19,7 +19,10 @@
 
 package com.teammoeg.frostedheart.climate.data;
 
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.ItemStackHelper;
@@ -36,8 +39,6 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-
-import javax.annotation.Nullable;
 
 public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> {
     private static class CopyInventory {

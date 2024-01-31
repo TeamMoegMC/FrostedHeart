@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
+
 import com.mojang.datafixers.DataFixerBuilder;
 import com.teammoeg.frostedheart.util.mixin.LazyDataFixerBuilder;
 
 import net.minecraft.util.datafix.DataFixesManager;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin({DataFixesManager.class})
 public class DataFixerMixin {

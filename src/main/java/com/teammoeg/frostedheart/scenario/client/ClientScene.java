@@ -2,14 +2,12 @@ package com.teammoeg.frostedheart.scenario.client;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
-import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo;
 import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
@@ -28,7 +26,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {

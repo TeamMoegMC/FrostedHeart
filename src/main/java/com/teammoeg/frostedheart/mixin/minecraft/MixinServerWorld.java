@@ -19,15 +19,9 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.climate.WorldClimate;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.IServerWorldInfo;
-import net.minecraft.world.storage.ISpawnWorldInfo;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -36,8 +30,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
+import com.teammoeg.frostedheart.climate.WorldClimate;
+
+import net.minecraft.profiler.IProfiler;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.DimensionType;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.IServerWorldInfo;
+import net.minecraft.world.storage.ISpawnWorldInfo;
 
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World {

@@ -19,14 +19,15 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
+import java.util.List;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.List;
 
 public class ExtendPolicyGroup extends PolicyGroup {
     ResourceLocation ref;

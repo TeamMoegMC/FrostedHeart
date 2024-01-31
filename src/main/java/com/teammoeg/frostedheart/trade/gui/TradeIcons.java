@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.trade.gui;
 
 import com.teammoeg.frostedheart.FHMain;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import net.minecraft.util.ResourceLocation;

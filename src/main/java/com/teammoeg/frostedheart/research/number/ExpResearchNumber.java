@@ -23,7 +23,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.research.data.ResearchData;
-import com.teammoeg.frostedheart.util.Writeable;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 import com.teammoeg.frostedheart.util.evaluator.Node;
 

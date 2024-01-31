@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.foods;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;

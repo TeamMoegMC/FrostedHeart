@@ -19,11 +19,10 @@
 
 package com.teammoeg.frostedheart.research.inspire;
 
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import java.util.Map.Entry;
+
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHPacketHandler;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.player.Temperature;
@@ -33,6 +32,8 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
+
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -43,17 +44,9 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.TickEvent.PlayerTickEvent;
-import net.minecraftforge.event.entity.player.SleepingTimeCheckEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.network.PacketDistributor;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
-
-import java.util.Map.Entry;
 
 public class EnergyCore {
     public static void addEnergy(ServerPlayerEntity player, int val) {
@@ -187,7 +180,7 @@ public class EnergyCore {
         data.putLong("lastsleep", tsls);
 
         int adenergy = 0;
-        boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA) != null;
+        boolean isBodyNotWell = player.getActivePotionEffect(FHEffects.HYPERTHERMIA.get()) != null || player.getActivePotionEffect(FHEffects.HYPOTHERMIA.get()) != null;
         if (!isBodyNotWell) {
             double m;
             TeamResearchData trd = ResearchDataAPI.getData(player);
@@ -221,7 +214,7 @@ public class EnergyCore {
             //System.out.println(nenergy);
             double cenergy = 5 / n;
             if (tenergy * 2 < M && nenergy <= 5) {
-                player.addPotionEffect(new EffectInstance(FHEffects.SAD, 200, 0, false, false));
+                player.addPotionEffect(new EffectInstance(FHEffects.SAD.get(), 200, 0, false, false));
             }
             if (tenergy < 13500)
                 nenergy = Math.max(nenergy, 1);

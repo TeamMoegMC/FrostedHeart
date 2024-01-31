@@ -19,9 +19,10 @@
 
 package com.teammoeg.frostedheart.base.block;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.IWaterLoggable;
@@ -29,41 +30,26 @@ import net.minecraft.block.SixWayBlock;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
 import net.minecraft.pathfinding.PathType;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.TickPriority;
 
-import javax.annotation.Nullable;
-import java.util.function.BiFunction;
-
 public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock implements IWaterLoggable {
     Class<T> type;
-    public final String name;
     protected int lightOpacity;
 
-    public FluidPipeBlock(Class<T> type, String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
+    public FluidPipeBlock(Class<T> type, Properties blockProps) {
         super(4 / 16f, blockProps);
-        this.name = name;
         lightOpacity = 15;
 
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
 
-        FHContent.registeredFHBlocks.add(this);
-        Item item = createItemBlock.apply(this, new Item.Properties().group(FHMain.itemGroup));
-        if (item != null) {
-            item.setRegistryName(registryName);
-            FHContent.registeredFHItems.add(item);
-        }
         this.type = type;
 
         BlockState defaultState = getDefaultState().with(BlockStateProperties.WATERLOGGED, false);
@@ -83,11 +69,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
         return false;
     }
-
-    public ResourceLocation createRegistryName() {
-        return new ResourceLocation(FHMain.MODID, name);
-    }
-
 
     @Override
     protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {

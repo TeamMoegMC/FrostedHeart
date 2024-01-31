@@ -21,13 +21,11 @@ package com.teammoeg.frostedheart.research.gui.drawdesk;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHPacketHandler;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.gui.TechButton;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchProgressPanel;
-import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;

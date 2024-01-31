@@ -19,8 +19,11 @@
 
 package com.teammoeg.frostedheart.client.renderer;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHItems;
+
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
@@ -32,8 +35,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-
-import javax.annotation.ParametersAreNonnullByDefault;
 
 public class FrostbiteRenderer<T extends LivingEntity, M extends BipedModel<T> & IHasHead> extends LayerRenderer<T, M> {
     public FrostbiteRenderer(IEntityRenderer<T, M> entityRendererIn) {

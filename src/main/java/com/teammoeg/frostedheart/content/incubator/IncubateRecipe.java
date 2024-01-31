@@ -19,14 +19,21 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
-import blusunrize.immersiveengineering.api.ApiUtils;
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
+import blusunrize.immersiveengineering.api.ApiUtils;
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -40,17 +47,11 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 public class IncubateRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<IncubateRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.incubator1);
+            return new ItemStack(FHBlocks.incubator1.get());
         }
 
         @Nullable

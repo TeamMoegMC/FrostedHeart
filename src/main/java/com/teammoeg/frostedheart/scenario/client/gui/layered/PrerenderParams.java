@@ -3,18 +3,13 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
-import com.teammoeg.frostedheart.client.util.Rect;
-
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.client.util.Rect;
 
 public class PrerenderParams {
 	Graphics2D g2d;

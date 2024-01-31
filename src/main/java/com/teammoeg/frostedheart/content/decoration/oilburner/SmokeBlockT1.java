@@ -20,22 +20,18 @@
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import java.util.Random;
-import java.util.function.BiFunction;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class SmokeBlockT1 extends FHBaseBlock {
 
-    public SmokeBlockT1(String name, Properties blockProps,
-                        BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public SmokeBlockT1(Properties blockProps) {
+        super(blockProps);
     }
 
     @Override

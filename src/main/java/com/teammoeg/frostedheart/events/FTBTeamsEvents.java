@@ -19,20 +19,20 @@
 
 package com.teammoeg.frostedheart.events;
 
+import java.util.UUID;
+
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
+
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.PlayerTeam;
 import dev.ftb.mods.ftbteams.event.PlayerChangedTeamEvent;
-import dev.ftb.mods.ftbteams.event.PlayerLeftPartyTeamEvent;
 import dev.ftb.mods.ftbteams.event.PlayerTransferredTeamOwnershipEvent;
 import dev.ftb.mods.ftbteams.event.TeamCreatedEvent;
 import dev.ftb.mods.ftbteams.event.TeamEvent;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.network.PacketDistributor;
-
-import java.util.UUID;
 
 public class FTBTeamsEvents {
 

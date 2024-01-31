@@ -1,6 +1,10 @@
 package com.teammoeg.frostedheart.content.foods.DailyKitchen;
 
 
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
@@ -14,9 +18,6 @@ import net.minecraftforge.common.util.LazyOptional;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 import top.theillusivec4.diet.common.capability.DietTrackerCapability;
-
-import javax.annotation.Nullable;
-import java.util.Set;
 
 public class DailyKitchen {
     @CapabilityInject(IWantedFoodCapability.class)

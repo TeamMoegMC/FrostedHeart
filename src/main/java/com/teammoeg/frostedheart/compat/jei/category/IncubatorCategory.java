@@ -19,6 +19,10 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.cannolicatfish.rankine.init.RankineItems;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHBlocks;
@@ -26,6 +30,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -43,10 +48,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fluids.FluidStack;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "incubator");
     private IDrawable BACKGROUND;
@@ -59,7 +60,7 @@ public class IncubatorCategory implements IRecipeCategory<IncubateRecipe> {
 
     public IncubatorCategory(IGuiHelper guiHelper) {
         ResourceLocation guiMain = new ResourceLocation(FHMain.MODID, "textures/gui/incubator.png");
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.incubator1));
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.incubator1.get()));
         this.BACKGROUND = guiHelper.createDrawable(guiMain, 4, 4, 164, 72);
         IDrawableStatic tfire = guiHelper.createDrawable(guiMain, 198, 64, 14, 14);
         this.FIRE = guiHelper.createAnimatedDrawable(tfire, 80, IDrawableAnimated.StartDirection.TOP, true);

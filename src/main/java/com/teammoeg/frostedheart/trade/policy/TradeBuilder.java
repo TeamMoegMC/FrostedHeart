@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.FHMain;
@@ -26,7 +32,12 @@ import com.teammoeg.frostedheart.trade.policy.actions.AddFlagValueAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagValueAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetLevelAction;
-import com.teammoeg.frostedheart.trade.policy.conditions.*;
+import com.teammoeg.frostedheart.trade.policy.conditions.FlagValueCondition;
+import com.teammoeg.frostedheart.trade.policy.conditions.GreaterFlagCondition;
+import com.teammoeg.frostedheart.trade.policy.conditions.LevelCondition;
+import com.teammoeg.frostedheart.trade.policy.conditions.NotCondition;
+import com.teammoeg.frostedheart.trade.policy.conditions.TotalTradeCondition;
+import com.teammoeg.frostedheart.trade.policy.conditions.WithFlagCondition;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -37,12 +48,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Class TradeBuilder.

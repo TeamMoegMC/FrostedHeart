@@ -19,14 +19,16 @@
 
 package com.teammoeg.frostedheart.mixin.rankine;
 
-import com.cannolicatfish.rankine.items.alloys.AlloyItem;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.cannolicatfish.rankine.items.alloys.AlloyItem;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
 @Mixin(AlloyItem.class)
 public class MixinAlloyItem {

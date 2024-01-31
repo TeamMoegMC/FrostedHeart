@@ -1,15 +1,16 @@
 package com.teammoeg.frostedheart.content.foods.DailyKitchen;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextComponent;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextComponent;
 
 public class WantedFoodsGenerator {
     private final Random random;

@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.mixin.watersource;
 
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+
 import gloridifice.watersource.common.recipe.WaterLevelFluidRecipe;
 import gloridifice.watersource.common.recipe.WaterLevelItemRecipe;
 import net.minecraft.item.ItemStack;
@@ -27,8 +30,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(WaterLevelFluidRecipe.class)
 public class MixinWaterLevelFluidRecipe extends WaterLevelItemRecipe {

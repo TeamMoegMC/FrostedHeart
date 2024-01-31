@@ -26,20 +26,17 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.ZoneHeatingMultiblockTileEntity;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 

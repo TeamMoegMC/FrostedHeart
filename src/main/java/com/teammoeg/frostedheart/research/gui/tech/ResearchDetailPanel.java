@@ -23,9 +23,9 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechScrollBar;
+import com.teammoeg.frostedheart.research.research.Research;
 
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.Panel;

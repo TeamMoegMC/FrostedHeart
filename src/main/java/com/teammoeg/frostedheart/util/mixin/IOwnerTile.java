@@ -19,10 +19,11 @@
 
 package com.teammoeg.frostedheart.util.mixin;
 
-import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
-import net.minecraft.tileentity.TileEntity;
-
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
+
+import net.minecraft.tileentity.TileEntity;
 
 public interface IOwnerTile {
     public static UUID getOwner(TileEntity te) {

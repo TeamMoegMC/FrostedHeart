@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.trade;
 
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public enum RelationModifier {

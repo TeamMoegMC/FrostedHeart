@@ -28,7 +28,6 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.Lists;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
@@ -46,7 +45,6 @@ import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.town.TeamTownData;
 import com.teammoeg.frostedheart.util.LazyOptional;
 
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;

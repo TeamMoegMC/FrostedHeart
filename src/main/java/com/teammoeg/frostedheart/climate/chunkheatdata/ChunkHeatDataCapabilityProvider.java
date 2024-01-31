@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.climate.chunkheatdata;
 
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;

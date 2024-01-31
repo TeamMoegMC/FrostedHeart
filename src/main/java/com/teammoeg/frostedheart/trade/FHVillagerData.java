@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.trade.policy.TradePolicy;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.util.FHUtils;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
+
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;

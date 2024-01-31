@@ -20,11 +20,11 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerInventory;

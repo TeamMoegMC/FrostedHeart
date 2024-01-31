@@ -1,12 +1,11 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
-import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLLayerContent;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import net.minecraft.client.Minecraft;
 
 public class RenderParams {

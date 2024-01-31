@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.scenario.parser;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,11 +31,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
-import com.teammoeg.frostedheart.scenario.parser.reader.StringListStringSource;
-import com.teammoeg.frostedheart.scenario.parser.reader.StringParseReader;
 import com.teammoeg.frostedheart.scenario.parser.reader.CodeLineSource;
 import com.teammoeg.frostedheart.scenario.parser.reader.ReaderLineSource;
 import com.teammoeg.frostedheart.scenario.parser.reader.StringLineSource;
+import com.teammoeg.frostedheart.scenario.parser.reader.StringListStringSource;
+import com.teammoeg.frostedheart.scenario.parser.reader.StringParseReader;
 
 public class ScenarioParser {
     private static class CommandStack {

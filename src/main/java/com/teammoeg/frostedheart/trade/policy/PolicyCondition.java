@@ -19,10 +19,8 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
-import com.teammoeg.frostedheart.util.Writeable;
 
 import net.minecraft.network.PacketBuffer;
 

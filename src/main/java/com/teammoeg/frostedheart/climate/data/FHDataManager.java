@@ -19,6 +19,12 @@
 
 package com.teammoeg.frostedheart.climate.data;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
@@ -31,12 +37,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class FHDataManager {
     public static enum FHDataType {

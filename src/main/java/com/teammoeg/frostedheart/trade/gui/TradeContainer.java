@@ -19,7 +19,13 @@
 
 package com.teammoeg.frostedheart.trade.gui;
 
-import com.teammoeg.frostedheart.FHContent;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import com.teammoeg.frostedheart.FHContainer;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
@@ -31,6 +37,7 @@ import com.teammoeg.frostedheart.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
 import com.teammoeg.frostedheart.trade.policy.snapshot.SellData;
 import com.teammoeg.frostedheart.util.FHUtils;
+
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -48,12 +55,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class TradeContainer extends Container {
     public class DetectionSlot extends Slot {
@@ -144,7 +145,7 @@ public class TradeContainer extends Container {
 
     public TradeContainer(int id, PlayerInventory inventoryPlayer,
                           VillagerEntity ve /* ,PlayerRelationData prd,RelationList rel */) {
-        super(FHContent.TRADE_GUI.get(), id);
+        super(FHContainer.TRADE_GUI.get(), id);
         // Server does not need such data as server always have access to all data.
         /*
          * this.pld=prd;

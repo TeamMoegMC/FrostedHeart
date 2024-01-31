@@ -1,5 +1,9 @@
 package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHConfig;
@@ -9,6 +13,7 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -18,9 +23,6 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
-import java.util.Objects;
 
 public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         INetworkConsumer, ITickableTileEntity, IHaveGoggleInformation,

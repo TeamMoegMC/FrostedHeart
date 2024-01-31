@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.trade.policy.snapshot;
 
-import com.teammoeg.frostedheart.trade.FHVillagerData;
-import com.teammoeg.frostedheart.trade.policy.BaseData;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.teammoeg.frostedheart.trade.FHVillagerData;
+import com.teammoeg.frostedheart.trade.policy.BaseData;
 
 public class PolicySnapshot {
     public static final PolicySnapshot empty = new PolicySnapshot() {
