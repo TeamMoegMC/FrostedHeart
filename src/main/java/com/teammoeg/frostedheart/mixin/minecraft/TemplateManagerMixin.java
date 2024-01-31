@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.util.StructureUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import javax.annotation.Nullable;
 import java.util.Map;

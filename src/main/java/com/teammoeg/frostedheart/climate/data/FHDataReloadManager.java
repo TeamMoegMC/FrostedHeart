@@ -28,7 +28,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.data.FHDataManager.FHDataType;
-import com.teammoeg.frostedheart.util.StructureUtils;
+import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;

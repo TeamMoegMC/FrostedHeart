@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.util.StructureUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.LockableLootTileEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -34,6 +33,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import javax.annotation.Nullable;
 import java.util.Random;

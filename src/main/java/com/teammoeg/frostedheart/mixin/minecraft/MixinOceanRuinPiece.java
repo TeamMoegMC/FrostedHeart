@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.util.StructureUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
@@ -41,6 +40,8 @@ import net.minecraft.world.gen.feature.structure.TemplateStructurePiece;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 
 import java.util.Random;
 
