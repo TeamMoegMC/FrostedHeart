@@ -26,8 +26,8 @@ import net.minecraft.item.ItemStack;
 
 public class FHBasePen extends FHBaseItem implements IPen {
 
-    public FHBasePen(String name, Properties properties) {
-        super(name, properties);
+    public FHBasePen(Properties properties) {
+        super(properties);
     }
 
     @Override

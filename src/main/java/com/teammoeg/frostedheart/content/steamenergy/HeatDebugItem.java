@@ -40,11 +40,8 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 
 public class HeatDebugItem extends Item {
-    public HeatDebugItem(String name) {
+    public HeatDebugItem() {
         super(new Properties().maxStackSize(1).setNoRepair().group(FHMain.itemGroup));
-        setRegistryName(FHMain.MODID, name);
-        FHContent.registeredFHItems.add(this);
-
     }
 
     //Dont add to creative tag

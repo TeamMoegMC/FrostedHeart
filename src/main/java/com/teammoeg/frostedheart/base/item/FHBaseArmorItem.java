@@ -26,10 +26,8 @@ import net.minecraft.item.ArmorItem;
 import net.minecraft.item.IArmorMaterial;
 
 public class FHBaseArmorItem extends ArmorItem {
-    public FHBaseArmorItem(String name, IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
+    public FHBaseArmorItem(IArmorMaterial materialIn, EquipmentSlotType slot, Properties builderIn) {
         super(materialIn, slot, builderIn);
-        setRegistryName(FHMain.MODID, name);
-        FHContent.registeredFHItems.add(this);
     }
 
 }

@@ -71,8 +71,8 @@ public class CoalHandStove extends FHBaseItem implements IHeatingEquipment {
             is.getTag().putInt("CustomModelData", 1);
     }
 
-    public CoalHandStove(String name, Properties properties) {
-        super(name, properties);
+    public CoalHandStove(Properties properties) {
+        super(properties);
     }
 
     @Override

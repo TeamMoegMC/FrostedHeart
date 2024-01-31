@@ -72,8 +72,8 @@ public class RubbingTool extends FHBaseItem {
             stack.getOrCreateTag().putString("research", rs);
     }
 
-    public RubbingTool(String name, Properties properties) {
-        super(name, properties);
+    public RubbingTool(Properties properties) {
+        super(properties);
     }
 
     @Override

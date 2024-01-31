@@ -49,8 +49,8 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
 
     Item resultType;
 
-    public MushroomBed(String name, Item resultType, Properties properties) {
-        super(name, properties);
+    public MushroomBed( Item resultType, Properties properties) {
+        super(properties);
         this.resultType = resultType;
     }
 

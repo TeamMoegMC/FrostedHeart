@@ -47,7 +47,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
     public static class Serializer extends IERecipeSerializer<InstallInnerRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+            return new ItemStack(FHItems.buff_coat.get());
         }
 
         @Nullable

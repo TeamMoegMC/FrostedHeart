@@ -50,8 +50,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class CeramicBucket extends FHBaseItem {
-    public CeramicBucket(String name, Properties properties) {
-        super(name, properties);
+    public CeramicBucket(Properties properties) {
+        super(properties);
     }
 
 

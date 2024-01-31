@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHContent;
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -38,6 +38,5 @@ public class FHBlockItem extends BlockItem {
     public FHBlockItem(Block block, Item.Properties props, String name) {
         this(block, new Item.Properties().group(FHMain.itemGroup));
         this.setRegistryName(FHMain.MODID, name);
-        FHContent.registeredFHItems.add(this);
     }
 }

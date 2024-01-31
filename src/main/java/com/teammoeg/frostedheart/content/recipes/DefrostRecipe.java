@@ -51,7 +51,7 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
 
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHItems.frozen_seeds);
+            return new ItemStack(FHItems.frozen_seeds.get());
         }
 
         @Nullable

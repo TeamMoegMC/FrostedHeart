@@ -30,8 +30,8 @@ public class FHSoupItem extends FHBaseItem {
 
     private final boolean isPoor;
 
-    public FHSoupItem(String name, Properties properties, boolean isPoorlyMade) {
-        super(name, properties);
+    public FHSoupItem(Properties properties, boolean isPoorlyMade) {
+        super( properties);
         isPoor = isPoorlyMade;
     }
 

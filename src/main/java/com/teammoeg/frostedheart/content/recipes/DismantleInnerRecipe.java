@@ -43,7 +43,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
     public static class Serializer extends IERecipeSerializer<DismantleInnerRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+            return new ItemStack(FHItems.buff_coat.get());
         }
 
         @Nullable

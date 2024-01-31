@@ -43,8 +43,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class SoilThermometer extends FHBaseItem {
-    public SoilThermometer(String name, Properties properties) {
-        super(name, properties);
+    public SoilThermometer(Properties properties) {
+        super(properties);
     }
 
     @Override

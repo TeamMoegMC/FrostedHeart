@@ -148,7 +148,21 @@ public class CommonEvents {
     static ResourceLocation ft = new ResourceLocation("storagedrawers:drawers");
 
     private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(COW, SHEEP, PIG, CHICKEN);
-
+    @SubscribeEvent
+    public static void checkSleep(SleepingTimeCheckEvent event) {
+        if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
+            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+        }
+    }
+    @SubscribeEvent
+    public static void tickEnergy(PlayerTickEvent event) {
+        if (event.side == LogicalSide.SERVER && event.phase == Phase.START
+                && event.player instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+            if (!player.isSpectator() && !player.isCreative() && player.ticksExisted % 20 == 0)
+                EnergyCore.dT(player);
+        }
+    }
     @SubscribeEvent
     public static void addManualToPlayer(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
         CompoundNBT nbt = event.getPlayer().getPersistentData();

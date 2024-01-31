@@ -19,18 +19,14 @@
 
 package com.teammoeg.frostedheart.base.item;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class FHBaseItem extends Item {
     Item repair;
 
-    public FHBaseItem(String name, Properties properties) {
+    public FHBaseItem(Properties properties) {
         super(properties);
-        setRegistryName(FHMain.MODID, name);
-        FHContent.registeredFHItems.add(this);
     }
 
     @Override

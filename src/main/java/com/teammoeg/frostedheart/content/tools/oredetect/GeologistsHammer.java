@@ -126,8 +126,8 @@ public class GeologistsHammer extends FHLeveledTool {
         return getLevel(item) + 3;
     }
 
-    public GeologistsHammer(String name, int lvl, Properties properties) {
-        super(name, lvl, properties);
+    public GeologistsHammer(int lvl, Properties properties) {
+        super(lvl, properties);
 
     }
 

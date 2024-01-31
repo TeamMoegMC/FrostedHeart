@@ -52,7 +52,7 @@ public class CuttingCategory implements IRecipeCategory<CuttingRecipe> {
     private IDrawable ICON;
 
     public CuttingCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(() -> new ItemStack(Items.IRON_SWORD), () -> new ItemStack(FHItems.brown_mushroombed));
+        this.ICON = new DoubleItemIcon(() -> new ItemStack(Items.IRON_SWORD), () -> new ItemStack(FHItems.brown_mushroombed.get()));
         this.BACKGROUND = new EmptyBackground(120, 50);
     }
 

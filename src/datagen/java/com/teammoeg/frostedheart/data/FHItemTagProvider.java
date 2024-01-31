@@ -48,14 +48,14 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 
 	@Override
 	protected void registerTags() {
-		tag("colored_thermos").add(FHItems.allthermos.toArray(new Item[0]));
+		tag("colored_thermos").add(FHItems.allthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
 		
-		tag("colored_advanced_thermos").add(FHItems.alladvthermos.toArray(new Item[0]));
+		tag("colored_advanced_thermos").add(FHItems.alladvthermos.stream().map(t->t.get()).toArray(n->new Item[n]));
 		tag("thermos")
 		.addTag(ItemTags.createOptional(mrl("colored_thermos")))
-		.add(FHItems.thermos)
+		.add(FHItems.thermos.get())
 		.addTag(ItemTags.createOptional(mrl("colored_advanced_thermos")))
-		.add(FHItems.advanced_thermos);
+		.add(FHItems.advanced_thermos.get());
 		tag("chicken_feed").addTag(RankineTags.Items.BREEDABLES_CHICKEN).addTag(ftag("seeds"));
 		tag("cow_feed").addTag(RankineTags.Items.BREEDABLES_COW);
 	}

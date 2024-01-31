@@ -27,8 +27,8 @@ import net.minecraft.item.ItemStack;
 public class FHReusablePen extends FHBaseItem implements IPen {
     int lvl;
 
-    public FHReusablePen(String name, Properties properties, int lvl) {
-        super(name, properties);
+    public FHReusablePen( Properties properties, int lvl) {
+        super(properties);
         this.lvl = lvl;
     }
 

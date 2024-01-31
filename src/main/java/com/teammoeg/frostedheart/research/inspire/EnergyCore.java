@@ -55,7 +55,6 @@ import top.theillusivec4.diet.api.IDietTracker;
 
 import java.util.Map.Entry;
 
-@Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class EnergyCore {
     public static void addEnergy(ServerPlayerEntity player, int val) {
         TeamResearchData trd = ResearchDataAPI.getData(player);
@@ -150,12 +149,7 @@ public class EnergyCore {
 		}*/
     }
 
-    @SubscribeEvent
-    public static void checkSleep(SleepingTimeCheckEvent event) {
-        if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
-            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
-        }
-    }
+
 
     public static boolean consumeEnergy(ServerPlayerEntity player, int val) {
         if (player.abilities.isCreativeMode) return true;
@@ -274,15 +268,6 @@ public class EnergyCore {
         player.sendMessage(new StringTextComponent("Energy:" + data.getLong("energy") + ",Persist Energy: " + data.getLong("penergy") + ",Extra Energy: " + data.getLong("cenergy")), player.getUniqueID());
     }
 
-    @SubscribeEvent
-    public static void tickEnergy(PlayerTickEvent event) {
-        if (event.side == LogicalSide.SERVER && event.phase == Phase.START
-                && event.player instanceof ServerPlayerEntity) {
-            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            if (!player.isSpectator() && !player.isCreative() && player.ticksExisted % 20 == 0)
-                EnergyCore.dT(player);
-        }
-    }
 /*
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {

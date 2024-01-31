@@ -139,8 +139,8 @@ public class CoreSpade extends FHLeveledTool {
         return getLevel(item) == 1 ? 32 : (48 + (getLevel(item) - 1) * 16);
     }
 
-    public CoreSpade(String name, int lvl, Properties properties) {
-        super(name, lvl, properties);
+    public CoreSpade(int lvl, Properties properties) {
+        super(lvl, properties);
     }
 
     @Override

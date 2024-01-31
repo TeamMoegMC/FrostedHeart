@@ -395,7 +395,7 @@ public class ResearchListeners {
                             rd.sendProgressPacket();
                         }
                     }
-                    return new ItemStack(FHItems.rubbing_pad);
+                    return new ItemStack(FHItems.rubbing_pad.get());
                 }
                 trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getLId()));
             }

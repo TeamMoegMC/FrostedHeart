@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
@@ -98,10 +99,7 @@ public class PlayerEvents {
         if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) event.player;
             boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
-            boolean hasRadar = serverPlayer.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
-            boolean hasHelmet = serverPlayer.inventory.armorInventory.get(3)
-                    .isItemEqualIgnoreDurability(new ItemStack(FHItems.weatherHelmet));
-            if (configAllows && (hasRadar || hasHelmet)) {
+            if (configAllows && ResearchDataAPI.getVariants(serverPlayer).getDouble("has_forecast")>0) {
                 // Blizzard warning
                 float thisHour = WorldClimate.getTemp(serverPlayer.world);
                 boolean thisHourB = WorldClimate.isBlizzard(serverPlayer.world);

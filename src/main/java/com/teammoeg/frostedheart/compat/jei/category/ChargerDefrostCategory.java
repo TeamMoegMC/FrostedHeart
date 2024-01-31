@@ -53,7 +53,7 @@ public class ChargerDefrostCategory implements IRecipeCategory<CampfireDefrostRe
      * @param guiHelper
      */
     public ChargerDefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(() -> new ItemStack(FHBlocks.charger), () -> new ItemStack(FHItems.frozen_seeds));
+        this.ICON = new DoubleItemIcon(() -> new ItemStack(FHBlocks.charger), () -> new ItemStack(FHItems.frozen_seeds.get()));
         this.BACKGROUND = new EmptyBackground(177, 70);
     }
 

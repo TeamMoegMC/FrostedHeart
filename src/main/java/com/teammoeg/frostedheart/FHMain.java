@@ -138,7 +138,7 @@ public class FHMain {
         FHConfig.register();
         TetraCompat.init();
         FHProps.init();
-        FHItems.init();
+        FHItems.registry.register(mod);
         FHBlocks.init();
         FHMultiblocks.init();
         FHContent.registerContainers();

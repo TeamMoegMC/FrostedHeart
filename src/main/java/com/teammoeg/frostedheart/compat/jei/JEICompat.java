@@ -284,9 +284,9 @@ public class JEICompat implements IModPlugin {
         registration.addRecipes(new ArrayList<>(SmokingDefrostRecipe.recipeList.values()), SmokingDefrostCategory.UID);
         registration.addRecipes(new ArrayList<>(CampfireDefrostRecipe.recipeList.values()), ChargerDefrostCategory.UID);
         registration.addRecipes(Arrays.asList(
-                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.red_mushroombed), 0),
+                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.red_mushroombed.get()), 0),
                                 new ItemStack(Items.RED_MUSHROOM, 10)),
-                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.brown_mushroombed), 0),
+                        new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.brown_mushroombed.get()), 0),
                                 new ItemStack(Items.BROWN_MUSHROOM, 10))),
                 CuttingCategory.UID);
         registration.addRecipes(new ArrayList<>(SaunaRecipe.recipeList.values()), SaunaCategory.UID);

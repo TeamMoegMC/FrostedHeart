@@ -51,8 +51,8 @@ import net.minecraft.world.World;
 public class GeneratorUpgraderI extends FHBaseItem {
     IETemplateMultiblock ietm = FHMultiblocks.GENERATOR_T2;
 
-    public GeneratorUpgraderI(String name, Properties properties) {
-        super(name, properties);
+    public GeneratorUpgraderI(Properties properties) {
+        super(properties);
     }
 
     public boolean createStructure(PlayerEntity entityplayer, World worldIn) {

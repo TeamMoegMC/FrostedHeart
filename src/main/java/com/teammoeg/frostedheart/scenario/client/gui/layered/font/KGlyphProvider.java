@@ -44,7 +44,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 			case "legacy_unicode":readUnicode(cr);break;
 			}
 		}
-		System.out.println("loaded "+data.size());
+		//System.out.println("loaded "+data.size());
 	}
 	public void readBitmap(JsonObject unicode) {
 		int height=9;
@@ -157,9 +157,9 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	@Override
 	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		onResourceManagerReload(resourceManagerIn);
-		for(int i='A';i<'z';i++) {
+		/*for(int i='A';i<'z';i++) {
 			System.out.println(Character.toString((char)i)+unicodeData.get(i));
-		}
+		}*/
 		return new Object();
 	}
 	@Override

@@ -43,12 +43,12 @@ public class FrostbiteRenderer<T extends LivingEntity, M extends BipedModel<T> &
     @Override
     @ParametersAreNonnullByDefault
     public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T living, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        ItemStack heaterVest = new ItemStack(FHItems.heater_vest);
-        BipedModel<T> model = FHItems.heater_vest.getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
+        ItemStack heaterVest = new ItemStack(FHItems.heater_vest.get());
+        BipedModel<T> model = FHItems.heater_vest.get().getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
         if (model != null) {
             model.setRotationAngles(living, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
             RenderType type = model.getRenderType(
-                    new ResourceLocation(FHItems.heater_vest.getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
+                    new ResourceLocation(FHItems.heater_vest.get().getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
             );
             model.render(matrixStackIn, bufferIn.getBuffer(type), packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 1F);
         }

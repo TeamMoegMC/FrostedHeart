@@ -58,7 +58,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
      * @param guiHelper
      */
     public SmokingDefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.SMOKER), () -> new ItemStack(FHItems.frozen_seeds));
+        this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.SMOKER), () -> new ItemStack(FHItems.frozen_seeds.get()));
         this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
                 .addPadding(0, 10, 0, 0)
                 .build();

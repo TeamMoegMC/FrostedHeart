@@ -34,12 +34,12 @@ public class CannedFoodItem extends FHBaseItem {
 
     boolean showtt = true;
 
-    public CannedFoodItem(String name, Properties properties) {
-        super(name, properties);
+    public CannedFoodItem(Properties properties) {
+        super(properties);
     }
 
-    public CannedFoodItem(String name, Properties properties, boolean showtt) {
-        super(name, properties);
+    public CannedFoodItem(Properties properties, boolean showtt) {
+        super( properties);
         this.showtt = showtt;
     }
 

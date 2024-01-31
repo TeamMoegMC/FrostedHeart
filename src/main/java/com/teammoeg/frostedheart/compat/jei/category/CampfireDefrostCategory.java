@@ -58,7 +58,7 @@ public class CampfireDefrostCategory implements IRecipeCategory<CampfireDefrostR
      * @param guiHelper
      */
     public CampfireDefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.CAMPFIRE), () -> new ItemStack(FHItems.frozen_seeds));
+        this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.CAMPFIRE), () -> new ItemStack(FHItems.frozen_seeds.get()));
         this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
                 .addPadding(0, 10, 0, 0)
                 .build();

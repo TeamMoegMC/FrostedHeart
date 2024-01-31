@@ -36,7 +36,6 @@ public class MixinClientEvents {
      * @author yuesha-yc
      * @reason fix overlay when the hotbar event is canceled
      */
-    @SubscribeEvent
     @Overwrite(remap = false)
     public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         MatrixStack ms = event.getMatrixStack();

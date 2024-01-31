@@ -131,8 +131,8 @@ public class ProspectorPick extends FHLeveledTool {
         return getLevel(item) + 3;
     }
 
-    public ProspectorPick(String name, int lvl, Properties properties) {
-        super(name, lvl, properties);
+    public ProspectorPick(int lvl, Properties properties) {
+        super(lvl, properties);
     }
 
     @SuppressWarnings("resource")
