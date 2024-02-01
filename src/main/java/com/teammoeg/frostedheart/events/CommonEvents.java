@@ -405,7 +405,7 @@ public class CommonEvents {
                 Temperature.setBody((ServerPlayerEntity) event.getEntityLiving(), current);
             }
 
-            DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), it);
+            DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), is);
         }
     }
 
