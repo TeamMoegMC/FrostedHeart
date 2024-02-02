@@ -5,6 +5,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
+import com.simibubi.create.content.contraptions.base.KineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
@@ -35,14 +37,14 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
-public class SteamCoreBlock extends FHKineticBlock implements ISteamEnergyBlock {
+public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
 
 
     public SteamCoreBlock( Properties blockProps) {
         super(blockProps);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
 
@@ -65,17 +67,17 @@ public class SteamCoreBlock extends FHKineticBlock implements ISteamEnergyBlock 
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        return shape.get(state.get(BlockStateProperties.HORIZONTAL_FACING));
+        return shape.get(state.get(BlockStateProperties.FACING));
     }
 
     @Override
     public Direction.Axis getRotationAxis(BlockState blockState) {
-        return blockState.get(BlockStateProperties.HORIZONTAL_FACING).rotateY().getAxis();
+        return blockState.get(BlockStateProperties.FACING).rotateY().getAxis();
     }
 
     @Override
     public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
-        return dir == state.get(BlockStateProperties.HORIZONTAL_FACING);
+        return dir == state.get(BlockStateProperties.FACING);
     }
 
     @Override

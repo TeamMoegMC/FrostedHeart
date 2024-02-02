@@ -56,7 +56,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHItems {
-	public static DeferredRegister<Item> registry=DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
+	static final DeferredRegister<Item> registry=DeferredRegister.create(ForgeRegistries.ITEMS, FHMain.MODID);
 	static <T extends Item> RegistryObject<T> register(String name,Function<String,T> supplier) {
 		return registry.register(name,()->{ 
 			T item=supplier.apply(name);

@@ -19,12 +19,19 @@
 
 package com.teammoeg.frostedheart;
 
+import static com.simibubi.create.foundation.data.ModelGen.*;
 import static com.teammoeg.frostedheart.util.FHProps.*;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.cannolicatfish.rankine.init.RankineBlocks;
+import com.simibubi.create.AllTags;
+import com.simibubi.create.Create;
+import com.simibubi.create.content.AllSections;
+import com.simibubi.create.foundation.block.BlockStressDefaults;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.repack.registrate.util.entry.BlockEntry;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
@@ -47,8 +54,8 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
 import com.teammoeg.frostedheart.town.house.HouseBlock;
-
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
@@ -58,7 +65,9 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHBlocks {
-	static DeferredRegister<Block> registry=DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
+	static final DeferredRegister<Block> registry=DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
+    private static final CreateRegistrate REGISTRATE = FHMain.registrate.getValue()
+        .itemGroup(() -> FHMain.itemGroup);
 	public static <T extends Block> RegistryObject<T> register(String name,Supplier<T> block,String itemName,Function<T,Item> item){
 		RegistryObject<T> blk=registry.register(name, block);
 		FHItems.registry.register(itemName,()->item.apply(blk.get()));
@@ -155,13 +164,18 @@ public class FHBlocks {
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)
             .notSolid()));
-    public static RegistryObject<Block> steam_core = register("steam_core",()->new SteamCoreBlock( Block.Properties
-            .create(Material.IRON)
+    public static final BlockEntry<SteamCoreBlock> steam_core = REGISTRATE.block("steam_core", SteamCoreBlock::new)
+        .initialProperties(Material.IRON)
+        .properties(t->t
             .sound(SoundType.METAL)
             .setRequiresTool()
             .harvestTool(ToolType.PICKAXE)
             .hardnessAndResistance(2, 10)
-            .notSolid()));
+            .notSolid())
+        .tag(AllTags.AllBlockTags.SAFE_NBT.tag)
+        .item()
+        .transform(customItemModel())
+        .register();
     public static RegistryObject<Block> house = register("house",()->new HouseBlock( Block.Properties
             .create(Material.WOOD)
             .sound(SoundType.WOOD)
@@ -170,5 +184,6 @@ public class FHBlocks {
             .hardnessAndResistance(2, 6)
             .notSolid()));
     public static void init() {
+    	Create.registrate().addToSection(steam_core, AllSections.KINETICS);
     }
 }

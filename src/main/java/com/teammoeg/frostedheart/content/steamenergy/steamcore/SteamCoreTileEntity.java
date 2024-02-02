@@ -18,14 +18,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
 
 public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         INetworkConsumer, ITickableTileEntity, IHaveGoggleInformation,
         FHBlockInterfaces.IActiveState{
-    public SteamCoreTileEntity() {
-        super(FHTileTypes.STEAM_CORE.get());
+    public SteamCoreTileEntity(TileEntityType<?> type) {
+        super(type);
         this.setLazyTickRate(20);
     }
 
@@ -78,7 +79,7 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
 
     @Override
     public boolean canConnectAt(Direction dir) {
-        return dir == this.getBlockState().get(BlockStateProperties.HORIZONTAL_FACING).getOpposite();
+        return dir == this.getBlockState().get(BlockStateProperties.FACING).getOpposite();
     }
 
     @Nullable

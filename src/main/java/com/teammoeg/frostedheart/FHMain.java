@@ -32,6 +32,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.repack.registrate.util.NonNullLazyValue;
 import com.teammoeg.frostedheart.client.DynamicModelSetup;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -104,6 +106,7 @@ public class FHMain {
     public static File lastbkf;
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
+    public static final NonNullLazyValue<CreateRegistrate> registrate = CreateRegistrate.lazy(MODID);
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
         @Nonnull
@@ -137,6 +140,7 @@ public class FHMain {
         FHProps.init();
         FHItems.registry.register(mod);
         FHBlocks.registry.register(mod);
+        FHBlocks.init();
         FHMultiblocks.init();
         FHContainer.registerContainers();
         FHTileTypes.REGISTER.register(mod);
