@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class ActTarget implements IScenarioTarget {
 	ActNamespace ns;
@@ -32,8 +33,9 @@ public class ActTarget implements IScenarioTarget {
 		this.parent = parent;
 	}
 	@Override
-	public void accept(ScenarioConductor t) {
-		t.continueAct(ns);
+	public void accept(ScenarioVM t) {
+		if(t instanceof ScenarioConductor)
+			((ScenarioConductor) t).continueAct(ns);
 		parent.apply(t);
 		
 	}

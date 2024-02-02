@@ -48,6 +48,7 @@ import com.teammoeg.frostedheart.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.scenario.parser.providers.ScenarioProvider;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -57,7 +58,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class FHScenario {
-	public static ScenarioExecutor<ScenarioConductor> server = new ScenarioExecutor<>(ScenarioConductor.class);
+	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
 	public static Map<ServerPlayerEntity, ScenarioConductor> runners = new HashMap<>();
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
 
@@ -114,20 +115,20 @@ public class FHScenario {
 		return new Scenario(name);
 	}
 
-	public static void callCommand(String name, ScenarioConductor runner, Map<String, String> params) {
-		server.callCommand(name, runner, params);
+	public static void callCommand(String name, ScenarioVM scenarioVM, Map<String, String> params) {
+		server.callCommand(name, scenarioVM, params);
 	}
 
 	public static void register(Class<?> clazz) {
 		server.register(clazz);
 	}
 
-	public static void callClientCommand(String name, ScenarioConductor runner, Map<String, String> params) {
+	public static void callClientCommand(String name, ScenarioVM runner, Map<String, String> params) {
 		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), params));
 	}
 
-	public static void callClientCommand(String name, ScenarioConductor runner, String... params) {
+	public static void callClientCommand(String name, ScenarioVM runner, String... params) {
 		Map<String, String> data = new HashMap<>();
 		for (int i = 0; i < params.length / 2; i++) {
 			data.put(params[i * 2], params[i * 2 + 1]);
@@ -148,7 +149,7 @@ public class FHScenario {
 		}
 	}
 
-	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioConductor> method) {
+	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioVM> method) {
 		server.registerCommand(cmdName, method);
 	}
 

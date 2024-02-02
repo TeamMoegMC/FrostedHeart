@@ -25,20 +25,21 @@ import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenarioTrigger {
 	boolean canStillTrigger=true;
-	Predicate<ScenarioConductor> test;
-	public SingleExecuteTargerTrigger(IScenarioConductor par,String name, String label,Predicate<ScenarioConductor> test) {
+	Predicate<ScenarioVM> test;
+	public SingleExecuteTargerTrigger(IScenarioConductor par,String name, String label,Predicate<ScenarioVM> test) {
 		super(par,name, label);
 		this.test=test;
 	}
-	public SingleExecuteTargerTrigger(Scenario sc, String label,Predicate<ScenarioConductor> test) {
+	public SingleExecuteTargerTrigger(Scenario sc, String label,Predicate<ScenarioVM> test) {
 		super(sc, label);
 		this.test=test;
 	}
 	@Override
-	public boolean test(ScenarioConductor t) {
+	public boolean test(ScenarioVM t) {
 
 		return test.test(t);
 	}

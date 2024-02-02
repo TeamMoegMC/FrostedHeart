@@ -122,8 +122,8 @@ public class Act implements IScenarioConductor{
     	
     }
     public void saveActState() {
-		setNodeNum(parent.nodeNum);
-		setScenario(parent.sp);
+		setNodeNum(parent.getNodeNum());
+		setScenario(parent.getScenario());
 		setStatus(parent.getStatus());
 		callStack.clear();
 		callStack.addAll(parent.getCallStack());
@@ -144,7 +144,7 @@ public class Act implements IScenarioConductor{
 
 
 	public void queue(IScenarioTarget target) {
-		parent.queue(new ActTarget(name,target));
+		parent.toExecute.add(new ActTarget(name,target));
 	}
 	public ServerPlayerEntity getPlayer() {
 		return parent.getPlayer();

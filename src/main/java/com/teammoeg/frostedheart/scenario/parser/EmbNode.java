@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class EmbNode implements Node {
     String exp;
@@ -36,7 +37,7 @@ public class EmbNode implements Node {
     }
 
     @Override
-    public String getLiteral(ScenarioConductor runner) {
+    public String getLiteral(ScenarioVM runner) {
         Object dat = "";
         if (exp != null)
             dat = runner.eval(exp);
@@ -56,7 +57,7 @@ public class EmbNode implements Node {
     }
 
     @Override
-    public void run(ScenarioConductor runner) {
+    public void run(ScenarioVM runner) {
 
     }
 
