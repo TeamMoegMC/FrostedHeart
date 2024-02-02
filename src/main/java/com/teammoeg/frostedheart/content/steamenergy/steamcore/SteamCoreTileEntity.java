@@ -15,12 +15,9 @@ import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
 
@@ -43,15 +40,6 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     public float calculateAddedStressCapacity() {
         if(getIsActive()) return FHConfig.SERVER.steamCoreCapacity.get().floatValue();
         return 0f;
-    }
-
-    public ActionResultType onClick(PlayerEntity pe, ItemStack is){
-        if(is != null){
-            System.out.println("SC State");
-            System.out.println(this.getState());
-            System.out.println("Speed:" + this.getSpeed() + "/" + this.getGeneratedSpeed());
-        }
-        return ActionResultType.PASS;
     }
 
     @Override
