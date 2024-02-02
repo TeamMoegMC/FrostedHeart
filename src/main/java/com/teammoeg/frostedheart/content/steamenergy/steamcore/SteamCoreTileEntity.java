@@ -27,16 +27,12 @@ import net.minecraft.world.World;
 public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         INetworkConsumer, ITickableTileEntity, IHaveGoggleInformation,
         FHBlockInterfaces.IActiveState{
-
-    boolean doProduct = true;
-    public float power = 0;
-
     public SteamCoreTileEntity() {
         super(FHTileTypes.STEAM_CORE.get());
         this.setLazyTickRate(20);
     }
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(FHConfig.SERVER.steamCoreMaxPower.get().floatValue(),FHConfig.SERVER.steamCorePowerIntake.get().floatValue());
+    SteamNetworkConsumer network = new SteamNetworkConsumer(FHConfig.SERVER.steamCoreMaxPower.get().floatValue(),FHConfig.SERVER.steamCorePowerIntake.get().floatValue()*1.5f);
 
     public float getGeneratedSpeed(){
         float speed = FHConfig.SERVER.steamCoreGeneratedSpeed.get().floatValue();
@@ -64,21 +60,14 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         if (!world.isRemote) {
             if (network.isValid()) {
                 network.tick();
-                float actual = network.drainHeat(Math.min(FHConfig.SERVER.steamCorePowerIntake.get().floatValue(), (getMaxPower() - power) / 0.8F));
-                if (actual > 0) {
-                    power += actual * 1.0;
-                    markDirty();
-                }
             }
-            if(power > 0){
-                power -= FHConfig.SERVER.steamCorePowerIntake.get().floatValue();
+            if(network.tryDrainHeat(FHConfig.SERVER.steamCorePowerIntake.get().floatValue())){
                 this.setActive(true);
                 if(this.getSpeed() == 0f){
                     this.updateGeneratedRotation();
                 }
                 markDirty();
             }else {
-                power = 0;
                 this.setActive(false);
                 this.updateGeneratedRotation();
             }
@@ -118,11 +107,6 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
                 ClientUtils.spawnSteamParticles(world, this.getPos());
         }
     }
-
-    public float getMaxPower() {
-        return FHConfig.SERVER.steamCoreMaxPower.get().floatValue();
-    }
-
     public Direction getDirection() {
         return this.getBlockState().get(BlockStateProperties.FACING);
     }
@@ -130,17 +114,13 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     @Override
     protected void fromTag(BlockState state, CompoundNBT tag, boolean client) {
         super.fromTag(state, tag, client);
-        power = tag.getInt("power");
-        if (tag.contains("prod"))
-            doProduct = tag.getBoolean("prod");
+        network.load(tag);
     }
 
     @Override
     protected void write(CompoundNBT tag, boolean client) {
         super.write(tag, client);
-        tag.putFloat("power", power);
-        if (!doProduct)
-            tag.putBoolean("prod", doProduct);
+        network.save(tag);
     }
 
     @Override

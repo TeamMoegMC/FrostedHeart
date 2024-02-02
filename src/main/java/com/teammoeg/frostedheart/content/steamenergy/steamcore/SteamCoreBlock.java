@@ -91,18 +91,4 @@ public class SteamCoreBlock extends FHKineticBlock implements ISteamEnergyBlock 
         }
         return superResult;
     }
-
-    @Override
-    public void addInformation(ItemStack stack, IBlockReader worldIn, List<ITextComponent> tooltip,
-                               ITooltipFlag flagIn) {
-        super.addInformation(stack, worldIn, tooltip, flagIn);
-        if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
-            tooltip.add(GuiUtils.str("For Display Only"));
-        }
-    }
-
-    @Override
-    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-        return dir == state.get(BlockStateProperties.HORIZONTAL_FACING);
-    }
 }
