@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.crafting.IRecipeType;
@@ -30,8 +33,6 @@ import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
-
-import java.util.List;
 
 public class ResearchPaperRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<ResearchPaperRecipe> {

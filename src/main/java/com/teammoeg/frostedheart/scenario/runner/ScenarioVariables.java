@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.Arrays;
+
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 
 import net.minecraft.nbt.CompoundNBT;

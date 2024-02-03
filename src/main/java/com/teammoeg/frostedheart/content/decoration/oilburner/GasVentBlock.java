@@ -20,19 +20,14 @@
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import java.util.Random;
-import java.util.function.BiFunction;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -49,9 +44,8 @@ public class GasVentBlock extends FHBaseBlock {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public GasVentBlock(String name, Properties blockProps,
-                        BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public GasVentBlock(Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 TeamMoeg
+ * Copyright (c) 2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -17,10 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
-public interface FHGameRule {
+import com.teammoeg.frostedheart.trade.FHVillagerData;
 
-    boolean isWeatherCycle();
-
+public interface VillagerDataHolder {
+    FHVillagerData getFHData();
 }

@@ -19,17 +19,25 @@
 
 package com.teammoeg.frostedheart.trade.gui;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.gui.*;
+import com.teammoeg.frostedheart.research.gui.FakeSlot;
+import com.teammoeg.frostedheart.research.gui.RTextField;
+import com.teammoeg.frostedheart.research.gui.SwitchButton;
+import com.teammoeg.frostedheart.research.gui.ToolTipWidget;
+import com.teammoeg.frostedheart.research.gui.TristateButton;
 import com.teammoeg.frostedheart.trade.RelationModifier;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer.DetectionSlot;
 import com.teammoeg.frostedheart.trade.network.BargainRequestPacket;
 import com.teammoeg.frostedheart.trade.network.TradeCommitPacket;
 import com.teammoeg.frostedheart.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.SellData;
+
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
@@ -40,9 +48,6 @@ import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 public class TradeScreen extends BaseScreen {
     TradeContainer cx;

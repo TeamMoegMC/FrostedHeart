@@ -19,22 +19,24 @@
 
 package com.teammoeg.frostedheart.climate.data;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class FHDataManager {
     public static enum FHDataType {
@@ -122,7 +124,7 @@ public class FHDataManager {
 
     public static IWarmKeepingEquipment getArmor(ItemStack is) {
         //System.out.println(is.getItem().getRegistryName());
-        return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(is.getItem().getRegistryName());
+        return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(RegistryUtils.getRegistryName(is.getItem()));
     }
 
     public static IWarmKeepingEquipment getArmor(String is) {
@@ -132,34 +134,34 @@ public class FHDataManager {
 
     public static Float getBiomeTemp(Biome b) {
         if (b == null) return 0f;
-        BiomeTempData data = FHDataManager.<BiomeTempData>get(FHDataType.Biome).get(b.getRegistryName());
+        BiomeTempData data = FHDataManager.<BiomeTempData>get(FHDataType.Biome).get(RegistryUtils.getRegistryName(b));
         if (data != null)
             return data.getTemp();
         return 0F;
     }
 
     public static BlockTempData getBlockData(Block b) {
-        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(b.getRegistryName());
+        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(RegistryUtils.getRegistryName(b));
     }
 
     public static BlockTempData getBlockData(ItemStack b) {
-        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(b.getItem().getRegistryName());
+        return FHDataManager.<BlockTempData>get(FHDataType.Block).get(RegistryUtils.getRegistryName(b.getItem()));
     }
 
     public static float getDrinkHeat(FluidStack f) {
-        DrinkTempData dtd = FHDataManager.<DrinkTempData>get(FHDataType.Drink).get(f.getFluid().getRegistryName());
+        DrinkTempData dtd = FHDataManager.<DrinkTempData>get(FHDataType.Drink).get(RegistryUtils.getRegistryName(f.getFluid()));
         if (dtd != null)
             return dtd.getHeat();
         return -0.3f;
     }
 
     public static ITempAdjustFood getFood(ItemStack is) {
-        CupData data = FHDataManager.<CupData>get(FHDataType.Cup).get(is.getItem().getRegistryName());
+        CupData data = FHDataManager.<CupData>get(FHDataType.Cup).get(RegistryUtils.getRegistryName(is.getItem()));
         ResourceMap<FoodTempData> foodData = FHDataManager.get(FHDataType.Food);
         if (data != null) {
-            return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(is.getItem().getRegistryName()));
+            return new CupTempAdjustProxy(data.getEfficiency(), foodData.get(RegistryUtils.getRegistryName(is.getItem())));
         }
-        return foodData.get(is.getItem().getRegistryName());
+        return foodData.get(RegistryUtils.getRegistryName(is.getItem()));
     }
 
     public static Float getWorldTemp(World w) {

@@ -19,12 +19,13 @@
 
 package com.teammoeg.frostedheart.recipe;
 
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.research.ResearchListeners;
+
 import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
-
-import javax.annotation.Nonnull;
 
 public class FHRecipeCachingReloadListener implements IResourceManagerReloadListener {
     private final DataPackRegistries dataPackRegistries;

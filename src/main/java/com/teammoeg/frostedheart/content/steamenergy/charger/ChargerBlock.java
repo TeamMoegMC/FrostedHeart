@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy.charger;
 
 import java.util.Random;
-import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,7 +34,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
@@ -53,9 +51,8 @@ import net.minecraft.world.World;
 public class ChargerBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public ChargerBlock(String name, Properties blockProps,
-                        BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public ChargerBlock(Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
 

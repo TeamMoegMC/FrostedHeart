@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
 import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
-import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.Transition;
@@ -37,6 +36,7 @@ import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsImag
 import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsTextContent;
+
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;

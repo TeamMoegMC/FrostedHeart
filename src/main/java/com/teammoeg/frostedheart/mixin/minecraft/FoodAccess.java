@@ -19,14 +19,16 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.mojang.datafixers.util.Pair;
-import net.minecraft.item.Food;
-import net.minecraft.potion.EffectInstance;
+import java.util.List;
+import java.util.function.Supplier;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-import java.util.List;
-import java.util.function.Supplier;
+import com.mojang.datafixers.util.Pair;
+
+import net.minecraft.item.Food;
+import net.minecraft.potion.EffectInstance;
 
 @Mixin(Food.class)
 public interface FoodAccess {

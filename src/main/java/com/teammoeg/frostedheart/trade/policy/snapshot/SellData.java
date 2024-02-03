@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.trade.policy.snapshot;
 
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.ProductionData;
+
 import net.minecraft.item.ItemStack;
 
 public class SellData {

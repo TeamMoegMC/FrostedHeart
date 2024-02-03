@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import net.minecraft.nbt.CompoundNBT;
-
 import java.util.Arrays;
+
+import net.minecraft.nbt.CompoundNBT;
 
 public class DayTemperatureData {
     public static class HourData {

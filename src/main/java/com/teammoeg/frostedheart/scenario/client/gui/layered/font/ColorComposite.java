@@ -1,7 +1,13 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered.font;
 
-import java.awt.*;
-import java.awt.image.*;
+import java.awt.AlphaComposite;
+import java.awt.Composite;
+import java.awt.CompositeContext;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 
 public final class ColorComposite implements Composite {
 	int color;

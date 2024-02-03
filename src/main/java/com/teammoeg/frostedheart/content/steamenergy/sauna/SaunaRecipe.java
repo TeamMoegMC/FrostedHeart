@@ -45,7 +45,7 @@ public class SaunaRecipe extends IESerializableRecipe {
 
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.sauna.asItem());
+            return new ItemStack(FHBlocks.sauna.get().asItem());
         }
 
         @Override

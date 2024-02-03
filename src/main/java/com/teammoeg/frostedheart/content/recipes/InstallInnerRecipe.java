@@ -19,12 +19,19 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import java.util.Collections;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import com.google.common.base.Optional;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.climate.data.JsonHelper;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -39,15 +46,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.Map;
-
 public class InstallInnerRecipe extends SpecialRecipe {
     public static class Serializer extends IERecipeSerializer<InstallInnerRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+            return new ItemStack(FHItems.buff_coat.get());
         }
 
         @Nullable
@@ -93,7 +96,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
     }
 
     public ResourceLocation getBuffType() {
-        return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e -> e.getItem().getRegistryName())
+        return Optional.fromNullable(type.getMatchingStacks()[0]).transform(e -> RegistryUtils.getRegistryName(e.getItem()))
                 .or(new ResourceLocation("minecraft", "air"));
     }
 
@@ -126,7 +129,7 @@ public class InstallInnerRecipe extends SpecialRecipe {
         if (!armoritem.isEmpty() && !buffstack.isEmpty()) {
             ItemStack ret = armoritem.copy();
             ret.setCount(1);
-            ItemNBTHelper.putString(ret, "inner_cover", buffstack.getItem().getRegistryName().toString());
+            ItemNBTHelper.putString(ret, "inner_cover", RegistryUtils.getRegistryName(buffstack.getItem()).toString());
             CompoundNBT nbt = buffstack.getTag();
             ret.getTag().put("inner_cover_tag", nbt != null ? nbt : new CompoundNBT());
             return ret;

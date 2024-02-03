@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.trade.policy.snapshot;
 
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.DemandData;
+
 import net.minecraft.item.crafting.Ingredient;
 
 public class BuyData {

@@ -17,10 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.entity.player.PlayerEntity;
 
-public interface IFTBSecondWritable {
-    void write2(PacketBuffer pb, long now);
+public class FTBFixUtils {
+    public static PlayerEntity networkPlayer;
 }

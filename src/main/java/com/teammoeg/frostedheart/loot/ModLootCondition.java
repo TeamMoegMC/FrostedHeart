@@ -19,17 +19,23 @@
 
 package com.teammoeg.frostedheart.loot;
 
-import com.google.gson.*;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.loot.LootContext;
 import net.minecraft.loot.conditions.ILootCondition;
-
-import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 public class ModLootCondition implements ILootCondition {
     public static class Serializer implements ILootSerializer<ModLootCondition> {

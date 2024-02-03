@@ -19,8 +19,11 @@
 
 package com.teammoeg.frostedheart.client.renderer;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHItems;
+
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.IEntityRenderer;
@@ -33,8 +36,6 @@ import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 public class FrostbiteRenderer<T extends LivingEntity, M extends BipedModel<T> & IHasHead> extends LayerRenderer<T, M> {
     public FrostbiteRenderer(IEntityRenderer<T, M> entityRendererIn) {
         super(entityRendererIn);
@@ -43,12 +44,12 @@ public class FrostbiteRenderer<T extends LivingEntity, M extends BipedModel<T> &
     @Override
     @ParametersAreNonnullByDefault
     public void render(MatrixStack matrixStackIn, IRenderTypeBuffer bufferIn, int packedLightIn, T living, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        ItemStack heaterVest = new ItemStack(FHItems.heater_vest);
-        BipedModel<T> model = FHItems.heater_vest.getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
+        ItemStack heaterVest = new ItemStack(FHItems.heater_vest.get());
+        BipedModel<T> model = FHItems.heater_vest.get().getArmorModel(living, heaterVest, EquipmentSlotType.CHEST, null);
         if (model != null) {
             model.setRotationAngles(living, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
             RenderType type = model.getRenderType(
-                    new ResourceLocation(FHItems.heater_vest.getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
+                    new ResourceLocation(FHItems.heater_vest.get().getArmorTexture(heaterVest, living, EquipmentSlotType.CHEST, null))
             );
             model.render(matrixStackIn, bufferIn.getBuffer(type), packedLightIn, OverlayTexture.NO_OVERLAY, 1F, 1F, 1F, 1F);
         }

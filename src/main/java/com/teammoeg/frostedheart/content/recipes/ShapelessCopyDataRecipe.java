@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.block.Blocks;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.inventory.CraftingInventory;

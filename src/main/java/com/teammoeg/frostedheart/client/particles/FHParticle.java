@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.client.particles;
 
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+
 import net.minecraft.client.particle.IParticleRenderType;
 import net.minecraft.client.particle.SpriteTexturedParticle;
 import net.minecraft.client.renderer.ActiveRenderInfo;

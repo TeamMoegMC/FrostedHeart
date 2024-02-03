@@ -7,8 +7,6 @@ import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
-
 public class HUDDialog implements IScenarioDialog{
 	private LayerManager primary=new LayerManager();
 	public float handlePt(float partialTicks) {

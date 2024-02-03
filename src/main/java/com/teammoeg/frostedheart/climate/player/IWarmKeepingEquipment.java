@@ -19,10 +19,10 @@
 
 package com.teammoeg.frostedheart.climate.player;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-
-import javax.annotation.Nullable;
 
 // TODO: Auto-generated Javadoc
 

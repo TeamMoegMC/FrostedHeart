@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -17,17 +17,19 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart;
 
-public interface VariantProvider {
-    Double get(String k);
+import net.minecraft.block.Block;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ITag;
+import net.minecraft.util.ResourceLocation;
 
-    default double getOrDefault(String k, double def) {
-        Double d = get(k);
-        if (d == null)
-            return def;
-        return d;
+public class FHTags {
+    public static final class Blocks {
+        public static final ITag.INamedTag<Block> ALWAYS_BREAKABLE = create("always_breakable");
+
+        private static ITag.INamedTag<Block> create(String id) {
+            return BlockTags.makeWrapperTag(new ResourceLocation(FHMain.MODID, id).toString());
+        }
     }
-
-    ;
 }

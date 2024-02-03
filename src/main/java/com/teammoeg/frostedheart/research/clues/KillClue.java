@@ -24,6 +24,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.EntityType;
@@ -101,7 +102,7 @@ public class KillClue extends ListenerClue {
     @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
-        jo.addProperty("entity", type.getRegistryName().toString());
+        jo.addProperty("entity", RegistryUtils.getRegistryName(type).toString());
         return jo;
     }
 

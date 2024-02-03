@@ -1,7 +1,5 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-
 public interface RenderableContent{
 	void tick();
 	RenderableContent copy();

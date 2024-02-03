@@ -10,9 +10,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.teammoeg.frostedheart.util.FileUtil;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.util.io.FileUtil;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.client.resources.ReloadListener;
@@ -44,7 +44,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 			case "legacy_unicode":readUnicode(cr);break;
 			}
 		}
-		System.out.println("loaded "+data.size());
+		//System.out.println("loaded "+data.size());
 	}
 	public void readBitmap(JsonObject unicode) {
 		int height=9;
@@ -157,9 +157,9 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	@Override
 	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		onResourceManagerReload(resourceManagerIn);
-		for(int i='A';i<'z';i++) {
+		/*for(int i='A';i<'z';i++) {
 			System.out.println(Character.toString((char)i)+unicodeData.get(i));
-		}
+		}*/
 		return new Object();
 	}
 	@Override

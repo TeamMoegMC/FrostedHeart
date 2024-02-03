@@ -21,8 +21,6 @@ package com.teammoeg.frostedheart.content.agriculture;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
@@ -33,33 +31,26 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
 public class FHBerryBushBlock extends SweetBerryBushBlock {
-    public final String name;
+
     private int growTemperature;
     protected int growSpeed = 10;//0<growSpeed<50,growSpeed=50时具有原版浆果丛的生长速度
 
-    public FHBerryBushBlock(String name, int growTemperature, Properties properties) {
+    public FHBerryBushBlock(int growTemperature, Properties properties) {
         super(properties);
-        this.name = name;
+
         this.growTemperature = growTemperature;
-        FHContent.registeredFHBlocks.add(this);
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
     }//if you don't want to set growSpeed
 
-    public FHBerryBushBlock(String name, int growTemperature, Properties properties, int growSpeed) {
+    public FHBerryBushBlock(int growTemperature, Properties properties, int growSpeed) {
         super(properties);
-        this.name = name;
+
         this.growTemperature = growTemperature;
-        FHContent.registeredFHBlocks.add(this);
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
         this.growSpeed = growSpeed;
     }
 
@@ -69,9 +60,6 @@ public class FHBerryBushBlock extends SweetBerryBushBlock {
         return temp >= growTemperature;
     }
 
-    public ResourceLocation createRegistryName() {
-        return new ResourceLocation(FHMain.MODID, name);
-    }
 
     public int getGrowTemperature() {
         return growTemperature;

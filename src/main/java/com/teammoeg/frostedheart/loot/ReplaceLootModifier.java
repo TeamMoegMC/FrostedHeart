@@ -19,9 +19,17 @@
 
 package com.teammoeg.frostedheart.loot;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
@@ -31,11 +39,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class ReplaceLootModifier extends LootModifier {
     static class ReplacePair {
@@ -50,7 +53,7 @@ public class ReplaceLootModifier extends LootModifier {
         JsonObject toJson() {
             JsonObject jo = new JsonObject();
             jo.add("from", from.serialize());
-            jo.addProperty("to", to.getRegistryName().toString());
+            jo.addProperty("to", RegistryUtils.getRegistryName(to).toString());
             return jo;
         }
     }

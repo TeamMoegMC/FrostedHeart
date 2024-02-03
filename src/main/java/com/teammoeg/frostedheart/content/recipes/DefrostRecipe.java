@@ -19,11 +19,14 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
@@ -33,8 +36,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
-
-import javax.annotation.Nullable;
 
 public interface DefrostRecipe extends IRecipe<IInventory> {
     public static class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
@@ -51,7 +52,7 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
 
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHItems.frozen_seeds);
+            return new ItemStack(FHItems.frozen_seeds.get());
         }
 
         @Nullable

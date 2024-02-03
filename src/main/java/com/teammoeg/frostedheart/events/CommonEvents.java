@@ -19,11 +19,20 @@
 
 package com.teammoeg.frostedheart.events;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
-import blusunrize.immersiveengineering.common.blocks.IEBlocks;
+import static net.minecraft.entity.EntityType.*;
+import static net.minecraft.world.biome.Biome.Category.*;
+
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
-import com.teammoeg.frostedheart.*;
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHDamageSources;
+import com.teammoeg.frostedheart.FHEffects;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
@@ -61,13 +70,18 @@ import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
-import com.teammoeg.frostedheart.util.FHNBT;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
+
+import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.MultiblockFormEvent;
+import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.IGrowable;
+import net.minecraft.block.SaplingBlock;
 import net.minecraft.command.CommandSource;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.enchantment.UnbreakingEnchantment;
@@ -128,7 +142,6 @@ import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -137,19 +150,27 @@ import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
 
-import javax.annotation.Nonnull;
-import java.util.Set;
-
-import static net.minecraft.entity.EntityType.*;
-import static net.minecraft.world.biome.Biome.Category.*;
-
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CommonEvents {
 
     static ResourceLocation ft = new ResourceLocation("storagedrawers:drawers");
 
     private static final Set<EntityType<?>> VANILLA_ENTITIES = Sets.newHashSet(COW, SHEEP, PIG, CHICKEN);
-
+    @SubscribeEvent
+    public static void checkSleep(SleepingTimeCheckEvent event) {
+        if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
+            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+        }
+    }
+    @SubscribeEvent
+    public static void tickEnergy(PlayerTickEvent event) {
+        if (event.side == LogicalSide.SERVER && event.phase == Phase.START
+                && event.player instanceof ServerPlayerEntity) {
+            ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+            if (!player.isSpectator() && !player.isCreative() && player.ticksExisted % 20 == 0)
+                EnergyCore.dT(player);
+        }
+    }
     @SubscribeEvent
     public static void addManualToPlayer(@Nonnull PlayerEvent.PlayerLoggedInEvent event) {
         CompoundNBT nbt = event.getPlayer().getPersistentData();
@@ -160,17 +181,17 @@ public class CommonEvents {
         } else {
             nbt.put(PlayerEntity.PERSISTED_NBT_TAG, (persistent = new CompoundNBT()));
         }
-        if (!persistent.contains(FHNBT.FIRST_LOGIN_GIVE_MANUAL)) {
-            persistent.putBoolean(FHNBT.FIRST_LOGIN_GIVE_MANUAL, false);
+        if (!persistent.contains(FHUtils.FIRST_LOGIN_GIVE_MANUAL)) {
+            persistent.putBoolean(FHUtils.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(
                     new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
-            event.getPlayer().inventory.armorInventory.set(3, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
+            event.getPlayer().inventory.armorInventory.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_head"))));
-            event.getPlayer().inventory.armorInventory.set(2, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
+            event.getPlayer().inventory.armorInventory.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_chest"))));
-            event.getPlayer().inventory.armorInventory.set(1, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
+            event.getPlayer().inventory.armorInventory.set(1, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_LEGGINGS)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_leg"))));
-            event.getPlayer().inventory.armorInventory.set(0, FHNBT.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
+            event.getPlayer().inventory.armorInventory.set(0, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_BOOTS)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_foot"))));
             if (event.getPlayer().abilities.isCreativeMode) {
                 event.getPlayer().sendMessage(new TranslationTextComponent("message.frostedheart.creative_help")
@@ -384,7 +405,7 @@ public class CommonEvents {
                 Temperature.setBody((ServerPlayerEntity) event.getEntityLiving(), current);
             }
 
-            DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), it);
+            DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), is);
         }
     }
 
@@ -517,7 +538,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onHeal(LivingHealEvent event) {
-        EffectInstance ei = event.getEntityLiving().getActivePotionEffect(FHEffects.SCURVY);
+        EffectInstance ei = event.getEntityLiving().getActivePotionEffect(FHEffects.SCURVY.get());
         if (ei != null)
             event.setAmount(event.getAmount() * (0.2f / (ei.getAmplifier() + 1)));
     }
@@ -566,7 +587,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onPotionRemove(PotionRemoveEvent event) {
-        if (event.getPotion() == FHEffects.ION)
+        if (event.getPotion() == FHEffects.ION.get())
             event.setCanceled(true);
 
     }

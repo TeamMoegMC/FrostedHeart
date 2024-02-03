@@ -19,13 +19,13 @@
 
 package com.teammoeg.frostedheart.util.evaluator;
 
-import net.minecraft.util.math.MathHelper;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import net.minecraft.util.math.MathHelper;
 
 public class Evaluator {
     public static Map<String, Function<Node[], Node>> functions = new HashMap<>();

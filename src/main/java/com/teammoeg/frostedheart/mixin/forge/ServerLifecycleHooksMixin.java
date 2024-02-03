@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.mixin.forge;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.FHVersion;
-import com.teammoeg.frostedheart.util.FileUtil;
-import com.teammoeg.frostedheart.util.ZipFile;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.storage.FolderName;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.server.ServerLifecycleHooks;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,11 +32,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.ZipFile;
+import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.version.FHVersion;
+
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.storage.FolderName;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mixin(ServerLifecycleHooks.class)
 public class ServerLifecycleHooksMixin {

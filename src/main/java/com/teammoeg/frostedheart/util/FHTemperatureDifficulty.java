@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -19,8 +19,20 @@
 
 package com.teammoeg.frostedheart.util;
 
-import com.teammoeg.frostedheart.trade.FHVillagerData;
+import java.util.function.Function;
 
-public interface VillagerDataHolder {
-    FHVillagerData getFHData();
+import net.minecraft.entity.player.ServerPlayerEntity;
+
+public enum FHTemperatureDifficulty {
+    Easy(s -> 0.05F),
+    Normal(s -> 0.036F),
+    Hard(s -> s.isSprinting() ? 0.036F : 0.024F),
+    HardCore(s -> 0F);
+
+    public final Function<ServerPlayerEntity, Float> self_heat;
+
+    private FHTemperatureDifficulty(Function<ServerPlayerEntity, Float> self_heat) {
+        this.self_heat = self_heat;
+
+    }
 }

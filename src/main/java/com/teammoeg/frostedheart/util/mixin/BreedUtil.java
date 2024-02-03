@@ -17,16 +17,17 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import com.cannolicatfish.rankine.init.RankineTags;
+
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.Tags.IOptionalNamedTag;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class BreedUtil {
     static Map<EntityType<?>, IOptionalNamedTag<Item>> tag = new HashMap<>();

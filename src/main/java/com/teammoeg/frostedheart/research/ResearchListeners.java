@@ -44,6 +44,7 @@ import com.teammoeg.frostedheart.research.machines.RubbingTool;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -81,7 +82,7 @@ public class ResearchListeners {
 
         @Override
         public String getString(Block item) {
-            return item.getRegistryName().toString();
+            return RegistryUtils.getRegistryName(item).toString();
         }
     }
 
@@ -395,7 +396,7 @@ public class ResearchListeners {
                             rd.sendProgressPacket();
                         }
                     }
-                    return new ItemStack(FHItems.rubbing_pad);
+                    return new ItemStack(FHItems.rubbing_pad.get());
                 }
                 trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getLId()));
             }

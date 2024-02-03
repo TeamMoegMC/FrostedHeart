@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
+import java.util.Arrays;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -27,6 +29,7 @@ import com.simibubi.create.compat.jei.DoubleItemIcon;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -44,8 +47,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TranslationTextComponent;
 
-import java.util.Arrays;
-
 public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "defrost_smoking");
     private IDrawable BACKGROUND;
@@ -58,7 +59,7 @@ public class SmokingDefrostCategory implements IRecipeCategory<SmokingDefrostRec
      * @param guiHelper
      */
     public SmokingDefrostCategory(IGuiHelper guiHelper) {
-        this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.SMOKER), () -> new ItemStack(FHItems.frozen_seeds));
+        this.ICON = new DoubleItemIcon(() -> new ItemStack(Blocks.SMOKER), () -> new ItemStack(FHItems.frozen_seeds.get()));
         this.BACKGROUND = guiHelper.drawableBuilder(Constants.RECIPE_GUI_VANILLA, 0, 186, 82, 34)
                 .addPadding(0, 10, 0, 0)
                 .build();

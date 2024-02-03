@@ -48,8 +48,8 @@ import net.minecraft.world.World;
 public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, ITempAdjustFood, EnergyHelper.IIEEnergyItem {
 
 
-    public SteamBottleItem(String name, Properties properties) {
-        super(name, properties);
+    public SteamBottleItem(Properties properties) {
+        super(properties);
     }
 
     @Override

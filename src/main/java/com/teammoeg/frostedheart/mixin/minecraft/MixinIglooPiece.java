@@ -19,6 +19,11 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import java.util.Random;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.loot.LootTables;
 import net.minecraft.nbt.CompoundNBT;
@@ -30,10 +35,6 @@ import net.minecraft.world.IServerWorld;
 import net.minecraft.world.gen.feature.structure.IStructurePieceType;
 import net.minecraft.world.gen.feature.structure.IglooPieces;
 import net.minecraft.world.gen.feature.structure.TemplateStructurePiece;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-
-import java.util.Random;
 
 @Mixin(IglooPieces.Piece.class)
 public abstract class MixinIglooPiece extends TemplateStructurePiece {

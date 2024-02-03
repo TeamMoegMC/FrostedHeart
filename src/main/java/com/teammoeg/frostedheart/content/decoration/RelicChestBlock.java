@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.base.item.FHBlockItem;
 
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import net.minecraft.block.Block;
@@ -59,9 +58,9 @@ public class RelicChestBlock extends FHBaseBlock {
     protected static final VoxelShape Z_SHAPE = Block.makeCuboidShape(2D, 0D, 0D, 14D, 13D, 16D);
     public static final EnumProperty<Direction.Axis> HORIZONTAL_AXIS = BlockStateProperties.HORIZONTAL_AXIS;
 
-    public RelicChestBlock(String name) {
-        super(name, Block.Properties.create(Material.IRON).sound(SoundType.STONE).setRequiresTool()
-                .harvestTool(ToolType.PICKAXE).hardnessAndResistance(35, 600).notSolid(), FHBlockItem::new);
+    public RelicChestBlock() {
+        super(Block.Properties.create(Material.IRON).sound(SoundType.STONE).setRequiresTool()
+                .harvestTool(ToolType.PICKAXE).hardnessAndResistance(35, 600).notSolid());
     }
 
     @Nullable

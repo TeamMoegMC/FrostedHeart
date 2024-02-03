@@ -31,18 +31,16 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
+import com.teammoeg.frostedheart.client.util.FHGuiHelper;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
-import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -702,9 +700,9 @@ public class FrostedHud {
                 heart = HUDElements.icon_health_hardcore_abnormal_black;
             } else if (player.isPotionActive(Effects.POISON)) {
                 heart = HUDElements.icon_health_hardcore_abnormal_green;
-            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA)) {
+            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA.get())) {
                 heart = HUDElements.icon_health_hardcore_abnormal_cyan;
-            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA)) {
+            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA.get())) {
                 heart = HUDElements.icon_health_hardcore_abnormal_orange;
             } else
                 heart = HUDElements.icon_health_hardcore_normal;
@@ -713,10 +711,10 @@ public class FrostedHud {
                 heart = HUDElements.icon_health_abnormal_black;
             } else if (player.isPotionActive(Effects.POISON)) {
                 heart = HUDElements.icon_health_abnormal_green;
-            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA)) {
+            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA.get())) {
                 heart = HUDElements.icon_health_abnormal_cyan;
-            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA)) {
-                heart = HUDElements.icon_health_hardcore_abnormal_orange;
+            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA.get())) {
+                heart = HUDElements.icon_health_abnormal_orange;
             } else
                 heart = HUDElements.icon_health_normal;
         }

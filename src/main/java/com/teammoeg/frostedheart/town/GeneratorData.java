@@ -19,10 +19,12 @@
 
 package com.teammoeg.frostedheart.town;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -145,7 +147,7 @@ public class GeneratorData {
         result.putBoolean("isActive", isActive);
         result.putFloat("power", power);
         if (fluid != null)
-            result.putString("steamFluid", fluid.getRegistryName().toString());
+            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
         if (!update) {
             CompoundNBT inv = new CompoundNBT();
             ItemStackHelper.saveAllItems(inv, inventory);

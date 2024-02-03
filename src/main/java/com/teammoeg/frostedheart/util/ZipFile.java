@@ -29,6 +29,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipOutputStream;
 
+import com.teammoeg.frostedheart.util.io.FileUtil;
+
 public class ZipFile implements AutoCloseable {
     Path fd;
     ZipOutputStream bkf;

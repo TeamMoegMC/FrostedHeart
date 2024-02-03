@@ -19,21 +19,23 @@
 
 package com.teammoeg.frostedheart.mixin.forge;
 
-import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHMain;
-import net.minecraft.network.login.server.SDisconnectLoginPacket;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.fml.network.FMLHandshakeHandler;
-import net.minecraftforge.fml.network.FMLHandshakeMessages;
-import net.minecraftforge.fml.network.NetworkEvent;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import com.teammoeg.frostedheart.FHConfig;
+import com.teammoeg.frostedheart.FHMain;
+
+import net.minecraft.network.login.server.SDisconnectLoginPacket;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.fml.network.FMLHandshakeHandler;
+import net.minecraftforge.fml.network.FMLHandshakeMessages;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 @Mixin(FMLHandshakeHandler.class)
 public class FMLHandshakeAntiCheatMixin {

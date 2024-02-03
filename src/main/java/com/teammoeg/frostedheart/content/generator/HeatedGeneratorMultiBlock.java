@@ -19,8 +19,9 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import net.minecraftforge.fml.RegistryObject;
 
 public class HeatedGeneratorMultiBlock<T extends MultiblockPartTileEntity<? super T>> extends NormalGeneratorMultiBlock<T> implements ISteamEnergyBlock {

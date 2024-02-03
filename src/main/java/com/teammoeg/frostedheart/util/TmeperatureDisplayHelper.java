@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.util;
 
+import java.util.Collection;
+
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHPacketHandler;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.network.PacketDistributor;
-
-import java.util.Collection;
 
 /**
  * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting

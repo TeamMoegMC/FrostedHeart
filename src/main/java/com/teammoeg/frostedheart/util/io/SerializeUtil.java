@@ -17,7 +17,18 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.io;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
@@ -26,6 +37,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.Writeable;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -34,12 +48,6 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 public class SerializeUtil {
     public static class CompoundBuilder {
@@ -190,9 +198,9 @@ public class SerializeUtil {
     public static JsonElement toJson(ItemStack stack) {
         boolean hasCount = stack.getCount() > 1, hasTag = stack.hasTag();
         if (!hasCount && !hasTag)
-            return new JsonPrimitive(stack.getItem().getRegistryName().toString());
+            return new JsonPrimitive(RegistryUtils.getRegistryName(stack.getItem()).toString());
         JsonObject jo = new JsonObject();
-        jo.addProperty("id", stack.getItem().getRegistryName().toString());
+        jo.addProperty("id", RegistryUtils.getRegistryName(stack.getItem()).toString());
         if (hasCount)
             jo.addProperty("count", stack.getCount());
         if (hasTag)

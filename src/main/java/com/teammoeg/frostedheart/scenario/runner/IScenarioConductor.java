@@ -8,4 +8,5 @@ public interface IScenarioConductor {
 	void setNodeNum(int num);
 	int getNodeNum();
 	String getLang();
+	void sendMessage(String s);
 }

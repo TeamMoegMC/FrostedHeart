@@ -25,6 +25,7 @@ public class ScenarioCommand {
 					return Command.SINGLE_SUCCESS;
 				})
 				).executes(ct->{
+					
 					FHScenario.runners.get(ct.getSource().asPlayer()).jump(
 						new ExecuteTarget(FHScenario.runners.get(ct.getSource().asPlayer()),StringArgumentType.getString(ct, "scenario"),null));
 					return Command.SINGLE_SUCCESS;

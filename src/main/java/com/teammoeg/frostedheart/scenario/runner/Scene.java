@@ -23,7 +23,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * object, always get it from {@link ScenarioConductor#getScene()}
  */
 public class Scene {
-	transient final Map<String, ExecuteTarget> links = new HashMap<>();
+	private transient final Map<String, ExecuteTarget> links = new HashMap<>();
 	private transient StringBuilder currentLiteral;
 	private transient final ScenarioConductor parent;
 	public transient boolean isNowait;
@@ -215,7 +215,7 @@ public class Scene {
 	}
 
 	public void clearLink() {
-		links.clear();
+		getLinks().clear();
 	}
 	public void markChatboxDirty() {
 		requireClear=true;
@@ -229,6 +229,10 @@ public class Scene {
 			waiting=0;
 			parent.setStatus(RunStatus.RUNNING);
 		}
+	}
+
+	public Map<String, ExecuteTarget> getLinks() {
+		return links;
 	}
 
 }

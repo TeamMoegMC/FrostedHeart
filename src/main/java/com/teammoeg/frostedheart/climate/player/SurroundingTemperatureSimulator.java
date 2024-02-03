@@ -19,9 +19,14 @@
 
 package com.teammoeg.frostedheart.climate.player;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -35,10 +40,6 @@ import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 /**
  * A simulator built on Alphagem618's heat conducting model

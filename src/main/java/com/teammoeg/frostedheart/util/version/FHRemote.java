@@ -17,18 +17,21 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
-
-import com.google.gson.JsonParser;
-import com.teammoeg.frostedheart.FHMain;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLPaths;
+package com.teammoeg.frostedheart.util.version;
 
 import java.io.File;
 import java.io.FileReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
+
+import com.google.gson.JsonParser;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.io.FileUtil;
+
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 public class FHRemote {
     public static class FHLocal extends FHRemote {

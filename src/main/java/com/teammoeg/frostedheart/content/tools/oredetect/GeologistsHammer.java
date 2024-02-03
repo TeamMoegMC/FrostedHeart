@@ -20,9 +20,14 @@
 package com.teammoeg.frostedheart.content.tools.oredetect;
 
 
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.Random;
+
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -37,10 +42,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
-
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.Random;
 
 public class GeologistsHammer extends FHLeveledTool {
     public static ResourceLocation tag = new ResourceLocation("forge:ores");
@@ -126,8 +127,8 @@ public class GeologistsHammer extends FHLeveledTool {
         return getLevel(item) + 3;
     }
 
-    public GeologistsHammer(String name, int lvl, Properties properties) {
-        super(name, lvl, properties);
+    public GeologistsHammer(int lvl, Properties properties) {
+        super(lvl, properties);
 
     }
 

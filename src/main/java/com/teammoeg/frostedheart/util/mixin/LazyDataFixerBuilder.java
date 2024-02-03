@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 TeamMoeg
+ * Copyright (c) 2022-2024 TeamMoeg
  *
  * This file is part of Frosted Heart.
  *
@@ -17,10 +17,23 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
 
-import net.minecraft.entity.player.PlayerEntity;
+import java.util.concurrent.Executor;
 
-public class FTBFixUtils {
-    public static PlayerEntity networkPlayer;
+import com.mojang.datafixers.DataFixer;
+import com.mojang.datafixers.DataFixerBuilder;
+
+public class LazyDataFixerBuilder extends DataFixerBuilder {
+    private static final Executor NO_OP_EXECUTOR = command -> {
+    };
+
+    public LazyDataFixerBuilder(int dataVersion) {
+        super(dataVersion);
+    }
+
+    @Override
+    public DataFixer build(Executor executor) {
+        return super.build(NO_OP_EXECUTOR);
+    }
 }

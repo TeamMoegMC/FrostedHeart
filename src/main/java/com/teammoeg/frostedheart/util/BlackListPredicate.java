@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
+
 import net.minecraft.advancements.criterion.ItemPredicate;
 import net.minecraft.item.ItemStack;
 

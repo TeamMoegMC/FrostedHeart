@@ -17,7 +17,10 @@
  *
  */
 
-package com.teammoeg.frostedheart.util;
+package com.teammoeg.frostedheart.util.mixin;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -28,9 +31,6 @@ import top.theillusivec4.diet.DietMod;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 import top.theillusivec4.diet.common.capability.DietTrackerCapability;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class FixedDietProvider implements ICapabilitySerializable<INBT> {
 
