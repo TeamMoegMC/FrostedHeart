@@ -61,6 +61,7 @@ public class ScenarioConductor extends ScenarioVM {
     private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
     private static final ActNamespace init=new ActNamespace(null,null);
+
     public CompoundNBT save() {
     	CompoundNBT data=new CompoundNBT();
     	data.put("vars", varData.snapshot);
@@ -225,7 +226,10 @@ public class ScenarioConductor extends ScenarioVM {
     	for(IScenarioTrigger t:triggers) {
     		if(t.test(this)) {
     			if(t.use()) {
-    				this.queue(t);
+    				if(t.isAsync())
+						queue(t);
+					else
+						jump(t);
     			}
     		}
     	}

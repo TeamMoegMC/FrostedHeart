@@ -40,7 +40,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * An act is a basic unit of execution code
  * You should NOT store this object, always get it from {@link ScenarioConductor#getCurrentAct()}
  * */
-public class Act implements IScenarioConductor{
+public class Act implements IScenarioThread{
 	ParagraphData paragraph=new ParagraphData(this);
 	String label;
 	

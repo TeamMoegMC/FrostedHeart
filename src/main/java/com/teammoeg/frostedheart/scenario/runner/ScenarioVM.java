@@ -24,7 +24,7 @@ import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 
-public class ScenarioVM implements IScenarioConductor{
+public class ScenarioVM implements IScenarioThread{
 	protected Scenario sp;//current scenario
 	protected int nodeNum=0;//Program register
 	protected ScenarioVariables varData=new ScenarioVariables();
@@ -40,6 +40,7 @@ public class ScenarioVM implements IScenarioConductor{
 	protected boolean isConducting;
 	protected Scene scene;
 	protected boolean clearAfterClick;
+    public boolean playerInited;
 	public ScenarioVM() {
 		// TODO Auto-generated constructor stub
 	}
@@ -206,7 +207,10 @@ public class ScenarioVM implements IScenarioConductor{
     	for(IScenarioTrigger t:triggers) {
     		if(t.test(this)) {
     			if(t.use()) {
-    				this.queue(t);
+    				if(t.isAsync())
+						queue(t);
+					else
+						jump(t);
     			}
     		}
     	}

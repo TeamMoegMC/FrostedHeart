@@ -34,11 +34,12 @@ public class MCCommands {
 	}
 	public void waitPlayerStart(ScenarioVM runner,@Param("s")String s,@Param("l")String l) {
 		final Vector3d vec=runner.getPlayer().getPositionVec();
+		(runner).playerInited=false;
 		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
-			if(vec.distanceTo(r.getPlayer().getPositionVec())>=0.1) {
+			if(vec.distanceTo(r.getPlayer().getPositionVec())>=0.1||r.playerInited) {
 				return true;
 			}
 			return false;
-		}));
+		}).setSync());
 	}
 }

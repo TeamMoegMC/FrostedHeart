@@ -308,7 +308,10 @@ public class CommonEvents {
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
-    	
+    	if(ite.getPlayer() instanceof ServerPlayerEntity) {
+    		ScenarioConductor cond=FHScenario.runners.get(ite.getPlayer());
+    		cond.playerInited=true;
+    	}
     }
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {

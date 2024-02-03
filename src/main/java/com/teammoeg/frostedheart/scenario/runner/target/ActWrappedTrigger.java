@@ -1,7 +1,7 @@
 package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
@@ -15,7 +15,7 @@ public class ActWrappedTrigger implements IScenarioTrigger {
 	}
 
 	@Override
-	public void apply(IScenarioConductor conductor) {
+	public void apply(IScenarioThread conductor) {
 		at.apply(conductor);
 	}
 
@@ -32,6 +32,11 @@ public class ActWrappedTrigger implements IScenarioTrigger {
 	@Override
 	public boolean canUse() {
 		return original.canUse();
+	}
+
+	@Override
+	public boolean isAsync() {
+		return original.isAsync();
 	}
 
 }

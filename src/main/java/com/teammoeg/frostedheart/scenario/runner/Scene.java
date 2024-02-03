@@ -201,7 +201,10 @@ public class Scene {
 						acttrigger = t;
 						break;
 					}
-					parent.queue(t);
+					if(t.isAsync())
+						parent.queue(t);
+					else
+						parent.jump(t);
 				}
 			}
 		}

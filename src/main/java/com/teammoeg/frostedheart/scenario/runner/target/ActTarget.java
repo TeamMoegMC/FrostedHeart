@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
@@ -40,7 +40,7 @@ public class ActTarget implements IScenarioTarget {
 		
 	}
 	@Override
-	public void apply(IScenarioConductor conductor) {
+	public void apply(IScenarioThread conductor) {
 		parent.apply(conductor);
 	}
 
