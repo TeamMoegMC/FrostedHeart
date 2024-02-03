@@ -34,7 +34,10 @@ import net.minecraft.block.trees.Tree;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
-
+/**
+ * Reduces chance for big tree
+ * 
+ * */
 @Mixin(BigTree.class)
 public abstract class BigTreeMixin extends Tree {
     @Inject(at = @At("HEAD"), method = "growBigTree", cancellable = true)

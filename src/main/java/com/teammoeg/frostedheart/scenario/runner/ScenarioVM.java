@@ -225,6 +225,8 @@ public class ScenarioVM implements IScenarioConductor{
 		triggers.add(trig);
 	}
 	public Scene getScene() {
+		if(scene==null)
+			scene=new Scene(this);
     	return scene;
     }
 	public void newLine() {

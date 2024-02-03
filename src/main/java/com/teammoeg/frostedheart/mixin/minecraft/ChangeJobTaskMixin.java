@@ -30,7 +30,10 @@ import net.minecraft.entity.ai.brain.task.ChangeJobTask;
 import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.world.server.ServerWorld;
-
+/**
+ * Disable vanilla village profession
+ * 
+ * */
 @Mixin(ChangeJobTask.class)
 public abstract class ChangeJobTaskMixin extends Task<VillagerEntity> {
 

@@ -47,7 +47,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
-
+/**
+ * Mark machine owner for research
+ * 
+ * */
 @SuppressWarnings("unused")
 @Mixin({IETileProviderBlock.class, MechanicalCrafterBlock.class, SaunaBlock.class})
 public class BlockMixin extends Block {

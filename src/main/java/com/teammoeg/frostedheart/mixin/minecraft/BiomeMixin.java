@@ -32,7 +32,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
-
+/**
+ * Freeze water when cold
+ * 
+ * */
 @Mixin(Biome.class)
 public abstract class BiomeMixin {
     public boolean doesWaterFreeze(IWorldReader worldIn, BlockPos water, boolean mustBeAtEdge) {

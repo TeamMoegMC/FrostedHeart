@@ -40,7 +40,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IServerWorldInfo;
 import net.minecraft.world.storage.ISpawnWorldInfo;
-
+/**
+ * Weather modify
+ * */
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld extends World {
 

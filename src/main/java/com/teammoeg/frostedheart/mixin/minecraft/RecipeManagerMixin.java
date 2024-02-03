@@ -36,12 +36,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
-
+/**
+ * Lock unresearched recipe
+ * */
 @Mixin(RecipeManager.class)
 public abstract class RecipeManagerMixin {
     /**
      * @author khjxiaogu
-     * @reason TODO
+     * @reason Lock unresearched recipes
      */
     @Overwrite
     public <C extends IInventory, T extends IRecipe<C>> Optional<T> getRecipe(IRecipeType<T> recipeTypeIn,

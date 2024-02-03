@@ -40,7 +40,9 @@ import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.world.ISeedReader;
 import net.minecraft.world.IServerWorld;
 import net.minecraft.world.gen.feature.structure.StructurePiece;
-
+/**
+ * Replace chest to stone ones
+ * */
 @Mixin(StructurePiece.class)
 public class MixinStructurePiece {
     /**

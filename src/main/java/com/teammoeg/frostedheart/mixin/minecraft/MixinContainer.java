@@ -33,9 +33,10 @@ import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-
-//fix a dupe bug made by careless bugjang developers
-//Hope this would work
+/**
+* fix a dupe bug made by careless bugjang developers
+* Hope this would work
+*/
 @Mixin(Container.class)
 public class MixinContainer {
     @Shadow

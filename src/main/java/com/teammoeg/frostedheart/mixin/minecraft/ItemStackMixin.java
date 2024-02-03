@@ -32,7 +32,10 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-
+/**
+ * Gives lining when cloth destroyed
+ * 
+ * */
 @Mixin(ItemStack.class)
 public class ItemStackMixin {
     @Inject(at = @At(value = "INVOKE",

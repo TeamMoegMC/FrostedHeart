@@ -164,7 +164,7 @@ public class ScenarioConductor extends ScenarioVM {
 
 	public void addTrigger(IScenarioTrigger trig) {
 		if(getCurrentAct().name.isAct()) {
-			getCurrentAct().getScene().addTrigger(trig);
+			getCurrentAct().addTrigger(trig);
 		}else super.addTrigger(trig);
 	}
 

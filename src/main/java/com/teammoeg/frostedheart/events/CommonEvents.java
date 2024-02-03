@@ -300,12 +300,16 @@ public class CommonEvents {
     public static void biomeLoadingEventRemove(@Nonnull BiomeLoadingEvent event) {
         MobSpawnInfoBuilder spawns = event.getSpawns();
 
-        for (EntityClassification en : EntityClassification.values())
+        for (EntityClassification en : EntityClassification.values()) {
             spawns.getSpawner(en).removeIf(entry -> VANILLA_ENTITIES.contains(entry.type));
-
+            
+        }
 
     }
-
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void doPlayerInteract(PlayerInteractEvent ite) {
+    	
+    }
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
         if (event.getItemStack().getItem() instanceof IModularItem) {
