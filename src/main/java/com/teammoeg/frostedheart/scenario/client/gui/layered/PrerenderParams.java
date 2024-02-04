@@ -3,13 +3,14 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.Rect;
+
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.renderer.texture.NativeImage.PixelFormat;
 
 public class PrerenderParams {
 	Graphics2D g2d;
@@ -65,11 +66,36 @@ public class PrerenderParams {
 		//return (int) (s*scale);
 		return s;
 	}
-	public int loadTexture() {
+	public DynamicTexture loadTexture() {
 		g2d.dispose();
 		image.flush();
 		BufferedImage cur=image;
+		NativeImage texture=new NativeImage(PixelFormat.RGBA, cur.getWidth(), cur.getHeight(), false);//No need to close because dynamicTexture would handle this properly
 		int[] pixels = new int[cur.getWidth() * cur.getHeight()];
+		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
+		
+		for (int y = 0; y < cur.getHeight(); y++) {
+			for (int x = 0; x < cur.getWidth(); x++) {
+				int pixel = pixels[y * cur.getWidth() + x];
+				texture.setPixelRGBA(x, y,NativeImage.getCombined((pixel >> 24) & 0xFF,pixel & 0xFF,(pixel >> 8) & 0xFF, (pixel >> 16) & 0xFF));
+			}
+		}
+		/*try {
+			try (ByteArrayOutputStream baos=new ByteArrayOutputStream();ByteArrayInputStream bais=new ByteArrayInputStream(baos.toByteArray());){
+				ImageIO.write(cur, "png", baos);
+				texture = NativeImage.read(bais);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				FHMain.LOGGER.error("Could not render scenario layer!");
+			}
+		}catch(Exception ex) {
+			ex.printStackTrace();
+			FHMain.LOGGER.error("Error rendering scenario layer!");
+		}*/
+		
+		return new DynamicTexture(texture);
+		/*int[] pixels = new int[cur.getWidth() * cur.getHeight()];
 		cur.getRGB(0, 0, cur.getWidth(), cur.getHeight(), pixels, 0, cur.getWidth());
 
 		ByteBuffer buffer = BufferUtils.createByteBuffer(cur.getWidth() * cur.getHeight() * 4+4);
@@ -83,15 +109,13 @@ public class PrerenderParams {
 				buffer.put((byte) ((pixel >> 24) & 0xFF)); // Alpha component. Only for RGBA
 			}
 		}
-
 		buffer.flip(); // FOR THE LOVE OF GOD DO NOT FORGET THIS
-
 		// You now have a ByteBuffer filled with the color data of each pixel.
 		// Now just create a texture ID and bind it. Then you can load it using
 		// whatever OpenGL method you want, for example:
 		int textureID = GL11.glGenTextures(); // Generate texture ID
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID); // Bind texture ID
-/*
+
 		// Setup wrap mode
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
@@ -99,11 +123,11 @@ public class PrerenderParams {
 		// Setup texture scaling filtering
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-*/
+
 		// Send texel data to OpenGL
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, cur.getWidth(), cur.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
-		
 		// Return the texture ID so we can bind it later again
 		return textureID;
+		*/
 	}
 }

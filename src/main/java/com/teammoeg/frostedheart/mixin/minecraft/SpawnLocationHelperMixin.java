@@ -32,7 +32,10 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.server.ServerWorld;
-
+/**
+ * Make spawnpoint more suitable
+ * For removal in 1.20+
+ * */
 @Mixin(SpawnLocationHelper.class)
 public class SpawnLocationHelperMixin {
     /**

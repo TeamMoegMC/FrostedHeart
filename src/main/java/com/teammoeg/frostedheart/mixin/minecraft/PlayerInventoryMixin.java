@@ -31,7 +31,9 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.util.INameable;
 import net.minecraftforge.common.util.FakePlayer;
-
+/**
+ * Keep equipments for players
+ * */
 @Mixin(PlayerInventory.class)
 public abstract class PlayerInventoryMixin implements IInventory, INameable {
 

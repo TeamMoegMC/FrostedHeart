@@ -32,7 +32,10 @@ import com.teammoeg.frostedheart.util.mixin.StructureUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.TemplateManager;
-
+/**
+ * Automatically remove specific blocks from structures
+ * 
+ * */
 @Mixin(TemplateManager.class)
 public abstract class TemplateManagerMixin {
     @Shadow

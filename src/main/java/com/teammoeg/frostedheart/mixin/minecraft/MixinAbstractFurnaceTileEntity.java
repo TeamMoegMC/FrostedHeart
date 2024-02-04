@@ -28,7 +28,10 @@ import net.minecraft.tileentity.AbstractFurnaceTileEntity;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.LockableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
-
+/**
+ * Fully diable furnace
+ * 
+ * */
 @Mixin(AbstractFurnaceTileEntity.class)
 public abstract class MixinAbstractFurnaceTileEntity extends LockableTileEntity implements ITickableTileEntity {
 

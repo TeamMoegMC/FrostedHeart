@@ -25,7 +25,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.block.PortalSize;
-
+/**
+ * Disable nether
+ * */
 @Mixin(PortalSize.class)
 public class PortalSizeMixin {
     /**

@@ -33,7 +33,10 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
+/**
+ * Add more breeding cooldown and set breading item to tag items
+ * For removal in 1.20+
+ * */
 @Mixin({AnimalEntity.class})
 public abstract class AnimalEntityMixin extends AgeableEntity {
 

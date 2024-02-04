@@ -46,7 +46,7 @@ import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.scenario.parser.providers.ScenarioProvider;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
@@ -75,7 +75,7 @@ public class FHScenario {
 		scenarioProviders.add(p);
 	}
 
-	public static Scenario loadScenario(IScenarioConductor caller,String name) {
+	public static Scenario loadScenario(IScenarioThread caller,String name) {
 		String[] paths=name.split("\\?");
 		String[] args=new String[0];
 		if(paths.length>1&&!paths[1].isEmpty())

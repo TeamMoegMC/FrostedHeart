@@ -234,7 +234,7 @@ public class ClientEvents {
                     event.getPlayer() == null ? 37 : Temperature.getEnv(event.getPlayer())) * tspeed;
             temp = (Math.round(temp * 1000)) / 1000.0F;// round
             if (temp != 0)
-                if (temp > 0)
+                if (temp > 0) 
                     event.getToolTip()
                             .add(GuiUtils.translateTooltip("food_temp", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else

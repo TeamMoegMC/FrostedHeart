@@ -25,7 +25,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.client.Minecraft;
-
+/**
+ * Fix minecraft tells multiplayer is disabled
+ * For removal in 1.20+
+ * */
 @Mixin(Minecraft.class)
 public class MinecraftMPFixMixin {
     @Inject(at = @At("HEAD"), method = "isChatEnabled", cancellable = true)

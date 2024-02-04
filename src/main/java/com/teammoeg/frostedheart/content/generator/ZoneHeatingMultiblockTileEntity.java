@@ -270,7 +270,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     protected abstract void tickFuel();
 
     public void tickHeat() {
-        if (isWorking() && heated != getMaxHeated()) {
+        if (getIsActive()&&heated != getMaxHeated()) {
             Random random = world.rand;
             boolean needAdd = false;
             float heatAddProbability = 1F / heatAddInterval;
@@ -286,7 +286,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
             } else if (heated > getMaxHeated() && needAdd) {
                 heated--;
             }
-        } else if (!isWorking()) {
+        } else if (!getIsActive()) {
             if (heated == 0) {
                 shutdownTick();
                 ChunkHeatData.removeTempAdjust(world, getPos());

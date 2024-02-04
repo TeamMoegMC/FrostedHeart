@@ -26,7 +26,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.FlowerPotBlock;
-
+/**
+ * Fix infinite glitch with rankine flower pot
+ * For removal in later version
+ * */
 @Mixin(FlowerPotBlock.class)
 public abstract class FlowerPotMixin extends Block {
     @Shadow(remap = false)
@@ -38,7 +41,7 @@ public abstract class FlowerPotMixin extends Block {
 
     /**
      * @author khjxiaogu
-     * @reason TODO
+     * @reason Fix rankine bug
      */
     @Overwrite(remap = false)
     public FlowerPotBlock getEmptyPot() {

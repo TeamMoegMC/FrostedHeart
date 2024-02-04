@@ -35,7 +35,9 @@ import net.minecraft.world.IServerWorld;
 import net.minecraft.world.gen.feature.structure.IStructurePieceType;
 import net.minecraft.world.gen.feature.structure.IglooPieces;
 import net.minecraft.world.gen.feature.structure.TemplateStructurePiece;
-
+/**
+ * Replace chest to stone ones
+ * */
 @Mixin(IglooPieces.Piece.class)
 public abstract class MixinIglooPiece extends TemplateStructurePiece {
 

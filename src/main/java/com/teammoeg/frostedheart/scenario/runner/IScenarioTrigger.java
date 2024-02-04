@@ -8,4 +8,5 @@ public interface IScenarioTrigger extends IScenarioTarget,Predicate<ScenarioVM> 
 	boolean use();
 
 	default boolean canUse() {return true;};
+	boolean isAsync();
 }

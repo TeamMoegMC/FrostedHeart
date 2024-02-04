@@ -36,7 +36,9 @@ import net.minecraft.block.MushroomBlock;
 import net.minecraft.block.SaplingBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
-
+/**
+ * Disable any tree from growing when blizzard
+ * */
 @Mixin({SaplingBlock.class, MushroomBlock.class})
 public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
 

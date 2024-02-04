@@ -22,24 +22,44 @@ package com.teammoeg.frostedheart.scenario.commands;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ActNamespace;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class ActCommand {
-	public void act(ScenarioConductor runner,@Param("c")String c,@Param("a")String a) {
+	public void act(ScenarioVM vrunner,@Param("c")String c,@Param("a")String a) {
+		ScenarioConductor runner;
+		if(vrunner instanceof ScenarioConductor) {
+			runner=(ScenarioConductor) vrunner;
+		}else return;
 		runner.endAct();
 		runner.enterAct(new ActNamespace(c,a));
 		//runner.jump(new ActTarget(new ActNamespace(c,a),runner.getCurrentAct().getCurrentPosition().next()));
 	}
-	public void endAct(ScenarioConductor runner) {
+	public void endAct(ScenarioVM vrunner) {
+		ScenarioConductor runner;
+		if(vrunner instanceof ScenarioConductor) {
+			runner=(ScenarioConductor) vrunner;
+		}else return;
 		runner.endAct();
 	}
-	public void startAct(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
-		
+	public void startAct(ScenarioVM vrunner,@Param("s")String s,@Param("l")String l,@Param("c")String c,@Param("a")String a) {
+		ScenarioConductor runner;
+		if(vrunner instanceof ScenarioConductor) {
+			runner=(ScenarioConductor) vrunner;
+		}else return;
 		runner.queueAct(new ActNamespace(c,a),s,l);
 	}
-	public void actTitle(ScenarioConductor runner,@Param("t")String t,@Param("st")String st) {
+	public void actTitle(ScenarioVM vrunner,@Param("t")String t,@Param("st")String st) {
+		ScenarioConductor runner;
+		if(vrunner instanceof ScenarioConductor) {
+			runner=(ScenarioConductor) vrunner;
+		}else return;
 		runner.getCurrentAct().setTitles(t, st);
 	}
-	public void startSystem(ScenarioConductor runner) {
+	public void startSystem(ScenarioVM vrunner) {
+		ScenarioConductor runner;
+		if(vrunner instanceof ScenarioConductor) {
+			runner=(ScenarioConductor) vrunner;
+		}else return;
 		runner.enableActs();
 	}
 }

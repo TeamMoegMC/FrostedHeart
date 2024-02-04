@@ -25,6 +25,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.ActWrappedTrigger;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
@@ -39,7 +40,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * An act is a basic unit of execution code
  * You should NOT store this object, always get it from {@link ScenarioConductor#getCurrentAct()}
  * */
-public class Act implements IScenarioConductor{
+public class Act implements IScenarioThread{
 	ParagraphData paragraph=new ParagraphData(this);
 	String label;
 	
@@ -55,13 +56,13 @@ public class Act implements IScenarioConductor{
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
-		this.scene=new Scene(paraData,this);
+		this.scene=new Scene(paraData);
 		parent=paraData;
 		this.name=name;
 	}
     public Act(ScenarioConductor paraData,CompoundNBT data) {
 		super();
-		this.scene=new Scene(paraData,this);
+		this.scene=new Scene(paraData);
 		parent=paraData;
 		load(data);
 	}
@@ -216,5 +217,8 @@ public class Act implements IScenarioConductor{
 	@Override
 	public void sendMessage(String s) {
 		parent.sendMessage(s);
+	}
+	public void addTrigger(IScenarioTrigger trig) {
+		scene.addTrigger(new ActWrappedTrigger(name,trig));
 	}
 }
