@@ -43,6 +43,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -219,6 +220,13 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         ItemStackHelper.loadAllItems(nbt, linventory);
+        if(!descPacket&&this.getWorld() instanceof ServerWorld) {
+            Optional<GeneratorData> data = this.getData();
+            data.ifPresent(t -> {
+                this.isOverdrive=t.isOverdrive;
+                this.isWorking=t.isWorking;
+            });
+        }
     }
 
     @Override

@@ -47,6 +47,8 @@
     "immersiveengineering.RotationUtilMixin",
     "immersiveengineering.TemplateMultiblockMixin",
     "jei.MixinCommandUtilServer",
+    "minecraft.GameRulesMixin",
+    "minecraft.GameRuleAccessor",
     "minecraft.AbstractTopPlantBlockMixin",
     "minecraft.AnimalEntityMixin",
     "minecraft.BeeHiveMixin",
@@ -93,6 +95,7 @@
     "minecraft.ServerPlayNetHandlerMixin",
     "minecraft.NewChatGuiAccessor",
     "minecraft.EntitySpawbPlacementRegistryMixin",
+
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

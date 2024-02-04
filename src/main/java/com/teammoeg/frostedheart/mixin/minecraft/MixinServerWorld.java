@@ -36,6 +36,7 @@ import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.GameRules.BooleanValue;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IServerWorldInfo;
@@ -63,7 +64,7 @@ public abstract class MixinServerWorld extends World {
     private void resetRainAndThunder() {
 
     }
-
+    
     /**
      * @author yuesha-yc
      * @reason this allows us to add our own weather logic since we disabled it
@@ -71,13 +72,12 @@ public abstract class MixinServerWorld extends World {
      */
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/DimensionType;hasSkyLight()Z"))
     private void tick(BooleanSupplier hasTimeLeft, CallbackInfo ci) {
-        if (!this.getGameRules().getBoolean(GameRules.DO_WEATHER_CYCLE))//vanilla rules
+        if (!((BooleanValue)(((GameRuleAccessor)this.getGameRules()).getRules().get(GameRules.DO_WEATHER_CYCLE))).get())//vanilla rules
             return;
 
         // ignore nether and end etc.
         if (!this.getDimensionType().hasSkyLight())
             return;
-
         // get hourly temp data
         //float currentTemp = WorldTemperature.getClimateTemperature(this);
         // System.out.println("Current Temp: " + currentTemp);
