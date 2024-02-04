@@ -34,6 +34,8 @@ import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
@@ -52,7 +54,7 @@ import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
-public class FHPacketHandler {
+public class FHNetwork {
 
     private static SimpleChannel CHANNEL;
 
@@ -95,6 +97,10 @@ public class FHPacketHandler {
         //Research System
         CHANNEL.registerMessage(id++, FHResearchRegistrtySyncPacket.class, FHResearchRegistrtySyncPacket::encode,
                 FHResearchRegistrtySyncPacket::new, FHResearchRegistrtySyncPacket::handle);
+        CHANNEL.registerMessage(id++, FHResearchSyncPacket.class, FHResearchSyncPacket::encode, 
+        	FHResearchSyncPacket::new, FHResearchSyncPacket::handle);
+        CHANNEL.registerMessage(id++, FHResearchSyncEndPacket.class, FHResearchSyncEndPacket::encode, 
+        	FHResearchSyncEndPacket::new, FHResearchSyncEndPacket::handle);
         CHANNEL.registerMessage(id++, FHResearchDataSyncPacket.class, FHResearchDataSyncPacket::encode,
                 FHResearchDataSyncPacket::new, FHResearchDataSyncPacket::handle);
         CHANNEL.registerMessage(id++, FHResearchDataUpdatePacket.class, FHResearchDataUpdatePacket::encode,

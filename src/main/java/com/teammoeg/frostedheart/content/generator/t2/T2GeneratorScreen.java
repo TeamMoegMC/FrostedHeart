@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
@@ -100,7 +100,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setWorking(!btn.getState());
                     tag.putBoolean("isWorking", tile.isWorking());
-                    FHPacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                    FHNetwork.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
         this.addButton(new GuiButtonBoolean(guiLeft + 101, guiTop + 35, 19, 10, "", tile.isOverdrive(), TEXTURE, 0, 245, 0,
@@ -108,7 +108,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
                     CompoundNBT tag = new CompoundNBT();
                     tile.setOverdrive(!btn.getState());
                     tag.putBoolean("isOverdrive", tile.isOverdrive());
-                    FHPacketHandler.sendToServer(new MessageTileSync(tile.master(), tag));
+                    FHNetwork.sendToServer(new MessageTileSync(tile.master(), tag));
                     fullInit();
                 }));
     }

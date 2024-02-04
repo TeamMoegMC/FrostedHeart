@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.gui.FakeSlot;
@@ -122,7 +122,7 @@ public class TradeScreen extends BaseScreen {
             @Override
             public void onClicked(MouseButton arg0) {
                 if (bargain.isEnabled()) {
-                    FHPacketHandler.sendToServer(new BargainRequestPacket(cx.order));
+                    FHNetwork.sendToServer(new BargainRequestPacket(cx.order));
                 }
             }
 
@@ -132,7 +132,7 @@ public class TradeScreen extends BaseScreen {
             @Override
             public void onClicked(MouseButton arg0) {
                 if (trade.isEnabled()) {
-                    FHPacketHandler.sendToServer(new TradeCommitPacket(cx.order));
+                    FHNetwork.sendToServer(new TradeCommitPacket(cx.order));
                 }
             }
 

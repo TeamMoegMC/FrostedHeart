@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.research.inspire;
 import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.player.Temperature;
@@ -67,7 +67,7 @@ public class EnergyCore {
         long energy = Math.min(data.getLong("energy") + val, M);
         data.putLong("energy", energy);
         Temperature.setFHData(player, data);
-        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+        FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
     }
 
     public static void addExtraEnergy(ServerPlayerEntity player, int val) {
@@ -83,7 +83,7 @@ public class EnergyCore {
         long energy = data.getLong("penergy") + val;
         data.putLong("penergy", energy);
         Temperature.setFHData(player, data);
-        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+        FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
     }
 
     public static void applySleep(float tenv, ServerPlayerEntity player) {
@@ -152,7 +152,7 @@ public class EnergyCore {
             energy -= val;
             data.putLong("energy", energy);
             Temperature.setFHData(player, data);
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
         }
 
@@ -163,7 +163,7 @@ public class EnergyCore {
             data.putLong("penergy", penergy);
             data.putLong("energy", 0);
             Temperature.setFHData(player, data);
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(data));
             return true;
         }
         return false;

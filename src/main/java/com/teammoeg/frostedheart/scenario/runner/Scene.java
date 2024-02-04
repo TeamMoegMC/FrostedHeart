@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
@@ -115,7 +115,7 @@ public class Scene {
 
 	private void sendScene(String text, boolean wrap, boolean reset) {
 	
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> parent.getPlayer()), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> parent.getPlayer()), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
 		isClick=true;
 	}
 	/**

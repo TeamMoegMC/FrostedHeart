@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
@@ -577,7 +577,7 @@ public class ClientEvents {
     public static void onClientChat(ClientChatEvent event) {
     	if(event.getOriginalMessage().startsWith("fh$scenario$link:")) {
     		ClientLinkClickedPacket packet=new ClientLinkClickedPacket(event.getOriginalMessage().substring("fh$scenario$link:".length()));
-    		FHPacketHandler.sendToServer(packet);
+    		FHNetwork.sendToServer(packet);
     		event.setCanceled(true);
     	}
     }

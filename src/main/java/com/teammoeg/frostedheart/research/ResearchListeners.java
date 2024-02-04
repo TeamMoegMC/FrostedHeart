@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -373,7 +373,7 @@ public class ResearchListeners {
         FHResearchDataManager.INSTANCE.save();
         FHResearchDataManager.INSTANCE.load();
         FHResearchRegistrtySyncPacket packet = new FHResearchRegistrtySyncPacket();
-        FHPacketHandler.send(PacketDistributor.ALL.noArg(), packet);
+        FHNetwork.send(PacketDistributor.ALL.noArg(), packet);
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.sendUpdate());
     }
 

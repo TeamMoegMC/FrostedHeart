@@ -261,7 +261,7 @@ public class FHMain {
             }
         ChunkHeatDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
-        FHPacketHandler.register();
+        FHNetwork.register();
         WorldClimate.setup();
         DeathInventoryData.setup();
         FHBiomes.Biomes();

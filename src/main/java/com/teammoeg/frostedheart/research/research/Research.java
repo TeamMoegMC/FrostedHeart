@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.research.FHRegistry;
 import com.teammoeg.frostedheart.research.FHResearch;
@@ -762,7 +762,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
         if (team != null)
             for (ServerPlayerEntity spe : team.getOnlineMembers())
-                FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+                FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
     /**

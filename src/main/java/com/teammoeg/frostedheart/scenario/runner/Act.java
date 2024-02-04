@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.LinkedList;
 
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
@@ -182,7 +182,7 @@ public class Act implements IScenarioConductor{
 		return subtitle;
 	}
 	public void sendTitles(boolean updateT,boolean updateSt) {
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
+		FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
 	public void setTitles(String t,String st) {
 		System.out.println(t+","+st);

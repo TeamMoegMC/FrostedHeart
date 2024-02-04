@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.research.gui.drawdesk;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -84,7 +84,7 @@ public class DrawDeskPanel extends Panel {
             public void onClicked(MouseButton arg0) {
                 Research current = ClientResearchDataAPI.getData().getCurrentResearch().orElse(null);
                 if (current != null)
-                    FHPacketHandler.sendToServer(new FHResearchControlPacket(Operator.PAUSE, current));
+                    FHNetwork.sendToServer(new FHResearchControlPacket(Operator.PAUSE, current));
             }
         };
         techStop.setPosAndSize(55, 68, 19, 19);
@@ -108,7 +108,7 @@ public class DrawDeskPanel extends Panel {
 
             @Override
             public void onClicked(MouseButton arg0) {
-                FHPacketHandler.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getPos(), 3));
+                FHNetwork.sendToServer(new FHDrawingDeskOperationPacket(dd.getTile().getPos(), 3));
             }
 
         };

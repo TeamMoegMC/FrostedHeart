@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
@@ -777,7 +777,7 @@ public class CommonEvents {
                 if (dit != null)
                     dit.alive(event.getPlayer().inventory);
             }
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
             CompoundNBT cnbt = new CompoundNBT();
             cnbt.putLong("penergy", Temperature.getFHData(event.getPlayer()).getLong("penergy"));
@@ -801,17 +801,17 @@ public class CommonEvents {
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHResearchRegistrtySyncPacket());
 
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHDatapackSyncPacket());
 
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));
             serverWorld.getCapability(WorldClimate.CAPABILITY).ifPresent((cap) -> {
-                FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+                FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                         new FHClimatePacket(cap));
             });
             //System.out.println("=x-x=");
@@ -824,7 +824,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
 
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
         }
     }

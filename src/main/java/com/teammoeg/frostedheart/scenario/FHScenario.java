@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.ActCommand;
@@ -124,7 +124,7 @@ public class FHScenario {
 	}
 
 	public static void callClientCommand(String name, ScenarioVM runner, Map<String, String> params) {
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), params));
 	}
 
@@ -134,7 +134,7 @@ public class FHScenario {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), data));
 	}
 

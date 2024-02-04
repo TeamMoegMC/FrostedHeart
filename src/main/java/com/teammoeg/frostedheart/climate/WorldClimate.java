@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
@@ -896,7 +896,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             updateHourCache(hours);
             this.updateNewFrames();
             // Send to client if hour increases
-            FHPacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
+            FHNetwork.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
         }
     }
 

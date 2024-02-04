@@ -19,38 +19,32 @@
 
 package com.teammoeg.frostedheart.research.network;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.SpecialResearch;
 import com.teammoeg.frostedheart.research.research.Research;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
-
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join
-public class FHResearchRegistrtySyncPacket {
-    private final CompoundNBT data;
-
-    public FHResearchRegistrtySyncPacket() {
-        this.data = FHResearch.save(new CompoundNBT());
-
+public class FHResearchSyncPacket {
+    final Research r;
+    public FHResearchSyncPacket(Research r) {
+    	this.r=r;
     }
 
-    public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
-        data = buffer.readCompoundTag();
+    public FHResearchSyncPacket(PacketBuffer buffer) {
+        r = SpecialResearch.deserialize(buffer);
     }
 
     public void encode(PacketBuffer buffer) {
-        buffer.writeCompoundTag(data);
+        r.write(buffer);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            FHResearch.initFromRegistry(data);
+            FHResearch.readOne(r);
         });
         context.get().setPacketHandled(true);
     }

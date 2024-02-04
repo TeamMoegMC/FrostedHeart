@@ -25,7 +25,7 @@ import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
@@ -270,7 +270,7 @@ public class TemperatureUpdate {
                     current = 10;
                 float lenvtemp = Temperature.getEnv(player);//get a smooth change in display
                 Temperature.set(player, current, (envtemp + 37) * .2f + lenvtemp * .8f);
-                FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+                FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 
             // Set smoothed temperature after update:
@@ -286,7 +286,7 @@ public class TemperatureUpdate {
             // current and last temperature
             float smoothed = current + delta * (1 - progress / 10f);
             Temperature.setBodySmoothed(player, smoothed);
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }
     }
 }
