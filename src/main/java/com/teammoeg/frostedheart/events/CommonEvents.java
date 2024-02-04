@@ -59,6 +59,7 @@ import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
@@ -67,6 +68,8 @@ import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
@@ -145,6 +148,7 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
 import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
@@ -808,18 +812,15 @@ public class CommonEvents {
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                    new FHResearchRegistrtySyncPacket());
-
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                    new FHDatapackSyncPacket());
-
-            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                    new FHResearchDataSyncPacket(
+            PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
+            FHNetwork.send(currentPlayer,new FHResearchRegistrtySyncPacket());
+            FHResearch.getAllResearch().forEach(t->FHNetwork.send(currentPlayer, new FHResearchSyncPacket(t)));
+            FHNetwork.send(currentPlayer,new FHResearchSyncEndPacket());
+            FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
+            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));
             serverWorld.getCapability(WorldClimate.CAPABILITY).ifPresent((cap) -> {
-                FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                        new FHClimatePacket(cap));
+                FHNetwork.send(currentPlayer,new FHClimatePacket(cap));
             });
             //System.out.println("=x-x=");
             //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
