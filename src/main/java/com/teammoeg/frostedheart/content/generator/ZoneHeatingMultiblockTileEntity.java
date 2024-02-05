@@ -63,8 +63,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     }
 
     protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer, TileEntity te);
-    public abstract float getMaxTemperatureLevel();
-    public abstract float getMaxRangeLevel();
+
     @Override
     public void disassemble() {
         if (this == master())
@@ -84,10 +83,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     }
 
     public int getActualRange() {
-    	float rlevel=getRangeLevel();
-    	if(rlevel<=1)
-    		return (int) (8*rlevel);
-    	return (int) (8+(rlevel-1)*4);
+        return (int) (8 + (getRangeLevel()) * 4);
     }
 
     public int getActualTemp() {
@@ -103,7 +99,10 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     }
 
     public int getMaxHeated() {
-        return (int) (100*Math.max(this.getMaxTemperatureLevel(), this.getMaxRangeLevel()));
+        if (isOverdrive()) {
+            return 200;
+        }
+        return 100;
     }
 
     UUID getOwner() {
@@ -238,8 +237,8 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
         if (!world.isRemote && formed) {
 
             final boolean activeBeforeTick = getIsActive();
-            boolean isActive=tickFuel();
-            tickHeat(isActive);
+            tickFuel();
+            tickHeat();
             // set activity status
             final boolean activeAfterTick = getIsActive();
             int ntlevel = getActualTemp();
@@ -268,29 +267,26 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
     protected abstract void tickEffects(boolean isActive);
 
-    protected abstract boolean tickFuel();
+    protected abstract void tickFuel();
 
-    public void tickHeat(boolean isWorking) {
-        if (isWorking&&heated != getMaxHeated()) {
+    public void tickHeat() {
+        if (isWorking() && heated != getMaxHeated()) {
             Random random = world.rand;
             boolean needAdd = false;
             float heatAddProbability = 1F / heatAddInterval;
             if (isOverdrive()) {
                 heatAddProbability = 2F / heatAddInterval;
             }
-            if(!getIsActive()) {
-            	setAllActive(true);
-            }
             if (random.nextFloat() < heatAddProbability) {
                 needAdd = true;
+                markContainingBlockForUpdate(null);
             }
             if (heated < getMaxHeated() && needAdd) {
                 heated++;
             } else if (heated > getMaxHeated() && needAdd) {
                 heated--;
             }
-            markContainingBlockForUpdate(null);
-        } else if (!isWorking) {
+        } else if (!isWorking()) {
             if (heated == 0) {
                 shutdownTick();
                 ChunkHeatData.removeTempAdjust(world, getPos());
@@ -298,14 +294,12 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
             } else {
                 markContainingBlockForUpdate(null);
                 Random random = world.rand;
-                float heatAddProbability = 2F / heatAddInterval;
+                float heatAddProbability = 1F / heatAddInterval;
                 if (random.nextFloat() < heatAddProbability) {
                     heated--;
                 }
             }
         }
-        this.setTemperatureLevel(Math.min(getHeated() / 100F,this.getMaxTemperatureLevel()));
-        this.setRangeLevel(Math.min(getHeated() / 100F,this.getMaxRangeLevel()));
     }
 
     @Override
