@@ -285,7 +285,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     protected void tickEffects(boolean isActive) {
 
     }
-    @Override
     protected void tickDrives(boolean isActive) {
 
     }
@@ -301,6 +300,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         boolean isWorking=data.map(t -> t.isActive).orElse(false);
         process = data.map(t -> t.process).orElse(0);
         processMax = data.map(t -> t.processMax).orElse(0);
+        tickDrives(isWorking);
         return isWorking;
     	/*if(this.getIsActive())
     		this.markContainingBlockForUpdate(null);*/

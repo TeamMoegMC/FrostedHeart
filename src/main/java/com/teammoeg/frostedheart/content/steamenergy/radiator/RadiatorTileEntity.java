@@ -154,10 +154,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         }
     }
     @Override
-    protected void tickDrives(boolean isActive) {
-
-    }
-    @Override
     protected boolean tickFuel() {
 
         network.tick();
