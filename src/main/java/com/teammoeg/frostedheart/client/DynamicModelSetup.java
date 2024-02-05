@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.client;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
 import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
@@ -41,10 +40,6 @@ public class DynamicModelSetup {
         T2GeneratorRenderer.FUEL = DynamicModel.createSided(
                 new ResourceLocation(FHMain.MODID, "block/multiblocks/generator_t2_fuel.obj"),
                 "generator_t2_fuel", ModelType.IE_OBJ
-        );
-        HeatPipeRenderer.RIM = DynamicModel.createSimple(
-                new ResourceLocation(FHMain.MODID, "block/fluid_pipe/pipe_rim.obj"),
-                "pipe_rim", ModelType.IE_OBJ
         );
         MechCalcRenderer.MODEL = DynamicModel.createSided(
                 new ResourceLocation(FHMain.MODID, "block/mechanical_calculator_movable.obj"),

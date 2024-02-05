@@ -19,15 +19,19 @@
 
 package com.teammoeg.frostedheart.util;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.ToIntFunction;
 
+import javax.annotation.Nullable;
+
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
@@ -42,8 +46,12 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
@@ -242,7 +250,12 @@ public class FHUtils {
 	    stack.setDamage((int) (stack.getMaxDamage() - base - Math.random() * mult));
 	    return stack;
 	}
-
+	public static <R extends IRecipe<IInventory>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, IRecipeType<R> recipeType) {
+        if(recipeManager==null) {
+        	recipeManager=ClientUtils.mc().world.getRecipeManager();
+        }
+		return recipeManager.getRecipesForType(recipeType);
+    }
 	public static ItemStack ArmorLiningNBT(ItemStack stack) {
 	    stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");
 	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor

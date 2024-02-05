@@ -60,6 +60,54 @@
 		},
 		{
 			"when": {
+				"down": "true"
+			},
+			"apply": {
+				"model": "frostedheart:block/fluid_pipe/rim/down"
+			}
+		},
+		{
+			"when": {
+				"up": "true"
+			},
+			"apply": {
+				"model": "frostedheart:block/fluid_pipe/rim/up"
+			}
+		},
+		{
+			"when": {
+				"north": "true"
+			},
+			"apply": {
+				"model": "frostedheart:block/fluid_pipe/rim/north"
+			}
+		},
+		{
+			"when": {
+				"south": "true"
+			},
+			"apply": {
+				"model": "frostedheart:block/fluid_pipe/rim/south"
+			}
+		},
+		{
+			"when": {
+				"west": "true"
+			},
+			"apply": {
+				"model": "frostedheart:block/fluid_pipe/rim/west"
+			}
+		},
+		{
+			"when": {
+				"east": "true"
+			},
+			"apply": {
+				"model": "frostedheart:block/fluid_pipe/rim/east"
+			}
+		},
+		{
+			"when": {
 				"up": "true",
 				"north": "true",
 				"south": "false",
@@ -100,6 +148,14 @@
 			},
 			"apply": {
 				"model": "frostedheart:block/fluid_pipe/rd_x"
+			}
+		},
+				{
+			"when": {
+				"casing": "true"
+			},
+			"apply": {
+				"model": "frostedheart:block/fluid_pipe/casing"
 			}
 		},
 		{

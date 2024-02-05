@@ -36,7 +36,7 @@ public class SaunaContainer extends IEBaseContainer<SaunaTileEntity> {
 
             @Override
             public boolean isItemValid(ItemStack stack) {
-                return SaunaRecipe.findRecipe(stack) != null;
+                return tile.isStackValid(0, stack);
             }
         });
 

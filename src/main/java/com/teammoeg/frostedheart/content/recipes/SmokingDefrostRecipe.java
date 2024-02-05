@@ -50,8 +50,6 @@ public class SmokingDefrostRecipe extends SmokingRecipe implements DefrostRecipe
     }
     public static RegistryObject<IRecipeSerializer<SmokingDefrostRecipe>> SERIALIZER;
 
-    public static Map<ResourceLocation, DefrostRecipe> recipeList = Collections.emptyMap();
-
     ItemStack[] iss;
 
     Random recipeRNG = new Random();

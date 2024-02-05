@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.compat.jei.category;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
@@ -29,6 +30,7 @@ import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -137,7 +139,8 @@ public class GeneratorSteamCategory implements IRecipeCategory<GeneratorSteamRec
         guiFluidStacks.set(ingredients);
         guiItemStacks.init(0, true, 75, 7);
         guiItemStacks.init(1, false, 75, 46);
-        guiItemStacks.set(0, GeneratorRecipe.listAll());
-        guiItemStacks.set(1, GeneratorRecipe.listOut());
+        List<GeneratorRecipe> recipes=FHUtils.filterRecipes(null, GeneratorRecipe.TYPE);
+        guiItemStacks.set(0, recipes.stream().flatMap(t->Arrays.stream(t.input.getMatchingStacks())).collect(Collectors.toList()));
+        guiItemStacks.set(1, recipes.stream().map(t->t.output).collect(Collectors.toList()));
     }
 }

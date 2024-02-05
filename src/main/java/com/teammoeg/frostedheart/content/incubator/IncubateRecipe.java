@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
@@ -100,7 +101,6 @@ public class IncubateRecipe extends IESerializableRecipe {
     public static IRecipeType<IncubateRecipe> TYPE;
 
     public static RegistryObject<Serializer> SERIALIZER;
-    public static Map<ResourceLocation, IncubateRecipe> recipeList = Collections.emptyMap();
     public IngredientWithSize input;
     public IngredientWithSize catalyst;
     public ItemStack output;
@@ -113,17 +113,7 @@ public class IncubateRecipe extends IESerializableRecipe {
 
     public int time;
 
-    public static boolean canBeCatalyst(ItemStack catalyst) {
-        return recipeList.values().stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
-    }
 
-    public static boolean canBeInput(ItemStack input) {
-        return recipeList.values().stream().anyMatch(r -> r.input.testIgnoringSize(input));
-    }
-
-    public static IncubateRecipe findRecipe(ItemStack in, ItemStack catalyst) {
-        return recipeList.values().stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
-    }
 
     public IncubateRecipe() {
         super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);

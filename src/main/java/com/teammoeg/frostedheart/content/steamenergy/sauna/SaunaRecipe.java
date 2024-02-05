@@ -24,6 +24,8 @@ import java.util.Map;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
@@ -105,7 +107,6 @@ public class SaunaRecipe extends IESerializableRecipe {
     }
     public static IRecipeType<SaunaRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<SaunaRecipe>> SERIALIZER;
-    public static Map<ResourceLocation, SaunaRecipe> recipeList = Collections.emptyMap();
     public final Ingredient input;
     public final int time;
     public final Effect effect;
@@ -113,12 +114,6 @@ public class SaunaRecipe extends IESerializableRecipe {
 
     public final int amplifier;
 
-    public static SaunaRecipe findRecipe(ItemStack input) {
-        for (SaunaRecipe recipe : recipeList.values())
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
-                return recipe;
-        return null;
-    }
 
     public SaunaRecipe(ResourceLocation id, Ingredient input, int time, Effect effect, int duration, int amplifier) {
         super(ItemStack.EMPTY, TYPE, id);

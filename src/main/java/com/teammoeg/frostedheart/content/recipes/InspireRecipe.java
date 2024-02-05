@@ -62,7 +62,6 @@ public class InspireRecipe extends IESerializableRecipe {
     }
     public static IRecipeType<InspireRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<InspireRecipe>> SERIALIZER;
-    public static List<InspireRecipe> recipes = ImmutableList.of();
     public Ingredient item;
 
     public int inspire;

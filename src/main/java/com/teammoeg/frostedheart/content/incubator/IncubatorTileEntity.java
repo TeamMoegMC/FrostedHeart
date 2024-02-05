@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.thermopolium.api.ThermopoliumApi;
 import com.teammoeg.thermopolium.items.StewItem;
 
@@ -228,16 +229,26 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
     public int getSlotLimit(int i) {
         return 64;
     }
+    public boolean canBeCatalyst(ItemStack catalyst) {
+        return FHUtils.filterRecipes(this.getWorld().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
+    }
 
+    public boolean canBeInput(ItemStack input) {
+        return FHUtils.filterRecipes(this.getWorld().getRecipeManager(),IncubateRecipe.TYPE).stream().anyMatch(r -> r.input.testIgnoringSize(input));
+    }
+
+    public IncubateRecipe findRecipe(ItemStack in, ItemStack catalyst) {
+        return FHUtils.filterRecipes(this.getWorld().getRecipeManager(),IncubateRecipe.TYPE).stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
+    }
     @Override
     public boolean isStackValid(int i, ItemStack itemStack) {
 
         if (i == 0)
             return itemStack.getItem() == RankineItems.QUICKLIME.get();
         if (i == 1)
-            return IncubateRecipe.canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
+            return canBeCatalyst(itemStack) || itemStack.getItem() == Items.ROTTEN_FLESH;
         if (i == 2)
-            return IncubateRecipe.canBeInput(itemStack) || itemStack.isFood();
+            return canBeInput(itemStack) || itemStack.isFood();
         if (i == 3)
             return false;
         return true;
@@ -345,7 +356,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
                 if (!outfluid.isEmpty())
                     outfluid.shrink(fluid[1].fill(outfluid, FluidAction.EXECUTE));
             } else {
-                IncubateRecipe ir = IncubateRecipe.findRecipe(inventory.get(2), inventory.get(1));
+                IncubateRecipe ir = findRecipe(inventory.get(2), inventory.get(1));
                 if (ir != null) {
                     ItemStack outslot = inventory.get(3);
                     if (ir.output.isEmpty() || outslot.isEmpty()
