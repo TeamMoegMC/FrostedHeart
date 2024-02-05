@@ -94,17 +94,11 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     }
 
     @Override
-    protected void tickFuel() {
+    protected boolean tickFuel() {
         this.hasFuel = !this.getInventory().get(INPUT_SLOT).isEmpty();
-        super.tickFuel();
+        return super.tickFuel();
     }
 
-    @Override
-    public void tickHeat() {
-        super.tickHeat();
-        this.setTemperatureLevel(getHeated() / 100F);
-        this.setRangeLevel(1);
-    }
 
 
     @Override
@@ -112,4 +106,16 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
         super.writeCustomNBT(nbt, descPacket);
         nbt.putBoolean("hasFuel", hasFuel);
     }
+
+
+	@Override
+	public float getMaxTemperatureLevel() {
+		return isOverdrive()?2:1;
+	}
+
+
+	@Override
+	public float getMaxRangeLevel() {
+		return 1;
+	}
 }

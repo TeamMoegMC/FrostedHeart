@@ -58,7 +58,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
         public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
             FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
             float power = JSONUtils.getFloat(json, "energy");
-            float tempMod = JSONUtils.getFloat(json, "temp_multiplier");
+            float tempMod = JSONUtils.getFloat(json, "level");
             return new GeneratorSteamRecipe(recipeId, input, power, tempMod);
         }
 

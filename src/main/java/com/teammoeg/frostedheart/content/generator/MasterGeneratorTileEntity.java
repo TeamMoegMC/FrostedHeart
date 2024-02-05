@@ -272,7 +272,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     @Override
-    protected void tickFuel() {
+    protected boolean tickFuel() {
         // just finished process or during process
         Optional<GeneratorData> data = this.getData();
         data.ifPresent(t -> {
@@ -280,9 +280,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             t.isWorking = this.isWorking;
         });
         data.ifPresent(t -> t.tick());
-        setAllActive(data.map(t -> t.isActive).orElse(false));
+        boolean isWorking=data.map(t -> t.isActive).orElse(false);
         process = data.map(t -> t.process).orElse(0);
         processMax = data.map(t -> t.processMax).orElse(0);
+        return isWorking;
     	/*if(this.getIsActive())
     		this.markContainingBlockForUpdate(null);*/
     }
