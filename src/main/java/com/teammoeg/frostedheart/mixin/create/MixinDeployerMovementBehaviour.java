@@ -19,18 +19,20 @@
 
 package com.teammoeg.frostedheart.mixin.create;
 
-import com.simibubi.create.content.contraptions.components.deployer.DeployerMovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
-import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
-import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import com.simibubi.create.content.contraptions.components.deployer.DeployerMovementBehaviour;
+import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import com.simibubi.create.content.contraptions.components.structureMovement.MovementBehaviour;
+import com.simibubi.create.content.contraptions.components.structureMovement.MovementContext;
+import com.teammoeg.frostedheart.util.mixin.ISpeedContraption;
+
+import net.minecraft.util.math.MathHelper;
 
 @Mixin(DeployerMovementBehaviour.class)
 public abstract class MixinDeployerMovementBehaviour extends MovementBehaviour {

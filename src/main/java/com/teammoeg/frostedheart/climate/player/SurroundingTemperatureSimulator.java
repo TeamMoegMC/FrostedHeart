@@ -19,8 +19,14 @@
 
 package com.teammoeg.frostedheart.climate.player;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -29,15 +35,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-
 /**
- * A simulator built on Alphagem618s' heat conducting model
+ * A simulator built on Alphagem618's heat conducting model
  * This simulates heat conduction in a small area around player
  * And would take the area out of minecraft logic to optimize calculations.
  *
@@ -51,25 +56,28 @@ public class SurroundingTemperatureSimulator {
     private static class CachedBlockInfo {
         VoxelShape shape;
         float temperature;
+        boolean exposeToAir;
 
-        public CachedBlockInfo(VoxelShape shape) {
+        public CachedBlockInfo(VoxelShape shape,boolean airExpose) {
             super();
             this.shape = shape;
+            this.exposeToAir=airExpose;
         }
 
-        public CachedBlockInfo(VoxelShape shape, float temperature) {
+        public CachedBlockInfo(VoxelShape shape, float temperature,boolean airExpose) {
             super();
             this.shape = shape;
             this.temperature = temperature;
+            this.exposeToAir=airExpose;
         }
     }
     public static final int range = 8;// through max range is 8, to avoid some rare issues, set it to 7 to keep count
-    private static final int n = 4168;
+    private static final int n = 4168;//number of particles
     private static final int rdiff = 10;
-    private static final float v0 = .4f;
+    private static final float v0 = .4f;//initial particle speed
     private static final VoxelShape EMPTY = VoxelShapes.empty();
     private static final VoxelShape FULL = VoxelShapes.fullCube();
-    private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list
+    private static float[] vx = new float[n], vy = new float[n], vz = new float[n];// Vp, speed vector list, this list is constant and considered a distributed ball mesh.
     private static final int num_rounds = 20;
     static {// generate speed vector list
         int o = 0;
@@ -89,16 +97,15 @@ public class SurroundingTemperatureSimulator {
                 }
     }
     public ChunkSection[] sections = new ChunkSection[8];// sectors(xz): - -/- +/+ -/+ + and y -/+
-    // of sections is 8
+    public Heightmap[] maps=new Heightmap[4]; // sectors(xz): - -/- +/+ -/+ +
     BlockPos origin;
     ServerWorld world;
     Random rnd;
 
     private double[] qx = new double[n], qy = new double[n], qz = new double[n];// Qpos, position of particle.
-
-    // is considered a distributed ball
-    // mesh.
     private int[] vid = new int[n];// IDv, particle speed index in speed vector list, this lower random cost.
+    //private double[] factor=
+    
 
     public Map<BlockState, CachedBlockInfo> info = new HashMap<>();// state to info cache
 
@@ -125,7 +132,9 @@ public class SurroundingTemperatureSimulator {
         world = player.getServerWorld();
         for (int x = chunkOffsetW; x <= chunkOffsetW + 1; x++)
             for (int z = chunkOffsetN; z <= chunkOffsetN + 1; z++) {
-                ChunkSection[] css = world.getChunk(x, z).getSections();
+            	Chunk cnk=world.getChunk(x, z);
+                ChunkSection[] css = cnk.getSections();
+                maps[i/2]=cnk.getHeightmap(Type.MOTION_BLOCKING_NO_LEAVES);
                 for (ChunkSection cs : css) {
                     if (cs == null)
                         continue;
@@ -176,8 +185,26 @@ public class SurroundingTemperatureSimulator {
             throw new RuntimeException("Failed to get block at" + x + "," + y + "," + z);
         }
     }
+    public int getTopY(int x, int z) {
+        int i = 0;
 
-    public float getBlockTemperature(double qx0, double qy0, double qz0) {
+        if (x >= 0) {
+            i += 2;
+        } else {
+            x += 16;
+        }
+        if (z >= 0) {
+            i += 1;
+        } else {
+            z += 16;
+        }
+        if (x >= 16 || z >= 16 || x < 0|| z < 0) {// out of bounds
+            return 0;
+        }
+        return maps[i].getHeight(x, z);
+    }
+    public Pair<Float,Float> getBlockTemperatureAndWind(double qx0, double qy0, double qz0) {
+    	float wind=0;
         for (int i = 0; i < n; ++i) // initialize position as the player's position and the speed (index)
         {
             qx[i] = qx0;
@@ -186,6 +213,7 @@ public class SurroundingTemperatureSimulator {
             vid[i] = i;
         }
         float heat = 0;
+        BlockPos.Mutable bm=new BlockPos.Mutable();
         for (int round = 0; round < num_rounds; ++round) // time-to-live for each particle is `num_rounds`
         {
             for (int i = 0; i < n; ++i) // for all particles:
@@ -197,19 +225,28 @@ public class SurroundingTemperatureSimulator {
                 qx[i] = qx[i] + vx[vid[i]]; // move x
                 qy[i] = qy[i] + vy[vid[i]]; // move y
                 qz[i] = qz[i] + vz[vid[i]]; // move z
-                heat += getHeat(qx[i], qy[i], qz[i])
+                bm.setX((int) qx[i]);
+                bm.setY((int) qy[i]);
+                bm.setZ((int) qz[i]);
+                BlockPos bp=bm.toImmutable();
+                heat += getHeat(bp)
                         * MathHelper.lerp(MathHelper.clamp(vy[vid[i]], 0, 0.4) * 2.5, 1, 0.5); // add heat
+                wind +=getAir(bp)?MathHelper.lerp((MathHelper.clamp(Math.abs(vy[vid[i]]), 0.2, 0.8)-0.2)/0.6, 2, 0.5):0;
             }
         }
-        return heat / n;
+        return Pair.of(heat / n, wind/n);
     }
 
     /**
      * Get location temperature
      */
-    private float getHeat(double x, double y, double z) {
+    private float getHeat(BlockPos bp) {
 
-        return getInfoCached(new BlockPos(x, y, z)).temperature;
+        return getInfoCached(bp).temperature;
+    }
+    private boolean getAir(BlockPos bp) {
+
+        return getInfoCached(bp).exposeToAir;
     }
 
     /***
@@ -228,10 +265,10 @@ public class SurroundingTemperatureSimulator {
      * Position is only for getCollisionShape method, to avoid some TE based shape.
      */
     private CachedBlockInfo getInfo(BlockPos pos, BlockState bs) {
-
+    	boolean isExpose=getTopY(pos.getX(),pos.getZ())<pos.getY();
         BlockTempData b = FHDataManager.getBlockData(bs.getBlock());
         if (b == null)
-            return new CachedBlockInfo(bs.getCollisionShape(world, pos));
+            return new CachedBlockInfo(bs.getCollisionShape(world, pos),isExpose);
 
         float cblocktemp = 0;
         if (b.isLit()) {
@@ -253,7 +290,7 @@ public class SurroundingTemperatureSimulator {
                 cblocktemp *= (bs.get(BlockStateProperties.LEVEL_0_3) + 1) / 4;
             }
         }
-        return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp);
+        return new CachedBlockInfo(bs.getCollisionShape(world, pos), cblocktemp,isExpose);
     }
 
     /***

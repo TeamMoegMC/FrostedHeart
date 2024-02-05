@@ -19,9 +19,18 @@
 
 package com.teammoeg.frostedheart.content.tools.oredetect;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Set;
+import java.util.function.Predicate;
+
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
@@ -38,13 +47,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import se.mickelus.tetra.properties.IToolProvider;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Random;
-import java.util.Set;
-import java.util.function.Predicate;
 
 public class CoreSpade extends FHLeveledTool {
     public static ResourceLocation otag = new ResourceLocation("forge:ores");
@@ -90,7 +92,7 @@ public class CoreSpade extends FHLeveledTool {
                             int BlockY = y + y2;
                             int BlockZ = z + z2;
                             ore = world.getBlockState(mutable.setPos(BlockX, BlockY, BlockZ)).getBlock();
-                            if (!ore.getRegistryName().getNamespace().equals("minecraft") && tagdet.test(ore.getTags())) {
+                            if (!RegistryUtils.getRegistryName(ore).getNamespace().equals("minecraft") && tagdet.test(ore.getTags())) {
                                 founded.merge(ore.getTranslationKey(), 1, Integer::sum);
                             }
                         }
@@ -139,8 +141,8 @@ public class CoreSpade extends FHLeveledTool {
         return getLevel(item) == 1 ? 32 : (48 + (getLevel(item) - 1) * 16);
     }
 
-    public CoreSpade(String name, int lvl, Properties properties) {
-        super(name, lvl, properties);
+    public CoreSpade(int lvl, Properties properties) {
+        super(lvl, properties);
     }
 
     @Override

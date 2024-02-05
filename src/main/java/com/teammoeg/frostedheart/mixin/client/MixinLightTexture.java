@@ -19,11 +19,13 @@
 
 package com.teammoeg.frostedheart.mixin.client;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import net.minecraft.client.renderer.LightTexture;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+
+import net.minecraft.client.renderer.LightTexture;
 
 @Mixin(LightTexture.class)
 public class MixinLightTexture {

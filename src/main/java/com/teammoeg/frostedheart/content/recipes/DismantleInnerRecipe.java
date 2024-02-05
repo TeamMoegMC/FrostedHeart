@@ -19,9 +19,12 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.EquipmentSlotType;
@@ -37,13 +40,11 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
-
 public class DismantleInnerRecipe extends SpecialRecipe {
     public static class Serializer extends IERecipeSerializer<DismantleInnerRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+            return new ItemStack(FHItems.buff_coat.get());
         }
 
         @Nullable

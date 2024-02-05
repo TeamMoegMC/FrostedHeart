@@ -28,12 +28,14 @@ import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageContent;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.ImageScreenDialog;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.TextContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.Transition;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsImageContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsLineContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsRectContent;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsTextContent;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import dev.ftb.mods.ftbquests.FTBQuests;
@@ -52,7 +54,6 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.event.ClickEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class ClientControl implements IClientControlCommand {
 	public void link(IClientScene runner,@Param("lid")String linkId) {
@@ -80,15 +81,8 @@ public class ClientControl implements IClientControlCommand {
 		runner.setActHud(null, tsk.getTitle().getString());
 	}
 	@Override
-	public void speed(IClientScene runner,@Param("v")Double value,@Param("space")Integer s) {
-		if(value!=null) {
-			if(value<=2) {
-				runner.setTicksBetweenShow((int) (2/value));
-			}else {
-				runner.setTicksBetweenShow(1);
-				runner.setCharsPerShow((int) (value/2));
-			}
-		}
+	public void speed(IClientScene runner,@Param("v")double value,@Param("space")Integer s) {
+		runner.setSpeed(value);
 		
 	}
 	@Override
@@ -105,34 +99,65 @@ public class ClientControl implements IClientControlCommand {
 		
 	}
 	@Override
-	public void fullScreenDialog(IClientScene runner,@Param("show")Integer show,@Param("x")Float x,@Param("y")Float y,@Param("w")Float w,@Param("m")Integer m) {
+	public void hudDialog(IClientScene runner,@Param("show")Integer show) {
+		HUDDialog id=null;
 		if(show!=null) {
-			if(show>0&&ClientScene.dialog==null) {
-				ClientScene.dialog=new ImageScreenDialog(GuiUtils.str(""));
-				ClientUtils.mc().displayGuiScreen(ClientScene.dialog);
-			}else {
-				ClientScene.dialog.closeScreen();
-				ClientScene.dialog=null;
+			if(show>0) {
+				if(!(ClientScene.INSTANCE.dialog instanceof HUDDialog)) {
+					id=new HUDDialog();
+					ClientScene.INSTANCE.dialog=id;
+				}else {
+					id=(HUDDialog) ClientScene.INSTANCE.dialog;
+				}
+			}else if(ClientScene.INSTANCE.dialog!=null){
+				ClientScene.INSTANCE.dialog.closeDialog();
+				ClientScene.INSTANCE.dialog=null;
 			}
 		}
-		if(ClientScene.dialog==null)
+	}
+	@Override
+	public void fullScreenDialog(IClientScene runner,@Param("show")Integer show,@Param("x")Float x,@Param("y")Float y,@Param("w")Float w,@Param("m")Integer m) {
+		ImageScreenDialog id=null;
+		if(show!=null) {
+			if(show>0) {
+				if(!(ClientScene.INSTANCE.dialog instanceof ImageScreenDialog)) {
+					id=new ImageScreenDialog(GuiUtils.str(""));
+					if(ClientScene.INSTANCE.dialog!=null)
+						ClientScene.INSTANCE.dialog.closeDialog();
+					ClientScene.INSTANCE.dialog=id;
+					ClientUtils.mc().displayGuiScreen(id);
+				}else {
+					id=(ImageScreenDialog) ClientScene.INSTANCE.dialog;
+				}
+				
+				
+			}else {
+				if(ClientScene.INSTANCE.dialog!=null){
+					ClientScene.INSTANCE.dialog.closeDialog();
+				}
+				/*while(ClientUtils.mc().currentScreen instanceof IScenarioDialog)
+					ClientUtils.mc().currentScreen.closeScreen();*/
+			}
+			
+		}
+		if(id==null)
 			return;
 		if(x!=null)
-			ClientScene.dialog.dialogX=(x);
+			id.dialogX=(x);
 		if(y!=null)
-			ClientScene.dialog.dialogY=(y);
+			id.dialogY=(y);
 		if(w!=null)
-			ClientScene.dialog.dialogW=(w);
+			id.dialogW=(w);
 		if(m!=null)
-			ClientScene.dialog.alignMiddle=m>0;
+			id.alignMiddle=m>0;
 	}
 	@Override
 	public void startLayer(IClientScene runner,@Param("n")@Param("name")String name) {
-		if(ClientScene.dialog==null)
+		if(ClientScene.INSTANCE.dialog==null)
 			return;
-		LayerManager lm=ClientScene.layers.peekLast();
+		LayerManager lm=ClientScene.INSTANCE.layers.peekLast();
 		if(lm==null) {
-			lm=ClientScene.dialog.primary;
+			lm=ClientScene.INSTANCE.dialog.getPrimary();
 		}else{
 			if(name!=null) {
 				lm=lm.getLayer(name);
@@ -140,13 +165,13 @@ public class ClientControl implements IClientControlCommand {
 				lm=new LayerManager();
 			}
 		}
-		ClientScene.layers.add(lm);
+		ClientScene.INSTANCE.layers.add(lm);
 	}
 	@Override
 	public void showLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("trans")String transition,@Param("t")int time,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h) {
-		if(ClientScene.dialog==null)
+		if(ClientScene.INSTANCE.dialog==null)
 			return;
-		LayerManager lm=ClientScene.layers.pollLast();
+		LayerManager lm=ClientScene.INSTANCE.layers.pollLast();
 		if(w==null)
 			w=1f;
 		if(h==null)
@@ -157,65 +182,95 @@ public class ClientControl implements IClientControlCommand {
 		lm.setY((y));
 		lm.setWidth((w));
 		lm.setHeight((h));
-		if(transition!=null) {
-			lm.setTrans(Transition.valueOf(transition.toLowerCase()), time);
-			
-		}
-		
-		lm.commitChanges();
-		if(ClientScene.layers.isEmpty()) {
-			ClientScene.dialog.primary=lm;
+		lm.commitChanges(transition!=null?Transition.valueOf(transition.toLowerCase()):null,time);
+		if(ClientScene.INSTANCE.layers.isEmpty()) {
+			ClientScene.INSTANCE.dialog.setPrimary(lm);
 		}else {
-			ClientScene.layers.peekLast().addLayer(name, lm);
+			ClientScene.INSTANCE.layers.peekLast().addLayer(name, lm);
 		}
 	}
 	@Override
-	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("u")int u,@Param("v")int v,@Param("uw")int uw,@Param("uh")int uh,@Param("tw")int tw,@Param("th")int th,@Param("z")int z,@Param("opacity")Float opacity) {
-		if(ClientScene.dialog==null)
+	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("sx")int u,@Param("sy")int v,@Param("sw")Integer uw,@Param("sh")Integer uh,@Param("z")int z,@Param("opacity")Float opacity) {
+		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		if(w==null)
-			w=1f;
+			w=-1f;
 		if(h==null)
-			h=1f;
-		
+			h=-1f;
+		if(uw==null)
+			uw=-1;
+		if(uh==null)
+			uh=-1;
 		if(opacity==null)
 			opacity=1f;
 		ResourceLocation ip=FHScenarioClient.getPathOf(new ResourceLocation(path), "textures/gui/");
-		ImageContent ic=new ImageContent(ip,x,(y),(w),(h),u,v,uw,uh,tw,th);
+		GraphicsImageContent ic=new GraphicsImageContent(ip,(int)x,(int)(y),(int)(float)(w),(int)(float)(h));
 		ic.setZ(z);
 		ic.setOpacity(opacity);
-		ClientScene.layers.peekLast().addLayer(name,ic);
+		ic.ix=u;
+		ic.iy=v;
+		ic.iw=uw;
+		ic.ih=uh;
+		ClientScene.INSTANCE.layers.peekLast().addLayer(name,ic);
 	}
 	@Override
 	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")float resize,@Param("cv")int cv,@Param("ch")int ch,@Param("clr")Integer color) {
-		if(ClientScene.dialog==null)
+		if(ClientScene.INSTANCE.dialog==null)
 			return;
 		if(w==null)
-			w=1f;
+			w=-1f;
 		if(h==null)
-			h=1f;
+			h=-1f;
 		if(opacity==null)
 			opacity=1f;
 		if(resize==0)
-			resize=1;
+			resize=9;
 		if(color==null)
 			color=0xFFFFFF;
-		TextContent tc=new TextContent(ClientTextComponentUtils.parse(text),(x),(y),(w),(h), shadow>0);
+		GraphicsTextContent tc=new GraphicsTextContent(ClientTextComponentUtils.parse(text),(int)(x),(int)(y),(int)(float)(w),(int)(float)(h), shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
-		tc.setResize(resize);
-		tc.centerH=ch>0;
-		tc.centerV=cv>0;
-		tc.color=0xFFFFFF&color;
-		ClientScene.layers.peekLast().addLayer(name,tc);
+		tc.size=(int) resize;
+		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
+		
+	}
+	@Override
+	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("clr")Integer color) {
+		if(ClientScene.INSTANCE.dialog==null)
+			return;
+		if(w==null)
+			w=-1f;
+		if(h==null)
+			h=-1f;
+		if(color==null)
+			color=0xFFFFFFFF;
+		GraphicsRectContent tc=new GraphicsRectContent(color,(int)(x),(int)(y),(int)(float)(w),(int)(float)(h));
+		tc.setZ(z);
+		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
+		
+	}
+	@Override
+	public void DrawLine(IClientScene runner,@Param("n")@Param("name")String name,@Param("sx")int x,@Param("sy")int y,@Param("dx")int dx,@Param("dy")int dy,@Param("w")int w,@Param("z")int z,@Param("clr")Integer color) {
+		if(ClientScene.INSTANCE.dialog==null)
+			return;
+		if(w==0)
+			w=1;
+		if(color==null)
+			color=0xFFFFFFFF;
+		
+		GraphicsLineContent tc=new GraphicsLineContent(color,(x),(y),(dx),(dy));
+		tc.setZ(z);
+		tc.color=color;
+		tc.wid=w;
+		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
 		
 	}
 	@Override
 	public void freeLayer(IClientScene runner,@Param("n")@Param("name")String name) {
-		if(ClientScene.dialog==null)
+		if(ClientScene.INSTANCE.dialog==null)
 			return;
 
-		ClientScene.layers.peekLast().freeLayer(name);
+		ClientScene.INSTANCE.layers.peekLast().freeLayer(name);
 		
 	}
 	@Override

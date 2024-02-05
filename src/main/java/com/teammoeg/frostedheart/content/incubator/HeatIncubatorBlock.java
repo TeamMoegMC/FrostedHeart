@@ -26,8 +26,8 @@ import net.minecraftforge.fml.RegistryObject;
 
 public class HeatIncubatorBlock extends IncubatorBlock implements ISteamEnergyBlock {
 
-    public HeatIncubatorBlock(String name, Properties p, RegistryObject<TileEntityType<?>> incubator2) {
-        super(name, p, incubator2);
+    public HeatIncubatorBlock(Properties p, RegistryObject<TileEntityType<?>> incubator2) {
+        super(p, incubator2);
     }
 
 

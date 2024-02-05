@@ -19,10 +19,12 @@
 
 package com.teammoeg.frostedheart.mixin.rankine;
 
-import com.cannolicatfish.rankine.blocks.StickBlock;
-import net.minecraft.block.Block;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+
+import com.cannolicatfish.rankine.blocks.StickBlock;
+
+import net.minecraft.block.Block;
 
 @Mixin(StickBlock.class)
 public class MixinStickBlock extends Block {

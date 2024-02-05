@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.mixin.engdecor;
 
+import org.spongepowered.asm.mixin.Mixin;
+
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.DirectionalBlock;
 import net.minecraft.util.Rotation;
-import org.spongepowered.asm.mixin.Mixin;
 import wile.engineersdecor.blocks.DecorBlock;
 
 @Mixin(DecorBlock.DirectedWaterLoggable.class)

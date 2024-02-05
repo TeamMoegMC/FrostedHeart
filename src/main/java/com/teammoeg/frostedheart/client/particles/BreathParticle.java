@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.client.particles;
 
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+
 import net.minecraft.client.particle.IAnimatedSprite;
 import net.minecraft.client.particle.IParticleFactory;
 import net.minecraft.client.particle.Particle;

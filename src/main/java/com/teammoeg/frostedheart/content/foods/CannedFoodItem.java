@@ -19,8 +19,11 @@
 
 package com.teammoeg.frostedheart.content.foods;
 
+import java.util.List;
+
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
@@ -28,18 +31,16 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 
-import java.util.List;
-
 public class CannedFoodItem extends FHBaseItem {
 
     boolean showtt = true;
 
-    public CannedFoodItem(String name, Properties properties) {
-        super(name, properties);
+    public CannedFoodItem(Properties properties) {
+        super(properties);
     }
 
-    public CannedFoodItem(String name, Properties properties, boolean showtt) {
-        super(name, properties);
+    public CannedFoodItem(Properties properties, boolean showtt) {
+        super( properties);
         this.showtt = showtt;
     }
 

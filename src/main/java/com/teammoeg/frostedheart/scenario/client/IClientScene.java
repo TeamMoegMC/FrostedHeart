@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.scenario.client;
 
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 
-import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 
@@ -43,5 +42,7 @@ public interface IClientScene {
 	void setCharsPerShow(int charsPerShow);
 
 	int getCharsPerShow();
+
+	void setSpeed(double value);
 
 }

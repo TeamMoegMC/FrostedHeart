@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.research;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import com.mojang.datafixers.util.Pair;
 

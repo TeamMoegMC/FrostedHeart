@@ -19,9 +19,13 @@
 
 package com.teammoeg.frostedheart.base.block;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import com.google.common.collect.Maps;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.IWaterLoggable;
@@ -29,41 +33,43 @@ import net.minecraft.block.SixWayBlock;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
 import net.minecraft.pathfinding.PathType;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Util;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.TickPriority;
 
-import javax.annotation.Nullable;
-import java.util.function.BiFunction;
-
 public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock implements IWaterLoggable {
     Class<T> type;
-    public final String name;
     protected int lightOpacity;
-
-    public FluidPipeBlock(Class<T> type, String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
+    public static final BooleanProperty CASING=BooleanProperty.create("casing");
+    public static final BooleanProperty RNORTH = BooleanProperty.create("north_rim");
+    public static final BooleanProperty REAST = BooleanProperty.create("east_rim");
+    public static final BooleanProperty RSOUTH = BooleanProperty.create("south_rim");
+    public static final BooleanProperty RWEST = BooleanProperty.create("west_rim");
+    public static final BooleanProperty RUP = BooleanProperty.create("up_rim");
+    public static final BooleanProperty RDOWN = BooleanProperty.create("down_rim");
+    public static final Map<Direction, BooleanProperty> RIM_PROPERTY_MAP = Util.make(Maps.newEnumMap(Direction.class), (directions) -> {
+       directions.put(Direction.NORTH, RNORTH);
+       directions.put(Direction.EAST, REAST);
+       directions.put(Direction.SOUTH, RSOUTH);
+       directions.put(Direction.WEST, RWEST);
+       directions.put(Direction.UP, RUP);
+       directions.put(Direction.DOWN, RDOWN);
+    });
+    
+    public FluidPipeBlock(Class<T> type, Properties blockProps) {
         super(4 / 16f, blockProps);
-        this.name = name;
         lightOpacity = 15;
 
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
 
-        FHContent.registeredFHBlocks.add(this);
-        Item item = createItemBlock.apply(this, new Item.Properties().group(FHMain.itemGroup));
-        if (item != null) {
-            item.setRegistryName(registryName);
-            FHContent.registeredFHItems.add(item);
-        }
         this.type = type;
 
         BlockState defaultState = getDefaultState().with(BlockStateProperties.WATERLOGGED, false);
@@ -84,20 +90,16 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
         return false;
     }
 
-    public ResourceLocation createRegistryName() {
-        return new ResourceLocation(FHMain.MODID, name);
-    }
-
-
     @Override
     protected void fillStateContainer(net.minecraft.state.StateContainer.Builder<Block, BlockState> builder) {
         builder.add(NORTH, EAST, SOUTH, WEST, UP, DOWN, BlockStateProperties.WATERLOGGED);
+        builder.add(RNORTH,REAST,RSOUTH,RWEST,RUP,RDOWN,CASING);
         super.fillStateContainer(builder);
     }
 
     @Nullable
     private Axis getAxis(IBlockReader world, BlockPos pos, BlockState state) {
-        if (!type.isInstance(state.getBlock())) return null;
+        if (!state.matchesBlock(this)) return null;
         for (Axis axis : Axis.values()) {
             Direction d1 = Direction.getFacingFromAxis(AxisDirection.NEGATIVE, axis);
             Direction d2 = Direction.getFacingFromAxis(AxisDirection.POSITIVE, axis);
@@ -147,7 +149,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
     }
 
     public boolean isCornerOrEndPipe(IBlockDisplayReader world, BlockPos pos, BlockState state) {
-        return (type.isInstance(state.getBlock())) && getAxis(world, pos, state) == null
+        return (state.matchesBlock(this)) && getAxis(world, pos, state) == null
                 && !shouldDrawCasing(world, pos, state);
     }
 
@@ -161,7 +163,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
     }
 
     public boolean shouldDrawCasing(IBlockDisplayReader world, BlockPos pos, BlockState state) {
-        if (!type.isInstance(state.getBlock()))
+        if (!state.matchesBlock(this))
             return false;
         Axis axis = getAxis(world, pos, state);
         if (axis == null) return false;
@@ -177,7 +179,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
             return false;
         BlockPos offsetPos = pos.offset(direction);
         BlockState facingState = world.getBlockState(offsetPos);
-        if (!type.isInstance(facingState.getBlock()))
+        if (!facingState.matchesBlock(this))
             return true;
         if (!canConnectTo(world, offsetPos, facingState, direction))
             return true;

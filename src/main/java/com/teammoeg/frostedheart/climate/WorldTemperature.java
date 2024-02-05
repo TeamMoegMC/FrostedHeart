@@ -19,14 +19,15 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class WorldTemperature {
 
@@ -149,11 +150,16 @@ public class WorldTemperature {
 
     public static float getClimateTemperature(IWorldReader w) {
         if (w instanceof World) {
-            return WorldClimate.getTemp((World) w) * 0.25f;
+            return WorldClimate.getTemp((World) w);
         }
         return 0;
     }
-
+    public static int getClimateWind(IWorldReader w) {
+        if (w instanceof World) {
+            return WorldClimate.getWind((World) w);
+        }
+        return 0;
+    }
     /**
      * Get World temperature for a specific world, affected by weather and so on
      *

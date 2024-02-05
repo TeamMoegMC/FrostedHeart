@@ -19,12 +19,20 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.Optional;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.town.GeneratorData;
+import com.teammoeg.frostedheart.util.FHUtils;
+
+import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.town.GeneratorData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -37,6 +45,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -44,10 +53,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Optional;
 
 public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEntity<T>> extends ZoneHeatingMultiblockTileEntity<T> implements IIEInventory,
         FHBlockInterfaces.IActiveState, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, IEBlockInterfaces.IBlockBounds {
@@ -205,10 +210,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         if (stack.isEmpty())
             return false;
         if (slot == INPUT_SLOT)
-            return GeneratorRecipe.findRecipe(stack) != null;
+            return findRecipe(stack) != null;
         return false;
     }
-
+    public GeneratorRecipe findRecipe(ItemStack input) {
+        for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), GeneratorRecipe.TYPE))
+            if (ItemUtils.stackMatchesObject(input, recipe.input))
+                return recipe;
+        return null;
+    }
     @Override
     public void onShutDown() {
     }
@@ -217,6 +227,13 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         ItemStackHelper.loadAllItems(nbt, linventory);
+        if(!descPacket&&this.getWorld() instanceof ServerWorld) {
+            Optional<GeneratorData> data = this.getData();
+            data.ifPresent(t -> {
+                this.isOverdrive=t.isOverdrive;
+                this.isWorking=t.isWorking;
+            });
+        }
     }
 
     @Override
@@ -268,19 +285,23 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     protected void tickEffects(boolean isActive) {
 
     }
-
     @Override
-    protected void tickFuel() {
+    protected void tickDrives(boolean isActive) {
+
+    }
+    @Override
+    protected boolean tickFuel() {
         // just finished process or during process
         Optional<GeneratorData> data = this.getData();
         data.ifPresent(t -> {
             t.isOverdrive = this.isOverdrive;
             t.isWorking = this.isWorking;
         });
-        data.ifPresent(t -> t.tick());
-        setAllActive(data.map(t -> t.isActive).orElse(false));
+        data.ifPresent(t -> t.tick(this.getWorld()));
+        boolean isWorking=data.map(t -> t.isActive).orElse(false);
         process = data.map(t -> t.process).orElse(0);
         processMax = data.map(t -> t.processMax).orElse(0);
+        return isWorking;
     	/*if(this.getIsActive())
     		this.markContainingBlockForUpdate(null);*/
     }

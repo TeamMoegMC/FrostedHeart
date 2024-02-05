@@ -19,9 +19,12 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.climate.data.JsonHelper;
+
+import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -33,8 +36,6 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
-
-import javax.annotation.Nullable;
 
 public class ModifyDamageRecipe extends ShapelessRecipe {
     public static class Serializer extends IERecipeSerializer<ModifyDamageRecipe> {

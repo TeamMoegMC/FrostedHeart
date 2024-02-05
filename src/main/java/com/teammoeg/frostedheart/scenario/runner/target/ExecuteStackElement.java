@@ -20,13 +20,13 @@
 package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 
 import net.minecraft.nbt.CompoundNBT;
 
 public class ExecuteStackElement extends ScenarioTarget{
 	private final int nodeNum;
-	public ExecuteStackElement(IScenarioConductor par,String name, int nodeNum) {
+	public ExecuteStackElement(IScenarioThread par,String name, int nodeNum) {
 		super(par,name);
 		this.nodeNum = nodeNum;
 	}
@@ -34,7 +34,7 @@ public class ExecuteStackElement extends ScenarioTarget{
 		super(sc);
 		this.nodeNum = nodeNum;
 	}
-	public ExecuteStackElement(IScenarioConductor par,CompoundNBT n) {
+	public ExecuteStackElement(IScenarioThread par,CompoundNBT n) {
 		this(par,n.getString("storage"),n.getInt("node"));
 	}
 
@@ -48,7 +48,7 @@ public class ExecuteStackElement extends ScenarioTarget{
 		return new ExecuteStackElement(this.getScenario(),nodeNum+1);
 	}
 	@Override
-	public void apply(IScenarioConductor conductor) {
+	public void apply(IScenarioThread conductor) {
 		super.apply(conductor);
 		conductor.setNodeNum(nodeNum);
 	}

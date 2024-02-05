@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import net.minecraft.nbt.CompoundNBT;
-
 import java.util.Arrays;
+
+import net.minecraft.nbt.CompoundNBT;
 
 public class DayTemperatureData {
     public static class HourData {
@@ -223,7 +223,6 @@ public class DayTemperatureData {
 
     void setTemp(int hourInDay, float temp) {
         hourData[hourInDay].temp = temp;
-        ;
     }
 
     public void setType(int hourInDay, ClimateType type) {
@@ -232,7 +231,6 @@ public class DayTemperatureData {
 
     public void setWind(int hourInDay, int speed) {
         hourData[hourInDay].setWindSpeed(speed);
-        ;
     }
 
     @Override

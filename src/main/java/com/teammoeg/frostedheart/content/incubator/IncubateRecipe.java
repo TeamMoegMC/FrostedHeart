@@ -19,13 +19,22 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -39,17 +48,11 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 public class IncubateRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<IncubateRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.incubator1);
+            return new ItemStack(FHBlocks.incubator1.get());
         }
 
         @Nullable
@@ -98,7 +101,6 @@ public class IncubateRecipe extends IESerializableRecipe {
     public static IRecipeType<IncubateRecipe> TYPE;
 
     public static RegistryObject<Serializer> SERIALIZER;
-    public static Map<ResourceLocation, IncubateRecipe> recipeList = Collections.emptyMap();
     public IngredientWithSize input;
     public IngredientWithSize catalyst;
     public ItemStack output;
@@ -111,17 +113,7 @@ public class IncubateRecipe extends IESerializableRecipe {
 
     public int time;
 
-    public static boolean canBeCatalyst(ItemStack catalyst) {
-        return recipeList.values().stream().filter(r -> r.catalyst != null).anyMatch(r -> r.catalyst.testIgnoringSize(catalyst));
-    }
 
-    public static boolean canBeInput(ItemStack input) {
-        return recipeList.values().stream().anyMatch(r -> r.input.testIgnoringSize(input));
-    }
-
-    public static IncubateRecipe findRecipe(ItemStack in, ItemStack catalyst) {
-        return recipeList.values().stream().filter(t -> t.input.test(in)).filter(t -> t.catalyst == null || t.catalyst.test(catalyst)).findAny().orElse(null);
-    }
 
     public IncubateRecipe() {
         super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);

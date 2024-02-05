@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.trade.policy.actions;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.Actions;
 import com.teammoeg.frostedheart.trade.policy.PolicyAction;
+
 import net.minecraft.network.PacketBuffer;
 
 public class SetFlagAction implements PolicyAction {

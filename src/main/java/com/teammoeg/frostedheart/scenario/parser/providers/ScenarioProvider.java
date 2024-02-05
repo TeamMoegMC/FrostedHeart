@@ -1,7 +1,6 @@
 package com.teammoeg.frostedheart.scenario.parser.providers;
 
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 

@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.research.network;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;

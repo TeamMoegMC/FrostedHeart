@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.town;
 
 import com.teammoeg.frostedheart.FHBlocks;
+
 import net.minecraft.block.Block;
 
 // TODO: Auto-generated Javadoc
@@ -33,7 +34,7 @@ public enum TownWorkerType {
      * The dummy.
      */
     DUMMY(null, null, -1),
-    HOUSE(FHBlocks.house, (resource, workData) -> {
+    HOUSE(FHBlocks.house.get(), (resource, workData) -> {
         double cost = 1;
         double actualCost = resource.cost(TownResourceType.PREP_FOOD, cost, false);
         return cost == actualCost;

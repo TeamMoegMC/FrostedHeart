@@ -31,9 +31,9 @@ import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
-import com.teammoeg.frostedheart.util.SerializeUtil;
-import com.teammoeg.frostedheart.util.SerializeUtil.CompoundBuilder;
-import com.teammoeg.frostedheart.util.VariantProvider;
+import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil.CompoundBuilder;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -42,7 +42,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.common.MinecraftForge;
 
-public class ResearchData implements VariantProvider {
+public class ResearchData implements IEnvironment {
 
     public static final ResearchData EMPTY = new ResearchData(null, null) {
 
@@ -285,12 +285,7 @@ public class ResearchData implements VariantProvider {
         // rs=FHResearch.getResearch(cn.getInt("research"));
     }
 
-    @Override
-    public Double get(String k) {
-        if (k.equals("level"))
-            return (double) level;
-        return null;
-    }
+
 
     /**
      * @return Research points committed
@@ -407,6 +402,26 @@ public class ResearchData implements VariantProvider {
         pb.writeVarLong(committed);
         SerializeUtil.writeBooleans(pb, active, finished);
     }
+
+	@Override
+	public Double getOptional(String key) {
+        if (key.equals("level"))
+            return (double) level;
+        return null;
+	}
+
+	@Override
+	public void set(String key, double v) {
+		if (key.equals("level"))
+			this.level=(int) v;
+	}
+
+	@Override
+	public double get(String key) {
+		if (key.equals("level"))
+            return (double) level;
+		return 0;
+	}
 
 
 }

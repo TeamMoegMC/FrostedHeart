@@ -24,8 +24,8 @@ import com.teammoeg.frostedheart.base.item.FHBaseItem;
 public class FHLeveledTool extends FHBaseItem {
     protected int level;
 
-    public FHLeveledTool(String name, int lvl, Properties properties) {
-        super(name, properties);
+    public FHLeveledTool(int lvl, Properties properties) {
+        super(properties);
         this.level = lvl;
     }
 

@@ -30,7 +30,6 @@ import com.teammoeg.frostedheart.research.research.Research;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
-import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 
 public class ResearchProgressPanel extends Panel {
 

@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
@@ -43,7 +43,9 @@ import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.RubbingTool;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -81,7 +83,7 @@ public class ResearchListeners {
 
         @Override
         public String getString(Block item) {
-            return item.getRegistryName().toString();
+            return RegistryUtils.getRegistryName(item).toString();
         }
     }
 
@@ -235,7 +237,7 @@ public class ResearchListeners {
     @OnlyIn(Dist.CLIENT)
     public static boolean canExamine(ItemStack i) {
         if (i.isEmpty()) return false;
-        for (InspireRecipe ir : InspireRecipe.recipes) {
+        for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(i)) {
                 return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(), ir.inspire);
             }
@@ -372,7 +374,7 @@ public class ResearchListeners {
         FHResearchDataManager.INSTANCE.save();
         FHResearchDataManager.INSTANCE.load();
         FHResearchRegistrtySyncPacket packet = new FHResearchRegistrtySyncPacket();
-        FHPacketHandler.send(PacketDistributor.ALL.noArg(), packet);
+        FHNetwork.send(PacketDistributor.ALL.noArg(), packet);
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.sendUpdate());
     }
 
@@ -395,11 +397,11 @@ public class ResearchListeners {
                             rd.sendProgressPacket();
                         }
                     }
-                    return new ItemStack(FHItems.rubbing_pad);
+                    return new ItemStack(FHItems.rubbing_pad.get());
                 }
                 trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getLId()));
             }
-            for (InspireRecipe ir : InspireRecipe.recipes) {
+            for (InspireRecipe ir : FHUtils.filterRecipes(s.getServerWorld().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
                     if (EnergyCore.useExtraEnergy(s, ir.inspire)) {
                         i.shrink(1);

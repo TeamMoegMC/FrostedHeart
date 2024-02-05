@@ -85,7 +85,7 @@ public class ScenarioExecutor<T> {
                     if(partype.isPrimitive())
                     	def=()->0d;
                 } else if (partype.isAssignableFrom(String.class)) {
-                    converter = string;
+                    converter = null;
                 } else if (partype.isAssignableFrom(Integer.class) || partype == int.class) {
                     converter = integer;
                     if(partype.isPrimitive())
@@ -119,9 +119,12 @@ public class ScenarioExecutor<T> {
             	}
                 if (par != null) {
                     try {
-                        pars[i + 1] = params[i].convertion.apply(par);
+                    	if(params[i].convertion==null) {
+                    		pars[i+1]=par;
+                    	}else if(!par.isEmpty())
+                    		pars[i + 1] = params[i].convertion.apply(par);
                     } catch (NumberFormatException | ClassCastException ex) {
-                        throw new ScenarioExecutionException("Exception converting param " + params[i].paramName, ex);
+                        throw new ScenarioExecutionException("Exception converting param " + Arrays.toString(params[i].paramName), ex);
                     }
                 }else {
                 	if(params[i].def!=null)
@@ -141,7 +144,7 @@ public class ScenarioExecutor<T> {
     }
     @FunctionalInterface
     public interface ScenarioMethod<T> {
-        void execute(T runner, Map<String, String> param);
+        void execute(T scenarioVM, Map<String, String> param);
     }
     static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
     Class<T> objcls;
@@ -149,11 +152,10 @@ public class ScenarioExecutor<T> {
 		super();
 		this.objcls = objcls;
 	}
-	private static Function<String, Object> string = s -> s;
     private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
     private static Function<String, Object> integer = s ->{ 
     	if(s==null)return s;
-    	if(s.toLowerCase().startsWith("0x"))return Integer.parseInt(s.substring(2),16);
+    	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
     	return ((Double) Double.parseDouble(s)).intValue();
     	};
 
@@ -161,12 +163,12 @@ public class ScenarioExecutor<T> {
 
     Map<String, ScenarioMethod<T>> commands = new HashMap<>();
 
-    public void callCommand(String name, T runner, Map<String, String> params) {
+    public void callCommand(String name, T scenarioVM, Map<String, String> params) {
         ScenarioMethod<T> command = commands.get(name);
         if (command == null) {
             throw new ScenarioExecutionException("Can not find command " + name);
         }
-        command.execute(runner, params);
+        command.execute(scenarioVM, params);
     }
 
     public void register(Class<?> clazz) {

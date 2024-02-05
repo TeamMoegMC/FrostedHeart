@@ -19,13 +19,14 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.util.Random;
+
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.noise.INoise1D;
+
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
-
-import java.util.Random;
 
 /**
  * No longer use

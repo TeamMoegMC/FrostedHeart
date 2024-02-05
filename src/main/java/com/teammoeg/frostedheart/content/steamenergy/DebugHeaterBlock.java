@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.function.BiFunction;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -46,9 +44,8 @@ import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
-    public DebugHeaterBlock(String name, Properties blockProps,
-                            BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public DebugHeaterBlock(Properties blockProps) {
+        super( blockProps);
     }
 
 

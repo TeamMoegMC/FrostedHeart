@@ -19,16 +19,17 @@
 
 package com.teammoeg.frostedheart.loot;
 
+import javax.annotation.Nonnull;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
+
 import net.minecraft.loot.ILootSerializer;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.loot.LootContext;
 import net.minecraft.loot.LootParameterSets;
 import net.minecraft.loot.conditions.ILootCondition;
-
-import javax.annotation.Nonnull;
 
 public class TreasureLootCondition implements ILootCondition {
     public static class Serializer implements ILootSerializer<TreasureLootCondition> {

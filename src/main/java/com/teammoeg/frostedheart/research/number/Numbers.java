@@ -25,6 +25,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
+
 import net.minecraft.network.PacketBuffer;
 
 public class Numbers {

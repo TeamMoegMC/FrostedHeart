@@ -39,9 +39,9 @@ import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.ResearchCategory;
-import com.teammoeg.frostedheart.util.FileUtil;
 import com.teammoeg.frostedheart.util.LazyOptional;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.FileUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -168,7 +168,22 @@ public class FHResearch {
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
         //FHResearch.saveAll();
     }
-
+    public static void initFromRegistry(CompoundNBT data) {
+        ClientResearchData.last = null;
+        ResearchListeners.reload();
+        //no need
+        FHResearch.clearAll();
+        prepareReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
+        FHResearch.load(data);
+    }
+    public static void endPacketInit() {
+    	MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
+        finishReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
+    }
     public static void initFromPacket(CompoundNBT data, List<Research> rs) {
         ClientResearchData.last = null;
         ResearchListeners.reload();
@@ -240,12 +255,14 @@ public class FHResearch {
         effects.prepareReload();
         clearCache();
     }
-
+    public static void readOne(Research r) {
+    	r.packetInit();
+        researches.register(r);
+    }
     public static void readAll(List<Research> rss) {
 
         for (Research r : rss) {
-            r.packetInit();
-            researches.register(r);
+        	readOne(r);
         }
     }
 

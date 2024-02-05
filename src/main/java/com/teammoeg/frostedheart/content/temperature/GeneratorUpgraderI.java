@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -51,8 +50,8 @@ import net.minecraft.world.World;
 public class GeneratorUpgraderI extends FHBaseItem {
     IETemplateMultiblock ietm = FHMultiblocks.GENERATOR_T2;
 
-    public GeneratorUpgraderI(String name, Properties properties) {
-        super(name, properties);
+    public GeneratorUpgraderI(Properties properties) {
+        super(properties);
     }
 
     public boolean createStructure(PlayerEntity entityplayer, World worldIn) {

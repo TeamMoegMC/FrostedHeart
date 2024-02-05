@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.function.BiFunction;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -29,7 +27,6 @@ import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -42,9 +39,8 @@ import net.minecraft.world.IWorld;
 public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public HeatPipeBlock(String name, Properties blockProps,
-                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(HeatPipeBlock.class, name, blockProps, createItemBlock);
+    public HeatPipeBlock(Properties blockProps) {
+        super(HeatPipeBlock.class,  blockProps);
         this.lightOpacity = 0;
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }

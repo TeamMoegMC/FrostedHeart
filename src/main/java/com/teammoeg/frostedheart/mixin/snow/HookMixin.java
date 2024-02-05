@@ -19,15 +19,17 @@
 
 package com.teammoeg.frostedheart.mixin.snow;
 
-import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorldReader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+
+import net.minecraft.block.BlockState;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorldReader;
 import snownee.snow.Hook;
 
 //Mixin into mixin

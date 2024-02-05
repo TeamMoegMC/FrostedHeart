@@ -33,18 +33,19 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
+import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
-import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -131,7 +132,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                 for (Direction dir : HORIZONTALS) {
                     BlockPos act = crn.offset(dir);
                     // if crn connected to plank
-                    if (l.isBlockPresent(act) && (l.getBlockState(act).isIn(BlockTags.PLANKS) || l.getBlockState(act).getBlock().matchesBlock(FHBlocks.sauna))) {
+                    if (l.isBlockPresent(act) && (l.getBlockState(act).isIn(BlockTags.PLANKS) || l.getBlockState(act).getBlock().matchesBlock(FHBlocks.sauna.get()))) {
                         findNext(l, act, orig, poss, edges);
                     }
                     // otherwise, crn is an edge block
@@ -197,15 +198,15 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         if (t == null || !t.equals(owner)) return;
         // add wet effect
         if (world.getGameTime() % 200L == 0L) {
-            p.addPotionEffect(new EffectInstance(FHEffects.WET, 200, 0, true, false));
+            p.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 200, 0, true, false));
         }
 
         // add sauna effect
-        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA)) {
+        if (world.getGameTime() % 1000L == 0L && !p.isPotionActive(FHEffects.SAUNA.get())) {
             // initial reward
             EnergyCore.addEnergy(p, 1000);
             // whole day reward
-            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA, 23000, 0, true, false));
+            p.addPotionEffect(new EffectInstance(FHEffects.SAUNA.get(), 23000, 0, true, false));
         }
         // add temperature
         float lenvtemp = Temperature.getEnv(p);//get a smooth change in display
@@ -223,7 +224,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean isStackValid(int slot, ItemStack itemStack) {
-        return true;
+        return findRecipe(itemStack) != null;
     }
 
     public boolean isWorking() {
@@ -299,6 +300,12 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         return true;
     }
 
+    public SaunaRecipe findRecipe(ItemStack input) {
+        for (SaunaRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), SaunaRecipe.TYPE))
+            if (recipe.input.test(input))
+                return recipe;
+        return null;
+    }
     @Override
     public void tick() {
         // server side logic
@@ -342,7 +349,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                     effectDuration = 0;
                     effectAmplifier = 0;
                     if (!medicine.isEmpty()) {
-                        SaunaRecipe recipe = SaunaRecipe.findRecipe(medicine);
+                        SaunaRecipe recipe =findRecipe(medicine);
                         if (recipe != null) {
                             maxTime = recipe.time;
                             remainTime += recipe.time;

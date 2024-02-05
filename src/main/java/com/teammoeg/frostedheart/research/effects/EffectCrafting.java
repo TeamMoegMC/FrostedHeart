@@ -33,15 +33,13 @@ import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.ResearchListeners;
-import com.teammoeg.frostedheart.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.research.gui.TechIcons;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -237,7 +235,7 @@ public class EffectCrafting extends Effect {
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
         if (item != null)
-            jo.addProperty("item", item.getRegistryName().toString());
+            jo.addProperty("item", RegistryUtils.getRegistryName(item).toString());
         else if (itemStack != null)
             jo.add("item", SerializeUtil.toJson(itemStack));
         else if (unlocks.size() == 1)

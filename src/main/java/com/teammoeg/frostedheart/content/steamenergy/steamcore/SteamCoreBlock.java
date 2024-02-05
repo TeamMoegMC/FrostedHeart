@@ -1,16 +1,16 @@
 package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHKineticBlock;
-import com.teammoeg.frostedheart.base.item.FHBlockItem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -29,27 +29,20 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.*;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorldReader;
+import net.minecraft.world.World;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.function.BiFunction;
-
-public class SteamCoreBlock extends FHKineticBlock implements ISteamEnergyBlock {
+public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
     static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 16, 16)), Direction.SOUTH);
 
 
-    public SteamCoreBlock(String name, Properties blockProps,
-                          BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
+    public SteamCoreBlock( Properties blockProps) {
+        super(blockProps);
+        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
 
-    public SteamCoreBlock(Properties properties) {
-        super("steam_core", properties, FHBlockItem::new);
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
-    }
 
     @Nullable
     @Override
@@ -70,33 +63,24 @@ public class SteamCoreBlock extends FHKineticBlock implements ISteamEnergyBlock 
 
     @Override
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        return shape.get(state.get(BlockStateProperties.HORIZONTAL_FACING));
+        return shape.get(state.get(BlockStateProperties.FACING));
     }
 
     @Override
     public Direction.Axis getRotationAxis(BlockState blockState) {
-        return blockState.get(BlockStateProperties.HORIZONTAL_FACING).rotateY().getAxis();
+        return blockState.get(BlockStateProperties.FACING).rotateY().getAxis();
     }
 
     @Override
     public boolean hasShaftTowards(IWorldReader arg0, BlockPos arg1, BlockState state, Direction dir) {
-        return dir == state.get(BlockStateProperties.HORIZONTAL_FACING);
+        return dir == state.get(BlockStateProperties.FACING);
     }
 
     @Override
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
-        if (superResult.isSuccessOrConsume() || player.isSneaking())
-            return superResult;
-        ItemStack item = player.getHeldItem(hand);
-
-        TileEntity te = Utils.getExistingTileEntity(world, pos);
-        if (te instanceof SteamCoreTileEntity) {
-            return ((SteamCoreTileEntity) te).onClick(player, item);
-        }
         return superResult;
     }
-
     @Override
     public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
         super.onBlockHarvested(worldIn, pos, state, player);

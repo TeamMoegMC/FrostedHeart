@@ -31,16 +31,16 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.ClientClimateData;
 import com.teammoeg.frostedheart.client.util.AtlasUV;
+import com.teammoeg.frostedheart.client.util.FHGuiHelper;
 import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureFrame.FrameType;
 import com.teammoeg.frostedheart.climate.player.Temperature;
-import com.teammoeg.frostedheart.research.gui.FHGuiHelper;
+import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
@@ -700,9 +700,9 @@ public class FrostedHud {
                 heart = HUDElements.icon_health_hardcore_abnormal_black;
             } else if (player.isPotionActive(Effects.POISON)) {
                 heart = HUDElements.icon_health_hardcore_abnormal_green;
-            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA)) {
+            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA.get())) {
                 heart = HUDElements.icon_health_hardcore_abnormal_cyan;
-            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA)) {
+            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA.get())) {
                 heart = HUDElements.icon_health_hardcore_abnormal_orange;
             } else
                 heart = HUDElements.icon_health_hardcore_normal;
@@ -711,10 +711,10 @@ public class FrostedHud {
                 heart = HUDElements.icon_health_abnormal_black;
             } else if (player.isPotionActive(Effects.POISON)) {
                 heart = HUDElements.icon_health_abnormal_green;
-            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA)) {
+            } else if (player.isPotionActive(FHEffects.HYPOTHERMIA.get())) {
                 heart = HUDElements.icon_health_abnormal_cyan;
-            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA)) {
-                heart = HUDElements.icon_health_hardcore_abnormal_orange;
+            } else if (player.isPotionActive(FHEffects.HYPERTHERMIA.get())) {
+                heart = HUDElements.icon_health_abnormal_orange;
             } else
                 heart = HUDElements.icon_health_normal;
         }
@@ -959,9 +959,7 @@ public class FrostedHud {
 
         // Forecast
         boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
-        boolean hasRadar = player.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
-        boolean hasHelmet = player.inventory.armorInventory.get(3).getItem() == FHItems.weatherHelmet;
-        renderForecast = configAllows && (hasRadar || hasHelmet);
+        renderForecast = configAllows && ClientResearchDataAPI.getVariants().getDouble("has_forecast")>0;
     }
 
     private static void renderTemp(MatrixStack stack, Minecraft mc, float temp, int tlevel, int offsetX, int offsetY,

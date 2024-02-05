@@ -19,24 +19,30 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import java.util.Random;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.IceBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.Random;
-
+/**
+ * Add generator effect for ice (melt)
+ * 
+ * */
 @Mixin(IceBlock.class)
 public abstract class IceMixin {
     /**
      * @author khjxiaogu
-     * @reason Performs a random tick on a block.
+     * @reason add generator effect on ice
      */
     @Overwrite
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {

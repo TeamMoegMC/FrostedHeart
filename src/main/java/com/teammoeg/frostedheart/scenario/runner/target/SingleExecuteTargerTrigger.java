@@ -22,23 +22,25 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 import java.util.function.Predicate;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenarioTrigger {
 	boolean canStillTrigger=true;
-	Predicate<ScenarioConductor> test;
-	public SingleExecuteTargerTrigger(IScenarioConductor par,String name, String label,Predicate<ScenarioConductor> test) {
+	Predicate<ScenarioVM> test;
+	boolean async=true;
+	public SingleExecuteTargerTrigger(IScenarioThread par,String name, String label,Predicate<ScenarioVM> test) {
 		super(par,name, label);
 		this.test=test;
 	}
-	public SingleExecuteTargerTrigger(Scenario sc, String label,Predicate<ScenarioConductor> test) {
+	public SingleExecuteTargerTrigger(Scenario sc, String label,Predicate<ScenarioVM> test) {
 		super(sc, label);
 		this.test=test;
 	}
 	@Override
-	public boolean test(ScenarioConductor t) {
+	public boolean test(ScenarioVM t) {
 
 		return test.test(t);
 	}
@@ -53,6 +55,13 @@ public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenar
 	@Override
 	public boolean canUse() {
 		return canStillTrigger;
+	}
+	public boolean isAsync() {
+		return async;
+	}
+	public SingleExecuteTargerTrigger setSync() {
+		this.async = false;
+		return this;
 	}
 
 }

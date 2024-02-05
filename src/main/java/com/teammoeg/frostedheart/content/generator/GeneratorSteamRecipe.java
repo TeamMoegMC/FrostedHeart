@@ -19,11 +19,17 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.Collections;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMultiblocks;
+
 import blusunrize.immersiveengineering.api.crafting.FluidTagInput;
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHMultiblocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.network.PacketBuffer;
@@ -31,10 +37,6 @@ import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.RegistryObject;
-
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.Map;
 
 public class GeneratorSteamRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<GeneratorSteamRecipe> {
@@ -56,7 +58,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
         public GeneratorSteamRecipe readFromJson(ResourceLocation recipeId, JsonObject json) {
             FluidTagInput input = FluidTagInput.deserialize(JSONUtils.getJsonObject(json, "input"));
             float power = JSONUtils.getFloat(json, "energy");
-            float tempMod = JSONUtils.getFloat(json, "temp_multiplier");
+            float tempMod = JSONUtils.getFloat(json, "level");
             return new GeneratorSteamRecipe(recipeId, input, power, tempMod);
         }
 

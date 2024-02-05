@@ -19,13 +19,27 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -43,12 +57,6 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
-
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Climate Data Capability attached to a world.
@@ -402,6 +410,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     public static float getTemp(IWorld world) {
         return get(world).getTemp();
     }
+    public static int getWind(IWorld world) {
+        return get(world).getWind();
+    }
 
     public static long getWorldDay(IWorld w) {
         return get(w).getDay();
@@ -488,9 +499,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
 //    	this.tempEventStream.add(new TempEvent(s-60*50,s-45*50,-5,s+32*50,-23,s+100*50,s+136*50,true));
         //model : 8->0 : 0->-30 : -30->-50= 1 : 2 : 2
         int f12cptime = 12 * 50;//1/2 storm period time
-        long warmpeak = s + 48 * 50;//warm period time-1/4 storm period time
-        long coldpeak = (long) (warmpeak + 2.5 * f12cptime);
-        long coldend = (long) (coldpeak + 2 * f12cptime);
+        long warmpeak = s + 56 * 50;//warm period time-1/4 storm period time
+        long coldpeak = (long) (warmpeak + 3 * f12cptime);
+        long coldend = (long) (coldpeak + 1 * f12cptime);
         //this.tempEventStream.add(new TempEvent(s-2*50,s+12*50,0,s+24*50,0,s+36*50,s+42*50,true,true));
         this.tempEventStream.add(new ClimateEvent(s + 0 * 50, warmpeak, 8, coldpeak, -50, coldend, coldend + 72 * 50, true, true));
         lasthour = -1;
@@ -559,7 +570,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      * @param lasthumid prev humidity
      * @return a newly computed instance of DayTemperatureData for the day specified.
      */
-    private DayTemperatureData generateDay(long day, float lastnoise, float lasthumid) {
+    private DayTemperatureData generateDay(long day, float lastnoise, float lasthumid,int lastWind) {
         DayTemperatureData dtd = new DayTemperatureData();
         Random rnd = new Random();
         long startTime = day * 1200;
@@ -570,10 +581,13 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             Pair<Float, ClimateType> temp = this.computeTemp(startTime + i * 50);
             dtd.setTemp(i, temp.getFirst()); // Removed daynoise
             dtd.setType(i, temp.getSecond());
+            dtd.setWind(i, getWind(lastWind,temp.getSecond(),temp.getFirst()));
         }
         return dtd;
     }
-
+    private int getWind(int lastWind,ClimateType climate,float temp) {
+    	return 30;
+    }
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
         return cap == CAPABILITY ? capability.cast() : LazyOptional.empty();
@@ -705,7 +719,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     public float getTemp() {
         return daycache.getTemp(hourInDay);
     }
-
+    public int getWind() {
+        return daycache.getWind(hourInDay);
+    }
     private int getTemperatureLevel(float temp) {
         if (temp >= WorldTemperature.WARM_PERIOD_PEAK - 2) {
             return 2;
@@ -727,11 +743,11 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
      */
     protected void populateDays() {
         if (dailyTempData.isEmpty()) {
-            dailyTempData.offer(generateDay(clockSource.getDate(), 0, 0));
+            dailyTempData.offer(generateDay(clockSource.getDate(), 0, 0,30));
         }
         while (dailyTempData.size() <= DAY_CACHE_LENGTH) {
             DayTemperatureData last = dailyTempData.peekLast();
-            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity));
+            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity,last.getWind(23)));
         }
     }
 
@@ -880,7 +896,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
             updateHourCache(hours);
             this.updateNewFrames();
             // Send to client if hour increases
-            FHPacketHandler.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
+            FHNetwork.send(PacketDistributor.DIMENSION.with(serverWorld::getDimensionKey), new FHClimatePacket(this));
         }
     }
 
@@ -908,7 +924,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         while (dailyTempData.peek().day < date - 1) {
             dailyTempData.poll();
             DayTemperatureData last = dailyTempData.peekLast();
-            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity));
+            dailyTempData.offer(generateDay(last.day + 1, last.dayNoise, last.dayHumidity,last.getWind(23)));
         }
         populateDays();
         daycache = dailyTempData.get(1);

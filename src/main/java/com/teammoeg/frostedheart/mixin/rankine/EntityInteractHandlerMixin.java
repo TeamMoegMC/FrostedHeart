@@ -19,10 +19,12 @@
 
 package com.teammoeg.frostedheart.mixin.rankine;
 
-import com.cannolicatfish.rankine.events.handlers.common.EntityInteractHandler;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+
+import com.cannolicatfish.rankine.events.handlers.common.EntityInteractHandler;
+
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 @Mixin(EntityInteractHandler.class)
 public class EntityInteractHandlerMixin {

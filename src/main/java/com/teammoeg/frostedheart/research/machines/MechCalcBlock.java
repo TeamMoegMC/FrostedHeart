@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.research.machines;
 
 import java.util.List;
-import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,7 +35,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -60,9 +58,8 @@ import net.minecraftforge.common.util.FakePlayer;
 public class MechCalcBlock extends FHKineticBlock {
     static final VoxelShaper shape = VoxelShaper.forDirectional(VoxelShapes.or(Block.makeCuboidShape(0, 0, 0, 16, 9, 16), Block.makeCuboidShape(0, 9, 0, 16, 16, 13)), Direction.SOUTH);
 
-    public MechCalcBlock(String name, Properties blockProps,
-                         BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public MechCalcBlock( Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
     }
 

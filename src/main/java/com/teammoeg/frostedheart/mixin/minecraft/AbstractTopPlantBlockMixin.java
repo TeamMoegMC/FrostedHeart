@@ -19,6 +19,14 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import java.util.Random;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import net.minecraft.block.AbstractPlantBlock;
 import net.minecraft.block.AbstractTopPlantBlock;
 import net.minecraft.block.BlockState;
@@ -26,14 +34,11 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.server.ServerWorld;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Random;
-
+/**
+ * To fix an issue that forge event is not properly fired which causes our event mechanic breaks.
+ * e.g. kelp breaking everything/growing even when cold
+ * 
+ * */
 @Mixin(AbstractTopPlantBlock.class)
 public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
     @Shadow
@@ -48,7 +53,6 @@ public abstract class AbstractTopPlantBlockMixin extends AbstractPlantBlock {
     abstract boolean canGrowIn(BlockState state);
 
     /**
-     * Performs a random tick on a block.
      *
      * @reason fix forge event bug
      * @author khjxiaogu

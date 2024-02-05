@@ -20,40 +20,20 @@
 package com.teammoeg.frostedheart.base.block;
 
 import com.simibubi.create.content.contraptions.base.HorizontalKineticBlock;
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
-import net.minecraft.block.Block;
+
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 
-import java.util.function.BiFunction;
-
 public abstract class FHKineticBlock extends HorizontalKineticBlock {
-    public final String name;
     protected int lightOpacity;
 
-    public FHKineticBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
+    public FHKineticBlock(Properties blockProps) {
         super(blockProps.variableOpacity());
-        this.name = name;
         lightOpacity = 15;
 
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
-
-        FHContent.registeredFHBlocks.add(this);
-        Item item = createItemBlock.apply(this, new Item.Properties().group(FHMain.itemGroup));
-        if (item != null) {
-            item.setRegistryName(registryName);
-            FHContent.registeredFHItems.add(item);
-        }
     }
 
-    public ResourceLocation createRegistryName() {
-        return new ResourceLocation(FHMain.MODID, name);
-    }
 
     @Override
     public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {

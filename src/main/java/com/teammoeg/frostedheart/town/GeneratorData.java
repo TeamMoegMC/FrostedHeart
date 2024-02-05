@@ -19,10 +19,13 @@
 
 package com.teammoeg.frostedheart.town;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -53,12 +56,12 @@ public class GeneratorData {
     private TeamResearchData teamData;
     public BlockPos actualPos = BlockPos.ZERO;
     public RegistryKey<World> dimension;
-
+    
     public GeneratorData(TeamResearchData teamResearchData) {
         teamData = teamResearchData;
     }
 
-    public boolean consumesFuel() {
+    public boolean consumesFuel(World w) {
         if (currentItem != null) {
             if (!inventory.get(OUTPUT_SLOT).isEmpty() && ItemHandlerHelper.canItemStacksStack(inventory.get(OUTPUT_SLOT), currentItem))
                 inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
@@ -66,7 +69,7 @@ public class GeneratorData {
                 inventory.set(OUTPUT_SLOT, currentItem);
             currentItem = null;
         }
-        GeneratorRecipe recipe = getRecipe();
+        GeneratorRecipe recipe = getRecipe(w);
         if (recipe != null) {
             int count = recipe.input.getCount();
             Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
@@ -118,10 +121,15 @@ public class GeneratorData {
         return inventory;
     }
 
-    public GeneratorRecipe getRecipe() {
+    public GeneratorRecipe getRecipe(World w) {
         if (inventory.get(INPUT_SLOT).isEmpty())
             return null;
-        GeneratorRecipe recipe = GeneratorRecipe.findRecipe(inventory.get(INPUT_SLOT));
+        GeneratorRecipe recipe=null;
+        for(GeneratorRecipe recipet:FHUtils.filterRecipes(w.getRecipeManager(),GeneratorRecipe.TYPE))
+        	if(recipet.input.test(inventory.get(INPUT_SLOT))) {
+        		recipe=recipet;
+        		break;
+        	}
         if (recipe == null)
             return null;
         if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output)
@@ -145,7 +153,7 @@ public class GeneratorData {
         result.putBoolean("isActive", isActive);
         result.putFloat("power", power);
         if (fluid != null)
-            result.putString("steamFluid", fluid.getRegistryName().toString());
+            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
         if (!update) {
             CompoundNBT inv = new CompoundNBT();
             ItemStackHelper.saveAllItems(inv, inventory);
@@ -159,17 +167,17 @@ public class GeneratorData {
         return result;
     }
 
-    public void tick() {
-        isActive = tickFuelProcess();
+    public void tick(World w) {
+        isActive = tickFuelProcess(w);
     }
 
-    public boolean tickFuelProcess() {
+    public boolean tickFuelProcess(World w) {
         if (!isWorking)
             return false;
         boolean hasFuel = true;
         if (isOverdrive) {
             while (process <= 3 && hasFuel) {
-                hasFuel = consumesFuel();
+                hasFuel = consumesFuel(w);
             }
             if (process > 3) {
                 process -= 4;
@@ -177,7 +185,7 @@ public class GeneratorData {
             }
         } else {
             while (process <= 0 && hasFuel) {
-                hasFuel = consumesFuel();
+                hasFuel = consumesFuel(w);
             }
             if (process > 0) {
                 process--;

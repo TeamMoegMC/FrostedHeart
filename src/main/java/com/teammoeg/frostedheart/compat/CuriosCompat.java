@@ -19,7 +19,11 @@
 
 package com.teammoeg.frostedheart.compat;
 
+import java.util.Iterator;
+import java.util.function.Predicate;
+
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.LazyOptional;
@@ -30,9 +34,6 @@ import top.theillusivec4.curios.api.SlotTypePreset;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
-
-import java.util.Iterator;
-import java.util.function.Predicate;
 
 public class CuriosCompat {
     static class CuriosIterator implements Iterator<ItemStack> {

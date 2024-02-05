@@ -19,8 +19,7 @@
 
 package com.teammoeg.frostedheart;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.effects.AnemiaEffect;
 import com.teammoeg.frostedheart.effects.BaseEffect;
@@ -31,38 +30,31 @@ import com.teammoeg.frostedheart.effects.SaunaEffect;
 
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectType;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHEffects {
-    public static List<Effect> EFFECTS = new ArrayList<Effect>();
+    public static final DeferredRegister<Effect> EFFECTS=DeferredRegister.create(ForgeRegistries.POTIONS, FHMain.MODID);
+    public static final RegistryObject<Effect> HYPOTHERMIA = register("hypothermia",()->  new HypothermiaEffect(EffectType.HARMFUL, 0x57BDE8));
+    public static final RegistryObject<Effect> HYPERTHERMIA = register("hyperthermia",()->  new HyperthermiaEffect(EffectType.HARMFUL, 0xFF9800));
+    public static final RegistryObject<Effect> NYCTALOPIA = register("nyctalopia",()->  new BaseEffect(EffectType.HARMFUL, 0x787dab) {
+    });
+    public static final RegistryObject<Effect> SCURVY = register("scurvy",()->  new BaseEffect(EffectType.HARMFUL, 0xc47b34) {
+    });
+    public static final RegistryObject<Effect> ANEMIA = register("anemia",()->  new AnemiaEffect(EffectType.HARMFUL, 0x571b1c) {
+    });
+    public static final RegistryObject<Effect> ION = register("ionizing_radiation",()->  new IonEffect(EffectType.NEUTRAL, 0x92cbe5) {
+    });
+    public static final RegistryObject<Effect> WET = register("wet",()->  new BaseEffect(EffectType.NEUTRAL, 816760296) {
+    });
+    public static final RegistryObject<Effect> SAD = register("lethargic",()->  new BaseEffect(EffectType.NEUTRAL, 816760296) {
+    });
+    public static final RegistryObject<Effect> SAUNA = register("sauna",()-> new SaunaEffect(EffectType.BENEFICIAL, 816760296) {
+    });
 
-    public static final Effect HYPOTHERMIA = register("hypothermia", new HypothermiaEffect(EffectType.HARMFUL, 0x57BDE8));
-    public static final Effect HYPERTHERMIA = register("hyperthermia", new HyperthermiaEffect(EffectType.HARMFUL, 0xFF9800));
-    public static final Effect NYCTALOPIA = register("nyctalopia", new BaseEffect(EffectType.HARMFUL, 0x787dab) {
-    });
-    public static final Effect SCURVY = register("scurvy", new BaseEffect(EffectType.HARMFUL, 0xc47b34) {
-    });
-    public static final Effect ANEMIA = register("anemia", new AnemiaEffect(EffectType.HARMFUL, 0x571b1c) {
-    });
-    public static final Effect ION = register("ionizing_radiation", new IonEffect(EffectType.NEUTRAL, 0x92cbe5) {
-    });
-    public static final Effect WET = register("wet", new BaseEffect(EffectType.NEUTRAL, 816760296) {
-    });
-    public static final Effect SAD = register("lethargic", new BaseEffect(EffectType.NEUTRAL, 816760296) {
-    });
-    public static final Effect SAUNA = register("sauna", new SaunaEffect(EffectType.BENEFICIAL, 816760296) {
-    });
-
-    public static Effect register(String name, Effect effect) {
-        effect.setRegistryName(FHMain.rl(name));
-        EFFECTS.add(effect);
-        return effect;
-    }
-
-    public static void registerAll(IForgeRegistry<Effect> registry) {
-        for (Effect effect : EFFECTS) {
-            registry.register(effect);
-        }
+    public static <T extends Effect> RegistryObject<T> register(String name, Supplier<T> effect) {
+    	return EFFECTS.register(name, effect);
     }
 
 }

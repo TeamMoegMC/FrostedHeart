@@ -19,12 +19,13 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import com.mojang.datafixers.util.Pair;
-import net.minecraft.nbt.CompoundNBT;
+import static com.teammoeg.frostedheart.climate.WorldTemperature.*;
 
 import java.util.Random;
 
-import static com.teammoeg.frostedheart.climate.WorldTemperature.*;
+import com.mojang.datafixers.util.Pair;
+
+import net.minecraft.nbt.CompoundNBT;
 
 /**
  * A climate event defined by a set of timestamps and temperature

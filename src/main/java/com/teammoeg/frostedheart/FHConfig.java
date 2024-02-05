@@ -22,6 +22,8 @@ package com.teammoeg.frostedheart;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.teammoeg.frostedheart.util.FHTemperatureDifficulty;
+
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -39,7 +41,9 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue enableFrozenVignette;
         public final ForgeConfigSpec.BooleanValue enableHeatVignette;
         public final ForgeConfigSpec.BooleanValue enableFrozenSound;
-
+        public final ForgeConfigSpec.BooleanValue autoMode;
+        public final ForgeConfigSpec.IntValue autoModeInterval;
+        public final ForgeConfigSpec.DoubleValue textSpeed;
         Client(ForgeConfigSpec.Builder builder) {
             enableUI = builder
                     .comment("Enables The Winter Rescue HUD. THIS IS MODPACK CORE FEATURE, DISABLING IS NOT RECOMMENDED. ")
@@ -73,12 +77,23 @@ public class FHConfig {
             enableFrozenSound = builder
                     .comment("Enables the frozen sound when player is freezing. ")
                     .define("enableFrozenSound", true);
+            builder.push("scenario");
+            autoMode=builder.comment("EnableaAuto click when scenario requires")
+            	.define("autoMode", true);
+            autoModeInterval=builder.comment("Tick before click when a click is required to progress")
+            	.defineInRange("autoModeInterval",40,0,500);
+            textSpeed=builder.comment("Base text appear speed, actual speed may change by scenario if necessary, speed 1 is 0.5 character per tick.")
+            	.defineInRange("textSpeed", 1d, 0.000001, 100000);
+            builder.pop();
+
+
         }
     }
 
     public static class Common {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
+        public final ForgeConfigSpec.BooleanValue enableDailyKitchen;
 
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
@@ -87,6 +102,9 @@ public class FHConfig {
             blackmods = builder
                     .comment("BlackListed mods to kick player")
                     .defineList("Mod Blacklist", new ArrayList<>(), s -> true);
+            enableDailyKitchen = builder
+                    .comment("Enables sending wanted food message. ")
+                    .define("enableDailyKitchen", true);
         }
     }
 
@@ -94,7 +112,7 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue alwaysKeepInventory;
         public final ForgeConfigSpec.BooleanValue fixEssJeiIssue;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> developers;
-        public final ForgeConfigSpec.EnumValue<FHDifficulty> tdiffculty;
+        public final ForgeConfigSpec.EnumValue<FHTemperatureDifficulty> tdiffculty;
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
         public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
@@ -118,7 +136,7 @@ public class FHConfig {
                     .comment("Special array of players")
                     .defineList("Player Whitelist", DEFAULT_WHITELIST, s -> true);
             tdiffculty = builder.comment("Temperature System difficulty", "Easy=Strong body", "Normal=Average", "Hard=Reality", "Hardcore=Sick body")
-                    .defineEnum("temperatureDifficulty", FHDifficulty.Normal);
+                    .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
             steamCoreMaxPower = builder.comment("The max power which steam core can store.Steam Core will cost the power stored without any heat source connected.")

@@ -19,13 +19,12 @@
 
 package com.teammoeg.frostedheart.trade.network;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.inventory.container.Container;
 import net.minecraft.network.PacketBuffer;

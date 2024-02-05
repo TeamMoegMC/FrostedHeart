@@ -19,8 +19,16 @@
 
 package com.teammoeg.frostedheart.town;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.PriorityQueue;
+
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -29,9 +37,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Town data for a whole team.

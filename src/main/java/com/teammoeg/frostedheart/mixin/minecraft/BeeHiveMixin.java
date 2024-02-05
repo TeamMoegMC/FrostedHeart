@@ -19,15 +19,20 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import net.minecraft.tileentity.BeehiveTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+
+import net.minecraft.tileentity.BeehiveTileEntity;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityType;
+/**
+ * Cause bee stay inside hive when cold, prevents them from dying
+ * 
+ * */
 @Mixin(BeehiveTileEntity.class)
 public class BeeHiveMixin extends TileEntity {
 

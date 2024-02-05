@@ -1,21 +1,25 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
+import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
+import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLLayerContent;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import net.minecraft.client.Minecraft;
 
 public class RenderParams {
-	ImageScreenDialog screen;
+	IScenarioDialog screen;
 	MatrixStack matrixStack;
 	int mouseX;
 	int mouseY;
 	float partialTicks;
 	float opacity;
-	int x,y,width,height,contentWidth,contentHeight,offsetX,offsetY;
+	float xzoom=1,yzoom=1;
+	int x,y,width,height,offsetX,offsetY;
 	boolean forceFirst;
-	public RenderParams(ImageScreenDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+	int contentWidth,contentHeight;
+	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		super();
 		this.screen = screen;
 		this.matrixStack = matrixStack;
@@ -24,17 +28,15 @@ public class RenderParams {
 		this.partialTicks = partialTicks;
 		width=this.getScreenWidth();
 		height=this.getScreenHeight();
-		contentWidth=width;
-		contentHeight=height;
 		offsetX=offsetY=0;
 		x=y=0;
 		opacity=1;
 	}
 
 
-	public RenderParams(ImageScreenDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
-			float opacity, int x, int y, int width, int height, int contentWidth, int contentHeight, int offsetX,
-			int offsetY) {
+	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
+			float opacity, int x, int y, int width, int height, float xzoom, float yzoom, int offsetX,
+			int offsetY,int contentWidth,int contentHeight) {
 		super();
 		this.screen = screen;
 		this.matrixStack = matrixStack;
@@ -46,13 +48,15 @@ public class RenderParams {
 		this.y = y;
 		this.width = width;
 		this.height = height;
-		this.contentWidth = contentWidth;
-		this.contentHeight = contentHeight;
+		this.xzoom = xzoom;
+		this.yzoom = yzoom;
 		this.offsetX = offsetX;
 		this.offsetY = offsetY;
+		this.contentWidth=contentWidth;
+		this.contentHeight=contentHeight;
 	}
-	public RenderParams(ImageScreenDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
-			float opacity, int x, int y, int width, int height, int contentWidth, int contentHeight) {
+	public RenderParams(IScenarioDialog screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks,
+			float opacity, int x, int y, int width, int height, float xzoom, float yzoom) {
 		super();
 		this.screen = screen;
 		this.matrixStack = matrixStack;
@@ -64,8 +68,8 @@ public class RenderParams {
 		this.y = y;
 		this.width = width;
 		this.height = height;
-		this.contentWidth = contentWidth;
-		this.contentHeight = contentHeight;
+		this.xzoom = xzoom;
+		this.yzoom = yzoom;
 		this.offsetX = 0;
 		this.offsetY = 0;
 	}
@@ -76,16 +80,17 @@ public class RenderParams {
 		return ClientUtils.mc().getMainWindow().getScaledHeight();
 	}
 	public RenderParams copy() {
-		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,contentWidth,contentHeight,offsetX,offsetY);
+		return new RenderParams(screen, matrixStack, mouseX, mouseY, partialTicks, opacity, x, y, width, height,xzoom,yzoom,offsetX,offsetY,contentWidth,contentHeight);
 	}
-	public RenderParams copyWithCurrent(LayerContent layer) {
-		return new RenderParams(screen, matrixStack, mouseX-ClientScene.fromRelativeXW(layer.x), mouseY-ClientScene.fromRelativeYH(layer.y), partialTicks, opacity*layer.opacity, x+ClientScene.fromRelativeXW(layer.x), y+ClientScene.fromRelativeYH(layer.y), Math.min(ClientScene.fromRelativeXW(layer.width),width-ClientScene.fromRelativeXW(layer.x)), Math.min(ClientScene.fromRelativeYH(layer.height),height-ClientScene.fromRelativeYH(layer.y)),ClientScene.fromRelativeXW(layer.width),ClientScene.fromRelativeYH(layer.height));
+	public RenderParams copyWithCurrent(GLLayerContent layer) {
+		return new RenderParams(screen, matrixStack, mouseX-ClientScene.fromRelativeXW(layer.getX()), mouseY-ClientScene.fromRelativeYH(layer.getY()), partialTicks,
+				opacity*layer.getOpacity(), x+ClientScene.fromRelativeXW(layer.getX()), y+ClientScene.fromRelativeYH(layer.getY()),
+				Math.min(ClientScene.fromRelativeXW(layer.getWidth()),width-ClientScene.fromRelativeXW(layer.getX())),
+				Math.min(ClientScene.fromRelativeYH(layer.getHeight()),height-ClientScene.fromRelativeYH(layer.getY())),
+				xzoom,yzoom,offsetX,offsetY,ClientScene.fromRelativeXW(layer.getWidth()),ClientScene.fromRelativeYH(layer.getHeight()));
 	}
-	public ImageScreenDialog getScreen() {
+	public IScenarioDialog getScreen() {
 		return screen;
-	}
-	public void setScreen(ImageScreenDialog screen) {
-		this.screen = screen;
 	}
 	public MatrixStack getMatrixStack() {
 		return matrixStack;
@@ -139,7 +144,7 @@ public class RenderParams {
 		return y+offsetY;
 	}
 	public void setContentY(int y) {
-		this.offsetX = y-this.y;
+		this.offsetY = y-this.y;
 	}
 	public int getWidth() {
 		return width;
@@ -155,19 +160,19 @@ public class RenderParams {
 	}
 
 	public Minecraft getMinecraft() {
-		return screen.getMinecraft();
+		return ClientUtils.mc();
 	}
 	public int getContentWidth() {
-		return contentWidth;
+		return (int) (xzoom*this.contentWidth);
 	}
 	public void setContentWidth(int contentWidth) {
-		this.contentWidth = contentWidth;
+		this.xzoom = contentWidth*1f/this.contentWidth;
 	}
 	public int getContentHeight() {
-		return contentHeight;
+		return (int) (yzoom*this.contentHeight);
 	}
 	public void setContentHeight(int contentHeight) {
-		this.contentHeight = contentHeight;
+		this.yzoom = contentHeight*1f/this.contentHeight;
 	}
 
 

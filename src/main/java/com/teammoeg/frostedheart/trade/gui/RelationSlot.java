@@ -19,15 +19,16 @@
 
 package com.teammoeg.frostedheart.trade.gui;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class RelationSlot extends Widget {
     Supplier<Integer> toshow;
