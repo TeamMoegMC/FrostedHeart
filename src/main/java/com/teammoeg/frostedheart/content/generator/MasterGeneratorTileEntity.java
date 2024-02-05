@@ -285,7 +285,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     protected void tickEffects(boolean isActive) {
 
     }
+    @Override
+    protected void tickDrives(boolean isActive) {
 
+    }
     @Override
     protected boolean tickFuel() {
         // just finished process or during process

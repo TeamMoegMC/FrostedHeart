@@ -153,7 +153,10 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
             ClientUtils.spawnSteamParticles(world, this.getPos());
         }
     }
+    @Override
+    protected void tickDrives(boolean isActive) {
 
+    }
     @Override
     protected boolean tickFuel() {
 
