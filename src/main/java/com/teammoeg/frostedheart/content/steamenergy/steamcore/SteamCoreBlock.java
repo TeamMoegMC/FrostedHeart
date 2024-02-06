@@ -5,12 +5,16 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -23,6 +27,8 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.*;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
@@ -74,5 +80,11 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEne
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
         return superResult;
+    }
+
+
+    @Override
+    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
+        return dir == state.get(BlockStateProperties.HORIZONTAL_FACING);
     }
 }
