@@ -58,6 +58,7 @@ import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
@@ -295,22 +296,24 @@ public class JEICompat implements IModPlugin {
         CuttingCategory.matching = ForgeRegistries.ITEMS.getValues().stream()
                 .filter(e -> e.getTags().contains(CuttingCategory.ktag)).collect(Collectors.toList());
 
-        registration.addRecipes(new ArrayList<>(GeneratorRecipe.recipeList.values()), GeneratorFuelCategory.UID);
-        registration.addRecipes(new ArrayList<>(GeneratorSteamRecipe.recipeList.values()), GeneratorSteamCategory.UID);
-        registration.addRecipes(new ArrayList<>(ChargerRecipe.recipeList.values()), ChargerCategory.UID);
+        registration.addRecipes(FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE), GeneratorFuelCategory.UID);
+        registration.addRecipes(GeneratorSteamRecipe.recipeList.values(), GeneratorSteamCategory.UID);
+        registration.addRecipes(FHUtils.filterRecipes(recipeManager,ChargerRecipe.TYPE), ChargerCategory.UID);
         registration.addRecipes(recipeManager.getRecipesForType(IRecipeType.SMOKING), ChargerCookingCategory.UID);
-        registration.addRecipes(new ArrayList<>(CampfireDefrostRecipe.recipeList.values()),
+        registration.addRecipes(CampfireDefrostRecipe.recipeList.values(),
                 CampfireDefrostCategory.UID);
-        registration.addRecipes(new ArrayList<>(SmokingDefrostRecipe.recipeList.values()), SmokingDefrostCategory.UID);
-        registration.addRecipes(new ArrayList<>(CampfireDefrostRecipe.recipeList.values()), ChargerDefrostCategory.UID);
+ 
+        registration.addRecipes(FHUtils.filterRecipes(recipeManager,IRecipeType.SMOKING).stream()
+            .filter(iRecipe -> iRecipe.getClass() == SmokingDefrostRecipe.class).collect(Collectors.toList()), SmokingDefrostCategory.UID);
+        registration.addRecipes(CampfireDefrostRecipe.recipeList.values(), ChargerDefrostCategory.UID);
         registration.addRecipes(Arrays.asList(
                         new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.red_mushroombed.get()), 0),
                                 new ItemStack(Items.RED_MUSHROOM, 10)),
                         new CuttingRecipe(FHUtils.Damage(new ItemStack(FHItems.brown_mushroombed.get()), 0),
                                 new ItemStack(Items.BROWN_MUSHROOM, 10))),
                 CuttingCategory.UID);
-        registration.addRecipes(new ArrayList<>(SaunaRecipe.recipeList.values()), SaunaCategory.UID);
-        List<IncubateRecipe> rcps = new ArrayList<>(IncubateRecipe.recipeList.values());
+        registration.addRecipes(FHUtils.filterRecipes(recipeManager,SaunaRecipe.TYPE), SaunaCategory.UID);
+        List<IncubateRecipe> rcps = new ArrayList<>(FHUtils.filterRecipes(recipeManager,IncubateRecipe.TYPE));
         rcps.add(new IncubateRecipe());
         registration.addRecipes(rcps, IncubatorCategory.UID);
     }

@@ -33,12 +33,15 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
+import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -221,7 +224,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
 
     @Override
     public boolean isStackValid(int slot, ItemStack itemStack) {
-        return true;
+        return findRecipe(itemStack) != null;
     }
 
     public boolean isWorking() {
@@ -297,6 +300,12 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
         return true;
     }
 
+    public SaunaRecipe findRecipe(ItemStack input) {
+        for (SaunaRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), SaunaRecipe.TYPE))
+            if (recipe.input.test(input))
+                return recipe;
+        return null;
+    }
     @Override
     public void tick() {
         // server side logic
@@ -340,7 +349,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
                     effectDuration = 0;
                     effectAmplifier = 0;
                     if (!medicine.isEmpty()) {
-                        SaunaRecipe recipe = SaunaRecipe.findRecipe(medicine);
+                        SaunaRecipe recipe =findRecipe(medicine);
                         if (recipe != null) {
                             maxTime = recipe.time;
                             remainTime += recipe.time;

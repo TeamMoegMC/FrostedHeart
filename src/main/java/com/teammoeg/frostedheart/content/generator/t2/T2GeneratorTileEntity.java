@@ -68,7 +68,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     float power = 0;
     SteamEnergyNetwork sen = null;
     float spowerMod = 0;
-    float slevelMod = 1;
+    float slevelMod = 0 ;
     int liquidtick = 0;
     int noliquidtick = 0;
     int tickUntilStopBoom = 20;
@@ -232,8 +232,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
     protected void tickControls() {
         super.tickControls();
-
-
         int power = this.world.getStrongPower(getBlockPosForPos(redstone));
         if (power > 0) {
             if (power > 10) {
@@ -284,17 +282,12 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     }
 
     @Override
-    protected void tickFuel() {
-        super.tickFuel();
-        this.tickLiquid();
-        manager.tick();
-    }
-
-    @Override
-    public void tickHeat() {
-        super.tickHeat();
-        this.setTemperatureLevel(super.getHeated() / 100F);
-        this.setRangeLevel(1 * slevelMod);
+    protected boolean tickFuel() {
+    	manager.tick();
+        boolean res=super.tickFuel();
+        if(res)
+        	this.tickLiquid();
+        return res;
     }
 
     protected void tickLiquid() {
@@ -306,7 +299,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         float rt = this.getTemperatureLevel();
         if (rt == 0) {
             this.spowerMod = 0;
-            this.slevelMod = 1;
+            this.slevelMod = 0;
         }
         if (noliquidtick > 0) {
             noliquidtick--;
@@ -340,7 +333,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         noliquidtick = 40;
         this.markChanged(true);
         this.spowerMod = 0;
-        this.slevelMod = 1;
+        this.slevelMod = 0;
     }
 
     @Override
@@ -354,4 +347,14 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         nbt.putFloat("liquid_tick", liquidtick);
         nbt.put("fluid", tankx);
     }
+
+	@Override
+	public float getMaxTemperatureLevel() {
+		return 1+(isOverdrive()?1:0)+slevelMod;
+	}
+
+	@Override
+	public float getMaxRangeLevel() {
+		return 1+slevelMod;
+	}
 }

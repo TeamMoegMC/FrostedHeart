@@ -43,6 +43,7 @@ import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.machines.RubbingTool;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.LazyOptional;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
@@ -236,7 +237,7 @@ public class ResearchListeners {
     @OnlyIn(Dist.CLIENT)
     public static boolean canExamine(ItemStack i) {
         if (i.isEmpty()) return false;
-        for (InspireRecipe ir : InspireRecipe.recipes) {
+        for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(i)) {
                 return EnergyCore.hasExtraEnergy(ClientUtils.getPlayer(), ir.inspire);
             }
@@ -400,7 +401,7 @@ public class ResearchListeners {
                 }
                 trd.getCurrentResearch().ifPresent(r -> RubbingTool.setResearch(i, r.getLId()));
             }
-            for (InspireRecipe ir : InspireRecipe.recipes) {
+            for (InspireRecipe ir : FHUtils.filterRecipes(s.getServerWorld().getRecipeManager(), InspireRecipe.TYPE)) {
                 if (ir.item.test(i)) {
                     if (EnergyCore.useExtraEnergy(s, ir.inspire)) {
                         i.shrink(1);

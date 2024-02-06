@@ -57,6 +57,7 @@ import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
@@ -169,7 +170,7 @@ public class ClientEvents {
         Item i = stack.getItem();
         ITempAdjustFood itf = null;
         IWarmKeepingEquipment iwe = null;
-        for (InspireRecipe ir : InspireRecipe.recipes) {
+        for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(stack)) {
                 event.getToolTip().add(GuiUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
                 break;

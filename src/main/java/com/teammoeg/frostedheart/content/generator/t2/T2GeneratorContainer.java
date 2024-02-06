@@ -36,7 +36,7 @@ public class T2GeneratorContainer extends IEBaseContainer<T2GeneratorTileEntity>
         this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
             @Override
             public boolean isItemValid(ItemStack itemStack) {
-                return GeneratorRecipe.findRecipe(itemStack) != null;
+            	return tile.isStackValid(0, itemStack);
             }
         });
 

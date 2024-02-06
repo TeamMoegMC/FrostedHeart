@@ -99,11 +99,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
     @Override
-    public int getActualTemp() {
-        return (int) (tempLevelLast * 10);
-    }
-
-    @Override
     public int[] getCurrentProcessesMax() {
         return new int[]{processMax};
     }
@@ -158,39 +153,39 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
             ClientUtils.spawnSteamParticles(world, this.getPos());
         }
     }
-
     @Override
-    protected void tickFuel() {
+    protected boolean tickFuel() {
 
         network.tick();
         if (!isWorking()) {
             if (this.getIsActive())
                 this.setAllActive(false);
-            return;
+            return false;
         }
+        boolean hasFuel=false;
         if (process > 0) {
             if (network.isValid())
                 process -= network.getTemperatureLevel();
             else
                 process -= tempLevelLast;
+            hasFuel=true;
         } else if (network.isValid() && network.tryDrainHeat(4 * 160 * network.getTemperatureLevel())) {
             process = (int) (160 * network.getTemperatureLevel());
             processMax = (int) (160 * network.getTemperatureLevel());
             this.setAllActive(true);
+            hasFuel=true;
         } else {
             this.setAllActive(false);
+            hasFuel=false;
         }
         if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
             tempLevelLast = network.getTemperatureLevel();
             this.markChanged(true);
         }
+        return hasFuel;
     }
 
-    @Override
-    public void tickHeat() {
 
-
-    }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -200,4 +195,16 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         nbt.putInt("processMax", processMax);
         nbt.putFloat("temp", tempLevelLast);
     }
+
+
+	@Override
+	public float getMaxTemperatureLevel() {
+		return tempLevelLast;
+	}
+
+
+	@Override
+	public float getMaxRangeLevel() {
+		return 0.5f;
+	}
 }

@@ -26,7 +26,9 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.town.GeneratorData;
+import com.teammoeg.frostedheart.util.FHUtils;
 
+import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -208,10 +210,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
         if (stack.isEmpty())
             return false;
         if (slot == INPUT_SLOT)
-            return GeneratorRecipe.findRecipe(stack) != null;
+            return findRecipe(stack) != null;
         return false;
     }
-
+    public GeneratorRecipe findRecipe(ItemStack input) {
+        for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), GeneratorRecipe.TYPE))
+            if (ItemUtils.stackMatchesObject(input, recipe.input))
+                return recipe;
+        return null;
+    }
     @Override
     public void onShutDown() {
     }
@@ -278,19 +285,23 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     protected void tickEffects(boolean isActive) {
 
     }
+    protected void tickDrives(boolean isActive) {
 
+    }
     @Override
-    protected void tickFuel() {
+    protected boolean tickFuel() {
         // just finished process or during process
         Optional<GeneratorData> data = this.getData();
         data.ifPresent(t -> {
             t.isOverdrive = this.isOverdrive;
             t.isWorking = this.isWorking;
         });
-        data.ifPresent(t -> t.tick());
-        setAllActive(data.map(t -> t.isActive).orElse(false));
+        data.ifPresent(t -> t.tick(this.getWorld()));
+        boolean isWorking=data.map(t -> t.isActive).orElse(false);
         process = data.map(t -> t.process).orElse(0);
         processMax = data.map(t -> t.processMax).orElse(0);
+        tickDrives(isWorking);
+        return isWorking;
     	/*if(this.getIsActive())
     		this.markContainingBlockForUpdate(null);*/
     }
