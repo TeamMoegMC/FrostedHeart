@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.DebugHeaterTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatPipeTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.fountain.FountainTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
@@ -91,6 +92,10 @@ public class FHTileTypes {
 
     public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
             "steam_core", makeType(SteamCoreTileEntity::new, FHBlocks.steam_core)
+    );
+
+    public static final RegistryObject<TileEntityType<FountainTileEntity>> FOUNTAIN = REGISTER.register(
+            "fountain", makeType(FountainTileEntity::new, FHBlocks.fountain)
     );
 
     public static final RegistryObject<TileEntityType<SaunaTileEntity>> SAUNA = REGISTER.register(

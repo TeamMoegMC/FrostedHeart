@@ -85,7 +85,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
+        return network.receiveConnection(world, pos, to, dist);
     }
 
     @Override
