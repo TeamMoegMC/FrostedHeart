@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "sgtype=0": {
+      "model": "frostedheart:block/small_garage/block_0"
+    },
+    "sgtype=1": {
+      "model": "frostedheart:block/small_garage/block_1"
+    },
+    "sgtype=2": {
+      "model": "frostedheart:block/small_garage/block_2"
+    },
+    "sgtype=3": {
+      "model": "frostedheart:block/small_garage/block_3"
+    }
+  }
+}
