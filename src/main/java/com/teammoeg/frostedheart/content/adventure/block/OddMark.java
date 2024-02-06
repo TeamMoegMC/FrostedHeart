@@ -25,8 +25,8 @@ public class OddMark extends FHBaseBlock {
     private static IntegerProperty COLOR = IntegerProperty.create("markcolor", 0, colorCount - 1);
     static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 1, 16);
     static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 2, 16);
-    public OddMark(String name, AbstractBlock.Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public OddMark(AbstractBlock.Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0).with(COLOR, 0));
     }
 

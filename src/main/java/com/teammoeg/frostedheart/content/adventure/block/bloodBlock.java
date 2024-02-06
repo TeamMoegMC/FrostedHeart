@@ -26,8 +26,8 @@ import java.util.function.BiFunction;
 public class bloodBlock extends FHBaseBlock {
     private static IntegerProperty BLDT = IntegerProperty.create("bloodtype", 0, 3);
     private static IntegerProperty BLDC = IntegerProperty.create("bloodcolor", 0, 1);
-    public bloodBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public bloodBlock(Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(BLDT, 0).with(BLDC, 0));
     }
 

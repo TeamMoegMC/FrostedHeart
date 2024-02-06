@@ -86,15 +86,14 @@ public class FHBlocks {
 	}
     public static RegistryObject<Block> generator_brick = register("generator_brick",()->new FHBaseBlock(stoneDecoProps));
 
-    public static Block generator_brick = new FHBaseBlock("generator_brick", stoneDecoProps, FHBlockItem::new);
-    public static Block blood_block = new bloodBlock("blood_block", stoneProps, FHBlockItem::new);
+ /*   public static Block blood_block = new bloodBlock("blood_block", stoneProps, FHBlockItem::new);
     public static Block bone_block = new BoneBlock("bone_block", grassProps, FHBlockItem::new);
     //public static Block desk = new DeskBlock("desk", redStoneProps, FHBlockItem::new);
     public static Block small_garage = new SmallGarage("small_garage", grassProps, FHBlockItem::new);
     public static Block package_block = new PackageBlock("package_block", woodenProps, FHBlockItem::new);
     public static Block pebble_block = new PebbleBlock("pebble_block", stoneProps, FHBlockItem::new);
     public static Block odd_mark = new OddMark("odd_mark", redStoneProps, FHBlockItem::new);
-    public static Block wooden_box = new WoodenBox("wooden_box", woodenProps, FHBlockItem::new);
+    public static Block wooden_box = new WoodenBox("wooden_box", woodenProps, FHBlockItem::new);*/
     public static RegistryObject<Block> generator_core_t1 = register("generator_core_t1",()->new FHBaseBlock( stoneDecoProps));
     public static RegistryObject<Block> generator_amplifier_r1 = register("generator_amplifier_r1",()->new FHBaseBlock( stoneDecoProps));
     public static RegistryObject<Block> rye_block = register("rye_block",()->new RyeBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps));

@@ -46,6 +46,7 @@ public class GeneratorData {
     public int processMax = 0;
     public int overdriveLevel = 0;
     public int steamLevel;
+    public int heat;
     public float power;
     public Fluid fluid;
     public boolean isWorking;

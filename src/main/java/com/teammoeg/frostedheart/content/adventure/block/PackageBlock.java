@@ -27,8 +27,8 @@ public class PackageBlock extends FHBaseBlock {
     private static Integer colorCount = 3;
     private static IntegerProperty COLOR = IntegerProperty.create("packagecolor", 0, colorCount - 1);
     static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 15, 16);
-    public PackageBlock(String name, AbstractBlock.Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public PackageBlock(AbstractBlock.Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0).with(COLOR, 0));
     }
 

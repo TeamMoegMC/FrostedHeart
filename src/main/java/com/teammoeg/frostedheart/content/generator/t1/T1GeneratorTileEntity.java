@@ -63,6 +63,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
                         TileEntity te = Utils.getExistingTileEntity(world, actualPos);
                         if (te instanceof BlastFurnaceTileEntity) {
                             if (++blastBlockCount == 9) {
+                            	BlastFurnaceTileEntity master=((BlastFurnaceTileEntity) te).master();
                                 lastSupportPos = actualPos;
                                 neighborType = NeighborTypeEnum.BlastFurnaceTileEntity;
                                 System.out.println("The TileEntity is BlastFurnaceTileEntity");

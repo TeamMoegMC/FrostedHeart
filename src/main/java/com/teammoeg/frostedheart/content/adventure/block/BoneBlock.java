@@ -32,8 +32,8 @@ public class BoneBlock extends FHBaseBlock {
     private static IntegerProperty BNT = IntegerProperty.create("bonetype", 0, 5);
     static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 3, 16);
     static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 15, 16);
-    public BoneBlock(String name, AbstractBlock.Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public BoneBlock(AbstractBlock.Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(BNT, 0));
     }
 

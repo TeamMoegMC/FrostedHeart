@@ -262,17 +262,15 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public void regist() {
         getTeamData().ifPresent(t -> {
+        	if(!this.pos.equals(t.generatorData.actualPos))
+        		t.generatorData.heat=0;
+        	else
+        		t.generatorData.heat=Math.min(t.generatorData.heat,this.getMaxHeated());
             t.generatorData.actualPos = this.pos;
             t.generatorData.dimension = this.world.getDimensionKey();
         });
     }
 
-    public void registIfPossible() {
-        getTeamData().filter(t -> t.generatorData.actualPos.equals(this.pos)).ifPresent(t -> {
-            t.generatorData.actualPos = this.pos;
-            t.generatorData.dimension = this.world.getDimensionKey();
-        });
-    }
 
     @Override
     public void tick() {

@@ -81,26 +81,7 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEne
         ActionResultType superResult = super.onBlockActivated(state, world, pos, player, hand, hit);
         return superResult;
     }
-    @Override
-    public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
-        super.onBlockHarvested(worldIn, pos, state, player);
-        spawnAsEntity(worldIn, pos, new ItemStack(FHBlocks.steam_core, 1));
-    }
 
-    @Override
-    public void onExplosionDestroy(World worldIn, BlockPos pos, Explosion explosionIn) {
-        super.onExplosionDestroy(worldIn, pos, explosionIn);
-        spawnAsEntity(worldIn, pos, new ItemStack(FHBlocks.steam_core, 1));
-    }
-
-    @Override
-    public void addInformation(ItemStack stack, IBlockReader worldIn, List<ITextComponent> tooltip,
-                               ITooltipFlag flagIn) {
-        super.addInformation(stack, worldIn, tooltip, flagIn);
-        if (stack.hasTag() && stack.getTag().getBoolean("prod")) {
-            tooltip.add(GuiUtils.str("For Display Only"));
-        }
-    }
 
     @Override
     public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
