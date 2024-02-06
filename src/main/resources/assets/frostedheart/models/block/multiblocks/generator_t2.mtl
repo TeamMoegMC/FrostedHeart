@@ -1,8 +1,8 @@
-# Made in Blockbench 4.9.3
+# Made in Blockbench 4.5.2
 newmtl m_23b2b941-701a-54aa-0541-249b2cf872ef
-map_Kd frostedheart:block/multiblocks/generatoriibottom.png
+map_Kd frostedheart:block/multiblocks/generatoriibottom
 newmtl m_35b0c822-c1e5-4e4a-dcb3-d0bc964705ed
-map_Kd frostedheart:block/multiblocks/generatoriimiddle.png
+map_Kd frostedheart:block/multiblocks/generatoriimiddle
 newmtl m_de01412d-a255-dca4-f85c-c5173ba20de4
-map_Kd frostedheart:block/multiblocks/generatoriiupper.png
+map_Kd frostedheart:block/multiblocks/generatoriiupper
 newmtl none
