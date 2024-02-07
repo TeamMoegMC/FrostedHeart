@@ -86,8 +86,8 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     public int getActualRange() {
     	float rlevel=getRangeLevel();
     	if(rlevel<=1)
-    		return (int) (8*rlevel);
-    	return (int) (8+(rlevel-1)*4);
+    		return (int) (12*rlevel);
+    	return (int) (12+(rlevel-1)*4);
     }
 
     public int getActualTemp() {

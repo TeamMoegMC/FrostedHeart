@@ -252,8 +252,11 @@ public class FHUtils {
 	}
 	public static <R extends IRecipe<IInventory>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, IRecipeType<R> recipeType) {
         if(recipeManager==null) {
+    
         	recipeManager=ClientUtils.mc().world.getRecipeManager();
         }
+        if(recipeManager==null)
+        	return ImmutableList.of();
 		return recipeManager.getRecipesForType(recipeType);
     }
 	public static ItemStack ArmorLiningNBT(ItemStack stack) {

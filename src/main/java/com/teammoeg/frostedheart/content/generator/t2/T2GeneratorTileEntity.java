@@ -284,10 +284,10 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
     protected boolean tickFuel() {
     	manager.tick();
-        boolean res=super.tickFuel();
-        if(res)
+        boolean active=super.tickFuel();
+        if(active)
         	this.tickLiquid();
-        return res;
+        return active;
     }
 
     protected void tickLiquid() {
@@ -297,10 +297,10 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         if (!this.getIsActive())
             return;
         float rt = this.getTemperatureLevel();
-        if (rt == 0) {
+        /*if (rt == 0) {
             this.spowerMod = 0;
             this.slevelMod = 0;
-        }
+        }*/
         if (noliquidtick > 0) {
             noliquidtick--;
             return;

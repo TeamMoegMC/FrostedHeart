@@ -20,8 +20,10 @@
 package com.teammoeg.frostedheart.climate.player;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
@@ -35,6 +37,8 @@ import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
@@ -128,7 +132,7 @@ public class TemperatureUpdate {
             }
         }
     }
-
+    public static final UUID envTempId=UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
     /**
      * Perform temperature tick logic
      * <p>
@@ -196,6 +200,12 @@ public class TemperatureUpdate {
                 // burning heat
                 if (player.isBurning())
                     envtemp += 150F;
+                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
+                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).applyNonPersistentModifier(new AttributeModifier(envTempId,"player environment modifier", envtemp, Operation.ADDITION));
+                
+                
+                envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
+                
                 // normalize
                 envtemp -= 37F;
                 float keepwarm = 0;

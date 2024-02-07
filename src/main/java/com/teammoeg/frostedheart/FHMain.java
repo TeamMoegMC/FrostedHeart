@@ -150,6 +150,7 @@ public class FHMain {
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
+        FHAttributes.REGISTER.register(mod);
         FHEffects.EFFECTS.register(mod);
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
