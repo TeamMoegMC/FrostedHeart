@@ -40,8 +40,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3i;
 
 public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {
-    public T1GeneratorTileEntity.GeneratorUIData guiData = new T1GeneratorTileEntity.GeneratorUIData();
-    public boolean hasFuel;
+
+    
     GeneratorDriveHandler generatorDriveHandler;
     protected static BlockPos lastSupportPos;
     protected static NeighborTypeEnum neighborType;
@@ -88,34 +88,12 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
             consumer.accept((T1GeneratorTileEntity) te);
     }
 
-    @Override
-    public int getLowerBound() {
-        int distanceToGround = 2;
-        int extra = MathHelper.ceil(getRangeLevel());
-        return distanceToGround + extra;
-    }
 
-    @Override
-    public int getUpperBound() {
-        int distanceToTowerTop = 2;
-        int extra = MathHelper.ceil(getRangeLevel() * 2);
-        return distanceToTowerTop + extra;
-    }
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        hasFuel = nbt.getBoolean("hasFuel");
-    }
-
-    @Override
-    public void shutdownTick() {
-        boolean invState = !this.getInventory().get(INPUT_SLOT).isEmpty();
-        if (invState != hasFuel) {
-            hasFuel = invState;
-            this.markContainingBlockForUpdate(null);
-        }
-
+       
     }
 
     @Override
@@ -132,13 +110,6 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
             }
         }
     }
-
-    @Override
-    protected boolean tickFuel() {
-        this.hasFuel = !this.getInventory().get(INPUT_SLOT).isEmpty();
-        return super.tickFuel();
-    }
-
     @Override
     protected void tickDrives(boolean isActive) {
         if (isActive) {
@@ -150,18 +121,6 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.putBoolean("hasFuel", hasFuel);
+        
     }
-
-
-	@Override
-	public float getMaxTemperatureLevel() {
-		return isOverdrive()?2:1;
-	}
-
-
-	@Override
-	public float getMaxRangeLevel() {
-		return 1;
-	}
 }

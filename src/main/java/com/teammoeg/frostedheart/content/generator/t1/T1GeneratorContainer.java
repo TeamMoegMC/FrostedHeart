@@ -24,9 +24,10 @@ import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIntArray;
 
 public class T1GeneratorContainer extends IEBaseContainer<T1GeneratorTileEntity> {
-    public T1GeneratorTileEntity.GeneratorUIData data;
+    public IIntArray data;
 
     public T1GeneratorContainer(int id, PlayerInventory inventoryPlayer, T1GeneratorTileEntity tile) {
         super(tile, id);

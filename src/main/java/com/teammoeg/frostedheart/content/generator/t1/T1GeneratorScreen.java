@@ -26,6 +26,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
@@ -53,8 +54,8 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
         this.blit(transform, guiLeft, guiTop, 0, 0, xSize, ySize);
 
         // recipe progress icon
-        if (tile.processMax > 0 && tile.process > 0) {
-            int h = (int) (12 * (tile.process / (float) tile.processMax));
+        if (tile.guiData.get(MasterGeneratorTileEntity.PROCESS) > 0 && tile.guiData.get(MasterGeneratorTileEntity.PROCESS_MAX) > 0) {
+            int h = (int) (12 * (tile.guiData.get(MasterGeneratorTileEntity.PROCESS) / (float) tile.guiData.get(MasterGeneratorTileEntity.PROCESS_MAX)));
             this.blit(transform, guiLeft + 84, guiTop + 47 - h, 179, 1 + 12 - h, 9, h);
         }
 
@@ -68,7 +69,7 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
             this.blit(transform, guiLeft + 101, guiTop + 35, 232, 12, 19, 10);
         }
 
-        float tempLevel = tile.getActualTemp() / 10F;
+        float tempLevel = tile.getTemperatureLevel();
         float rangeLevel = tile.getRangeLevel();
         int offset, bar;
 
@@ -135,7 +136,7 @@ public class T1GeneratorScreen extends IEContainerScreen<T1GeneratorContainer> {
 
         if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
             //tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getActualTemp())));
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TmeperatureDisplayHelper.toTemperatureDeltaIntString(tile.getActualTemp())));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TmeperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {

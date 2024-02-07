@@ -27,7 +27,9 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ActionResultType;
@@ -68,12 +70,10 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
         if (!world.isRemote) {
             TileEntity te = Utils.getExistingTileEntity(world, pos);
             if (te instanceof ZoneHeatingMultiblockTileEntity && !(player instanceof FakePlayer)) {
-
-                if (((ZoneHeatingMultiblockTileEntity) te).getOwner() == null) {
-                    te = ((ZoneHeatingMultiblockTileEntity) te).master();
-                    ((ZoneHeatingMultiblockTileEntity) te).setOwner(ResearchDataAPI.getData(player).getId());
-                    if (te instanceof MasterGeneratorTileEntity)
-                        ((MasterGeneratorTileEntity) te).regist();
+            	ZoneHeatingMultiblockTileEntity<?> zte=(ZoneHeatingMultiblockTileEntity<?>) te;
+                if (zte.getOwner() == null) {
+                	zte = zte.master();
+                	zte.setOwner(ResearchDataAPI.getData(player).getId());
                 }
 
             }

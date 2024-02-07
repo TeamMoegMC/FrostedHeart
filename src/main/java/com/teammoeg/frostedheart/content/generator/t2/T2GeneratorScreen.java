@@ -26,6 +26,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
@@ -54,8 +55,8 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         GuiHelper.handleGuiTank(transform, tile.tank, guiLeft + 30, guiTop + 16, 16, 47, 177, 86, 20, 51, x, y, TEXTURE, null);
 
         // recipe progress icon
-        if (tile.processMax > 0 && tile.process > 0) {
-            int h = (int) (12 * (tile.process / (float) tile.processMax));
+        if (tile.guiData.get(MasterGeneratorTileEntity.PROCESS) > 0 && tile.guiData.get(MasterGeneratorTileEntity.PROCESS_MAX) > 0) {
+            int h = (int) (12 * (tile.guiData.get(MasterGeneratorTileEntity.PROCESS) / (float) tile.guiData.get(MasterGeneratorTileEntity.PROCESS_MAX)));
             this.blit(transform, guiLeft + 84, guiTop + 47 - h, 179, 1 + 12 - h, 9, h);
         }
 
@@ -71,7 +72,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
 
         float tempLevel = tile.getActualTemp() / 10F;
         float rangeLevel = tile.getRangeLevel();
-        float powerRatio = tile.power / tile.getMaxPower(); // (0, 1)
+        float powerRatio = tile.guiData.get(MasterGeneratorTileEntity.POWER) / tile.getMaxPower(); // (0, 1)
         int offset, bar;
 
         // temperature bar (182, 30)
@@ -151,7 +152,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
         }
 
         if (isMouseIn(mouseX, mouseY, 146, 13, 2, 54)) {
-            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString((int) tile.power)));
+            tooltip.add(GuiUtils.translateGui("generator.power.level").appendString(Integer.toString(tile.guiData.get(MasterGeneratorTileEntity.POWER))));
         }
 
         if (!tooltip.isEmpty()) {

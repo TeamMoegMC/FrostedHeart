@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
@@ -52,10 +53,8 @@ public class T1GeneratorRenderer extends TileEntityRenderer<T1GeneratorTileEntit
                        IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
         if (!te.formed || te.isDummy() || !te.getWorldNonnull().isBlockLoaded(te.getPos()))
             return;
-        if (te.process > 0 || te.hasFuel) {
-
-        } else
-            return;
+        if (!te.hasFuel())
+        	return;
 
         BlockPos blockPos = te.getPos();
         BlockState state = te.getWorld().getBlockState(blockPos);

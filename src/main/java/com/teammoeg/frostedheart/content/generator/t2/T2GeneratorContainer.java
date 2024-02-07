@@ -19,16 +19,15 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
-import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
-
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIntArray;
 
 public class T2GeneratorContainer extends IEBaseContainer<T2GeneratorTileEntity> {
-    public T2GeneratorTileEntity.GeneratorUIData data;
+    public IIntArray data;
 
     public T2GeneratorContainer(int id, PlayerInventory inventoryPlayer, T2GeneratorTileEntity tile) {
         super(tile, id);

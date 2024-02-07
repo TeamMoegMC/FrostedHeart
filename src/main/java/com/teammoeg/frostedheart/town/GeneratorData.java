@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.town;
 
+import java.util.Random;
+
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
@@ -45,19 +48,22 @@ public class GeneratorData {
     public int process = 0;
     public int processMax = 0;
     public int overdriveLevel = 0;
-    public int steamLevel;
-    public int heat;
+    public float steamLevel;
+    public int steamProcess;
+    public int heated;
     public float power;
     public Fluid fluid;
     public boolean isWorking;
     public boolean isOverdrive;
     public boolean isActive;
+    public float TLevel,RLevel;
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public ItemStack currentItem;
     private TeamResearchData teamData;
     public BlockPos actualPos = BlockPos.ZERO;
     public RegistryKey<World> dimension;
-    
+
+    final float heatAddInterval = 20;
     public GeneratorData(TeamResearchData teamResearchData) {
         teamData = teamResearchData;
     }
@@ -91,12 +97,16 @@ public class GeneratorData {
     public void deserialize(CompoundNBT data, boolean update) {
         process = data.getInt("process");
         processMax = data.getInt("processMax");
+        steamProcess=data.getInt("steamProcess");
         overdriveLevel = data.getInt("overdriveLevel");
         isWorking = data.getBoolean("isWorking");
         isOverdrive = data.getBoolean("isOverdrive");
         isActive = data.getBoolean("isActive");
-        steamLevel = data.getInt("steamLevel");
+        steamLevel = data.getFloat("steamLevel");
         power = data.getFloat("power");
+        heated=data.getInt("heated");
+        TLevel=data.getFloat("tempLevel");
+        RLevel=data.getFloat("rangeLevel");
         if (data.contains("steamFluid"))
             fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(data.getString("steamFluid")));
         else
@@ -148,11 +158,16 @@ public class GeneratorData {
         CompoundNBT result = new CompoundNBT();
         result.putInt("process", process);
         result.putInt("processMax", processMax);
+        result.putInt("steamProcess", steamProcess);
         result.putInt("overdriveLevel", overdriveLevel);
         result.putBoolean("isWorking", isWorking);
         result.putBoolean("isOverdrive", isOverdrive);
         result.putBoolean("isActive", isActive);
+        result.putFloat("steamLevel",steamLevel);
         result.putFloat("power", power);
+        result.putInt("heated", heated);
+        result.putFloat("tempLevel", TLevel);
+        result.putFloat("rangeLevel",RLevel);
         if (fluid != null)
             result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
         if (!update) {
@@ -170,8 +185,38 @@ public class GeneratorData {
 
     public void tick(World w) {
         isActive = tickFuelProcess(w);
+        tickHeatedProcess(w);
     }
-
+    public void tickHeatedProcess(World world) {
+    	int heatedMax=getMaxHeated();
+        if (isActive&&heated != heatedMax) {
+            Random random = world.rand;
+            boolean needAdd = false;
+            float heatAddProbability = 1F / heatAddInterval;
+            if (isOverdrive) {
+                heatAddProbability = 2F / heatAddInterval;
+            }
+            if (random.nextFloat() < heatAddProbability) {
+                needAdd = true;
+            }
+            if (heated < heatedMax && needAdd) {
+                heated++;
+            } else if (heated > heatedMax && needAdd) {
+                heated--;
+            }
+        } else if (!isActive) {
+            if (heated > 0){
+                Random random = world.rand;
+                float heatAddProbability = 2F / heatAddInterval;
+                if (random.nextFloat() < heatAddProbability) {
+                    heated--;
+                }
+            }
+        }
+        System.out.println(heated);
+        TLevel=(Math.min(heated / 100F,this.getMaxTemperatureLevel()));
+        RLevel=(Math.min(heated / 100F,this.getMaxRangeLevel()));
+    }
     public boolean tickFuelProcess(World w) {
         if (!isWorking)
             return false;
@@ -194,5 +239,22 @@ public class GeneratorData {
             }
         }
         return false;
+    }
+    public void onPosChange() {
+    	heated=0;
+    	TLevel=0;
+    	RLevel=0;
+    	process=0;
+    	processMax=0;
+    	steamProcess=0;
+    }
+	public float getMaxTemperatureLevel() {
+		return 1+(isOverdrive?1:0)+steamLevel;
+	}
+	public float getMaxRangeLevel() {
+		return 1+steamLevel;
+	}
+    public int getMaxHeated() {
+        return (int) (100*Math.max(this.getMaxTemperatureLevel(), this.getMaxRangeLevel()));
     }
 }

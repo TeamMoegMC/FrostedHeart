@@ -52,10 +52,8 @@ public class T2GeneratorRenderer extends TileEntityRenderer<T2GeneratorTileEntit
                        IRenderTypeBuffer bufferIn, int combinedLightIn, int combinedOverlayIn) {
         if (!te.formed || te.isDummy() || !te.getWorldNonnull().isBlockLoaded(te.getPos()))
             return;
-        if (te.process > 0) {
-
-        } else
-            return;
+        if (!te.hasFuel())
+        	return;
         BlockPos blockPos = te.getPos();
         BlockState state = te.getWorld().getBlockState(blockPos);
         if (state.getBlock() != FHMultiblocks.generator_t2)
