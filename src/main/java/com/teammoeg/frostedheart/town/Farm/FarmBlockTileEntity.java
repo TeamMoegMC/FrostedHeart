@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.town.Farm;
 
 import com.ibm.icu.impl.Pair;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scheduler.IScheduledTaskTE;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.town.ITownBlockTE;
@@ -23,7 +24,8 @@ import java.util.*;
 
 public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, IScheduledTaskTE, ITickableTileEntity {
     private boolean isAdd;
-    public static int MAX_SIZE = 1000;
+    public static int MAX_SIZE = 576;
+    public static int MIN_SIZE = 4;
     public int size;//Size of the farm
     public int temperature;
     public Map<Long, BlockPos> blocks;
@@ -64,31 +66,32 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
 
     private boolean checkFarm(){
         Queue<BlockPos> queue = new PriorityQueue<>();
+        Map<Long, BlockPos> blockMap = new HashMap<>();
         queue.add(this.pos.add(0, -1, 0));
-        blocks.put(this.pos.add(0, -1, 0).toLong(), this.pos.add(0, -1, 0));
+        blockMap.put(this.pos.add(0, -1, 0).toLong(), this.pos.add(0, -1, 0));
         BlockPos tempPos;
         List<Pair<Integer, Integer>> py = Arrays.asList(Pair.of(1, 0), Pair.of(-1, 0), Pair.of(0, 1), Pair.of(0, -1));
         while (!queue.isEmpty()){
-            if(blocks.size() > MAX_SIZE)break;
+            if(blockMap.size() > MAX_SIZE)break;
             tempPos = queue.poll();
             for (Pair<Integer, Integer> p : py) {
-                if(true){
-                    if(world.isAirBlock(tempPos.add(p.first, 1, p.second))){
+                if(world.isAirBlock(tempPos.add(p.first, 1, p.second))){
+                    if(!world.isAirBlock(tempPos.add(p.first, 0, p.second))){
                         BlockPos pos = tempPos.add(p.first, 0, p.second);
                         Long key = pos.toLong();
-                        if(!blocks.containsKey(key)){
+                        if(!blockMap.containsKey(key)){
                             queue.add(pos);
-                            blocks.put(key, pos);
-                            world.updateBlock(pos, Blocks.STONE);
+                            blockMap.put(key, pos);
+                            world.setBlockState(pos, Blocks.GOLD_BLOCK.getDefaultState());
                         }
                     }
                 }
             }
         }
-        if(blocks.size() >= MAX_SIZE){
-            blocks.clear();
+        if(blockMap.size() >= MAX_SIZE && blockMap.size() <= MIN_SIZE){
+            blockMap.clear();
         }else{
-            blocks.clear();
+            blockMap.clear();
             return true;
         }
         return false;
@@ -108,8 +111,10 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
 
     @Override
     public void executeTask() {
-        if(true){
-            //System.out.println("Working");
+        if(checkFarm()){
+            if (world != null && world.isRemote) {
+                ClientUtils.spawnSteamParticles(world, pos.add(0, 1, 0));
+            }
         }
     }
 
