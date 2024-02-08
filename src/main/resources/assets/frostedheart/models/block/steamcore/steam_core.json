@@ -1,5 +1,6 @@
 {
 	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
 	"texture_size": [32, 32],
 	"textures": {
 		"0": "frostedheart:block/steamcore/steam_core",
@@ -66,7 +67,7 @@
 			}
 		},
 		{
-			"from": [4, 4, 0],
+			"from": [4, 4, 1],
 			"to": [12, 12, 3],
 			"faces": {
 				"north": {"uv": [1, 11, 5, 15], "texture": "#0"},

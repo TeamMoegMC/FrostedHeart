@@ -94,7 +94,10 @@ public class FHConfig {
         public final ForgeConfigSpec.BooleanValue enablesTemperatureForecast;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> blackmods;
         public final ForgeConfigSpec.BooleanValue enableDailyKitchen;
-
+        public final ForgeConfigSpec.ConfigValue<Double> steamCoreMaxPower;
+        public final ForgeConfigSpec.ConfigValue<Double> steamCorePowerIntake;
+        public final ForgeConfigSpec.ConfigValue<Double> steamCoreGeneratedSpeed;
+        public final ForgeConfigSpec.ConfigValue<Double> steamCoreCapacity;
         Common(ForgeConfigSpec.Builder builder) {
             enablesTemperatureForecast = builder
                     .comment("Enables the weather forecast system. ")
@@ -105,6 +108,15 @@ public class FHConfig {
             enableDailyKitchen = builder
                     .comment("Enables sending wanted food message. ")
                     .define("enableDailyKitchen", true);
+            steamCoreMaxPower = builder.comment("The max power which steam core can store.Steam Core will cost the power stored without any heat source connected.")
+                    .defineInRange("steamCoreMaxPower", 600f, 100f, 6000000f);
+            steamCorePowerIntake = builder.comment("SteamCore will cost such heat 20 times per second.")
+                    .defineInRange("steamCorePowerIntake", 8f, 0f, 6000000f);
+            steamCoreGeneratedSpeed = builder.comment("The speed which steam core can provide.")
+                    .defineInRange("steamCoreGeneratedSpeed", 32f, 0f, 256f);
+            steamCoreCapacity = builder.comment("The capacity which steam core can provide.")
+                    .defineInRange("steamCoreCapacity", 32, 0f, 256f);
+
         }
     }
 
@@ -116,10 +128,7 @@ public class FHConfig {
         public final ForgeConfigSpec.ConfigValue<Double> tempSpeed;
         public final ForgeConfigSpec.BooleanValue keepEquipments;
         public final ForgeConfigSpec.ConfigValue<Double> taskPerTick;
-        public final ForgeConfigSpec.ConfigValue<Double> steamCoreMaxPower;
-        public final ForgeConfigSpec.ConfigValue<Double> steamCorePowerIntake;
-        public final ForgeConfigSpec.ConfigValue<Double> steamCoreGeneratedSpeed;
-        public final ForgeConfigSpec.ConfigValue<Double> steamCoreCapacity;
+
 
         Server(ForgeConfigSpec.Builder builder) {
             alwaysKeepInventory = builder
@@ -139,14 +148,6 @@ public class FHConfig {
                     .defineEnum("temperatureDifficulty", FHTemperatureDifficulty.Normal);
             tempSpeed = builder.comment("Modifier of body temperature change speed, This does not affect hypothermia temperature.")
                     .defineInRange("temperatureChangeRate", 0.5, 0, 20);
-            steamCoreMaxPower = builder.comment("The max power which steam core can store.Steam Core will cost the power stored without any heat source connected.")
-                    .defineInRange("steamCoreMaxPower", 600f, 100f, 6000000f);
-            steamCorePowerIntake = builder.comment("SteamCore will cost such heat 20 times per second.")
-                    .defineInRange("steamCorePowerIntake", 10f, 0f, 6000000f);
-            steamCoreGeneratedSpeed = builder.comment("The speed which steam core can provide.")
-                    .defineInRange("steamCoreGeneratedSpeed", 32f, 0f, 256f);
-            steamCoreCapacity = builder.comment("The capacity which steam core can provide.")
-                    .defineInRange("steamCoreCapacity", 50f, 0f, 256f);
 
         }
     }

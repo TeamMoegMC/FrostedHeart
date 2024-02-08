@@ -44,7 +44,6 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     
     GeneratorDriveHandler generatorDriveHandler;
     protected static BlockPos lastSupportPos;
-    protected static NeighborTypeEnum neighborType;
     public T1GeneratorTileEntity() {
         super(FHMultiblocks.GENERATOR, FHTileTypes.GENERATOR_T1.get(), false);
         this.generatorDriveHandler = new GeneratorDriveHandler(world);
@@ -64,17 +63,13 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
                         if (te instanceof BlastFurnaceTileEntity) {
                             if (++blastBlockCount == 9) {
                             	BlastFurnaceTileEntity master=((BlastFurnaceTileEntity) te).master();
-                                lastSupportPos = actualPos;
-                                neighborType = NeighborTypeEnum.BlastFurnaceTileEntity;
-                                System.out.println("The TileEntity is BlastFurnaceTileEntity");
+                                lastSupportPos = master.getPos();
                                 return true;
                             }
                         }
                         if (te instanceof AlloySmelterTileEntity) {
                             if (++alloySmelterCount == 4) {
                                 lastSupportPos = actualPos;
-                                neighborType = NeighborTypeEnum.AlloySmelterTileEntity;
-                                System.out.println("The TileEntity is AlloySmelterTileEntity");
                                 return true;
                             }
                         }

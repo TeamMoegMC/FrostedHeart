@@ -280,11 +280,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public void regist() {
         getTeamData().ifPresent(t -> {
-        	if(!this.pos.equals(t.generatorData.actualPos))
+        	if(!master().pos.equals(t.generatorData.actualPos))
         		t.generatorData.onPosChange();
         	this.setWorking(t.generatorData.isWorking);
         	this.setOverdrive(t.generatorData.isOverdrive);
-            t.generatorData.actualPos = this.pos;
+            t.generatorData.actualPos = master().pos;
             t.generatorData.dimension = this.world.getDimensionKey();
         });
     }

@@ -30,16 +30,16 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         this.setLazyTickRate(20);
     }
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(FHConfig.SERVER.steamCoreMaxPower.get().floatValue(),FHConfig.SERVER.steamCorePowerIntake.get().floatValue()*1.5f);
+    SteamNetworkConsumer network = new SteamNetworkConsumer(FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue()*1.5f);
 
     public float getGeneratedSpeed(){
-        float speed = FHConfig.SERVER.steamCoreGeneratedSpeed.get().floatValue();
+        float speed = FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
         if(getIsActive()) return speed;
         return 0f;
     }
 
     public float calculateAddedStressCapacity() {
-        if(getIsActive()) return FHConfig.SERVER.steamCoreCapacity.get().floatValue();
+        if(getIsActive()) return FHConfig.COMMON.steamCoreCapacity.get().floatValue();
         return 0f;
     }
 
@@ -50,7 +50,7 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
             if (network.isValid()) {
                 network.tick();
             }
-            if(network.tryDrainHeat(FHConfig.SERVER.steamCorePowerIntake.get().floatValue())){
+            if(network.tryDrainHeat(FHConfig.COMMON.steamCorePowerIntake.get().floatValue())){
                 this.setActive(true);
                 if(this.getSpeed() == 0f){
                     this.updateGeneratedRotation();

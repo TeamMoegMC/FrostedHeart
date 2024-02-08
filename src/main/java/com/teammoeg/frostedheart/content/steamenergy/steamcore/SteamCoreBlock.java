@@ -12,6 +12,7 @@ import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -68,7 +69,7 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEne
 
     @Override
     public Direction.Axis getRotationAxis(BlockState blockState) {
-        return blockState.get(BlockStateProperties.FACING).rotateY().getAxis();
+        return blockState.get(BlockStateProperties.FACING).getAxis();
     }
 
     @Override
@@ -85,6 +86,15 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEne
 
     @Override
     public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-        return dir == state.get(BlockStateProperties.HORIZONTAL_FACING);
+        return dir == state.get(BlockStateProperties.FACING);
     }
+
+
+	@Override
+	public Direction getPreferredFacing(BlockItemUseContext arg0) {
+		Direction dir= super.getPreferredFacing(arg0);
+				
+		if(dir!=null)dir=dir.getOpposite();
+		return dir;
+	}
 }
