@@ -806,9 +806,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
             PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
-            FHNetwork.send(currentPlayer,new FHResearchRegistrtySyncPacket());
-            FHResearch.getAllResearch().forEach(t->FHNetwork.send(currentPlayer, new FHResearchSyncPacket(t)));
-            FHNetwork.send(currentPlayer,new FHResearchSyncEndPacket());
+            FHResearch.sendSyncPacket(currentPlayer);
             FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
             FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));

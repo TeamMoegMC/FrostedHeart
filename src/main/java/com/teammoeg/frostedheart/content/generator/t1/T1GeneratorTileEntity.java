@@ -109,7 +109,7 @@ public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1Gen
     protected void tickDrives(boolean isActive) {
         if (isActive) {
             if (isExistNeighborTileEntity()) {
-                this.generatorDriveHandler.checkExistOreAndUpdate(lastSupportPos, neighborType);
+                this.generatorDriveHandler.checkExistOreAndUpdate(lastSupportPos);
             }
         }
     }

@@ -373,8 +373,7 @@ public class ResearchListeners {
         FHMain.LOGGER.info("reloading research system");
         FHResearchDataManager.INSTANCE.save();
         FHResearchDataManager.INSTANCE.load();
-        FHResearchRegistrtySyncPacket packet = new FHResearchRegistrtySyncPacket();
-        FHNetwork.send(PacketDistributor.ALL.noArg(), packet);
+        FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.sendUpdate());
     }
 

@@ -28,16 +28,18 @@ public abstract class SerializerRegistry<T, R> {
 		if(ffrom==null)return null;
 		return ffrom.apply(fromObj);
 	}
-	public abstract String typeOf(Class<?> cls);
+	public abstract Pair<Integer,String> typeOf(Class<?> cls);
 	public R write(T fromObj) {
 		if(fromObj==null)return null;
-		String type=typeOf(fromObj.getClass());
+		Pair<Integer, String> type=typeOf(fromObj.getClass());
 		if(type==null)return null;
-		Function<T, R> ffrom=to.get(type);
+		Function<T, R> ffrom=to.get(type.getSecond());
 		if(ffrom==null)return null;
-		return ffrom.apply(fromObj);
+		R obj= ffrom.apply(fromObj);
+		writeType(type,obj);
+		return obj;
 	}
-	protected void register(Class<? extends T> cls, String type, Function<R, T> json, Function<T, R> obj) {
+	protected void register(String type, Function<R, T> json, Function<T, R> obj) {
 	    putSerializer(type, json);
 	    putDeserializer(type,obj);
 	}
