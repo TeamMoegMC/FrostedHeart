@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.climate.data;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.climate.data.FHDataManager.FHDataType;
+
 import net.minecraft.network.PacketBuffer;
 
 public class DataEntry {

@@ -42,6 +42,10 @@ public interface IClientControlCommand {
 
 	void FillRect(IClientScene runner, String name, float x, float y, Float w, Float h, int z, Integer color);
 
+	void DrawLine(IClientScene runner, String name, int x, int y, int dx, int dy, int w, int z, Integer color);
+
+	void hudDialog(IClientScene runner, Integer show);
+
 
 
 }

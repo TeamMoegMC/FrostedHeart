@@ -19,18 +19,19 @@
 
 package com.teammoeg.frostedheart.trade.network;
 
+import java.util.function.Supplier;
+
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.trade.RelationList;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public class BargainResponse {
     boolean succeed;

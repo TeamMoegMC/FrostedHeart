@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat;
 
 import com.simibubi.create.foundation.block.BlockStressValues.IStressValueProvider;
 import com.teammoeg.frostedheart.FHBlocks;
+
 import net.minecraft.block.Block;
 
 public class FHStress implements IStressValueProvider {
@@ -36,7 +37,7 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public double getImpact(Block arg0) {
-        if (arg0 == FHBlocks.mech_calc) return 64;
+        if (arg0 == FHBlocks.mech_calc.get()) return 64;
         return 0;
     }
 
@@ -47,7 +48,7 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public boolean hasImpact(Block arg0) {
-        if (arg0 == FHBlocks.mech_calc) return true;
+        if (arg0 == FHBlocks.mech_calc.get()) return true;
         return false;
     }
 

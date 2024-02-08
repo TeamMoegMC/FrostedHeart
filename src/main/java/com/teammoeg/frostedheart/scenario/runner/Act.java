@@ -21,10 +21,11 @@ package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.LinkedList;
 
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.ActWrappedTrigger;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
@@ -39,7 +40,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * An act is a basic unit of execution code
  * You should NOT store this object, always get it from {@link ScenarioConductor#getCurrentAct()}
  * */
-public class Act implements IScenarioConductor{
+public class Act implements IScenarioThread{
 	ParagraphData paragraph=new ParagraphData(this);
 	String label;
 	
@@ -55,13 +56,13 @@ public class Act implements IScenarioConductor{
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
-		this.scene=new Scene(paraData,this);
+		this.scene=new Scene(paraData);
 		parent=paraData;
 		this.name=name;
 	}
     public Act(ScenarioConductor paraData,CompoundNBT data) {
 		super();
-		this.scene=new Scene(paraData,this);
+		this.scene=new Scene(paraData);
 		parent=paraData;
 		load(data);
 	}
@@ -122,8 +123,8 @@ public class Act implements IScenarioConductor{
     	
     }
     public void saveActState() {
-		setNodeNum(parent.nodeNum);
-		setScenario(parent.sp);
+		setNodeNum(parent.getNodeNum());
+		setScenario(parent.getScenario());
 		setStatus(parent.getStatus());
 		callStack.clear();
 		callStack.addAll(parent.getCallStack());
@@ -144,7 +145,7 @@ public class Act implements IScenarioConductor{
 
 
 	public void queue(IScenarioTarget target) {
-		parent.queue(new ActTarget(name,target));
+		parent.toExecute.add(new ActTarget(name,target));
 	}
 	public ServerPlayerEntity getPlayer() {
 		return parent.getPlayer();
@@ -182,9 +183,10 @@ public class Act implements IScenarioConductor{
 		return subtitle;
 	}
 	public void sendTitles(boolean updateT,boolean updateSt) {
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
+		FHNetwork.send(PacketDistributor.PLAYER.with(()->parent.getPlayer()), new ServerSenarioActPacket(updateT?title:null,updateSt?subtitle:null));
 	}
 	public void setTitles(String t,String st) {
+		System.out.println(t+","+st);
 		boolean b1 = false,b2 = false;
 		if(t!=null&&!title.equals(t)) {
 			this.title=t;
@@ -211,5 +213,12 @@ public class Act implements IScenarioConductor{
 	@Override
 	public String getLang() {
 		return parent.getLang();
+	}
+	@Override
+	public void sendMessage(String s) {
+		parent.sendMessage(s);
+	}
+	public void addTrigger(IScenarioTrigger trig) {
+		scene.addTrigger(new ActWrappedTrigger(name,trig));
 	}
 }

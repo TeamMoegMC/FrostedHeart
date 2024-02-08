@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.content.incubator;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.base.block.FHGuiBlock;
-import com.teammoeg.frostedheart.base.item.FHBlockItem;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -48,8 +47,8 @@ public class IncubatorBlock extends FHGuiBlock {
     static BooleanProperty LIT = BlockStateProperties.LIT;
     private RegistryObject<TileEntityType<?>> type;
 
-    public IncubatorBlock(String name, Properties p, RegistryObject<TileEntityType<?>> type) {
-        super(name, p, FHBlockItem::new);
+    public IncubatorBlock(Properties p, RegistryObject<TileEntityType<?>> type) {
+        super(p);
         this.type = type;
     }
 

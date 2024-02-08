@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.scenario.parser;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,6 +31,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
+import com.teammoeg.frostedheart.scenario.parser.reader.CodeLineSource;
+import com.teammoeg.frostedheart.scenario.parser.reader.ReaderLineSource;
+import com.teammoeg.frostedheart.scenario.parser.reader.StringLineSource;
+import com.teammoeg.frostedheart.scenario.parser.reader.StringListStringSource;
+import com.teammoeg.frostedheart.scenario.parser.reader.StringParseReader;
 
 public class ScenarioParser {
     private static class CommandStack {
@@ -89,60 +93,19 @@ public class ScenarioParser {
 
     }
     public Scenario parseString(String name,List<String> code) throws IOException {
-        List<Node> nodes = new ArrayList<>();
-        
-        try{
-            int i=0;
-            for(String line:code) {
-            	i++;
-            	try {
-            		nodes.addAll(parseLine(line));
-            	}catch(Exception ex) {
-            		throw new ScenarioExecutionException("line "+i+":"+ex.getMessage(),ex);
-            	}
-            }
-        }catch(Exception ex) {
-        	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
-        }
-        return process(name,nodes);
+        return process(name,parseLine(new StringListStringSource(name,code)));
     }
     public Scenario parseString(String name,String code){
-        List<Node> nodes = new ArrayList<>();
-        
-        try  {
-            int i=0;
-            for(String line:code.split("[\r\n]")) {
-            	i++;
-            	try {
-            		nodes.addAll(parseLine(line));
-            	}catch(Exception ex) {
-            		throw new ScenarioExecutionException("line "+i+":"+ex.getMessage(),ex);
-            	}
-            }
-        }catch(Exception ex) {
-        	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
-        }
-        return process(name,nodes);
+        return process(name,parseLine(new StringLineSource(name,code)));
     }
     public Scenario parseFile(String name,File file) throws IOException {
-        List<Node> nodes = new ArrayList<>();
-        try (FileInputStream fis = new FileInputStream(file);
-             InputStreamReader isr = new InputStreamReader(fis,StandardCharsets.UTF_8);
-             BufferedReader reader = new BufferedReader(isr)) {
-            String line;
-            int i=0;
-            while ((line = reader.readLine()) != null) {
-            	i++;
-            	try {
-            		nodes.addAll(parseLine(line));
-            	}catch(Exception ex) {
-            		throw new ScenarioExecutionException("line "+i+":"+ex.getMessage(),ex);
-            	}
-            }
-        }catch(Exception ex) {
-        	throw new ScenarioExecutionException("At file "+name+" "+ex.getMessage(),ex);
+        try (FileInputStream fis = new FileInputStream(file);InputStreamReader isr = new InputStreamReader(fis,StandardCharsets.UTF_8)) {
+        	return process(name,parseLine(new ReaderLineSource(name,isr)));
+
+        }catch(IOException ex) {//ignored exception when closed
         }
-        return process(name,nodes);
+        return new Scenario(name);
+        
     }
     private Scenario process(String name,List<Node> nodes) {
     	List<Integer> paragraphs = new ArrayList<>();
@@ -198,19 +161,16 @@ public class ScenarioParser {
 
     private Node parseAtCommand(StringParseReader reader) throws IOException {
         Map<String, String> params = new HashMap<>();
-        reader.saveIndex();
+        
         String command = parseLiteralOrString(reader, -1);
         reader.skipWhitespace();
-        if(!reader.hasNext()) return createCommand(command, params);
-        while (reader.hasNext()) {
+        //System.out.println("cmd:"+command);
+        if(!reader.has()) return createCommand(command, params);
+        while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
-            
-            if (reader.last() != '=') {
-                reader.skipWhitespace();
-                if (reader.peek() != '=') {
-                    break;
-                }
-				reader.next();
+            reader.skipWhitespace();
+            if (!reader.eat('=')) {
+                 break;
             }
             reader.skipWhitespace();
             
@@ -218,7 +178,7 @@ public class ScenarioParser {
             params.put(name, val);
             reader.skipWhitespace();
             
-            if (!reader.hasNext()||reader.eat('#')) return createCommand(command, params);
+            if (!reader.has()||reader.eat('#')) return createCommand(command, params);
         }
         return new LiteralNode(reader.fromStart());
 
@@ -226,52 +186,51 @@ public class ScenarioParser {
 
     private Node parseBarackCommand(StringParseReader reader) throws IOException {
         Map<String, String> params = new HashMap<>();
-        reader.saveIndex();
         String command = parseLiteralOrString(reader, ']');
         reader.skipWhitespace();
-        if(reader.peekLast()==']') return createCommand(command, params);
-        while (reader.hasNext()) {
+        
+        if(reader.eat(']')) return createCommand(command, params);
+        while (reader.has()) {
             String name = parseLiteralOrString(reader, '=');
-            if (reader.last() != '=') {
-                reader.skipWhitespace();
-                if (reader.peek() != '=') {
-                    break;
-                }
-				reader.next();
-            }
             reader.skipWhitespace();
+            if (!reader.eat('=')) {
+                break;
+            }
             reader.skipWhitespace();
             String val = parseLiteralOrString(reader, ']');
             params.put(name, val);
             reader.skipWhitespace();
-            if(reader.peek()==']')reader.next();
-            if (reader.last() == ']') return createCommand(command, params);
+            if(reader.eat(']'))return createCommand(command, params);
         }
         return new LiteralNode(reader.fromStart());
     }
 
-    private List<Node> parseLine(String line) throws IOException {
-        StringParseReader reader = new StringParseReader(line);
+    private List<Node> parseLine(CodeLineSource source) {
+        StringParseReader reader = new StringParseReader(source);
         List<Node> nodes = new ArrayList<>();
-        while (reader.hasNext()) {
-        	if(reader.peekLast()=='#') {
-        		break;
-        	}else if (reader.peekLast() == '@') {
-            	if(reader.isBegin())reader.next();
-                nodes.add(parseAtCommand(reader));
-            } else if (reader.peekLast() == '[') {
-            	if(reader.isBegin())reader.next();
-                nodes.add(parseBarackCommand(reader));
-            }else{
-            	String lit=parseLiteral(reader);
-            	
-            	if(lit!=null&&!lit.isEmpty()) {
-            		if(lit.startsWith("*")) {
-            			nodes.add(new LabelNode(lit));
-                	}else
-            		nodes.add(new LiteralNode(lit));
-            	}
-            }
+        while(reader.nextLine()) {
+        	try {
+		        while (reader.has()) {
+		        	reader.saveIndex();
+		        	if(reader.eat('#')) {
+		        		break;
+		        	}else if (reader.eat('@')) {
+		                nodes.add(parseAtCommand(reader));
+		            } else if (reader.eat('[')) {
+		                nodes.add(parseBarackCommand(reader));
+		            }else{
+		            	String lit=parseLiteral(reader);
+		            	if(lit!=null&&!lit.isEmpty()) {
+		            		if(lit.startsWith("*")) {
+		            			nodes.add(new LabelNode(lit));
+		                	}else
+		            		nodes.add(new LiteralNode(lit));
+		            	}
+		            }
+		        }
+        	}catch(Exception ex) {
+        		throw reader.generateException(ex);
+        	}
         }
         return nodes;
     }
@@ -279,21 +238,24 @@ public class ScenarioParser {
     private String parseLiteral(StringParseReader reader) throws IOException {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
-        while (reader.hasNext()) {
-            char r = reader.next();
+        while (reader.has()) {
+            char r = reader.read();
             if (!isEscaping && r == '\\') {
                 isEscaping = true;
+                reader.eat();
                 continue;
             }
             if (isEscaping) {
                 all.append(r);
                 isEscaping = false;
+                reader.eat();
                 continue;
             }
             if (r == '[' || r == '@'||r=='#') {
                 break;
             }
             all.append(r);
+            reader.eat();
         }
         return all.toString();
     }
@@ -302,36 +264,39 @@ public class ScenarioParser {
         StringBuilder all = new StringBuilder();
         boolean isEscaping = false;
         boolean hasQuote = false;
-        while (reader.hasNext()) {
-            char r = reader.next();
+        while (reader.has()) {
+            char r = reader.read();
             if (!isEscaping && r == '\\') {
                 isEscaping = true;
+                reader.eat();
                 continue;
             }
             if (isEscaping) {
                 all.append(r);
                 isEscaping = false;
+                reader.eat();
                 continue;
             }
             if (r == '"') {
                 if (!hasQuote) {
                     hasQuote = true;
                 } else {
-                	if(reader.hasNext())
-                		reader.next();
+                	reader.eat();
                     break;
                 }
+                reader.eat();
                 continue;
             }
             if (!hasQuote && (r == ch || Character.isWhitespace(r) || r=='#')) {
                 break;
             }
             all.append(r);
+            reader.eat();
         }
         return all.toString();
     }
-   /* public static void main(String[] args) {
-    	for(Node n:new ScenarioParser().parseString("test", "@t").pieces)
+    /*public static void main(String[] args) throws IOException {
+    	for(Node n:new ScenarioParser().parseFile("prelogue", new File("config\\fhscenario\\prelogue.ks")).pieces)
     		System.out.println(n.getText());
     }*/
 }

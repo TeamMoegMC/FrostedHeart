@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.util;
 
-import net.minecraft.util.ResourceLocation;
-
 import java.util.HashMap;
+
+import net.minecraft.util.ResourceLocation;
 
 public class VersionRemap {
 

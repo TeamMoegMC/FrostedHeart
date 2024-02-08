@@ -19,6 +19,10 @@
 
 package com.teammoeg.frostedheart.compat.jei.category;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
@@ -26,6 +30,7 @@ import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.compat.jei.StaticBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaRecipe;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.gui.drawable.IDrawable;
@@ -40,18 +45,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class SaunaCategory implements IRecipeCategory<SaunaRecipe> {
     public static ResourceLocation UID = new ResourceLocation(FHMain.MODID, "sauna");
     private IDrawable BACKGROUND;
     private IDrawable ICON;
-    private StaticBlock sauna = new StaticBlock(FHBlocks.sauna.getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
+    private StaticBlock sauna = new StaticBlock(FHBlocks.sauna.get().getDefaultState().with(BlockStateProperties.FACING, Direction.EAST));
 
     public SaunaCategory(IGuiHelper guiHelper) {
-        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.sauna));
+        this.ICON = guiHelper.createDrawableIngredient(new ItemStack(FHBlocks.sauna.get()));
         this.BACKGROUND = new EmptyBackground(177, 70);
     }
 

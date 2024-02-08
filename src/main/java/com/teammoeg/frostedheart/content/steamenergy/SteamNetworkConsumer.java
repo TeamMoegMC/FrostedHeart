@@ -112,7 +112,7 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
     public boolean tick() {
         if (isValid()) {
             super.tick();
-            float actual = super.drainHeat(Math.min(24, maxPower - power));
+            float actual = super.drainHeat(Math.min(24, Math.min(maxPower - power,Math.max(1,(maxPower - power)*0.8f))));
             if (actual > 0) {
                 power += actual;
                 return true;

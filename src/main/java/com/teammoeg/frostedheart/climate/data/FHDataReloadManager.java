@@ -19,31 +19,29 @@
 
 package com.teammoeg.frostedheart.climate.data;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.data.FHDataManager.FHDataType;
-import com.teammoeg.frostedheart.util.StructureUtils;
+import com.teammoeg.frostedheart.util.mixin.StructureUtils;
+
 import net.minecraft.resources.IResource;
 import net.minecraft.resources.IResourceManager;
 import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.resource.IResourceType;
-import net.minecraftforge.resource.ISelectiveResourceReloadListener;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.function.Predicate;
 
 
 @SuppressWarnings("deprecation")
-public class FHDataReloadManager implements ISelectiveResourceReloadListener {
+public class FHDataReloadManager implements IResourceManagerReloadListener {
     public static final FHDataReloadManager INSTANCE = new FHDataReloadManager();
     private static final JsonParser parser = new JsonParser();
 
     @Override
-    public void  onResourceManagerReload(IResourceManager manager, Predicate<IResourceType> resourcePredicate) {
+    public void  onResourceManagerReload(IResourceManager manager) {
         FHDataManager.reset();
         StructureUtils.addBanedBlocks();
         WorldTemperature.clear();

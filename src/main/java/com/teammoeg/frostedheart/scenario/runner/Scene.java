@@ -6,9 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
-import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -23,9 +22,9 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * object, always get it from {@link ScenarioConductor#getScene()}
  */
 public class Scene {
-	transient final Map<String, ExecuteTarget> links = new HashMap<>();
+	private transient final Map<String, ExecuteTarget> links = new HashMap<>();
 	private transient StringBuilder currentLiteral;
-	private transient final ScenarioConductor parent;
+	private transient final ScenarioVM parent;
 	public transient boolean isNowait;
 	private boolean isSaveNowait;
 	private transient boolean isSlient;
@@ -33,7 +32,6 @@ public class Scene {
 	LinkedList<StringBuilder> log = new LinkedList<>();
 	private transient List<IScenarioTrigger> triggers = new ArrayList<>();
 	List<String> savedLog = new ArrayList<>();
-	private transient Act act;
 	private transient boolean requireClear;
 	public boolean isClick=true;
 	public CompoundNBT save() {
@@ -71,10 +69,9 @@ public class Scene {
 		log.add(new StringBuilder());
 	}
 
-	public Scene(ScenarioConductor paraData, Act act) {
+	public Scene(ScenarioVM paraData) {
 		super();
 		this.parent = paraData;
-		this.act = act;
 	}
 
 	public void clear() {
@@ -83,7 +80,6 @@ public class Scene {
 	}
 
 	public void paragraph() {
-		clear();
 		isSaveNowait = isNowait;
 		savedLog.clear();
 		if(!log.isEmpty()&&log.peekLast().length()==0)
@@ -116,7 +112,7 @@ public class Scene {
 
 	private void sendScene(String text, boolean wrap, boolean reset) {
 	
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> parent.getPlayer()), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> parent.getPlayer()), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
 		isClick=true;
 	}
 	/**
@@ -196,7 +192,7 @@ public class Scene {
 		return false;
 	}
 
-	public void tickTriggers(ScenarioConductor runner, boolean isCurrentAct) {
+	public void tickTriggers(ScenarioVM runner, boolean isCurrentAct) {
 		IScenarioTrigger acttrigger = null;
 		for (IScenarioTrigger t : triggers) {
 			if (t.test(runner)) {
@@ -205,7 +201,10 @@ public class Scene {
 						acttrigger = t;
 						break;
 					}
-					parent.queue(new ActTarget(act.name, t));
+					if(t.isAsync())
+						parent.queue(t);
+					else
+						parent.jump(t);
 				}
 			}
 		}
@@ -216,7 +215,7 @@ public class Scene {
 	}
 
 	public void clearLink() {
-		links.clear();
+		getLinks().clear();
 	}
 	public void markChatboxDirty() {
 		requireClear=true;
@@ -230,6 +229,10 @@ public class Scene {
 			waiting=0;
 			parent.setStatus(RunStatus.RUNNING);
 		}
+	}
+
+	public Map<String, ExecuteTarget> getLinks() {
+		return links;
 	}
 
 }

@@ -19,40 +19,19 @@
 
 package com.teammoeg.frostedheart.base.block;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 
-import java.util.function.BiFunction;
-
 public class FHBaseBlock extends Block {
-    public final String name;
     protected int lightOpacity;
 
-    public FHBaseBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
+    public FHBaseBlock(Properties blockProps) {
         super(blockProps.variableOpacity());
-        this.name = name;
         lightOpacity = 15;
-
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
-
-        FHContent.registeredFHBlocks.add(this);
-        Item item = createItemBlock.apply(this, new Item.Properties().group(FHMain.itemGroup));
-        if (item != null) {
-            item.setRegistryName(registryName);
-            FHContent.registeredFHItems.add(item);
-        }
     }
 
-    public ResourceLocation createRegistryName() {
-        return new ResourceLocation(FHMain.MODID, name);
-    }
 
     @Override
     public int getOpacity(BlockState state, IBlockReader worldIn, BlockPos pos) {

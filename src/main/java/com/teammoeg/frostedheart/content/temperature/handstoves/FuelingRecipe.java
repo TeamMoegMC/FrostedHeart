@@ -40,7 +40,7 @@ public class FuelingRecipe extends SpecialRecipe {
     public static class Serializer extends IERecipeSerializer<FuelingRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHItems.buff_coat);
+            return new ItemStack(FHItems.hand_stove.get());
         }
 
         @Nullable

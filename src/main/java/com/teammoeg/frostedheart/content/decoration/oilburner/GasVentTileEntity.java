@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces.IActiveState;
@@ -109,7 +108,6 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
                 if (!this.getIsActive()) {
                     this.setActive(true);
                 }
-                this.markContainingBlockForUpdate(null);
                 this.markDirty();
             } else if (this.getIsActive())
                 this.setActive(false);

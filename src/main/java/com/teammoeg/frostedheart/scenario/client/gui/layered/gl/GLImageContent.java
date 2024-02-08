@@ -1,22 +1,26 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered.gl;
 
+import org.lwjgl.opengl.GL11C;
+
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Matrix4f;
 
 public class GLImageContent extends GLLayerContent {
 	public ResourceLocation showingImage;
-	public int texture=0;
+	public DynamicTexture texture;
 	int u, v, uw, uh, tw, th;
 
 	public GLImageContent(float x, float y, float width, float height, int z, ResourceLocation showingImage, int u, int v, int uw, int uh, int tw, int th) {
@@ -38,13 +42,14 @@ public class GLImageContent extends GLLayerContent {
 	@Override
 	public void renderContents(RenderParams params) {
 		//RenderSystem.colorMask(false, false, false, false);
-		if(texture==0) {
+		if(texture==null) {
 			if(showingImage!=null) {
+				
 				ClientUtils.bindTexture(showingImage);
 				blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 			}
 		}else {
-			RenderSystem.bindTexture(texture);
+			texture.bindTexture();
 			blit(params.getMatrixStack(), params.getContentX(), params.getContentY(), params.getContentWidth(), params.getContentHeight(), u, v, uw, uh, tw, th, params.getOpacity());
 		}
 	}
@@ -62,14 +67,14 @@ public class GLImageContent extends GLLayerContent {
 	public static void innerBlit(Matrix4f matrix, int x1, int x2, int y1, int y2, int blitOffset, float minU, float maxU, float minV, float maxV, float opacity) {
 		//RenderSystem.enableAlphaTest();
 		BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
+		bufferbuilder.begin(GL11C.GL_QUADS, DefaultVertexFormats.POSITION_COLOR_TEX);
 		bufferbuilder.pos(matrix, x1, y2, blitOffset).color(1, 1, 1, opacity).tex(minU, maxV).endVertex();
 		bufferbuilder.pos(matrix, x2, y2, blitOffset).color(1, 1, 1, opacity).tex(maxU, maxV).endVertex();
 		bufferbuilder.pos(matrix, x2, y1, blitOffset).color(1, 1, 1, opacity).tex(maxU, minV).endVertex();
 		bufferbuilder.pos(matrix, x1, y1, blitOffset).color(1, 1, 1, opacity).tex(minU, minV).endVertex();
 		bufferbuilder.finishDrawing();
-		 RenderSystem.enableBlend();
-		 RenderSystem.enableAlphaTest();
+		RenderSystem.enableBlend();
+		RenderSystem.enableAlphaTest();
 		WorldVertexBufferUploader.draw(bufferbuilder);
 		RenderSystem.disableBlend();
 	}

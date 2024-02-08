@@ -23,8 +23,8 @@ public class DeskBlock extends FHBaseBlock {
     private static IntegerProperty TYPE = IntegerProperty.create("desktype", 0, typeCount - 1);
     static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 16, 32);
 
-    public DeskBlock(String name, AbstractBlock.Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public DeskBlock(AbstractBlock.Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0));
     }
 

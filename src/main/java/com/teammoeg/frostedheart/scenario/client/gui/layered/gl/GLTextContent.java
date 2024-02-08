@@ -2,15 +2,12 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered.gl;
 
 import java.util.List;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 
 import net.minecraft.client.gui.RenderComponentsUtil;
 import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
 public class GLTextContent extends GLLayerContent{

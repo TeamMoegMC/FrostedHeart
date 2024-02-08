@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.gui;
 import java.util.function.Consumer;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.CursorType;

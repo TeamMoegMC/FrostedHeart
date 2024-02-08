@@ -24,8 +24,11 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
+import com.teammoeg.frostedheart.content.foods.DailyKitchen.WantedFoodCapabilityProvider;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -53,10 +56,11 @@ public class AttachCapabilityEvents {
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
         if (event.getObject() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
-            if (!(player instanceof FakePlayer))
+            if (!(player instanceof FakePlayer)) {
                 if (!event.getCapabilities().containsKey(DeathInventoryData.ID))
                     event.addCapability(DeathInventoryData.ID, new DeathInventoryData());
-
+                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"), new WantedFoodCapabilityProvider());
+            }
         }
 
     }

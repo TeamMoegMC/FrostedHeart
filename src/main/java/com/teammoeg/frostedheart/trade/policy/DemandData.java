@@ -19,14 +19,15 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
+import java.util.Map;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.policy.snapshot.BuyData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
+
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
-
-import java.util.Map;
 
 public class DemandData extends BaseData {
     public Ingredient item;

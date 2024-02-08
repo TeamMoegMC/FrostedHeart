@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.compat;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+
 import moze_intel.projecte.api.mapper.EMCMapper;
 import moze_intel.projecte.api.mapper.IEMCMapper;
 import moze_intel.projecte.api.mapper.collector.IMappingCollector;

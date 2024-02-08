@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.decoration;
 
-import java.util.function.BiFunction;
-
 import com.cannolicatfish.rankine.blocks.RankineOreBlock;
 import com.cannolicatfish.rankine.util.WorldgenUtils;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
@@ -28,13 +26,12 @@ import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.item.Item;
 import net.minecraft.state.StateContainer;
 import net.minecraft.world.World;
 
 public class FHOreBlock extends FHBaseBlock {
-    public FHOreBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public FHOreBlock(Properties blockProps) {
+        super(blockProps);
     }
 
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {

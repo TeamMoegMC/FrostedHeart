@@ -3,8 +3,7 @@ package com.teammoeg.frostedheart.scenario.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
-import com.teammoeg.frostedheart.scenario.runner.RunStatus;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;

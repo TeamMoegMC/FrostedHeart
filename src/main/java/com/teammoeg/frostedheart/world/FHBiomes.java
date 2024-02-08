@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.world;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.world.biome.VolcanicBiome;
 
 import net.minecraft.util.RegistryKey;
@@ -42,6 +43,6 @@ public class FHBiomes {
     }
 
     public static RegistryKey<Biome> makeKey(Biome biome) {
-        return RegistryKey.getOrCreateKey(Registry.BIOME_KEY, biome.getRegistryName());
+        return RegistryKey.getOrCreateKey(Registry.BIOME_KEY, RegistryUtils.getRegistryName(biome));
     }
 }

@@ -28,8 +28,8 @@ import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.research.gui.TechIcons;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
@@ -117,7 +117,7 @@ public class EffectUse extends Effect {
     @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
-        jo.add("blocks", SerializeUtil.toJsonStringList(blocks, Block::getRegistryName));
+        jo.add("blocks", SerializeUtil.toJsonStringList(blocks, RegistryUtils::getRegistryName));
         return jo;
     }
 

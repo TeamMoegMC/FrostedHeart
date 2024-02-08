@@ -26,7 +26,7 @@ import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.research.Research;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

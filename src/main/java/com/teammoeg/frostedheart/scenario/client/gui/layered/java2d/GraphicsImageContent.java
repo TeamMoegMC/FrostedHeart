@@ -6,8 +6,10 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import com.teammoeg.frostedheart.client.util.Rect;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
@@ -49,8 +51,9 @@ public class GraphicsImageContent extends GraphicLayerContent {
 					iw=image.getWidth();
 				if(ih<0)
 					ih=image.getHeight();
+				Rect r=params.calculateRect(x, y, width, height);
 				params.getG2d().setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-				params.getG2d().drawImage(image, x, y, x+width, y+height, ix, iy, iw, ih, null);
+				params.getG2d().drawImage(image,r.getX(),r.getY(),r.getW()+r.getX(),r.getH()+r.getY(), ix, iy, iw+ix, ih+iy, null);
 				params.getG2d().setComposite(AlphaComposite.SrcOver);
 				
 			} catch (IOException e) {

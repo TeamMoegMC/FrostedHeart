@@ -2,18 +2,18 @@ package com.teammoeg.frostedheart.scenario.client;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
-import com.teammoeg.frostedheart.scenario.client.gui.layered.ImageScreenDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
+import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo;
+import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
-import com.teammoeg.frostedheart.scenario.client.text.IScenarioDialog;
-import com.teammoeg.frostedheart.scenario.client.text.TextInfo;
-import com.teammoeg.frostedheart.scenario.client.text.TextInfo.SizedReorderingProcessor;
 import com.teammoeg.frostedheart.scenario.network.ClientScenarioResponsePacket;
+import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
+import com.teammoeg.frostedheart.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.util.ReferenceValue;
 
@@ -26,13 +26,12 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class ClientScene implements IClientScene {
 	public static ClientScene INSTANCE;
-	public static ImageScreenDialog dialog;
-	public static LinkedList<LayerManager> layers=new LinkedList<>();
+	public IScenarioDialog dialog;
+	public LinkedList<LayerManager> layers=new LinkedList<>();
 	public ClientScene() {
 		super();
 		this.setSpeed(1);
@@ -114,7 +113,7 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void sendContinuePacket(boolean isSkip) {
 		// if(canSkip)
-		FHPacketHandler.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
+		FHNetwork.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
 		status=RunStatus.RUNNING;
 		canSkip=false;
 	}
@@ -169,9 +168,8 @@ public class ClientScene implements IClientScene {
 		}
 		origmsgQueue.clear();
 		msgQueue.clear();
-		if(mc.currentScreen instanceof IScenarioDialog) {
-			IScenarioDialog dialogBox=(IScenarioDialog) mc.currentScreen;
-			dialogBox.updateTextLines(msgQueue);
+		if(dialog!=null&&dialog.hasDialog()) {
+			dialog.updateTextLines(msgQueue);
 		}
 		shouldWrap = false;
 		needUpdate = false;
@@ -275,20 +273,21 @@ public class ClientScene implements IClientScene {
 
 	}
 	int w;
-	
-	public void render(Minecraft mc) {
+	double lastScale=0;
+	public void tick(Minecraft mc) {
 		w=MathHelper.floor((double) mc.ingameGUI.getChatGUI().getChatWidth() / mc.ingameGUI.getChatGUI().getScale());
 		if (!mc.isGamePaused()) {
-
+			if(lastScale!=mc.getMainWindow().getGuiScaleFactor()) {
+				lastScale=mc.getMainWindow().getGuiScaleFactor();
+				this.sendClientUpdate();
+			}
 			if(ticksActUpdate>0)
 				ticksActUpdate--;
 			if(ticksActStUpdate>0)
 				ticksActStUpdate--;
 			List<ChatLine<IReorderingProcessor>> i = ((NewChatGuiAccessor) mc.ingameGUI.getChatGUI()).getDrawnChatLines();
-			IScenarioDialog dialogBox=null;
-			if(mc.currentScreen instanceof IScenarioDialog) {
-				dialogBox=(IScenarioDialog) mc.currentScreen;
-				dialogBox.tickDialog();
+			if(dialog!=null) {
+				dialog.tickDialog();
 				
 			}
 			if (!msgQueue.isEmpty()) {
@@ -297,7 +296,7 @@ public class ClientScene implements IClientScene {
 
 				if(needUpdate||mc.ingameGUI.getTicks() % 20 == 0) {
 					needUpdate = false;
-					if (dialogBox==null) {
+					if (dialog==null||!dialog.hasDialog()) {
 						i.removeIf(l -> l.getChatLineID() == fhchatid);
 						for (TextInfo t : msgQueue) {
 							if (t.hasText()) {
@@ -307,13 +306,18 @@ public class ClientScene implements IClientScene {
 							}
 						}
 					}else {
-						dialogBox.updateTextLines(msgQueue);
+						dialog.updateTextLines(msgQueue);
 					}
 				}
 			}
 		}
 	}
-
+	public void sendClientReady() {
+		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+	}
+	public void sendClientUpdate() {
+		FHNetwork.sendToServer(new FHClientSettingsPacket());
+	}
 	@Override
 	public void setActHud(String title, String subtitle) {
 		if(title!=null) {
@@ -368,9 +372,9 @@ public class ClientScene implements IClientScene {
 	}
 
 	int getDialogWidth() {
-		if(ClientUtils.mc().currentScreen instanceof IScenarioDialog) {
-			return ((IScenarioDialog) ClientUtils.mc().currentScreen).getDialogWidth();
-		}else
-			return w;
+		if(dialog!=null&&dialog.hasDialog()) {
+			return dialog.getDialogWidth();
+		}
+		return w;
 	}
 }

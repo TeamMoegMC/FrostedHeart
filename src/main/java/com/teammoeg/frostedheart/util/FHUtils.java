@@ -19,18 +19,39 @@
 
 package com.teammoeg.frostedheart.util;
 
-import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.function.ToIntFunction;
+
+import javax.annotation.Nullable;
+
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+
+import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ILivingEntityData;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
@@ -49,12 +70,6 @@ import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.crafting.NBTIngredient;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.ToIntFunction;
 
 public class FHUtils {
     private static class NBTIngredientAccess extends NBTIngredient {
@@ -64,6 +79,9 @@ public class FHUtils {
     }
 
     private static final ResourceLocation emptyLoot = new ResourceLocation("frostedheart:empty");
+	public static final String NBT_HEATER_VEST = FHMain.MODID + "heater_vest";
+	public static final String FIRST_LOGIN_GIVE_NUTRITION = FHMain.MODID + "first_login_give_nutrition";
+	public static final String FIRST_LOGIN_GIVE_MANUAL = "first";
 
     public static void applyEffectTo(EffectInstance effectinstance, PlayerEntity playerentity) {
         if (effectinstance.getPotion().isInstant()) {
@@ -222,5 +240,29 @@ public class FHUtils {
             }
         }
     }
+
+	public static ItemStack Damage(ItemStack stack, int dmg) {
+	    stack.setDamage(dmg);
+	    return stack;
+	}
+
+	public static ItemStack ArmorNBT(ItemStack stack, int base, int mult) {
+	    stack.setDamage((int) (stack.getMaxDamage() - base - Math.random() * mult));
+	    return stack;
+	}
+	public static <R extends IRecipe<IInventory>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, IRecipeType<R> recipeType) {
+        if(recipeManager==null) {
+    
+        	recipeManager=ClientUtils.mc().world.getRecipeManager();
+        }
+        if(recipeManager==null)
+        	return ImmutableList.of();
+		return recipeManager.getRecipesForType(recipeType);
+    }
+	public static ItemStack ArmorLiningNBT(ItemStack stack) {
+	    stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");
+	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor
+	    return ArmorNBT(stack, 107, 6);
+	}
 
 }

@@ -50,8 +50,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
  */
 public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergyItem, IHeatingEquipment, IChargable {
 
-    public HeaterVestItem(String name, Properties properties) {
-        super(name, properties);
+    public HeaterVestItem(Properties properties) {
+        super(properties);
     }
 
     @Override

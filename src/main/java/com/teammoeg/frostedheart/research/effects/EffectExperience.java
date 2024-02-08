@@ -20,27 +20,17 @@
 package com.teammoeg.frostedheart.research.effects;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 

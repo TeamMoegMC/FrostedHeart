@@ -19,11 +19,12 @@
 
 package com.teammoeg.frostedheart.trade.policy;
 
+import java.util.Map;
+
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
-import net.minecraft.network.PacketBuffer;
 
-import java.util.Map;
+import net.minecraft.network.PacketBuffer;
 
 public class NopData extends BaseData {
 

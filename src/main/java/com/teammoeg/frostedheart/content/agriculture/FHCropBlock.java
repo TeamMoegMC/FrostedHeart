@@ -20,51 +20,24 @@
 package com.teammoeg.frostedheart.content.agriculture;
 
 import java.util.Random;
-import java.util.function.BiFunction;
 
-import com.teammoeg.frostedheart.FHContent;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CropsBlock;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
 public class FHCropBlock extends CropsBlock {
-    public final String name;
     private int growTemperature;
 
-    public FHCropBlock(String name, int growTemperature, Properties builder) {
+    public FHCropBlock(int growTemperature, Properties builder) {
         super(builder);
-        this.name = name;
         this.growTemperature = growTemperature;
-        FHContent.registeredFHBlocks.add(this);
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
-        //custom BlockItem
     }
-
-    public FHCropBlock(String name, int growTemperature, Properties builder, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(builder);
-        this.name = name;
-        this.growTemperature = growTemperature;
-        FHContent.registeredFHBlocks.add(this);
-        ResourceLocation registryName = createRegistryName();
-        setRegistryName(registryName);
-        Item item = createItemBlock.apply(this, new Item.Properties().group(FHMain.itemGroup));
-        if (item != null) {
-            item.setRegistryName(registryName);
-            FHContent.registeredFHItems.add(item);
-        }
-    }
-
 
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, BlockState state) {
@@ -72,9 +45,6 @@ public class FHCropBlock extends CropsBlock {
         return temp >= growTemperature;
     }
 
-    public ResourceLocation createRegistryName() {
-        return new ResourceLocation(FHMain.MODID, name);
-    }
 
     public int getGrowTemperature() {
         return this.growTemperature;

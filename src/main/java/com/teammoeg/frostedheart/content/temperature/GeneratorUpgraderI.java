@@ -29,7 +29,6 @@ import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.Utils;
-import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -51,8 +50,8 @@ import net.minecraft.world.World;
 public class GeneratorUpgraderI extends FHBaseItem {
     IETemplateMultiblock ietm = FHMultiblocks.GENERATOR_T2;
 
-    public GeneratorUpgraderI(String name, Properties properties) {
-        super(name, properties);
+    public GeneratorUpgraderI(Properties properties) {
+        super(properties);
     }
 
     public boolean createStructure(PlayerEntity entityplayer, World worldIn) {
@@ -68,19 +67,6 @@ public class GeneratorUpgraderI extends FHBaseItem {
             if (t1te.isDummy()) return false;
             Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, brtr.getFace().getOpposite());
             ((MultiBlockAccess) (Object) ietm).callForm(worldIn, brtr.getPos().offset(Direction.DOWN).offset(brtr.getFace().rotateY()).offset(brtr.getFace().getOpposite(), 2), rot, Mirror.NONE, brtr.getFace());
-            TileEntity nte = Utils.getExistingTileEntity(worldIn, brtr.getPos().offset(brtr.getFace(), 1));
-            System.out.println(nte);
-            if (nte instanceof T2GeneratorTileEntity) {//bug: cannot get correct te
-                ((T2GeneratorTileEntity) nte).setWorking(t1te.isWorking());
-                ((T2GeneratorTileEntity) nte).setOverdrive(t1te.isOverdrive());
-                ((T2GeneratorTileEntity) nte).setOwner(ResearchDataAPI.getData(entityplayer).getId());
-                NonNullList<ItemStack> nnl = ((T2GeneratorTileEntity) nte).getInventory();
-                for (int i = 0; i < nnl.size(); i++) {
-                    ((T2GeneratorTileEntity) nte).getInventory().set(i, nnl.get(i));
-                }
-                ((T2GeneratorTileEntity) nte).process = t1te.process;
-                ((T2GeneratorTileEntity) nte).processMax = t1te.processMax;
-            }
             return true;
         }
         return true;

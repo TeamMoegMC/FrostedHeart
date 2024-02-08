@@ -19,14 +19,15 @@
 
 package com.teammoeg.frostedheart.climate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class WorldTemperature {
 

@@ -19,20 +19,26 @@
 
 package com.teammoeg.frostedheart.events;
 
-import com.cannolicatfish.rankine.init.RankineBlocks;
-import com.teammoeg.frostedheart.FHBlocks;
+import javax.annotation.Nonnull;
+
+import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.base.item.FHBlockItem;
-import com.teammoeg.frostedheart.content.decoration.FHOreBlock;
-import com.teammoeg.frostedheart.loot.*;
-import com.teammoeg.frostedheart.util.FHLogger;
+import com.teammoeg.frostedheart.loot.AddLootModifier;
+import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
+import com.teammoeg.frostedheart.loot.BlizzardDamageCondition;
+import com.teammoeg.frostedheart.loot.DechantLootModifier;
+import com.teammoeg.frostedheart.loot.ModLootCondition;
+import com.teammoeg.frostedheart.loot.RemoveLootModifier;
+import com.teammoeg.frostedheart.loot.ReplaceLootModifier;
+import com.teammoeg.frostedheart.loot.TagLootCondition;
+import com.teammoeg.frostedheart.loot.TemperatureLootCondition;
+import com.teammoeg.frostedheart.loot.TreasureLootCondition;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
-import net.minecraft.block.Block;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
+
+import net.minecraft.entity.EntityType;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
@@ -41,13 +47,10 @@ import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
-
-import javax.annotation.Nonnull;
-
-import static com.teammoeg.frostedheart.FHContent.*;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonRegistryEvents {
@@ -76,48 +79,9 @@ public class CommonRegistryEvents {
     }
 
     @SubscribeEvent
-    public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        FHBlocks.fluorite_ore = new FHOreBlock("fluorite_ore", RankineBlocks.DEF_ORE.harvestLevel(3), FHBlockItem::new);
-        FHBlocks.halite_ore = new FHOreBlock("halite_ore", RankineBlocks.DEF_ORE.harvestLevel(2), FHBlockItem::new);
-        for (Block block : registeredFHBlocks) {
-            try {
-                event.getRegistry().register(block);
-            } catch (Throwable e) {
-                FHLogger.error("Failed to register a block. ({})", block);
-                throw e;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void registerEffects(final RegistryEvent.Register<Effect> event) {
-        FHEffects.registerAll(event.getRegistry());
-    }
-
-    @SubscribeEvent
-    public static void registerFluids(RegistryEvent.Register<Fluid> event) {
-        for (Fluid fluid : registeredFHFluids) {
-            try {
-                event.getRegistry().register(fluid);
-            } catch (Throwable e) {
-                FHLogger.error("Failed to register a fluid. ({}, {})", fluid, fluid.getRegistryName());
-                throw e;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void registerItems(RegistryEvent.Register<Item> event) {
-        for (Item item : registeredFHItems) {
-            try {
-                event.getRegistry().register(item);
-            } catch (Throwable e) {
-                FHLogger.error("Failed to register an item. ({}, {})", item, item.getRegistryName());
-                throw e;
-            }
-        }
-    }
-
+    public static void onEntityAttributeModificationEvent(EntityAttributeModificationEvent event) {
+		event.add(EntityType.PLAYER, FHAttributes.ENV_TEMPERATURE.get());
+	}
     @SubscribeEvent
     public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
         IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();

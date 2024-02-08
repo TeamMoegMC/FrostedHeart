@@ -36,6 +36,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.IEProperties;
 import blusunrize.immersiveengineering.api.multiblocks.TemplateMultiblock;
@@ -75,18 +76,18 @@ public class FHMultiblockStatesProvider extends FHExtendedStatesProvider {
 //        createMultiblock(FHBlocks.Multi.crucible, split(obj("block/multiblocks/crucible.obj"), FHMultiblocks.CRUCIBLE));
 		// createMultiblock(FHContent.FHMultiblocks.generator_t2,split(obj("block/multiblocks/generator_t2.obj"),
 		// FHContent.FHMultiblocks.GENERATOR_T2));
-		super.horizontalBlock(FHBlocks.mech_calc, obj("block/mechanical_calculator_base.obj"));
+		super.horizontalBlock(FHBlocks.mech_calc.get(), obj("block/mechanical_calculator_base.obj"));
 		obj("block/mechanical_calculator.obj");
 
-		super.horizontalBlock(FHBlocks.incubator1, bmf("incubator"));
-		super.itemModel(FHBlocks.incubator1, bmf("incubator"));
-		super.itemModel(FHBlocks.incubator2, bmf("heat_incubator"));
-		super.horizontalBlock(FHBlocks.incubator2,
+		super.horizontalBlock(FHBlocks.incubator1.get(), bmf("incubator"));
+		super.itemModel(FHBlocks.incubator1.get(), bmf("incubator"));
+		super.itemModel(FHBlocks.incubator2.get(), bmf("heat_incubator"));
+		super.horizontalBlock(FHBlocks.incubator2.get(),
 				s -> s.get(BlockStateProperties.LIT) ? bmf("heat_incubator_active") : bmf("heat_incubator"));
 		// super.itemModel(FHBlocks.mech_calc,models().withExistingParent("block/mechanical_calculator",
 		// modLoc("block/mechanical_calculator")));
-		for (Block blk : new Block[] { FHBlocks.fluorite_ore, FHBlocks.halite_ore }) {
-			String regName = blk.getRegistryName().getPath();
+		for (Block blk : new Block[] { FHBlocks.fluorite_ore.get(), FHBlocks.halite_ore.get() }) {
+			String regName = RegistryUtils.getRegistryName(blk).getPath();
 			getVariantBuilder(blk).forAllStates(state -> {
 				int i = state.get(RankineOreBlock.TYPE);
 				try {

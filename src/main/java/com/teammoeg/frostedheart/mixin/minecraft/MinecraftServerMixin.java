@@ -19,17 +19,22 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.world.FHFeatures;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.gen.Heightmap.Type;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.IServerWorldInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.teammoeg.frostedheart.world.FHFeatures;
+
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.gen.Heightmap.Type;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.IServerWorldInfo;
+/**
+ * Generates aircraft on start
+ * 
+ * */
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin {
     @Inject(at = @At("TAIL"), method = "func_240786_a_")

@@ -19,10 +19,11 @@
 
 package com.teammoeg.frostedheart.util.mixin;
 
-import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
-import net.minecraft.tileentity.TileEntity;
-
 import java.util.UUID;
+
+import com.teammoeg.frostedheart.base.block.ManagedOwnerTile;
+
+import net.minecraft.tileentity.TileEntity;
 
 public interface IOwnerTile {
     public static UUID getOwner(TileEntity te) {
@@ -35,6 +36,9 @@ public interface IOwnerTile {
     public static void setOwner(TileEntity te, UUID id) {
         if (te instanceof IOwnerTile) {
             ((IOwnerTile) te).setStoredOwner(id);
+            if(te instanceof IOwnerChangeListener) {
+            	((IOwnerChangeListener)te).onOwnerChange();
+            }
         }
     }
 
@@ -42,11 +46,14 @@ public interface IOwnerTile {
         if (te instanceof IOwnerTile && !(te instanceof ManagedOwnerTile)) {
             if (((IOwnerTile) te).getStoredOwner() == null) {
                 ((IOwnerTile) te).setStoredOwner(id);
+                if(te instanceof IOwnerChangeListener) {
+                	((IOwnerChangeListener)te).onOwnerChange();
+                }
             }
         }
     }
 
     public UUID getStoredOwner();
 
-    public void setStoredOwner(UUID id);
+    public void setStoredOwner(UUID id) ;
 }

@@ -137,6 +137,8 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
             if (drained >= 5) {
                 vals = Math.min(vals + drained / 5, 100);
             }
+            if(vals>0)
+            	this.markDirty();
             if (this.getIsActive()) {
                 vals--;
             } else if (vals > 20) {
@@ -144,7 +146,7 @@ public class OilBurnerTileEntity extends FHBaseTileEntity implements IActiveStat
             }
             if (vals <= 0)
                 this.setActive(false);
-            this.markContainingBlockForUpdate(null);
+            
         }
     }
 

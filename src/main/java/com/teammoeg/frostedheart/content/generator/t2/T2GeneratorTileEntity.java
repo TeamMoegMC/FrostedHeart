@@ -19,16 +19,25 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.Optional;
+import java.util.Random;
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
-import com.teammoeg.frostedheart.content.steamenergy.*;
+import com.teammoeg.frostedheart.content.steamenergy.HeatController;
+import com.teammoeg.frostedheart.content.steamenergy.HeatProviderManager;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.SteamEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.ReferenceValue;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -41,10 +50,6 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.Consumer;
-
 public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity>
         implements HeatController, INetworkConsumer {
     private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
@@ -52,18 +57,15 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     private static final BlockPos networkTile = new BlockPos(1, 0, 0);
     private static final BlockPos redstone = new BlockPos(1, 1, 2);
 
-    public T2GeneratorTileEntity.GeneratorUIData guiData = new T2GeneratorTileEntity.GeneratorUIData();
-
     HeatProviderManager manager = new HeatProviderManager(this, c -> {
         Direction dir = this.getFacing();
 
         c.accept(getBlockPosForPos(networkTile).offset(dir.getOpposite()), dir);
 
     });
-    float power = 0;
     SteamEnergyNetwork sen = null;
     float spowerMod = 0;
-    float slevelMod = 1;
+    float slevelMod = 0 ;
     int liquidtick = 0;
     int noliquidtick = 0;
     int tickUntilStopBoom = 20;
@@ -164,12 +166,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         return null;
     }
 
-    @Override
-    public int getLowerBound() {
-        int distanceToGround = 2;
-        int extra = MathHelper.ceil(getRangeLevel());
-        return distanceToGround + extra;
-    }
 
     @Override
     public float getMaxHeat() {
@@ -207,16 +203,8 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     }
 
     @Override
-    public int getUpperBound() {
-        int distanceToTowerTop = 5;
-        int extra = MathHelper.ceil(getRangeLevel() * 2);
-        return distanceToTowerTop + extra;
-    }
-
-    @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
-        power = nbt.getFloat("steam_power");
         slevelMod = nbt.getFloat("steam_temp");
         spowerMod = nbt.getFloat("steam_product");
         liquidtick = nbt.getInt("liquid_tick");
@@ -227,8 +215,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
     protected void tickControls() {
         super.tickControls();
-
-
         int power = this.world.getStrongPower(getBlockPosForPos(redstone));
         if (power > 0) {
             if (power > 10) {
@@ -262,7 +248,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
                 ClientUtils.spawnSmokeParticles(world, blockpos);
                 // }
             }
-
+            /*
             if (this.isWorking() && this.getHeated() == getMaxHeated() && this.tickUntilStopBoom > 0) {
                 ClientUtils.spawnSteamParticles(world, blockpos);
                 this.tickUntilStopBoom--;
@@ -274,44 +260,38 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
                     this.notFullPowerTick = this.nextBoom;
                     this.tickUntilStopBoom = 20;
                 }
-            }
+            }*/
         }
     }
 
     @Override
-    protected void tickFuel() {
-        super.tickFuel();
-        this.tickLiquid();
-        manager.tick();
-    }
-
-    @Override
-    public void tickHeat() {
-        super.tickHeat();
-        this.setTemperatureLevel(super.getHeated() / 100F);
-        this.setRangeLevel(1 * slevelMod);
+    protected boolean tickFuel() {
+    	manager.tick();
+        boolean active=super.tickFuel();
+        if(active)
+        	this.tickLiquid();
+        return active;
     }
 
     protected void tickLiquid() {
         Optional<GeneratorData> data = getData();
-        this.power = data.map(t -> t.power).orElse(0f);
-        this.liquidtick = data.map(t -> t.steamLevel).orElse(0);
+        this.liquidtick = data.map(t -> t.steamProcess).orElse(0);
         if (!this.getIsActive())
             return;
         float rt = this.getTemperatureLevel();
-        if (rt == 0) {
+        /*if (rt == 0) {
             this.spowerMod = 0;
-            this.slevelMod = 1;
-        }
+            this.slevelMod = 0;
+        }*/
         if (noliquidtick > 0) {
             noliquidtick--;
             return;
         }
         double eff = getHeatEfficiency();
 
-        int liquidtick = data.map(t -> t.steamLevel).orElse(0);
+        int liquidtick = data.map(t -> t.steamProcess).orElse(0);
         if (liquidtick >= rt) {
-            data.ifPresent(t -> t.steamLevel -= rt);
+            data.ifPresent(t -> t.steamProcess -= rt);
             this.fillHeat((float) (this.spowerMod * rt * eff));
             return;
         }
@@ -326,7 +306,8 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
                 this.spowerMod = sgr.power;
                 this.fillHeat((float) (this.spowerMod * rt * eff));
                 this.slevelMod = sgr.level;
-                data.ifPresent(t -> t.steamLevel = rdrain);
+                data.ifPresent(t->t.steamProcess= rdrain);
+                data.ifPresent(t -> t.steamLevel = slevelMod);
                 final FluidStack fs2 = this.tank.drain(actualDrain, FluidAction.EXECUTE);
                 data.ifPresent(t -> t.fluid = fs2.getFluid());
                 return;
@@ -335,13 +316,12 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         noliquidtick = 40;
         this.markChanged(true);
         this.spowerMod = 0;
-        this.slevelMod = 1;
+        this.slevelMod = 0;
     }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.putFloat("steam_power", power);
         CompoundNBT tankx = new CompoundNBT();
         tank.writeToNBT(tankx);
         nbt.putFloat("steam_temp", slevelMod);
@@ -349,4 +329,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         nbt.putFloat("liquid_tick", liquidtick);
         nbt.put("fluid", tankx);
     }
+
+
 }

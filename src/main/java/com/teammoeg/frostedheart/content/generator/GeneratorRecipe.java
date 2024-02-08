@@ -19,24 +19,27 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.FHMultiblocks;
+import com.teammoeg.frostedheart.util.FHUtils;
+
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.api.utils.ItemUtils;
-import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHMultiblocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.RegistryObject;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 public class GeneratorRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<GeneratorRecipe> {
@@ -72,21 +75,14 @@ public class GeneratorRecipe extends IESerializableRecipe {
     public static IRecipeType<GeneratorRecipe> TYPE;
 
     public static RegistryObject<IERecipeSerializer<GeneratorRecipe>> SERIALIZER;
-    // Initialized by reload listener
-    public static Map<ResourceLocation, GeneratorRecipe> recipeList = Collections.emptyMap();
     public final IngredientWithSize input;
 
     public final ItemStack output;
 
     public final int time;
 
-    public static GeneratorRecipe findRecipe(ItemStack input) {
-        for (GeneratorRecipe recipe : recipeList.values())
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
-                return recipe;
-        return null;
-    }
 
+/*
     public static List<ItemStack> listAll() {
         ArrayList<ItemStack> all = new ArrayList<>();
         recipeList.values().stream().map(e -> e.input.getMatchingStacks()).forEach(e -> {
@@ -101,7 +97,7 @@ public class GeneratorRecipe extends IESerializableRecipe {
             if (!all.contains(i)) all.add(i);
         });
         return all;
-    }
+    }*/
 
     public GeneratorRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, int time) {
         super(output, TYPE, id);

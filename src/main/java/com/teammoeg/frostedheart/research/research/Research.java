@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.FHRegisteredItem;
 import com.teammoeg.frostedheart.research.FHRegistry;
 import com.teammoeg.frostedheart.research.FHResearch;
@@ -49,8 +49,8 @@ import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.research.gui.FHTextUtil;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.number.IResearchNumber;
-import com.teammoeg.frostedheart.util.SerializeUtil;
 import com.teammoeg.frostedheart.util.Writeable;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftbteams.data.Team;
@@ -762,7 +762,7 @@ public class Research extends FHRegisteredItem implements Writeable {
         FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(rd);
         if (team != null)
             for (ServerPlayerEntity spe : team.getOnlineMembers())
-                FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+                FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
     }
 
     /**

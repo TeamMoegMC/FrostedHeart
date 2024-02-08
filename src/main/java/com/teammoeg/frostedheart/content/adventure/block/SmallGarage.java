@@ -25,8 +25,8 @@ public class SmallGarage extends FHBaseBlock {
     private static Integer typeCount = 4;
     private static IntegerProperty TYPE = IntegerProperty.create("sgtype", 0, typeCount - 1);
     static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 14, 16);
-    public SmallGarage(String name, AbstractBlock.Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public SmallGarage(AbstractBlock.Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0));
     }
 

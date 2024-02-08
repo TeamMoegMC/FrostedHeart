@@ -19,24 +19,22 @@
 
 package com.teammoeg.frostedheart.town.house;
 
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import net.minecraft.block.Block;
+
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.IBlockReader;
-
-import javax.annotation.Nonnull;
-import java.util.function.BiFunction;
 
 /**
  * A house in the town.
  */
 public class HouseBlock extends FHBaseBlock {
 
-    public HouseBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public HouseBlock( Properties blockProps) {
+        super(blockProps);
     }
 
     @Override

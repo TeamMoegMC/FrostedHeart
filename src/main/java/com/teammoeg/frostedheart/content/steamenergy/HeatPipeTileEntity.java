@@ -30,7 +30,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
-public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetworkProvider, ITickableTileEntity, FHBlockInterfaces.IActiveState, INetworkConsumer {
+public class HeatPipeTileEntity extends PipeTileEntity implements EnergyNetworkProvider, ITickableTileEntity, FHBlockInterfaces.IActiveState, INetworkConsumer {
     private SteamNetworkHolder network = new SteamNetworkHolder();
     private boolean isPathFinding;
     private boolean justPropagated;
@@ -97,6 +97,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
 
     @Override
     public void tick() {
+    	
         justPropagated = false;
         if (network.isValid()) {
             network.tick();
@@ -105,6 +106,7 @@ public class HeatPipeTileEntity extends IEBaseTileEntity implements EnergyNetwor
                 return;
             }
         }
+        super.tick();
         setActive(false);
     }
 

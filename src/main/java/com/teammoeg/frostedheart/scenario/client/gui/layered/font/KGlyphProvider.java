@@ -10,16 +10,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.teammoeg.frostedheart.util.FileUtil;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.util.io.FileUtil;
 
-import blusunrize.immersiveengineering.client.ClientUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.IResourceManager;
-import net.minecraft.resources.IResourceManagerReloadListener;
 import net.minecraft.util.ResourceLocation;
 
 public class KGlyphProvider extends ReloadListener<Object>{
@@ -46,7 +44,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 			case "legacy_unicode":readUnicode(cr);break;
 			}
 		}
-		System.out.println("loaded "+data.size());
+		//System.out.println("loaded "+data.size());
 	}
 	public void readBitmap(JsonObject unicode) {
 		int height=9;
@@ -122,6 +120,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 						gd.image=image;
 						gd.parseSize(sizesb[n]);
 						unicodeData.put(n, gd);
+						gd.isUnicode=true;
 						data.putIfAbsent(n, gd);
 					}
 				}else {
@@ -137,7 +136,6 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		
 	}
 	public void onResourceManagerReload(IResourceManager resourceManager) {
-		System.out.println("123456");
 		rm=resourceManager;
 		JsonParser jp=new JsonParser();
 		try {
@@ -159,6 +157,9 @@ public class KGlyphProvider extends ReloadListener<Object>{
 	@Override
 	protected Object prepare(IResourceManager resourceManagerIn, IProfiler profilerIn) {
 		onResourceManagerReload(resourceManagerIn);
+		/*for(int i='A';i<'z';i++) {
+			System.out.println(Character.toString((char)i)+unicodeData.get(i));
+		}*/
 		return new Object();
 	}
 	@Override

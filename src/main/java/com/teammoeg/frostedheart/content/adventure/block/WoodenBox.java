@@ -25,8 +25,8 @@ public class WoodenBox extends FHBaseBlock {
     private static Integer colorCount = 5;
     private static IntegerProperty TYPE = IntegerProperty.create("boxcolor", 0, colorCount - 1);
     static final VoxelShape shape = Block.makeCuboidShape(0, 0, 0, 16, 16, 16);
-    public WoodenBox(String name, AbstractBlock.Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public WoodenBox(AbstractBlock.Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0));
     }
 

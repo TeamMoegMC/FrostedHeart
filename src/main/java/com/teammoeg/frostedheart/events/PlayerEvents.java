@@ -19,20 +19,23 @@
 
 package com.teammoeg.frostedheart.events;
 
+import static com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen.*;
+
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.STitlePacket;
 import net.minecraft.potion.EffectInstance;
@@ -53,7 +56,7 @@ public class PlayerEvents {
     @SuppressWarnings("resource")
     public static void onRC(PlayerInteractEvent.RightClickItem rci) {
         if (!rci.getWorld().isRemote
-                && rci.getItemStack().getItem().getRegistryName().getNamespace().equals("projecte")) {
+                && RegistryUtils.getRegistryName(rci.getItemStack().getItem()).getNamespace().equals("projecte")) {
             rci.setCancellationResult(ActionResultType.SUCCESS);
             rci.setCanceled(true);
             World world = rci.getWorld();
@@ -90,10 +93,7 @@ public class PlayerEvents {
         if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity serverPlayer = (ServerPlayerEntity) event.player;
             boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
-            boolean hasRadar = serverPlayer.inventory.hasItemStack(new ItemStack(FHItems.weatherRadar));
-            boolean hasHelmet = serverPlayer.inventory.armorInventory.get(3)
-                    .isItemEqualIgnoreDurability(new ItemStack(FHItems.weatherHelmet));
-            if (configAllows && (hasRadar || hasHelmet)) {
+            if (configAllows && ResearchDataAPI.getVariants(serverPlayer).getDouble("has_forecast")>0) {
                 // Blizzard warning
                 float thisHour = WorldClimate.getTemp(serverPlayer.world);
                 boolean thisHourB = WorldClimate.isBlizzard(serverPlayer.world);
@@ -121,10 +121,9 @@ public class PlayerEvents {
                     float noonTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 6) * 10) / 10.0F;
                     float nightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 12) * 10) / 10.0F;
                     float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
-                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
-                            / 10.0F;
-                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp, noonTemp,
-                            nightTemp, midnightTemp, tomorrowMorningTemp);
+                    float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10) / 10.0F;
+                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
+                            nightTemp-10, midnightTemp-10, tomorrowMorningTemp-10);
                     boolean snow = morningTemp < WorldTemperature.SNOW_TEMPERATURE
                             || noonTemp < WorldTemperature.SNOW_TEMPERATURE || nightTemp < WorldTemperature.SNOW_TEMPERATURE
                             || midnightTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -140,6 +139,7 @@ public class PlayerEvents {
                         serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.snow_today"), false);
                     else
                         serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.clear_today"), false);
+
                 }
 
                 // Night forecast bedtime
@@ -152,8 +152,8 @@ public class PlayerEvents {
                             / 10.0F;
                     float tomorrowNightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
                             / 10.0F;
-                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp, midnightTemp,
-                            tomorrowMorningTemp, tomorrowNoonTemp, tomorrowNightTemp);
+                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
+                            tomorrowMorningTemp-10, tomorrowNoonTemp-10, tomorrowNightTemp-10);
                     boolean snow = nightTemp < WorldTemperature.SNOW_TEMPERATURE
                             || midnightTemp < WorldTemperature.SNOW_TEMPERATURE
                             || tomorrowMorningTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -172,6 +172,9 @@ public class PlayerEvents {
                         serverPlayer.sendStatusMessage(GuiUtils.translateMessage("forecast.clear_tomorrow"), false);
                 }
             }
+
+            if (serverPlayer.world.getDayTime() % 24000 == 41 && FHConfig.COMMON.enableDailyKitchen.get())
+                generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
         }
     }
 }

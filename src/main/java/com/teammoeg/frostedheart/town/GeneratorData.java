@@ -19,10 +19,16 @@
 
 package com.teammoeg.frostedheart.town;
 
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.Random;
+
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
@@ -42,23 +48,27 @@ public class GeneratorData {
     public int process = 0;
     public int processMax = 0;
     public int overdriveLevel = 0;
-    public int steamLevel;
+    public float steamLevel;
+    public int steamProcess;
+    public int heated;
     public float power;
     public Fluid fluid;
     public boolean isWorking;
     public boolean isOverdrive;
     public boolean isActive;
+    public float TLevel,RLevel;
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
     public ItemStack currentItem;
     private TeamResearchData teamData;
     public BlockPos actualPos = BlockPos.ZERO;
     public RegistryKey<World> dimension;
 
+    final float heatAddInterval = 20;
     public GeneratorData(TeamResearchData teamResearchData) {
         teamData = teamResearchData;
     }
 
-    public boolean consumesFuel() {
+    public boolean consumesFuel(World w) {
         if (currentItem != null) {
             if (!inventory.get(OUTPUT_SLOT).isEmpty() && ItemHandlerHelper.canItemStacksStack(inventory.get(OUTPUT_SLOT), currentItem))
                 inventory.get(OUTPUT_SLOT).grow(currentItem.getCount());
@@ -66,7 +76,7 @@ public class GeneratorData {
                 inventory.set(OUTPUT_SLOT, currentItem);
             currentItem = null;
         }
-        GeneratorRecipe recipe = getRecipe();
+        GeneratorRecipe recipe = getRecipe(w);
         if (recipe != null) {
             int count = recipe.input.getCount();
             Utils.modifyInvStackSize(inventory, INPUT_SLOT, -count);
@@ -87,12 +97,16 @@ public class GeneratorData {
     public void deserialize(CompoundNBT data, boolean update) {
         process = data.getInt("process");
         processMax = data.getInt("processMax");
+        steamProcess=data.getInt("steamProcess");
         overdriveLevel = data.getInt("overdriveLevel");
         isWorking = data.getBoolean("isWorking");
         isOverdrive = data.getBoolean("isOverdrive");
         isActive = data.getBoolean("isActive");
-        steamLevel = data.getInt("steamLevel");
+        steamLevel = data.getFloat("steamLevel");
         power = data.getFloat("power");
+        heated=data.getInt("heated");
+        TLevel=data.getFloat("tempLevel");
+        RLevel=data.getFloat("rangeLevel");
         if (data.contains("steamFluid"))
             fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(data.getString("steamFluid")));
         else
@@ -118,10 +132,15 @@ public class GeneratorData {
         return inventory;
     }
 
-    public GeneratorRecipe getRecipe() {
+    public GeneratorRecipe getRecipe(World w) {
         if (inventory.get(INPUT_SLOT).isEmpty())
             return null;
-        GeneratorRecipe recipe = GeneratorRecipe.findRecipe(inventory.get(INPUT_SLOT));
+        GeneratorRecipe recipe=null;
+        for(GeneratorRecipe recipet:FHUtils.filterRecipes(w.getRecipeManager(),GeneratorRecipe.TYPE))
+        	if(recipet.input.test(inventory.get(INPUT_SLOT))) {
+        		recipe=recipet;
+        		break;
+        	}
         if (recipe == null)
             return null;
         if (inventory.get(OUTPUT_SLOT).isEmpty() || (ItemStack.areItemsEqual(inventory.get(OUTPUT_SLOT), recipe.output)
@@ -139,13 +158,18 @@ public class GeneratorData {
         CompoundNBT result = new CompoundNBT();
         result.putInt("process", process);
         result.putInt("processMax", processMax);
+        result.putInt("steamProcess", steamProcess);
         result.putInt("overdriveLevel", overdriveLevel);
         result.putBoolean("isWorking", isWorking);
         result.putBoolean("isOverdrive", isOverdrive);
         result.putBoolean("isActive", isActive);
+        result.putFloat("steamLevel",steamLevel);
         result.putFloat("power", power);
+        result.putInt("heated", heated);
+        result.putFloat("tempLevel", TLevel);
+        result.putFloat("rangeLevel",RLevel);
         if (fluid != null)
-            result.putString("steamFluid", fluid.getRegistryName().toString());
+            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
         if (!update) {
             CompoundNBT inv = new CompoundNBT();
             ItemStackHelper.saveAllItems(inv, inventory);
@@ -159,17 +183,47 @@ public class GeneratorData {
         return result;
     }
 
-    public void tick() {
-        isActive = tickFuelProcess();
+    public void tick(World w) {
+        isActive = tickFuelProcess(w);
+        tickHeatedProcess(w);
     }
-
-    public boolean tickFuelProcess() {
+    public void tickHeatedProcess(World world) {
+    	int heatedMax=getMaxHeated();
+        if (isActive&&heated != heatedMax) {
+            Random random = world.rand;
+            boolean needAdd = false;
+            float heatAddProbability = 1F / heatAddInterval;
+            if (isOverdrive) {
+                heatAddProbability = 2F / heatAddInterval;
+            }
+            if (random.nextFloat() < heatAddProbability) {
+                needAdd = true;
+            }
+            if (heated < heatedMax && needAdd) {
+                heated++;
+            } else if (heated > heatedMax && needAdd) {
+                heated--;
+            }
+        } else if (!isActive) {
+            if (heated > 0){
+                Random random = world.rand;
+                float heatAddProbability = 2F / heatAddInterval;
+                if (random.nextFloat() < heatAddProbability) {
+                    heated--;
+                }
+            }
+        }
+        System.out.println(heated);
+        TLevel=(Math.min(heated / 100F,this.getMaxTemperatureLevel()));
+        RLevel=(Math.min(heated / 100F,this.getMaxRangeLevel()));
+    }
+    public boolean tickFuelProcess(World w) {
         if (!isWorking)
             return false;
         boolean hasFuel = true;
         if (isOverdrive) {
             while (process <= 3 && hasFuel) {
-                hasFuel = consumesFuel();
+                hasFuel = consumesFuel(w);
             }
             if (process > 3) {
                 process -= 4;
@@ -177,7 +231,7 @@ public class GeneratorData {
             }
         } else {
             while (process <= 0 && hasFuel) {
-                hasFuel = consumesFuel();
+                hasFuel = consumesFuel(w);
             }
             if (process > 0) {
                 process--;
@@ -185,5 +239,22 @@ public class GeneratorData {
             }
         }
         return false;
+    }
+    public void onPosChange() {
+    	heated=0;
+    	TLevel=0;
+    	RLevel=0;
+    	process=0;
+    	processMax=0;
+    	steamProcess=0;
+    }
+	public float getMaxTemperatureLevel() {
+		return 1+(isOverdrive?1:0)+steamLevel;
+	}
+	public float getMaxRangeLevel() {
+		return 1+steamLevel;
+	}
+    public int getMaxHeated() {
+        return (int) (100*Math.max(this.getMaxTemperatureLevel(), this.getMaxRangeLevel()));
     }
 }

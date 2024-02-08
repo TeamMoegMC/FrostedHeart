@@ -8,6 +8,8 @@ import java.util.PriorityQueue;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLImageContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.gl.GLLayerContent;
 
+import net.minecraft.client.renderer.texture.DynamicTexture;
+
 public class LayerManager extends GLLayerContent {
 	Map<String, OrderedRenderableContent> names = new LinkedHashMap<>();
 	PriorityQueue<OrderedRenderableContent> pq;
@@ -68,15 +70,21 @@ public class LayerManager extends GLLayerContent {
 		return new LayerManager();
 	}
 	public void close() {
-		if(oglc.texture!=0)
-			PrerenderParams.freeTexture(oglc.texture);
-		if(nglc.texture!=0)
-			PrerenderParams.freeTexture(nglc.texture);
+		if(oglc.texture!=null){
+			oglc.texture.close();
+			oglc.texture=null;
+			
+		}
+		if(nglc.texture!=null) {
+			nglc.texture.close();
+			nglc.texture=null;
+		}
 		for(OrderedRenderableContent ctx:names.values())
 			if(ctx instanceof LayerManager) {
 				((LayerManager) ctx).close();
 			}
 	}
+	private static boolean loadedTex=true;
 	public synchronized void commitChanges(TransitionFunction t, int ticks) {
 
 		if (t != null) {
@@ -85,10 +93,12 @@ public class LayerManager extends GLLayerContent {
 			this.maxTransTicks = ticks;
 			opq = pq;
 			
-			if(oglc.texture!=0)
-				PrerenderParams.freeTexture(oglc.texture);
+			if(oglc.texture!=null) {
+				oglc.texture.close();
+				oglc.texture=null;
+			}
 			oglc.texture=nglc.texture;
-			nglc.texture=0;
+			nglc.texture=null;
 		}else close();
 		pq=null;
 		if (!names.isEmpty()) {
@@ -101,7 +111,13 @@ public class LayerManager extends GLLayerContent {
 			}
 			PrerenderParams prerender=new PrerenderParams();
 			pq.forEach(s->s.prerender(prerender));
-			nglc.texture=prerender.loadTexture();
+			DynamicTexture tex=prerender.loadTexture();
+			//System.out.println("Loading tex");
+			if(nglc.texture!=null) {
+				nglc.texture.close();
+				nglc.texture=null;
+			}
+			nglc.texture=tex;
 		}
 	}
 

@@ -32,7 +32,6 @@ import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;

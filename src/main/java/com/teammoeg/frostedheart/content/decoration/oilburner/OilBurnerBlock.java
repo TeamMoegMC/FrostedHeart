@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.decoration.oilburner;
 
 import java.util.Random;
-import java.util.function.BiFunction;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
@@ -32,7 +31,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -49,9 +47,8 @@ public class OilBurnerBlock extends FHBaseBlock {
 
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public OilBurnerBlock(String name, Properties blockProps,
-                          BiFunction<Block, net.minecraft.item.Item.Properties, Item> createItemBlock) {
-        super(name, blockProps.setLightLevel(FHUtils.getLightValueLit(15)), createItemBlock);
+    public OilBurnerBlock(Properties blockProps) {
+        super(blockProps.setLightLevel(FHUtils.getLightValueLit(15)));
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 

@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlocks;
 import blusunrize.immersiveengineering.data.DataGenUtils;
@@ -64,7 +65,7 @@ public abstract class FHExtendedStatesProvider extends BlockStateProvider {
 
     protected String name(Block b)
     {
-        return b.getRegistryName().getPath();
+        return RegistryUtils.getRegistryName(b).getPath();
     }
 
     public void simpleBlockItem(Block b, ModelFile model)

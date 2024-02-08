@@ -19,9 +19,9 @@
 
 package com.teammoeg.frostedheart.util;
 
-import net.minecraft.nbt.CompoundNBT;
-
 import java.util.function.Supplier;
+
+import net.minecraft.nbt.CompoundNBT;
 
 public class LazyTickWorker {
     public int tMax;

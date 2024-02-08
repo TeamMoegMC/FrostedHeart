@@ -23,9 +23,9 @@ import java.util.function.Consumer;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
+
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
-import dev.ftb.mods.ftblibrary.icon.ImageIcon;
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 import dev.ftb.mods.ftblibrary.ui.Panel;
 import dev.ftb.mods.ftblibrary.ui.Theme;

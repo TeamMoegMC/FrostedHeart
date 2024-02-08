@@ -30,8 +30,8 @@ public class PebbleBlock extends FHBaseBlock {
     static final VoxelShape shape2 = Block.makeCuboidShape(0, 0, 0, 16, 7, 16);
     static final VoxelShape shape3 = Block.makeCuboidShape(0, 0, 0, 16, 5, 16);
     static final VoxelShape shape4 = Block.makeCuboidShape(0, 0, 0, 16, 2, 16);
-    public PebbleBlock(String name, AbstractBlock.Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public PebbleBlock(AbstractBlock.Properties blockProps) {
+        super( blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(TYPE, 0).with(COLOR, 0));
     }
 

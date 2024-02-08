@@ -42,8 +42,8 @@ import net.minecraft.world.World;
 public class ThermometerItem extends FHBaseItem {
 
 
-    public ThermometerItem(String name, Properties properties) {
-        super(name, properties);
+    public ThermometerItem(Properties properties) {
+        super(properties);
     }
 
     @Override

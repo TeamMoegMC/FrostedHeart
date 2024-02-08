@@ -19,6 +19,10 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
+import java.util.Random;
+
+import org.spongepowered.asm.mixin.Mixin;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CraftingTableBlock;
 import net.minecraft.nbt.CompoundNBT;
@@ -27,10 +31,9 @@ import net.minecraft.world.ISeedReader;
 import net.minecraft.world.gen.feature.structure.IStructurePieceType;
 import net.minecraft.world.gen.feature.structure.ScatteredStructurePiece;
 import net.minecraft.world.gen.feature.structure.SwampHutPiece;
-import org.spongepowered.asm.mixin.Mixin;
-
-import java.util.Random;
-
+/**
+ * Remove crafting table in swamp hut
+ * */
 @Mixin(SwampHutPiece.class)
 public abstract class MixinSwampHutPiece extends ScatteredStructurePiece {
 

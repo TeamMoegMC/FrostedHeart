@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy.sauna;
 
 import java.util.Random;
-import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -34,7 +33,6 @@ import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -50,9 +48,8 @@ import net.minecraft.world.World;
 public class SaunaBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-    public SaunaBlock(String name, Properties blockProps,
-                      BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public SaunaBlock(Properties blockProps) {
+        super(blockProps);
         this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE).with(BlockStateProperties.FACING, Direction.SOUTH));
     }
 

@@ -20,13 +20,12 @@
 package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 
 public class ExecuteTarget extends ScenarioTarget{
 
 	private final String label;
-	public ExecuteTarget(IScenarioConductor par,String name, String label) {
+	public ExecuteTarget(IScenarioThread par,String name, String label) {
 		super(par,name);
 
 		this.label = label;
@@ -37,7 +36,7 @@ public class ExecuteTarget extends ScenarioTarget{
 		this.label = label;
 	}
 	@Override
-	public void apply(IScenarioConductor runner) {
+	public void apply(IScenarioThread runner) {
 		super.apply(runner);
 		if(label!=null) {
 			Integer ps=runner.getScenario().labels.get(label);

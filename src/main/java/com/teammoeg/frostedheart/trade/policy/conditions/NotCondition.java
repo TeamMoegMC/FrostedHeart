@@ -19,11 +19,11 @@
 
 package com.teammoeg.frostedheart.trade.policy.conditions;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.Conditions;
 import com.teammoeg.frostedheart.trade.policy.PolicyCondition;
+
 import net.minecraft.network.PacketBuffer;
 
 public class NotCondition implements PolicyCondition {

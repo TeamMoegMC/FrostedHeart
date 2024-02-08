@@ -25,9 +25,8 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
-import com.teammoeg.frostedheart.util.SerializeUtil;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
@@ -54,8 +53,14 @@ public class ServerScenarioCommandPacket {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
+        	//System.out.println(this);
             FHScenarioClient.callCommand(commandName, ClientScene.INSTANCE, params);
         });
         context.get().setPacketHandled(true);
     }
+
+	@Override
+	public String toString() {
+		return "ServerScenarioCommandPacket [commandName=" + commandName + ", params=" + params + "]";
+	}
 }

@@ -19,12 +19,6 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.util.BreedUtil;
-import net.minecraft.entity.AgeableEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -32,6 +26,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.teammoeg.frostedheart.util.mixin.BreedUtil;
+
+import net.minecraft.entity.AgeableEntity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
+/**
+ * Add more breeding cooldown and set breading item to tag items
+ * For removal in 1.20+
+ * */
 @Mixin({AnimalEntity.class})
 public abstract class AnimalEntityMixin extends AgeableEntity {
 

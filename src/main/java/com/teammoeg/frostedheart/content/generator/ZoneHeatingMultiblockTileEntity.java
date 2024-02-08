@@ -19,14 +19,20 @@
 
 package com.teammoeg.frostedheart.content.generator;
 
-import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
-import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
-import blusunrize.immersiveengineering.common.util.Utils;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
+
+import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
+import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
+import blusunrize.immersiveengineering.common.util.Utils;
 import dev.ftb.mods.ftbteams.data.Team;
 import dev.ftb.mods.ftbteams.data.TeamManager;
 import net.minecraft.nbt.CompoundNBT;
@@ -35,11 +41,6 @@ import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3i;
-
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 /**
  * Common base class for any generator like block that maintains a heat area
@@ -54,15 +55,13 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     boolean isWorking;
     boolean isOverdrive;
     boolean isDirty;// mark if temperature change required
-    int heated = 0;
-    float heatAddInterval = 20;    //ticks
+
 
     public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
         super(multiblockInstance, type, hasRSControl);
     }
 
     protected abstract void callBlockConsumerWithTypeCheck(Consumer<T> consumer, TileEntity te);
-
     @Override
     public void disassemble() {
         if (this == master())
@@ -82,27 +81,23 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     }
 
     public int getActualRange() {
-        return (int) (8 + (getRangeLevel()) * 4);
+    	float rlevel=getRangeLevel();
+    	if(rlevel<=1)
+    		return (int) (12*rlevel);
+    	return (int) (12+(rlevel-1)*4);
     }
 
     public int getActualTemp() {
         return (int) (getTemperatureLevel() * 10);
     }
 
-    public int getHeated() {
-        return heated;
-    }
+
 
     public int getLowerBound() {
         return MathHelper.ceil(getRangeLevel());
     }
 
-    public int getMaxHeated() {
-        if (isOverdrive()) {
-            return 200;
-        }
-        return 100;
-    }
+
 
     UUID getOwner() {
         return IOwnerTile.getOwner(this);
@@ -110,10 +105,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
 
     public final float getRangeLevel() {
-        T master = master();
-        if (master == this)
             return rangeLevel;
-        return master == null ? 1 : master.getRangeLevel();
     }
 
     protected Optional<Team> getTeam() {
@@ -132,10 +124,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
 
     public final float getTemperatureLevel() {
-        T master = master();
-        if (master == this)
-            return temperatureLevel;
-        return master == null ? 1 : master.getTemperatureLevel();
+        return temperatureLevel;
     }
 
     public int getUpperBound() {
@@ -174,7 +163,6 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
         isOverdrive = nbt.getBoolean("isOverdrive");
         temperatureLevel = nbt.getFloat("temperatureLevel");
         rangeLevel = nbt.getFloat("rangeLevel");
-        heated = nbt.getInt("heated");
     }
 
     protected void setAllActive(boolean state) {
@@ -191,24 +179,12 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
         forEachBlock(s -> IOwnerTile.setOwner(s, owner));
     }
 
-    public final void setRangeLevel(float f) {
-        if (master() == this) {
-            if (this.rangeLevel != f)
-                isDirty = true;
+    public void setRangeLevel(float f) {
             this.rangeLevel = f;
-        } else {
-            master().setTemperatureLevel(f);
-        }
     }
 
-    public final void setTemperatureLevel(float temperatureLevel) {
-        if (master() == this) {
-            if (this.temperatureLevel != temperatureLevel)
-                isDirty = true;
-            this.temperatureLevel = temperatureLevel;
-        } else {
-            master().setTemperatureLevel(temperatureLevel);
-        }
+    public void setTemperatureLevel(float temperatureLevel) {
+        this.temperatureLevel = temperatureLevel;
     }
 
 
@@ -231,13 +207,12 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
             tickEffects(getIsActive());
         }
 
-        tickControls();
-
         if (!world.isRemote && formed) {
-
+        	
             final boolean activeBeforeTick = getIsActive();
-            tickFuel();
-            tickHeat();
+            boolean isActive=tickFuel();
+            tickHeat(isActive);
+            setAllActive(isActive);
             // set activity status
             final boolean activeAfterTick = getIsActive();
             int ntlevel = getActualTemp();
@@ -250,6 +225,8 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
                 if (nrlevel > 0 && ntlevel > 0) {
                     ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
                             getLowerBound(), ntlevel);
+                }else {
+                	ChunkHeatData.removeTempAdjust(world, getPos());
                 }
             } else if (activeAfterTick) {
                 if (isChanged() || !initialized) {
@@ -257,7 +234,7 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
                     markChanged(false);
                 }
             }
-
+            shutdownTick();
         }
     }
 
@@ -266,41 +243,9 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
     protected abstract void tickEffects(boolean isActive);
 
-    protected abstract void tickFuel();
+    protected abstract boolean tickFuel();
 
-    public void tickHeat() {
-        if (isWorking() && heated != getMaxHeated()) {
-            Random random = world.rand;
-            boolean needAdd = false;
-            float heatAddProbability = 1F / heatAddInterval;
-            if (isOverdrive()) {
-                heatAddProbability = 2F / heatAddInterval;
-            }
-            if (random.nextFloat() < heatAddProbability) {
-                needAdd = true;
-                markContainingBlockForUpdate(null);
-            }
-            if (heated < getMaxHeated() && needAdd) {
-                heated++;
-            } else if (heated > getMaxHeated() && needAdd) {
-                heated--;
-            }
-        } else if (!isWorking()) {
-            if (heated == 0) {
-                shutdownTick();
-                ChunkHeatData.removeTempAdjust(world, getPos());
-                setAllActive(false);
-            } else {
-                markContainingBlockForUpdate(null);
-                Random random = world.rand;
-                float heatAddProbability = 1F / heatAddInterval;
-                if (random.nextFloat() < heatAddProbability) {
-                    heated--;
-                }
-            }
-        }
-    }
-
+    public abstract void tickHeat(boolean isWorking);
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
@@ -308,6 +253,5 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
         nbt.putBoolean("isOverdrive", isOverdrive);
         nbt.putFloat("temperatureLevel", temperatureLevel);
         nbt.putFloat("rangeLevel", rangeLevel);
-        nbt.putInt("heated", heated);
     }
 }

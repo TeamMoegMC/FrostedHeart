@@ -20,6 +20,8 @@
 package com.teammoeg.frostedheart.compat.jei;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
@@ -49,7 +51,7 @@ public class CuttingRecipe implements IRecipe<IInventory> {
 
     @Override
     public ResourceLocation getId() {
-        return new ResourceLocation(FHMain.MODID, "cutting/" + out.getItem().getRegistryName().getPath());
+        return new ResourceLocation(FHMain.MODID, "cutting/" + RegistryUtils.getRegistryName(out.getItem()).getPath());
     }
 
     @Override

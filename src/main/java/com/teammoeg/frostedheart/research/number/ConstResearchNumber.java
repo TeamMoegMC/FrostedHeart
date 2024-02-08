@@ -28,7 +28,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.teammoeg.frostedheart.research.data.ResearchData;
-import com.teammoeg.frostedheart.util.Writeable;
 
 import net.minecraft.network.PacketBuffer;
 

@@ -19,17 +19,26 @@
 
 package com.teammoeg.frostedheart.mixin.minecraft;
 
-import com.teammoeg.frostedheart.util.FHUtils;
-import net.minecraft.block.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.server.ServerWorld;
+import java.util.Random;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
+import com.teammoeg.frostedheart.util.FHUtils;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.BushBlock;
+import net.minecraft.block.IGrowable;
+import net.minecraft.block.MushroomBlock;
+import net.minecraft.block.SaplingBlock;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
+/**
+ * Disable any tree from growing when blizzard
+ * */
 @Mixin({SaplingBlock.class, MushroomBlock.class})
 public abstract class SaplingBlockMixin extends BushBlock implements IGrowable {
 

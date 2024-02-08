@@ -34,6 +34,7 @@ import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.research.Research;
+
 import dev.ftb.mods.ftbteams.FTBTeamsAPI;
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.command.CommandSource;
@@ -132,6 +133,7 @@ public class ResearchCommand {
                             String rsn = ct.getArgument("name", String.class).toString();
                             INBT nbt = ct.getArgument("value", INBT.class);
                             cnbt.put(rsn, nbt);
+                            ResearchDataAPI.sendVariants(ct.getSource().asPlayer());
                             return Command.SINGLE_SUCCESS;
                         })))))
                 .then(Commands.literal("reset").then(Commands.argument("name", StringArgumentType.string()).suggests((ct, s) -> {

@@ -42,7 +42,7 @@ public class ChargerRecipe extends IESerializableRecipe {
     public static class Serializer extends IERecipeSerializer<ChargerRecipe> {
         @Override
         public ItemStack getIcon() {
-            return new ItemStack(FHBlocks.charger);
+            return new ItemStack(FHBlocks.charger.get());
         }
 
         @Nullable
@@ -72,20 +72,12 @@ public class ChargerRecipe extends IESerializableRecipe {
     public static IRecipeType<ChargerRecipe> TYPE;
 
     public static RegistryObject<IERecipeSerializer<ChargerRecipe>> SERIALIZER;
-    // Initialized by reload listener
-    public static Map<ResourceLocation, ChargerRecipe> recipeList = Collections.emptyMap();
     public final IngredientWithSize input;
 
     public final ItemStack output;
 
     public final float cost;
 
-    public static ChargerRecipe findRecipe(ItemStack input) {
-        for (ChargerRecipe recipe : recipeList.values())
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
-                return recipe;
-        return null;
-    }
 
     public ChargerRecipe(ResourceLocation id, ItemStack output, IngredientWithSize input, float cost2) {
         super(output, TYPE, id);

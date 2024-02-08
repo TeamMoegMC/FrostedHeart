@@ -19,21 +19,23 @@
 
 package com.teammoeg.frostedheart.mixin.ftb;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.util.FTBFixUtils;
+import com.teammoeg.frostedheart.util.mixin.FTBFixUtils;
+
 import dev.ftb.mods.ftbteams.data.ClientTeam;
 import dev.ftb.mods.ftbteams.data.ClientTeamManager;
 import dev.ftb.mods.ftbteams.data.KnownClientPlayer;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 @Mixin(ClientTeamManager.class)
 public abstract class ClientTeamManagerMixin {
