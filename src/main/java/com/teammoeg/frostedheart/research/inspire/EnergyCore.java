@@ -323,7 +323,7 @@ public class EnergyCore implements ICapabilitySerializable<CompoundNBT> {
         utbody=0;
         lastsleep=0;
         lastsleepdate=0;
-        energy=0;
+        energy=energy/2;
         
 	}
 	public void sendUpdate(ServerPlayerEntity player) {
