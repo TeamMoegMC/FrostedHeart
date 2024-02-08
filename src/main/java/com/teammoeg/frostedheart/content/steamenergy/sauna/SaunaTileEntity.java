@@ -32,8 +32,6 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.climate.player.Temperature;
-import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
@@ -41,7 +39,6 @@ import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerTile;
 
-import blusunrize.immersiveengineering.api.utils.ItemUtils;
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -208,10 +205,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             // whole day reward
             p.addPotionEffect(new EffectInstance(FHEffects.SAUNA.get(), 23000, 0, true, false));
         }
-        // add temperature
-        float lenvtemp = Temperature.getEnv(p);//get a smooth change in display
-        float lbodytemp = Temperature.getBodySmoothed(p);
-        Temperature.set(p, 1.01f * .01f + lbodytemp * .99f, 65 * .1f + lenvtemp * .9f);
+        
         // add medical effect
         if (hasMedicine() && remainTime == 1) {
             p.addPotionEffect(getEffectInstance());

@@ -39,7 +39,7 @@ import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.client.util.UV;
 import com.teammoeg.frostedheart.climate.TemperatureFrame;
 import com.teammoeg.frostedheart.climate.TemperatureFrame.FrameType;
-import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 
@@ -218,6 +218,7 @@ public class FrostedHud {
     public static boolean renderForecast = true;
     public static boolean renderFrozenVignette = true;
     public static boolean renderHeatVignette = true;
+	public static float smoothedBody;
     static final ResourceLocation HUD_ELEMENTS = new ResourceLocation(FHMain.MODID, "textures/gui/hud/hudelements.png");
     // static final ResourceLocation FROZEN_OVERLAY_PATH = new
     // ResourceLocation(FHMain.MODID, "textures/gui/hud/frozen_overlay.png");
@@ -601,7 +602,7 @@ public class FrostedHud {
         }
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
         float temperature = 0;
-        float tlvl = Temperature.getEnv(player);
+        float tlvl = PlayerTemperatureData.getCapability(player).map(t->t.getEnvTemp()).orElse(0F);
         tlvl = Math.max(-273, tlvl);
         UV unit;
         if (f) {
@@ -625,7 +626,7 @@ public class FrostedHud {
     public static void renderFrozenOverlay(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_frozen");
         // render frozen overlay with alpha based on linear interpolation
-        float tempDelta = MathHelper.clamp(Math.abs(Temperature.getBodySmoothed(player)), 0.5f, 5.0f);
+        float tempDelta = MathHelper.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.getBodyTemp()).orElse(0F)), 0.5f, 5.0f);
         float opacityDelta = (tempDelta - 0.5F) / 4.5F;
         ResourceLocation texture;
         RenderSystem.enableBlend();
@@ -653,7 +654,7 @@ public class FrostedHud {
     }
     public static void renderFrozenVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_vignette");
-        float tempDelta = MathHelper.clamp(Math.abs(Temperature.getBodySmoothed(player)), 0.5f, 5.0f);
+        float tempDelta = MathHelper.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.getBodyTemp()).orElse(0F)), 0.5f, 5.0f);
         float opacityDelta = 0.5F * (tempDelta - 0.5F) / 4.5F;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
@@ -761,7 +762,7 @@ public class FrostedHud {
     }
     public static void renderHeatVignette(MatrixStack stack, int x, int y, Minecraft mc, PlayerEntity player) {
         mc.getProfiler().startSection("frostedheart_vignette");
-        float tempDelta = MathHelper.clamp(Math.abs(Temperature.getBodySmoothed(player)), 0.5f, 5.0f);
+        float tempDelta = MathHelper.clamp(Math.abs(PlayerTemperatureData.getCapability(player).map(t->t.getBodyTemp()).orElse(0F)), 0.5f, 5.0f);
         float opacityDelta = 0.5F * (tempDelta - 0.5F) / 4.5F;
         RenderSystem.enableBlend();
         RenderSystem.disableDepthTest();
@@ -877,7 +878,7 @@ public class FrostedHud {
         mc.getTextureManager().bindTexture(FrostedHud.HUD_ELEMENTS);
         RenderSystem.enableBlend();
 
-        float temp = Temperature.getBodySmoothed(player);
+        float temp = PlayerTemperatureData.getCapability(player).map(t->t.getBodyTemp()).orElse(0F);
         HUDElements.exp_bar_frame.blit(mc.ingameGUI, stack, x, y, BasePos.exp_bar);
 //        double startTemp = -0.5, endTemp = -3.0;
 //        int k = (int) ((Math.abs(Math.max(TemperatureCore.getBodyTemperature(player), endTemp)) - Math.abs(startTemp)) / (Math.abs(endTemp) - Math.abs(startTemp)) * 181.0F);
@@ -949,7 +950,7 @@ public class FrostedHud {
         renderExperience = renderHealth;
 
         // Hypothermia
-        float bt = Temperature.getBodySmoothed(renderViewPlayer);
+        float bt = PlayerTemperatureData.getCapability(player).map(t->t.getBodyTemp()).orElse(0F);
         renderHypothermia = renderHealth && bt < -0.5 || bt > 0.5;
 
         // Overlay and vignette
@@ -1024,7 +1025,7 @@ public class FrostedHud {
         HUDElements.temperature_orb_frame.blit(mc.ingameGUI, stack, x, y + 3, BasePos.temperature_orb_frame);
         boolean f = FHConfig.CLIENT.useFahrenheit.get();
         float temperature = 0;
-        float tlvl = Temperature.getEnv(player);
+        float tlvl = PlayerTemperatureData.getCapability(player).map(t->t.getFeelTemp()).orElse(0F);
         tlvl = Math.max(-273, tlvl);
         if (f)
             temperature = (tlvl * 9 / 5 + 32);

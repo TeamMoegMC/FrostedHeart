@@ -43,7 +43,7 @@ import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.DebugCommand;
@@ -358,14 +358,9 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        CompoundNBT cnbt = new CompoundNBT();
-        CompoundNBT olddata = Temperature.getFHData(ev.getOriginal());
-        cnbt.putLong("penergy", olddata.getLong("penergy"));
-        cnbt.putLong("cenergy", olddata.getLong("cenergy"));
-        Temperature.setFHData(ev.getPlayer(), cnbt);
-
-        DailyKitchen.copyData(ev.getOriginal().getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY), ev.getPlayer().getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY));
-
+        FHUtils.copyPlayerCapability(DailyKitchen.WANTED_FOOD_CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.copyPlayerCapability(EnergyCore.CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        //FHUtils.copyPlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {
             DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());
@@ -392,10 +387,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = Temperature.getBodySmoothed((ServerPlayerEntity) event.getEntityLiving());
+                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getBodyTemp()).orElse(0f);
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(), Temperature.getEnv((ServerPlayerEntity) event.getEntityLiving()));
+                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getEnvTemp()).orElse(0f));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -413,7 +408,8 @@ public class CommonEvents {
                     if (current <= min)
                         return;
                 }
-                Temperature.setBody((ServerPlayerEntity) event.getEntityLiving(), current);
+                final float toset=current;
+                PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).ifPresent(t->t.setBodyTemp(toset));
             }
 
             DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), is);
@@ -790,12 +786,9 @@ public class CommonEvents {
             }
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
-            CompoundNBT cnbt = new CompoundNBT();
-            cnbt.putLong("penergy", Temperature.getFHData(event.getPlayer()).getLong("penergy"));
-            cnbt.putDouble("utbody", 1);
-            cnbt.putLong("lastsleep", 0);
-            cnbt.putLong("lastsleepdate", 0);
-            Temperature.setFHData(event.getPlayer(), cnbt);
+            EnergyCore.getCapability(event.getPlayer()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayerEntity) event.getPlayer());});
+            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(t->t.reset());
+            
         }
     }
 

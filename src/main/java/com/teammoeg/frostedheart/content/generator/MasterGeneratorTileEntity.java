@@ -342,8 +342,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        ItemStackHelper.saveAllItems(nbt, linventory);
-        nbt.putBoolean("hasFuel", hasFuel);
+        if(!this.isDummy()||descPacket) {
+	        ItemStackHelper.saveAllItems(nbt, linventory);
+	        nbt.putBoolean("hasFuel", hasFuel);
+        }
     }
 
 

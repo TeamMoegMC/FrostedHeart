@@ -213,7 +213,6 @@ public class GeneratorData {
                 }
             }
         }
-        System.out.println(heated);
         TLevel=(Math.min(heated / 100F,this.getMaxTemperatureLevel()));
         RLevel=(Math.min(heated / 100F,this.getMaxRangeLevel()));
     }

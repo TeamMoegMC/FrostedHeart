@@ -35,6 +35,8 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.content.foods.DailyKitchen.IWantedFoodCapability;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.block.BlockState;
@@ -68,8 +70,12 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.crafting.NBTIngredient;
+import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.common.util.LazyOptional;
 
 public class FHUtils {
     private static class NBTIngredientAccess extends NBTIngredient {
@@ -264,5 +270,10 @@ public class FHUtils {
 	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor
 	    return ArmorNBT(stack, 107, 6);
 	}
-
+   public static <T extends INBTSerializable<CompoundNBT>> void copyCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
+       newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> newCap.deserializeNBT(oldCap.serializeNBT())));
+   }
+   public static <T extends INBTSerializable<CompoundNBT>> void copyPlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
+	   copyCapability(old.getCapability(capability),now.getCapability(capability));
+   }
 }
