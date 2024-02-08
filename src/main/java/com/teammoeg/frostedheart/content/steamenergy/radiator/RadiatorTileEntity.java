@@ -96,7 +96,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     public int getActualRange() {
-        return 6;
+        return 7;
     }
 
     @Override
@@ -192,7 +192,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
             tempLevelLast = network.getTemperatureLevel();
         }
-        System.out.println(hasFuel);
         return hasFuel;
     }
 

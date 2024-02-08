@@ -280,10 +280,10 @@ public class TemperatureUpdate {
                 else if (current > 10)
                     current = 10;
                 float lenvtemp = data.getEnvTemp();//get a smooth change in display
+                float lfeeltemp=data.getFeelTemp();
+                float feeltemp=current-(1 - keepwarm)*(current-envtemp);
                 
-                
-                
-                data.update(current, (envtemp + 37) * .2f + lenvtemp * .8f, current-(1 - keepwarm)*(current-envtemp)+37);
+                data.update(current, (envtemp + 37) * .2f + lenvtemp * .8f, (feeltemp+37)*.2f+lfeeltemp*.8f);
                 //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 

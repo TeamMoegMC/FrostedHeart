@@ -186,7 +186,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.generatorData).filter(t -> this.pos.equals(t.actualPos));
+        return getTeamData().map(t -> t.generatorData).filter(t -> master().pos.equals(t.actualPos));
     }
 
     @Nullable
