@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.content.steamenergy.steamcore;
 
+import java.util.Random;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -7,6 +9,7 @@ import com.simibubi.create.content.contraptions.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 
 import net.minecraft.block.Block;
@@ -96,5 +99,13 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEne
 				
 		if(dir!=null)dir=dir.getOpposite();
 		return dir;
+	}
+
+
+	@Override
+	public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+		super.animateTick(stateIn, worldIn, pos, rand);
+		if(stateIn.get(LIT))
+			ClientUtils.spawnSteamParticles(worldIn, pos);
 	}
 }

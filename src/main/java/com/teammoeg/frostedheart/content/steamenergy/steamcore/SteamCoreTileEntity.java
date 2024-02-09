@@ -60,10 +60,6 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
                 this.setActive(false);
                 this.updateGeneratedRotation();
             }
-        }else {
-            if(getIsActive()){
-                ClientUtils.spawnSteamParticles(this.getWorld(), pos);
-            }
         }
     }
 
@@ -88,14 +84,6 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         return network;
     }
 
-    public void drawEffect(int type) {
-        if (world != null && world.isRemote) {
-            if(type == 1)
-                ClientUtils.spawnFireParticles(world, this.getPos());
-            else
-                ClientUtils.spawnSteamParticles(world, this.getPos());
-        }
-    }
     public Direction getDirection() {
         return this.getBlockState().get(BlockStateProperties.FACING);
     }

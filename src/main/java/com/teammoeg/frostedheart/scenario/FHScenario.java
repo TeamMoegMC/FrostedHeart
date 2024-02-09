@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -50,6 +51,7 @@ import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -59,12 +61,11 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 public class FHScenario {
 	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
-	public static Map<ServerPlayerEntity, ScenarioConductor> runners = new HashMap<>();
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
 
 	public static void startFor(ServerPlayerEntity pe) {
-		ScenarioConductor sr = runners.computeIfAbsent(pe, FHScenario::load);
-
+		ScenarioConductor sr = get(pe);
+		sr.init(pe);
 		sr.run(loadScenario(sr,"init"));
 	}
 
@@ -165,7 +166,7 @@ public class FHScenario {
 	}
 	static Path local;
 	static final FolderName dataFolder = new FolderName("fhscenario");
-
+/*
 	public static ScenarioConductor load(ServerPlayerEntity player) {
 		local = FHResearchDataManager.server.func_240776_a_(dataFolder);
 		local.toFile().mkdirs();
@@ -203,5 +204,9 @@ public class FHScenario {
 
 		runners.values().removeIf(t -> t.isOfflined());
 
+	}*/
+
+	public static ScenarioConductor get(PlayerEntity playerEntity) {
+		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));
 	}
 }

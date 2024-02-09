@@ -313,7 +313,7 @@ public class CommonEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
     	if(ite.getPlayer() instanceof ServerPlayerEntity) {
-    		ScenarioConductor cond=FHScenario.runners.get(ite.getPlayer());
+    		ScenarioConductor cond=FHScenario.get(ite.getPlayer());
     		cond.playerInited=true;
     	}
     }
@@ -660,9 +660,8 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            ScenarioConductor runner=FHScenario.runners.get(player);
-            if(runner!=null)
-            	runner.tick();
+            ScenarioConductor runner=FHScenario.get(player);
+            runner.tick();
         }
     }
     @SubscribeEvent

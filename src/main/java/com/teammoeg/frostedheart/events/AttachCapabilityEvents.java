@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.WantedFoodCapabilityProvider;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -61,6 +62,8 @@ public class AttachCapabilityEvents {
             if (!(player instanceof FakePlayer)) {
                 if (!event.getCapabilities().containsKey(DeathInventoryData.ID))
                     event.addCapability(DeathInventoryData.ID, new DeathInventoryData());
+                if (!event.getCapabilities().containsKey(ScenarioConductor.ID))
+                    event.addCapability(ScenarioConductor.ID, new ScenarioConductor());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"), new WantedFoodCapabilityProvider());
             }
         }

@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import com.simibubi.create.content.contraptions.base.HalfShaftInstance;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.entry.TileEntityEntry;
+import com.teammoeg.frostedheart.client.renderer.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
@@ -99,6 +100,7 @@ public class FHTileTypes {
         .tileEntity("steam_core", SteamCoreTileEntity::new)
         .instance(() -> HalfShaftInstance::new)
         .validBlocks(FHBlocks.steam_core)
+        .renderer(() -> HalfShaftRenderer::new)
         .register();
 
     public static final RegistryObject<TileEntityType<SaunaTileEntity>> SAUNA = REGISTER.register(

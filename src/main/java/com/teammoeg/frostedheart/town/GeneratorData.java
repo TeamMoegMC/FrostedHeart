@@ -93,7 +93,34 @@ public class GeneratorData {
         }
         return false;
     }
-
+    public CompoundNBT serialize(boolean update) {
+        CompoundNBT result = new CompoundNBT();
+        result.putInt("process", process);
+        result.putInt("processMax", processMax);
+        result.putInt("steamProcess", steamProcess);
+        result.putInt("overdriveLevel", overdriveLevel);
+        result.putBoolean("isWorking", isWorking);
+        result.putBoolean("isOverdrive", isOverdrive);
+        result.putBoolean("isActive", isActive);
+        result.putFloat("steamLevel",steamLevel);
+        result.putFloat("power", power);
+        result.putInt("heated", heated);
+        result.putFloat("tempLevel", TLevel);
+        result.putFloat("rangeLevel",RLevel);
+        if (fluid != null)
+            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
+        if (!update) {
+            CompoundNBT inv = new CompoundNBT();
+            ItemStackHelper.saveAllItems(inv, inventory);
+            result.put("inv", inv);
+            if (currentItem != null)
+                result.put("res", currentItem.serializeNBT());
+            result.putLong("actualPos", actualPos.toLong());
+            if (dimension != null)
+                result.putString("dim", dimension.getLocation().toString());
+        }
+        return result;
+    }
     public void deserialize(CompoundNBT data, boolean update) {
         process = data.getInt("process");
         processMax = data.getInt("processMax");
@@ -154,34 +181,7 @@ public class GeneratorData {
         return 64;
     }
 
-    public CompoundNBT serialize(boolean update) {
-        CompoundNBT result = new CompoundNBT();
-        result.putInt("process", process);
-        result.putInt("processMax", processMax);
-        result.putInt("steamProcess", steamProcess);
-        result.putInt("overdriveLevel", overdriveLevel);
-        result.putBoolean("isWorking", isWorking);
-        result.putBoolean("isOverdrive", isOverdrive);
-        result.putBoolean("isActive", isActive);
-        result.putFloat("steamLevel",steamLevel);
-        result.putFloat("power", power);
-        result.putInt("heated", heated);
-        result.putFloat("tempLevel", TLevel);
-        result.putFloat("rangeLevel",RLevel);
-        if (fluid != null)
-            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
-        if (!update) {
-            CompoundNBT inv = new CompoundNBT();
-            ItemStackHelper.saveAllItems(inv, inventory);
-            result.put("inv", inv);
-            if (currentItem != null)
-                result.put("res", currentItem.serializeNBT());
-            result.putLong("actualPos", actualPos.toLong());
-            if (dimension != null)
-                result.putString("dim", dimension.getLocation().toString());
-        }
-        return result;
-    }
+
 
     public void tick(World w) {
         isActive = tickFuelProcess(w);

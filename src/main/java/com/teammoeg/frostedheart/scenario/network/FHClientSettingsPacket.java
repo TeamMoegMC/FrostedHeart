@@ -49,7 +49,7 @@ public class FHClientSettingsPacket {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             // Update client-side nbt
-            ScenarioVariables sv=FHScenario.runners.get(context.get().getSender()).getVaribles();
+            ScenarioVariables sv=FHScenario.get(context.get().getSender()).getVaribles();
             sv.getExecutionData().putDouble("uiScale", scale);
             if(sv.getSnapshot()!=null)
             	sv.getSnapshot().putDouble("uiScale", scale);

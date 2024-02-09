@@ -54,6 +54,7 @@ import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.FHScenario;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -226,7 +227,6 @@ public class FHMain {
     private void serverSave(final WorldEvent.Save event) {
         if (FHResearchDataManager.INSTANCE != null) {
             FHResearchDataManager.INSTANCE.save();
-            FHScenario.save();
         }
     }
 
@@ -269,6 +269,7 @@ public class FHMain {
         DeathInventoryData.setup();
         PlayerTemperatureData.setup();
         EnergyCore.setup();
+        ScenarioConductor.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();
