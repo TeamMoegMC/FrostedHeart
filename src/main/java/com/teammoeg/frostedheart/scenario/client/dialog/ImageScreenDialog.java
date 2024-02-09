@@ -148,6 +148,7 @@ public class ImageScreenDialog extends Screen implements IScenarioDialog {
 		return primary;
 	}
 	public void setPrimary(LayerManager primary) {
+		cpartialTicks=0;
 		this.primary = primary;
 	}
 	@Override

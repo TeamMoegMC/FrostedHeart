@@ -100,7 +100,9 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
     public void enableActs() {
     	if(!isActsEnabled) {
     		isActsEnabled=true;
-    		
+       		if(lastQuest!=null) {
+    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
+    		}
     		acts.values().forEach(t->{
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
     				//t.getScene().setSlient(true);
@@ -110,9 +112,7 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
     				//t.getScene().setSlient(false);
     			}
     		});
-    		if(lastQuest!=null) {
-    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
-    		}
+ 
     	}
     }
     public ScenarioConductor() {

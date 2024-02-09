@@ -312,7 +312,7 @@ public class CommonEvents {
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
-    	if(ite.getPlayer() instanceof ServerPlayerEntity) {
+    	if(ite.getPlayer() instanceof ServerPlayerEntity&&!(ite.getPlayer() instanceof FakePlayer)) {
     		ScenarioConductor cond=FHScenario.get(ite.getPlayer());
     		cond.playerInited=true;
     	}

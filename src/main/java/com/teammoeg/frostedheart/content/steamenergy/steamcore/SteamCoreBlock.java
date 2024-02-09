@@ -105,7 +105,7 @@ public class SteamCoreBlock extends DirectionalKineticBlock implements ISteamEne
 	@Override
 	public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
 		super.animateTick(stateIn, worldIn, pos, rand);
-		if(stateIn.get(LIT))
+		if(stateIn.get(LIT)&&rand.nextBoolean())
 			ClientUtils.spawnSteamParticles(worldIn, pos);
 	}
 }

@@ -157,6 +157,7 @@ public class ClientEvents {
             }
         }
     }
+    static int forstedSoundCd;
     /**
      * Play ice cracking sound when player's body temperature transitions across integer threshold.
      */
@@ -165,13 +166,18 @@ public class ClientEvents {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
-            if (!player.isSpectator() && !player.isCreative() && player.world != null) {
+            if(forstedSoundCd>0)
+            	forstedSoundCd--;
+            if (!player.isSpectator() && !player.isCreative() && player.world != null&&forstedSoundCd>0) {
+            	
             	PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
-                float prevTemp = ptd.getPreviousTemp();
-                float currTemp = ptd.getBodyTemp();
+                float prevTemp = ptd.smoothedBodyPrev;
+                float currTemp = ptd.smoothedBody;
                 // play sound if currTemp transitions across integer threshold
-                if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F))
+                if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F)) {
                     player.world.playSound(player, player.getPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    forstedSoundCd=20;
+                }
             }
         }
     }
@@ -472,6 +478,7 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
+    	forstedSoundCd=0;
         FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
             boolean isStable = true;
             if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
@@ -540,7 +547,10 @@ public class ClientEvents {
 
             }
             PlayerEntity pe = ClientUtils.getPlayer();
-            PlayerTemperatureData.getCapability(pe).ifPresent(t->t.smoothedBody=t.smoothedBody*.9f+t.getBodyTemp()*.1f);
+            PlayerTemperatureData.getCapability(pe).ifPresent(t->{
+            	t.smoothedBodyPrev=t.smoothedBody;
+            	t.smoothedBody=t.smoothedBody*.9f+t.getBodyTemp()*.1f;
+            });
             
             if (pe != null && pe.getActivePotionEffect(FHEffects.NYCTALOPIA.get()) != null) {
                 ClientUtils.applyspg = true;

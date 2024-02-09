@@ -22,6 +22,7 @@ public class PlayerTemperatureData implements ICapabilitySerializable<CompoundNB
 	float envTemp;
 	float feelTemp;
 	public float smoothedBody;//Client only, smoothed body temperature
+	public float smoothedBodyPrev;//Client only, smoothed body temperature
     @CapabilityInject(PlayerTemperatureData.class)
     public static Capability<PlayerTemperatureData> CAPABILITY;
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "temperature");
