@@ -108,6 +108,12 @@ public class ScenarioVM implements IScenarioThread{
 		}
 		jump(getCallStack().pollLast());
 	}
+    public void tryPopCallStack() {
+		if(!getCallStack().isEmpty()) {
+			jump(getCallStack().pollLast());
+		}
+		
+	}
 	public void addCallStack() {
 		getCallStack().add(getCurrentPosition());
 	}
@@ -146,6 +152,7 @@ public class ScenarioVM implements IScenarioThread{
 	    		setStatus((RunStatus.STOPPED));
 	    		getScene().clear();
 	    		sendCachedSence();
+	    		this.tryPopCallStack();
 	    		return;
     		}
     	}
@@ -208,7 +215,7 @@ public class ScenarioVM implements IScenarioThread{
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())
-						queue(t);
+    					toExecute.add(t);
 					else
 						jump(t);
     			}

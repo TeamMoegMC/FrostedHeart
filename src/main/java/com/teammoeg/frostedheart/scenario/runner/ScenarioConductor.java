@@ -195,35 +195,6 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
 		run();
 	}*/
 
-    protected void runCode() {
-    	clearAfterClick=false;
-    	
-    	
-    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
-    		Node node=getScenario().pieces.get(nodeNum++);
-    		try {
-    			getScene().appendLiteral(node.getLiteral(this));
-    			node.run(this);
-    		}catch(Throwable t) {
-    			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
-    			this.sendMessage("Execution Exception when executing scenario: "+t.getMessage()+" see logs for more detail");
-    			setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
-	    		sendCachedSence();
-    			break;
-    		}
-	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
-	    		
-	    		setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
-	    		sendCachedSence();
-	    		return;
-    		}
-    	}
-    	if(isRunning())
-    		setStatus((RunStatus.STOPPED));
-		
-    }
 
 
     public void run(Scenario sp) {
@@ -245,7 +216,7 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())
-						queue(t);
+						toExecute.add(t);
 					else
 						jump(t);
     			}
@@ -347,7 +318,7 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
 		target.apply(data);
 		data.paragraph.setScenario(target.getScenario());
 		data.paragraph.setParagraphNum(0);
-		queue(new ActTarget(quest,target));
+		toExecute.add(new ActTarget(quest,target));
 	}
 
 	public void endAct() {

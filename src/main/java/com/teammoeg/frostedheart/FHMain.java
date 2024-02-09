@@ -227,6 +227,7 @@ public class FHMain {
     private void serverSave(final WorldEvent.Save event) {
         if (FHResearchDataManager.INSTANCE != null) {
             FHResearchDataManager.INSTANCE.save();
+            //FHScenario.save();
         }
     }
 

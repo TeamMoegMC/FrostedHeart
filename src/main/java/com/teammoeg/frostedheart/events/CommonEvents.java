@@ -662,6 +662,7 @@ public class CommonEvents {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             ScenarioConductor runner=FHScenario.get(player);
             runner.tick();
+           // System.out.println(runner.save());
         }
     }
     @SubscribeEvent

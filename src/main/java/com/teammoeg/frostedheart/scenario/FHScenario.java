@@ -62,7 +62,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class FHScenario {
 	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
-
+	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
 	public static void startFor(ServerPlayerEntity pe) {
 		ScenarioConductor sr = get(pe);
 		sr.init(pe);
@@ -207,6 +207,7 @@ public class FHScenario {
 	}*/
 
 	public static ScenarioConductor get(PlayerEntity playerEntity) {
+		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));
 	}
 }
