@@ -174,9 +174,9 @@ public class FHMain {
                 || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
             throw new RuntimeException("Unsupported projecte");
         // remove primal winter blocks not to temper rankine world
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
     @SuppressWarnings("unused")
