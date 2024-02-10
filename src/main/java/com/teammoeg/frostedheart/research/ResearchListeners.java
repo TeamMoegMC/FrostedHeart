@@ -278,7 +278,8 @@ public class ResearchListeners {
     public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;
-            return ResearchDataAPI.getData(team).crafting.has(r);
+            TeamResearchData trd=ResearchDataAPI.getData(team);
+            return trd!=null&&trd.crafting.has(r);
         }
         return true;
     }

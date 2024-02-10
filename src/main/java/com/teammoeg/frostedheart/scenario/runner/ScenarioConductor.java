@@ -54,6 +54,12 @@ import net.minecraftforge.common.util.LazyOptional;
  * You should define triggers in script file and activate triggers to make it execute.
  * */
 public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializable<CompoundNBT>{
+    @CapabilityInject(ScenarioConductor.class)
+    public static Capability<ScenarioConductor> CAPABILITY;
+    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "scenario");
+    private final LazyOptional<ScenarioConductor> capability=LazyOptional.of(()->this);
+    
+    
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
@@ -61,10 +67,8 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
     private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
     private static final ActNamespace init=new ActNamespace(null,null);
-    @CapabilityInject(ScenarioConductor.class)
-    public static Capability<ScenarioConductor> CAPABILITY;
-    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "scenario");
-    private final LazyOptional<ScenarioConductor> capability=LazyOptional.of(()->this);
+    boolean inited=false;
+
     public CompoundNBT save() {
     	CompoundNBT data=new CompoundNBT();
     	if(varData.snapshot==null)
@@ -96,7 +100,7 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
     	//if(currentAct==null)
     	//currentAct=acts.get(empty);
     }
-
+    public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
     		isActsEnabled=true;
@@ -121,7 +125,7 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
 		acts.put(init, getCurrentAct());
 		acts.put(global, new Act(this,global));
 	}
-    boolean inited=false;
+
     public void init(ServerPlayerEntity player) {
     	if(!inited)inited=true;
 		this.player = player.getUniqueID();

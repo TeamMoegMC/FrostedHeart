@@ -165,7 +165,7 @@ public class FHResearch {
         ResearchListeners.reload();
         //No need to clear all as data manager would handle this.
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> TeamResearchData::resetClientInstance);
-        FHResearch.clearAll();
+        //FHResearch.clearAll();
         prepareReload();
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
         loadAll();
@@ -246,7 +246,7 @@ public class FHResearch {
                 if (je.isJsonObject()) {
                     String id = f.getName();
                     Research r=SpecialResearch.deserialize(id.substring(0, id.length() - 5), je.getAsJsonObject());
-                    r.packetInit();
+                    //r.packetInit();
                     researches.register(r);
                 }
             } catch (Exception e) {

@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.util;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +40,6 @@ import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.IWantedFoodCapability;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
@@ -273,7 +275,39 @@ public class FHUtils {
    public static <T extends INBTSerializable<CompoundNBT>> void copyCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
        newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> newCap.deserializeNBT(oldCap.serializeNBT())));
    }
+   public static <T extends INBTSerializable<CompoundNBT>> void cloneCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
+       newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> copyAllFields(newCap,oldCap)));
+   }
    public static <T extends INBTSerializable<CompoundNBT>> void copyPlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
 	   copyCapability(old.getCapability(capability),now.getCapability(capability));
    }
+   public static <T extends INBTSerializable<CompoundNBT>> void clonePlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
+	   cloneCapability(old.getCapability(capability),now.getCapability(capability));
+   }
+   public static <T> void copyAllFields(T to, T from) {
+       Class<T> clazz = (Class<T>) from.getClass();
+       // OR:
+       // Class<T> clazz = (Class<T>) to.getClass();
+       List<Field> fields = getAllModelFields(clazz);
+
+       if (fields != null) {
+           for (Field field : fields) {
+               try {
+                   field.setAccessible(true);
+                   field.set(to,field.get(from));
+               } catch (IllegalAccessException e) {
+                   e.printStackTrace();
+               }
+           }
+       }
+   }
+
+	public static List<Field> getAllModelFields(Class aClass) {
+	    List<Field> fields = new ArrayList<>();
+	    do {
+	        Collections.addAll(fields, aClass.getDeclaredFields());
+	        aClass = aClass.getSuperclass();
+	    } while (aClass != null);
+	    return fields;
+	}
 }

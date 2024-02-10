@@ -360,6 +360,7 @@ public class CommonEvents {
     public static void death(PlayerEvent.Clone ev) {
         FHUtils.copyPlayerCapability(DailyKitchen.WANTED_FOOD_CAPABILITY,ev.getOriginal(),ev.getPlayer());
         FHUtils.copyPlayerCapability(EnergyCore.CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(ScenarioConductor.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHUtils.copyPlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {

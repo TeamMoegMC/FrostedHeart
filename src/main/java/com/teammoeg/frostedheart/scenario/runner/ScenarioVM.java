@@ -41,6 +41,10 @@ public class ScenarioVM implements IScenarioThread{
 	protected Scene scene;
 	protected boolean clearAfterClick;
     public boolean playerInited;
+
+    public void copy(ScenarioVM another) {
+    	
+    }
 	public ScenarioVM() {
 		// TODO Auto-generated constructor stub
 	}
