@@ -190,21 +190,21 @@ public class FHBlocks {
         .transform(customItemModel())
         .register();
     public static RegistryObject<Block> house = register("house",()->new HouseBlock( Block.Properties
-            .notSolid(), FHBlockItem::new);
-    public static Block house = new HouseBlock("house", Block.Properties
             .create(Material.WOOD)
             .sound(SoundType.WOOD)
             .setRequiresTool()
             .harvestTool(ToolType.AXE)
             .hardnessAndResistance(2, 6)
-            .notSolid(), FHBlockItem::new);
-    public static Block farm = new FarmBlock("farm_block", Block.Properties
+            .notSolid()));
+
+    public static RegistryObject<Block> farm = register("farm",()->new FarmBlock( Block.Properties
             .create(Material.WOOD)
             .sound(SoundType.WOOD)
             .setRequiresTool()
             .harvestTool(ToolType.AXE)
             .hardnessAndResistance(2, 6)
-            .notSolid(), FHBlockItem::new);
+            .notSolid()));
+
     public static void init() {
     }
 }

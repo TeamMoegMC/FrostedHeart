@@ -21,8 +21,8 @@ import javax.annotation.Nonnull;
 import java.util.function.BiFunction;
 
 public class FarmBlock extends FHBaseBlock {
-    public FarmBlock(String name, Properties blockProps, BiFunction<Block, Item.Properties, Item> createItemBlock) {
-        super(name, blockProps, createItemBlock);
+    public FarmBlock(Properties blockProps) {
+        super(blockProps);
     }
 
     @Override
