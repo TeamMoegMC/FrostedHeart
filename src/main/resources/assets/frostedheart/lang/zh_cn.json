@@ -367,7 +367,7 @@
   "subtitle.frostedheart.mechanical_calculator_roll": "机械计算器滚筒滚动",
   "subtitle.frostedheart.ice_cracking": "冰块破裂",
   "tooltip.frostedheart.armor_heating": "加热功率：%s/s",
-  "tooltip.frostedheart.armor_warm": "保暖指数：%s %%",
+  "tooltip.frostedheart.armor_warm": "保温指数：%s %%",
   "tooltip.frostedheart.block_temp": "温度变化%s",
   "tooltip.frostedheart.canned_food": "推荐加水烹饪食用",
   "tooltip.frostedheart.charger.heat_vest": "对充气机使用以充能",
