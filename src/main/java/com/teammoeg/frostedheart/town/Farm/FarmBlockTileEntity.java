@@ -75,7 +75,7 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
             if(blockMap.size() > MAX_SIZE)break;
             tempPos = queue.poll();
             for (Pair<Integer, Integer> p : py) {
-                if(world.isAirBlock(tempPos.add(p.first, 1, p.second))){
+                if(world.isAirBlock(tempPos.add(p.first, 1, p.second)) || !isUsefulBlock(tempPos.add(p.first, 1, p.second))){
                     if(!world.isAirBlock(tempPos.add(p.first, 0, p.second))){
                         BlockPos pos = tempPos.add(p.first, 0, p.second);
                         Long key = pos.toLong();
@@ -88,12 +88,19 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
                 }
             }
         }
-        if(blockMap.size() >= MAX_SIZE && blockMap.size() <= MIN_SIZE){
+        if(blockMap.size() >= MAX_SIZE || blockMap.size() <= MIN_SIZE){
             blockMap.clear();
         }else{
             blockMap.clear();
             return true;
         }
+        return false;
+    }
+
+    private boolean isUsefulBlock(BlockPos pos){
+        //fence wall
+        String name = world.getBlockState(pos).getBlock().getTranslationKey();
+        if(name.contains("fence") || name.contains("wall"))return true;
         return false;
     }
 
