@@ -1,6 +1,8 @@
 package com.teammoeg.frostedheart.town.Farm;
 
+import com.alcatrazescapee.primalwinter.common.ModBlocks;
 import com.ibm.icu.impl.Pair;
+import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scheduler.IScheduledTaskTE;
@@ -82,7 +84,7 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
                         if(!blockMap.containsKey(key)){
                             queue.add(pos);
                             blockMap.put(key, pos);
-                            world.setBlockState(pos, Blocks.GOLD_BLOCK.getDefaultState());
+                            //world.setBlockState(pos, Blocks.GOLD_BLOCK.getDefaultState());
                         }
                     }
                 }
@@ -91,6 +93,9 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
         if(blockMap.size() >= MAX_SIZE || blockMap.size() <= MIN_SIZE){
             blockMap.clear();
         }else{
+            this.size = blockMap.size();
+            this.blocks.clear();
+            this.blocks.putAll(blockMap);
             blockMap.clear();
             return true;
         }
@@ -119,8 +124,34 @@ public class FarmBlockTileEntity extends TileEntity implements ITownBlockTE, ISc
     @Override
     public void executeTask() {
         if(checkFarm()){
-            if (world != null && world.isRemote) {
-                ClientUtils.spawnSteamParticles(world, pos.add(0, 1, 0));
+            if (world != null) {
+                if(Math.random() < 0.05){
+                    System.out.println("Size:" + this.blocks.size());
+                    if(this.blocks.size() > 0){
+                        List<BlockPos> list = new ArrayList(blocks.values());
+                        int pc = (int) (list.size() * Math.random());
+                        System.out.println("Change block" + pc + "/" + list.size());
+                        doFarm(list.get(pc));
+                    }
+                }
+                //ClientUtils.spawnSteamParticles(world, pos.add(0, 1, 0));
+            }
+        }
+    }
+
+    private void doFarm(BlockPos pos){
+        Map<Block, Pair<Block, Double>> blocksMap = new HashMap<>();
+        blocksMap.put(Blocks.GOLD_BLOCK, Pair.of(Blocks.DIRT, 1.0));
+        blocksMap.put(Blocks.SANDSTONE, Pair.of(Blocks.DIRT, 1.0));
+
+        blocksMap.put(Blocks.DIRT, Pair.of(Blocks.FARMLAND, 1.0));
+        blocksMap.put(Blocks.COARSE_DIRT, Pair.of(Blocks.DIRT, 1.0));
+        blocksMap.put(ModBlocks.SNOWY_COARSE_DIRT.get(), Pair.of(Blocks.DIRT, 1.0));
+        blocksMap.put(ModBlocks.SNOWY_DIRT.get(), Pair.of(Blocks.DIRT, 1.0));
+
+        if(blocksMap.containsKey(world.getBlockState(pos).getBlock())){
+            if(Math.random() < blocksMap.get(world.getBlockState(pos).getBlock()).second){
+                world.setBlockState(pos, blocksMap.get(world.getBlockState(pos).getBlock()).first.getDefaultState());
             }
         }
     }
