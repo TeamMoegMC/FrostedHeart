@@ -19,33 +19,33 @@
 
 package com.teammoeg.frostedheart.scenario.runner;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.scenario.FHScenario;
+import javax.annotation.Nullable;
+
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
-import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
-import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.LazyOptional;
 
 /**
  * ScenarioConductor
@@ -53,7 +53,13 @@ import net.minecraftforge.common.util.Constants;
  * You shouldn't opearte this class from any other code except from scenario trigger and commands.
  * You should define triggers in script file and activate triggers to make it execute.
  * */
-public class ScenarioConductor extends ScenarioVM {
+public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializable<CompoundNBT>{
+    @CapabilityInject(ScenarioConductor.class)
+    public static Capability<ScenarioConductor> CAPABILITY;
+    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "scenario");
+    private final LazyOptional<ScenarioConductor> capability=LazyOptional.of(()->this);
+    
+    
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
@@ -61,10 +67,14 @@ public class ScenarioConductor extends ScenarioVM {
     private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
     private static final ActNamespace init=new ActNamespace(null,null);
+    boolean inited=false;
 
     public CompoundNBT save() {
     	CompoundNBT data=new CompoundNBT();
-    	data.put("vars", varData.snapshot);
+    	if(varData.snapshot==null)
+    		data.put("vars", varData.extraData);
+    	else
+    		data.put("vars", varData.snapshot);
     	ListNBT lacts=new ListNBT();
     	for(Act v:acts.values()) {
     		if(v.name.isAct())
@@ -90,11 +100,13 @@ public class ScenarioConductor extends ScenarioVM {
     	//if(currentAct==null)
     	//currentAct=acts.get(empty);
     }
-
+    public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
     		isActsEnabled=true;
-    		
+       		if(lastQuest!=null) {
+    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
+    		}
     		acts.values().forEach(t->{
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
     				//t.getScene().setSlient(true);
@@ -104,11 +116,20 @@ public class ScenarioConductor extends ScenarioVM {
     				//t.getScene().setSlient(false);
     			}
     		});
-    		if(lastQuest!=null) {
-    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
-    		}
+ 
     	}
     }
+    public ScenarioConductor() {
+		super();
+		setCurrentAct(new Act(this,init));
+		acts.put(init, getCurrentAct());
+		acts.put(global, new Act(this,global));
+	}
+
+    public void init(ServerPlayerEntity player) {
+    	if(!inited)inited=true;
+		this.player = player.getUniqueID();
+	}
     public ScenarioConductor(ServerPlayerEntity player) {
 		super();
 		this.player = player.getUniqueID();
@@ -178,35 +199,6 @@ public class ScenarioConductor extends ScenarioVM {
 		run();
 	}*/
 
-    protected void runCode() {
-    	clearAfterClick=false;
-    	
-    	
-    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
-    		Node node=getScenario().pieces.get(nodeNum++);
-    		try {
-    			getScene().appendLiteral(node.getLiteral(this));
-    			node.run(this);
-    		}catch(Throwable t) {
-    			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
-    			this.sendMessage("Execution Exception when executing scenario: "+t.getMessage()+" see logs for more detail");
-    			setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
-	    		sendCachedSence();
-    			break;
-    		}
-	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
-	    		
-	    		setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
-	    		sendCachedSence();
-	    		return;
-    		}
-    	}
-    	if(isRunning())
-    		setStatus((RunStatus.STOPPED));
-		
-    }
 
 
     public void run(Scenario sp) {
@@ -218,7 +210,8 @@ public class ScenarioConductor extends ScenarioVM {
 		run();
 	}
 
-	public void tick() {    	
+	public void tick() {
+		if(!inited)return;
     	//detect triggers
 		if(getStatus()==RunStatus.RUNNING) {
 			run();
@@ -227,7 +220,7 @@ public class ScenarioConductor extends ScenarioVM {
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())
-						queue(t);
+						toExecute.add(t);
 					else
 						jump(t);
     			}
@@ -327,10 +320,9 @@ public class ScenarioConductor extends ScenarioVM {
 			target=new ExecuteTarget(this,scene,null);
 		}
 		target.apply(data);
-		System.out.println(target);
 		data.paragraph.setScenario(target.getScenario());
 		data.paragraph.setParagraphNum(0);
-		queue(new ActTarget(quest,target));
+		toExecute.add(new ActTarget(quest,target));
 	}
 
 	public void endAct() {
@@ -346,6 +338,37 @@ public class ScenarioConductor extends ScenarioVM {
 	}
 	private void setCurrentAct(Act currentAct) {
 		this.currentAct = currentAct;
+	}
+    public static void setup() {
+        CapabilityManager.INSTANCE.register(ScenarioConductor.class, new Capability.IStorage<ScenarioConductor>() {
+            public void readNBT(Capability<ScenarioConductor> capability, ScenarioConductor instance, Direction side, INBT nbt) {
+                instance.deserializeNBT((CompoundNBT) nbt);
+            }
+
+            public INBT writeNBT(Capability<ScenarioConductor> capability, ScenarioConductor instance, Direction side) {
+                return instance.serializeNBT();
+            }
+        }, ScenarioConductor::new);
+    }
+    public static LazyOptional<ScenarioConductor> getCapability(@Nullable PlayerEntity player) {
+        if (player != null) {
+            return player.getCapability(CAPABILITY);
+        }
+        return LazyOptional.empty();
+    }
+	@Override
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+        if (cap == CAPABILITY)
+            return capability.cast();
+        return LazyOptional.empty();
+	}
+	@Override
+	public CompoundNBT serializeNBT() {
+		return save();
+	}
+	@Override
+	public void deserializeNBT(CompoundNBT nbt) {
+		load(nbt);
 	}
 
 }

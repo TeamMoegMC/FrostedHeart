@@ -24,7 +24,10 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.WantedFoodCapabilityProvider;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -54,14 +57,21 @@ public class AttachCapabilityEvents {
 
     @SubscribeEvent
     public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
-        if (event.getObject() instanceof ServerPlayerEntity) {
+        if (event.getObject() instanceof ServerPlayerEntity) {//server-side only capabilities
             ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
             if (!(player instanceof FakePlayer)) {
                 if (!event.getCapabilities().containsKey(DeathInventoryData.ID))
                     event.addCapability(DeathInventoryData.ID, new DeathInventoryData());
+                if (!event.getCapabilities().containsKey(ScenarioConductor.ID))
+                    event.addCapability(ScenarioConductor.ID, new ScenarioConductor());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"), new WantedFoodCapabilityProvider());
             }
         }
+        //Common capabilities
+        if(!event.getCapabilities().containsKey(PlayerTemperatureData.ID))
+        	event.addCapability(PlayerTemperatureData.ID, new PlayerTemperatureData());
+        if(!event.getCapabilities().containsKey(EnergyCore.ID))
+        	event.addCapability(EnergyCore.ID, new EnergyCore());
 
     }
 

@@ -74,7 +74,10 @@ public class ResearchDataAPI {
     }
     
     public static CompoundNBT getVariants(UUID id) {
-        return FHResearchDataManager.INSTANCE.getData(id).getVariants();
+        TeamResearchData trd= FHResearchDataManager.INSTANCE.getData(id);
+        if(trd!=null)
+        	return trd.getVariants();
+        return new CompoundNBT();
 
     }
     public static void sendVariants(PlayerEntity id) {
@@ -84,7 +87,9 @@ public class ResearchDataAPI {
     }
     
     public static void sendVariants(UUID id) {
-        FHResearchDataManager.INSTANCE.getData(id).sendVariantPacket();
+        TeamResearchData trd=FHResearchDataManager.INSTANCE.getData(id);
+        if(trd!=null)
+        	trd.sendVariantPacket();
 
     }
     

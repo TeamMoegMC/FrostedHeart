@@ -297,12 +297,10 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         }
         GeneratorSteamRecipe sgr = GeneratorSteamRecipe.findRecipe(this.tank.getFluid());
         if (sgr != null) {
-            int rdrain = (int) (20 * super.getTemperatureLevel() * sgr.level);
+            int rdrain = (int) (20 * super.getTemperatureLevel());
             int actualDrain = rdrain * sgr.input.getAmount();
             FluidStack fs = this.tank.drain(actualDrain, FluidAction.SIMULATE);
             if (fs.getAmount() >= actualDrain) {
-                if (this.slevelMod != sgr.level)
-                    this.markChanged(true);
                 this.spowerMod = sgr.power;
                 this.fillHeat((float) (this.spowerMod * rt * eff));
                 this.slevelMod = sgr.level;
@@ -314,7 +312,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
             }
         }
         noliquidtick = 40;
-        this.markChanged(true);
         this.spowerMod = 0;
         this.slevelMod = 0;
     }
@@ -322,12 +319,14 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        CompoundNBT tankx = new CompoundNBT();
-        tank.writeToNBT(tankx);
-        nbt.putFloat("steam_temp", slevelMod);
-        nbt.putFloat("steam_product", spowerMod);
-        nbt.putFloat("liquid_tick", liquidtick);
-        nbt.put("fluid", tankx);
+        if(!this.isDummy()||descPacket) {
+	        CompoundNBT tankx = new CompoundNBT();
+	        tank.writeToNBT(tankx);
+	        nbt.putFloat("steam_temp", slevelMod);
+	        nbt.putFloat("steam_product", spowerMod);
+	        nbt.putFloat("liquid_tick", liquidtick);
+	        nbt.put("fluid", tankx);
+        }
     }
 
 

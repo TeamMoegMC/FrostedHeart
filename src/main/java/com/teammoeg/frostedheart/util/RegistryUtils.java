@@ -22,15 +22,15 @@ public class RegistryUtils {
 		return ForgeRegistries.FLUIDS.getKey(v);
 	}
 	public static ResourceLocation getRegistryName(Biome b) {
-		return ForgeRegistries.BIOMES.getKey(b);
+		return b.getRegistryName();
 	}
 	public static ResourceLocation getRegistryName(Structure<NoFeatureConfig> observatory) {
-		return ForgeRegistries.STRUCTURE_FEATURES.getKey(observatory);
+		return observatory.getRegistryName();
 	}
 	public static ResourceLocation getRegistryName(VillagerProfession prof) {
-		return ForgeRegistries.PROFESSIONS.getKey(prof);
+		return prof.getRegistryName();
 	}
 	public static ResourceLocation getRegistryName(EntityType<?> e) {
-		return ForgeRegistries.ENTITIES.getKey(e);
+		return e.getRegistryName();
 	}
 }

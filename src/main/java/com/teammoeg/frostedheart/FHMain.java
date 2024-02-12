@@ -39,6 +39,7 @@ import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -51,7 +52,9 @@ import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.FHScenario;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -171,9 +174,9 @@ public class FHMain {
                 || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
             throw new RuntimeException("Unsupported projecte");
         // remove primal winter blocks not to temper rankine world
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
     @SuppressWarnings("unused")
@@ -224,7 +227,7 @@ public class FHMain {
     private void serverSave(final WorldEvent.Save event) {
         if (FHResearchDataManager.INSTANCE != null) {
             FHResearchDataManager.INSTANCE.save();
-            FHScenario.save();
+            //FHScenario.save();
         }
     }
 
@@ -265,6 +268,9 @@ public class FHMain {
         FHNetwork.register();
         WorldClimate.setup();
         DeathInventoryData.setup();
+        PlayerTemperatureData.setup();
+        EnergyCore.setup();
+        ScenarioConductor.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();

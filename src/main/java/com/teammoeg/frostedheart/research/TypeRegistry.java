@@ -22,6 +22,9 @@ public class TypeRegistry<T> {
 	public String typeOf(Class<?> cls) {
 		return typeInfo.get(cls).getSecond();
 	}
+	public Pair<Integer, String> fullTypeOf(Class<?> cls) {
+		return typeInfo.get(cls);
+	}
 	public void register(Class<? extends T> cls, String type) {
 	    int id = typeInfo.size();
 	    

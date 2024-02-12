@@ -709,7 +709,9 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     }
 
     public HourData getHourData() {
-        return daycache.getData(hourInDay);
+    	if(daycache!=null)
+    		return daycache.getData(hourInDay);
+    	return new HourData(ClimateType.NONE);
     }
 
     public long getSec() {

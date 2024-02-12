@@ -22,8 +22,7 @@ package com.teammoeg.frostedheart.climate.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.climate.player.Temperature;
-
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
@@ -40,7 +39,7 @@ public class FHBodyDataSyncPacket {
     }
 
     public FHBodyDataSyncPacket(PlayerEntity pe) {
-        this.data = Temperature.getFHData(pe);
+        this.data = PlayerTemperatureData.getCapability(pe).map(t->t.serializeNBT()).orElseGet(CompoundNBT::new);
     }
 
     public void encode(PacketBuffer buffer) {
@@ -53,7 +52,7 @@ public class FHBodyDataSyncPacket {
             World world = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getWorld);
             PlayerEntity player = DistExecutor.safeCallWhenOn(Dist.CLIENT, () -> ClientUtils::getPlayer);
             if (world != null) {
-                Temperature.setFHData(player, data);
+            	PlayerTemperatureData.getCapability(player).ifPresent(t->t.deserializeNBT(data));
             }
         });
         context.get().setPacketHandled(true);

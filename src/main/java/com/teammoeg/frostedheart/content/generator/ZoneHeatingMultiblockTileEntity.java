@@ -54,7 +54,6 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     private boolean initialized;
     boolean isWorking;
     boolean isOverdrive;
-    boolean isDirty;// mark if temperature change required
 
 
     public ZoneHeatingMultiblockTileEntity(IETemplateMultiblock multiblockInstance, TileEntityType<T> type, boolean hasRSControl) {
@@ -105,7 +104,9 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
 
     public final float getRangeLevel() {
-            return rangeLevel;
+    	if(master()==this)
+    		return rangeLevel;
+    	return master().getRangeLevel();
     }
 
     protected Optional<Team> getTeam() {
@@ -124,17 +125,13 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
 
 
     public final float getTemperatureLevel() {
-        return temperatureLevel;
+    	if(master()==this)
+    		return temperatureLevel;
+    	return master().getTemperatureLevel();
     }
 
     public int getUpperBound() {
         return MathHelper.ceil(getRangeLevel() * 4);
-    }
-
-    public boolean isChanged() {
-        if (master() != null)
-            return master().isDirty;
-        return false;
     }
 
     public boolean isOverdrive() {
@@ -149,16 +146,12 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
         return false;
     }
 
-    public void markChanged(boolean dirty) {
-        if (master() != null)
-            master().isDirty = dirty;
-    }
-
     protected abstract void onShutDown();
 
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
+        
         isWorking = nbt.getBoolean("isWorking");
         isOverdrive = nbt.getBoolean("isOverdrive");
         temperatureLevel = nbt.getFloat("temperatureLevel");
@@ -180,11 +173,17 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     }
 
     public void setRangeLevel(float f) {
-            this.rangeLevel = f;
+    	if(master()==this)
+    		this.rangeLevel = f;
+    	else
+    		master().setRangeLevel(f);
     }
 
     public void setTemperatureLevel(float temperatureLevel) {
-        this.temperatureLevel = temperatureLevel;
+    	if(master()==this)
+    		this.temperatureLevel = temperatureLevel;
+    	else
+    		master().setTemperatureLevel(temperatureLevel);
     }
 
 
@@ -218,10 +217,9 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
             int ntlevel = getActualTemp();
             int nrlevel = getActualRange();
             if (activeBeforeTick != activeAfterTick || lastTLevel != ntlevel || lastRLevel != nrlevel) {
-                this.isDirty = false;
                 lastTLevel = ntlevel;
                 lastRLevel = nrlevel;
-                this.markDirty();
+                
                 if (nrlevel > 0 && ntlevel > 0) {
                     ChunkHeatData.addPillarTempAdjust(world, getPos(), nrlevel, getUpperBound(),
                             getLowerBound(), ntlevel);
@@ -229,11 +227,11 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
                 	ChunkHeatData.removeTempAdjust(world, getPos());
                 }
             } else if (activeAfterTick) {
-                if (isChanged() || !initialized) {
+                if (!initialized) {
                     initialized = true;
-                    markChanged(false);
                 }
             }
+            this.markDirty();
             shutdownTick();
         }
     }
@@ -249,9 +247,11 @@ public abstract class ZoneHeatingMultiblockTileEntity<T extends ZoneHeatingMulti
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        nbt.putBoolean("isWorking", isWorking);
-        nbt.putBoolean("isOverdrive", isOverdrive);
-        nbt.putFloat("temperatureLevel", temperatureLevel);
-        nbt.putFloat("rangeLevel", rangeLevel);
+        if(!this.isDummy()||descPacket) {
+	        nbt.putBoolean("isWorking", isWorking);
+	        nbt.putBoolean("isOverdrive", isOverdrive);
+	        nbt.putFloat("temperatureLevel", temperatureLevel);
+	        nbt.putFloat("rangeLevel", rangeLevel);
+        }
     }
 }

@@ -96,7 +96,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     public int getActualRange() {
-        return 8;
+        return 7;
     }
 
     @Override
@@ -180,6 +180,8 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         } else if (network.isValid() && network.tryDrainHeat(4 * 160 * network.getTemperatureLevel())) {
             process = (int) (160 * network.getTemperatureLevel());
             processMax = (int) (160 * network.getTemperatureLevel());
+            this.setTemperatureLevel(network.getTemperatureLevel());
+            this.setRangeLevel(0.5f);
             this.setAllActive(true);
             hasFuel=true;
         } else {
@@ -189,7 +191,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         }
         if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
             tempLevelLast = network.getTemperatureLevel();
-            this.markChanged(true);
         }
         return hasFuel;
     }

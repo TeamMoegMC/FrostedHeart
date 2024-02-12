@@ -278,7 +278,8 @@ public class ResearchListeners {
     public static boolean canUseRecipe(UUID team, IRecipe<?> r) {
         if (recipe.has(r)) {
             if (team == null) return false;
-            return ResearchDataAPI.getData(team).crafting.has(r);
+            TeamResearchData trd=ResearchDataAPI.getData(team);
+            return trd!=null&&trd.crafting.has(r);
         }
         return true;
     }
@@ -373,8 +374,7 @@ public class ResearchListeners {
         FHMain.LOGGER.info("reloading research system");
         FHResearchDataManager.INSTANCE.save();
         FHResearchDataManager.INSTANCE.load();
-        FHResearchRegistrtySyncPacket packet = new FHResearchRegistrtySyncPacket();
-        FHNetwork.send(PacketDistributor.ALL.noArg(), packet);
+        FHResearch.sendSyncPacket(PacketDistributor.ALL.noArg());
         FHResearchDataManager.INSTANCE.getAllData().forEach(t -> t.sendUpdate());
     }
 

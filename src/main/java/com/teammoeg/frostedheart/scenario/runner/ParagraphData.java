@@ -47,7 +47,7 @@ public class ParagraphData implements IScenarioTarget{
 			t.setScenario(getScenario());
 			t.setNodeNum(0);
 		}
-		if(paragraphNum!=0)
+		if(paragraphNum!=0&&paragraphNum<=t.getScenario().paragraphs.length)
 			t.setNodeNum(t.getScenario().paragraphs[paragraphNum-1]+1);
 	}
 }

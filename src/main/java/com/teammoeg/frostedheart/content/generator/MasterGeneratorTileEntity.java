@@ -186,7 +186,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.generatorData).filter(t -> this.pos.equals(t.actualPos));
+        return getTeamData().map(t -> t.generatorData).filter(t -> master().pos.equals(t.actualPos));
     }
 
     @Nullable
@@ -280,11 +280,11 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 
     public void regist() {
         getTeamData().ifPresent(t -> {
-        	if(!this.pos.equals(t.generatorData.actualPos))
+        	if(!master().pos.equals(t.generatorData.actualPos))
         		t.generatorData.onPosChange();
         	this.setWorking(t.generatorData.isWorking);
         	this.setOverdrive(t.generatorData.isOverdrive);
-            t.generatorData.actualPos = this.pos;
+            t.generatorData.actualPos = master().pos;
             t.generatorData.dimension = this.world.getDimensionKey();
         });
     }
@@ -342,8 +342,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
-        ItemStackHelper.saveAllItems(nbt, linventory);
-        nbt.putBoolean("hasFuel", hasFuel);
+        if(!this.isDummy()||descPacket) {
+	        ItemStackHelper.saveAllItems(nbt, linventory);
+	        nbt.putBoolean("hasFuel", hasFuel);
+        }
     }
 
 

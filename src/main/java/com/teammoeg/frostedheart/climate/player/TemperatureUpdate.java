@@ -85,7 +85,7 @@ public class TemperatureUpdate {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            double calculatedTarget = Temperature.getBody(player);
+            double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
                     if (!player.isPotionActive(FHEffects.HYPERTHERMIA.get())
@@ -147,7 +147,7 @@ public class TemperatureUpdate {
             // ignore creative and spectator players
             if (player.isCreative() || player.isSpectator())
                 return;
-
+            PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
             if (player.ticksExisted % 10 == 0) {
                 //soak in water modifier
                 if (player.isInWater()) {
@@ -165,7 +165,7 @@ public class TemperatureUpdate {
                         player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 100, 0));
                 }
                 //load current data
-                float current = Temperature.getBody(player);
+                float current = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
                 double tspeed = FHConfig.SERVER.tempSpeed.get();
                 if (current < 0) {
                     float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
@@ -269,6 +269,7 @@ public class TemperatureUpdate {
                     dheat += addi;
                     simulated += addi;
                 }
+                //Attack player if temperature changes too much
                 if (dheat > 0.1)
                     player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
                 else if (dheat < -0.1)
@@ -278,24 +279,14 @@ public class TemperatureUpdate {
                     current = -10;
                 else if (current > 10)
                     current = 10;
-                float lenvtemp = Temperature.getEnv(player);//get a smooth change in display
-                Temperature.set(player, current, (envtemp + 37) * .2f + lenvtemp * .8f);
-                FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+                float lenvtemp = data.getEnvTemp();//get a smooth change in display
+                float lfeeltemp=data.getFeelTemp();
+                float feeltemp=current-(1 - keepwarm)*(current-envtemp);
+                
+                data.update(current, (envtemp + 37) * .2f + lenvtemp * .8f, (feeltemp+37)*.2f+lfeeltemp*.8f);
+                //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 
-            // Set smoothed temperature after update:
-            // Note that we must do this on server side!
-            // If we do this on client side, it would be out of sync with the server.
-            int progress = player.ticksExisted % 10;
-            float current = Temperature.getBody(player);
-            // if progress is zero, then this is an update tick
-            // delta will now be the difference between the last and current temperature
-            // this delta is preserved for the next 9 ticks, until the next update tick
-            float delta = Temperature.getBodyDelta(player);
-            // the smoothed temperature is calculated as a linear interpolation between the
-            // current and last temperature
-            float smoothed = current + delta * (1 - progress / 10f);
-            Temperature.setBodySmoothed(player, smoothed);
             FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }
     }

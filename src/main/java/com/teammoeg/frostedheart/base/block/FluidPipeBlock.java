@@ -45,6 +45,7 @@ import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.TickPriority;
+import net.minecraft.world.World;
 
 public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock implements IWaterLoggable {
     Class<T> type;
@@ -72,9 +73,12 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
         this.type = type;
 
-        BlockState defaultState = getDefaultState().with(BlockStateProperties.WATERLOGGED, false);
-        for (Direction d : Direction.values())
+        BlockState defaultState = getDefaultState().with(BlockStateProperties.WATERLOGGED, false).with(CASING, false);
+        for (Direction d : Direction.values()) {
             defaultState = defaultState.with(FACING_TO_PROPERTY_MAP.get(d), false);
+            defaultState = defaultState.with(RIM_PROPERTY_MAP.get(d), false);
+        }
+        
         this.setDefaultState(defaultState);
     }
 
@@ -196,10 +200,19 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 
     public BlockState updateBlockState(BlockState state, Direction preferredDirection, @Nullable Direction ignore,
                                        IWorld world, BlockPos pos) {
-
+    	state=state.with(CASING, this.shouldDrawCasing(world, pos, state));
         for (Direction d : Direction.values())
             if (d != ignore) {
-                state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
+                state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d))
+                		.with(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d))
+                		;
+                
+            }
+        for (Direction d : Direction.values())
+            if (d != ignore) {
+                state = state.with(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d))
+                		;
+                
             }
         return state;
     }
@@ -215,6 +228,13 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
                     .scheduleTick(pos, this, 1, TickPriority.HIGH);
         return updateBlockState(state, direction, direction.getOpposite(), world, pos);
     }
+
+	@Override
+	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
+			boolean isMoving) {
+		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
+		worldIn.setBlockState(pos, updateBlockState(state,null,null,worldIn,pos));
+	}
 
 
 }
