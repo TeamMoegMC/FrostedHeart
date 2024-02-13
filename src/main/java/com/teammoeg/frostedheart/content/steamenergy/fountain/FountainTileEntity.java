@@ -19,30 +19,34 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.fountain;
 
+import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.player.Temperature;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants;
 
+import java.util.UUID;
+
 public class FountainTileEntity extends IEBaseTileEntity implements
         INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
 
+    private static final UUID WARMTH_EFFECT_UUID = UUID.fromString("95c1f024-8f3a-4828-aaa7-a86733cffbf2");
     private static final float POWER_CAP = 400;
     private static final float REFILL_THRESHOLD = 200;
     public static final int RANGE_PER_NOZZLE = 1;
@@ -51,6 +55,7 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     private float power = 0;
     private boolean refilling = false;
     private int height = 0;
+    private int heatRange = 0;
     private boolean heatAdjusted = false;
     private float lastTemp;
 
@@ -146,6 +151,8 @@ public class FountainTileEntity extends IEBaseTileEntity implements
                 adjustHeat(getRange());
 
                 for (PlayerEntity p : this.getWorld().getPlayers()) {
+                    removeWarmth((ServerPlayerEntity) p);
+
                     if (p.getDistanceSq(
                             this.getPos().getX() + 0.5,
                             this.getPos().getY() + 0.5,
@@ -193,12 +200,19 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     public int getRange() {
-        return height * RANGE_PER_NOZZLE;
+        return height * RANGE_PER_NOZZLE + 1; // +1 for the edge
     }
 
     private void grantWarmth(ServerPlayerEntity player) {
-        Temperature.setBody(player, lastTemp * 0.5f);
+        player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).applyNonPersistentModifier(
+                new AttributeModifier(WARMTH_EFFECT_UUID, "fountain warmth", lastTemp * 25, AttributeModifier.Operation.ADDITION)
+        );
     }
+
+    private void removeWarmth(ServerPlayerEntity player) {
+        player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(WARMTH_EFFECT_UUID);
+    }
+
 
     private int findNozzleHeight() {
         assert world != null;
@@ -221,14 +235,18 @@ public class FountainTileEntity extends IEBaseTileEntity implements
     }
 
     private void adjustHeat(int range) {
-        if (lastTemp == network.getTemperatureLevel() && heatAdjusted) return;
+        float networkTemp = network.getTemperatureLevel();
+        if (lastTemp == networkTemp && heatAdjusted && range == heatRange) return;
 
-        if (heatAdjusted) {
-            ChunkHeatData.removeTempAdjust(world, pos);
-        }
+        lastTemp = networkTemp;
 
-        ChunkHeatData.addCubicTempAdjust(world, pos, range, (int) lastTemp * 10);
+        removeHeat();
+        ChunkHeatData.addPillarTempAdjust(world, pos, (heatRange = range), height + 1,1, (int) lastTemp * 15);
         heatAdjusted = true;
+    }
+
+    public void refill() {
+        refilling = true;
     }
 
     @Override

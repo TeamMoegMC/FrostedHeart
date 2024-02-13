@@ -77,4 +77,18 @@ public class FountainBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public boolean hasTileEntity(BlockState state) {
         return true;
     }
+
+    // Refill on click, (refilling reevaluates the height etc)
+    @Override
+    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult ctx) {
+        if (state.get(LIT).booleanValue()) return ActionResultType.PASS;
+
+        TileEntity te = world.getTileEntity(pos);
+        if (te instanceof FountainTileEntity) {
+            FountainTileEntity fte = (FountainTileEntity) te;
+            fte.refill();
+        }
+
+        return ActionResultType.SUCCESS;
+    }
 }
