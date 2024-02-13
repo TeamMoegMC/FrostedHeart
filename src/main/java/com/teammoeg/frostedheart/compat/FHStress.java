@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.compat;
 
 import com.simibubi.create.foundation.block.BlockStressValues.IStressValueProvider;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHConfig;
 
 import net.minecraft.block.Block;
 
@@ -31,18 +32,20 @@ public class FHStress implements IStressValueProvider {
 
     @Override
     public double getCapacity(Block arg0) {
-
+    	if(arg0 ==FHBlocks.steam_core.get())return FHConfig.COMMON.steamCoreCapacity.get();
         return 0;
     }
 
     @Override
     public double getImpact(Block arg0) {
         if (arg0 == FHBlocks.mech_calc.get()) return 64;
+        
         return 0;
     }
 
     @Override
     public boolean hasCapacity(Block arg0) {
+    	if(arg0 ==FHBlocks.steam_core.get())return true;
         return false;
     }
 

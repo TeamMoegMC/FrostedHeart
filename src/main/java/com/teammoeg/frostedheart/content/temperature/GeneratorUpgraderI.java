@@ -67,19 +67,6 @@ public class GeneratorUpgraderI extends FHBaseItem {
             if (t1te.isDummy()) return false;
             Rotation rot = DirectionUtils.getRotationBetweenFacings(Direction.NORTH, brtr.getFace().getOpposite());
             ((MultiBlockAccess) (Object) ietm).callForm(worldIn, brtr.getPos().offset(Direction.DOWN).offset(brtr.getFace().rotateY()).offset(brtr.getFace().getOpposite(), 2), rot, Mirror.NONE, brtr.getFace());
-            TileEntity nte = Utils.getExistingTileEntity(worldIn, brtr.getPos().offset(brtr.getFace(), 1));
-            System.out.println(nte);
-            if (nte instanceof T2GeneratorTileEntity) {//bug: cannot get correct te
-                ((T2GeneratorTileEntity) nte).setWorking(t1te.isWorking());
-                ((T2GeneratorTileEntity) nte).setOverdrive(t1te.isOverdrive());
-                ((T2GeneratorTileEntity) nte).setOwner(ResearchDataAPI.getData(entityplayer).getId());
-                NonNullList<ItemStack> nnl = ((T2GeneratorTileEntity) nte).getInventory();
-                for (int i = 0; i < nnl.size(); i++) {
-                    ((T2GeneratorTileEntity) nte).getInventory().set(i, nnl.get(i));
-                }
-                ((T2GeneratorTileEntity) nte).process = t1te.process;
-                ((T2GeneratorTileEntity) nte).processMax = t1te.processMax;
-            }
             return true;
         }
         return true;

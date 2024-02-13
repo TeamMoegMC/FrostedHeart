@@ -32,7 +32,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
@@ -43,7 +43,7 @@ import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.command.AddTempCommand;
 import com.teammoeg.frostedheart.command.ClimateCommand;
 import com.teammoeg.frostedheart.command.DebugCommand;
@@ -59,6 +59,7 @@ import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
 import com.teammoeg.frostedheart.recipe.FHRecipeCachingReloadListener;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
+import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
@@ -67,6 +68,8 @@ import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
@@ -145,6 +148,7 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
 import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
@@ -300,12 +304,19 @@ public class CommonEvents {
     public static void biomeLoadingEventRemove(@Nonnull BiomeLoadingEvent event) {
         MobSpawnInfoBuilder spawns = event.getSpawns();
 
-        for (EntityClassification en : EntityClassification.values())
+        for (EntityClassification en : EntityClassification.values()) {
             spawns.getSpawner(en).removeIf(entry -> VANILLA_ENTITIES.contains(entry.type));
-
+            
+        }
 
     }
-
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void doPlayerInteract(PlayerInteractEvent ite) {
+    	if(ite.getPlayer() instanceof ServerPlayerEntity&&!(ite.getPlayer() instanceof FakePlayer)) {
+    		ScenarioConductor cond=FHScenario.get(ite.getPlayer());
+    		cond.playerInited=true;
+    	}
+    }
     @SubscribeEvent
     public static void canUseBlock(PlayerInteractEvent.RightClickBlock event) {
         if (event.getItemStack().getItem() instanceof IModularItem) {
@@ -347,14 +358,10 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        CompoundNBT cnbt = new CompoundNBT();
-        CompoundNBT olddata = Temperature.getFHData(ev.getOriginal());
-        cnbt.putLong("penergy", olddata.getLong("penergy"));
-        cnbt.putLong("cenergy", olddata.getLong("cenergy"));
-        Temperature.setFHData(ev.getPlayer(), cnbt);
-
-        DailyKitchen.copyData(ev.getOriginal().getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY), ev.getPlayer().getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY));
-
+        FHUtils.copyPlayerCapability(DailyKitchen.WANTED_FOOD_CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.copyPlayerCapability(EnergyCore.CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(ScenarioConductor.CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        //FHUtils.copyPlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {
             DeathInventoryData orig = DeathInventoryData.get(ev.getOriginal());
@@ -381,10 +388,10 @@ public class CommonEvents {
                 adj = FHDataManager.getFood(is);
             }
             if (adj != null) {
-                float current = Temperature.getBodySmoothed((ServerPlayerEntity) event.getEntityLiving());
+                float current = PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getBodyTemp()).orElse(0f);
                 float max = adj.getMaxTemp(event.getItem());
                 float min = adj.getMinTemp(event.getItem());
-                float heat = adj.getHeat(event.getItem(), Temperature.getEnv((ServerPlayerEntity) event.getEntityLiving()));
+                float heat = adj.getHeat(event.getItem(),PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).map(t->t.getEnvTemp()).orElse(0f));
                 if (heat > 1) {
                     event.getEntityLiving().attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (heat) * 2);
                 } else if (heat < -1)
@@ -402,7 +409,8 @@ public class CommonEvents {
                     if (current <= min)
                         return;
                 }
-                Temperature.setBody((ServerPlayerEntity) event.getEntityLiving(), current);
+                final float toset=current;
+                PlayerTemperatureData.getCapability((ServerPlayerEntity) event.getEntityLiving()).ifPresent(t->t.setBodyTemp(toset));
             }
 
             DailyKitchen.tryGiveBenefits((ServerPlayerEntity) event.getEntityLiving(), is);
@@ -653,9 +661,9 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            ScenarioConductor runner=FHScenario.runners.get(player);
-            if(runner!=null)
-            	runner.tick();
+            ScenarioConductor runner=FHScenario.get(player);
+            runner.tick();
+           // System.out.println(runner.save());
         }
     }
     @SubscribeEvent
@@ -777,14 +785,11 @@ public class CommonEvents {
                 if (dit != null)
                     dit.alive(event.getPlayer().inventory);
             }
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
-            CompoundNBT cnbt = new CompoundNBT();
-            cnbt.putLong("penergy", Temperature.getFHData(event.getPlayer()).getLong("penergy"));
-            cnbt.putDouble("utbody", 1);
-            cnbt.putLong("lastsleep", 0);
-            cnbt.putLong("lastsleepdate", 0);
-            Temperature.setFHData(event.getPlayer(), cnbt);
+            EnergyCore.getCapability(event.getPlayer()).ifPresent(t->{t.onrespawn();t.sendUpdate((ServerPlayerEntity) event.getPlayer());});
+            PlayerTemperatureData.getCapability(event.getPlayer()).ifPresent(t->t.reset());
+            
         }
     }
 
@@ -801,18 +806,13 @@ public class CommonEvents {
     public static void syncDataToClient(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                    new FHResearchRegistrtySyncPacket());
-
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                    new FHDatapackSyncPacket());
-
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                    new FHResearchDataSyncPacket(
+            PacketTarget currentPlayer=PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer());
+            FHResearch.sendSyncPacket(currentPlayer);
+            FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
+            FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));
             serverWorld.getCapability(WorldClimate.CAPABILITY).ifPresent((cap) -> {
-                FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
-                        new FHClimatePacket(cap));
+                FHNetwork.send(currentPlayer,new FHClimatePacket(cap));
             });
             //System.out.println("=x-x=");
             //System.out.println(ForgeRegistries.LOOT_MODIFIER_SERIALIZERS.getValue(new ResourceLocation(FHMain.MODID,"add_loot")));
@@ -824,7 +824,7 @@ public class CommonEvents {
         if (event.getEntity() instanceof ServerPlayerEntity) {
             ServerWorld serverWorld = ((ServerPlayerEntity) event.getPlayer()).getServerWorld();
 
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) event.getPlayer()),
                     new FHClimatePacket(WorldClimate.get(serverWorld)));
         }
     }

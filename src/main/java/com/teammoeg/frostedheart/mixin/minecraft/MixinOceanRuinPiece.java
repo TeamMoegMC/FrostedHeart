@@ -45,7 +45,9 @@ import net.minecraft.world.IServerWorld;
 import net.minecraft.world.gen.feature.structure.IStructurePieceType;
 import net.minecraft.world.gen.feature.structure.OceanRuinPieces;
 import net.minecraft.world.gen.feature.structure.TemplateStructurePiece;
-
+/**
+ * Replace chest to stone ones
+ * */
 @Mixin(OceanRuinPieces.Piece.class)
 public abstract class MixinOceanRuinPiece extends TemplateStructurePiece {
     @Shadow

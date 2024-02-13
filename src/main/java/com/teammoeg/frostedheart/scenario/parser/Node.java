@@ -20,13 +20,14 @@
 package com.teammoeg.frostedheart.scenario.parser;
 
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public interface Node {
-    String getLiteral(ScenarioConductor runner);
+    String getLiteral(ScenarioVM scenarioVM);
 
     String getText();
 
     boolean isLiteral();
 
-    void run(ScenarioConductor runner);
+    void run(ScenarioVM scenarioVM);
 }

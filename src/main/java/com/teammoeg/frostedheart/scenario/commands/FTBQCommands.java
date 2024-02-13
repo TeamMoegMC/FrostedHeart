@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.scenario.commands;
 
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.Param;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 import com.teammoeg.frostedheart.scenario.runner.target.SingleExecuteTargerTrigger;
 
 import dev.ftb.mods.ftbquests.FTBQuests;
@@ -33,14 +33,14 @@ import dev.ftb.mods.ftbquests.quest.task.Task;
 import dev.ftb.mods.ftbquests.util.ProgressChange;
 
 public class FTBQCommands {
-	public void waitquestComplete(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
+	public void waitquestComplete(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
 			return quest.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
-	public void waittaskComplete(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
+	public void waittaskComplete(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
@@ -48,7 +48,7 @@ public class FTBQCommands {
 			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
-	public void waittaskCompleteShow(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
+	public void waittaskCompleteShow(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q,@Param("t")int t) {
 		//System.out.println("wtcs");
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
@@ -63,14 +63,14 @@ public class FTBQCommands {
 		}));
 		
 	}
-	public void waitquestStart(ScenarioConductor runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
+	public void waitquestStart(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
 			return qf.getData(r.getPlayer()).canStartTasks(quest);
 		}));
 	}
-	public void completequest(ScenarioConductor runner,@Param("q")String q) {
+	public void completequest(ScenarioVM runner,@Param("q")String q) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(q));
 		TeamData td=ServerQuestFile.INSTANCE.getData(runner.getPlayer());
 		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE);
@@ -79,7 +79,7 @@ public class FTBQCommands {
 		change.origin.forceProgress(td, change);
 
 	}
-	public void completetask(ScenarioConductor runner,@Param("q")String q,@Param("t")int t) {
+	public void completetask(ScenarioVM runner,@Param("q")String q,@Param("t")int t) {
 		Quest quest=ServerQuestFile.INSTANCE.getQuest(QuestFile.parseCodeString(q));
 		TeamData td=ServerQuestFile.INSTANCE.getData(runner.getPlayer());
 		ProgressChange change=new ProgressChange(ServerQuestFile.INSTANCE);

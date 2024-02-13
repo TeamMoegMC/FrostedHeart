@@ -31,7 +31,9 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.play.ServerPlayNetHandler;
 import net.minecraft.network.play.client.CMoveVehiclePacket;
 import net.minecraft.network.play.client.CPlayerPacket;
-
+/**
+ * Stop players from being kicked when flying
+ * */
 @Mixin(ServerPlayNetHandler.class)
 public class ServerPlayNetHandlerMixin {
     @Shadow

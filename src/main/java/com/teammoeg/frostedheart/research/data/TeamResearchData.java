@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
@@ -191,7 +191,7 @@ public class TeamResearchData {
             FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket();
             getTeam().ifPresent(t -> {
                 for (ServerPlayerEntity spe : t.getOnlineMembers())
-                    FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+                    FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
             });
         }
     }
@@ -444,7 +444,7 @@ public class TeamResearchData {
     public void sendVariantPacket() {
     	FHResearchAttributeSyncPacket pack=new FHResearchAttributeSyncPacket(variants);
     	for(ServerPlayerEntity spe:getTeam().map(Team::getOnlineMembers).orElseGet(()->Arrays.asList()))
-    		FHPacketHandler.send(PacketDistributor.PLAYER.with(()->spe), pack);
+    		FHNetwork.send(PacketDistributor.PLAYER.with(()->spe), pack);
     }
     public boolean hasVariant(ResearchVariant name) {
         return variants.contains(name.getToken());
@@ -520,7 +520,7 @@ public class TeamResearchData {
         crafting.reload();
         building.reload();
         FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this.serialize(true));
-        getTeam().ifPresent(t -> t.getOnlineMembers().forEach(p -> FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> p), packet)));
+        getTeam().ifPresent(t -> t.getOnlineMembers().forEach(p -> FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), packet)));
     }
 
     public void removeVariant(ResearchVariant name) {
@@ -551,7 +551,7 @@ public class TeamResearchData {
             if (t != null && causeUpdate) {
                 FHResearchDataUpdatePacket packet = new FHResearchDataUpdatePacket(r.getRId());
                 for (ServerPlayerEntity spe : t.getOnlineMembers())
-                    FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+                    FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
             }
         }
     }
@@ -559,7 +559,7 @@ public class TeamResearchData {
     public void sendUpdate() {
 
         FHResearchDataSyncPacket packet = new FHResearchDataSyncPacket(this.serialize(true));
-        getTeam().ifPresent(t -> t.getOnlineMembers().forEach(p -> FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> p), packet)));
+        getTeam().ifPresent(t -> t.getOnlineMembers().forEach(p -> FHNetwork.send(PacketDistributor.PLAYER.with(() -> p), packet)));
     }
 
     /**
@@ -640,7 +640,7 @@ public class TeamResearchData {
                 FHChangeActiveResearchPacket packet = new FHChangeActiveResearchPacket(r);
                 getTeam().ifPresent(t -> {
                     for (ServerPlayerEntity spe : t.getOnlineMembers())
-                        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> spe), packet);
+                        FHNetwork.send(PacketDistributor.PLAYER.with(() -> spe), packet);
                 });
                 getTeam().ifPresent(t -> {
                     for (Clue c : r.getClues())

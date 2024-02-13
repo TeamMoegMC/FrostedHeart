@@ -8,12 +8,12 @@ public class ParagraphData implements IScenarioTarget{
 	private String name;
 	private transient Scenario sp;
 	private int paragraphNum;
-	private transient IScenarioConductor cd;
-	public ParagraphData(IScenarioConductor cd) {
+	private transient IScenarioThread cd;
+	public ParagraphData(IScenarioThread cd) {
 		super();
 		this.cd=cd;
 	}
-	public ParagraphData(IScenarioConductor cd,String name, int paragraphNum) {
+	public ParagraphData(IScenarioThread cd,String name, int paragraphNum) {
 		this(cd);
 		this.name = name;
 		this.paragraphNum = paragraphNum;
@@ -42,12 +42,12 @@ public class ParagraphData implements IScenarioTarget{
 	}
 
 	@Override
-	public void apply(IScenarioConductor t) {
+	public void apply(IScenarioThread t) {
 		if(name!=null&&!getScenario().equals(t.getScenario())) {
 			t.setScenario(getScenario());
 			t.setNodeNum(0);
 		}
-		if(paragraphNum!=0)
+		if(paragraphNum!=0&&paragraphNum<=t.getScenario().paragraphs.length)
 			t.setNodeNum(t.getScenario().paragraphs[paragraphNum-1]+1);
 	}
 }

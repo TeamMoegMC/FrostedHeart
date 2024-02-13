@@ -31,12 +31,16 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.data.ClientResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.events.ResearchLoadEvent;
+import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
+import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.ResearchCategory;
 import com.teammoeg.frostedheart.util.LazyOptional;
@@ -49,6 +53,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
 
 /**
  * Main Research System.
@@ -160,6 +165,7 @@ public class FHResearch {
         ResearchListeners.reload();
         //No need to clear all as data manager would handle this.
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> TeamResearchData::resetClientInstance);
+        //FHResearch.clearAll();
         prepareReload();
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
         loadAll();
@@ -168,7 +174,23 @@ public class FHResearch {
         MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
         //FHResearch.saveAll();
     }
-
+    public static void initFromRegistry(CompoundNBT data) {
+        ClientResearchData.last = null;
+        ResearchListeners.reload();
+        
+        //no need
+        FHResearch.clearAll();
+        prepareReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Pre());
+        FHResearch.load(data);
+    }
+    public static void endPacketInit() {
+    	MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Post());
+        finishReload();
+        MinecraftForge.EVENT_BUS.post(new ResearchLoadEvent.Finish());
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> JEICompat::addInfo);
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ResearchListeners::reloadEditor);
+    }
     public static void initFromPacket(CompoundNBT data, List<Research> rs) {
         ClientResearchData.last = null;
         ResearchListeners.reload();
@@ -223,7 +245,9 @@ public class FHResearch {
                 JsonElement je = jp.parse(FileUtil.readString(f));
                 if (je.isJsonObject()) {
                     String id = f.getName();
-                    researches.register(SpecialResearch.deserialize(id.substring(0, id.length() - 5), je.getAsJsonObject()));
+                    Research r=SpecialResearch.deserialize(id.substring(0, id.length() - 5), je.getAsJsonObject());
+                    //r.packetInit();
+                    researches.register(r);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -240,12 +264,14 @@ public class FHResearch {
         effects.prepareReload();
         clearCache();
     }
-
+    public static void readOne(Research r) {
+    	r.packetInit();
+        researches.register(r);
+    }
     public static void readAll(List<Research> rss) {
 
         for (Research r : rss) {
-            r.packetInit();
-            researches.register(r);
+        	readOne(r);
         }
     }
 
@@ -306,4 +332,10 @@ public class FHResearch {
     public static void saveAll(PacketBuffer pb) {
         SerializeUtil.writeList(pb, getAllResearch(), Research::write);
     }
+
+	public static void sendSyncPacket(PacketTarget target) {
+        FHNetwork.send(target,new FHResearchRegistrtySyncPacket());
+        FHResearch.getAllResearch().forEach(t->FHNetwork.send(target, new FHResearchSyncPacket(t)));
+        FHNetwork.send(target,new FHResearchSyncEndPacket());
+	}
 }

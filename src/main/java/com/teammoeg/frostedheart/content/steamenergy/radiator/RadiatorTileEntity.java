@@ -52,6 +52,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     public RadiatorTileEntity() {
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
+        
     }
 
 
@@ -95,12 +96,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     public int getActualRange() {
-        return 8;
-    }
-
-    @Override
-    public int getActualTemp() {
-        return (int) (tempLevelLast * 10);
+        return 7;
     }
 
     @Override
@@ -158,39 +154,48 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
             ClientUtils.spawnSteamParticles(world, this.getPos());
         }
     }
-
     @Override
-    protected void tickFuel() {
+    protected boolean tickFuel() {
 
         network.tick();
         if (!isWorking()) {
             if (this.getIsActive())
                 this.setAllActive(false);
-            return;
+            return false;
         }
+        boolean hasFuel=false;
         if (process > 0) {
-            if (network.isValid())
-                process -= network.getTemperatureLevel();
-            else
+        	float tlevel;
+            if (network.isValid()) {
+            	tlevel=network.getTemperatureLevel();
+                process -= tlevel;
+                
+            }else {
+            	tlevel = tempLevelLast;
                 process -= tempLevelLast;
+            }
+            hasFuel=true;
+            this.setTemperatureLevel(tlevel);
+            this.setRangeLevel(0.5f);
         } else if (network.isValid() && network.tryDrainHeat(4 * 160 * network.getTemperatureLevel())) {
             process = (int) (160 * network.getTemperatureLevel());
             processMax = (int) (160 * network.getTemperatureLevel());
+            this.setTemperatureLevel(network.getTemperatureLevel());
+            this.setRangeLevel(0.5f);
             this.setAllActive(true);
+            hasFuel=true;
         } else {
             this.setAllActive(false);
+            hasFuel=false;
+            this.setTemperatureLevel(0);
         }
         if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
             tempLevelLast = network.getTemperatureLevel();
-            this.markChanged(true);
         }
+        return hasFuel;
     }
 
-    @Override
-    public void tickHeat() {
 
-
-    }
 
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
@@ -200,4 +205,11 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         nbt.putInt("processMax", processMax);
         nbt.putFloat("temp", tempLevelLast);
     }
+
+
+
+
+	@Override
+	public void tickHeat(boolean isWorking) {
+	}
 }

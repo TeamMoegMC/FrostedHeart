@@ -1,0 +1,42 @@
+{
+  "variants": {
+    "packagetype=0,packagecolor=0": {
+      "model": "frostedheart:block/package_block/package_block_00"
+    },
+    "packagetype=1,packagecolor=0": {
+      "model": "frostedheart:block/package_block/package_block_10"
+    },
+    "packagetype=2,packagecolor=0": {
+      "model": "frostedheart:block/package_block/package_block_20"
+    },
+    "packagetype=3,packagecolor=0": {
+      "model": "frostedheart:block/package_block/package_block_30"
+    },
+
+    "packagetype=0,packagecolor=1": {
+      "model": "frostedheart:block/package_block/package_block_01"
+    },
+    "packagetype=1,packagecolor=1": {
+      "model": "frostedheart:block/package_block/package_block_11"
+    },
+    "packagetype=2,packagecolor=1": {
+      "model": "frostedheart:block/package_block/package_block_21"
+    },
+    "packagetype=3,packagecolor=1": {
+      "model": "frostedheart:block/package_block/package_block_31"
+    },
+
+    "packagetype=0,packagecolor=2": {
+      "model": "frostedheart:block/package_block/package_block_02"
+    },
+    "packagetype=1,packagecolor=2": {
+      "model": "frostedheart:block/package_block/package_block_12"
+    },
+    "packagetype=2,packagecolor=2": {
+      "model": "frostedheart:block/package_block/package_block_22"
+    },
+    "packagetype=3,packagecolor=2": {
+      "model": "frostedheart:block/package_block/package_block_32"
+    }
+  }
+}

@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.research;
 
 import java.util.function.Function;
 
+import com.mojang.datafixers.util.Pair;
+
 import net.minecraft.network.PacketBuffer;
 
 public abstract class PacketBufferSerializerRegistry<T, R>  extends SerializerRegistry<T, R> {
@@ -46,14 +48,14 @@ public abstract class PacketBufferSerializerRegistry<T, R>  extends SerializerRe
 		return types.idOf(obj);
 	}
 
-	public String typeOf(Class<?> cls) {
-		return types.typeOf(cls);
+	public Pair<Integer, String> typeOf(Class<?> cls) {
+		return types.fullTypeOf(cls);
 	}
 
 	public void register(Class<? extends T> cls, String type, Function<R, T> json, Function<T, R> obj, Function<PacketBuffer, T> packet) {
 		pbs.register(cls, packet);
 		types.register(cls, type);
-    	super.register(cls, type,json, obj);
+    	super.register( type,json, obj);
 	}
 
 	public PacketBufferSerializerRegistry() {

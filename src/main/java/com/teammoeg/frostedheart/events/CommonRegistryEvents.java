@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.events;
 
 import javax.annotation.Nonnull;
 
+import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.loot.AddLootModifier;
@@ -37,6 +38,7 @@ import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 import com.teammoeg.frostedheart.world.FHStructures;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.loot.LootConditionType;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
@@ -45,6 +47,7 @@ import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -75,7 +78,10 @@ public class CommonRegistryEvents {
         FHStructureFeatures.registerStructureFeatures();
     }
 
-
+    @SubscribeEvent
+    public static void onEntityAttributeModificationEvent(EntityAttributeModificationEvent event) {
+		event.add(EntityType.PLAYER, FHAttributes.ENV_TEMPERATURE.get());
+	}
     @SubscribeEvent
     public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
         IForgeRegistry<GlobalLootModifierSerializer<?>> registry = event.getRegistry();

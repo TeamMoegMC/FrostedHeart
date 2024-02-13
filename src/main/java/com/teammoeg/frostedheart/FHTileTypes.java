@@ -23,6 +23,10 @@ import java.util.Collection;
 import java.util.function.Supplier;
 
 import com.google.common.collect.ImmutableSet;
+import com.simibubi.create.content.contraptions.base.HalfShaftInstance;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.repack.registrate.util.entry.TileEntityEntry;
+import com.teammoeg.frostedheart.client.renderer.HalfShaftRenderer;
 import com.teammoeg.frostedheart.content.decoration.RelicChestTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.GasVentTileEntity;
 import com.teammoeg.frostedheart.content.decoration.oilburner.OilBurnerTileEntity;
@@ -40,7 +44,6 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEnti
 import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
 import com.teammoeg.frostedheart.town.house.HouseTileEntity;
-
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -51,7 +54,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
-
+    private static final CreateRegistrate REGISTRATE = FHMain.registrate.getValue()
+        .itemGroup(() -> FHMain.itemGroup);
     public static final RegistryObject<TileEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
             "generator", makeType(T1GeneratorTileEntity::new, () -> FHMultiblocks.generator)
     );
@@ -90,9 +94,15 @@ public class FHTileTypes {
             "mechanical_calculator", makeType(MechCalcTileEntity::new, FHBlocks.mech_calc)
     );
 
-    public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
+    /*public static final RegistryObject<TileEntityType<SteamCoreTileEntity>> STEAM_CORE = REGISTER.register(
             "steam_core", makeType(SteamCoreTileEntity::new, FHBlocks.steam_core)
-    );
+    );*/
+    public static final TileEntityEntry<SteamCoreTileEntity> STEAM_CORE = REGISTRATE
+        .tileEntity("steam_core", SteamCoreTileEntity::new)
+        .instance(() -> HalfShaftInstance::new)
+        .validBlocks(FHBlocks.steam_core)
+        .renderer(() -> HalfShaftRenderer::new)
+        .register();
 
     public static final RegistryObject<TileEntityType<FountainTileEntity>> FOUNTAIN = REGISTER.register(
             "fountain", makeType(FountainTileEntity::new, FHBlocks.fountain)

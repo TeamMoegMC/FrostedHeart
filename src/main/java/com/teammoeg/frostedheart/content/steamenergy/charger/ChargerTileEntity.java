@@ -106,7 +106,14 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     public float getMaxPower() {
         return 20000F;
     }
-
+    public ChargerRecipe findRecipe(ItemStack is) {
+    	for(ChargerRecipe cr:FHUtils.filterRecipes(this.getWorld().getRecipeManager(),ChargerRecipe.TYPE)) {
+    		if(cr.input.test(is)) {
+    			return cr;
+    		}
+    	}
+    	return null;
+    }
     public ActionResultType onClick(PlayerEntity pe, ItemStack is) {
         if (is != null) {
             Item it = is.getItem();
@@ -115,7 +122,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
                 drawEffect();
                 return ActionResultType.SUCCESS;
             }
-            ChargerRecipe cr = ChargerRecipe.findRecipe(is);
+            ChargerRecipe cr = findRecipe(is);
             if (cr != null) {
                 if (power >= cr.cost && is.getCount() >= cr.input.getCount()) {
                     if (!world.isRemote) {

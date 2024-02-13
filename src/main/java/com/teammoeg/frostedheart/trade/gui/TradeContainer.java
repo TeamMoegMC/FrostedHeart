@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.teammoeg.frostedheart.FHContainer;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.trade.ClientTradeHandler;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.PlayerRelationData;
@@ -235,7 +235,7 @@ public class TradeContainer extends Container {
                 order.clear();
             }
             this.setData(data, pe);
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new TradeUpdatePacket(
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new TradeUpdatePacket(
                     data.serializeForSend(new CompoundNBT()), pld.serialize(new CompoundNBT()), relations, true));
         }
     }
@@ -261,7 +261,7 @@ public class TradeContainer extends Container {
             relations = data.getRelationShip(pe);
             succeed = true;
         }
-        FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
+        FHNetwork.send(PacketDistributor.PLAYER.with(() -> pe), new BargainResponse(this, succeed));
     }
 
     @Override

@@ -37,7 +37,6 @@ import com.teammoeg.frostedheart.client.model.LiningModel;
 import com.teammoeg.frostedheart.client.particles.BreathParticle;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.client.particles.SteamParticle;
-import com.teammoeg.frostedheart.client.renderer.HeatPipeRenderer;
 import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
 import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
 import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
@@ -146,9 +145,17 @@ public class ClientRegistryEvents {
         RenderTypeLookup.setRenderLayer(FHBlocks.relic_chest.get(), RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.fluorite_ore.get(), RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(FHBlocks.halite_ore.get(), RenderType.getCutout());
+/*
+        RenderTypeLookup.setRenderLayer(FHBlocks.blood_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.bone_block, RenderType.getCutout());
+        //RenderTypeLookup.setRenderLayer(FHBlocks.desk, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.small_garage, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.package_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.pebble_block, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.odd_mark, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FHBlocks.wooden_box, RenderType.getCutout());*/
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T1.get(), T1GeneratorRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.GENERATOR_T2.get(), T2GeneratorRenderer::new);
-        ClientRegistry.bindTileEntityRenderer(FHTileTypes.HEATPIPE.get(), HeatPipeRenderer::new);
         ClientRegistry.bindTileEntityRenderer(FHTileTypes.MECH_CALC.get(), MechCalcRenderer::new);
         key_skipDialog.setKeyConflictContext(KeyConflictContext.IN_GAME);
 		ClientRegistry.registerKeyBinding(key_skipDialog);

@@ -49,6 +49,7 @@ public class HUDDialog implements IScenarioDialog{
 
 	@Override
 	public void setPrimary(LayerManager primary) {
+		cpartialTicks=0;
 		this.primary=primary;
 	}
 

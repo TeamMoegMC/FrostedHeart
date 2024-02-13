@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.teammoeg.frostedheart.FHConfig;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
@@ -113,7 +113,7 @@ public class ClientScene implements IClientScene {
 	@Override
 	public void sendContinuePacket(boolean isSkip) {
 		// if(canSkip)
-		FHPacketHandler.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
+		FHNetwork.send(PacketDistributor.SERVER.noArg(), new ClientScenarioResponsePacket(isSkip, 0));
 		status=RunStatus.RUNNING;
 		canSkip=false;
 	}
@@ -313,10 +313,10 @@ public class ClientScene implements IClientScene {
 		}
 	}
 	public void sendClientReady() {
-		FHPacketHandler.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
+		FHNetwork.sendToServer(new FHClientReadyPacket(ClientUtils.mc().getLanguageManager().getCurrentLanguage().getCode()));
 	}
 	public void sendClientUpdate() {
-		FHPacketHandler.sendToServer(new FHClientSettingsPacket());
+		FHNetwork.sendToServer(new FHClientSettingsPacket());
 	}
 	@Override
 	public void setActHud(String title, String subtitle) {

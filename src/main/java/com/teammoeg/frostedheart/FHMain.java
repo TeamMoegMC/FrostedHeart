@@ -32,11 +32,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.simibubi.create.foundation.data.CreateRegistrate;
+import com.simibubi.create.repack.registrate.util.NonNullLazyValue;
 import com.teammoeg.frostedheart.client.DynamicModelSetup;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
@@ -49,7 +52,9 @@ import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
 import com.teammoeg.frostedheart.recipe.FHRecipeReloadListener;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.FHScenario;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.util.BlackListPredicate;
 import com.teammoeg.frostedheart.util.FHProps;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -104,6 +109,7 @@ public class FHMain {
     public static File lastbkf;
     public static File lastServerConfig;
     public static boolean saveNeedUpdate;
+    public static final NonNullLazyValue<CreateRegistrate> registrate = CreateRegistrate.lazy(MODID);
     public static final ItemGroup itemGroup = new ItemGroup(MODID) {
         @Override
         @Nonnull
@@ -137,6 +143,7 @@ public class FHMain {
         FHProps.init();
         FHItems.registry.register(mod);
         FHBlocks.registry.register(mod);
+        FHBlocks.init();
         FHMultiblocks.init();
         FHContainer.registerContainers();
         FHTileTypes.REGISTER.register(mod);
@@ -146,6 +153,7 @@ public class FHMain {
         FHRecipes.RECIPE_SERIALIZERS.register(mod);
         FHParticleTypes.REGISTER.register(mod);
         FHBiomes.BIOME_REGISTER.register(mod);
+        FHAttributes.REGISTER.register(mod);
         FHEffects.EFFECTS.register(mod);
         TeamEvent.PLAYER_CHANGED.register(FTBTeamsEvents::syncDataWhenTeamChange);
         TeamEvent.CREATED.register(FTBTeamsEvents::syncDataWhenTeamCreated);
@@ -166,9 +174,9 @@ public class FHMain {
                 || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
             throw new RuntimeException("Unsupported projecte");
         // remove primal winter blocks not to temper rankine world
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
-        ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
+        //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.PODZOL);
     }
 
     @SuppressWarnings("unused")
@@ -219,7 +227,7 @@ public class FHMain {
     private void serverSave(final WorldEvent.Save event) {
         if (FHResearchDataManager.INSTANCE != null) {
             FHResearchDataManager.INSTANCE.save();
-            FHScenario.save();
+            //FHScenario.save();
         }
     }
 
@@ -257,9 +265,12 @@ public class FHMain {
             }
         ChunkHeatDataCapabilityProvider.setup();
         CrashReportExtender.registerCrashCallable(new ClimateCrash());
-        FHPacketHandler.register();
+        FHNetwork.register();
         WorldClimate.setup();
         DeathInventoryData.setup();
+        PlayerTemperatureData.setup();
+        EnergyCore.setup();
+        ScenarioConductor.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();

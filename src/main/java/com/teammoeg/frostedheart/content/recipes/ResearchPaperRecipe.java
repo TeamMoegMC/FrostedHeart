@@ -62,7 +62,6 @@ public class ResearchPaperRecipe extends IESerializableRecipe {
     }
     public static IRecipeType<ResearchPaperRecipe> TYPE;
     public static RegistryObject<IERecipeSerializer<ResearchPaperRecipe>> SERIALIZER;
-    public static List<ResearchPaperRecipe> recipes = ImmutableList.of();
     public Ingredient paper;
 
     public int maxlevel;

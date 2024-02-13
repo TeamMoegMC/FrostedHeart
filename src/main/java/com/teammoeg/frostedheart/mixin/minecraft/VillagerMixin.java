@@ -44,7 +44,9 @@ import net.minecraft.stats.Stats;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
-
+/**
+ * New trade system
+ * */
 @Mixin(VillagerEntity.class)
 public abstract class VillagerMixin extends AbstractVillagerEntity implements VillagerDataHolder {
     FHVillagerData fh$data = new FHVillagerData(getThis());

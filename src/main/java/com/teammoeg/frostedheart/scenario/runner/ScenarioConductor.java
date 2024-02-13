@@ -19,33 +19,33 @@
 
 package com.teammoeg.frostedheart.scenario.runner;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
-import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
-import com.teammoeg.frostedheart.scenario.FHScenario;
+import javax.annotation.Nullable;
+
+import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
-import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
-import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.LazyOptional;
 
 /**
  * ScenarioConductor
@@ -53,35 +53,28 @@ import net.minecraftforge.common.util.Constants;
  * You shouldn't opearte this class from any other code except from scenario trigger and commands.
  * You should define triggers in script file and activate triggers to make it execute.
  * */
-public class ScenarioConductor implements IScenarioConductor{
-	//Conducting and scheduling data 
-
-	
-	private transient LinkedList<IScenarioTarget> toExecute=new LinkedList<>();//Actions appended by trigger and awaiting execution
-    private transient List<IScenarioTrigger> triggers=new ArrayList<>();
-    private transient Map<String,ExecuteStackElement> macros=new HashMap<>();
-    private final ScenarioVariables varData=new ScenarioVariables();
-	transient Scenario sp;//current scenario
-	transient int nodeNum=0;//Program register
-	private RunStatus status=RunStatus.STOPPED;
-    //Text handling state machine
-	private transient LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
-    private transient boolean isConducting;
-    private transient boolean clearAfterClick;
+public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializable<CompoundNBT>{
+    @CapabilityInject(ScenarioConductor.class)
+    public static Capability<ScenarioConductor> CAPABILITY;
+    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "scenario");
+    private final LazyOptional<ScenarioConductor> capability=LazyOptional.of(()->this);
+    
+    
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
     private transient boolean isActsEnabled;
     private transient ActNamespace lastQuest;
-    //Server and Client info
-    public transient UUID player;
-    public transient boolean isSkip;
-    private transient int clientStatus;
     private static final ActNamespace global=new ActNamespace();
     private static final ActNamespace init=new ActNamespace(null,null);
+    boolean inited=false;
+
     public CompoundNBT save() {
     	CompoundNBT data=new CompoundNBT();
-    	data.put("vars", varData.snapshot);
+    	if(varData.snapshot==null)
+    		data.put("vars", varData.extraData);
+    	else
+    		data.put("vars", varData.snapshot);
     	ListNBT lacts=new ListNBT();
     	for(Act v:acts.values()) {
     		if(v.name.isAct())
@@ -107,13 +100,13 @@ public class ScenarioConductor implements IScenarioConductor{
     	//if(currentAct==null)
     	//currentAct=acts.get(empty);
     }
-    public String getLang() {
-    	return getPlayer().getLanguage();
-    }
+    public void copy() {}
     public void enableActs() {
     	if(!isActsEnabled) {
     		isActsEnabled=true;
-    		
+       		if(lastQuest!=null) {
+    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
+    		}
     		acts.values().forEach(t->{
     			if(t.getStatus()==RunStatus.WAITTRIGGER) {
     				//t.getScene().setSlient(true);
@@ -123,11 +116,20 @@ public class ScenarioConductor implements IScenarioConductor{
     				//t.getScene().setSlient(false);
     			}
     		});
-    		if(lastQuest!=null) {
-    			acts.get(lastQuest).queue(acts.get(lastQuest).paragraph);
-    		}
+ 
     	}
     }
+    public ScenarioConductor() {
+		super();
+		setCurrentAct(new Act(this,init));
+		acts.put(init, getCurrentAct());
+		acts.put(global, new Act(this,global));
+	}
+
+    public void init(ServerPlayerEntity player) {
+    	if(!inited)inited=true;
+		this.player = player.getUniqueID();
+	}
     public ScenarioConductor(ServerPlayerEntity player) {
 		super();
 		this.player = player.getUniqueID();
@@ -144,109 +146,22 @@ public class ScenarioConductor implements IScenarioConductor{
 		setCurrentAct(new Act(this,init));
 		acts.put(init, getCurrentAct());
 	}
-	public void call(String scenario, String label) {
-		call(new ExecuteTarget(this,scenario,label));
-	}
-	Pattern cmd=Pattern.compile("\\@([^@$;]+);");
-	Pattern cmd2=Pattern.compile("\\$([^@$;]+);");
-	public void callCommand(String name,Map<String,String> params) {
-		name=name.toLowerCase();
-		Map<String,String> cparams=new HashMap<>();
-		for(Entry<String, String> i:params.entrySet()) {
-			String val=i.getValue();
-			Matcher m=cmd.matcher(val);
-	        StringBuffer sb=new StringBuffer();
-            while(m.find()){
-                String replacement = ""+eval(m.group(1));
-                m.appendReplacement(sb, replacement);
-            }
-            m.appendTail(sb);
-			m=cmd2.matcher(sb.toString());
-			sb=new StringBuffer();
-            while(m.find()){
-                String replacement = ""+eval(m.group(1));
-                m.appendReplacement(sb, replacement);
-            }
-            m.appendTail(sb);
-			cparams.put(i.getKey(), sb.toString());
-		}
-		if(macros.containsKey(name)) {
-			CompoundNBT mp=new CompoundNBT();
-			for(Entry<String, String> e:cparams.entrySet()) {
-				mp.putString(e.getKey(), e.getValue());
-			}
-			varData.extraData.put("mp", mp);
-			call(macros.get(name));
-		}else
-			FHScenario.callCommand(name, this, cparams);
-	}
 
-	public void addCallStack() {
-		getCallStack().add(getCurrentPosition());
-	}
-	public void call(IScenarioTarget target) {
-		addCallStack();
-		jump(target);
-	}
-    public void clearLink() {
-    	getScene().clearLink();
-	}
-    public String createLink(String id,String scenario,String label) {
-		if(id==null||getScene().links.containsKey(id)) {
-			id=UUID.randomUUID().toString();
-		}
-		getScene().links.put(id, new ExecuteTarget(this,scenario,label));
-		getScene().markChatboxDirty();
-		return id;
-	}
-    public void popCallStack() {
-		if(getCallStack().isEmpty()) {
-			throw new ScenarioExecutionException("Invalid return at "+getScenario().name);
-		}
-		jump(getCallStack().pollLast());
-	}
-    public double eval(String exp) {
-        com.teammoeg.frostedheart.util.evaluator.Node n= Evaluator.eval(exp);
-        //System.out.println(n);
-        return n.eval(getVaribles());
-    }
 
-	public int getNodeNum() {
-        return nodeNum;
-    }
-	public ServerPlayerEntity getPlayer() {
-        return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player);
-    }
-	public boolean isOfflined() {
-		return FHResearchDataManager.server.getPlayerList().getPlayerByUUID(player)==null;
-	}
+
+
 	public Scene getScene() {
     	return getCurrentAct().getScene();
     }
-	public ScenarioVariables getVaribles() {
-    	return varData;
-    }
-	public void gotoNode(int target) {
-		nodeNum = target;
-    }
-	public boolean isRunning() {
-		return getStatus()==RunStatus.RUNNING;
-	}
-	public void jump(IScenarioTarget nxt) {
-		nxt.accept(this);
-		run();
 
+
+
+    public void paragraph(int pn) {
+		varData.takeSnapshot();
+    	getCurrentAct().newParagraph(getScenario(), pn);
+    	super.paragraph(pn);
 	}
-	public void jump(String scenario,String label) {
-		if(scenario==null)
-			jump(new ExecuteTarget(this,scenario,label));
-		else
-			jump(new ExecuteTarget(getScenario(),label));
-	}
-	public void newLine() {
-		getScene().sendNewLine();
-		//getScene().sendCurrent();
-	}
+
 	public void notifyClientResponse(boolean isSkip,int status) {
 		this.isSkip=isSkip;
 		this.clientStatus=status;
@@ -260,41 +175,21 @@ public class ScenarioConductor implements IScenarioConductor{
 		}
 		
     }
-    public void stopWait() {
-		getScene().stopWait();
-	}
+
 	public void onLinkClicked(String link) {
-		ExecuteTarget jt=getScene().links.get(link);
+		ExecuteTarget jt=getScene().getLinks().get(link);
 		if(jt!=null) {
 			jump(jt);
 		}
 	}
-	private void doParagraph() {
-		getScene().clear();
-	}
-    public void paragraph(int pn) {
-		varData.takeSnapshot();
-    	getCurrentAct().newParagraph(getScenario(), pn);
-    	if(getScene().shouldWaitClient()) {
-    		getScene().waitClientIfNeeded();
-    		clearAfterClick=true;
-    		getScene().sendCurrent();
-    	}else doParagraph();
-	}
-	public void sendCachedSence() {
-		getScene().sendCurrent();
-	}
+
+
 	public void addTrigger(IScenarioTrigger trig) {
 		if(getCurrentAct().name.isAct()) {
-			getCurrentAct().getScene().addTrigger(trig);
-		}else {
-			triggers.add(trig);
-		}
+			getCurrentAct().addTrigger(trig);
+		}else super.addTrigger(trig);
 	}
-	public void queue(IScenarioTarget questExecuteTarget) {
-		//getCurrentAct().queue(questExecuteTarget);
-		toExecute.add(questExecuteTarget);
-	}
+
     /*public void restoreParagraph(ParagraphData paragraph) {
 		Scenario sp=paragraph.getScenario();
 		if(paragraph.getParagraphNum()==0)
@@ -304,64 +199,6 @@ public class ScenarioConductor implements IScenarioConductor{
 		run();
 	}*/
 
-    private void runCode() {
-    	clearAfterClick=false;
-    	
-    	
-    	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
-    		Node node=getScenario().pieces.get(nodeNum++);
-    		try {
-    			getScene().appendLiteral(node.getLiteral(this));
-    			node.run(this);
-    		}catch(Throwable t) {
-    			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
-    			this.sendMessage("Execution Exception when executing scenario: "+t.getMessage()+" see logs for more detail");
-    			setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
-	    		sendCachedSence();
-    			break;
-    		}
-	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
-	    		
-	    		setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
-	    		sendCachedSence();
-	    		return;
-    		}
-    	}
-    	if(isRunning())
-    		setStatus((RunStatus.STOPPED));
-		
-    }
-    private void runScheduled() {
-    	if(getStatus().shouldPause) {
-    		IScenarioTarget nxt=toExecute.pollFirst();
-    		if(nxt!=null) {
-    			//globalScope();
-    			//paragraph(-1);
-    			jump(nxt);
-    		}
-    	}
-    }
-    /**
-	 * Break any waits and stop, Execute now.
-	 * 
-	 * 
-	 * */
-    private void run() {
-    	setStatus((RunStatus.RUNNING));
-    	if(isConducting)return;
-    	try {
-    		isConducting=true;
-    		
-    		while(isRunning()){
-	    		runCode();
-	    		runScheduled();
-    		}
-    	}finally {
-    		isConducting=false;
-    	}
-    }
 
 
     public void run(Scenario sp) {
@@ -373,15 +210,8 @@ public class ScenarioConductor implements IScenarioConductor{
 		run();
 	}
 
-    public void stop() {
-    	nodeNum=getScenario().pieces.size();
-    	setStatus(RunStatus.STOPPED);
-    }
-
-
-
-
-	public void tick() {    	
+	public void tick() {
+		if(!inited)return;
     	//detect triggers
 		if(getStatus()==RunStatus.RUNNING) {
 			run();
@@ -389,7 +219,10 @@ public class ScenarioConductor implements IScenarioConductor{
     	for(IScenarioTrigger t:triggers) {
     		if(t.test(this)) {
     			if(t.use()) {
-    				this.queue(t);
+    				if(t.isAsync())
+						toExecute.add(t);
+					else
+						jump(t);
     			}
     		}
     	}
@@ -464,6 +297,10 @@ public class ScenarioConductor implements IScenarioConductor{
 			this.setCurrentAct(data);
 		}
 	}
+	public void queue(IScenarioTarget questExecuteTarget) {
+		getCurrentAct().queue(questExecuteTarget);
+		//toExecute.add(questExecuteTarget);
+	}
 	public void queueAct(ActNamespace quest,String scene,String label) {
 		Act data=getCurrentAct();
 		if(!quest.equals(getCurrentAct().name)) {
@@ -483,53 +320,55 @@ public class ScenarioConductor implements IScenarioConductor{
 			target=new ExecuteTarget(this,scene,null);
 		}
 		target.apply(data);
-		System.out.println(target);
 		data.paragraph.setScenario(target.getScenario());
 		data.paragraph.setParagraphNum(0);
-		queue(new ActTarget(quest,target));
+		toExecute.add(new ActTarget(quest,target));
 	}
-	public ExecuteStackElement getCurrentPosition() {
-    	return new ExecuteStackElement(sp,nodeNum);
-    }
+
 	public void endAct() {
 		if(getCurrentAct().name.isAct()) {
 			acts.remove(getCurrentAct().name);
 		}
 		globalScope();
 	}
-	public Scenario getScenario() {
-		return sp;
-	}
-	public void setScenario(Scenario sp) {
-		this.sp = sp;
-	}
-	public int getClientStatus() {
-		return clientStatus;
-	}
+
+
 	public Act getCurrentAct() {
 		return currentAct;
-	}
-	public void addMacro(String name) {
-		macros.put(name.toLowerCase(), getCurrentPosition().next());
-	}
-	@Override
-	public void setNodeNum(int num) {
-		gotoNode(num);
-	}
-	public RunStatus getStatus() {
-		return status;
-	}
-	public void setStatus(RunStatus status) {
-		this.status = status;
-	}
-	public LinkedList<ExecuteStackElement> getCallStack() {
-		return callStack;
 	}
 	private void setCurrentAct(Act currentAct) {
 		this.currentAct = currentAct;
 	}
+    public static void setup() {
+        CapabilityManager.INSTANCE.register(ScenarioConductor.class, new Capability.IStorage<ScenarioConductor>() {
+            public void readNBT(Capability<ScenarioConductor> capability, ScenarioConductor instance, Direction side, INBT nbt) {
+                instance.deserializeNBT((CompoundNBT) nbt);
+            }
+
+            public INBT writeNBT(Capability<ScenarioConductor> capability, ScenarioConductor instance, Direction side) {
+                return instance.serializeNBT();
+            }
+        }, ScenarioConductor::new);
+    }
+    public static LazyOptional<ScenarioConductor> getCapability(@Nullable PlayerEntity player) {
+        if (player != null) {
+            return player.getCapability(CAPABILITY);
+        }
+        return LazyOptional.empty();
+    }
 	@Override
-	public void sendMessage(String s) {
-		getPlayer().sendStatusMessage(GuiUtils.str(s), false);
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+        if (cap == CAPABILITY)
+            return capability.cast();
+        return LazyOptional.empty();
 	}
+	@Override
+	public CompoundNBT serializeNBT() {
+		return save();
+	}
+	@Override
+	public void deserializeNBT(CompoundNBT nbt) {
+		load(nbt);
+	}
+
 }

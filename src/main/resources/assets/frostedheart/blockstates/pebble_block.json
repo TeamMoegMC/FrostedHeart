@@ -1,0 +1,73 @@
+{
+  "variants": {
+    "pebbletype=0,pebblecolor=0": {
+      "model": "frostedheart:block/pebbleblock/block_00"
+    },
+    "pebbletype=0,pebblecolor=1": {
+      "model": "frostedheart:block/pebbleblock/block_10"
+    },
+    "pebbletype=0,pebblecolor=2": {
+      "model": "frostedheart:block/pebbleblock/block_20"
+    },
+
+    "pebbletype=1,pebblecolor=0": {
+      "model": "frostedheart:block/pebbleblock/block_01"
+    },
+    "pebbletype=1,pebblecolor=1": {
+      "model": "frostedheart:block/pebbleblock/block_11"
+    },
+    "pebbletype=1,pebblecolor=2": {
+      "model": "frostedheart:block/pebbleblock/block_21"
+    },
+
+    "pebbletype=2,pebblecolor=0": {
+      "model": "frostedheart:block/pebbleblock/block_02"
+    },
+    "pebbletype=2,pebblecolor=1": {
+      "model": "frostedheart:block/pebbleblock/block_12"
+    },
+    "pebbletype=2,pebblecolor=2": {
+      "model": "frostedheart:block/pebbleblock/block_22"
+    },
+
+    "pebbletype=3,pebblecolor=0": {
+      "model": "frostedheart:block/pebbleblock/block_03"
+    },
+    "pebbletype=3,pebblecolor=1": {
+      "model": "frostedheart:block/pebbleblock/block_13"
+    },
+    "pebbletype=3,pebblecolor=2": {
+      "model": "frostedheart:block/pebbleblock/block_23"
+    },
+
+    "pebbletype=4,pebblecolor=0": {
+      "model": "frostedheart:block/pebbleblock/block_04"
+    },
+    "pebbletype=4,pebblecolor=1": {
+      "model": "frostedheart:block/pebbleblock/block_14"
+    },
+    "pebbletype=4,pebblecolor=2": {
+      "model": "frostedheart:block/pebbleblock/block_24"
+    },
+
+    "pebbletype=5,pebblecolor=0": {
+      "model": "frostedheart:block/pebbleblock/block_05"
+    },
+    "pebbletype=5,pebblecolor=1": {
+      "model": "frostedheart:block/pebbleblock/block_15"
+    },
+    "pebbletype=5,pebblecolor=2": {
+      "model": "frostedheart:block/pebbleblock/block_25"
+    },
+
+    "pebbletype=6,pebblecolor=0": {
+      "model": "frostedheart:block/pebbleblock/block_06"
+    },
+    "pebbletype=6,pebblecolor=1": {
+      "model": "frostedheart:block/pebbleblock/block_16"
+    },
+    "pebbletype=6,pebblecolor=2": {
+      "model": "frostedheart:block/pebbleblock/block_26"
+    }
+  }
+}

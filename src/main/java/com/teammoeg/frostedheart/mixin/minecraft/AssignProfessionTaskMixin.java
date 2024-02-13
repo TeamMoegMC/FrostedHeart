@@ -30,7 +30,10 @@ import net.minecraft.entity.ai.brain.task.AssignProfessionTask;
 import net.minecraft.entity.ai.brain.task.Task;
 import net.minecraft.entity.merchant.villager.VillagerEntity;
 import net.minecraft.world.server.ServerWorld;
-
+/**
+ * Disable vanilla village profession
+ * 
+ * */
 @Mixin(AssignProfessionTask.class)
 public abstract class AssignProfessionTaskMixin extends Task<VillagerEntity> {
     public AssignProfessionTaskMixin(Map<MemoryModuleType<?>, MemoryModuleStatus> requiredMemoryStateIn) {

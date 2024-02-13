@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.client.hud.FrostedHud;
 import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
@@ -38,12 +38,15 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.FHGuiHelper;
 import com.teammoeg.frostedheart.client.util.GuiClickedEvent;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.data.BlockTempData;
+import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
+import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
-import com.teammoeg.frostedheart.climate.player.Temperature;
+import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
@@ -53,10 +56,12 @@ import com.teammoeg.frostedheart.research.effects.EffectCrafting;
 import com.teammoeg.frostedheart.research.effects.EffectShowCategory;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchToast;
+import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
@@ -72,6 +77,7 @@ import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.BipedRenderer;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -89,6 +95,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.GameType;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggedInEvent;
@@ -98,18 +105,21 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mod.EventBusSubscriber(modid = FHMain.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
@@ -126,7 +136,8 @@ public class ClientEvents {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
             if (!player.isSpectator() && !player.isCreative() && player.world != null) {
                 if (player.ticksExisted % 60 <= 3) {
-                    float envTemp = Temperature.getEnv(player);
+                	 PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
+                    float envTemp = ptd.getEnvTemp();
                     if (envTemp < -10.0F) {
                         // get the player's facing vector and make the particle spawn in front of the player
                         double x = player.getPosX() + player.getLookVec().x * 0.3D;
@@ -146,6 +157,7 @@ public class ClientEvents {
             }
         }
     }
+    static int forstedSoundCd;
     /**
      * Play ice cracking sound when player's body temperature transitions across integer threshold.
      */
@@ -154,22 +166,29 @@ public class ClientEvents {
         if (event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START
                 && event.player instanceof ClientPlayerEntity) {
             ClientPlayerEntity player = (ClientPlayerEntity) event.player;
-            if (!player.isSpectator() && !player.isCreative() && player.world != null) {
-                float prevTemp = Temperature.getBodySmoothedPrevious(player);
-                float currTemp = Temperature.getBodySmoothed(player);
+            if(forstedSoundCd>0)
+            	forstedSoundCd--;
+            if (!player.isSpectator() && !player.isCreative() && player.world != null&&forstedSoundCd>0) {
+            	
+            	PlayerTemperatureData ptd=PlayerTemperatureData.getCapability(player).orElse(null);
+                float prevTemp = ptd.smoothedBodyPrev;
+                float currTemp = ptd.smoothedBody;
                 // play sound if currTemp transitions across integer threshold
-                if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F))
+                if (currTemp <= 0.5F && MathHelper.floor(prevTemp - 0.5F) != MathHelper.floor(currTemp - 0.5F)) {
                     player.world.playSound(player, player.getPosition(), FHSounds.ICE_CRACKING.get(), SoundCategory.PLAYERS, 1.0F, 1.0F);
+                    forstedSoundCd=20;
+                }
             }
         }
     }
+
     @SubscribeEvent
     public static void addItemTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
         ITempAdjustFood itf = null;
         IWarmKeepingEquipment iwe = null;
-        for (InspireRecipe ir : InspireRecipe.recipes) {
+        for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(stack)) {
                 event.getToolTip().add(GuiUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
                 break;
@@ -231,10 +250,10 @@ public class ClientEvents {
         }
         if (itf != null) {
             float temp = itf.getHeat(stack,
-                    event.getPlayer() == null ? 37 : Temperature.getEnv(event.getPlayer())) * tspeed;
+                    event.getPlayer() == null ? 37 :PlayerTemperatureData.getCapability(event.getPlayer()).map(t->t.getEnvTemp()).orElse(0f)) * tspeed;
             temp = (Math.round(temp * 1000)) / 1000.0F;// round
             if (temp != 0)
-                if (temp > 0)
+                if (temp > 0) 
                     event.getToolTip()
                             .add(GuiUtils.translateTooltip("food_temp", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
@@ -459,6 +478,7 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void sendLoginUpdateReminder(PlayerEvent.PlayerLoggedInEvent event) {
+    	forstedSoundCd=0;
         FHMain.remote.fetchVersion().ifPresent(stableVersion -> {
             boolean isStable = true;
             if (FHMain.pre != null && FHMain.pre.fetchVersion().isPresent()) {
@@ -527,6 +547,11 @@ public class ClientEvents {
 
             }
             PlayerEntity pe = ClientUtils.getPlayer();
+            PlayerTemperatureData.getCapability(pe).ifPresent(t->{
+            	t.smoothedBodyPrev=t.smoothedBody;
+            	t.smoothedBody=t.smoothedBody*.9f+t.getBodyTemp()*.1f;
+            });
+            
             if (pe != null && pe.getActivePotionEffect(FHEffects.NYCTALOPIA.get()) != null) {
                 ClientUtils.applyspg = true;
                 ClientUtils.spgamma = MathHelper.clamp((float) (ClientUtils.mc().gameSettings.gamma), 0f, 1f) * 0.1f
@@ -577,7 +602,7 @@ public class ClientEvents {
     public static void onClientChat(ClientChatEvent event) {
     	if(event.getOriginalMessage().startsWith("fh$scenario$link:")) {
     		ClientLinkClickedPacket packet=new ClientLinkClickedPacket(event.getOriginalMessage().substring("fh$scenario$link:".length()));
-    		FHPacketHandler.sendToServer(packet);
+    		FHNetwork.sendToServer(packet);
     		event.setCanceled(true);
     	}
     }

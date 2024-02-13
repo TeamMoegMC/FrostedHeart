@@ -67,11 +67,12 @@ public class ServerLifecycleHooksMixin {
                 String lw = FileUtil.readString(saveVersion);
                 if (!lw.isEmpty() && (lw.equals(localVersion)))
                     return;
+                FHMain.saveNeedUpdate = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        FHMain.saveNeedUpdate = true;
+        
         try {
             LOGGER.info("Making backup for old config files...");
             configbkf.toFile().mkdirs();

@@ -31,6 +31,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import com.mojang.authlib.GameProfile;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
@@ -102,7 +104,7 @@ public class FHResearchDataManager {
         return cn;
 
     }
-
+    @Nullable
     public TeamResearchData getData(UUID id) {
 
         TeamResearchData cn = dataByResearchId.get(id);

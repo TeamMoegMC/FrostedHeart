@@ -108,7 +108,6 @@ public class GasVentTileEntity extends FHBaseTileEntity implements IActiveState,
                 if (!this.getIsActive()) {
                     this.setActive(true);
                 }
-                this.markContainingBlockForUpdate(null);
                 this.markDirty();
             } else if (this.getIsActive())
                 this.setActive(false);

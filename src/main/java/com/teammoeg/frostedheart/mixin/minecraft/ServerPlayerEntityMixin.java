@@ -35,6 +35,7 @@ import net.minecraftforge.common.util.FakePlayer;
 
 /**
  * Relief a performance issue in server
+ * For removal in 1.20+
  */
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin extends PlayerEntity {

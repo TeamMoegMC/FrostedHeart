@@ -20,12 +20,14 @@
 package com.teammoeg.frostedheart.climate.player;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
@@ -35,6 +37,8 @@ import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
@@ -81,7 +85,7 @@ public class TemperatureUpdate {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            double calculatedTarget = Temperature.getBody(player);
+            double calculatedTarget = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
             if (!(player.isCreative() || player.isSpectator())) {
                 if (calculatedTarget > 1 || calculatedTarget < -1) {
                     if (!player.isPotionActive(FHEffects.HYPERTHERMIA.get())
@@ -128,7 +132,7 @@ public class TemperatureUpdate {
             }
         }
     }
-
+    public static final UUID envTempId=UUID.fromString("95c1eab4-8f3a-4878-aaa7-a86722cdfb07");
     /**
      * Perform temperature tick logic
      * <p>
@@ -143,7 +147,7 @@ public class TemperatureUpdate {
             // ignore creative and spectator players
             if (player.isCreative() || player.isSpectator())
                 return;
-
+            PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
             if (player.ticksExisted % 10 == 0) {
                 //soak in water modifier
                 if (player.isInWater()) {
@@ -161,7 +165,7 @@ public class TemperatureUpdate {
                         player.addPotionEffect(new EffectInstance(FHEffects.WET.get(), 100, 0));
                 }
                 //load current data
-                float current = Temperature.getBody(player);
+                float current = PlayerTemperatureData.getCapability(event.player).map(t->t.getBodyTemp()).orElse(0f);
                 double tspeed = FHConfig.SERVER.tempSpeed.get();
                 if (current < 0) {
                     float delt = (float) (FHConfig.SERVER.tdiffculty.get().self_heat.apply(player) * tspeed);
@@ -196,6 +200,12 @@ public class TemperatureUpdate {
                 // burning heat
                 if (player.isBurning())
                     envtemp += 150F;
+                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).removeModifier(envTempId);
+                player.getAttribute(FHAttributes.ENV_TEMPERATURE.get()).applyNonPersistentModifier(new AttributeModifier(envTempId,"player environment modifier", envtemp, Operation.ADDITION));
+                
+                
+                envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
+                
                 // normalize
                 envtemp -= 37F;
                 float keepwarm = 0;
@@ -259,6 +269,7 @@ public class TemperatureUpdate {
                     dheat += addi;
                     simulated += addi;
                 }
+                //Attack player if temperature changes too much
                 if (dheat > 0.1)
                     player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
                 else if (dheat < -0.1)
@@ -268,25 +279,15 @@ public class TemperatureUpdate {
                     current = -10;
                 else if (current > 10)
                     current = 10;
-                float lenvtemp = Temperature.getEnv(player);//get a smooth change in display
-                Temperature.set(player, current, (envtemp + 37) * .2f + lenvtemp * .8f);
-                FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+                float lenvtemp = data.getEnvTemp();//get a smooth change in display
+                float lfeeltemp=data.getFeelTemp();
+                float feeltemp=current-(1 - keepwarm)*(current-envtemp);
+                
+                data.update(current, (envtemp + 37) * .2f + lenvtemp * .8f, (feeltemp+37)*.2f+lfeeltemp*.8f);
+                //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 
-            // Set smoothed temperature after update:
-            // Note that we must do this on server side!
-            // If we do this on client side, it would be out of sync with the server.
-            int progress = player.ticksExisted % 10;
-            float current = Temperature.getBody(player);
-            // if progress is zero, then this is an update tick
-            // delta will now be the difference between the last and current temperature
-            // this delta is preserved for the next 9 ticks, until the next update tick
-            float delta = Temperature.getBodyDelta(player);
-            // the smoothed temperature is calculated as a linear interpolation between the
-            // current and last temperature
-            float smoothed = current + delta * (1 - progress / 10f);
-            Temperature.setBodySmoothed(player, smoothed);
-            FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
+            FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
         }
     }
 }

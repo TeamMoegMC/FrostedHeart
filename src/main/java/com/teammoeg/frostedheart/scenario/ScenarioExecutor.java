@@ -144,7 +144,7 @@ public class ScenarioExecutor<T> {
     }
     @FunctionalInterface
     public interface ScenarioMethod<T> {
-        void execute(T runner, Map<String, String> param);
+        void execute(T scenarioVM, Map<String, String> param);
     }
     static Logger LOGGER = LogManager.getLogger("ScenarioExecutor");
     Class<T> objcls;
@@ -163,12 +163,12 @@ public class ScenarioExecutor<T> {
 
     Map<String, ScenarioMethod<T>> commands = new HashMap<>();
 
-    public void callCommand(String name, T runner, Map<String, String> params) {
+    public void callCommand(String name, T scenarioVM, Map<String, String> params) {
         ScenarioMethod<T> command = commands.get(name);
         if (command == null) {
             throw new ScenarioExecutionException("Can not find command " + name);
         }
-        command.execute(runner, params);
+        command.execute(scenarioVM, params);
     }
 
     public void register(Class<?> clazz) {

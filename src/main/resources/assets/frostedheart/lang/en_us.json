@@ -31,6 +31,14 @@
   "block.frostedheart.halite_ore": "Halite Ore",
   "block.frostedheart.incubator": "Incubator",
   "block.frostedheart.heat_incubator": "Steam Incubator",
+  "block.frostedheart.blood_block": "Blood",
+  "block.frostedheart.bone_block": "Bone",
+  "block.frostedheart.desk": "Old Desk",
+  "block.frostedheart.small_garage": "Garage",
+  "block.frostedheart.package_block": "Package",
+  "block.frostedheart.pebble_block": "Pebble",
+  "block.frostedheart.odd_mark": "Odd Mark",
+  "block.frostedheart.wooden_box": "Wooden Box",
   
    "tetra/schematic/single/head/core_spade/basic_core_spade.name": "Core Spade Head",
   

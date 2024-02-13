@@ -30,6 +30,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 @Mixin(ClientEvents.class)
 public class MixinClientEvents {
@@ -37,6 +38,7 @@ public class MixinClientEvents {
      * @author yuesha-yc
      * @reason fix overlay when the hotbar event is canceled
      */
+    @SubscribeEvent
     @Overwrite(remap = false)
     public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
         MatrixStack ms = event.getMatrixStack();

@@ -34,11 +34,15 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
+/**
+ * Add generator effect for ice (melt)
+ * 
+ * */
 @Mixin(IceBlock.class)
 public abstract class IceMixin {
     /**
      * @author khjxiaogu
-     * @reason Performs a random tick on a block.
+     * @reason add generator effect on ice
      */
     @Overwrite
     public void randomTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random random) {

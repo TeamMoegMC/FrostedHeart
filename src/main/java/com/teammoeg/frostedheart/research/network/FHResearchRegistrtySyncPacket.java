@@ -34,7 +34,6 @@ import net.minecraftforge.fml.network.NetworkEvent;
 // send when player join
 public class FHResearchRegistrtySyncPacket {
     private final CompoundNBT data;
-    List<Research> rss;
 
     public FHResearchRegistrtySyncPacket() {
         this.data = FHResearch.save(new CompoundNBT());
@@ -43,17 +42,15 @@ public class FHResearchRegistrtySyncPacket {
 
     public FHResearchRegistrtySyncPacket(PacketBuffer buffer) {
         data = buffer.readCompoundTag();
-        rss = SerializeUtil.readList(buffer, SpecialResearch::deserialize);
     }
 
     public void encode(PacketBuffer buffer) {
         buffer.writeCompoundTag(data);
-        FHResearch.saveAll(buffer);
     }
 
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            FHResearch.initFromPacket(data, rss);
+            FHResearch.initFromRegistry(data);
         });
         context.get().setPacketHandled(true);
     }

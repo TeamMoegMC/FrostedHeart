@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class ShpNode implements Node {
 
@@ -30,7 +30,7 @@ public class ShpNode implements Node {
     }
 
     @Override
-    public String getLiteral(ScenarioConductor runner) {
+    public String getLiteral(ScenarioVM runner) {
         return "#";
     }
 
@@ -45,7 +45,7 @@ public class ShpNode implements Node {
     }
 
     @Override
-    public void run(ScenarioConductor runner) {
+    public void run(ScenarioVM runner) {
 
     }
 

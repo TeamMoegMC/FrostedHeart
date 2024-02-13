@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.scenario.parser;
 import java.util.Map;
 
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class LabelNode implements Node {
     String name;
@@ -37,7 +38,7 @@ public class LabelNode implements Node {
 	}
 
 	@Override
-    public String getLiteral(ScenarioConductor runner) {
+    public String getLiteral(ScenarioVM runner) {
         return "";
     }
 
@@ -53,6 +54,6 @@ public class LabelNode implements Node {
     }
 
     @Override
-    public void run(ScenarioConductor runner) {
+    public void run(ScenarioVM runner) {
     }
 }

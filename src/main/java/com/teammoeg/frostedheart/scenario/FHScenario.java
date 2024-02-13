@@ -29,9 +29,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHPacketHandler;
+import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.ActCommand;
@@ -46,9 +47,11 @@ import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.parser.ScenarioParser;
 import com.teammoeg.frostedheart.scenario.parser.providers.FTBQProvider;
 import com.teammoeg.frostedheart.scenario.parser.providers.ScenarioProvider;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -57,13 +60,12 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 public class FHScenario {
-	public static ScenarioExecutor<ScenarioConductor> server = new ScenarioExecutor<>(ScenarioConductor.class);
-	public static Map<ServerPlayerEntity, ScenarioConductor> runners = new HashMap<>();
+	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
-
+	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
 	public static void startFor(ServerPlayerEntity pe) {
-		ScenarioConductor sr = runners.computeIfAbsent(pe, FHScenario::load);
-
+		ScenarioConductor sr = get(pe);
+		sr.init(pe);
 		sr.run(loadScenario(sr,"init"));
 	}
 
@@ -74,7 +76,7 @@ public class FHScenario {
 		scenarioProviders.add(p);
 	}
 
-	public static Scenario loadScenario(IScenarioConductor caller,String name) {
+	public static Scenario loadScenario(IScenarioThread caller,String name) {
 		String[] paths=name.split("\\?");
 		String[] args=new String[0];
 		if(paths.length>1&&!paths[1].isEmpty())
@@ -114,26 +116,26 @@ public class FHScenario {
 		return new Scenario(name);
 	}
 
-	public static void callCommand(String name, ScenarioConductor runner, Map<String, String> params) {
-		server.callCommand(name, runner, params);
+	public static void callCommand(String name, ScenarioVM scenarioVM, Map<String, String> params) {
+		server.callCommand(name, scenarioVM, params);
 	}
 
 	public static void register(Class<?> clazz) {
 		server.register(clazz);
 	}
 
-	public static void callClientCommand(String name, ScenarioConductor runner, Map<String, String> params) {
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+	public static void callClientCommand(String name, ScenarioVM runner, Map<String, String> params) {
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), params));
 	}
 
-	public static void callClientCommand(String name, ScenarioConductor runner, String... params) {
+	public static void callClientCommand(String name, ScenarioVM runner, String... params) {
 		Map<String, String> data = new HashMap<>();
 		for (int i = 0; i < params.length / 2; i++) {
 			data.put(params[i * 2], params[i * 2 + 1]);
 		}
 
-		FHPacketHandler.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) runner.getPlayer()),
 				new ServerScenarioCommandPacket(name.toLowerCase(), data));
 	}
 
@@ -148,7 +150,7 @@ public class FHScenario {
 		}
 	}
 
-	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioConductor> method) {
+	public static void registerCommand(String cmdName, ScenarioMethod<ScenarioVM> method) {
 		server.registerCommand(cmdName, method);
 	}
 
@@ -164,7 +166,7 @@ public class FHScenario {
 	}
 	static Path local;
 	static final FolderName dataFolder = new FolderName("fhscenario");
-
+/*
 	public static ScenarioConductor load(ServerPlayerEntity player) {
 		local = FHResearchDataManager.server.func_240776_a_(dataFolder);
 		local.toFile().mkdirs();
@@ -202,5 +204,10 @@ public class FHScenario {
 
 		runners.values().removeIf(t -> t.isOfflined());
 
+	}*/
+
+	public static ScenarioConductor get(PlayerEntity playerEntity) {
+		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
+		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));
 	}
 }

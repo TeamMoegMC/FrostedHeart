@@ -37,7 +37,10 @@ import net.minecraft.entity.passive.horse.AbstractHorseEntity;
 import net.minecraft.entity.passive.horse.LlamaEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-
+/**
+ * Add more breeding cooldown and set breading item to tag items
+ * For removal in 1.20+
+ * */
 @Mixin({PigEntity.class, ChickenEntity.class, FoxEntity.class, RabbitEntity.class, CatEntity.class, LlamaEntity.class, AbstractHorseEntity.class})
 public abstract class BreedableEntityMixin extends AnimalEntity {
 

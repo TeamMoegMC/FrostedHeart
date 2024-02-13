@@ -59,7 +59,10 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.items.ItemHandlerHelper;
-
+/**
+ * Add time limit for campfire
+ * 
+ * */
 @Mixin(CampfireBlock.class)
 public abstract class CampfireBlockMixin extends ContainerBlock {
     @Shadow

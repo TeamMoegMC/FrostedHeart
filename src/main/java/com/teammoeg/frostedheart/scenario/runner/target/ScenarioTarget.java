@@ -21,13 +21,13 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioConductor;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 
 public abstract class ScenarioTarget implements IScenarioTarget{
 	private final String name;
 	private transient Scenario sp;
-	private transient IScenarioConductor cd;
-	public ScenarioTarget(IScenarioConductor cdr,String name) {
+	private transient IScenarioThread cd;
+	public ScenarioTarget(IScenarioThread cdr,String name) {
 		super();
 		this.name=name;
 		cd=cdr;
@@ -45,7 +45,7 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 		return sp;
 	}
 	@Override
-	public void apply(IScenarioConductor conductor) {
+	public void apply(IScenarioThread conductor) {
 		if(name!=null&&!getScenario().equals(conductor.getScenario())) {
 			conductor.setScenario(getScenario());
 			conductor.setNodeNum(0);

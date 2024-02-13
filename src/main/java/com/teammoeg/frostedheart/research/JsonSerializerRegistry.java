@@ -32,7 +32,7 @@ public class JsonSerializerRegistry<U> extends PacketBufferSerializerRegistry<U,
 
 	@Override
 	protected void writeType(Pair<Integer, String> type, JsonObject obj) {
-		obj.add("type", obj);
+		obj.addProperty("type", type.getSecond());
 	}
 
 	@Override

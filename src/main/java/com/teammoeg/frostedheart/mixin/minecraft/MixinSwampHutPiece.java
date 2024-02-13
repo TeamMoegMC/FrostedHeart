@@ -31,7 +31,9 @@ import net.minecraft.world.ISeedReader;
 import net.minecraft.world.gen.feature.structure.IStructurePieceType;
 import net.minecraft.world.gen.feature.structure.ScatteredStructurePiece;
 import net.minecraft.world.gen.feature.structure.SwampHutPiece;
-
+/**
+ * Remove crafting table in swamp hut
+ * */
 @Mixin(SwampHutPiece.class)
 public abstract class MixinSwampHutPiece extends ScatteredStructurePiece {
 
