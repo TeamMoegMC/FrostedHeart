@@ -1,0 +1,10 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "frostedheart:models/block/fountain/base"
+  },
+  "loader": "forge:obj",
+  "model": "frostedheart:models/block/fountain/base.obj",
+  "detectCullableFaces": false,
+  "flip-v": true
+}

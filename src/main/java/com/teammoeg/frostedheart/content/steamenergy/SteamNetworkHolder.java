@@ -54,7 +54,7 @@ public class SteamNetworkHolder {
     }
 
     /**
-     * Recive Connection.
+     * Receive Connection.
      *
      * @param sen  the network<br>
      * @param dist the distance to master<br>
@@ -123,7 +123,7 @@ public class SteamNetworkHolder {
     }
 
     /**
-     * Recive connection from specific direction.<br>
+     * Receive connection from specific direction.<br>
      *
      * @param w    the world of reciver<br>
      * @param pos  the position of reciver<br>
@@ -131,7 +131,7 @@ public class SteamNetworkHolder {
      * @param dist the distance<br>
      * @return true, if connected
      */
-    public boolean reciveConnection(World w, BlockPos pos, Direction from, int dist) {
+    public boolean receiveConnection(World w, BlockPos pos, Direction from, int dist) {
         TileEntity te = Utils.getExistingTileEntity(w, pos.offset(from));
         if (te instanceof EnergyNetworkProvider) {
             this.connect(((EnergyNetworkProvider) te).getNetwork(), dist);
