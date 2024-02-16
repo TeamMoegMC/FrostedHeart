@@ -41,9 +41,7 @@ public class FHGuiHelper {
     // hack to access render state protected members
     public static class RenderStateAccess extends RenderState {
         public static RenderType.State getLineState(double width) {
-            return RenderType.State.getBuilder().line(new RenderState.LineState(OptionalDouble.of(width)))// this is
-                    // line
-                    // width
+            return RenderType.State.getBuilder().line(new RenderState.LineState(OptionalDouble.of(width)))// width
                     .layer(VIEW_OFFSET_Z_LAYERING).target(MAIN_TARGET).writeMask(COLOR_DEPTH_WRITE).build(true);
         }
 

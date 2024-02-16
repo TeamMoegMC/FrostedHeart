@@ -21,19 +21,18 @@ package com.teammoeg.frostedheart.climate.data;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 
-public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipment {
+public class ArmorTempData extends JsonDataHolder {
 
     public ArmorTempData(JsonObject data) {
         super(data);
     }
 
-    @Override
+  /*  @Override
     public float getFactor(ServerPlayerEntity pe, ItemStack stack) {
         float base = this.getFloatOrDefault("factor", 0F);
         if (pe == null) return base;
@@ -61,5 +60,5 @@ public class ArmorTempData extends JsonDataHolder implements IWarmKeepingEquipme
 
         }
         return base;
-    }
+    }*/
 }

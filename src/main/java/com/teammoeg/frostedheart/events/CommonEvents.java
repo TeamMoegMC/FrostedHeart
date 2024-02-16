@@ -163,7 +163,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
-            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+            EnergyCore.applySleep((ServerPlayerEntity) event.getPlayer());
         }
     }
     @SubscribeEvent

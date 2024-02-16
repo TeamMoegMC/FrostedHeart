@@ -28,7 +28,6 @@ import java.util.Map.Entry;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.block.Block;
@@ -122,7 +121,7 @@ public class FHDataManager {
 
     }
 
-    public static IWarmKeepingEquipment getArmor(ItemStack is) {
+    /*public static IWarmKeepingEquipment getArmor(ItemStack is) {
         //System.out.println(is.getItem().getRegistryName());
         return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(RegistryUtils.getRegistryName(is.getItem()));
     }
@@ -130,7 +129,7 @@ public class FHDataManager {
     public static IWarmKeepingEquipment getArmor(String is) {
         //System.out.println(is.getItem().getRegistryName());
         return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(new ResourceLocation(is));
-    }
+    }*/
 
     public static Float getBiomeTemp(Biome b) {
         if (b == null) return 0f;

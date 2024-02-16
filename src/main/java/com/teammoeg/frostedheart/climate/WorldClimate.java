@@ -719,9 +719,11 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     }
 
     public float getTemp() {
+    	if(daycache==null)return 0;
         return daycache.getTemp(hourInDay);
     }
     public int getWind() {
+    	if(daycache==null)return 0;
         return daycache.getWind(hourInDay);
     }
     private int getTemperatureLevel(float temp) {

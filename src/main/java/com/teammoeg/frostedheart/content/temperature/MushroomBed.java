@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.climate.player.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 
 import net.minecraft.client.util.ITooltipFlag;
@@ -62,16 +63,6 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
             list.add(GuiUtils.translateTooltip("mushroom").mergeStyle(TextFormatting.GRAY));
     }
 
-    @Override
-    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-        if (stack.getDamage() > 0) {
-            if (bodyTemp > -1) {
-                this.setDamage(stack, this.getDamage(stack) - 1);
-                return this.getMax(stack);
-            }
-        }
-        return 0;
-    }
 
 
     @Override
@@ -83,12 +74,6 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
             items.add(is);
         }
     }
-
-    @Override
-    public float getMax(ItemStack stack) {
-        return stack.getDamage() > 0 ? 0.001F : 0;
-    }
-
     @Override
     public UseAction getUseAction(ItemStack stack) {
         return UseAction.EAT;
@@ -132,5 +117,18 @@ public class MushroomBed extends FHBaseItem implements IHeatingEquipment {
         }
         return stack;
     }
+
+	@Override
+	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+		if(slot==null)
+			return 0.5f;
+        if (stack.getDamage() > 0) {
+            if (bodyTemp > -1) {
+                this.setDamage(stack, this.getDamage(stack) - 1);
+                return 0.5f;
+            }
+        }
+		return 0;
+	}
 
 }

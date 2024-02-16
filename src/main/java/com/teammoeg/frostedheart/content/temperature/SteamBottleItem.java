@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.climate.player.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 
@@ -60,11 +61,6 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
     }
 
     @Override
-    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-        return this.extractEnergy(stack, 3, false) / 120;
-    }
-
-    @Override
     public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
         if (this.isInGroup(group)) {
             ItemStack is = new ItemStack(this);
@@ -79,11 +75,6 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
         return this.getEnergyStored(is) / 120;
     }
 
-
-    @Override
-    public float getMax(ItemStack stack) {
-        return 0.025F;
-    }
 
     @Override
     public int getMaxEnergyStored(ItemStack container) {
@@ -154,5 +145,13 @@ public class SteamBottleItem extends FHBaseItem implements IHeatingEquipment, IT
 
         return stack;
     }
+
+	@Override
+	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp,
+			float bodyTemp) {
+		if(slot==null)return 12.5f;
+		
+		return this.extractEnergy(stack, 3, false) / 0.24f;
+	}
 
 }
