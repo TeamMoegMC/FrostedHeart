@@ -15,6 +15,7 @@ import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonState;
+import blusunrize.immersiveengineering.client.utils.GuiHelper;
 import blusunrize.immersiveengineering.common.network.MessageTileSync;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.entity.player.PlayerInventory;
@@ -90,7 +91,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		int ininvarry=in.getY()+6;
 		int outinvarry=out.getY()+6;
 		int ininvarrx=in.getX()+18;
-		int outinvarrx=100;
+		int outinvarrx=98;
 		int inarryl=76-ininvarrx;
 		int outarryl=out.getX()-2-outinvarrx;
 		//arrows
@@ -99,7 +100,12 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//slot background
 		this.blit(matrixStack,in.getX()-2, in.getY()-2, 20, 20, 404, 128);
 		this.blit(matrixStack,out.getX()-2, out.getY()-2, 20, 20, 424, 128);
-
+		if(container.getTank()!=null) {
+			this.blit(matrixStack,133,55, 20, 64, 384, 128);
+			this.blit(matrixStack,98, 84, 34, 4, 444, 128);
+			GuiHelper.handleGuiTank(matrixStack, container.getTank(), guiLeft + 135, guiTop + 57, 16, 60, 384, 192, 16, 60, x, y, TEXTURE, null);
+			ClientUtils.bindTexture(TEXTURE);
+		}
 		
 
 		//upgrade arrow
@@ -134,7 +140,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
 		//titles
 	    this.font.drawText(matrixStack, this.title, this.titleX, this.titleY, 0xff404040);
-	    this.font.drawText(matrixStack, this.playerInventory.getDisplayName(), this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
+	    //this.font.drawText(matrixStack, this.playerInventory.getDisplayName(), this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
 	    //temp level
 	    drawCenterText(matrixStack,88,40, TemperatureDisplayHelper.toTemperatureDeltaInt( tile.getActualTemp())+"",0xffffffff);
 	    //range level
@@ -177,7 +183,10 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
     public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
         super.render(transform, mouseX, mouseY, partial);
         List<ITextComponent> tooltip = new ArrayList<>();
-
+        if(container.getTank()!=null) {
+        	
+        	GuiHelper.handleGuiTank(transform, container.getTank(), guiLeft + 135, guiTop + 57, 16, 60, 384, 192, 16, 60, mouseX, mouseY, TEXTURE, tooltip);
+        }
         if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
             if (tile.isWorking()) {
                 tooltip.add(GuiUtils.translateGui("generator.mode.off"));

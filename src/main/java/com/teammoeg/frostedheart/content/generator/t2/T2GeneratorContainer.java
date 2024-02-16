@@ -19,37 +19,39 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
-import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
-import blusunrize.immersiveengineering.common.gui.IESlot;
+import com.teammoeg.frostedheart.client.util.Point;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorContainer;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.IIntArray;
+import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorContainer extends IEBaseContainer<T2GeneratorTileEntity> {
-    public IIntArray data;
+public class T2GeneratorContainer extends MasterGeneratorContainer<T2GeneratorTileEntity> {
 
-    public T2GeneratorContainer(int id, PlayerInventory inventoryPlayer, T2GeneratorTileEntity tile) {
-        super(tile, id);
+	public T2GeneratorContainer(int id, PlayerInventory inventoryPlayer, T2GeneratorTileEntity tile) {
+		super(id, inventoryPlayer, tile);
+	}
+    static final Point pin=new Point(29,63);
+    static final Point pout=new Point(112,55);
+	@Override
+	public Point getSlotIn() {
+		return pin;
+	}
 
-        this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
-            @Override
-            public boolean isItemValid(ItemStack itemStack) {
-            	return tile.isStackValid(0, itemStack);
-            }
-        });
+	@Override
+	public Point getSlotOut() {
+		return pout;
+	}
 
-        this.addSlot(new IESlot.Output(this, this.inv, 1, 80, 51));
+	@Override
+	public int getTier() {
+		return 2;
+	}
 
-        slotCount = 2;
+	@Override
+	public FluidTank getTank() {
+		return super.tile.tank;
+	}
 
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
-        data = tile.guiData;
-        trackIntArray(data);
-    }
+
+
 }
 
