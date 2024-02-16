@@ -1,7 +1,9 @@
 package com.teammoeg.frostedheart.content.generator;
 
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -171,6 +173,38 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 
         
     }
+    @Override
+    public void render(MatrixStack transform, int mouseX, int mouseY, float partial) {
+        super.render(transform, mouseX, mouseY, partial);
+        List<ITextComponent> tooltip = new ArrayList<>();
 
+        if (isMouseIn(mouseX, mouseY, 5, 24, 11, 22)) {
+            if (tile.isWorking()) {
+                tooltip.add(GuiUtils.translateGui("generator.mode.off"));
+            } else {
+                tooltip.add(GuiUtils.translateGui("generator.mode.on"));
+            }
+        }
+
+        if (isMouseIn(mouseX, mouseY, 160, 24, 11, 22)) {
+            if (tile.isOverdrive()) {
+                tooltip.add(GuiUtils.translateGui("generator.overdrive.off"));
+            } else {
+                tooltip.add(GuiUtils.translateGui("generator.overdrive.on"));
+            }
+        }
+
+        if (isMouseIn(mouseX, mouseY, 63, 0, 50, 50)) {
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TemperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp())));
+        }
+
+        if (isMouseIn(mouseX, mouseY, 18, 18, 32, 32)) {
+            tooltip.add(GuiUtils.translateGui("generator.range.level").appendString(Integer.toString(tile.getActualRange())));
+        }
+
+        if (!tooltip.isEmpty()) {
+            net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(transform, tooltip, mouseX, mouseY, width, height, -1, font);
+        }
+    }
 
 }
