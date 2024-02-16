@@ -90,8 +90,8 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
 			}
 			index-=base.size();
 			switch(index) {
-			case 0:setTemperatureLevel(value/100f);
-			case 1:setRangeLevel(value/100f);
+			case 0:setTemperatureLevel(value/100f);break;
+			case 1:setRangeLevel(value/100f);break;
 			}
 		}
 
@@ -236,9 +236,6 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             this.markContainingBlockForUpdate(null);
         }
 
-    }
-    public int getHeated() {
-        return getData().map(t->t.heated).orElse(0);
     }
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {

@@ -215,6 +215,7 @@ public class GeneratorData {
         }
         TLevel=(Math.min(heated / 100F,this.getMaxTemperatureLevel()));
         RLevel=(Math.min(heated / 100F,this.getMaxRangeLevel()));
+
     }
     public boolean tickFuelProcess(World w) {
         if (!isWorking)

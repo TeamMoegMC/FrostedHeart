@@ -103,7 +103,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		if(container.getTank()!=null) {
 			this.blit(matrixStack,133,55, 20, 64, 384, 128);
 			this.blit(matrixStack,98, 84, 34, 4, 444, 128);
-			GuiHelper.handleGuiTank(matrixStack, container.getTank(), guiLeft + 135, guiTop + 57, 16, 60, 384, 192, 16, 60, x, y, TEXTURE, null);
+			GuiHelper.handleGuiTank(matrixStack, container.getTank(), guiLeft + 135, guiTop + 57, 16, 60, 0, 0, 0, 0, x, y, TEXTURE, null);
 			ClientUtils.bindTexture(TEXTURE);
 		}
 		
