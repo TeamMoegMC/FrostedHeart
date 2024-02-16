@@ -19,6 +19,9 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
+import com.teammoeg.frostedheart.client.util.Point;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorContainer;
+
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;
 import net.minecraft.entity.player.PlayerInventory;
@@ -26,30 +29,26 @@ import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIntArray;
 
-public class T1GeneratorContainer extends IEBaseContainer<T1GeneratorTileEntity> {
-    public IIntArray data;
-
+public class T1GeneratorContainer extends MasterGeneratorContainer<T1GeneratorTileEntity> {
     public T1GeneratorContainer(int id, PlayerInventory inventoryPlayer, T1GeneratorTileEntity tile) {
-        super(tile, id);
+		super(id, inventoryPlayer, tile);
+	}
+    static final Point pin=new Point(46,72);
+    static final Point pout=new Point(114,72);
 
-        this.addSlot(new IESlot(this, this.inv, 0, 80, 12) {
-            @Override
-            public boolean isItemValid(ItemStack itemStack) {
-                return tile.isStackValid(0, itemStack);
-            }
-        });
+	@Override
+	public Point getSlotIn() {
+		return pin;
+	}
 
-        this.addSlot(new IESlot.Output(this, this.inv, 1, 80, 51));
+	@Override
+	public Point getSlotOut() {
+		return pout;
+	}
 
-        slotCount = 2;
-
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 9; j++)
-                addSlot(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-        for (int i = 0; i < 9; i++)
-            addSlot(new Slot(inventoryPlayer, i, 8 + i * 18, 142));
-        data = tile.guiData;
-        trackIntArray(data);
-    }
+	@Override
+	public int getTier() {
+		return 1;
+	}
 }
 
