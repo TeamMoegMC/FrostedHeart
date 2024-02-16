@@ -31,7 +31,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 /**
  * A Helper for showing temperature in ui and message as well as convert them accordingly to client unit setting
  */
-public class TmeperatureDisplayHelper {
+public class TemperatureDisplayHelper {
 
     public static void sendTemperature(Collection<ServerPlayerEntity> pe, String format, float... temps) {
         FHTemperatureDisplayPacket k = new FHTemperatureDisplayPacket(format, temps);
@@ -86,7 +86,18 @@ public class TmeperatureDisplayHelper {
             return ((int) (celsus * 9 / 5)) + " °F";
         return ((int) celsus) + " °C";
     }
-
+    public static String toTemperatureDeltaIntStringNoSpace(float celsus) {
+        //celsus=Math.max(-273.15f, celsus);
+        if (FHConfig.CLIENT.useFahrenheit.get())
+            return ((int) (celsus * 9 / 5)) + "F";
+        return ((int) celsus) + "C";
+    }
+    public static int toTemperatureDeltaInt(float celsus) {
+        //celsus=Math.max(-273.15f, celsus);
+        if (FHConfig.CLIENT.useFahrenheit.get())
+            return ((int) (celsus * 9 / 5)) ;
+        return ((int) celsus) ;
+    }
     public static String toTemperatureFloatString(float celsus) {
         celsus = Math.max(-273.15f, celsus);
         if (FHConfig.CLIENT.useFahrenheit.get())

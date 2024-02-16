@@ -62,7 +62,7 @@ import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
 import com.teammoeg.frostedheart.scenario.client.dialog.HUDDialog;
 import com.teammoeg.frostedheart.scenario.network.ClientLinkClickedPacket;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 import com.teammoeg.frostedheart.util.version.FHVersion;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
@@ -243,10 +243,10 @@ public class ClientEvents {
             if (temp != 0)
                 if (temp > 0)
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("block_temp", TmeperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            .add(GuiUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("block_temp", TmeperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(GuiUtils.translateTooltip("block_temp", TemperatureDisplayHelper.toTemperatureFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
         if (itf != null) {
             float temp = itf.getHeat(stack,
@@ -255,10 +255,10 @@ public class ClientEvents {
             if (temp != 0)
                 if (temp > 0) 
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("food_temp", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            .add(GuiUtils.translateTooltip("food_temp", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("food_temp", TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(GuiUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
         if (iwe != null) {
             float temp = iwe.getFactor(null, stack);
@@ -273,10 +273,10 @@ public class ClientEvents {
             if (temp != 0)
                 if (temp > 0)
                     event.getToolTip().add(
-                            GuiUtils.translateTooltip("armor_heating", "+" + TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
+                            GuiUtils.translateTooltip("armor_heating", "+" + TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.GOLD));
                 else
                     event.getToolTip()
-                            .add(GuiUtils.translateTooltip("armor_heating", TmeperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
+                            .add(GuiUtils.translateTooltip("armor_heating", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
     }
 

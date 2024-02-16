@@ -27,7 +27,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
 import blusunrize.immersiveengineering.client.gui.elements.GuiButtonBoolean;
@@ -144,7 +144,7 @@ public class T2GeneratorScreen extends IEContainerScreen<T2GeneratorContainer> {
 
         if (isMouseIn(mouseX, mouseY, 12, 13, 2, 54)) {
             //tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(GuiUtils.toTemperatureDeltaIntString(tile.getIsActive()?tile.getActualTemp():0)));
-            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TmeperatureDisplayHelper.toTemperatureDeltaIntString(tile.getActualTemp())));
+            tooltip.add(GuiUtils.translateGui("generator.temperature.level").appendString(TemperatureDisplayHelper.toTemperatureDeltaIntString(tile.getActualTemp())));
         }
 
         if (isMouseIn(mouseX, mouseY, 161, 13, 2, 54)) {

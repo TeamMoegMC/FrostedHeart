@@ -7,7 +7,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.client.util.Point;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.gui.IEContainerScreen;
@@ -61,7 +61,6 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		super(inventorySlotsIn, inv, title);
 		tile=inventorySlotsIn.tile;
 		this.ySize=222;
-        this.playerInventoryTitleY+=10;
 		
 	}
 	public void blit(MatrixStack matrixStack, int x, int y,int w,int h, int u, int v, int uWidth, int vHeight) {
@@ -94,7 +93,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		int outarryl=out.getX()-2-outinvarrx;
 		//arrows
 		this.blit(matrixStack, ininvarrx,ininvarry, inarryl, 4, 511-inarryl, 132);
-		this.blit(matrixStack, outinvarrx,outinvarry, outarryl, 4,444, 128);
+		this.blit(matrixStack, outinvarrx,outinvarry, outarryl, 4,511-outarryl,132);
 		//slot background
 		this.blit(matrixStack,in.getX()-2, in.getY()-2, 20, 20, 404, 128);
 		this.blit(matrixStack,out.getX()-2, out.getY()-2, 20, 20, 424, 128);
@@ -133,13 +132,13 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
 		//titles
 	    this.font.drawText(matrixStack, this.title, this.titleX, this.titleY, 0xff404040);
-	    this.font.drawText(matrixStack, this.playerInventory.getDisplayName(), this.playerInventoryTitleX, this.playerInventoryTitleY, 0xff404040);
+	    this.font.drawText(matrixStack, this.playerInventory.getDisplayName(), this.playerInventoryTitleX, this.playerInventoryTitleY+5, 0xff404040);
 	    //temp level
-	    drawCenterText(matrixStack,88,40, TmeperatureDisplayHelper.toTemperatureDeltaIntString( tile.getActualTemp()),0xffffffff);
+	    drawCenterText(matrixStack,88,40, TemperatureDisplayHelper.toTemperatureDeltaInt( tile.getActualTemp())+"",0xffffffff);
 	    //range level
-	    drawCenterText(matrixStack,35,45, tile.getActualRange()+"bl",0xffffffff);
+	    drawCenterText(matrixStack,35,45, tile.getActualRange()+"",0xffffffff);
 	    //overdrive level
-	    drawCenterText(matrixStack,141,45, 0+"%",0xffffffff);
+	    drawCenterText(matrixStack,141,45, 0+"",0xffffffff);
 	}
     @Override
     public void init() {

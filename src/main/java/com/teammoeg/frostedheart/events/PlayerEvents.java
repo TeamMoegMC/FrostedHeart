@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
-import com.teammoeg.frostedheart.util.TmeperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
 
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntityType;
@@ -122,7 +122,7 @@ public class PlayerEvents {
                     float nightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 12) * 10) / 10.0F;
                     float midnightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 0, 18) * 10) / 10.0F;
                     float tomorrowMorningTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10) / 10.0F;
-                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
+                    TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.morning", false, morningTemp-10, noonTemp-10,
                             nightTemp-10, midnightTemp-10, tomorrowMorningTemp-10);
                     boolean snow = morningTemp < WorldTemperature.SNOW_TEMPERATURE
                             || noonTemp < WorldTemperature.SNOW_TEMPERATURE || nightTemp < WorldTemperature.SNOW_TEMPERATURE
@@ -152,7 +152,7 @@ public class PlayerEvents {
                             / 10.0F;
                     float tomorrowNightTemp = Math.round(WorldClimate.getFutureTemp(serverPlayer.world, 1, 0) * 10)
                             / 10.0F;
-                    TmeperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
+                    TemperatureDisplayHelper.sendTemperatureStatus(serverPlayer, "forecast.night", false, nightTemp-10, midnightTemp-10,
                             tomorrowMorningTemp-10, tomorrowNoonTemp-10, tomorrowNightTemp-10);
                     boolean snow = nightTemp < WorldTemperature.SNOW_TEMPERATURE
                             || midnightTemp < WorldTemperature.SNOW_TEMPERATURE

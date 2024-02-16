@@ -28,6 +28,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIntArray;
+import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T1GeneratorContainer extends MasterGeneratorContainer<T1GeneratorTileEntity> {
     public T1GeneratorContainer(int id, PlayerInventory inventoryPlayer, T1GeneratorTileEntity tile) {
@@ -49,6 +50,11 @@ public class T1GeneratorContainer extends MasterGeneratorContainer<T1GeneratorTi
 	@Override
 	public int getTier() {
 		return 1;
+	}
+
+	@Override
+	public FluidTank getTank() {
+		return null;
 	}
 }
 

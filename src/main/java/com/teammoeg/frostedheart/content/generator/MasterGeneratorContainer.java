@@ -27,6 +27,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIntArray;
+import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEntity<T>> extends IEBaseContainer<T> {
     public IIntArray data;
@@ -56,5 +57,6 @@ public abstract class MasterGeneratorContainer<T extends MasterGeneratorTileEnti
     public abstract Point getSlotIn();
     public abstract Point getSlotOut();
     public abstract int getTier();
+    public abstract FluidTank getTank();
 }
 
