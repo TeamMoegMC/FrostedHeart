@@ -31,7 +31,15 @@ public class ArmorTempData extends JsonDataHolder {
     public ArmorTempData(JsonObject data) {
         super(data);
     }
-
+    public float getInsulation() {
+    	return this.getFloatOrDefault("insulation", 0F);
+    }
+    public float getHeatProof() {
+    	return this.getFloatOrDefault("heat_proof", 0F);
+    }
+    public float getColdProof() {
+    	return this.getFloatOrDefault("wind_proof", 0F);
+    }
   /*  @Override
     public float getFactor(ServerPlayerEntity pe, ItemStack stack) {
         float base = this.getFloatOrDefault("factor", 0F);

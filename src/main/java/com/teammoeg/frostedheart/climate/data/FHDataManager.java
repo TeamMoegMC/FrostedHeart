@@ -121,15 +121,15 @@ public class FHDataManager {
 
     }
 
-    /*public static IWarmKeepingEquipment getArmor(ItemStack is) {
+    public static ArmorTempData getArmor(ItemStack is) {
         //System.out.println(is.getItem().getRegistryName());
         return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(RegistryUtils.getRegistryName(is.getItem()));
     }
 
-    public static IWarmKeepingEquipment getArmor(String is) {
+    public static ArmorTempData getArmor(String is) {
         //System.out.println(is.getItem().getRegistryName());
         return FHDataManager.<ArmorTempData>get(FHDataType.Armor).get(new ResourceLocation(is));
-    }*/
+    }
 
     public static Float getBiomeTemp(Biome b) {
         if (b == null) return 0f;
