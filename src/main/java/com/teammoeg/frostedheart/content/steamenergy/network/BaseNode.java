@@ -26,8 +26,6 @@ public class BaseNode {
 		network.tiles.add(route.getLast());
 	}
 	public void remove() {
-		for(BlockPos bp:route)
-			network.
 	}
 	public void breakAt(BlockPos pos) {
 		ArrayList<BlockPos> fore=new ArrayList<>(route.size());
