@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.teammoeg.frostedheart.content.steamenergy.network.SteamEnergyNetwork;
+
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;

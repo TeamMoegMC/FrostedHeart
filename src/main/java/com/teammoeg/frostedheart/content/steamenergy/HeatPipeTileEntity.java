@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.content.steamenergy.network.SteamEnergyNetwork;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;

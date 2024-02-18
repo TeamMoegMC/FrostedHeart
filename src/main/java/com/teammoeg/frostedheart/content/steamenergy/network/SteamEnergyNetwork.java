@@ -17,14 +17,29 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy.network;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.teammoeg.frostedheart.content.steamenergy.HeatController;
 
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 
 public class SteamEnergyNetwork {
     private HeatController provider;
     private boolean isValid = true;
-
+    ArrayList<BlockPos> tiles=new ArrayList<>();
+    BranchNode root;
+    Map<BlockPos,BaseNode> nodesByPos=new HashMap<>();
+    public void setPosNode(BlockPos pos,BaseNode node) {
+    	nodesByPos.put(pos, node);
+    }
+    public void removePosNode(BlockPos pos) {
+    	nodesByPos.remove(pos);
+    }
     public SteamEnergyNetwork(HeatController provider) {
         this.provider = provider;
     }

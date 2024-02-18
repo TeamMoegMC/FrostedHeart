@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.content.steamenergy.network.SteamEnergyNetwork;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.nbt.CompoundNBT;

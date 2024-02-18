@@ -203,15 +203,12 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
     	state=state.with(CASING, this.shouldDrawCasing(world, pos, state));
         for (Direction d : Direction.values())
             if (d != ignore) {
-                state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d))
-                		.with(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d))
-                		;
+                state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
                 
             }
         for (Direction d : Direction.values())
             if (d != ignore) {
-                state = state.with(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d))
-                		;
+                state = state.with(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d));
                 
             }
         return state;

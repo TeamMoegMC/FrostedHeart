@@ -19,6 +19,8 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import com.teammoeg.frostedheart.content.steamenergy.network.SteamEnergyNetwork;
+
 public interface EnergyNetworkProvider {
     SteamEnergyNetwork getNetwork();
 }
