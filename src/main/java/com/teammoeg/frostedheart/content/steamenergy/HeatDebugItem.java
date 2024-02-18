@@ -64,13 +64,8 @@ public class HeatDebugItem extends Item {
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
             BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
             TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
-            if (te instanceof HeatController) {
-                playerIn.sendMessage(new StringTextComponent("HeatProvider network=" + ((HeatController) te).getNetwork()), playerIn.getUniqueID());
-            } else if (te instanceof EnergyNetworkProvider) {
+            if (te instanceof EnergyNetworkProvider) {
                 playerIn.sendMessage(new StringTextComponent("EnergyNetworkProvider network=" + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
-            } else if (te instanceof INetworkConsumer) {
-                if (((INetworkConsumer) te).getHolder() != null)
-                    playerIn.sendMessage(new StringTextComponent("EnergyNetworkConsumer data=" + ((INetworkConsumer) te).getHolder()), playerIn.getUniqueID());
             }
             return ActionResult.resultSuccess(itemstack);
         }

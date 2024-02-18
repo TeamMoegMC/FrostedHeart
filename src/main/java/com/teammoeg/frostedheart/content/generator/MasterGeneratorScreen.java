@@ -72,6 +72,9 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 	public void blit(MatrixStack matrixStack, int x, int y,int w,int h, int u, int v) {
 		blit(matrixStack,x,y, w, h, u, v, w, h);
 	}
+	public MasterGeneratorContainer<T> getContainer() {
+		return container;
+	}
 	@Override
 	protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
 		ClientUtils.bindTexture(TEXTURE);

@@ -20,10 +20,9 @@
 package com.teammoeg.frostedheart.content.incubator;
 
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -42,27 +41,21 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
     }
 
     @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
+    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
+        return network.reciveConnection(world, pos,manager, to, dist);
     }
 
     @Override
     protected boolean fetchFuel() {
 
 
-        if (network.tryDrainHeat(10)) {
+        if (network.tryDrainHeat(5)) {
             fuel = fuelMax = 400;
             return true;
         }
 
         return false;
     }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
-    }
-
     @Override
     protected float getMaxEfficiency() {
         return 2f;
@@ -84,11 +77,6 @@ public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INet
 
     @Override
     public void tick() {
-
-        if (network.tick()) {
-            this.markDirty();
-            this.markContainingBlockForUpdate(null);
-        }
         super.tick();
 
     }

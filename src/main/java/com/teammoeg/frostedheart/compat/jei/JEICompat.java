@@ -21,6 +21,8 @@ package com.teammoeg.frostedheart.compat.jei;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +39,7 @@ import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.compat.jei.category.CampfireDefrostCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCategory;
 import com.teammoeg.frostedheart.compat.jei.category.ChargerCookingCategory;
@@ -52,13 +55,12 @@ import com.teammoeg.frostedheart.compat.jei.extension.FuelingExtension;
 import com.teammoeg.frostedheart.compat.jei.extension.InnerExtension;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
-import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorScreen;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorScreen;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorContainer;
+import com.teammoeg.frostedheart.content.generator.MasterGeneratorScreen;
 import com.teammoeg.frostedheart.content.incubator.IncubateRecipe;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT1Screen;
 import com.teammoeg.frostedheart.content.incubator.IncubatorT2Screen;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
-import com.teammoeg.frostedheart.content.recipes.DefrostRecipe;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
 import com.teammoeg.frostedheart.content.recipes.ModifyDamageRecipe;
 import com.teammoeg.frostedheart.content.recipes.SmokingDefrostRecipe;
@@ -73,6 +75,8 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaRecipeCategoryUid;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.handlers.IGuiClickableArea;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocus.Mode;
 import mezz.jei.api.recipe.IRecipeManager;
@@ -267,9 +271,26 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registry) {
-        registry.addRecipeClickArea(T1GeneratorScreen.class, 84, 35, 9, 12, GeneratorFuelCategory.UID);
-        registry.addRecipeClickArea(T2GeneratorScreen.class, 84, 35, 9, 12, GeneratorFuelCategory.UID,
-                GeneratorSteamCategory.UID);
+        registry.addGuiContainerHandler(MasterGeneratorScreen.class, new IGuiContainerHandler<MasterGeneratorScreen>() {
+			@Override
+			public Collection<IGuiClickableArea> getGuiClickableAreas(MasterGeneratorScreen containerScreen, double mouseX, double mouseY) {
+				List<IGuiClickableArea> col=new ArrayList<>(2);
+				MasterGeneratorContainer container=containerScreen.getContainer();
+				if(container.getTank()!=null)
+					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
+				Point in=container.getSlotIn();
+				Point out=container.getSlotOut();
+				int ininvarry=in.getY()+6;
+				int outinvarry=out.getY()+6;
+				int ininvarrx=in.getX()+18;
+				int outinvarrx=98;
+				int inarryl=76-ininvarrx;
+				int outarryl=out.getX()-2-outinvarrx;
+				col.add(IGuiClickableArea.createBasic(ininvarrx,ininvarry, inarryl, 4, GeneratorSteamCategory.UID));
+				col.add(IGuiClickableArea.createBasic(outinvarrx,outinvarry, outarryl, 4, GeneratorSteamCategory.UID));
+				return col;
+			}
+		});
         registry.addRecipeClickArea(IncubatorT1Screen.class, 80, 28, 32, 29, IncubatorCategory.UID);
         registry.addRecipeClickArea(IncubatorT2Screen.class, 107, 28, 14, 29, IncubatorCategory.UID);
     }

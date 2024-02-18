@@ -20,8 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.steamenergy.network.SteamEnergyNetwork;
-
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -29,10 +27,9 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatController, INetworkConsumer, ITickableTileEntity {
-    SteamEnergyNetwork network = new SteamEnergyNetwork(this);
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements INetworkConsumer, ITickableTileEntity {
 
-    HeatProviderManager manager = new HeatProviderManager(this, c -> {
+    HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
         for (Direction d : Direction.values()) {
             c.accept(pos.offset(d), d.getOpposite());
         }
@@ -47,44 +44,8 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
     }
 
     @Override
-    public boolean connect(Direction to, int distance) {
+    public boolean connect(HeatEnergyNetwork manager,Direction to, int distance) {
         return false;
-    }
-
-    @Override
-    public float drainHeat(float value) {
-        return value;
-    }
-
-    @Override
-    public float fillHeat(float value) {
-        return value;
-    }
-
-    @Override
-    public TileEntity getEntity() {
-        return this;
-    }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return null;
-    }
-
-    @Override
-    public float getMaxHeat() {
-        return Float.MAX_VALUE;
-    }
-
-    @Override
-    public SteamEnergyNetwork getNetwork() {
-        return network;
-    }
-
-
-    @Override
-    public float getTemperatureLevel() {
-        return this.getBlockState().get(BlockStateProperties.LEVEL_1_8);
     }
 
     @Override
@@ -94,6 +55,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements HeatContr
     @Override
     public void tick() {
         manager.tick();
+        manager.fillHeat(Integer.MAX_VALUE);
     }
 
     @Override

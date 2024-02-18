@@ -19,6 +19,13 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -34,37 +41,72 @@ import net.minecraft.util.math.BlockPos;
  * <p>
  * Integrated manager for heat providers
  */
-public class HeatProviderManager {
+public class HeatEnergyNetwork {
     private int interval = 0;
     private TileEntity cur;
     private Consumer<BiConsumer<BlockPos, Direction>> onConnect;
     private BiConsumer<BlockPos, Direction> connect = (pos, d) -> {
-        TileEntity te = Utils.getExistingTileEntity(cur.getWorld(), pos);
-        if (te instanceof INetworkConsumer)
-            ((INetworkConsumer) te).tryConnectAt(d, 0);
+    	if(cur!=null) {
+	        TileEntity te = Utils.getExistingTileEntity(cur.getWorld(), pos);
+	        if (te instanceof INetworkConsumer)
+	            ((INetworkConsumer) te).tryConnectAt(this,d, 0);
+    	}
     };
-
+    
+    private boolean isValid = true;
+    PriorityQueue<SteamNetworkConsumer> endpoints=new PriorityQueue<>(Comparator.comparingInt(t->t.dist));
+    Map<BlockPos,Integer> propagated=new HashMap<>();
+    public boolean shouldPropagate(BlockPos pos,int dist) {
+    	int odist=propagated.get(pos);
+    	if(odist>dist) {
+    		propagated.put(pos, dist);
+    		return true;
+    	}
+    	return false;
+    }
+    public void addEndpoint(BlockPos pos,SteamNetworkConsumer consumer) {
+    	endpoints.add(consumer);
+    }
     /**
      * Instantiates a new HeatProviderManager.<br>
      *
      * @param cur the current tile entity<br>
      * @param con the function that called when refresh is required. Should provide connect direction and location when called.<br>
      */
-    public HeatProviderManager(TileEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
+    public HeatEnergyNetwork(TileEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
         this.cur = cur;
         this.onConnect = con;
     }
-
+    public void requestUpdate() {
+    	interval=10;
+    }
     /**
      * Tick.
      */
     public void tick() {
-        if (interval > 0)
+        if (interval > 0) {
             interval--;
-        else {
+        }else if(interval==0){
+        	propagated.clear();
+        	endpoints.clear();
             onConnect.accept(connect);
-            interval = 5;
+            interval = -1;
         }
     }
+    public void fillHeat(float value) {
+    	boolean shouldFill=true;
+    	while(shouldFill) {
+    		shouldFill=false;
+	    	for(SteamNetworkConsumer endpoint:endpoints) {
+	    		value=endpoint.fillHeat(value);
+	    		if(value<=0)return;
+	    		shouldFill|=endpoint.canFillHeat();
+	    		
+	    	}
+    	}
+    };
 
+    public void invalidate() {
+        isValid = false;
+    }
 }

@@ -26,10 +26,9 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.ZoneHeatingMultiblockTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
-
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import net.minecraft.entity.player.PlayerEntity;
@@ -44,11 +43,8 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
         INetworkConsumer, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
-    public int process = 0;
-    public int processMax = 0;
-    public float tempLevelLast;
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(3000, 24);
+    SteamNetworkConsumer network = new SteamNetworkConsumer(100, 4);
 
     public RadiatorTileEntity() {
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
@@ -85,8 +81,8 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
 
     @Override
-    public boolean connect(Direction to, int dist) {
-        return network.reciveConnection(world, pos, to, dist);
+    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
+        return network.reciveConnection(world, pos,manager, to, dist);
     }
 
     @Override
@@ -101,22 +97,17 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
 
     @Override
     public int[] getCurrentProcessesMax() {
-        return new int[]{processMax};
+        return new int[]{(int) network.getMaxPower()};
     }
 
     @Override
     public int[] getCurrentProcessesStep() {
-        return new int[]{processMax - process};
+        return new int[]{(int) network.getPower()};
     }
 
     @Override
     public IInteractionObjectIE getGuiMaster() {
         return this;
-    }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
     }
 
     @Override
@@ -143,9 +134,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.readCustomNBT(nbt, descPacket);
         network.load(nbt);
-        process = nbt.getInt("process");
-        processMax = nbt.getInt("processMax");
-        tempLevelLast = nbt.getFloat("temp");
     }
 
     @Override
@@ -156,41 +144,23 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
     @Override
     protected boolean tickFuel() {
-
-        network.tick();
         if (!isWorking()) {
             if (this.getIsActive())
                 this.setAllActive(false);
             return false;
         }
         boolean hasFuel=false;
-        if (process > 0) {
-        	float tlevel;
-            if (network.isValid()) {
-            	tlevel=network.getTemperatureLevel();
-                process -= tlevel;
-                
-            }else {
-            	tlevel = tempLevelLast;
-                process -= tempLevelLast;
-            }
-            hasFuel=true;
-            this.setTemperatureLevel(tlevel);
-            this.setRangeLevel(0.5f);
-        } else if (network.isValid() && network.tryDrainHeat(4 * 160 * network.getTemperatureLevel())) {
-            process = (int) (160 * network.getTemperatureLevel());
-            processMax = (int) (160 * network.getTemperatureLevel());
+        if (network.tryDrainHeat(4)) {
+
             this.setTemperatureLevel(network.getTemperatureLevel());
             this.setRangeLevel(0.5f);
             this.setAllActive(true);
             hasFuel=true;
         } else {
             this.setAllActive(false);
-            hasFuel=false;
             this.setTemperatureLevel(0);
-        }
-        if (network.isValid() && tempLevelLast != network.getTemperatureLevel()) {
-            tempLevelLast = network.getTemperatureLevel();
+            this.setRangeLevel(0);
+            hasFuel=false;
         }
         return hasFuel;
     }
@@ -201,9 +171,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         super.writeCustomNBT(nbt, descPacket);
         network.save(nbt);
-        nbt.putInt("process", process);
-        nbt.putInt("processMax", processMax);
-        nbt.putFloat("temp", tempLevelLast);
     }
 
 

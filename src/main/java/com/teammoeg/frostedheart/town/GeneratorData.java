@@ -103,7 +103,7 @@ public class GeneratorData {
         result.putBoolean("isOverdrive", isOverdrive);
         result.putBoolean("isActive", isActive);
         result.putFloat("steamLevel",steamLevel);
-        result.putFloat("power", power);
+        result.putFloat("powerLevel", power);
         result.putInt("heated", heated);
         result.putFloat("tempLevel", TLevel);
         result.putFloat("rangeLevel",RLevel);
@@ -130,7 +130,7 @@ public class GeneratorData {
         isOverdrive = data.getBoolean("isOverdrive");
         isActive = data.getBoolean("isActive");
         steamLevel = data.getFloat("steamLevel");
-        power = data.getFloat("power");
+        power = data.getFloat("powerLevel");
         heated=data.getInt("heated");
         TLevel=data.getFloat("tempLevel");
         RLevel=data.getFloat("rangeLevel");

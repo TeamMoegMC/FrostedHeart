@@ -20,13 +20,17 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 /**
  * Class SteamNetworkConsumer.
  * <p>
  * Integrated power cache manager for power devices
+ * A device should properly "request" power from the network
  */
-public class SteamNetworkConsumer extends SteamNetworkHolder {
+public class SteamNetworkConsumer{
 
     /**
      * The max power.<br>
@@ -38,26 +42,73 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
      */
     public final float maxIntake;
     private float power;
+    /**
+     * Is constant supply even unload
+     * */
+    public boolean persist;
+    
+    /**
+     * The main network.<br>
+     */
+	HeatEnergyNetwork sen;
+
+    /**
+     * The distance.<br>
+     */
+    protected int dist;
 
     /**
      * Instantiates a new SteamNetworkConsumer.<br>
      *
      * @param maxPower  the max power to store<br>
-     * @param maxIntake the max intake from network to cache<br>
+     * @param maxIntake the heat requested from network<br>
      */
     public SteamNetworkConsumer(float maxPower, float maxIntake) {
         super();
         this.maxPower = maxPower;
         this.maxIntake = maxIntake;
+        if(maxPower<=maxIntake)
+        	maxPower=maxIntake;
     }
-
-    @Override
+    /**
+     * Instantiates a new SteamNetworkConsumer with recommended cache value.<br>
+     *
+     * @param maxIntake the heat requested from network<br>
+     */
+    public SteamNetworkConsumer(float maxIntake) {
+        super();
+        this.maxPower = maxIntake*4;
+        this.maxIntake = maxIntake;
+    }
     public float drainHeat(float val) {
         float drained = Math.min(power, val);
         power -= drained;
         return drained;
     }
-
+    public boolean canFillHeat() {
+    	return power<maxPower;
+    }
+    public float fillHeat(float filled) {
+    	float required=Math.min(maxIntake, maxPower-power);
+    	if(required>0) {
+	    	if(filled>=required) {
+	    		filled-=required;
+	    		power+=required;
+	    		return filled;
+	    	}
+	    	power+=filled;
+	    	return 0;
+    	}
+    	return filled;
+    }
+    public boolean reciveConnection(World w,BlockPos pos,HeatEnergyNetwork manager,Direction d,int dist) {
+    	if(this.dist==0||this.dist>dist) {
+	    	sen=manager;
+	    	this.dist=dist;
+	    	sen.addEndpoint(pos, this);
+	    	return true;
+    	}else return false;
+    }
     /**
      * Get max power.
      *
@@ -75,14 +126,16 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
     public float getPower() {
         return power;
     }
-
+    public int getTemperatureLevel() {
+    	return 1;
+    }
     /**
      * Load.
      *
      * @param nbt the nbt<br>
      */
     public void load(CompoundNBT nbt) {
-        power = nbt.getFloat("power");
+        power = nbt.getFloat("net_power");
     }
 
     /**
@@ -91,7 +144,7 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
      * @param nbt the nbt<br>
      */
     public void save(CompoundNBT nbt) {
-        nbt.putFloat("power", power);
+        nbt.putFloat("net_power", power);
     }
 
     /**
@@ -103,31 +156,7 @@ public class SteamNetworkConsumer extends SteamNetworkHolder {
         this.power = power;
     }
 
-    /**
-     * Tick and absorb power.
-     *
-     * @return atually drained
-     */
-    @Override
-    public boolean tick() {
-        if (isValid()) {
-            super.tick();
-            float actual = super.drainHeat(Math.min(24, Math.min(maxPower - power,Math.max(1,(maxPower - power)*0.8f))));
-            if (actual > 0) {
-                power += actual;
-                return true;
-            }
-        }
-        return false;
-    }
 
-    @Override
-    public String toString() {
-        return "SteamNetworkConsumer [maxPower=" + maxPower + ", maxIntake=" + maxIntake + ", power=" + power + ", sen="
-                + sen + ", dist=" + dist + ", counter=" + counter + "]";
-    }
-
-    @Override
     public boolean tryDrainHeat(float val) {
         if (power >= val) {
             power -= val;

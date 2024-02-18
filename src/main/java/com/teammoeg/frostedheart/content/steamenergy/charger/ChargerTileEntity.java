@@ -26,9 +26,10 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkHolder;
+import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -51,10 +52,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
-    public float power = 0;
 
-    SteamNetworkHolder network = new SteamNetworkHolder();
-
+    SteamNetworkConsumer network = new SteamNetworkConsumer(200,5);
+    float power;
     private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
         int i = MathHelper.floor(experience);
         float f = MathHelper.frac(experience);
@@ -82,9 +82,9 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public boolean connect(Direction to, int dist) {
+    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
 
-        return network.reciveConnection(world, pos, to, dist);
+        return network.reciveConnection(world, pos,manager, to, dist);
     }
 
     public void drawEffect() {
@@ -96,12 +96,6 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     public Direction getDirection() {
         return this.getBlockState().get(BlockStateProperties.FACING);
     }
-
-    @Override
-    public SteamNetworkHolder getHolder() {
-        return network;
-    }
-
 
     public float getMaxPower() {
         return 20000F;
@@ -181,22 +175,20 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     @Override
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
         power = nbt.getFloat("power");
+        network.load(nbt);
     }
 
     @Override
     public void tick() {
         if (!world.isRemote) {
-            if (network.isValid()) {
-                network.tick();
-                float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
-                if (actual > 0) {
-                    power += actual * 0.8;
-                    this.setActive(true);
-                    markDirty();
-                    this.markContainingBlockForUpdate(null);
-                } else
-                    this.setActive(false);
-            } else this.setActive(false);
+            float actual = network.drainHeat(Math.min(200, (getMaxPower() - power) / 0.8F));
+            if (actual > 0) {
+                power += actual * 0.8;
+                this.setActive(true);
+                markDirty();
+                this.markContainingBlockForUpdate(null);
+            } else
+                this.setActive(false);
         } else if (getIsActive()) {
             ClientUtils.spawnSteamParticles(this.getWorld(), pos);
         }
@@ -205,5 +197,6 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         nbt.putFloat("power", power);
+        network.save(nbt);
     }
 }
