@@ -49,7 +49,8 @@ public class ClimateEvent {
         Random random = new Random();
         long peakTime = 0, bottomTime = 0, endTime = 0;
         float peakTemp = 0, bottomTemp = 0;
-        switch (random.nextInt(10)) {
+        int add=(int) Math.max(0,10-(startTime/secondsPerDay-15)/10);
+        switch (random.nextInt(10)+add) {
             case 0:
                 bottomTemp += COLD_PERIOD_BOTTOM_T8;
                 break;
@@ -110,16 +111,18 @@ public class ClimateEvent {
      */
     public static ClimateEvent getClimateEvent(long startTime) {
         Random random = new Random();
-        switch (random.nextInt(10)) {
+        switch (random.nextInt(10)+((startTime/secondsPerDay<=15)?5:0)) {
             case 0:
             case 1:
+            	return getBlizzardClimateEvent(startTime);
             case 2:
-                return getWarmClimateEvent(startTime);
             case 3:
             case 4:
-                return getBlizzardClimateEvent(startTime);
+            case 5:
+            case 6:
+            	return getColdClimateEvent(startTime);
             default:
-                return getColdClimateEvent(startTime);
+            	return getWarmClimateEvent(startTime);
         }
     }
 
