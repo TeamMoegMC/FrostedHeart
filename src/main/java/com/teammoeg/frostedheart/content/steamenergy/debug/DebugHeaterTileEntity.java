@@ -17,53 +17,61 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import com.teammoeg.frostedheart.FHTileTypes;
+import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
+
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements INetworkConsumer,EnergyNetworkProvider, ITickableTileEntity {
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickableTileEntity {
 
     HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
         for (Direction d : Direction.values()) {
             c.accept(pos.offset(d), d.getOpposite());
         }
     });
+    HeatProviderEndPoint endpoint=new HeatProviderEndPoint(Integer.MAX_VALUE, Integer.MAX_VALUE);
     public DebugHeaterTileEntity() {
         super(FHTileTypes.DEBUGHEATER.get());
     }
 
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return true;
-    }
 
-    @Override
-    public boolean connect(HeatEnergyNetwork manager,Direction to, int distance) {
-        return false;
-    }
-
-    @Override
+    @Override      
     public void readCustomNBT(CompoundNBT nbt, boolean descPacket) {
     }
 
     @Override
     public void tick() {
-        manager.tick();
-        manager.fillHeat(Integer.MAX_VALUE);
+        if(!endpoint.hasValidNetwork()&&!manager.isUpdateRequested()) {
+        	manager.requestSlowUpdate();
+        }
+        endpoint.addHeat(Integer.MAX_VALUE);
+    	manager.tick();
+        
     }
-
+    LazyOptional<HeatProviderEndPoint> heatcap=LazyOptional.of(()->endpoint);
     @Override
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY)
+			return heatcap.cast();
+		return super.getCapability(cap, side);
+	}
+
+	@Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
     }
 
-	@Override
-	public HeatEnergyNetwork getNetwork() {
-		return manager;
-	}
 }

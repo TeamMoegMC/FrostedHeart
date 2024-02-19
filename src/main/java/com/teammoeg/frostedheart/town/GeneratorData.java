@@ -23,6 +23,7 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -39,6 +40,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -58,9 +60,12 @@ public class GeneratorData {
     public boolean isActive;
     public float TLevel,RLevel;
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
+
     public ItemStack currentItem;
     private TeamResearchData teamData;
     public BlockPos actualPos = BlockPos.ZERO;
+    public HeatProviderEndPoint ep=new HeatProviderEndPoint(200);
+    public LazyOptional<HeatProviderEndPoint> epcap=LazyOptional.of(()->ep);
     public RegistryKey<World> dimension;
 
     final float heatAddInterval = 20;
@@ -186,6 +191,8 @@ public class GeneratorData {
     public void tick(World w) {
         isActive = tickFuelProcess(w);
         tickHeatedProcess(w);
+        if(isActive&&power>0)
+        	ep.setPower(power);
     }
     public void tickHeatedProcess(World world) {
     	int heatedMax=getMaxHeated();

@@ -24,19 +24,18 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FluidPipeBlock;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 
-public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISteamEnergyBlock {
+public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock>{
 
     public HeatPipeBlock(Properties blockProps) {
         super(HeatPipeBlock.class,  blockProps);
@@ -46,14 +45,9 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
 
     @Override
 	public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-		return HeatCapabilities.canConnectAt(world, neighbourPos, direction);
+		return HeatCapabilities.canConnectAt(world, neighbourPos, direction.getOpposite());
 	}
 
-
-	@Override
-    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-        return true;
-    }
 
     @Nullable
     @Override

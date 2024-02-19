@@ -1,13 +1,17 @@
-package com.teammoeg.frostedheart.content.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
+import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
+import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.util.FHUtils;
 
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.util.LazyOptional;
 
 public class HeatCapabilities {
     @CapabilityInject(HeatEndpoint.class)
@@ -32,11 +36,15 @@ public class HeatCapabilities {
      * @return true, if connected
      */
     public static boolean connect(HeatEnergyNetwork network,World w,BlockPos pos,Direction d, int distance) {
-    	HeatEndpoint ep=FHUtils.getCapability(w, pos, d, ENDPOINT_CAPABILITY);
-    	if(ep!=null)
-    		return ep.reciveConnection(w, pos, network, d, distance);
-    	INetworkConsumer inc=FHUtils.getExistingTileEntity(w, pos,INetworkConsumer.class);
-    	return inc!=null?inc.tryConnectAt(network, d, distance):false;
+    	TileEntity te=FHUtils.getExistingTileEntity(w, pos);
+    	if(te!=null) {
+    		LazyOptional<HeatEndpoint> ep=te.getCapability(ENDPOINT_CAPABILITY, d);
+    		if(ep.isPresent())
+        		return ep.orElse(null).reciveConnection(w, pos, network, d, distance);
+    		if(te instanceof INetworkConsumer)
+    			return ((INetworkConsumer) te).tryConnectAt(network, d, distance);
+    	}
+    	return false;
     }
 
 

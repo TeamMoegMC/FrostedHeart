@@ -17,9 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
@@ -65,7 +68,9 @@ public class HeatDebugItem extends Item {
             BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
             TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
             if (te instanceof EnergyNetworkProvider) {
-                playerIn.sendMessage(new StringTextComponent("EnergyNetworkProvider network=" + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
+                playerIn.sendMessage(GuiUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
+            }else if(te!=null) {
+            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY, ((BlockRayTraceResult) raytraceresult).getFace()).orElse(null)), playerIn.getUniqueID());
             }
             return ActionResult.resultSuccess(itemstack);
         }

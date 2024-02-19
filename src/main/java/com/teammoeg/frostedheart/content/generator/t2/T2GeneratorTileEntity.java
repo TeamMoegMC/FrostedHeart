@@ -30,6 +30,8 @@ import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.ReferenceValue;
@@ -39,6 +41,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
@@ -46,18 +50,13 @@ import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity>
-        implements  INetworkConsumer {
+        {
     private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
 
     private static final BlockPos networkTile = new BlockPos(1, 0, 0);
     private static final BlockPos redstone = new BlockPos(1, 1, 2);
 
-    HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
-        Direction dir = this.getFacing();
-
-        c.accept(getBlockPosForPos(networkTile).offset(dir.getOpposite()), dir);
-
-    });
+    HeatEnergyNetwork manager;
     int liquidtick = 0;
     int noliquidtick = 0;
     int tickUntilStopBoom = 20;
@@ -78,10 +77,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
             consumer.accept((T2GeneratorTileEntity) te);
     }
 
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return to == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile);
-    }
 
     @Override
     protected boolean canDrainTankFrom(int iTank, Direction side) {
@@ -95,13 +90,10 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         return false;
     }
 
-    @Override
-    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
-        return false;
-    }
 
     @Override
     public void disassemble() {
+    	if(manager!=null)
         manager.invalidate();
         super.disassemble();
     }
@@ -190,9 +182,32 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
             }*/
         }
     }
-
+    LazyOptional<HeatProviderEndPoint> ep;
     @Override
+	public <X> LazyOptional<X> getCapability(Capability<X> capability, Direction facing) {
+    	if(capability==HeatCapabilities.ENDPOINT_CAPABILITY&&facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
+    		LazyOptional<HeatProviderEndPoint> cep=master().getData().map(t->t.epcap).orElseGet(LazyOptional::empty);
+    		
+    		if(ep!=cep) {
+    			if(ep!=null)
+    				ep.invalidate();
+    			ep=cep;
+    		}
+    		return ep.cast();
+    	}
+		return super.getCapability(capability, facing);
+	}
+
+	@Override
     protected boolean tickFuel() {
+    	if(manager==null) {
+    		 manager = new HeatEnergyNetwork(this, c -> {
+    		        Direction dir = this.getFacing();
+
+    		        c.accept(getBlockPosForPos(networkTile).offset(dir.getOpposite()), dir);
+
+    		    });
+    	}
     	manager.tick();
         boolean active=super.tickFuel();
         if(active)

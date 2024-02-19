@@ -29,7 +29,8 @@ import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -47,13 +48,14 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 
-public class ChargerTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState {
+public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTileEntity, FHBlockInterfaces.IActiveState {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(200,5);
+    HeatConsumerEndPoint network = new HeatConsumerEndPoint(200,5);
     float power;
     private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
         int i = MathHelper.floor(experience);
@@ -75,18 +77,15 @@ public class ChargerTileEntity extends IEBaseTileEntity implements
         super(FHTileTypes.CHARGER.get());
     }
 
+    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
     @Override
-    public boolean canConnectAt(Direction dir) {
-        Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
-        return dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH);
-    }
-
-    @Override
-    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
-
-        return network.reciveConnection(world, pos,manager, to, dist);
-    }
-
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction dir) {
+    	Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
+		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY&&(dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH))) {
+			return heatcap.cast();
+		}
+		return super.getCapability(cap, dir);
+	}
     public void drawEffect() {
         if (world != null && world.isRemote) {
             ClientUtils.spawnSteamParticles(world, this.getPos());

@@ -21,11 +21,10 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.PipeTileEntity;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
-import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
@@ -41,21 +40,20 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
     }
 
     public boolean connect(HeatEnergyNetwork network,Direction to, int ndist) {
-        if (network.shouldPropagate(getPos(),ndist)) {
-	    	ntwk=network;
-	        this.propagate(to, network, ndist);
+        if(ntwk==null||ntwk.getNetworkSize()<network.getNetworkSize()) {
+        	ntwk=network;
+        }
+    	if (ntwk.shouldPropagate(getPos(),ndist)) {
+	        this.propagate(to, ntwk, ndist);
         }
         return true;
     }
     public void connectTo(Direction d, HeatEnergyNetwork network, int lengthx) {
     	BlockPos n = this.getPos().offset(d);
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), n);
+
         d=d.getOpposite();
-        if (te instanceof INetworkConsumer) {
-            ((INetworkConsumer) te).tryConnectAt(network,d, lengthx + 1);
-        }else if(te!=null) {
-        	HeatCapabilities.connect(network, getWorld(), n, d, lengthx+1);
-        }
+        HeatCapabilities.connect(network, getWorld(), n, d, lengthx+1);
+
     }
     protected void propagate(Direction from, HeatEnergyNetwork network, int lengthx) {
         for (Direction d : Direction.values()) {

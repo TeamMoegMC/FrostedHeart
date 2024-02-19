@@ -28,23 +28,27 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.ZoneHeatingMultiblockTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
-public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<RadiatorTileEntity> implements
-        INetworkConsumer, IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
+public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<RadiatorTileEntity> implements IEBlockInterfaces.IInteractionObjectIE, IEBlockInterfaces.IProcessTile, FHBlockInterfaces.IActiveState, ITickableTileEntity {
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    SteamNetworkConsumer network = new SteamNetworkConsumer(100, 4);
+    HeatConsumerEndPoint network = new HeatConsumerEndPoint(100, 4);
 
     public RadiatorTileEntity() {
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
@@ -58,10 +62,6 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
             consumer.accept((RadiatorTileEntity) te);
     }
 
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return this.offsetToMaster.getY() == 0;
-    }
 
     @Override
     protected boolean canDrainTankFrom(int iTank, Direction side) {
@@ -80,10 +80,14 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
 
+    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
     @Override
-    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
-        return network.reciveConnection(world, pos,manager, to, dist);
-    }
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY&&offsetToMaster.getY() == 0) {
+			return heatcap.cast();
+		}
+		return super.getCapability(cap, side);
+	}
 
     @Override
     protected IFluidTank[] getAccessibleFluidTanks(Direction side) {

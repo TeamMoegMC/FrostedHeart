@@ -19,32 +19,34 @@
 
 package com.teammoeg.frostedheart.content.incubator;
 
+import javax.annotation.Nonnull;
+
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 
-public class HeatIncubatorTileEntity extends IncubatorTileEntity implements INetworkConsumer {
-    SteamNetworkConsumer network = new SteamNetworkConsumer(80, 5);
+public class HeatIncubatorTileEntity extends IncubatorTileEntity{
+    HeatConsumerEndPoint network = new HeatConsumerEndPoint(80, 5);
 
     public HeatIncubatorTileEntity() {
         super(FHTileTypes.INCUBATOR2.get());
     }
 
 
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return to == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING);
+    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
+    @Nonnull
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
+		if(capability==HeatCapabilities.ENDPOINT_CAPABILITY&&facing == this.getBlockState().get(IncubatorBlock.HORIZONTAL_FACING)) {
+			return heatcap.cast();
+		}
+		return super.getCapability(capability, facing);
     }
-
-    @Override
-    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
-        return network.reciveConnection(world, pos,manager, to, dist);
-    }
-
     @Override
     protected boolean fetchFuel() {
 

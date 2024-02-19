@@ -28,7 +28,7 @@ import com.teammoeg.frostedheart.base.item.FHBaseArmorItem;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.foods.CannedFoodItem;
 import com.teammoeg.frostedheart.content.foods.FHSoupItem;
-import com.teammoeg.frostedheart.content.steamenergy.HeatDebugItem;
+import com.teammoeg.frostedheart.content.steamenergy.debug.HeatDebugItem;
 import com.teammoeg.frostedheart.content.temperature.GeneratorUpgraderI;
 import com.teammoeg.frostedheart.content.temperature.MushroomBed;
 import com.teammoeg.frostedheart.content.temperature.SoilThermometer;

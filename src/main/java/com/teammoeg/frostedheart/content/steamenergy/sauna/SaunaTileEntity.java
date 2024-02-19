@@ -34,7 +34,8 @@ import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -54,6 +55,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.util.ActionResultType;
@@ -69,8 +71,7 @@ import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class SaunaTileEntity extends IEBaseTileEntity implements
-        INetworkConsumer, ITickableTileEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
+public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEntity, FHBlockInterfaces.IActiveState, IIEInventory, IInteractionObjectIE {
 
     private static final int RANGE = 5;
     private static final int WALL_HEIGHT = 3;
@@ -86,7 +87,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     private int workPeriod;
     Set<BlockPos> floor = new HashSet<>();
     Set<BlockPos> edges = new HashSet<>();
-    SteamNetworkConsumer network = new SteamNetworkConsumer(10,1);
+    HeatConsumerEndPoint network = new HeatConsumerEndPoint(10,1);
 
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
@@ -101,15 +102,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     public boolean canUseGui(PlayerEntity playerEntity) {
         return true;
     }
-    @Override
-    public boolean canConnectAt(Direction to) {
-        return to == Direction.DOWN;
-    }
 
-    @Override
-    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
-        return network.reciveConnection(world, pos,manager, to, dist);
-    }
 
     private boolean dist(BlockPos crn, BlockPos orig) {
         return MathHelper.abs(crn.getX() - orig.getX()) <= RANGE && MathHelper.abs(crn.getZ() - orig.getZ()) <= RANGE;
@@ -137,10 +130,15 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
             }
         }
     }
-
+    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? this.insertionCap.cast() : super.getCapability(capability, facing);
+    	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
+    		return this.insertionCap.cast();
+		if(capability==HeatCapabilities.ENDPOINT_CAPABILITY&&facing==Direction.DOWN) {
+			return heatcap.cast();
+		}
+		return super.getCapability(capability, facing);
     }
 
     public EffectInstance getEffectInstance() {

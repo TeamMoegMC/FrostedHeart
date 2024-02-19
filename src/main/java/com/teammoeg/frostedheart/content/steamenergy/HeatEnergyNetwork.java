@@ -26,6 +26,8 @@ import java.util.PriorityQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -51,21 +53,23 @@ public class HeatEnergyNetwork {
 	            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
 	        else if(te!=null)
 	        	te.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY,d).ifPresent(t->t.reciveConnection(getWorld(),pos,this,d,1));
+	        if(cur instanceof INetworkConsumer) {
+	        	((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
+	        }else if(cur!=null) {
+	        	cur.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY,d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getPos(),this,d.getOpposite(),0));
+	        }
     	}
     };
-    
     @Override
 	public String toString() {
 		return "HeatEnergyNetwork [endpoints=" + endpoints + "]";
 	}
-
-    BlockPos master;
 	private boolean isValid = true;
-    PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(t->t.distance));
+    PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getDistance));
     Map<BlockPos,Integer> propagated=new HashMap<>();
     public boolean shouldPropagate(BlockPos pos,int dist) {
-    	int odist=propagated.getOrDefault(pos,0);
-    	if(odist>dist||odist==0) {
+    	int odist=propagated.getOrDefault(pos,-1);
+    	if(odist>dist||odist==-1) {
     		propagated.put(pos, dist);
     		return true;
     	}
@@ -74,20 +78,24 @@ public class HeatEnergyNetwork {
     public void startPropagation(HeatPipeTileEntity hpte,Direction dir) {
     	hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getPos(),-1));
     }
+    public int getNetworkSize() {
+    	return endpoints.size()+propagated.size();
+    }
     public boolean addEndpoint(BlockPos pos,HeatEndpoint heatEndpoint,int dist) {
     	if(endpoints.contains(heatEndpoint)) {
-    		if(dist<heatEndpoint.distance) {
-    			heatEndpoint.distance=dist;
-    			heatEndpoint.network=this;
+    		if(dist<heatEndpoint.getDistance()) {
+    			heatEndpoint.connect(this, dist);
     			return true;
     		}
     	}else {
-    		heatEndpoint.distance=dist;
-			heatEndpoint.network=this;
+    		heatEndpoint.connect(this, dist);
     		endpoints.add(heatEndpoint);
     		return true;
     	}
     	return false;
+    }
+    public boolean removeEndpoint(BlockPos pos,HeatEndpoint heatEndpoint) {
+    	return endpoints.remove(heatEndpoint);
     }
     /**
      * Instantiates a new HeatProviderManager.<br>
@@ -97,8 +105,6 @@ public class HeatEnergyNetwork {
      */
     public HeatEnergyNetwork(TileEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
     	this.cur=cur;
-
-        this.master=cur.getPos();
         this.onConnect = con;
     }
     public World getWorld() {
@@ -108,6 +114,12 @@ public class HeatEnergyNetwork {
     }
     public void requestUpdate() {
     	interval=10;
+    }
+    public void requestSlowUpdate() {
+    	interval=20;
+    }
+    public boolean isUpdateRequested() {
+    	return interval>=0;
     }
     /**
      * Tick.
@@ -124,28 +136,45 @@ public class HeatEnergyNetwork {
         	}
         	propagated.clear();
         	for(HeatEndpoint bp:endpoints) {
-        		bp.network=null;
-        		bp.distance=0;
+        		bp.clearConnection();
         	}
         	endpoints.clear();
             onConnect.accept(connect);
             interval = -1;
         }
-    }
-    public void fillHeat(float value) {
-    	boolean shouldFill=true;
+        float value=0;
+        int tlevel=1;
+        for(HeatEndpoint endpoint:endpoints) {
+        	if(endpoint.canProvideHeat()) {
+        		value+=endpoint.provideHeat();
+        		tlevel=Math.max(endpoint.getTemperatureLevel(), tlevel);
+        	}
+        }
+        boolean shouldFill=true;
     	while(shouldFill) {
     		shouldFill=false;
 	    	for(HeatEndpoint endpoint:endpoints) {
-	    		value=endpoint.fillHeat(value);
+	    		value=endpoint.sendHeat(value,tlevel);
 	    		if(value<=0)return;
-	    		shouldFill|=endpoint.canFillHeat();
+	    		shouldFill|=endpoint.canSendHeat();
 	    		
 	    	}
     	}
-    };
+    }
 
     public void invalidate() {
-        isValid = false;
+    	for(BlockPos bp:propagated.keySet()) {
+    		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(getWorld(), bp, HeatPipeTileEntity.class);
+    		if(hpte!=null) {
+    			hpte.ntwk=null;
+    		}
+    	}
+    	propagated.clear();
+    	for(HeatEndpoint bp:endpoints) {
+    		bp.clearConnection();
+    	}
+    	endpoints.clear();
+    	interval=-1;
+    	isValid=false;
     }
 }
