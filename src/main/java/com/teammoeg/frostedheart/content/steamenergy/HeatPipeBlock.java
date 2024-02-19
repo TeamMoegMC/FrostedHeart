@@ -37,12 +37,10 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 
 public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISteamEnergyBlock {
-    public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
     public HeatPipeBlock(Properties blockProps) {
         super(HeatPipeBlock.class,  blockProps);
         this.lightOpacity = 0;
-        this.setDefaultState(this.stateContainer.getBaseState().with(LIT, Boolean.FALSE));
     }
 
 
@@ -61,7 +59,6 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);
-        builder.add(LIT);
     }
 
 

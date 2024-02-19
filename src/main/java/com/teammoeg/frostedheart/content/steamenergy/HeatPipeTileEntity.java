@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.base.block.PipeTileEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
@@ -29,8 +30,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileEntity, FHBlockInterfaces.IActiveState, INetworkConsumer {
-
+public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileEntity,EnergyNetworkProvider, FHBlockInterfaces.IActiveState, INetworkConsumer {
+	HeatEnergyNetwork ntwk;
     public HeatPipeTileEntity() {
         super(FHTileTypes.HEATPIPE.get());
     }
@@ -45,21 +46,24 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
         if (te instanceof EnergyNetworkProvider) {
         	HeatEnergyNetwork newNetwork = ((EnergyNetworkProvider) te).getNetwork();
+        	ntwk=newNetwork;
             this.propagate(to, newNetwork, ndist);
             return true;
         }
         return false;
     }
-
+    public void connectTo(Direction d, HeatEnergyNetwork network, int lengthx) {
+    	BlockPos n = this.getPos().offset(d);
+        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), n);
+        if (te instanceof INetworkConsumer) {
+            ((INetworkConsumer) te).tryConnectAt(network,d.getOpposite(), lengthx + 1);
+        }
+    }
     protected void propagate(Direction from, HeatEnergyNetwork network, int lengthx) {
         //System.out.println(from);
         for (Direction d : Direction.values()) {
             if (from == d) continue;
-            BlockPos n = this.getPos().offset(d);
-            TileEntity te = Utils.getExistingTileEntity(this.getWorld(), n);
-            if (te instanceof INetworkConsumer) {
-                ((INetworkConsumer) te).tryConnectAt(network,d.getOpposite(), lengthx + 1);
-            }
+            connectTo(d,network,lengthx);
         }
         return;
     }
@@ -79,4 +83,17 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
         if (descPacket) return;
     }
+
+	@Override
+	public void onFaceChange(Direction dir, boolean isConnect) {
+		if(isConnect)
+			ntwk.startPropagation(this, dir);
+		else
+			ntwk.requestUpdate();
+	}
+
+	@Override
+	public HeatEnergyNetwork getNetwork() {
+		return ntwk;
+	}
 }

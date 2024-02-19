@@ -64,6 +64,9 @@ public class HeatEnergyNetwork {
     	}
     	return false;
     }
+    public void startPropagation(HeatPipeTileEntity hpte,Direction dir) {
+    	hpte.connectTo(dir, this, propagated.get(hpte.getPos()));
+    }
     public void addEndpoint(BlockPos pos,SteamNetworkConsumer consumer) {
     	endpoints.add(consumer);
     }
