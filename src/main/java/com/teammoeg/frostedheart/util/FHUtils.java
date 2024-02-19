@@ -290,8 +290,8 @@ public class FHUtils {
 	}
 	public static <R extends IRecipe<IInventory>> List<R> filterRecipes(@Nullable RecipeManager recipeManager, IRecipeType<R> recipeType) {
         if(recipeManager==null) {
-    
-        	recipeManager=ClientUtils.mc().world.getRecipeManager();
+        	if(ClientUtils.mc().world!=null)
+        		recipeManager=ClientUtils.mc().world.getRecipeManager();
         }
         if(recipeManager==null)
         	return ImmutableList.of();
