@@ -20,7 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.base.block.PipeTileEntity;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -30,7 +29,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
-public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileEntity,EnergyNetworkProvider, FHBlockInterfaces.IActiveState, INetworkConsumer {
+public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileEntity,EnergyNetworkProvider, INetworkConsumer {
 	HeatEnergyNetwork ntwk;
     public HeatPipeTileEntity() {
         super(FHTileTypes.HEATPIPE.get());
@@ -42,25 +41,23 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
     }
 
     public boolean connect(HeatEnergyNetwork network,Direction to, int ndist) {
-        if (!network.shouldPropagate(getPos(),ndist)) return true;
-        TileEntity te = Utils.getExistingTileEntity(this.getWorld(), this.getPos().offset(to));
-        if (te instanceof EnergyNetworkProvider) {
-        	HeatEnergyNetwork newNetwork = ((EnergyNetworkProvider) te).getNetwork();
-        	ntwk=newNetwork;
-            this.propagate(to, newNetwork, ndist);
-            return true;
+        if (network.shouldPropagate(getPos(),ndist)) {
+	    	ntwk=network;
+	        this.propagate(to, network, ndist);
         }
-        return false;
+        return true;
     }
     public void connectTo(Direction d, HeatEnergyNetwork network, int lengthx) {
     	BlockPos n = this.getPos().offset(d);
         TileEntity te = Utils.getExistingTileEntity(this.getWorld(), n);
+        d=d.getOpposite();
         if (te instanceof INetworkConsumer) {
-            ((INetworkConsumer) te).tryConnectAt(network,d.getOpposite(), lengthx + 1);
+            ((INetworkConsumer) te).tryConnectAt(network,d, lengthx + 1);
+        }else if(te!=null) {
+        	HeatCapabilities.connect(network, getWorld(), n, d, lengthx+1);
         }
     }
     protected void propagate(Direction from, HeatEnergyNetwork network, int lengthx) {
-        //System.out.println(from);
         for (Direction d : Direction.values()) {
             if (from == d) continue;
             connectTo(d,network,lengthx);
@@ -76,7 +73,6 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
     @Override
     public void tick() {
         super.tick();
-        setActive(false);
     }
 
     @Override
@@ -86,6 +82,7 @@ public class HeatPipeTileEntity extends PipeTileEntity implements ITickableTileE
 
 	@Override
 	public void onFaceChange(Direction dir, boolean isConnect) {
+		if(ntwk==null)return;
 		if(isConnect)
 			ntwk.startPropagation(this, dir);
 		else

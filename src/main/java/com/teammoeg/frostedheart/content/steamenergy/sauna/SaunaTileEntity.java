@@ -98,13 +98,12 @@ public class SaunaTileEntity extends IEBaseTileEntity implements
     }
 
     @Override
-    public boolean canConnectAt(Direction to) {
-        return to == Direction.DOWN;
-    }
-
-    @Override
     public boolean canUseGui(PlayerEntity playerEntity) {
         return true;
+    }
+    @Override
+    public boolean canConnectAt(Direction to) {
+        return to == Direction.DOWN;
     }
 
     @Override

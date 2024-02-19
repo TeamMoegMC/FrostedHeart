@@ -45,7 +45,7 @@ import net.minecraft.world.World;
 
 public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
     public DebugHeaterBlock(Properties blockProps) {
-        super( blockProps);
+        super(blockProps);
     }
 
 

@@ -6,6 +6,7 @@ import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
+import com.teammoeg.frostedheart.content.steamenergy.HeatCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.SteamNetworkConsumer;
@@ -16,9 +17,11 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 
 public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
-        INetworkConsumer, ITickableTileEntity, IHaveGoggleInformation,
+        ITickableTileEntity, IHaveGoggleInformation,
         FHBlockInterfaces.IActiveState{
     public SteamCoreTileEntity(TileEntityType<?> type) {
         super(type);
@@ -26,7 +29,7 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     }
 
     SteamNetworkConsumer network = new SteamNetworkConsumer(FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
-
+    LazyOptional<SteamNetworkConsumer> heatcap=LazyOptional.of(()->network);
     public float getGeneratedSpeed(){
         float speed = FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
         if(getIsActive()) return speed;
@@ -60,18 +63,17 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
 
     }
 
-    @Override
-    public boolean connect(HeatEnergyNetwork manager,Direction to, int dist) {
-        return network.reciveConnection(world, pos,manager, to, dist);
-    }
+
 
     @Override
-    public boolean canConnectAt(Direction dir) {
-        return dir == this.getBlockState().get(BlockStateProperties.FACING).getOpposite();
-    }
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
+		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY&&side==this.getBlockState().get(BlockStateProperties.FACING).getOpposite()) {
+			return heatcap.cast();
+		}
+		return super.getCapability(cap, side);
+	}
 
-
-    public Direction getDirection() {
+	public Direction getDirection() {
         return this.getBlockState().get(BlockStateProperties.FACING);
     }
 

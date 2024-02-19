@@ -27,7 +27,7 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 
-public class DebugHeaterTileEntity extends IEBaseTileEntity implements INetworkConsumer, ITickableTileEntity {
+public class DebugHeaterTileEntity extends IEBaseTileEntity implements INetworkConsumer,EnergyNetworkProvider, ITickableTileEntity {
 
     HeatEnergyNetwork manager = new HeatEnergyNetwork(this, c -> {
         for (Direction d : Direction.values()) {
@@ -61,4 +61,9 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements INetworkC
     @Override
     public void writeCustomNBT(CompoundNBT nbt, boolean descPacket) {
     }
+
+	@Override
+	public HeatEnergyNetwork getNetwork() {
+		return manager;
+	}
 }

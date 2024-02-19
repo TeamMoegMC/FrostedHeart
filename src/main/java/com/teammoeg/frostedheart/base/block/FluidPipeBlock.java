@@ -24,7 +24,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Maps;
-import com.teammoeg.frostedheart.content.steamenergy.ISteamEnergyBlock;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.block.Block;
@@ -38,9 +37,9 @@ import net.minecraft.pathfinding.PathType;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
-import net.minecraft.util.Util;
 import net.minecraft.util.Direction.Axis;
 import net.minecraft.util.Direction.AxisDirection;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockDisplayReader;
 import net.minecraft.world.IBlockReader;
@@ -88,9 +87,6 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	}
 
 	public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
-		if (neighbour.getBlock() instanceof ISteamEnergyBlock && ((ISteamEnergyBlock) neighbour.getBlock()).canConnectFrom(world, neighbourPos, neighbour, direction))
-			return true;
-
 		return false;
 	}
 
@@ -207,14 +203,14 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 	public BlockState updateBlockState(BlockState state, @Nullable Direction direction, @Nullable Direction ignore,
 		IWorld world, BlockPos pos) {
 		
-		if (direction != null) {
+		/*if (direction != null) {
 			state = state.with(FACING_TO_PROPERTY_MAP.get(direction), canConnectTo(world, pos.offset(direction), world.getBlockState(pos.offset(direction)), direction));
-		} else {
+		} else {*/
 			for (Direction d : Direction.values())
 				if (d != ignore) {
 					state = state.with(FACING_TO_PROPERTY_MAP.get(d), canConnectTo(world, pos.offset(d), world.getBlockState(pos.offset(d)), d));
 				}
-		}
+		//}
 		for (Direction d : Direction.values())
 			if (d != ignore) {
 				state = state.with(RIM_PROPERTY_MAP.get(d), this.shouldDrawRim(world, pos, state, d));
@@ -232,15 +228,15 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 				.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
 		if (isOpenAt(state, direction) && neighbourState.hasProperty(BlockStateProperties.WATERLOGGED))
 			world.getPendingBlockTicks().scheduleTick(pos, this, 1, TickPriority.HIGH);
-		return updateBlockState(state, null, direction.getOpposite(), world, pos);
+		return updateBlockState(state, null,direction.getOpposite() , world, pos);
 	}
 
 	@Override
 	public void neighborChanged(BlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos,
 		boolean isMoving) {
 		super.neighborChanged(state, worldIn, pos, blockIn, fromPos, isMoving);
-		Direction d = FHUtils.dirBetween(fromPos, pos);
-		BlockState updated=updateBlockState(state, d, null, worldIn, pos);
+		//Direction d = FHUtils.dirBetween(fromPos, pos);
+		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
 		checkNewConnection(worldIn,pos,state,updated);
 		worldIn.setBlockState(pos,updated);
 	}

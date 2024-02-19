@@ -45,6 +45,12 @@ public class HeatPipeBlock extends FluidPipeBlock<HeatPipeBlock> implements ISte
 
 
     @Override
+	public boolean canConnectTo(IWorld world, BlockPos neighbourPos, BlockState neighbour, Direction direction) {
+		return HeatCapabilities.canConnectAt(world, neighbourPos, direction);
+	}
+
+
+	@Override
     public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
         return true;
     }

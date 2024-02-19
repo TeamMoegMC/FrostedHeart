@@ -19,22 +19,20 @@
 
 package com.teammoeg.frostedheart.content.steamenergy;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-
-// TODO: Auto-generated Javadoc
+import net.minecraft.world.World;
 
 /**
  * Class HeatProviderManager.
@@ -43,32 +41,53 @@ import net.minecraft.util.math.BlockPos;
  */
 public class HeatEnergyNetwork {
     private int interval = 0;
-    private TileEntity cur;
     private Consumer<BiConsumer<BlockPos, Direction>> onConnect;
+    World world;
+    TileEntity cur;
     private BiConsumer<BlockPos, Direction> connect = (pos, d) -> {
-    	if(cur!=null) {
-	        TileEntity te = Utils.getExistingTileEntity(cur.getWorld(), pos);
+    	if(getWorld()!=null) {
+	        TileEntity te = Utils.getExistingTileEntity(getWorld(), pos);
 	        if (te instanceof INetworkConsumer)
-	            ((INetworkConsumer) te).tryConnectAt(this,d, 0);
+	            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
+	        else if(te!=null)
+	        	te.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY,d).ifPresent(t->t.reciveConnection(getWorld(),pos,this,d,1));
     	}
     };
     
-    private boolean isValid = true;
-    PriorityQueue<SteamNetworkConsumer> endpoints=new PriorityQueue<>(Comparator.comparingInt(t->t.dist));
+    @Override
+	public String toString() {
+		return "HeatEnergyNetwork [endpoints=" + endpoints + "]";
+	}
+
+    BlockPos master;
+	private boolean isValid = true;
+    PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(t->t.distance));
     Map<BlockPos,Integer> propagated=new HashMap<>();
     public boolean shouldPropagate(BlockPos pos,int dist) {
-    	int odist=propagated.get(pos);
-    	if(odist>dist) {
+    	int odist=propagated.getOrDefault(pos,0);
+    	if(odist>dist||odist==0) {
     		propagated.put(pos, dist);
     		return true;
     	}
     	return false;
     }
     public void startPropagation(HeatPipeTileEntity hpte,Direction dir) {
-    	hpte.connectTo(dir, this, propagated.get(hpte.getPos()));
+    	hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getPos(),-1));
     }
-    public void addEndpoint(BlockPos pos,SteamNetworkConsumer consumer) {
-    	endpoints.add(consumer);
+    public boolean addEndpoint(BlockPos pos,HeatEndpoint heatEndpoint,int dist) {
+    	if(endpoints.contains(heatEndpoint)) {
+    		if(dist<heatEndpoint.distance) {
+    			heatEndpoint.distance=dist;
+    			heatEndpoint.network=this;
+    			return true;
+    		}
+    	}else {
+    		heatEndpoint.distance=dist;
+			heatEndpoint.network=this;
+    		endpoints.add(heatEndpoint);
+    		return true;
+    	}
+    	return false;
     }
     /**
      * Instantiates a new HeatProviderManager.<br>
@@ -77,8 +96,15 @@ public class HeatEnergyNetwork {
      * @param con the function that called when refresh is required. Should provide connect direction and location when called.<br>
      */
     public HeatEnergyNetwork(TileEntity cur, Consumer<BiConsumer<BlockPos, Direction>> con) {
-        this.cur = cur;
+    	this.cur=cur;
+
+        this.master=cur.getPos();
         this.onConnect = con;
+    }
+    public World getWorld() {
+    	if(world==null)
+            this.world = cur.getWorld();
+    	return world;
     }
     public void requestUpdate() {
     	interval=10;
@@ -90,7 +116,17 @@ public class HeatEnergyNetwork {
         if (interval > 0) {
             interval--;
         }else if(interval==0){
+        	for(BlockPos bp:propagated.keySet()) {
+        		HeatPipeTileEntity hpte=FHUtils.getExistingTileEntity(getWorld(), bp, HeatPipeTileEntity.class);
+        		if(hpte!=null) {
+        			hpte.ntwk=null;
+        		}
+        	}
         	propagated.clear();
+        	for(HeatEndpoint bp:endpoints) {
+        		bp.network=null;
+        		bp.distance=0;
+        	}
         	endpoints.clear();
             onConnect.accept(connect);
             interval = -1;
@@ -100,7 +136,7 @@ public class HeatEnergyNetwork {
     	boolean shouldFill=true;
     	while(shouldFill) {
     		shouldFill=false;
-	    	for(SteamNetworkConsumer endpoint:endpoints) {
+	    	for(HeatEndpoint endpoint:endpoints) {
 	    		value=endpoint.fillHeat(value);
 	    		if(value<=0)return;
 	    		shouldFill|=endpoint.canFillHeat();

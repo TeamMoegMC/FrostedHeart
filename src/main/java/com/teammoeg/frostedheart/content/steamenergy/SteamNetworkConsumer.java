@@ -30,9 +30,9 @@ import net.minecraft.world.World;
  * Integrated power cache manager for power devices
  * A device should properly "request" power from the network
  */
-public class SteamNetworkConsumer{
+public class SteamNetworkConsumer extends HeatEndpoint{
 
-    /**
+	/**
      * The max power.<br>
      */
     public final float maxPower;
@@ -46,16 +46,7 @@ public class SteamNetworkConsumer{
      * Is constant supply even unload
      * */
     public boolean persist;
-    
-    /**
-     * The main network.<br>
-     */
-	HeatEnergyNetwork sen;
 
-    /**
-     * The distance.<br>
-     */
-    protected int dist;
 
     /**
      * Instantiates a new SteamNetworkConsumer.<br>
@@ -101,14 +92,7 @@ public class SteamNetworkConsumer{
     	}
     	return filled;
     }
-    public boolean reciveConnection(World w,BlockPos pos,HeatEnergyNetwork manager,Direction d,int dist) {
-    	if(this.dist==0||this.dist>dist) {
-	    	sen=manager;
-	    	this.dist=dist;
-	    	sen.addEndpoint(pos, this);
-	    	return true;
-    	}else return false;
-    }
+
     /**
      * Get max power.
      *
@@ -164,4 +148,8 @@ public class SteamNetworkConsumer{
         }
         return false;
     }
+    @Override
+	public String toString() {
+		return "SteamNetworkConsumer [maxPower=" + maxPower + ", maxIntake=" + maxIntake + ", power=" + power + ", persist=" + persist + ", dist=" + distance + "]";
+	}
 }
