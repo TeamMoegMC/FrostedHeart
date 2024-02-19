@@ -51,4 +51,5 @@ public abstract class HeatEndpoint {
 	public boolean hasValidNetwork() {
 		return network!=null;
 	}
+    public abstract float getMaxIntake();
 }

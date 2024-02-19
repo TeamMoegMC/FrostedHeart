@@ -74,4 +74,8 @@ public class HeatProviderEndPoint extends HeatPowerEndpoint{
 		power-=provided;
 		return provided;
 	}
+	@Override
+	public float getMaxIntake() {
+		return 0;
+	}
 }

@@ -22,10 +22,12 @@ package com.teammoeg.frostedheart.content.steamenergy.debug;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
+import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -65,12 +67,16 @@ public class HeatDebugItem extends Item {
         ItemStack itemstack = playerIn.getHeldItem(handIn);
         if (worldIn.isRemote) return ActionResult.resultSuccess(itemstack);
         if (raytraceresult.getType() == RayTraceResult.Type.BLOCK) {
-            BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
-            TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
-            if (te instanceof EnergyNetworkProvider) {
-                playerIn.sendMessage(GuiUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
-            }else if(te!=null) {
-            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY, ((BlockRayTraceResult) raytraceresult).getFace()).orElse(null)), playerIn.getUniqueID());
+        	if(playerIn instanceof ServerPlayerEntity) {
+	            BlockPos blockpos = ((BlockRayTraceResult) raytraceresult).getPos();
+	            TileEntity te = Utils.getExistingTileEntity(worldIn, blockpos);
+	            if (te instanceof EnergyNetworkProvider) {
+	            	if(((EnergyNetworkProvider) te).getNetwork()!=null)
+	            		HeatHandler.openHeatScreen((ServerPlayerEntity) playerIn, ((EnergyNetworkProvider) te).getNetwork());
+	            	else playerIn.sendMessage(GuiUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
+	            }else if(te!=null) {
+	            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY, ((BlockRayTraceResult) raytraceresult).getFace()).orElse(null)), playerIn.getUniqueID());
+	            }
             }
             return ActionResult.resultSuccess(itemstack);
         }

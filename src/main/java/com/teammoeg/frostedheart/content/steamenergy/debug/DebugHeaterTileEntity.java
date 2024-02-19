@@ -55,7 +55,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickabl
 
     @Override
     public void tick() {
-        if(!endpoint.hasValidNetwork()&&!manager.isUpdateRequested()) {
+        if((!endpoint.hasValidNetwork()||manager.data.size()<=1)&&!manager.isUpdateRequested()) {
         	manager.requestSlowUpdate();
         }
         endpoint.addHeat(Integer.MAX_VALUE);

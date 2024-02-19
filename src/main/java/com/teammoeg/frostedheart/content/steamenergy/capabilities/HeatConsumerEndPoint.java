@@ -90,4 +90,7 @@ public class HeatConsumerEndPoint extends HeatPowerEndpoint{
 	public float provideHeat() {
 		return 0;
 	}
+	public float getMaxIntake() {
+		return maxIntake;
+	}
 }

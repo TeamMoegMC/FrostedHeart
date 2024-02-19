@@ -49,8 +49,7 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 
-public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity>
-        {
+public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2GeneratorTileEntity>{
     private static final BlockPos fluidIn = new BlockPos(1, 0, 2);
 
     private static final BlockPos networkTile = new BlockPos(1, 0, 0);
@@ -193,6 +192,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     				ep.invalidate();
     			ep=cep;
     		}
+    		System.out.println("Getting cap");
     		return ep.cast();
     	}
 		return super.getCapability(capability, facing);
@@ -204,10 +204,13 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     		 manager = new HeatEnergyNetwork(this, c -> {
     		        Direction dir = this.getFacing();
 
-    		        c.accept(getBlockPosForPos(networkTile).offset(dir.getOpposite()), dir);
+    		        c.accept(getBlockPosForPos(networkTile).offset(dir.getOpposite()), dir.getOpposite());
 
     		    });
     	}
+        if((!master().getData().map(t->t.ep.hasValidNetwork()).orElse(true)||manager.data.size()<=1)&&!manager.isUpdateRequested()) {
+        	manager.requestSlowUpdate();
+        }
     	manager.tick();
         boolean active=super.tickFuel();
         if(active)
