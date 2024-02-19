@@ -271,11 +271,11 @@ public class JEICompat implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registry) {
-        registry.addGuiContainerHandler(MasterGeneratorScreen.class, new IGuiContainerHandler<MasterGeneratorScreen>() {
+        registry.addGenericGuiContainerHandler(MasterGeneratorScreen.class, new IGuiContainerHandler<MasterGeneratorScreen<?>>() {
 			@Override
-			public Collection<IGuiClickableArea> getGuiClickableAreas(MasterGeneratorScreen containerScreen, double mouseX, double mouseY) {
+			public Collection<IGuiClickableArea> getGuiClickableAreas(MasterGeneratorScreen<?> containerScreen, double mouseX, double mouseY) {
 				List<IGuiClickableArea> col=new ArrayList<>(2);
-				MasterGeneratorContainer container=containerScreen.getContainer();
+				MasterGeneratorContainer<?> container=containerScreen.getContainer();
 				if(container.getTank()!=null)
 					col.add(IGuiClickableArea.createBasic(98, 84, 34, 4, GeneratorSteamCategory.UID));
 				Point in=container.getSlotIn();
