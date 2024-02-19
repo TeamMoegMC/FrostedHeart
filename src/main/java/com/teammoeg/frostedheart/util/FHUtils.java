@@ -41,6 +41,7 @@ import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.IWantedFoodCapability;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
@@ -61,6 +62,8 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -131,7 +134,34 @@ public class FHUtils {
         return r.nextInt(chance) == 0;
 
     }
-
+    public static Direction dirBetween(BlockPos from,BlockPos to) {
+    	BlockPos delt=from.subtract(to);
+    	return Direction.byLong(MathHelper.clamp(delt.getX(), -1, 1), MathHelper.clamp(delt.getY(), -1, 1), MathHelper.clamp(delt.getZ(), -1, 1));
+    }
+    public static TileEntity getExistingTileEntity(IWorld w,BlockPos pos) {
+		if(w==null)
+			return null;
+    	TileEntity te=null;
+    	if(w instanceof World) {
+    		te=Utils.getExistingTileEntity((World) w, pos);
+    	}else {
+			if(w.isBlockLoaded(pos))
+				te=w.getTileEntity(pos);
+    	}
+    	return te;
+    }
+    public static <T> T getExistingTileEntity(IWorld w,BlockPos pos,Class<T> type) {
+    	TileEntity te=getExistingTileEntity(w,pos);
+    	if(type.isInstance(te))
+    		return (T) te;
+    	return null;
+    };
+    public static <T> T getCapability(IWorld w,BlockPos pos,Direction d,Capability<T> cap){
+    	TileEntity te=getExistingTileEntity(w,pos);
+    	if(te!=null)
+    		return te.getCapability(cap,d).orElse(null);
+    	return null;
+    }
     public static boolean canTreeGrow(World w, BlockPos p, Random r) {
         float temp = ChunkHeatData.getTemperature(w, p);
         if (temp <= -6 || WorldClimate.isBlizzard(w))

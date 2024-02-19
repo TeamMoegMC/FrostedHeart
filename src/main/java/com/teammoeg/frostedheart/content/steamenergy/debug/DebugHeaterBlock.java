@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.content.steamenergy;
+package com.teammoeg.frostedheart.content.steamenergy.debug;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -43,16 +43,13 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
-public class DebugHeaterBlock extends FHBaseBlock implements ISteamEnergyBlock {
+public class DebugHeaterBlock extends FHBaseBlock {
     public DebugHeaterBlock(Properties blockProps) {
-        super( blockProps);
+        super(blockProps);
     }
 
 
-    @Override
-    public boolean canConnectFrom(IWorld world, BlockPos pos, BlockState state, Direction dir) {
-        return true;
-    }
+
 
     @Nullable
     @Override
