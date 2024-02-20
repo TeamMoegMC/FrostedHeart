@@ -32,8 +32,6 @@ public class MCCommands {
 		 ResearchDataAPI.putVariantDouble(runner.getPlayer(), key, value);
 	}
 	public void waitPlayerStart(ScenarioVM runner,@Param("s")String s,@Param("l")String l) {
-		final Vector3d vec=runner.getPlayer().getPositionVec();
-	
 		runner.addTrigger(new VariantTargetTrigger(runner,s,l).setSync().register(runner.getPlayer(),EventTriggerType.PLAYER_INTERACT));
 	}
 }
