@@ -18,9 +18,11 @@ import com.teammoeg.frostedheart.util.FHUtils;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.server.management.OpEntry;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -44,25 +46,31 @@ public class MCCommands {
 			new ExecuteTarget(runner, s, l));
 	}
 
-	public void gameCommand(ScenarioVM runner, @Param("cmd") @Param("command") String s) {
+	public void gameCommand(ScenarioVM runner,@Param("op")int op,@Param("asPlayer")int asp, @Param("cmd") @Param("command") String s) {
 		Map<String, Object> overrides = new HashMap<>();
-		PlayerEntity triggerPlayer = runner.getPlayer();
+		ServerPlayerEntity triggerPlayer = runner.getPlayer();
 		overrides.put("p", triggerPlayer.getGameProfile().getName());
 
 		BlockPos pos = triggerPlayer.getPosition();
 		overrides.put("x", pos.getX());
 		overrides.put("y", pos.getY());
 		overrides.put("z", pos.getZ());
+		OpEntry opent=FHResearchDataManager.server.getPlayerList().getOppedPlayers().getEntry(triggerPlayer.getGameProfile());
+		if(op>0)
+			if(opent==null){
+				FHResearchDataManager.server.getPlayerList().addOp(triggerPlayer.getGameProfile());
+			}
 		Commands cmds = FHResearchDataManager.server.getCommandManager();
-		CommandSource source = FHResearchDataManager.server.getCommandSource();
-
+		CommandSource source = asp>0?triggerPlayer.getCommandSource():FHResearchDataManager.server.getCommandSource();
 		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
 			if (entry.getValue() != null) {
 				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
 			}
 		}
-
 		cmds.handleCommand(source, s);
-
+		if(op>0)
+			if(opent==null){
+				FHResearchDataManager.server.getPlayerList().removeOp(triggerPlayer.getGameProfile());
+			}
 	}
 }
