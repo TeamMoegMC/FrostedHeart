@@ -36,7 +36,10 @@ import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsRect
 import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsTextContent;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.frostedheart.util.client.Rect;
 
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;
@@ -190,77 +193,48 @@ public class ClientControl implements IClientControlCommand {
 		}
 	}
 	@Override
-	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("sx")int u,@Param("sy")int v,@Param("sw")Integer uw,@Param("sh")Integer uh,@Param("z")int z,@Param("opacity")Float opacity) {
+	public void ImageLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")String path,@Param("")Rect drect,@Param("s")Rect srect,@Param("z")int z,@Param("opacity")Float opacity) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
-		if(w==null)
-			w=-1f;
-		if(h==null)
-			h=-1f;
-		if(uw==null)
-			uw=-1;
-		if(uh==null)
-			uh=-1;
 		if(opacity==null)
 			opacity=1f;
 		ResourceLocation ip=FHScenarioClient.getPathOf(new ResourceLocation(path), "textures/gui/");
-		GraphicsImageContent ic=new GraphicsImageContent(ip,(int)x,(int)(y),(int)(float)(w),(int)(float)(h));
+		GraphicsImageContent ic=new GraphicsImageContent(ip,drect,srect);
 		ic.setZ(z);
 		ic.setOpacity(opacity);
-		ic.ix=u;
-		ic.iy=v;
-		ic.iw=uw;
-		ic.ih=uh;
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,ic);
 	}
 	@Override
-	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")float resize,@Param("cv")int cv,@Param("ch")int ch,@Param("clr")Integer color) {
+	public void TextLayer(IClientScene runner,@Param("n")@Param("name")String name,@Param("text")String text,@Param("")Rect rect,@Param("z")int z,@Param("opacity")Float opacity,@Param("shadow")int shadow,@Param("resize")int resize) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
-		if(w==null)
-			w=-1f;
-		if(h==null)
-			h=-1f;
 		if(opacity==null)
 			opacity=1f;
 		if(resize==0)
 			resize=9;
-		if(color==null)
-			color=0xFFFFFF;
-		GraphicsTextContent tc=new GraphicsTextContent(ClientTextComponentUtils.parse(text),(int)(x),(int)(y),(int)(float)(w),(int)(float)(h), shadow>0);
+		GraphicsTextContent tc=new GraphicsTextContent(ClientTextComponentUtils.parse(text),rect,resize,shadow>0);
 		tc.setOpacity(opacity);
 		tc.setZ(z);
-		tc.size=(int) resize;
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
 		
 	}
 	@Override
-	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("x")float x,@Param("y")float y,@Param("w")Float w,@Param("h")Float h,@Param("z")int z,@Param("clr")Integer color) {
+	public void FillRect(IClientScene runner,@Param("n")@Param("name")String name,@Param("")Rect rect,@Param("z")int z,@Param("clr")Color4I color) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
-		if(w==null)
-			w=-1f;
-		if(h==null)
-			h=-1f;
-		if(color==null)
-			color=0xFFFFFFFF;
-		GraphicsRectContent tc=new GraphicsRectContent(color,(int)(x),(int)(y),(int)(float)(w),(int)(float)(h));
+		GraphicsRectContent tc=new GraphicsRectContent(color,rect);
 		tc.setZ(z);
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
 		
 	}
 	@Override
-	public void DrawLine(IClientScene runner,@Param("n")@Param("name")String name,@Param("sx")int x,@Param("sy")int y,@Param("dx")int dx,@Param("dy")int dy,@Param("w")int w,@Param("z")int z,@Param("clr")Integer color) {
+	public void DrawLine(IClientScene runner,@Param("n")@Param("name")String name,@Param("s")Point start,@Param("d")Point end,@Param("w")int w,@Param("z")int z,@Param("clr")Color4I color) {
 		if(ClientScene.INSTANCE.dialog==null)
 			return;
-		if(w==0)
+		if(w<=0)
 			w=1;
-		if(color==null)
-			color=0xFFFFFFFF;
-		
-		GraphicsLineContent tc=new GraphicsLineContent(color,(x),(y),(dx),(dy));
+		GraphicsLineContent tc=new GraphicsLineContent(color,start,end);
 		tc.setZ(z);
-		tc.color=color;
 		tc.wid=w;
 		ClientScene.INSTANCE.layers.peekLast().addLayer(name,tc);
 		

@@ -7,6 +7,8 @@ import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 import com.teammoeg.frostedheart.util.client.Rect;
 
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+
 public class GraphicsRectContent extends GraphicLayerContent {
 	public int color;
 	public GraphicsRectContent() {
@@ -22,6 +24,10 @@ public class GraphicsRectContent extends GraphicLayerContent {
 		this.opacity=opacity;
 	}
 
+
+	public GraphicsRectContent(Color4I color, Rect rect) {
+		this(color.rgba(),rect.getX(),rect.getY(),rect.getW(),rect.getH());
+	}
 
 	@Override
 	public void tick() {

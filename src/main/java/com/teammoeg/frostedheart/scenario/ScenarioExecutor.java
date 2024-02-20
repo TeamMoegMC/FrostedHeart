@@ -37,6 +37,7 @@ import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.util.client.Point;
 import com.teammoeg.frostedheart.util.client.Rect;
 
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
@@ -209,12 +210,15 @@ public class ScenarioExecutor<T> {
     	addTypeAdapter(Rect.class,(r,n,p)->new Rect(
     		castParamType(r,p,int.class,n+"x"),
     		castParamType(r,p,int.class,n+"y"),
-    		castParamType(r,p,int.class,n+"w"),
-    		castParamType(r,p,int.class,n+"h")
+    		castParamType(r,p,int.class,-1,n+"w"),
+    		castParamType(r,p,int.class,-1,n+"h")
     		));
     	addTypeAdapter(Point.class,(r,n,p)->new Point(
     		castParamType(r,p,int.class,n+"x"),
     		castParamType(r,p,int.class,n+"y")
+    		));
+    	addTypeAdapter(Color4I.class,(r,n,p)->Color4I.rgba(
+    		castParamType(r,p,int.class,0xFF000000,n)
     		));
     }
     Map<String, ScenarioMethod<T>> commands = new HashMap<>();
@@ -226,6 +230,9 @@ public class ScenarioExecutor<T> {
         command.execute(scenarioVM, params);
     }
     public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,String... pnames) {
+    	return castParamType(runner,params,partype,null,pnames);
+    }
+    public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,V defval,String... pnames) {
     	TypeAdapter<?,T> ta=types.get(partype);
 		Object result=null;
     	for(String pname:pnames) {
@@ -243,7 +250,8 @@ public class ScenarioExecutor<T> {
 	    	if(result!=null)
 	    		return (V) result;
     	}
-    	
+    	if(defval!=null)
+    		return defval;
     	if(partype.isPrimitive()) {
     		if (partype == double.class) {
 	            result= 0d;

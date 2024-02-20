@@ -17,7 +17,12 @@ public class GraphicsTextContent extends GraphicLayerContent {
 	ITextComponent text;
 	public GraphicsTextContent() {
 	}
-
+	public GraphicsTextContent(ITextComponent text,Rect rect,int size,boolean shadow) {
+		super(rect.getX(), rect.getY(), rect.getW(), rect.getH());
+		this.text=text;
+		this.shadow=shadow;
+		this.size=size;
+	}
 	public GraphicsTextContent(ITextComponent text,int x, int y, int w, int h,boolean shadow) {
 		super(x, y, w, h);
 		this.text=text;
