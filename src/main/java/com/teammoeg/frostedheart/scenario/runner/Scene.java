@@ -8,7 +8,9 @@ import java.util.Map;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioScenePacket;
+import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -30,7 +32,7 @@ public class Scene {
 	private transient boolean isSlient;
 	private transient int waiting;
 	LinkedList<StringBuilder> log = new LinkedList<>();
-	private transient List<IScenarioTrigger> triggers = new ArrayList<>();
+	private transient List<TriggerTarget> triggers = new ArrayList<>();
 	List<String> savedLog = new ArrayList<>();
 	private transient boolean requireClear;
 	public boolean isClick=true;
@@ -193,8 +195,8 @@ public class Scene {
 	}
 
 	public void tickTriggers(ScenarioVM runner, boolean isCurrentAct) {
-		IScenarioTrigger acttrigger = null;
-		for (IScenarioTrigger t : triggers) {
+		TriggerTarget acttrigger = null;
+		for (TriggerTarget t : triggers) {
 			if (t.test(runner)) {
 				if (t.use()) {
 					if (isCurrentAct) {
@@ -220,10 +222,9 @@ public class Scene {
 	public void markChatboxDirty() {
 		requireClear=true;
 	}
-	public void addTrigger(IScenarioTrigger trig) {
-		triggers.add(trig);
+	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
+		triggers.add(new TriggerTarget(trig,targ));
 	}
-
 	public void stopWait() {
 		if(parent.getStatus()==RunStatus.WAITTIMER) {
 			waiting=0;

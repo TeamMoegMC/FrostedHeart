@@ -10,15 +10,16 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
+import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -29,7 +30,7 @@ public class ScenarioVM implements IScenarioThread{
 	protected int nodeNum=0;//Program register
 	protected ScenarioVariables varData=new ScenarioVariables();
 	protected LinkedList<IScenarioTarget> toExecute=new LinkedList<>();//Actions appended by trigger and awaiting execution
-	protected List<IScenarioTrigger> triggers=new ArrayList<>();
+	protected List<TriggerTarget> triggers=new ArrayList<>();
 	protected Map<String,ExecuteStackElement> macros=new HashMap<>();
 	protected RunStatus status=RunStatus.STOPPED;
 	protected LinkedList<ExecuteStackElement> callStack=new LinkedList<>();
@@ -40,7 +41,6 @@ public class ScenarioVM implements IScenarioThread{
 	protected boolean isConducting;
 	protected Scene scene;
 	protected boolean clearAfterClick;
-    public boolean playerInited;
 
     public void copy(ScenarioVM another) {
     	
@@ -215,7 +215,7 @@ public class ScenarioVM implements IScenarioThread{
 		if(getStatus()==RunStatus.RUNNING) {
 			run();
 		}
-    	for(IScenarioTrigger t:triggers) {
+    	for(TriggerTarget t:triggers) {
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())
@@ -236,8 +236,8 @@ public class ScenarioVM implements IScenarioThread{
     	//Execute Queued actions
     	runScheduled();
     }
-	public void addTrigger(IScenarioTrigger trig) {
-		triggers.add(trig);
+	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
+		triggers.add(new TriggerTarget(trig,targ));
 	}
 	public Scene getScene() {
 		if(scene==null)

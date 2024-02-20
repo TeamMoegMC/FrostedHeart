@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.LayerManager;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;

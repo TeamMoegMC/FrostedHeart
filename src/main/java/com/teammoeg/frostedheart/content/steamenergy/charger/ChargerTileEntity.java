@@ -24,7 +24,6 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
@@ -32,6 +31,7 @@ import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import net.minecraft.entity.item.ExperienceOrbEntity;

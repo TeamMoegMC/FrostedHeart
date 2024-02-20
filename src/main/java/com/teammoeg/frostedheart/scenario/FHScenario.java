@@ -50,6 +50,7 @@ import com.teammoeg.frostedheart.scenario.parser.providers.ScenarioProvider;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.scenario.runner.target.IVarTrigger;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -62,13 +63,26 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class FHScenario {
 	public static ScenarioExecutor<ScenarioVM> server = new ScenarioExecutor<>(ScenarioVM.class);
 	private static final List<ScenarioProvider> scenarioProviders = new ArrayList<>();
+	public static Map<PlayerEntity,Map<EventTriggerType,List<IVarTrigger>>> triggers=new HashMap<>();
 	//private static Map<ServerPlayerEntity,ScenarioConductor> runners=new HashMap<>();
 	public static void startFor(ServerPlayerEntity pe) {
 		ScenarioConductor sr = get(pe);
 		sr.init(pe);
 		sr.run(loadScenario(sr,"init"));
 	}
-
+	public static void addVarTrigger(PlayerEntity pe,EventTriggerType type,IVarTrigger trig) {
+		triggers.computeIfAbsent(pe,k->new HashMap<>()).computeIfAbsent(type, k->new ArrayList<>()).add(trig);
+	}
+	public static void trigVar(PlayerEntity pe,EventTriggerType type) {
+		Map<EventTriggerType,List<IVarTrigger>> me=triggers.get(pe);
+		if(me!=null) {
+			List<IVarTrigger> le=me.get(type);
+			le.removeIf(t->{
+				t.trigger();
+				return !t.canStillTrig();
+			});
+		}
+	}
 	public static final ScenarioParser parser = new ScenarioParser();
 	static File scenarioPath = new File(FMLPaths.CONFIGDIR.get().toFile(), "fhscenario");
 	

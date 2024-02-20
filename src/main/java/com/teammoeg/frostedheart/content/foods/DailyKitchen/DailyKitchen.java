@@ -8,8 +8,8 @@ import static com.teammoeg.thermopolium.data.recipes.BowlContainingRecipe.extrac
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.thermopolium.data.recipes.BowlContainingRecipe;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;

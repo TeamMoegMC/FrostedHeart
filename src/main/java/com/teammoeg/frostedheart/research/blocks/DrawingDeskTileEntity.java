@@ -17,13 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.machines;
+package com.teammoeg.frostedheart.research.blocks;
 
 import java.util.Optional;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
@@ -32,6 +31,7 @@ import com.teammoeg.frostedheart.research.gui.drawdesk.game.GenerateInfo;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IInteractionObjectIE;

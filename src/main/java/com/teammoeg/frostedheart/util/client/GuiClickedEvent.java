@@ -17,30 +17,32 @@
  *
  */
 
-package com.teammoeg.frostedheart.client.util;
+package com.teammoeg.frostedheart.util.client;
 
-public class Rect extends Point {
-    protected final int w, h;
+import net.minecraft.client.gui.IGuiEventListener;
 
-    public static Rect delta(int x1, int y1, int x2, int y2) {
-        return new Rect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+public class GuiClickedEvent implements IGuiEventListener {
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    Runnable call;
+
+    public GuiClickedEvent(int x1, int y1, int x2, int y2, Runnable call) {
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
+        this.call = call;
     }
 
-    public Rect(int x, int y, int w, int h) {
-        super(x, y);
-        this.w = w;
-        this.h = h;
+    @Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (x1 <= mx && mx <= x2 && y1 <= my && my <= y2) {
+            call.run();
+            return true;
+        }
+        return false;
     }
 
-    public Rect(Rect r) {
-        this(r.x, r.y, r.w, r.h);
-    }
-
-    public int getH() {
-        return h;
-    }
-
-    public int getW() {
-        return w;
-    }
 }

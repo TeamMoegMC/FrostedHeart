@@ -25,9 +25,9 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.client.renderer.entity.model.BipedModel;

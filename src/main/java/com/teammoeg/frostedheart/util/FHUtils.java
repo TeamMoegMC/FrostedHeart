@@ -34,12 +34,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.IWantedFoodCapability;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
@@ -299,7 +300,7 @@ public class FHUtils {
     }
 	public static ItemStack ArmorLiningNBT(ItemStack stack) {
 	    stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");
-	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor
+	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to arm or
 	    return ArmorNBT(stack, 107, 6);
 	}
    public static <T extends INBTSerializable<CompoundNBT>> void copyCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){

@@ -26,10 +26,10 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;

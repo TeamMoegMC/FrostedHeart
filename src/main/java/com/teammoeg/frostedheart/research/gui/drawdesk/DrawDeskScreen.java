@@ -20,10 +20,10 @@
 package com.teammoeg.frostedheart.research.gui.drawdesk;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.gui.ResearchGui;
 import com.teammoeg.frostedheart.research.gui.editor.EditDialog;
 import com.teammoeg.frostedheart.research.gui.tech.ResearchPanel;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.Theme;

@@ -19,30 +19,21 @@
 
 package com.teammoeg.frostedheart.scenario.runner.target;
 
-import java.util.function.Predicate;
-
-import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
+import com.teammoeg.frostedheart.scenario.EventTriggerType;
+import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
-public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenarioTrigger {
+import net.minecraft.entity.player.PlayerEntity;
+
+public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 	boolean canStillTrigger=true;
-	Predicate<ScenarioVM> test;
+	public boolean canTrigger;
 	boolean async=true;
-	public SingleExecuteTargerTrigger(IScenarioThread par,String name, String label,Predicate<ScenarioVM> test) {
-		super(par,name, label);
-		this.test=test;
-	}
-	public SingleExecuteTargerTrigger(Scenario sc, String label,Predicate<ScenarioVM> test) {
-		super(sc, label);
-		this.test=test;
-	}
+
 	@Override
 	public boolean test(ScenarioVM t) {
-
-		return test.test(t);
+		return canTrigger;
 	}
 	@Override
 	public boolean use() {
@@ -52,6 +43,7 @@ public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenar
 		}
 		return false;
 	}
+	
 	@Override
 	public boolean canUse() {
 		return canStillTrigger;
@@ -59,9 +51,20 @@ public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenar
 	public boolean isAsync() {
 		return async;
 	}
-	public SingleExecuteTargerTrigger setSync() {
+	public VariantTargetTrigger setSync() {
 		this.async = false;
 		return this;
 	}
-
+	@Override
+	public void trigger() {
+		canTrigger=true;
+	}
+	@Override
+	public boolean canStillTrig() {
+		return !canTrigger&&!canStillTrigger;
+	}
+	public VariantTargetTrigger register(PlayerEntity pe,EventTriggerType type) {
+		FHScenario.addVarTrigger(pe, type, this);
+		return this;
+	}
 }

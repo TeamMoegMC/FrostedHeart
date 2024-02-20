@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.machines;
+package com.teammoeg.frostedheart.research.blocks;
 
 import java.util.List;
 
@@ -25,8 +25,8 @@ import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.teammoeg.frostedheart.FHSounds;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;

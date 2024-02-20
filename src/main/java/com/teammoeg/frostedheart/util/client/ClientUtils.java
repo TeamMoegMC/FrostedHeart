@@ -17,11 +17,11 @@
  *
  */
 
-package com.teammoeg.frostedheart.client.util;
+package com.teammoeg.frostedheart.util.client;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.client.particles.FHParticleTypes;
+import com.teammoeg.frostedheart.FHParticleTypes;
 import com.teammoeg.frostedheart.research.gui.ResearchGui;
 
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;

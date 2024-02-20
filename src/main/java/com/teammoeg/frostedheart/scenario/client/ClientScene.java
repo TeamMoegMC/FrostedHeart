@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.mixin.minecraft.NewChatGuiAccessor;
 import com.teammoeg.frostedheart.scenario.client.dialog.IScenarioDialog;
 import com.teammoeg.frostedheart.scenario.client.dialog.TextInfo;
@@ -16,6 +15,7 @@ import com.teammoeg.frostedheart.scenario.network.FHClientReadyPacket;
 import com.teammoeg.frostedheart.scenario.network.FHClientSettingsPacket;
 import com.teammoeg.frostedheart.scenario.runner.RunStatus;
 import com.teammoeg.frostedheart.util.ReferenceValue;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import net.minecraft.client.Minecraft;

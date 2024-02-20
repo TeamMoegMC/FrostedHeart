@@ -17,12 +17,11 @@
  *
  */
 
-package com.teammoeg.frostedheart.client;
+package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.renderer.MechCalcRenderer;
-import com.teammoeg.frostedheart.client.renderer.T1GeneratorRenderer;
-import com.teammoeg.frostedheart.client.renderer.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorRenderer;
+import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorRenderer;
+import com.teammoeg.frostedheart.research.blocks.MechCalcRenderer;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.font.KGlyphProvider;
 
 import blusunrize.immersiveengineering.client.render.tile.DynamicModel;

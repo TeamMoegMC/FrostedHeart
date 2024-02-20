@@ -7,6 +7,9 @@ import java.awt.RenderingHints;
 
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
+import com.teammoeg.frostedheart.util.client.Point;
+
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 
 public class GraphicsLineContent extends GraphicLayerContent {
 	public int color;
@@ -24,7 +27,10 @@ public class GraphicsLineContent extends GraphicLayerContent {
 		this.opacity=opacity;
 	}
 
-
+	public GraphicsLineContent(Color4I color,Point start,Point end) {
+		super(start.getX(), start.getY(), end.getX(), end.getY());
+		this.color=color.rgba();
+	}
 	@Override
 	public void tick() {
 	}

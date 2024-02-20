@@ -17,14 +17,14 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.machines;
+package com.teammoeg.frostedheart.research.blocks;
 
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.client.util.ITooltipFlag;

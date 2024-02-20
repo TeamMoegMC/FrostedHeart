@@ -52,8 +52,8 @@ import com.teammoeg.frostedheart.content.steamenergy.charger.ChargerBlock;
 import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterBlock;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaBlock;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskBlock;
-import com.teammoeg.frostedheart.research.machines.MechCalcBlock;
+import com.teammoeg.frostedheart.research.blocks.DrawingDeskBlock;
+import com.teammoeg.frostedheart.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.town.house.HouseBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -86,14 +86,14 @@ public class FHBlocks {
 	}
     public static RegistryObject<Block> generator_brick = register("generator_brick",()->new FHBaseBlock(stoneDecoProps));
 
- /*   public static Block blood_block = new bloodBlock("blood_block", stoneProps, FHBlockItem::new);
-    public static Block bone_block = new BoneBlock("bone_block", grassProps, FHBlockItem::new);
-    //public static Block desk = new DeskBlock("desk", redStoneProps, FHBlockItem::new);
-    public static Block small_garage = new SmallGarage("small_garage", grassProps, FHBlockItem::new);
-    public static Block package_block = new PackageBlock("package_block", woodenProps, FHBlockItem::new);
-    public static Block pebble_block = new PebbleBlock("pebble_block", stoneProps, FHBlockItem::new);
-    public static Block odd_mark = new OddMark("odd_mark", redStoneProps, FHBlockItem::new);
-    public static Block wooden_box = new WoodenBox("wooden_box", woodenProps, FHBlockItem::new);*/
+    public static RegistryObject<Block> blood_block = register("blood_block", ()->new bloodBlock(stoneProps));
+    public static RegistryObject<Block> bone_block = register("bone_block", ()->new BoneBlock(grassProps));
+    //public static RegistryObject<Block> desk = register("desk", ()->new DeskBlock(redStoneProps));
+    public static RegistryObject<Block> small_garage = register("small_garage", ()->new SmallGarage(grassProps));
+    public static RegistryObject<Block> package_block = register("package_block", ()->new PackageBlock(woodenProps));
+    public static RegistryObject<Block> pebble_block = register("pebble_block", ()->new PebbleBlock(stoneProps));
+    public static RegistryObject<Block> odd_mark = register("odd_mark", ()->new OddMark(redStoneProps));
+    public static RegistryObject<Block> wooden_box = register("wooden_box", ()->new WoodenBox(woodenProps));
     public static RegistryObject<Block> generator_core_t1 = register("generator_core_t1",()->new FHBaseBlock( stoneDecoProps));
     public static RegistryObject<Block> generator_amplifier_r1 = register("generator_amplifier_r1",()->new FHBaseBlock( stoneDecoProps));
     public static RegistryObject<Block> rye_block = register("rye_block",()->new RyeBlock( WorldTemperature.COLD_RESIST_GROW_TEMPERATURE, cropProps));
@@ -103,8 +103,8 @@ public class FHBlocks {
     public static RegistryObject<Block> relic_chest = register("relic_chest",()->new RelicChestBlock());
     public static RegistryObject<Block> incubator1 = register("incubator",()->new IncubatorBlock( stoneDecoProps, FHTileTypes.INCUBATOR));
     public static RegistryObject<Block> incubator2 = register("heat_incubator",()->new HeatIncubatorBlock( metalDecoProps, FHTileTypes.INCUBATOR2));
-    //        public static RegistryObject<Block> access_control = new AccessControlBlock("access_control");
-//        public static RegistryObject<Block> gate = new FHBaseBlock("gate", AbstractBlock.Properties.from(Blocks.BEDROCK));
+  //public static RegistryObject<Block> access_control = register("access_control",()->new AccessControlBlock());
+  //public static RegistryObject<Block> gate = register("gate", ()->new FHBaseBlock(AbstractBlock.Properties.from(Blocks.BEDROCK)));
     public static RegistryObject<Block> fluorite_ore =register("fluorite_ore",()->new FHOreBlock( RankineBlocks.DEF_ORE.harvestLevel(3)));
     public static RegistryObject<Block> halite_ore=register("halite_ore",()->new FHOreBlock(RankineBlocks.DEF_ORE.harvestLevel(2)));
     public static RegistryObject<Block> heat_pipe = register("heat_pipe",()->new HeatPipeBlock( Block.Properties

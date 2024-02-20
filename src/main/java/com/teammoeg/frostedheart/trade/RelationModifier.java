@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.trade;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.util.text.TranslationTextComponent;
 

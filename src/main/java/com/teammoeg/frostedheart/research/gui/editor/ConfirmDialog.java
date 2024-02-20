@@ -21,7 +21,7 @@ package com.teammoeg.frostedheart.research.gui.editor;
 
 import java.util.function.Consumer;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;

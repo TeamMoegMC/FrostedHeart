@@ -17,24 +17,22 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.machines;
+package com.teammoeg.frostedheart.research.blocks;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 
-public class FHReusablePen extends FHBaseItem implements IPen {
-    int lvl;
+public class FHBasePen extends FHBaseItem implements IPen {
 
-    public FHReusablePen( Properties properties, int lvl) {
+    public FHBasePen(Properties properties) {
         super(properties);
-        this.lvl = lvl;
     }
 
     @Override
     public boolean canUse(PlayerEntity e, ItemStack stack, int val) {
-        return stack.getDamage() < stack.getMaxDamage() - val;
+        return true;
     }
 
     @Override
@@ -45,7 +43,7 @@ public class FHReusablePen extends FHBaseItem implements IPen {
 
     @Override
     public int getLevel(ItemStack is, PlayerEntity player) {
-        return lvl;
+        return 0;
     }
 
 }

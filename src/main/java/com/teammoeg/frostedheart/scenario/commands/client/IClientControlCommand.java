@@ -1,6 +1,10 @@
 package com.teammoeg.frostedheart.scenario.commands.client;
 
 import com.teammoeg.frostedheart.scenario.client.IClientScene;
+import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.frostedheart.util.client.Rect;
+
+import dev.ftb.mods.ftblibrary.icon.Color4I;
 
 public interface IClientControlCommand {
 
@@ -34,15 +38,14 @@ public interface IClientControlCommand {
 
 
 
-	void TextLayer(IClientScene runner, String name, String text, float x, float y, Float w, Float h, int z,
-			Float opacity, int shadow, float resize, int cv, int ch,Integer color);
+	void TextLayer(IClientScene runner, String name, String text, Rect rect, int z, Float opacity, int shadow, int resize);
 
 
-	void ImageLayer(IClientScene runner, String name, String path, float x, float y, Float w, Float h, int u, int v, Integer uw, Integer uh, int z, Float opacity);
+	void ImageLayer(IClientScene runner, String name, String path, Rect drect, Rect srect, int z, Float opacity);
 
-	void FillRect(IClientScene runner, String name, float x, float y, Float w, Float h, int z, Integer color);
+	void FillRect(IClientScene runner, String name, Rect rect, int z, Color4I color);
 
-	void DrawLine(IClientScene runner, String name, int x, int y, int dx, int dy, int w, int z, Integer color);
+	void DrawLine(IClientScene runner, String name, Point start, Point end, int w, int z, Color4I color);
 
 	void hudDialog(IClientScene runner, Integer show);
 

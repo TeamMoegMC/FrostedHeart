@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Icon;
 import dev.ftb.mods.ftblibrary.ui.Button;

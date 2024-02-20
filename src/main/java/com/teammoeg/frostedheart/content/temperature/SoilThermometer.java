@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.temperature;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;

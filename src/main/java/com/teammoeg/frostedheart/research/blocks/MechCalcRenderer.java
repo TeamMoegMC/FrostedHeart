@@ -17,13 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart.client.renderer;
+package com.teammoeg.frostedheart.research.blocks;
 
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHBlocks;
-import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
 import blusunrize.immersiveengineering.api.IEProperties.Model;

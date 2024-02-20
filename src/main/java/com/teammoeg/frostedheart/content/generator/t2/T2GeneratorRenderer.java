@@ -17,13 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart.client.renderer;
+package com.teammoeg.frostedheart.content.generator.t2;
 
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMultiblocks;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
 
 import blusunrize.immersiveengineering.api.IEProperties.IEObjState;
 import blusunrize.immersiveengineering.api.IEProperties.Model;

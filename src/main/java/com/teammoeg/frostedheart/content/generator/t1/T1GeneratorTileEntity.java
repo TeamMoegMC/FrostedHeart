@@ -27,11 +27,12 @@ import blusunrize.immersiveengineering.common.blocks.stone.BlastFurnaceTileEntit
 import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 
 import com.teammoeg.frostedheart.content.generator.tool.GeneratorDriveHandler;
 import com.teammoeg.frostedheart.content.generator.tool.NeighborTypeEnum;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;

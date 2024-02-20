@@ -21,11 +21,11 @@ package com.teammoeg.frostedheart.research.network;
 
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.events.ClientResearchStatusEvent;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;

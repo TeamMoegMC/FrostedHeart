@@ -6,9 +6,9 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import com.teammoeg.frostedheart.client.util.Rect;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
+import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
@@ -23,7 +23,14 @@ public class GraphicsImageContent extends GraphicLayerContent {
 		super(x, y, w, h);
 		this.showingImage=showingImage;
 	}
-
+	public GraphicsImageContent(ResourceLocation showingImage,Rect r1,Rect r2) {
+		super(r1.getX(), r1.getY(), r1.getW(), r1.getH());
+		this.showingImage=showingImage;
+		ix=r2.getX();
+		iy=r2.getY();
+		iw=r2.getW();
+		ih=r2.getH();
+	}
 	public GraphicsImageContent(ResourceLocation showingImage,int x, int y, int width, int height, int z,float opacity) {
 		super(x, y, width, height, z);
 		this.showingImage=showingImage;

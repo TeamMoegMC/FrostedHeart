@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.decoration.oilburner;
 import java.util.Random;
 
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;

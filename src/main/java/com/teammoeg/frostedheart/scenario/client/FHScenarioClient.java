@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.scenario.client;
 
 import java.util.Map;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutor.ScenarioMethod;
 import com.teammoeg.frostedheart.scenario.commands.client.ClientControl;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.util.ResourceLocation;
 

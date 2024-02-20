@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.client.util;
+package com.teammoeg.frostedheart.util.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 

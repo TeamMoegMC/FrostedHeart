@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.research.gui;
 import java.util.function.Consumer;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;

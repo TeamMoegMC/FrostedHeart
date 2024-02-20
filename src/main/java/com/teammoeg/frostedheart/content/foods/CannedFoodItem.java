@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.content.foods;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import gloridifice.watersource.common.capability.WaterLevelCapability;
 import net.minecraft.client.util.ITooltipFlag;

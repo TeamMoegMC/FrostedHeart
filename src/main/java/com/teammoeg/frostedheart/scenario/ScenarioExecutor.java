@@ -34,14 +34,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.util.client.Point;
+import com.teammoeg.frostedheart.util.client.Rect;
+
+import dev.ftb.mods.ftblibrary.icon.Color4I;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.math.vector.Vector3i;
 
 public class ScenarioExecutor<T> {
     private static class MethodInfo<T> implements ScenarioMethod<T> {
         private static class ParamInfo {
             String[] paramName;
-            Function<String, Object> convertion;
+            TypeAdapter convertion;
             Supplier<Object> def=null;
-            public ParamInfo(String[] paramName, Function<String, Object> convertion) {
+            public ParamInfo(String[] paramName, TypeAdapter convertion) {
                 this.paramName = paramName;
                 this.convertion = convertion;
             }
@@ -58,14 +66,14 @@ public class ScenarioExecutor<T> {
 
         Object instance;
         ParamInfo[] params;
-        public MethodInfo(Object instance, Method method) {
+        public MethodInfo(Object instance, Method method,ScenarioExecutor<T> parent) {
             this.instance = instance;
             this.method = method;
             Parameter[] param = method.getParameters();
             params = new ParamInfo[param.length - 1];
 
             for (int i = 1; i < param.length; i++) {
-                Function<String, Object> converter = null;
+            	TypeAdapter converter = null;
                 Class<?> partype = param[i].getType();
                 Param[] par=param[i].getAnnotationsByType(Param.class);
                 int size=0;
@@ -94,7 +102,9 @@ public class ScenarioExecutor<T> {
                     converter = fnumber;
                     if(partype.isPrimitive())
                     	def=()->0f;
-                } else {
+                } else if(parent.types.containsKey(partype)){
+                	converter=parent.types.get(partype);
+                }else {
                     throw new ScenarioExecutionException("No matching type found for param " + Arrays.toString(names) + " of " + method.getName());
                 }
                 params[i - 1] = new ParamInfo(names, converter);
@@ -112,20 +122,21 @@ public class ScenarioExecutor<T> {
         public void execute(T runner, Map<String, String> param) {
             Object[] pars = new Object[params.length + 1];
             for (int i = 0; i < params.length; i++) {
-            	String par=null;
+            	Object par=null;
             	for(String name:params[i].paramName) {
-            		par = param.get(name);
+            		if(params[i].convertion==null) {
+                		par=param.get(name);
+                	}else {
+                		try {
+	                		par=params[i].convertion.convert(runner,name,param);
+	                	} catch (NumberFormatException | ClassCastException ex) {
+	                        throw new ScenarioExecutionException("Exception converting param " + Arrays.toString(params[i].paramName), ex);
+	                    }
+                	}
             		if(par!=null)break;
             	}
                 if (par != null) {
-                    try {
-                    	if(params[i].convertion==null) {
-                    		pars[i+1]=par;
-                    	}else if(!par.isEmpty())
-                    		pars[i + 1] = params[i].convertion.apply(par);
-                    } catch (NumberFormatException | ClassCastException ex) {
-                        throw new ScenarioExecutionException("Exception converting param " + Arrays.toString(params[i].paramName), ex);
-                    }
+                	pars[i+1]=par;
                 }else {
                 	if(params[i].def!=null)
                 		pars[i+1] =params[i].def.get();
@@ -152,17 +163,65 @@ public class ScenarioExecutor<T> {
 		super();
 		this.objcls = objcls;
 	}
-    private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
-    private static Function<String, Object> integer = s ->{ 
-    	if(s==null)return s;
+    private static TypeAdapter<?,Object> number = (r,n,p) ->{
+    	String s=p.get(n);
+    	if(s==null||s.isEmpty())return s;
+    	return ((Double) Double.parseDouble(s));
+    	
+    };
+    private static TypeAdapter<?,Object> integer = (r,n,p) ->{ 
+    	String s=p.get(n);
+    	if(s==null||s.isEmpty())return s;
     	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
     	return ((Double) Double.parseDouble(s)).intValue();
     	};
 
-    private static Function<String, Object> fnumber = s -> ((Double) Double.parseDouble(s)).floatValue();
-
+    private static TypeAdapter<?,Object> fnumber = (r,n,p) ->{
+    	String s=p.get(n);
+    	if(s==null||s.isEmpty())return s;
+    	return ((Double) Double.parseDouble(s)).floatValue();
+    	
+    } ;
+    Map<Class<?>,TypeAdapter<?,T>> types=new HashMap<>();
+    public <V> void addTypeAdapter(Class<? super V> cls,TypeAdapter<V,T> conv) {
+    	types.put(cls, conv);
+    }
+    {
+    	addTypeAdapter(BlockPos.class,(r,n,p)->new BlockPos(
+    		castParamType(r,p,int.class,n+"x"),
+    		castParamType(r,p,int.class,n+"y"),
+    		castParamType(r,p,int.class,n+"z")
+    		));
+    	addTypeAdapter(Vector3i.class,(r,n,p)->new Vector3i(
+    		castParamType(r,p,int.class,n+"x"),
+    		castParamType(r,p,int.class,n+"y"),
+    		castParamType(r,p,int.class,n+"z")
+    		));
+    	addTypeAdapter(Vector3f.class,(r,n,p)->new Vector3f(
+    		castParamType(r,p,float.class,n+"x"),
+    		castParamType(r,p,float.class,n+"y"),
+    		castParamType(r,p,float.class,n+"z")
+    		));
+    	addTypeAdapter(Vector3d.class,(r,n,p)->new Vector3d(
+    		castParamType(r,p,double.class,n+"x"),
+    		castParamType(r,p,double.class,n+"y"),
+    		castParamType(r,p,double.class,n+"z")
+    		));
+    	addTypeAdapter(Rect.class,(r,n,p)->new Rect(
+    		castParamType(r,p,int.class,n+"x"),
+    		castParamType(r,p,int.class,n+"y"),
+    		castParamType(r,p,int.class,-1,n+"w"),
+    		castParamType(r,p,int.class,-1,n+"h")
+    		));
+    	addTypeAdapter(Point.class,(r,n,p)->new Point(
+    		castParamType(r,p,int.class,n+"x"),
+    		castParamType(r,p,int.class,n+"y")
+    		));
+    	addTypeAdapter(Color4I.class,(r,n,p)->Color4I.rgba(
+    		castParamType(r,p,int.class,0xFF000000,n)
+    		));
+    }
     Map<String, ScenarioMethod<T>> commands = new HashMap<>();
-
     public void callCommand(String name, T scenarioVM, Map<String, String> params) {
         ScenarioMethod<T> command = commands.get(name);
         if (command == null) {
@@ -170,7 +229,40 @@ public class ScenarioExecutor<T> {
         }
         command.execute(scenarioVM, params);
     }
-
+    public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,String... pnames) {
+    	return castParamType(runner,params,partype,null,pnames);
+    }
+    public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,V defval,String... pnames) {
+    	TypeAdapter<?,T> ta=types.get(partype);
+		Object result=null;
+    	for(String pname:pnames) {
+		        if (partype.isAssignableFrom(Double.class) || partype == double.class) {
+		            result= number.convert(runner, pname, params);
+		        } else if (partype.isAssignableFrom(String.class)) {
+		            result= params.get(pname);
+		        } else if (partype.isAssignableFrom(Integer.class) || partype == int.class) {
+		            result= integer.convert(runner, pname, params);
+		        } else if (partype.isAssignableFrom(Float.class) || partype == float.class) {
+		            result= fnumber.convert(runner, pname, params);
+		        }else if(ta!=null) {
+					result= ta.convert(runner, pname, params);
+		        }else throw new ScenarioExecutionException("No matching type found for param " + Arrays.toString(pnames));
+	    	if(result!=null)
+	    		return (V) result;
+    	}
+    	if(defval!=null)
+    		return defval;
+    	if(partype.isPrimitive()) {
+    		if (partype == double.class) {
+	            result= 0d;
+	        } else if (partype == int.class) {
+	            result= 0;
+	        } else if (partype == float.class) {
+	            result= 0f;
+	        }
+    	}
+    	return (V) result;
+    }
     public void register(Class<?> clazz) {
         try {
             Constructor<?> ctor = clazz.getConstructor();
@@ -194,7 +286,7 @@ public class ScenarioExecutor<T> {
             if (Modifier.isPublic(met.getModifiers())) {
                 try {
                 	if(met.getParameterCount()>0&&met.getParameters()[0].getType().isAssignableFrom(objcls))
-                		registerCommand(met.getName(), new MethodInfo<T>(Modifier.isStatic(met.getModifiers()) ? null :clazz,  met));
+                		registerCommand(met.getName(), new MethodInfo<T>(Modifier.isStatic(met.getModifiers()) ? null :clazz,  met,this));
                 } catch (ScenarioExecutionException ex) {
                     ex.printStackTrace();
                     LOGGER.warn(ex.getMessage());
@@ -207,7 +299,7 @@ public class ScenarioExecutor<T> {
         for (Method met : clazz.getMethods()) {
             if (Modifier.isPublic(met.getModifiers()) && Modifier.isStatic(met.getModifiers())) {
                 try {
-                    registerCommand(met.getName(), new MethodInfo(null, met));
+                    registerCommand(met.getName(), new MethodInfo(null, met,this));
                 } catch (ScenarioExecutionException ex) {
 
                     ex.printStackTrace();
@@ -217,16 +309,19 @@ public class ScenarioExecutor<T> {
         }
     }
     static class Test{
-    	public void test(ScenarioConductor sr,@Param("t")int t) {
+    	public void test(ScenarioConductor sr,@Param("")BlockPos t) {
     		System.out.println(t);
 
     	}
     }
     public static void main(String[] args) throws NoSuchMethodException, SecurityException {
     	Test t=new Test();
-    	MethodInfo mi=new MethodInfo(t,t.getClass().getMethod("test", ScenarioConductor.class,int.class));
+    	ScenarioExecutor exc=new ScenarioExecutor(ScenarioConductor.class);
+    	exc.registerInst(new Test());
     	Map<String,String> mp=new HashMap<>();
-    	mp.put("t", "20");
-    	mi.execute(null, mp);
+    	mp.put("x", "20");
+    	mp.put("y", "40");
+    	//mp.put("z", "60");
+    	exc.callCommand("test", null, mp);
     }
 }

@@ -25,7 +25,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.clues.ClueEditor;
@@ -43,6 +42,7 @@ import com.teammoeg.frostedheart.research.gui.editor.LabeledTextBoxAndBtn;
 import com.teammoeg.frostedheart.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;

@@ -40,8 +40,8 @@ import com.teammoeg.frostedheart.content.steamenergy.debug.DebugHeaterTileEntity
 import com.teammoeg.frostedheart.content.steamenergy.radiator.RadiatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEntity;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
-import com.teammoeg.frostedheart.research.machines.MechCalcTileEntity;
+import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.town.house.HouseTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
