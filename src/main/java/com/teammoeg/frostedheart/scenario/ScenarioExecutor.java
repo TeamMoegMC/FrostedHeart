@@ -35,13 +35,18 @@ import org.apache.logging.log4j.Logger;
 
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.math.vector.Vector3i;
+
 public class ScenarioExecutor<T> {
     private static class MethodInfo<T> implements ScenarioMethod<T> {
         private static class ParamInfo {
             String[] paramName;
-            Function<String, Object> convertion;
+            TypeAdapter convertion;
             Supplier<Object> def=null;
-            public ParamInfo(String[] paramName, Function<String, Object> convertion) {
+            public ParamInfo(String[] paramName, TypeAdapter convertion) {
                 this.paramName = paramName;
                 this.convertion = convertion;
             }
@@ -58,14 +63,14 @@ public class ScenarioExecutor<T> {
 
         Object instance;
         ParamInfo[] params;
-        public MethodInfo(Object instance, Method method) {
+        public MethodInfo(Object instance, Method method,ScenarioExecutor<T> parent) {
             this.instance = instance;
             this.method = method;
             Parameter[] param = method.getParameters();
             params = new ParamInfo[param.length - 1];
 
             for (int i = 1; i < param.length; i++) {
-                Function<String, Object> converter = null;
+            	TypeAdapter converter = null;
                 Class<?> partype = param[i].getType();
                 Param[] par=param[i].getAnnotationsByType(Param.class);
                 int size=0;
@@ -152,17 +157,42 @@ public class ScenarioExecutor<T> {
 		super();
 		this.objcls = objcls;
 	}
-    private static Function<String, Object> number = s -> ((Double) Double.parseDouble(s));
-    private static Function<String, Object> integer = s ->{ 
+    private static TypeAdapter<?,?> number = (r,n,p) -> ((Double) Double.parseDouble(p.get(n)));
+    private static TypeAdapter<?,?> integer = (r,n,p) ->{ 
+    	String s=p.get(n);
     	if(s==null)return s;
     	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
     	return ((Double) Double.parseDouble(s)).intValue();
     	};
 
-    private static Function<String, Object> fnumber = s -> ((Double) Double.parseDouble(s)).floatValue();
-
+    private static TypeAdapter<?,?> fnumber = (r,n,p) -> ((Double) Double.parseDouble(p.get(n))).floatValue();
+    Map<Class<?>,TypeAdapter<?,T>> types=new HashMap<>();
+    public <V> void addTypeAdapter(Class<? super V> cls,TypeAdapter<V,T> conv) {
+    	types.put(cls, conv);
+    }
+    {
+    	addTypeAdapter(BlockPos.class,(r,n,p)->new BlockPos(
+    		castParamType(r,p,int.class,n+"x"),
+    		castParamType(r,p,int.class,n+"y"),
+    		castParamType(r,p,int.class,n+"z")
+    		));
+    	addTypeAdapter(Vector3i.class,(r,n,p)->new Vector3i(
+    		castParamType(r,p,int.class,n+"x"),
+    		castParamType(r,p,int.class,n+"y"),
+    		castParamType(r,p,int.class,n+"z")
+    		));
+    	addTypeAdapter(Vector3f.class,(r,n,p)->new Vector3f(
+    		castParamType(r,p,float.class,n+"x"),
+    		castParamType(r,p,float.class,n+"y"),
+    		castParamType(r,p,float.class,n+"z")
+    		));
+    	addTypeAdapter(Vector3d.class,(r,n,p)->new Vector3d(
+    		castParamType(r,p,double.class,n+"x"),
+    		castParamType(r,p,double.class,n+"y"),
+    		castParamType(r,p,double.class,n+"z")
+    		));
+    }
     Map<String, ScenarioMethod<T>> commands = new HashMap<>();
-
     public void callCommand(String name, T scenarioVM, Map<String, String> params) {
         ScenarioMethod<T> command = commands.get(name);
         if (command == null) {
@@ -170,7 +200,37 @@ public class ScenarioExecutor<T> {
         }
         command.execute(scenarioVM, params);
     }
-
+    public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,String... pnames) {
+    	TypeAdapter<?,T> ta=types.get(partype);
+		
+    	for(String pname:pnames) {
+	    	String val=params.get(pname);
+	    	if(val!=null) {
+		        if (partype.isAssignableFrom(Double.class) || partype == double.class) {
+		            return (V) number.apply(val);
+		        } else if (partype.isAssignableFrom(String.class)) {
+		            return (V) val;
+		        } else if (partype.isAssignableFrom(Integer.class) || partype == int.class) {
+		            return (V) integer.apply(val);
+		        } else if (partype.isAssignableFrom(Float.class) || partype == float.class) {
+		            return (V) fnumber.apply(val);
+		        }else if(ta!=null) {
+					return (V) ta.convert(runner, pname, params);
+		        }else throw new ScenarioExecutionException("No matching type found for param " + Arrays.toString(pnames));
+	    	}
+    	}
+    	
+    	if(partype.isPrimitive()) {
+    		if (partype == double.class) {
+	            return (V)(Double)0d;
+	        } else if (partype == int.class) {
+	            return (V)(Integer)0;
+	        } else if (partype == float.class) {
+	            return (V)(Float)0f;
+	        }
+    	}
+    	return null;
+    }
     public void register(Class<?> clazz) {
         try {
             Constructor<?> ctor = clazz.getConstructor();

@@ -30,6 +30,7 @@ import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
@@ -184,10 +185,10 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
 	}
 
 
-	public void addTrigger(IScenarioTrigger trig) {
+	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
 		if(getCurrentAct().name.isAct()) {
-			getCurrentAct().addTrigger(trig);
-		}else super.addTrigger(trig);
+			getCurrentAct().addTrigger(trig,targ);
+		}else super.addTrigger(trig,targ);
 	}
 
     /*public void restoreParagraph(ParagraphData paragraph) {
@@ -216,7 +217,7 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
 		if(getStatus()==RunStatus.RUNNING) {
 			run();
 		}
-    	for(IScenarioTrigger t:triggers) {
+    	for(TriggerTarget t:triggers) {
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())

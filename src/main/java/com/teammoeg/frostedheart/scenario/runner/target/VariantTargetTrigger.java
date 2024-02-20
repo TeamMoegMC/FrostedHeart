@@ -21,23 +21,16 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
-import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 import net.minecraft.entity.player.PlayerEntity;
 
-public class VariantTargetTrigger extends ExecuteTarget implements IScenarioTrigger,IVarTrigger {
+public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 	boolean canStillTrigger=true;
 	public boolean canTrigger;
 	boolean async=true;
-	public VariantTargetTrigger(IScenarioThread par,String name, String label) {
-		super(par,name, label);
-	}
-	public VariantTargetTrigger(Scenario sc, String label) {
-		super(sc, label);
-	}
+
 	@Override
 	public boolean test(ScenarioVM t) {
 		return canTrigger;

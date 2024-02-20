@@ -5,7 +5,10 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
+import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.OrTrigger;
 import com.teammoeg.frostedheart.scenario.runner.target.VariantTargetTrigger;
+import com.teammoeg.frostedheart.scenario.runner.target.trigger.MovementTrigger;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import net.minecraft.item.Item;
@@ -32,6 +35,6 @@ public class MCCommands {
 		 ResearchDataAPI.putVariantDouble(runner.getPlayer(), key, value);
 	}
 	public void waitPlayerStart(ScenarioVM runner,@Param("s")String s,@Param("l")String l) {
-		runner.addTrigger(new VariantTargetTrigger(runner,s,l).setSync().register(runner.getPlayer(),EventTriggerType.PLAYER_INTERACT));
+		runner.addTrigger(new OrTrigger(new MovementTrigger(runner.getPlayer()),new VariantTargetTrigger().register(runner.getPlayer(),EventTriggerType.PLAYER_INTERACT)).setSync(),new ExecuteTarget(runner,s,l));
 	}
 }

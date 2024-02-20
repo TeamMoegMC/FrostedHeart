@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
-import com.teammoeg.frostedheart.scenario.runner.target.ActWrappedTrigger;
+import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
@@ -218,7 +218,7 @@ public class Act implements IScenarioThread{
 	public void sendMessage(String s) {
 		parent.sendMessage(s);
 	}
-	public void addTrigger(IScenarioTrigger trig) {
-		scene.addTrigger(new ActWrappedTrigger(name,trig));
+	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
+		scene.addTrigger(trig,new ActTarget(name,targ));
 	}
 }

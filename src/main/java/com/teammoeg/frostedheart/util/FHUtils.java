@@ -299,7 +299,7 @@ public class FHUtils {
     }
 	public static ItemStack ArmorLiningNBT(ItemStack stack) {
 	    stack.getOrCreateTag().putString("inner_cover", "frostedheart:straw_lining");
-	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to armor
+	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to arm or
 	    return ArmorNBT(stack, 107, 6);
 	}
    public static <T extends INBTSerializable<CompoundNBT>> void copyCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
