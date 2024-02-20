@@ -54,12 +54,20 @@ import dev.ftb.mods.ftblibrary.ui.SimpleTextButton;
 import dev.ftb.mods.ftblibrary.ui.Theme;
 import dev.ftb.mods.ftblibrary.ui.Widget;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IItemProvider;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 
 public class FHIcons {
 
@@ -260,7 +268,6 @@ public class FHIcons {
     }
 
     private static class FHItemIcon extends FHIcon {
-        Icon nested;
         ItemStack stack;
 
         public FHItemIcon(IItemProvider item2) {
@@ -293,7 +300,19 @@ public class FHIcons {
 
         @Override
         public void draw(MatrixStack matrixStack, int x, int y, int w, int h) {
-            nested.draw(matrixStack, x, y, w, h);
+        	//ItemRenderer itemRenderer=ClientUtils.mc().getItemRenderer();
+        	/*
+            itemRenderer.zLevel = 200.0F;
+            net.minecraft.client.gui.FontRenderer font = stack.getItem().getFontRenderer(stack);
+            if (font == null) font = ClientUtils.mc().fontRenderer;
+            itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
+            itemRenderer.renderItemOverlayIntoGUI(font, stack, x, y, null);
+            itemRenderer.zLevel = 0.0F;*/
+        	matrixStack.push();
+        	matrixStack.translate(0,0, 199);
+        	GuiHelper.drawItem(matrixStack, stack, x, y, w/16f, h/16f, true, null);
+            matrixStack.pop();
+            /*ClientUtils.mc().getItemRenderer().renderItem(stack, TransformType.GUI,LightTexture., y, matrixStack, null);
             if (stack != null && stack.getCount() > 1) {
                 matrixStack.push();
                 matrixStack.translate(x + w - 8, y + h - 7, 199);
@@ -303,7 +322,7 @@ public class FHIcons {
                         0xffffffff);
                 matrixStack.pop();
                 matrixStack.pop();
-            }
+            }*/
         }
 
         public ItemStack getStack() {
@@ -311,8 +330,6 @@ public class FHIcons {
         }
 
         private void init() {
-            if (stack != null)
-                nested = ItemIcon.getItemIcon(stack);
         }
         @Override
 		public JsonObject asObject() {

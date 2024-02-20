@@ -231,7 +231,7 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		if (isOpenAt(state, direction) && neighbourState.hasProperty(BlockStateProperties.WATERLOGGED))
 			world.getPendingBlockTicks().scheduleTick(pos, this, 1, TickPriority.HIGH);
 		BlockState newstate= updateBlockState(state, direction,null , world, pos);
-		System.out.println("Update post placement");
+		//System.out.println("Update post placement");
 		checkNewConnection(world,pos,state,newstate);
 		return newstate;
 	}
