@@ -23,47 +23,46 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class MCCommands {
-
-	public MCCommands() {
-		// TODO Auto-generated constructor stub
-	}
-	public void giveItem(ScenarioVM runner,@Param("i")String item,@Param("n")String nbt,@Param("c")int count) throws CommandSyntaxException {
-		Item i=ForgeRegistries.ITEMS.getValue(new ResourceLocation(item));
-		if(count==0)count=1;
-		ItemStack is=new ItemStack(i,count);
-		if(nbt!=null)
+	public void giveItem(ScenarioVM runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
+		Item i = ForgeRegistries.ITEMS.getValue(new ResourceLocation(item));
+		if (count == 0) count = 1;
+		ItemStack is = new ItemStack(i, count);
+		if (nbt != null)
 			is.setTag(JsonToNBT.getTagFromJson(nbt));
 		FHUtils.giveItem(runner.getPlayer(), is);
 	}
-	public void setResearchAttribute(ScenarioVM runner,@Param("k")String key,@Param("v")double value) {
-		 ResearchDataAPI.putVariantDouble(runner.getPlayer(), key, value);
+
+	public void setResearchAttribute(ScenarioVM runner, @Param("k") String key, @Param("v") double value) {
+		ResearchDataAPI.putVariantDouble(runner.getPlayer(), key, value);
 	}
-	public void waitPlayerStart(ScenarioVM runner,@Param("s")String s,@Param("l")String l) {
-		runner.addTrigger(new OrTrigger(new MovementTrigger(runner.getPlayer()),new VariantTargetTrigger().register(runner.getPlayer(),EventTriggerType.PLAYER_INTERACT)).setSync(),new ExecuteTarget(runner,s,l));
+
+	public void waitPlayerStart(ScenarioVM runner, @Param("s") String s, @Param("l") String l) {
+		runner.addTrigger(new OrTrigger(new MovementTrigger(runner.getPlayer()), new VariantTargetTrigger().register(runner.getPlayer(), EventTriggerType.PLAYER_INTERACT)).setSync(),
+			new ExecuteTarget(runner, s, l));
 	}
-	public void gameCommand(ScenarioVM runner,@Param("cmd")@Param("command")String s) {
-        Map<String, Object> overrides = new HashMap<>();
-        PlayerEntity triggerPlayer=runner.getPlayer();
-        overrides.put("p", triggerPlayer.getGameProfile().getName());
 
-        BlockPos pos = triggerPlayer.getPosition();
-        overrides.put("x", pos.getX());
-        overrides.put("y", pos.getY());
-        overrides.put("z", pos.getZ());
-        Commands cmds = FHResearchDataManager.server.getCommandManager();
-        CommandSource source = FHResearchDataManager.server.getCommandSource();
+	public void gameCommand(ScenarioVM runner, @Param("cmd") @Param("command") String s) {
+		Map<String, Object> overrides = new HashMap<>();
+		PlayerEntity triggerPlayer = runner.getPlayer();
+		overrides.put("p", triggerPlayer.getGameProfile().getName());
 
-            for (Map.Entry<String, Object> entry : overrides.entrySet()) {
-                if (entry.getValue() != null) {
-                    s = s.replace("@" + entry.getKey(), entry.getValue().toString());
-                }
-            }
+		BlockPos pos = triggerPlayer.getPosition();
+		overrides.put("x", pos.getX());
+		overrides.put("y", pos.getY());
+		overrides.put("z", pos.getZ());
+		Commands cmds = FHResearchDataManager.server.getCommandManager();
+		CommandSource source = FHResearchDataManager.server.getCommandSource();
 
-            cmds.handleCommand(source, s);
-        
+		for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+			if (entry.getValue() != null) {
+				s = s.replace("@" + entry.getKey(), entry.getValue().toString());
+			}
+		}
+
+		cmds.handleCommand(source, s);
+
 	}
 }
