@@ -22,7 +22,7 @@ package com.teammoeg.frostedheart.scenario.commands;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
-import com.teammoeg.frostedheart.scenario.runner.target.SingleExecuteTargerTrigger;
+import com.teammoeg.frostedheart.scenario.runner.target.SingleExecuteTargetTrigger;
 
 import dev.ftb.mods.ftbquests.FTBQuests;
 import dev.ftb.mods.ftbquests.quest.Quest;
@@ -36,7 +36,7 @@ public class FTBQCommands {
 	public void waitquestComplete(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
+		runner.addTrigger(new SingleExecuteTargetTrigger(runner,s,l,r->{
 			return quest.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
@@ -44,7 +44,7 @@ public class FTBQCommands {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
-		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
+		runner.addTrigger(new SingleExecuteTargetTrigger(runner,s,l,r->{
 			return tsk.isCompletedRaw(ServerQuestFile.INSTANCE.getData(r.getPlayer()));
 		}));
 	}
@@ -54,7 +54,7 @@ public class FTBQCommands {
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
 		Task tsk=quest.tasks.get(t);
 		FHScenario.callClientCommand("showTask", runner, "q",q,"t",""+t);
-		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
+		runner.addTrigger(new SingleExecuteTargetTrigger(runner,s,l,r->{
 			TeamData td=ServerQuestFile.INSTANCE.getData(r.getPlayer());
 			boolean rx=td.isCompleted(tsk);
 			
@@ -66,7 +66,7 @@ public class FTBQCommands {
 	public void waitquestStart(ScenarioVM runner,@Param("s")String s,@Param("l")String l,@Param("q")String q) {
 		QuestFile qf=FTBQuests.PROXY.getQuestFile(false);
 		Quest quest=qf.getQuest(QuestFile.parseCodeString(q));
-		runner.addTrigger(new SingleExecuteTargerTrigger(runner,s,l,r->{
+		runner.addTrigger(new SingleExecuteTargetTrigger(runner,s,l,r->{
 			return qf.getData(r.getPlayer()).canStartTasks(quest);
 		}));
 	}

@@ -40,7 +40,6 @@ public class ScenarioVM implements IScenarioThread{
 	protected boolean isConducting;
 	protected Scene scene;
 	protected boolean clearAfterClick;
-    public boolean playerInited;
 
     public void copy(ScenarioVM another) {
     	

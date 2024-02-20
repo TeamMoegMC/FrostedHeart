@@ -27,15 +27,15 @@ import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
-public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenarioTrigger {
+public class SingleExecuteTargetTrigger extends ExecuteTarget implements IScenarioTrigger {
 	boolean canStillTrigger=true;
 	Predicate<ScenarioVM> test;
 	boolean async=true;
-	public SingleExecuteTargerTrigger(IScenarioThread par,String name, String label,Predicate<ScenarioVM> test) {
+	public SingleExecuteTargetTrigger(IScenarioThread par,String name, String label,Predicate<ScenarioVM> test) {
 		super(par,name, label);
 		this.test=test;
 	}
-	public SingleExecuteTargerTrigger(Scenario sc, String label,Predicate<ScenarioVM> test) {
+	public SingleExecuteTargetTrigger(Scenario sc, String label,Predicate<ScenarioVM> test) {
 		super(sc, label);
 		this.test=test;
 	}
@@ -59,7 +59,7 @@ public class SingleExecuteTargerTrigger extends ExecuteTarget implements IScenar
 	public boolean isAsync() {
 		return async;
 	}
-	public SingleExecuteTargerTrigger setSync() {
+	public SingleExecuteTargetTrigger setSync() {
 		this.async = false;
 		return this;
 	}

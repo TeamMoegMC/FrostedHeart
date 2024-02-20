@@ -70,6 +70,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
+import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
@@ -313,8 +314,7 @@ public class CommonEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
     	if(ite.getPlayer() instanceof ServerPlayerEntity&&!(ite.getPlayer() instanceof FakePlayer)) {
-    		ScenarioConductor cond=FHScenario.get(ite.getPlayer());
-    		cond.playerInited=true;
+    		FHScenario.trigVar(ite.getPlayer(), EventTriggerType.PLAYER_INTERACT);
     	}
     }
     @SubscribeEvent
