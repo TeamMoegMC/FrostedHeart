@@ -30,9 +30,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.IWaterLoggable;
 import net.minecraft.block.SixWayBlock;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathType;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -228,7 +230,8 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 				.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
 		if (isOpenAt(state, direction) && neighbourState.hasProperty(BlockStateProperties.WATERLOGGED))
 			world.getPendingBlockTicks().scheduleTick(pos, this, 1, TickPriority.HIGH);
-		BlockState newstate= updateBlockState(state, null,direction.getOpposite() , world, pos);
+		BlockState newstate= updateBlockState(state, direction,null , world, pos);
+		System.out.println("Update post placement");
 		checkNewConnection(world,pos,state,newstate);
 		return newstate;
 	}
@@ -242,5 +245,14 @@ public class FluidPipeBlock<T extends FluidPipeBlock<T>> extends SixWayBlock imp
 		checkNewConnection(worldIn,pos,state,updated);
 		worldIn.setBlockState(pos,updated);
 	}
+
+	@Override
+	public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+		BlockState updated=updateBlockState(state, null, null, worldIn, pos);
+		checkNewConnection(worldIn,pos,state,updated);
+		worldIn.setBlockState(pos,updated);
+	}
+	
 
 }

@@ -66,4 +66,5 @@ public abstract class HeatPowerEndpoint extends HeatEndpoint {
     	return power>0;
     }
 
+
 }

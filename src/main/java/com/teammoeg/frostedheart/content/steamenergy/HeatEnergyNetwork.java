@@ -26,14 +26,21 @@ import java.util.PriorityQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
+import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 import com.teammoeg.frostedheart.util.FHUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 
 /**
@@ -41,7 +48,7 @@ import net.minecraft.world.World;
  * <p>
  * Integrated manager for heat providers
  */
-public class HeatEnergyNetwork {
+public class HeatEnergyNetwork  implements INamedContainerProvider{
     private int interval = 0;
     private Consumer<BiConsumer<BlockPos, Direction>> onConnect;
     World world;
@@ -66,6 +73,8 @@ public class HeatEnergyNetwork {
 	}
 	private boolean isValid = true;
     PriorityQueue<HeatEndpoint> endpoints=new PriorityQueue<>(Comparator.comparingInt(HeatEndpoint::getDistance));
+    public Map<HeatEndpoint,EndPointData> data=new HashMap<>();
+    boolean dataModified=true;
     Map<BlockPos,Integer> propagated=new HashMap<>();
     public boolean shouldPropagate(BlockPos pos,int dist) {
     	int odist=propagated.getOrDefault(pos,-1);
@@ -79,23 +88,35 @@ public class HeatEnergyNetwork {
     	hpte.connectTo(dir, this, propagated.getOrDefault(hpte.getPos(),-1));
     }
     public int getNetworkSize() {
-    	return endpoints.size()+propagated.size();
+    	return data.size()+propagated.size();
     }
     public boolean addEndpoint(BlockPos pos,HeatEndpoint heatEndpoint,int dist) {
-    	if(endpoints.contains(heatEndpoint)) {
+    	if(data.containsKey(heatEndpoint)) {
     		if(dist<heatEndpoint.getDistance()) {
     			heatEndpoint.connect(this, dist);
+    			dataModified=true;
     			return true;
     		}
     	}else {
     		heatEndpoint.connect(this, dist);
-    		endpoints.add(heatEndpoint);
+    		data.put(heatEndpoint, new EndPointData(getWorld().getBlockState(pos).getBlock()));
+    		dataModified=true;
     		return true;
     	}
     	return false;
     }
     public boolean removeEndpoint(BlockPos pos,HeatEndpoint heatEndpoint) {
-    	return endpoints.remove(heatEndpoint);
+    	Object dat= data.remove(heatEndpoint);
+    	if(dat!=null) {
+    		dataModified=true;
+    		return true;
+    	}
+    	return false;
+    	
+    }
+    @Override
+    public Container createMenu(int p1, PlayerInventory p2, PlayerEntity p3) {
+        return new HeatStatContainer(p1,p3,this);
     }
     /**
      * Instantiates a new HeatProviderManager.<br>
@@ -135,18 +156,26 @@ public class HeatEnergyNetwork {
         		}
         	}
         	propagated.clear();
-        	for(HeatEndpoint bp:endpoints) {
+        	for(HeatEndpoint bp:data.keySet()) {
         		bp.clearConnection();
         	}
-        	endpoints.clear();
+        	data.clear();
             onConnect.accept(connect);
+            dataModified=true;
             interval = -1;
         }
         float value=0;
         int tlevel=1;
+        if(dataModified) {
+        	dataModified=false;
+        	endpoints.clear();
+        	endpoints.addAll(data.keySet());
+        }
         for(HeatEndpoint endpoint:endpoints) {
         	if(endpoint.canProvideHeat()) {
-        		value+=endpoint.provideHeat();
+        		float provided=endpoint.provideHeat();
+        		data.get(endpoint).intake=provided;
+        		value+=provided;
         		tlevel=Math.max(endpoint.getTemperatureLevel(), tlevel);
         	}
         }
@@ -154,12 +183,18 @@ public class HeatEnergyNetwork {
     	while(shouldFill) {
     		shouldFill=false;
 	    	for(HeatEndpoint endpoint:endpoints) {
-	    		value=endpoint.sendHeat(value,tlevel);
-	    		if(value<=0)return;
-	    		shouldFill|=endpoint.canSendHeat();
+	    		if(endpoint.canSendHeat()) {
+	    			float oldval=value;
+		    		value=endpoint.sendHeat(value,tlevel);
+		    		data.get(endpoint).applyOutput(oldval-value,endpoint.getMaxIntake());
+		    		
+		    		shouldFill|=endpoint.canSendHeat();
+	    		}
 	    		
 	    	}
+	    	if(value<=0)break;
     	}
+    	data.values().forEach(t->t.pushData());
     }
 
     public void invalidate() {
@@ -170,11 +205,16 @@ public class HeatEnergyNetwork {
     		}
     	}
     	propagated.clear();
-    	for(HeatEndpoint bp:endpoints) {
+    	for(HeatEndpoint bp:data.keySet()) {
     		bp.clearConnection();
     	}
-    	endpoints.clear();
+    	data.clear();
     	interval=-1;
     	isValid=false;
+    	dataModified=true;
     }
+	@Override
+	public ITextComponent getDisplayName() {
+		return GuiUtils.translateGui("heat_stat");
+	}
 }

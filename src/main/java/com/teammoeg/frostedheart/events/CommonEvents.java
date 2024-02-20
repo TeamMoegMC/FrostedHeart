@@ -54,6 +54,7 @@ import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
@@ -118,6 +119,7 @@ import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.world.MobSpawnInfoBuilder;
@@ -663,6 +665,9 @@ public class CommonEvents {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             ScenarioConductor runner=FHScenario.get(player);
             runner.tick();
+            if(player.openContainer instanceof HeatStatContainer) {
+            	((HeatStatContainer)player.openContainer).tick();
+            }
            // System.out.println(runner.save());
         }
     }

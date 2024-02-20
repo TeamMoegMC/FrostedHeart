@@ -23,6 +23,7 @@ import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.network.FHDatapackSyncPacket;
 import com.teammoeg.frostedheart.climate.network.FHTemperatureDisplayPacket;
+import com.teammoeg.frostedheart.content.steamenergy.EndPointDataPacket;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHClueProgressSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
@@ -146,7 +147,8 @@ public class FHNetwork {
         CHANNEL.registerMessage(id++, ServerSenarioActPacket.class, ServerSenarioActPacket::encode, ServerSenarioActPacket::new, 
         	ServerSenarioActPacket::handle);
         CHANNEL.registerMessage(id++, FHClientSettingsPacket.class, FHClientSettingsPacket::encode, FHClientSettingsPacket::new, FHClientSettingsPacket::handle);
-        
+        //
+        CHANNEL.registerMessage(id++, EndPointDataPacket.class, EndPointDataPacket::encode, EndPointDataPacket::new, EndPointDataPacket::handle);
     }
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {
