@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.research.network.FHDrawingDeskOperationPacket;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.util.math.BlockPos;
 

@@ -17,9 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.client.particles;
-
-import com.teammoeg.frostedheart.FHMain;
+package com.teammoeg.frostedheart;
 
 import net.minecraft.particles.BasicParticleType;
 import net.minecraft.particles.ParticleType;

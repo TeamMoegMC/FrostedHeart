@@ -1,9 +1,9 @@
 package com.teammoeg.frostedheart.scenario.client.gui.layered.gl;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.OrderedRenderableContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
 

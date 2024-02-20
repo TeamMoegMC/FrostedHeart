@@ -32,8 +32,8 @@ import com.teammoeg.frostedheart.content.incubator.IncubatorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaContainer;
 import com.teammoeg.frostedheart.content.steamenergy.sauna.SaunaTileEntity;
+import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskContainer;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
 
 import blusunrize.immersiveengineering.common.gui.GuiHandler;

@@ -4,10 +4,10 @@ import org.lwjgl.opengl.GL11C;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;

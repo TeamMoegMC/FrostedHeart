@@ -6,9 +6,9 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import com.teammoeg.frostedheart.client.util.Rect;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
+import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;

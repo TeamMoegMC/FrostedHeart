@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.machines;
+package com.teammoeg.frostedheart.research.blocks;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import com.simibubi.create.foundation.utility.VoxelShaper;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHKineticBlock;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.Block;

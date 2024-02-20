@@ -22,8 +22,6 @@ package com.teammoeg.frostedheart.scenario.commands.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.scenario.Param;
 import com.teammoeg.frostedheart.scenario.client.ClientScene;
 import com.teammoeg.frostedheart.scenario.client.FHScenarioClient;
@@ -36,6 +34,8 @@ import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsImag
 import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsLineContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsRectContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.java2d.GraphicsTextContent;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.util.ClientTextComponentUtils;
 import dev.ftb.mods.ftbquests.FTBQuests;

@@ -23,7 +23,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.multiblock.FHBaseMultiblock;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.model.ItemCameraTransforms;

@@ -19,8 +19,8 @@
 
 package com.teammoeg.frostedheart.content.generator.t1;
 
-import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorContainer;
+import com.teammoeg.frostedheart.util.client.Point;
 
 import blusunrize.immersiveengineering.common.gui.IEBaseContainer;
 import blusunrize.immersiveengineering.common.gui.IESlot;

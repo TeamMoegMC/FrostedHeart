@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.gui.TechTextButton;
@@ -33,6 +32,7 @@ import com.teammoeg.frostedheart.research.gui.ThickLine;
 import com.teammoeg.frostedheart.research.gui.editor.EditUtils;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.ResearchEditorDialog;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;

@@ -20,12 +20,12 @@
 package com.teammoeg.frostedheart.research.gui.drawdesk;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
+import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.Card;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardPos;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.ClientResearchGame;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.research.machines.DrawingDeskTileEntity;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Button;
 import dev.ftb.mods.ftblibrary.ui.CursorType;

@@ -41,9 +41,9 @@ import com.teammoeg.frostedheart.content.tools.CeramicBucket;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
-import com.teammoeg.frostedheart.research.machines.FHBasePen;
-import com.teammoeg.frostedheart.research.machines.FHReusablePen;
-import com.teammoeg.frostedheart.research.machines.RubbingTool;
+import com.teammoeg.frostedheart.research.blocks.FHBasePen;
+import com.teammoeg.frostedheart.research.blocks.FHReusablePen;
+import com.teammoeg.frostedheart.research.blocks.RubbingTool;
 
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Food;

@@ -21,10 +21,10 @@ package com.teammoeg.frostedheart.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.RegistryUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.EntityType;

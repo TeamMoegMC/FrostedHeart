@@ -24,7 +24,6 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.data.ResearchData;
@@ -38,6 +37,7 @@ import com.teammoeg.frostedheart.research.gui.TechTextButton;
 import com.teammoeg.frostedheart.research.network.FHEffectTriggerPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchControlPacket.Operator;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;
 import dev.ftb.mods.ftblibrary.icon.Icon;

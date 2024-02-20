@@ -5,8 +5,8 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import org.lwjgl.opengl.GL11;
 
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.client.util.Rect;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;

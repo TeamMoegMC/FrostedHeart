@@ -28,10 +28,10 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.content.contraptions.fluids.potion.PotionFluidHandler;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.common.util.fluids.PotionFluid;
 import net.minecraft.client.util.ITooltipFlag;

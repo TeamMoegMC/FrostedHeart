@@ -20,7 +20,7 @@
 package com.teammoeg.frostedheart.research.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.FHGuiHelper;
+import com.teammoeg.frostedheart.util.client.FHGuiHelper;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 

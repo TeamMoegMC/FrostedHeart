@@ -28,8 +28,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
 import com.teammoeg.frostedheart.research.gui.editor.BaseEditDialog;
 import com.teammoeg.frostedheart.research.gui.editor.EditListDialog;
@@ -43,6 +41,8 @@ import com.teammoeg.frostedheart.research.gui.editor.NumberBox;
 import com.teammoeg.frostedheart.research.gui.editor.OpenEditorButton;
 import com.teammoeg.frostedheart.research.gui.editor.SelectDialog;
 import com.teammoeg.frostedheart.research.gui.editor.SelectItemStackDialog;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IngredientWithSize;

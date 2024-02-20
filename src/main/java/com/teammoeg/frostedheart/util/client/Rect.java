@@ -17,22 +17,30 @@
  *
  */
 
-package com.teammoeg.frostedheart.client.util;
+package com.teammoeg.frostedheart.util.client;
 
-public class Point {
-    protected final int x, y;
+public class Rect extends Point {
+    protected final int w, h;
 
-    public Point(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public static Rect delta(int x1, int y1, int x2, int y2) {
+        return new Rect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
     }
 
-    public int getX() {
-        return x;
+    public Rect(int x, int y, int w, int h) {
+        super(x, y);
+        this.w = w;
+        this.h = h;
     }
 
-    public int getY() {
-        return y;
+    public Rect(Rect r) {
+        this(r.x, r.y, r.w, r.h);
     }
 
+    public int getH() {
+        return h;
+    }
+
+    public int getW() {
+        return w;
+    }
 }

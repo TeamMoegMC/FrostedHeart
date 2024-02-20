@@ -22,8 +22,8 @@ package com.teammoeg.frostedheart.climate.network;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.util.TemperatureDisplayHelper;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.entity.player.PlayerEntity;

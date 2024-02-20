@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterators;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ItemSearchMode;
 import dev.ftb.mods.ftblibrary.icon.Color4I;

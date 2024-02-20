@@ -19,8 +19,9 @@
 
 package com.teammoeg.frostedheart.content.generator.t2;
 
-import com.teammoeg.frostedheart.client.util.Point;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorContainer;
+import com.teammoeg.frostedheart.util.client.Point;
+
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 

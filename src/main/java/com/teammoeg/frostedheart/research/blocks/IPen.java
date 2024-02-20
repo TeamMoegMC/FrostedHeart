@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.machines;
+package com.teammoeg.frostedheart.research.blocks;
 
 import java.util.function.Supplier;
 

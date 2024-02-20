@@ -23,8 +23,8 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-import com.teammoeg.frostedheart.client.util.ClientUtils;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

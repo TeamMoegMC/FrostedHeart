@@ -24,9 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.tools.FHLeveledTool;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;

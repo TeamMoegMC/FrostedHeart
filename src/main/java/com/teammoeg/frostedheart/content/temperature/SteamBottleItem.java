@@ -22,9 +22,9 @@ package com.teammoeg.frostedheart.content.temperature;
 import java.util.List;
 
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
-import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.advancements.CriteriaTriggers;
