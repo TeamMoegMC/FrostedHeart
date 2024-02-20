@@ -3,9 +3,9 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered.java2d;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 
-import com.teammoeg.frostedheart.client.util.Rect;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
+import com.teammoeg.frostedheart.util.client.Rect;
 
 public class GraphicsRectContent extends GraphicLayerContent {
 	public int color;

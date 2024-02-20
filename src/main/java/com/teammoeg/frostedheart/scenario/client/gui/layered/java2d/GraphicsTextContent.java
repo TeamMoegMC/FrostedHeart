@@ -2,10 +2,10 @@ package com.teammoeg.frostedheart.scenario.client.gui.layered.java2d;
 
 import java.awt.AlphaComposite;
 
-import com.teammoeg.frostedheart.client.util.Rect;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.PrerenderParams;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.RenderableContent;
 import com.teammoeg.frostedheart.scenario.client.gui.layered.font.GraphicGlyphRenderer;
+import com.teammoeg.frostedheart.util.client.Rect;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.RenderComponentsUtil;
