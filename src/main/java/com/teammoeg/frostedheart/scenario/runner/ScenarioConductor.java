@@ -25,9 +25,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
-import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
@@ -44,8 +41,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
 /**
@@ -54,12 +51,9 @@ import net.minecraftforge.common.util.LazyOptional;
  * You shouldn't opearte this class from any other code except from scenario trigger and commands.
  * You should define triggers in script file and activate triggers to make it execute.
  * */
-public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializable<CompoundNBT>{
+public class ScenarioConductor extends ScenarioVM implements INBTSerializable<CompoundNBT>{
     @CapabilityInject(ScenarioConductor.class)
     public static Capability<ScenarioConductor> CAPABILITY;
-    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "scenario");
-    private final LazyOptional<ScenarioConductor> capability=LazyOptional.of(()->this);
-    
     
     //Sence control
     private transient Act currentAct;
@@ -340,29 +334,12 @@ public class ScenarioConductor extends ScenarioVM implements ICapabilitySerializ
 	private void setCurrentAct(Act currentAct) {
 		this.currentAct = currentAct;
 	}
-    public static void setup() {
-        CapabilityManager.INSTANCE.register(ScenarioConductor.class, new Capability.IStorage<ScenarioConductor>() {
-            public void readNBT(Capability<ScenarioConductor> capability, ScenarioConductor instance, Direction side, INBT nbt) {
-                instance.deserializeNBT((CompoundNBT) nbt);
-            }
-
-            public INBT writeNBT(Capability<ScenarioConductor> capability, ScenarioConductor instance, Direction side) {
-                return instance.serializeNBT();
-            }
-        }, ScenarioConductor::new);
-    }
     public static LazyOptional<ScenarioConductor> getCapability(@Nullable PlayerEntity player) {
         if (player != null) {
             return player.getCapability(CAPABILITY);
         }
         return LazyOptional.empty();
     }
-	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-        if (cap == CAPABILITY)
-            return capability.cast();
-        return LazyOptional.empty();
-	}
 	@Override
 	public CompoundNBT serializeNBT() {
 		return save();

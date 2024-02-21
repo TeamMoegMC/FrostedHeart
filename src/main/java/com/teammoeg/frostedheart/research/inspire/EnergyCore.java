@@ -54,16 +54,15 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.PacketDistributor;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 
-public class EnergyCore implements ICapabilitySerializable<CompoundNBT> {
+public class EnergyCore implements INBTSerializable<CompoundNBT> {
     @CapabilityInject(EnergyCore.class)
     public static Capability<EnergyCore> CAPABILITY;
-    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "rsenergy");
-    private final LazyOptional<EnergyCore> capability=LazyOptional.of(()->this);
     long energy;
     long cenergy;
     long penergy;
@@ -250,29 +249,7 @@ public class EnergyCore implements ICapabilitySerializable<CompoundNBT> {
     	EnergyCore data=getCapability(player).orElse(null);
         player.sendMessage(new StringTextComponent("Energy:" + data.energy + ",Persist Energy: " + data.penergy + ",Extra Energy: " + data.cenergy), player.getUniqueID());
     }
-    public static void setup() {
-        CapabilityManager.INSTANCE.register(EnergyCore.class, new Capability.IStorage<EnergyCore>() {
-            public void readNBT(Capability<EnergyCore> capability, EnergyCore instance, Direction side, INBT nbt) {
-                instance.deserializeNBT((CompoundNBT) nbt);
-            }
-
-            public INBT writeNBT(Capability<EnergyCore> capability, EnergyCore instance, Direction side) {
-                return instance.serializeNBT();
-            }
-        }, EnergyCore::new);
-    }
-/*
-    @SubscribeEvent
-    public static void death(PlayerEvent.Clone ev) {
-        
-            CompoundNBT cnbt = new CompoundNBT();
-            cnbt.putLong("penergy", TemperatureCore.getFHData(ev.getOriginal()).getLong("penergy"));
-            
-            TemperatureCore.setFHData(ev.getPlayer(), cnbt);
-            //TemperatureCore.setTemperature(ev.getPlayer(), 0, 0);
-        
-    }*/
-
+ 
     public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {
         if (player.abilities.isCreativeMode) return true;
         EnergyCore data=getCapability(player).orElse(null);
@@ -292,12 +269,7 @@ public class EnergyCore implements ICapabilitySerializable<CompoundNBT> {
         }
         return LazyOptional.empty();
     }
-	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-        if (cap == CAPABILITY)
-            return capability.cast();
-        return LazyOptional.empty();
-	}
+
 	@Override
 	public CompoundNBT serializeNBT() {
 		CompoundNBT saved=new CompoundNBT();

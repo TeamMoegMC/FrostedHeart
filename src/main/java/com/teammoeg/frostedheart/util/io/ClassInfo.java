@@ -37,6 +37,7 @@ public class ClassInfo implements Marshaller{
 		return clss.computeIfAbsent(cls, ClassInfo::new);
 		
 	}
+	
 	private ClassInfo(Class<?> cls) {
 		super();
 		this.cls = cls;

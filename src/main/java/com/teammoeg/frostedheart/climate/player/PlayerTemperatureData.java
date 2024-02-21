@@ -3,8 +3,6 @@ package com.teammoeg.frostedheart.climate.player;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -13,10 +11,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class PlayerTemperatureData implements ICapabilitySerializable<CompoundNBT>  {
+public class PlayerTemperatureData implements INBTSerializable<CompoundNBT>  {
 	float previousTemp;
 	float bodyTemp;
 	float envTemp;
@@ -25,8 +23,6 @@ public class PlayerTemperatureData implements ICapabilitySerializable<CompoundNB
 	public float smoothedBodyPrev;//Client only, smoothed body temperature
     @CapabilityInject(PlayerTemperatureData.class)
     public static Capability<PlayerTemperatureData> CAPABILITY;
-    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "temperature");
-    private final LazyOptional<PlayerTemperatureData> capability=LazyOptional.of(()->this);
 	public PlayerTemperatureData() {
 	}
 	public void load (CompoundNBT nbt) {
@@ -55,29 +51,12 @@ public class PlayerTemperatureData implements ICapabilitySerializable<CompoundNB
     	envTemp=env;
     	feelTemp=feel;
     }
-    public static void setup() {
-        CapabilityManager.INSTANCE.register(PlayerTemperatureData.class, new Capability.IStorage<PlayerTemperatureData>() {
-            public void readNBT(Capability<PlayerTemperatureData> capability, PlayerTemperatureData instance, Direction side, INBT nbt) {
-                instance.deserializeNBT((CompoundNBT) nbt);
-            }
-
-            public INBT writeNBT(Capability<PlayerTemperatureData> capability, PlayerTemperatureData instance, Direction side) {
-                return instance.serializeNBT();
-            }
-        }, PlayerTemperatureData::new);
-    }
     public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable PlayerEntity player) {
         if (player != null) {
             return player.getCapability(CAPABILITY);
         }
         return LazyOptional.empty();
     }
-	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-        if (cap == CAPABILITY)
-            return capability.cast();
-        return LazyOptional.empty();
-	}
 	@Override
 	public CompoundNBT serializeNBT() {
 		CompoundNBT saved=new CompoundNBT();
