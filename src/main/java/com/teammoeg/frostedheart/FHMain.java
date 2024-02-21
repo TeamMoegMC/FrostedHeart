@@ -35,7 +35,6 @@ import com.google.gson.JsonPrimitive;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.NonNullLazyValue;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.climate.player.SurroundingTemperatureSimulator;
@@ -43,7 +42,6 @@ import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
-import com.teammoeg.frostedheart.crash.ClimateCrash;
 import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
@@ -261,14 +259,9 @@ public class FHMain {
                 MinecraftForge.EVENT_BUS.addListener(PlayerEvents::onRC);
             } catch (Throwable ignored) {
             }
-        ChunkHeatDataCapabilityProvider.setup();
-        CrashReportExtender.registerCrashCallable(new ClimateCrash());
+        //CrashReportExtender.registerCrashCallable(new ClimateCrash());
         FHNetwork.register();
-        WorldClimate.setup();
-        DeathInventoryData.setup();
-        PlayerTemperatureData.setup();
-        EnergyCore.setup();
-        ScenarioConductor.setup();
+        FHCapabilities.setup();
         FHBiomes.Biomes();
         FHStructures.registerStructureGenerate();
         FHFeatures.initFeatures();

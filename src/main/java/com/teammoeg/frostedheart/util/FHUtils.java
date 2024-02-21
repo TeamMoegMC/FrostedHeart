@@ -255,12 +255,6 @@ public class FHUtils {
         return Optional.ofNullable(map.get(key));
     }
 
-    public static void registerSimpleCapability(Class<?> clazz) {
-        CapabilityManager.INSTANCE.register(clazz, new NoopStorage<>(), () -> {
-            throw new UnsupportedOperationException("Creating default instances is not supported. Why would you ever do this");
-        });
-    }
-
     public static void spawnMob(ServerWorld world, BlockPos blockpos, CompoundNBT nbt, ResourceLocation type) {
         if (World.isInvalidPosition(blockpos)) {
             CompoundNBT compoundnbt = nbt.copy();

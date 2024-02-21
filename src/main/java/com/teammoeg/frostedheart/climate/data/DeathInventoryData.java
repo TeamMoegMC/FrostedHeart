@@ -37,10 +37,11 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
-public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> {
+public class DeathInventoryData implements INBTSerializable<CompoundNBT> {
     private static class CopyInventory {
         NonNullList<ItemStack> inv = NonNullList.withSize(9, ItemStack.EMPTY);
         NonNullList<ItemStack> armor = NonNullList.withSize(4, ItemStack.EMPTY);
@@ -108,8 +109,6 @@ public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> 
     }
     @CapabilityInject(DeathInventoryData.class)
     public static Capability<DeathInventoryData> CAPABILITY;
-    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "death_inventory");
-    private final LazyOptional<DeathInventoryData> capability;
     CopyInventory inv;
 
     boolean calledClone = false;
@@ -138,23 +137,7 @@ public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> 
         return LazyOptional.empty();
     }
 
-    /**
-     * Setup capability's serialization to disk.
-     */
-    public static void setup() {
-        CapabilityManager.INSTANCE.register(DeathInventoryData.class, new Capability.IStorage<DeathInventoryData>() {
-            public void readNBT(Capability<DeathInventoryData> capability, DeathInventoryData instance, Direction side, INBT nbt) {
-                instance.deserializeNBT((CompoundNBT) nbt);
-            }
-
-            public INBT writeNBT(Capability<DeathInventoryData> capability, DeathInventoryData instance, Direction side) {
-                return instance.serializeNBT();
-            }
-        }, DeathInventoryData::new);
-    }
-
     public DeathInventoryData() {
-        capability = LazyOptional.of(() -> this);
     }
 
     public void alive(PlayerInventory inv) {
@@ -189,12 +172,6 @@ public class DeathInventoryData implements ICapabilitySerializable<CompoundNBT> 
             inv = CopyInventory.deserializeNBT(nbt.getCompound("inv"));
     }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-        if (cap == CAPABILITY)
-            return capability.cast();
-        return LazyOptional.empty();
-    }
 
     @Override
     public CompoundNBT serializeNBT() {

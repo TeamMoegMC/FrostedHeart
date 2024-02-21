@@ -54,6 +54,7 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -96,7 +97,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * @author JackyWangMislantiaJnirvana
  * @author Lyuuke
  */
-public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
+public class WorldClimate implements INBTSerializable<CompoundNBT> {
     private static class NopClimateData extends WorldClimate {
 
         @Override
@@ -170,7 +171,6 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     private static final NopClimateData NOP = new NopClimateData();
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
     public static final int DAY_CACHE_LENGTH = 8;
-    private final LazyOptional<WorldClimate> capability;
 
     protected LinkedList<ClimateEvent> tempEventStream;
     protected WorldClockSource clockSource;
@@ -470,23 +470,7 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
         return get(world).getHourData().getType() == ClimateType.SUN;
     }
 
-    /**
-     * Setup capability's serialization to disk.
-     */
-    public static void setup() {
-        CapabilityManager.INSTANCE.register(WorldClimate.class, new Capability.IStorage<WorldClimate>() {
-            public void readNBT(Capability<WorldClimate> capability, WorldClimate instance, Direction side, INBT nbt) {
-                instance.deserializeNBT((CompoundNBT) nbt);
-            }
-
-            public INBT writeNBT(Capability<WorldClimate> capability, WorldClimate instance, Direction side) {
-                return instance.serializeNBT();
-            }
-        }, WorldClimate::new);
-    }
-
     public WorldClimate() {
-        capability = LazyOptional.of(() -> this);
         tempEventStream = new LinkedList<>();
         clockSource = new WorldClockSource();
         dailyTempData = new LinkedList<>();
@@ -588,11 +572,6 @@ public class WorldClimate implements ICapabilitySerializable<CompoundNBT> {
     private int getWind(int lastWind,ClimateType climate,float temp) {
     	return 30;
     }
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-        return cap == CAPABILITY ? capability.cast() : LazyOptional.empty();
-    }
-
     public ClimateType getClimate() {
         return this.getHourData().getType();
     }

@@ -27,12 +27,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.crash.ClimateCrash;
-
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
@@ -40,10 +37,11 @@ import net.minecraft.world.IWorldReader;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
+public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
     /**
      * Only used for the empty instance, this will enforce that it never leaks data
      * New empty instances can be constructed via constructor, EMPTY instance is
@@ -51,7 +49,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
      */
     private static final class Immutable extends ChunkHeatData {
         private Immutable() {
-            super(new ChunkPos(ChunkPos.SENTINEL));
+            super();
         }
 
         @Override
@@ -67,11 +65,10 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
 
     public static final ChunkHeatData EMPTY = new Immutable();
 
-    private final LazyOptional<ChunkHeatData> capability;
-
-    private final ChunkPos pos;
-
     private List<ITemperatureAdjust> adjusters = new LinkedList<>();
+
+	@CapabilityInject(ChunkHeatData.class)
+	public static Capability<ChunkHeatData> CAPABILITY;
 
     /**
      * Used on a ServerWorld context to add temperature in certain 3D region in a
@@ -251,7 +248,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
      */
     public static LazyOptional<ChunkHeatData> getCapability(@Nullable IChunk chunk) {
         if (chunk instanceof Chunk) {
-            return ((Chunk) chunk).getCapability(ChunkHeatDataCapabilityProvider.CAPABILITY);
+            return ((Chunk) chunk).getCapability(ChunkHeatData.CAPABILITY);
         }
         return LazyOptional.empty();
     }
@@ -367,10 +364,7 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         removeTempAdjust(world, heatPos);
     }
 
-    public ChunkHeatData(ChunkPos pos) {
-        this.pos = pos;
-        this.capability = LazyOptional.of(() -> this);
-
+    public ChunkHeatData() {
         reset();
     }
 
@@ -378,7 +372,6 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
     public void deserializeNBT(CompoundNBT nbt) {
         if (nbt != null) {
             // chunkMatrix.deserializeNBT(nbt.getCompound("temperature"));
-            ClimateCrash.Last = this.getPos();
             ListNBT nl = nbt.getList("temperature", 10);
             for (INBT nc : nl) {
                 adjusters.add(ITemperatureAdjust.valueOf((CompoundNBT) nc));
@@ -417,15 +410,8 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
         return adjusters;
     }
 
-    @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        return ChunkHeatDataCapabilityProvider.CAPABILITY.orEmpty(cap, capability);
-    }
 
 
-    public ChunkPos getPos() {
-        return pos;
-    }
 
     /**
      * Get Temperature in a world at a location
@@ -455,7 +441,6 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
     public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
         ListNBT nl = new ListNBT();
-        ClimateCrash.Last = this.getPos();
         for (ITemperatureAdjust adj : adjusters)
             nl.add(adj.serializeNBT());
         nbt.put("temperature", nl);
@@ -464,12 +449,6 @@ public class ChunkHeatData implements ICapabilitySerializable<CompoundNBT> {
 
     public void setAdjusters(List<ITemperatureAdjust> adjusters) {
         this.adjusters.addAll(adjusters);
-    }
-
-
-    @Override
-    public String toString() {
-        return "ChunkData{ pos=" + pos + ",hashCode=" + Integer.toHexString(hashCode()) + '}';
     }
 
 }

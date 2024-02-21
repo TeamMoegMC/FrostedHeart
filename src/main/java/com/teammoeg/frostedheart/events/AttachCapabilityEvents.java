@@ -19,20 +19,13 @@
 
 package com.teammoeg.frostedheart.events;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatDataCapabilityProvider;
-import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
-import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.WantedFoodCapabilityProvider;
-import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.util.FakePlayer;
@@ -47,10 +40,8 @@ public class AttachCapabilityEvents {
     public static void attachToChunk(AttachCapabilitiesEvent<Chunk> event) {
         if (!event.getObject().isEmpty()) {
             World world = event.getObject().getWorld();
-            ChunkPos chunkPos = event.getObject().getPos();
             if (!world.isRemote) {
-                if (!event.getCapabilities().containsKey(ChunkHeatDataCapabilityProvider.KEY))
-                    event.addCapability(ChunkHeatDataCapabilityProvider.KEY, new ChunkHeatData(chunkPos));
+                event.addCapability(new ResourceLocation(FHMain.MODID, "chunk_data"), FHCapabilities.CHUNK_HEAT.create());
             }
         }
     }
@@ -60,18 +51,14 @@ public class AttachCapabilityEvents {
         if (event.getObject() instanceof ServerPlayerEntity) {//server-side only capabilities
             ServerPlayerEntity player = (ServerPlayerEntity) event.getObject();
             if (!(player instanceof FakePlayer)) {
-                if (!event.getCapabilities().containsKey(DeathInventoryData.ID))
-                    event.addCapability(DeathInventoryData.ID, new DeathInventoryData());
-                if (!event.getCapabilities().containsKey(ScenarioConductor.ID))
-                    event.addCapability(ScenarioConductor.ID, new ScenarioConductor());
-                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"), new WantedFoodCapabilityProvider());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"), FHCapabilities.DEATH_INV.create());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "scenario"       ), FHCapabilities.SCENARIO.create());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"    ), new WantedFoodCapabilityProvider());
             }
         }
         //Common capabilities
-        if(!event.getCapabilities().containsKey(PlayerTemperatureData.ID))
-        	event.addCapability(PlayerTemperatureData.ID, new PlayerTemperatureData());
-        if(!event.getCapabilities().containsKey(EnergyCore.ID))
-        	event.addCapability(EnergyCore.ID, new EnergyCore());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "temperature"), FHCapabilities.PLAYER_TEMP.create());
+        event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"   ), FHCapabilities.ENERGY.create());
 
     }
 
@@ -79,8 +66,7 @@ public class AttachCapabilityEvents {
     public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
-            event.addCapability(WorldClimate.ID, new WorldClimate());
-
+            event.addCapability(WorldClimate.ID,FHCapabilities.CLIMATE_DATA.create());
         }
     }
 
