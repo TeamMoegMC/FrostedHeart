@@ -25,9 +25,10 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
+import com.teammoeg.frostedheart.climate.player.EquipmentCuriosSlotType;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.common.util.EnergyHelper;
 import net.minecraft.client.renderer.entity.model.BipedModel;
@@ -66,18 +67,6 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
         return this.receiveEnergy(stack, (int) value, false);
     }
 
-    @Override
-    public float compute(ItemStack stack, float bodyTemp, float environmentTemp) {
-        int energycost = 1;
-        if (bodyTemp < 0.05) {
-            float delta = 0.05F - bodyTemp;
-            if (delta > 0.1)
-                delta = 0.1F;
-            float rex = Math.max(this.extractEnergy(stack, energycost + (int) (delta * 120F), false) - energycost, 0F);
-            return rex / 120F;
-        } else this.extractEnergy(stack, energycost, false);
-        return 0;
-    }
 
     @Override
     public void fillItemGroup(ItemGroup group, NonNullList<ItemStack> items) {
@@ -109,13 +98,24 @@ public class HeaterVestItem extends FHBaseItem implements EnergyHelper.IIEEnergy
     }
 
     @Override
-    public float getMax(ItemStack stack) {
-        return 0.1F;
-    }
-
-    @Override
     public int getMaxEnergyStored(ItemStack container) {
         return 30000;
     }
+
+	@Override
+	public float getEffectiveTempAdded(EquipmentCuriosSlotType slot, ItemStack stack, float effectiveTemp, float bodyTemp) {
+		if(slot==null) {
+			return 50;
+		}
+		int energycost = 1;
+		if (effectiveTemp < 30.05f) {
+		    float delta = 30.05f - effectiveTemp;
+		    if (delta > 50)
+		        delta = 50F;
+		    float rex = Math.max(this.extractEnergy(stack, energycost + (int) (delta * 0.24f), false) - energycost, 0F);
+		    return rex / 0.24f;
+		} else this.extractEnergy(stack, energycost, false);
+		return 0;
+	}
 
 }

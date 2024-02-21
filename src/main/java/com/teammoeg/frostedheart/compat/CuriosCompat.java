@@ -20,8 +20,11 @@
 package com.teammoeg.frostedheart.compat;
 
 import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
+import com.mojang.datafixers.util.Pair;
 import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestItem;
 
 import net.minecraft.entity.LivingEntity;
@@ -36,28 +39,43 @@ import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
 
 public class CuriosCompat {
-    static class CuriosIterator implements Iterator<ItemStack> {
-        static class ItemIterator implements Iterator<ItemStack> {
-            int i = 0;
-            int max;
-            IDynamicStackHandler handler;
+	static class EmptyIterator<T> implements Iterator<T>{
 
-            public ItemIterator(int max, IDynamicStackHandler handler) {
-                this.max = max;
-                this.handler = handler;
-            }
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
 
-            @Override
-            public boolean hasNext() {
-                return i < max;
-            }
+		@Override
+		public T next() {
+			throw new NoSuchElementException();
+		}
+		
+		
+	}
+    static class ItemIterator implements Iterator<ItemStack> {
+        int i = 0;
+        int max;
+        IDynamicStackHandler handler;
 
-            @Override
-            public ItemStack next() {
-                return handler.getStackInSlot(i++);
-            }
-
+        public ItemIterator(int max, IDynamicStackHandler handler) {
+            this.max = max;
+            this.handler = handler;
         }
+
+        @Override
+        public boolean hasNext() {
+            return i < max;
+        }
+
+        @Override
+        public ItemStack next() {
+            return handler.getStackInSlot(i++);
+        }
+
+    }
+    static class CuriosIterator implements Iterator<ItemStack> {
+
         ItemIterator cur;
 
         Iterator<ICurioStacksHandler> it;
@@ -95,23 +113,59 @@ public class CuriosCompat {
             return null;
         }
     }
+    static class SlottyCuriosIterator implements Iterator<Pair<String,ItemStack>> {
+        ItemIterator cur;
 
+        Iterator<Entry<String, ICurioStacksHandler>> it;
+        String curEntry;
+        public SlottyCuriosIterator(Iterator<Entry<String, ICurioStacksHandler>> iterator) {
+        	this.it=iterator;
+		}
+
+        @Override
+        public boolean hasNext() {
+            if (cur != null && cur.hasNext()) return true;
+            Entry<String, ICurioStacksHandler> current;
+            while (it.hasNext()) {
+                current = it.next();
+                if (current.getValue().isVisible()) {
+                    cur = new ItemIterator(current.getValue().getSlots(), current.getValue().getStacks());
+                    curEntry=current.getKey();
+                    if (cur.hasNext())
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public Pair<String,ItemStack> next() {
+            if (cur != null && cur.hasNext()) return Pair.of(curEntry,cur.next());
+            Entry<String, ICurioStacksHandler> current;
+            do {
+                current = it.next();
+            } while (!current.getValue().isVisible() && it.hasNext());
+            if (current.getValue().isVisible()) {
+                cur = new ItemIterator(current.getValue().getSlots(), current.getValue().getStacks());
+                curEntry=current.getKey();
+                return Pair.of(curEntry,cur.next());
+            }
+            return null;
+        }
+    }
     public static Iterable<ItemStack> getAllCuriosIfVisible(LivingEntity el) {
         return new Iterable<ItemStack>() {
             @Override
             public Iterator<ItemStack> iterator() {
-                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h -> new CuriosIterator(h.getCurios().values().iterator())).orElse(new CuriosIterator(null) {
-                    @Override
-                    public boolean hasNext() {
-                        return false;
-                    }
-
-                    @Override
-                    public ItemStack next() {
-                        return null;
-                    }
-
-                });
+                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h ->(Iterator<ItemStack>)new CuriosIterator(h.getCurios().values().iterator())).orElse(new EmptyIterator<>());
+            }
+        };
+    }
+    public static Iterable<Pair<String, ItemStack>> getAllCuriosAndSlotsIfVisible(LivingEntity el) {
+        return new Iterable<Pair<String, ItemStack>>() {
+            @Override
+            public Iterator<Pair<String, ItemStack>> iterator() {
+                return CuriosApi.getCuriosHelper().getCuriosHandler(el).resolve().map(h ->(Iterator<Pair<String,ItemStack>>)new SlottyCuriosIterator(h.getCurios().entrySet().iterator())).orElse(new EmptyIterator<>());
             }
         };
     }
