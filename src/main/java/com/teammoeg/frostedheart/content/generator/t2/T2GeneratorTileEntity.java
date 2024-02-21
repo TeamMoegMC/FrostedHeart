@@ -106,13 +106,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
         return new FluidTank[0];
     }
 
-    protected double getHeatEfficiency() {
-        ReferenceValue<Double> eff = new ReferenceValue<>(1d);
-        getTeamData().ifPresent(t -> {
-            eff.map(n -> n + t.getVariantDouble(ResearchVariant.GENERATOR_HEAT));
-        });
-        return eff.getVal();
-    }
+
 
 
 
@@ -232,7 +226,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
             noliquidtick--;
             return;
         }
-        double eff = getHeatEfficiency();
 
         int liquidtick = data.map(t -> t.steamProcess).orElse(0);
         if (liquidtick >= rt) {

@@ -27,6 +27,7 @@ import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEn
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -192,7 +193,7 @@ public class GeneratorData {
         isActive = tickFuelProcess(w);
         tickHeatedProcess(w);
         if(isActive&&power>0)
-        	ep.setPower(power);
+        	ep.setPower((float) (power*getHeatEfficiency()));
     }
     public void tickHeatedProcess(World world) {
     	int heatedMax=getMaxHeated();
@@ -254,6 +255,10 @@ public class GeneratorData {
     	process=0;
     	processMax=0;
     	steamProcess=0;
+    }
+    protected double getHeatEfficiency() {
+
+        return 1+teamData.getVariantDouble(ResearchVariant.GENERATOR_HEAT);
     }
 	public float getMaxTemperatureLevel() {
 		return 1+(isOverdrive?1:0)+steamLevel;

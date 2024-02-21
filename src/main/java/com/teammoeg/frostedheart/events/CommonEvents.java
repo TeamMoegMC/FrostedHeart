@@ -22,20 +22,25 @@ package com.teammoeg.frostedheart.events;
 import static net.minecraft.entity.EntityType.*;
 import static net.minecraft.world.biome.Biome.Category.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
+import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
+import com.teammoeg.frostedheart.client.util.GuiUtils;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
+import com.teammoeg.frostedheart.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.data.FHDataReloadManager;
@@ -53,7 +58,6 @@ import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
-import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
@@ -70,12 +74,11 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
-import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
 
@@ -94,6 +97,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -119,12 +124,12 @@ import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.ConfiguredFeature;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.world.MobSpawnInfoBuilder;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.AnvilUpdateEvent;
+import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
@@ -166,7 +171,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void checkSleep(SleepingTimeCheckEvent event) {
         if (event.getPlayer().getSleepTimer() >= 100 && !event.getPlayer().getEntityWorld().isRemote) {
-            EnergyCore.applySleep(ChunkHeatData.getTemperature(event.getPlayer().getEntityWorld(), event.getSleepingLocation().orElseGet(event.getPlayer()::getPosition)), (ServerPlayerEntity) event.getPlayer());
+            EnergyCore.applySleep((ServerPlayerEntity) event.getPlayer());
         }
     }
     @SubscribeEvent
@@ -176,6 +181,18 @@ public class CommonEvents {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             if (!player.isSpectator() && !player.isCreative() && player.ticksExisted % 20 == 0)
                 EnergyCore.dT(player);
+        }
+    }
+    @SubscribeEvent
+    public static void insulationDataAttr(ItemAttributeModifierEvent event) {
+        ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
+        
+        if(data!=null) {
+        	UUID rnuuid=UUID.nameUUIDFromBytes(RegistryUtils.getRegistryName(event.getItemStack().getItem()).toString().getBytes(StandardCharsets.ISO_8859_1));
+        	String amd=FHMain.MODID+":armor_data";
+        	event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(rnuuid,amd, data.getInsulation(), Operation.ADDITION));
+        	event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getColdProof(), Operation.ADDITION));
+        	event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getHeatProof(), Operation.ADDITION));
         }
     }
     @SubscribeEvent
@@ -316,7 +333,8 @@ public class CommonEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void doPlayerInteract(PlayerInteractEvent ite) {
     	if(ite.getPlayer() instanceof ServerPlayerEntity&&!(ite.getPlayer() instanceof FakePlayer)) {
-    		FHScenario.trigVar(ite.getPlayer(), EventTriggerType.PLAYER_INTERACT);
+    		ScenarioConductor cond=FHScenario.get(ite.getPlayer());
+    		cond.playerInited=true;
     	}
     }
     @SubscribeEvent
@@ -665,9 +683,6 @@ public class CommonEvents {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             ScenarioConductor runner=FHScenario.get(player);
             runner.tick();
-            if(player.openContainer instanceof HeatStatContainer) {
-            	((HeatStatContainer)player.openContainer).tick();
-            }
            // System.out.println(runner.save());
         }
     }
