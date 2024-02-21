@@ -57,6 +57,7 @@ import com.teammoeg.frostedheart.content.agriculture.FHBerryBushBlock;
 import com.teammoeg.frostedheart.content.agriculture.FHCropBlock;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen;
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
+import com.teammoeg.frostedheart.content.steamenergy.HeatStatContainer;
 import com.teammoeg.frostedheart.content.tools.oredetect.CoreSpade;
 import com.teammoeg.frostedheart.content.tools.oredetect.GeologistsHammer;
 import com.teammoeg.frostedheart.content.tools.oredetect.ProspectorPick;
