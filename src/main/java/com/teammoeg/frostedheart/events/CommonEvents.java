@@ -683,6 +683,9 @@ public class CommonEvents {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             ScenarioConductor runner=FHScenario.get(player);
             runner.tick();
+            if(player.openContainer instanceof HeatStatContainer) {
+            	((HeatStatContainer)player.openContainer).tick();
+            }
            // System.out.println(runner.save());
         }
     }
