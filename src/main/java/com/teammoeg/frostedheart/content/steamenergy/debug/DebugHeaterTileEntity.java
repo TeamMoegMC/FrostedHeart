@@ -19,12 +19,13 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
 
 import blusunrize.immersiveengineering.common.blocks.IEBaseTileEntity;
@@ -65,7 +66,7 @@ public class DebugHeaterTileEntity extends IEBaseTileEntity implements  ITickabl
     LazyOptional<HeatProviderEndPoint> heatcap=LazyOptional.of(()->endpoint);
     @Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY)
+		if(cap==FHCapabilities.HEAT_EP.capability())
 			return heatcap.cast();
 		return super.getCapability(cap, side);
 	}

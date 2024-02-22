@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
@@ -178,7 +179,7 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     LazyOptional<HeatProviderEndPoint> ep;
     @Override
 	public <X> LazyOptional<X> getCapability(Capability<X> capability, Direction facing) {
-    	if(capability==HeatCapabilities.ENDPOINT_CAPABILITY&&facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
+    	if(capability==FHCapabilities.HEAT_EP.capability()&&facing == this.getFacing().getOpposite() && this.posInMultiblock.equals(networkTile)) {
     		LazyOptional<HeatProviderEndPoint> cep=master().getData().map(t->t.epcap).orElseGet(LazyOptional::empty);
     		
     		if(ep!=cep) {

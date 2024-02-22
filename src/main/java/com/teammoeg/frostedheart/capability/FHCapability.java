@@ -1,6 +1,4 @@
-package com.teammoeg.frostedheart;
-
-import com.teammoeg.frostedheart.capability.FHCapabilityProvider;
+package com.teammoeg.frostedheart.capability;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -26,6 +24,7 @@ public class FHCapability<C extends INBTSerializable<CompoundNBT>> {
 		this.factory = factory;
 		
 	}
+	@SuppressWarnings("unchecked")
 	public void setup() {
         CapabilityManager.INSTANCE.register(capClass, new Capability.IStorage<C>() {
             public void readNBT(Capability<C> capability, C instance, Direction side, INBT nbt) {
@@ -39,7 +38,10 @@ public class FHCapability<C extends INBTSerializable<CompoundNBT>> {
         capability=(Capability<C>) CapabilityManager.INSTANCE.providers.get(capClass.getName().intern());
     }
 	public ICapabilityProvider create() {
-		return new FHCapabilityProvider<C>(capability,factory);
+		return new FHCapabilityProvider<C>(this);
+	}
+	LazyOptional<C> createCapability(){
+		return LazyOptional.of(factory);
 	}
 	public LazyOptional<C> getCapability(Object cap) {
 		if(cap instanceof ICapabilityProvider)

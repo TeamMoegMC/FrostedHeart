@@ -25,7 +25,7 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
  * Integrated power cache manager for power devices
  * A device should properly "request" power from the network
  */
-public class HeatConsumerEndPoint extends HeatPowerEndpoint{
+public class HeatConsumerEndpoint extends HeatPowerEndpoint{
     /**
      * The max intake.<br>
      */
@@ -36,7 +36,7 @@ public class HeatConsumerEndPoint extends HeatPowerEndpoint{
      * @param maxPower  the max power to store<br>
      * @param maxIntake the heat requested from network<br>
      */
-    public HeatConsumerEndPoint(float maxPower, float maxIntake) {
+    public HeatConsumerEndpoint(float maxPower, float maxIntake) {
         super(maxPower<=maxIntake?maxIntake:maxPower);
         this.maxIntake = maxIntake;
     }
@@ -45,7 +45,7 @@ public class HeatConsumerEndPoint extends HeatPowerEndpoint{
      *
      * @param maxIntake the heat requested from network<br>
      */
-    public HeatConsumerEndPoint(float maxIntake) {
+    public HeatConsumerEndpoint(float maxIntake) {
         super(maxIntake*4);
         this.maxIntake = maxIntake;
     }

@@ -2,11 +2,13 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.INBTSerializable;
 
-public abstract class HeatEndpoint {
+public abstract class HeatEndpoint implements INBTSerializable<CompoundNBT>{
     
     /**
      * The main network.<br>
@@ -52,4 +54,14 @@ public abstract class HeatEndpoint {
 		return network!=null;
 	}
     public abstract float getMaxIntake();
+
+	@Override
+	public CompoundNBT serializeNBT() {
+		return new CompoundNBT();
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT nbt) {
+	}
+    
 }

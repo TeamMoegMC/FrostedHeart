@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.steamenergy.charger;
 import java.util.Collection;
 import java.util.List;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.recipes.CampfireDefrostRecipe;
@@ -29,7 +30,7 @@ import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.IChargable;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
@@ -55,7 +56,7 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatConsumerEndPoint network = new HeatConsumerEndPoint(200,5);
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(200,5);
     float power;
     private static void splitAndSpawnExperience(World world, BlockPos pos, float experience) {
         int i = MathHelper.floor(experience);
@@ -77,11 +78,11 @@ public class ChargerTileEntity extends IEBaseTileEntity implements ITickableTile
         super(FHTileTypes.CHARGER.get());
     }
 
-    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
+    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction dir) {
     	Direction bd = this.getBlockState().get(BlockStateProperties.FACING);
-		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY&&(dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH))) {
+		if(cap==FHCapabilities.HEAT_EP.capability()&&(dir == bd || (bd != Direction.DOWN && dir == Direction.DOWN) || (bd == Direction.UP && dir == Direction.NORTH) || (bd == Direction.DOWN && dir == Direction.SOUTH))) {
 			return heatcap.cast();
 		}
 		return super.getCapability(cap, dir);

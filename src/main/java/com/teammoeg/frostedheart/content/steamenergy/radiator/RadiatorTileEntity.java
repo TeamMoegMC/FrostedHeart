@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.content.steamenergy.radiator;
 
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
@@ -28,7 +29,7 @@ import com.teammoeg.frostedheart.content.generator.ZoneHeatingMultiblockTileEnti
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
@@ -48,7 +49,7 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
 
-    HeatConsumerEndPoint network = new HeatConsumerEndPoint(100, 4);
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(100, 4);
 
     public RadiatorTileEntity() {
         super(FHMultiblocks.RADIATOR, FHTileTypes.RADIATOR.get(), false);
@@ -80,10 +81,10 @@ public class RadiatorTileEntity extends ZoneHeatingMultiblockTileEntity<Radiator
     }
 
 
-    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
+    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY&&offsetToMaster.getY() == 0) {
+		if(cap==FHCapabilities.HEAT_EP.capability()&&offsetToMaster.getY() == 0) {
 			return heatcap.cast();
 		}
 		return super.getCapability(cap, side);

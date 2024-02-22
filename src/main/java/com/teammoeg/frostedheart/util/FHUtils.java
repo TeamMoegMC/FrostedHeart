@@ -33,8 +33,8 @@ import javax.annotation.Nullable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
-import com.teammoeg.frostedheart.FHCapability;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.capability.FHCapability;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;

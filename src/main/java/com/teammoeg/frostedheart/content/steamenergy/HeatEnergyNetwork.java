@@ -26,6 +26,7 @@ import java.util.PriorityQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.trade.gui.TradeContainer;
@@ -59,11 +60,11 @@ public class HeatEnergyNetwork  implements INamedContainerProvider{
 	        if (te instanceof INetworkConsumer)
 	            ((INetworkConsumer) te).tryConnectAt(this,d, 1);
 	        else if(te!=null)
-	        	te.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY,d).ifPresent(t->t.reciveConnection(getWorld(),pos,this,d,1));
+	        	te.getCapability(FHCapabilities.HEAT_EP.capability(),d).ifPresent(t->t.reciveConnection(getWorld(),pos,this,d,1));
 	        if(cur instanceof INetworkConsumer) {
 	        	((INetworkConsumer) cur).tryConnectAt(this, d.getOpposite(), 0);
 	        }else if(cur!=null) {
-	        	cur.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY,d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getPos(),this,d.getOpposite(),0));
+	        	cur.getCapability(FHCapabilities.HEAT_EP.capability(),d.getOpposite()).ifPresent(t->t.reciveConnection(getWorld(),cur.getPos(),this,d.getOpposite(),0));
 	        }
     	}
     };

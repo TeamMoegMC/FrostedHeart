@@ -4,12 +4,13 @@ import java.util.Objects;
 
 import com.simibubi.create.content.contraptions.base.GeneratingKineticTileEntity;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
@@ -29,7 +30,7 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
         this.setLazyTickRate(20);
     }
 
-    HeatConsumerEndPoint network = new HeatConsumerEndPoint(FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(FHConfig.COMMON.steamCoreMaxPower.get().floatValue(),FHConfig.COMMON.steamCorePowerIntake.get().floatValue());
     
     public float getGeneratedSpeed(){
         float speed = FHConfig.COMMON.steamCoreGeneratedSpeed.get().floatValue();
@@ -65,10 +66,10 @@ public class SteamCoreTileEntity extends GeneratingKineticTileEntity implements
     }
 
 
-    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
+    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if(cap==HeatCapabilities.ENDPOINT_CAPABILITY&&side==this.getBlockState().get(BlockStateProperties.FACING).getOpposite()) {
+		if(cap==FHCapabilities.HEAT_EP.capability()&&side==this.getBlockState().get(BlockStateProperties.FACING).getOpposite()) {
 			return heatcap.cast();
 		}
 		return super.getCapability(cap, side);

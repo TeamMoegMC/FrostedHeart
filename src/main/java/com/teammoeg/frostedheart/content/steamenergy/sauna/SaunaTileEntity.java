@@ -27,13 +27,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndPoint;
+import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatConsumerEndpoint;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.FHUtils;
@@ -87,7 +88,7 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
     private int workPeriod;
     Set<BlockPos> floor = new HashSet<>();
     Set<BlockPos> edges = new HashSet<>();
-    HeatConsumerEndPoint network = new HeatConsumerEndPoint(10,1);
+    HeatConsumerEndpoint network = new HeatConsumerEndpoint(10,1);
 
     protected NonNullList<ItemStack> inventory;
     private LazyOptional<IItemHandler> insertionCap;
@@ -130,12 +131,12 @@ public class SaunaTileEntity extends IEBaseTileEntity implements ITickableTileEn
             }
         }
     }
-    LazyOptional<HeatConsumerEndPoint> heatcap=LazyOptional.of(()->network);
+    LazyOptional<HeatConsumerEndpoint> heatcap=LazyOptional.of(()->network);
     @Nonnull
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, Direction facing) {
     	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
     		return this.insertionCap.cast();
-		if(capability==HeatCapabilities.ENDPOINT_CAPABILITY&&facing==Direction.DOWN) {
+		if(capability==FHCapabilities.HEAT_EP.capability()&&facing==Direction.DOWN) {
 			return heatcap.cast();
 		}
 		return super.getCapability(capability, facing);

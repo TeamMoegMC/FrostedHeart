@@ -10,16 +10,16 @@ import net.minecraftforge.common.util.NonNullSupplier;
 
 public class FHCapabilityProvider<C extends INBTSerializable<CompoundNBT>> implements ICapabilitySerializable<CompoundNBT>{
 	LazyOptional<C> lazyCap;
-	Capability<C> capability;
-	public FHCapabilityProvider(Capability<C> capability,NonNullSupplier<C> cap) {
+	FHCapability<C> capability;
+	public FHCapabilityProvider(FHCapability<C> capability) {
 		super();
 		this.capability = capability;
-		this.lazyCap=LazyOptional.of(cap);
+		this.lazyCap=capability.createCapability();
 	}
 
 	@Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if(cap==capability) {
+		if(cap==capability.capability()) {
 			return lazyCap.cast();
 		}
 		return LazyOptional.empty();

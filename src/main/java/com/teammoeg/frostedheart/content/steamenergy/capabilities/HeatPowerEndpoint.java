@@ -66,5 +66,18 @@ public abstract class HeatPowerEndpoint extends HeatEndpoint {
     	return power>0;
     }
 
+	@Override
+	public CompoundNBT serializeNBT() {
+		CompoundNBT nbt=super.serializeNBT();
+		save(nbt);
+		return nbt;
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT nbt) {
+		super.deserializeNBT(nbt);
+		load(nbt);
+	}
+
 
 }

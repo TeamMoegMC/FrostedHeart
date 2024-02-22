@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.content.steamenergy.debug;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.content.steamenergy.EnergyNetworkProvider;
 import com.teammoeg.frostedheart.content.steamenergy.HeatHandler;
@@ -75,7 +76,7 @@ public class HeatDebugItem extends Item {
 	            		HeatHandler.openHeatScreen((ServerPlayerEntity) playerIn, ((EnergyNetworkProvider) te).getNetwork());
 	            	else playerIn.sendMessage(GuiUtils.str("EnergyNetwork " + ((EnergyNetworkProvider) te).getNetwork()), playerIn.getUniqueID());
 	            }else if(te!=null) {
-	            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(HeatCapabilities.ENDPOINT_CAPABILITY, ((BlockRayTraceResult) raytraceresult).getFace()).orElse(null)), playerIn.getUniqueID());
+	            	playerIn.sendMessage(GuiUtils.str("EnergyEndpoint "+te.getCapability(FHCapabilities.HEAT_EP.capability(), ((BlockRayTraceResult) raytraceresult).getFace()).orElse(null)), playerIn.getUniqueID());
 	            }
             }
             return ActionResult.resultSuccess(itemstack);
