@@ -634,9 +634,11 @@ public class CommonEvents {
                 // Update clock source every second, and check hour data if it needs an update
                 if (serverWorld.getGameTime() % 20 == 0) {
                     WorldClimate data = WorldClimate.get(serverWorld);
-                    data.updateClock(serverWorld);
-                    data.updateCache(serverWorld);
-                    data.trimTempEventStream();
+                    if(data!=null) {
+	                    data.updateClock(serverWorld);
+	                    data.updateCache(serverWorld);
+	                    data.trimTempEventStream();
+                    }
 
                 }
                 if (world.getDayTime() % 24000 == 40) {

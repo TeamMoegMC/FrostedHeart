@@ -57,6 +57,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.world.storage.FolderName;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.network.PacketDistributor;
 
@@ -171,7 +172,8 @@ public class FHScenario {
 	static {
 		register(TextualCommands.class);
 		register(ControlCommands.class);
-		register(FTBQCommands.class);
+		if(ModList.get().isLoaded("ftbquests"))
+			register(FTBQCommands.class);
 		register(ActCommand.class);
 		register(VariableCommand.class);
 		registerClientDelegate(IClientControlCommand.class);

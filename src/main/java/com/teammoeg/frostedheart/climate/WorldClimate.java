@@ -41,9 +41,7 @@ import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
 
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
@@ -51,8 +49,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -98,77 +94,9 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * @author Lyuuke
  */
 public class WorldClimate implements INBTSerializable<CompoundNBT> {
-    private static class NopClimateData extends WorldClimate {
-
-        @Override
-        public void addInitTempEvent(ServerWorld w) {
-        }
-
-        @Override
-        protected Pair<Float, ClimateType> computeTemp(long time) {
-            return Pair.of(0f, ClimateType.NONE);
-        }
-
-        @Override
-        public List<TemperatureFrame> getFrames(int min, int max) {
-            return ImmutableList.of();
-        }
-
-        @Override
-        protected void populateDays() {
-            while (dailyTempData.size() <= DAY_CACHE_LENGTH) {
-                dailyTempData.offer(new DayTemperatureData(0));
-            }
-        }
-
-        @Override
-        protected void readCache() {
-        }
-
-        @Override
-        protected void rebuildTempEventStream(long time) {
-        }
-
-        @Override
-        public void resetTempEvent(ServerWorld w) {
-        }
-
-        @Override
-        protected void tempEventStreamGrow(long time) {
-        }
-
-        @Override
-        protected void tempEventStreamTrim(long time) {
-        }
-
-        @Override
-        public String toString() {
-            return "No temp data for this world";
-        }
-
-        @Override
-        public void trimTempEventStream() {
-        }
-
-
-        @Override
-        public void updateCache(ServerWorld serverWorld) {
-        }
-
-        @Override
-        public void updateFrames() {
-        }
-
-        @Override
-        public boolean updateNewFrames() {
-            return false;
-        }
-
-    }
 
     @CapabilityInject(WorldClimate.class)
     public static Capability<WorldClimate> CAPABILITY;
-    private static final NopClimateData NOP = new NopClimateData();
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
     public static final int DAY_CACHE_LENGTH = 8;
 
@@ -186,10 +114,11 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      * Get ClimateData attached to this world
      *
      * @param world server or client
-     * @return An instance of ClimateData exists on the world, otherwise return a new ClimateData instance.
+     * @return An instance of ClimateData exists on the world, otherwise return null
      */
+    @Nullable
     public static WorldClimate get(IWorld world) {
-        return getCapability(world).resolve().orElse(NOP);
+        return getCapability(world).resolve().orElse(null);
     }
 
     /**
@@ -198,7 +127,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      * @param world server or client
      * @return An instance of ClimateData if data exists on the world, otherwise return empty.
      */
-    private static LazyOptional<WorldClimate> getCapability(@Nullable IWorld world) {
+    public static LazyOptional<WorldClimate> getCapability(@Nullable IWorld world) {
         if (world instanceof World) {
             return ((World) world).getCapability(CAPABILITY);
         }
@@ -408,10 +337,10 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      * @return temperature at current hour
      */
     public static float getTemp(IWorld world) {
-        return get(world).getTemp();
+        return getCapability(world).map(t->t.getTemp()).orElse(0f);
     }
     public static int getWind(IWorld world) {
-        return get(world).getWind();
+        return getCapability(world).map(t->t.getWind()).orElse(0);
     }
 
     public static long getWorldDay(IWorld w) {

@@ -10,6 +10,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
 
 public class FHCapability<C extends INBTSerializable<CompoundNBT>> {
@@ -40,6 +41,10 @@ public class FHCapability<C extends INBTSerializable<CompoundNBT>> {
 	public ICapabilityProvider create() {
 		return new FHCapabilityProvider<C>(capability,factory);
 	}
-
+	public LazyOptional<C> getCapability(Object cap) {
+		if(cap instanceof ICapabilityProvider)
+			return ((ICapabilityProvider)cap).getCapability(capability);
+		return LazyOptional.empty();
+	}
 
 }

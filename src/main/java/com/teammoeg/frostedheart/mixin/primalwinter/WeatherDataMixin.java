@@ -45,7 +45,7 @@ public class WeatherDataMixin {
             if (Config.COMMON.isWinterDimension(world.getDimensionKey().getLocation())) {
                 world.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(true, world.getServer());
                 //world.setWeather(0, 64000, true, true);
-                WorldClimate.get(world).addInitTempEvent(world);
+                WorldClimate.getCapability(world).ifPresent(t->t.addInitTempEvent(world));
             }
         }
     }
