@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.capability.FHCapability;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -16,6 +17,7 @@ import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.common.util.NonNullSupplier;
 
 public class FHCapabilities {
 	private static List<FHCapability<?>> capabilities=new ArrayList<>();
@@ -55,6 +57,11 @@ public class FHCapabilities {
 				throw new RuntimeException("Can not create capability "+capClass.getSimpleName());
 			}
 		});
+		capabilities.add(cap);
+		return cap;
+	}
+	public static <T extends INBTSerializable<CompoundNBT>> FHCapability<T> register(Class<T> capClass,NonNullSupplier<T> sup){
+		FHCapability<T> cap=new FHCapability<>(capClass,sup);
 		capabilities.add(cap);
 		return cap;
 	}
