@@ -48,9 +48,15 @@ public class FHClimatePacket {
     }
 
     public FHClimatePacket(WorldClimate climateData) {
-        data = climateData.getFrames();
-        sec = climateData.getSec();
-        climate = climateData.getClimate();
+    	if(climateData==null) {
+    		data = new short[0];
+            sec = 0;
+            climate = ClimateType.NONE;
+    	}else {
+	        data = climateData.getFrames();
+	        sec = climateData.getSec();
+	        climate = climateData.getClimate();
+    	}
     }
 
     public void encode(PacketBuffer buffer) {

@@ -135,7 +135,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
     }
 
     public static long getDay(IWorld world) {
-        return get(world).clockSource.getDate();
+    	return getCapability(world).map(t->t.clockSource.getDate()).orElse(0L);
     }
 
     public static int getFirstHourGreaterThan(IWorld world, int withinHours, float highTemp) {
@@ -170,6 +170,8 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
     }
 
     private static boolean getFutureBlizzard(WorldClimate data, int deltaDays, int deltaHours) {
+    	if(data==null)
+    		return false;
         if (deltaDays < 0 || deltaDays > DAY_CACHE_LENGTH) {
             return false;
         }
@@ -230,7 +232,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      */
     public static float getFutureTemp(IWorld world, int deltaHours) {
 
-        return get(world).getFutureTemp(deltaHours);
+        return getCapability(world).map(t->t.getFutureTemp(deltaHours)).orElse(0f);
     }
 
     /**
@@ -256,6 +258,8 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      * @return temperature at hour at index. If exceeds cache size, return NaN.
      */
     private static float getFutureTemp(WorldClimate data, int deltaDays, int deltaHours) {
+    	if(data==null)
+    		return 0;
         if (deltaDays < 0 || deltaDays > DAY_CACHE_LENGTH) {
             return Float.NaN;
         }
@@ -277,6 +281,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      * @return Iterable of temperature
      */
     public static Iterable<Float> getFutureTempIterator(WorldClimate data, int deltaHours) {
+    	if(data==null)return Arrays.asList();
         long thours = data.clockSource.getHours() + deltaHours;
         long ddate = thours / 24 - data.clockSource.getDate() + 1;
         long dhours = thours % 24;
@@ -313,21 +318,21 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
 
         };
     }
-
+    
     public static long getHour(IWorld world) {
-        return get(world).clockSource.getHours();
+        return getCapability(world).map(t->t.clockSource.getHours()).orElse(0L);
     }
 
     public static int getHourInDay(IWorld world) {
-        return get(world).clockSource.getHourInDay();
+        return getCapability(world).map(t->t.clockSource.getHourInDay()).orElse(0);
     }
 
     public static long getMonth(IWorld world) {
-        return get(world).clockSource.getDate();
+        return getCapability(world).map(t->t.clockSource.getDate()).orElse(0L);
     }
 
     public static long getSec(IWorld world) {
-        return get(world).clockSource.getTimeSecs();
+        return getCapability(world).map(t->t.clockSource.getTimeSecs()).orElse(0L);
     }
 
     /**
@@ -344,7 +349,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
     }
 
     public static long getWorldDay(IWorld w) {
-        return get(w).getDay();
+        return getCapability(w).map(t->t.getDay()).orElse(0L);
     }
 
     /**
@@ -354,11 +359,11 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      * @return temperature at current hour
      */
     public static boolean isBlizzard(IWorld world) {
-        return get(world).getHourData().getType() == ClimateType.BLIZZARD;
+        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.BLIZZARD).orElse(false);
     }
 
     public static boolean isCloudy(World world) {
-        return get(world).getHourData().getType() == ClimateType.CLOUDY;
+        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.CLOUDY).orElse(false);
     }
 
     /**
@@ -372,6 +377,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      */
     public static boolean isFutureBlizzard(IWorld world, int deltaHours) {
         WorldClimate data = get(world);
+        if(data==null)return false;
         long thours = data.clockSource.getHours() + deltaHours;
         long ddate = thours / 24 - data.clockSource.getDate();
         long dhours = thours % 24;
@@ -392,11 +398,11 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
     }
 
     public static boolean isSnowing(World world) {
-        return get(world).getHourData().getType() == ClimateType.SNOW;
+        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SNOW).orElse(false);
     }
 
     public static boolean isSun(IWorld world) {
-        return get(world).getHourData().getType() == ClimateType.SUN;
+        return getCapability(world).map(t->t.getHourData().getType() == ClimateType.SUN).orElse(false);
     }
 
     public WorldClimate() {
