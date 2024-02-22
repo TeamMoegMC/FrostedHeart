@@ -149,9 +149,8 @@ repositories {
             includeGroup "mezz.jei"
         }
     }
-
+	// Location of the maven for Flywheel
     maven {
-        // Location of the maven for Flywheel
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
     }
@@ -162,6 +161,9 @@ repositories {
     }
     maven {
         url "https://maven.architectury.dev/"
+        content {
+        	includeGroup "me.shedaniel"
+        }
     }
     maven {
         url "https://maven.saps.dev/minecraft"

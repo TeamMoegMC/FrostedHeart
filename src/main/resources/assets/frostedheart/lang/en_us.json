@@ -1,4 +1,7 @@
 {
+  "attribute.frostedheart.insulation": "Insulation",
+  "attribute.frostedheart.windproof": "Water Proof",
+  "attribute.frostedheart.heatproof": "Heat Proof",
   "biome.frostedheart.volcanic": "Geology Active Area",
   "block.frostedheart.burning_chamber": "Burning Chamber",
   "block.frostedheart.burning_chamber_core": "Burning Chamber Core",

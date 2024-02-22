@@ -32,7 +32,7 @@ public class ArmorTempData extends JsonDataHolder {
         super(data);
     }
     public float getInsulation() {
-    	return this.getFloatOrDefault("insulation", 0F);
+    	return this.getFloatOrDefault("factor", 0F);
     }
     public float getHeatProof() {
     	return this.getFloatOrDefault("heat_proof", 0F);

@@ -96,7 +96,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
  */
 public class WorldClimate implements INBTSerializable<CompoundNBT> {
 
-    public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
     public static final int DAY_CACHE_LENGTH = 8;
 
     protected LinkedList<ClimateEvent> tempEventStream;

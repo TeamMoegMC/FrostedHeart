@@ -102,6 +102,7 @@ import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -188,11 +189,17 @@ public class CommonEvents {
         ArmorTempData data=FHDataManager.getArmor(event.getItemStack());
         
         if(data!=null) {
-        	UUID rnuuid=UUID.nameUUIDFromBytes(RegistryUtils.getRegistryName(event.getItemStack().getItem()).toString().getBytes(StandardCharsets.ISO_8859_1));
+        	UUID rnuuid=UUID.nameUUIDFromBytes((FHMain.MODID+event.getSlotType().toString()).getBytes(StandardCharsets.ISO_8859_1));
         	String amd=FHMain.MODID+":armor_data";
-        	event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(rnuuid,amd, data.getInsulation(), Operation.ADDITION));
-        	event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getColdProof(), Operation.ADDITION));
-        	event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getHeatProof(), Operation.ADDITION));
+        	EquipmentSlotType es=event.getItemStack().getEquipmentSlot();
+        	if(event.getSlotType()==es) {
+	        	if(data.getInsulation()!=0)
+	        		event.addModifier(FHAttributes.INSULATION.get(), new AttributeModifier(rnuuid,amd, data.getInsulation(), Operation.ADDITION));
+	        	if(data.getColdProof()!=0)
+	        		event.addModifier(FHAttributes.WIND_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getColdProof(), Operation.ADDITION));
+	        	if(data.getHeatProof()!=0)
+	        		event.addModifier(FHAttributes.HEAT_PROOF.get(), new AttributeModifier(rnuuid,amd, data.getHeatProof(), Operation.ADDITION));
+        	}
         }
     }
     @SubscribeEvent

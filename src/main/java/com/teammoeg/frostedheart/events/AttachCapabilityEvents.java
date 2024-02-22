@@ -21,10 +21,14 @@ package com.teammoeg.frostedheart.events;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.climate.WorldClimate;
+import com.teammoeg.frostedheart.capability.CurioCapabilityProvider;
+import com.teammoeg.frostedheart.climate.ArmorTempCurios;
+import com.teammoeg.frostedheart.climate.data.ArmorTempData;
+import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.content.foods.DailyKitchen.WantedFoodCapabilityProvider;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -61,12 +65,19 @@ public class AttachCapabilityEvents {
         event.addCapability(new ResourceLocation(FHMain.MODID, "rsenergy"   ), FHCapabilities.ENERGY.create());
 
     }
-
+    @SubscribeEvent
+    public static void attachToItem(AttachCapabilitiesEvent<ItemStack> event) {
+        // only attach to dimension with skylight (i.e. overworld)
+    	ArmorTempData amd=FHDataManager.getArmor(event.getObject());
+        if (amd!=null) {
+            event.addCapability(new ResourceLocation(FHMain.MODID, "armor_warmth"),new CurioCapabilityProvider(()->new ArmorTempCurios(amd)));
+        }
+    }
     @SubscribeEvent
     public static void attachToWorld(AttachCapabilitiesEvent<World> event) {
         // only attach to dimension with skylight (i.e. overworld)
         if (!event.getObject().getDimensionType().doesFixedTimeExist()) {
-            event.addCapability(WorldClimate.ID,FHCapabilities.CLIMATE_DATA.create());
+            event.addCapability(new ResourceLocation(FHMain.MODID, "climate_data"),FHCapabilities.CLIMATE_DATA.create());
         }
     }
 

@@ -16,7 +16,7 @@ public class FHAttributes {
 	public static final RegistryObject<Attribute> WIND_PROOF=register("windproof", s->new RangedAttribute(s, 0, -1000, 10000000));
 	public static final RegistryObject<Attribute> HEAT_PROOF=register("heatproof", s->new RangedAttribute(s, 0, -1000, 10000000));
 	public static RegistryObject<Attribute> register(String name,Function<String,Attribute> provider){
-		return REGISTER.register(name, ()->provider.apply(name));
+		return REGISTER.register(name, ()->provider.apply("attribute."+FHMain.MODID+"."+name));
 		
 	}
 }
