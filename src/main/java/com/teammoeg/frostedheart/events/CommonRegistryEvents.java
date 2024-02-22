@@ -81,6 +81,10 @@ public class CommonRegistryEvents {
     @SubscribeEvent
     public static void onEntityAttributeModificationEvent(EntityAttributeModificationEvent event) {
 		event.add(EntityType.PLAYER, FHAttributes.ENV_TEMPERATURE.get());
+		event.add(EntityType.PLAYER, FHAttributes.EFFECTIVE_TEMPERATURE.get());
+		event.add(EntityType.PLAYER, FHAttributes.INSULATION.get());
+		event.add(EntityType.PLAYER, FHAttributes.WIND_PROOF.get());
+		event.add(EntityType.PLAYER, FHAttributes.HEAT_PROOF.get());
 	}
     @SubscribeEvent
     public static void registerModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {

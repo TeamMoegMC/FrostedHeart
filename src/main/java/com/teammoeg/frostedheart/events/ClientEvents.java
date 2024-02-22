@@ -41,7 +41,6 @@ import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.climate.player.IHeatingEquipment;
 import com.teammoeg.frostedheart.climate.player.ITempAdjustFood;
-import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.compat.jei.JEICompat;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
@@ -187,7 +186,7 @@ public class ClientEvents {
         ItemStack stack = event.getItemStack();
         Item i = stack.getItem();
         ITempAdjustFood itf = null;
-        IWarmKeepingEquipment iwe = null;
+        //IWarmKeepingEquipment iwe = null;
         for (InspireRecipe ir : FHUtils.filterRecipes(null, InspireRecipe.TYPE)) {
             if (ir.item.test(stack)) {
                 event.getToolTip().add(GuiUtils.translateTooltip("inspire_item").mergeStyle(TextFormatting.GRAY));
@@ -200,7 +199,7 @@ public class ClientEvents {
         } else {
             itf = FHDataManager.getFood(stack);
         }
-        if (i instanceof IWarmKeepingEquipment) {
+       /* if (i instanceof IWarmKeepingEquipment) {
             iwe = (IWarmKeepingEquipment) i;
         } else {
             String s = ItemNBTHelper.getString(stack, "inner_cover");
@@ -235,7 +234,7 @@ public class ClientEvents {
                 iwe = FHDataManager.getArmor(s + "_" + aes.getName());
             } else
                 iwe = FHDataManager.getArmor(stack);
-        }
+        }*/
         BlockTempData btd = FHDataManager.getBlockData(stack);
         if (btd != null) {
             float temp = btd.getTemp();
@@ -260,15 +259,15 @@ public class ClientEvents {
                     event.getToolTip()
                             .add(GuiUtils.translateTooltip("food_temp", TemperatureDisplayHelper.toTemperatureDeltaFloatString(temp)).mergeStyle(TextFormatting.AQUA));
         }
-        if (iwe != null) {
+      /*  if (iwe != null) {
             float temp = iwe.getFactor(null, stack);
             temp = Math.round(temp * 100);
             String temps = Float.toString(temp);
             if (temp != 0)
                 event.getToolTip().add(GuiUtils.translateTooltip("armor_warm", temps).mergeStyle(TextFormatting.GOLD));
-        }
+        }*/
         if (i instanceof IHeatingEquipment) {
-            float temp = ((IHeatingEquipment) i).getMax(stack) * tspeed;
+            float temp = ((IHeatingEquipment) i).getEffectiveTempAdded(null, stack,0, 0);
             temp = (Math.round(temp * 2000)) / 1000.0F;
             if (temp != 0)
                 if (temp > 0)

@@ -35,10 +35,12 @@ public class MinecraftMPFixMixin {
 
     public void allowChat(CallbackInfoReturnable<Boolean> callbackInfo) {
         callbackInfo.setReturnValue(true);
+        callbackInfo.cancel();
     }
 
     @Inject(at = @At("HEAD"), method = "isMultiplayerEnabled", cancellable = true)
     public void allowMP(CallbackInfoReturnable<Boolean> callbackInfo) {
         callbackInfo.setReturnValue(true);
+        callbackInfo.cancel();
     }
 }

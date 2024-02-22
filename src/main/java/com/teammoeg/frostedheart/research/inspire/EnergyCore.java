@@ -26,23 +26,15 @@ import javax.annotation.Nullable;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
-import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.climate.player.IWarmKeepingEquipment;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
-import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
 
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.potion.EffectInstance;
@@ -99,7 +91,7 @@ public class EnergyCore implements INBTSerializable<CompoundNBT> {
         FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHEnergyDataSyncPacket(player));
     }
 
-    public static void applySleep(float tenv, ServerPlayerEntity player) {
+    public static void applySleep(ServerPlayerEntity player) {
         float nkeep = 0;
         EnergyCore data=getCapability(player).orElse(null);
         long lsd = data.lastsleepdate;
@@ -107,40 +99,7 @@ public class EnergyCore implements INBTSerializable<CompoundNBT> {
         //System.out.println("slept");
         if (csd == lsd) return;
         //System.out.println("sleptx");
-        for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
-            if (is == null)
-                continue;
-            Item it = is.getItem();
-            if (it instanceof IWarmKeepingEquipment) {//only for direct warm keeping
-                nkeep += ((IWarmKeepingEquipment) it).getFactor(player, is);
-            } else {
-                IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
-                if (iw != null)
-                    nkeep += iw.getFactor(player, is);
-            }
-        }
-        for (ItemStack is : player.getArmorInventoryList()) {
-            if (is.isEmpty())
-                continue;
-            Item it = is.getItem();
-            if (it instanceof IWarmKeepingEquipment) {
-                nkeep += ((IWarmKeepingEquipment) it).getFactor(player, is);
-            } else {//include inner
-                String s = ItemNBTHelper.getString(is, "inner_cover");
-                IWarmKeepingEquipment iw = null;
-                EquipmentSlotType aes = MobEntity.getSlotForItemStack(is);
-                if (s.length() > 0 && aes != null) {
-                    iw = FHDataManager.getArmor(s + "_" + aes.getName());
-                } else
-                    iw = FHDataManager.getArmor(is);
-                if (iw != null)
-                    nkeep += iw.getFactor(player, is);
-            }
-        }
-        if (nkeep > 1)
-            nkeep = 1;
-        float nta = (1 - nkeep) + 0.5f;
-        float tbody = 30 / nta + tenv;
+        float tbody = PlayerTemperatureData.getCapability(player).map(t->t.getFeelTemp()).orElse(0f);
         double out = Math.pow(10, 4 - Math.abs(tbody - 40) / 10);
         //System.out.println(out);
         data.utbody=out;

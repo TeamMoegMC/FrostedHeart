@@ -58,19 +58,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 @Mod.EventBusSubscriber
 public class TemperatureUpdate {
-    private static final class HeatingEquipment {
-        IHeatingEquipment e;
-        ItemStack i;
-
-        public HeatingEquipment(IHeatingEquipment e, ItemStack i) {
-            this.e = e;
-            this.i = i;
-        }
-
-        public float compute(float body, float env) {
-            return e.compute(i, body, env);
-        }
-    }
     public static final float HEAT_EXCHANGE_CONSTANT = 0.0012F;
 
     public static final float SELF_HEATING_CONSTANT = 0.036F;
@@ -205,33 +192,30 @@ public class TemperatureUpdate {
                 
                 
                 envtemp=(float) player.getAttributeValue(FHAttributes.ENV_TEMPERATURE.get());
+                float insulation = (float) player.getAttributeValue(FHAttributes.INSULATION.get());
+                float efftemp=current-(1-insulation)*(current-envtemp);//Effective temperature
                 
-                // normalize
-                envtemp -= 37F;
-                float keepwarm = 0;
+                
+                
+                
                 //list of equipments to be calculated
-                ArrayList<HeatingEquipment> equipments = new ArrayList<>(7);
-                for (ItemStack is : CuriosCompat.getAllCuriosIfVisible(player)) {
+                for (Pair<String, ItemStack> is : CuriosCompat.getAllCuriosAndSlotsIfVisible(player)) {
                     if (is == null)
                         continue;
-                    Item it = is.getItem();
+                    Item it = is.getSecond().getItem();
                     if (it instanceof IHeatingEquipment)
-                        equipments.add(new HeatingEquipment((IHeatingEquipment) it, is));
-                    if (it instanceof IWarmKeepingEquipment) {//only for direct warm keeping
-                        keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
-                    } else {
-                        IWarmKeepingEquipment iw = FHDataManager.getArmor(is);
-                        if (iw != null)
-                            keepwarm += iw.getFactor(player, is);
-                    }
+                    	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(EquipmentCuriosSlotType.fromCurios(is.getFirst()), is.getSecond(), efftemp, current);
                 }
-                for (ItemStack is : player.getArmorInventoryList()) {
+                for (EquipmentSlotType slot : EquipmentSlotType.values()) {
+                	ItemStack is=player.getItemStackFromSlot(slot);
                     if (is.isEmpty())
                         continue;
                     Item it = is.getItem();
-                    if (it instanceof IHeatingEquipment)
-                        equipments.add(new HeatingEquipment((IHeatingEquipment) it, is));
-                    if (it instanceof IWarmKeepingEquipment) {
+                    if (it instanceof IHeatingEquipment) {
+                    	if (it instanceof IHeatingEquipment)
+                        	efftemp+=((IHeatingEquipment) it).getEffectiveTempAdded(EquipmentCuriosSlotType.fromVanilla(slot), is, efftemp, current);
+                    }
+                    /*if (it instanceof IWarmKeepingEquipment) {
                         keepwarm += ((IWarmKeepingEquipment) it).getFactor(player, is);
                     } else {//include inner
                         String s = ItemNBTHelper.getString(is, "inner_cover");
@@ -243,32 +227,10 @@ public class TemperatureUpdate {
                             iw = FHDataManager.getArmor(is);
                         if (iw != null)
                             keepwarm += iw.getFactor(player, is);
-                    }
+                    }*/
                 }
-                {//main hand
-                    ItemStack hand = player.getHeldItemMainhand();
-                    Item it = hand.getItem();
-                    if (it instanceof IHeatingEquipment && ((IHeatingEquipment) it).canHandHeld())
-                        equipments.add(new HeatingEquipment((IHeatingEquipment) it, hand));
-                }
-                {//off hand
-                    ItemStack hand = player.getHeldItemOffhand();
-                    Item it = hand.getItem();
-                    if (it instanceof IHeatingEquipment && ((IHeatingEquipment) it).canHandHeld())
-                        equipments.add(new HeatingEquipment((IHeatingEquipment) it, hand));
-                    ;
-                }
-                if (keepwarm > 1)//prevent negative
-                    keepwarm = 1;
                 //environment heat exchange
-                float dheat = HEAT_EXCHANGE_CONSTANT * (1 - keepwarm) * (envtemp - current);
-                //simulate temperature transform to get heating device working
-                float simulated = (float) (current / tspeed + dheat);
-                for (HeatingEquipment it : equipments) {
-                    float addi = it.compute(simulated, envtemp);
-                    dheat += addi;
-                    simulated += addi;
-                }
+                float dheat = HEAT_EXCHANGE_CONSTANT * ((efftemp-37F) - current);
                 //Attack player if temperature changes too much
                 if (dheat > 0.1)
                     player.attackEntityFrom(FHDamageSources.HYPERTHERMIA_INSTANT, (dheat) * 10);
@@ -281,9 +243,8 @@ public class TemperatureUpdate {
                     current = 10;
                 float lenvtemp = data.getEnvTemp();//get a smooth change in display
                 float lfeeltemp=data.getFeelTemp();
-                float feeltemp=current-(1 - keepwarm)*(current-envtemp);
                 
-                data.update(current, (envtemp + 37) * .2f + lenvtemp * .8f, (feeltemp+37)*.2f+lfeeltemp*.8f);
+                data.update(current, (envtemp) * .2f + lenvtemp * .8f, (efftemp)*.2f+lfeeltemp*.8f);
                 //FHNetwork.send(PacketDistributor.PLAYER.with(() -> player), new FHBodyDataSyncPacket(player));
             }
 

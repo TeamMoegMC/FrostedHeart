@@ -41,6 +41,7 @@
     "ftb.QuestScreenMixin",
     "ftb.ClientTeamManagerMixin",
     "ftb.TeamManagerMixin",
+    "ftb.GuiHelperMixin",
     "immersiveengineering.CrafterPatternInventoryMixin",
     "immersiveengineering.HempBlockMixin",
     "immersiveengineering.MultiblockProcessMixerMixin",
@@ -95,7 +96,7 @@
     "minecraft.ServerPlayNetHandlerMixin",
     "minecraft.NewChatGuiAccessor",
     "minecraft.EntitySpawbPlacementRegistryMixin",
-
+	
     "primalwinter.WeatherDataAccess",
     "primalwinter.WeatherDataMixin",
     "projecte.MixinPhilosopherStone",

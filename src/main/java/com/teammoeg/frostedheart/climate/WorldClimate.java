@@ -627,10 +627,14 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
     }
 
     public float getTemp() {
-        return daycache.getTemp(hourInDay);
+    	if(daycache!=null)
+    		return daycache.getTemp(hourInDay);
+    	return 0;
     }
     public int getWind() {
-        return daycache.getWind(hourInDay);
+    	if(daycache!=null)
+    		return daycache.getWind(hourInDay);
+    	return 0;
     }
     private int getTemperatureLevel(float temp) {
         if (temp >= WorldTemperature.WARM_PERIOD_PEAK - 2) {

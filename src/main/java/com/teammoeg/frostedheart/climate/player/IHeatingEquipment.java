@@ -19,11 +19,14 @@
 
 package com.teammoeg.frostedheart.climate.player;
 
+import javax.annotation.Nullable;
+
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 
 /**
  * Interface IHeatingEquipment.
- * Interface for Heating Equipment Item
+ * Interface for Dynamic Heating Equipment Item
  *
  * @author khjxiaogu
  * file: IHeatingEquipment.java
@@ -31,25 +34,14 @@ import net.minecraft.item.ItemStack;
  */
 public interface IHeatingEquipment {
 
-    default boolean canHandHeld() {
-        return false;
-    }
-
     /**
-     * Compute new body temperature.<br>
+     * Compute added effective temperature.<br>
      *
+     * @param slot            current slot, null for display<br>
      * @param stack           the stack<br>
-     * @param bodyTemp        the body temp<br>
-     * @param environmentTemp the environment temp<br>
+     * @param effectiveTemp   the effective temp<br>
+     * @param bodyTemp        the body temperature, normalize to 0<br>
      * @return returns body temperature change
      */
-    float compute(ItemStack stack, float bodyTemp, float environmentTemp);
-
-    /**
-     * get max temperature delta.<br>
-     *
-     * @param stack the stack<br>
-     * @return returns max temperature delta
-     */
-    float getMax(ItemStack stack);
+    float getEffectiveTempAdded(@Nullable EquipmentCuriosSlotType slot,ItemStack stack, float effectiveTemp, float bodyTemp);
 }
