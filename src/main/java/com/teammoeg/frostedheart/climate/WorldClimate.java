@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Pair;
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.DayTemperatureData.HourData;
@@ -95,8 +96,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
  */
 public class WorldClimate implements INBTSerializable<CompoundNBT> {
 
-    @CapabilityInject(WorldClimate.class)
-    public static Capability<WorldClimate> CAPABILITY;
     public static final ResourceLocation ID = new ResourceLocation(FHMain.MODID, "climate_data");
     public static final int DAY_CACHE_LENGTH = 8;
 
@@ -118,7 +117,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      */
     @Nullable
     public static WorldClimate get(IWorld world) {
-        return getCapability(world).resolve().orElse(null);
+        return getCapability(world).orElse(null);
     }
 
     /**
@@ -128,10 +127,7 @@ public class WorldClimate implements INBTSerializable<CompoundNBT> {
      * @return An instance of ClimateData if data exists on the world, otherwise return empty.
      */
     public static LazyOptional<WorldClimate> getCapability(@Nullable IWorld world) {
-        if (world instanceof World) {
-            return ((World) world).getCapability(CAPABILITY);
-        }
-        return LazyOptional.empty();
+        return FHCapabilities.CLIMATE_DATA.getCapability(world);
     }
 
     public static long getDay(IWorld world) {

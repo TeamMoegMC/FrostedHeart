@@ -2,6 +2,7 @@ package com.teammoeg.frostedheart.climate.player;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -21,8 +22,8 @@ public class PlayerTemperatureData implements INBTSerializable<CompoundNBT>  {
 	float feelTemp;
 	public float smoothedBody;//Client only, smoothed body temperature
 	public float smoothedBodyPrev;//Client only, smoothed body temperature
-    @CapabilityInject(PlayerTemperatureData.class)
-    public static Capability<PlayerTemperatureData> CAPABILITY;
+    
+	
 	public PlayerTemperatureData() {
 	}
 	public void load (CompoundNBT nbt) {
@@ -52,10 +53,7 @@ public class PlayerTemperatureData implements INBTSerializable<CompoundNBT>  {
     	feelTemp=feel;
     }
     public static LazyOptional<PlayerTemperatureData> getCapability(@Nullable PlayerEntity player) {
-        if (player != null) {
-            return player.getCapability(CAPABILITY);
-        }
-        return LazyOptional.empty();
+        return FHCapabilities.PLAYER_TEMP.getCapability(player);
     }
 	@Override
 	public CompoundNBT serializeNBT() {

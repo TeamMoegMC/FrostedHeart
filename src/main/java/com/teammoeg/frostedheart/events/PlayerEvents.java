@@ -95,9 +95,9 @@ public class PlayerEvents {
             boolean configAllows = FHConfig.COMMON.enablesTemperatureForecast.get();
             if (configAllows && ResearchDataAPI.getVariants(serverPlayer).getDouble("has_forecast")>0) {
                 // Blizzard warning
-                float thisHour = WorldClimate.getTemp(serverPlayer.world);
+                //float thisHour = WorldClimate.getTemp(serverPlayer.world);
                 boolean thisHourB = WorldClimate.isBlizzard(serverPlayer.world);
-                float nextHour = WorldClimate.getFutureTemp(serverPlayer.world, 1);
+                //float nextHour = WorldClimate.getFutureTemp(serverPlayer.world, 1);
                 boolean nextHourB = WorldClimate.isFutureBlizzard(serverPlayer.world, 1);
                 if (!thisHourB) { // not in blizzard yet
                     if (nextHourB) {

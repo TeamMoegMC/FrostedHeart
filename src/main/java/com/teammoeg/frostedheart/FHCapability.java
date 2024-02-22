@@ -1,6 +1,6 @@
 package com.teammoeg.frostedheart;
 
-import com.teammoeg.frostedheart.base.FHCapabilityProvider;
+import com.teammoeg.frostedheart.capability.FHCapabilityProvider;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;

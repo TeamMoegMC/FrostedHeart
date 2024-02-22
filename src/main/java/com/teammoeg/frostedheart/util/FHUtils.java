@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.google.common.collect.ImmutableList;
+import com.teammoeg.frostedheart.FHCapability;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
@@ -308,6 +309,12 @@ public class FHUtils {
    }
    public static <T extends INBTSerializable<CompoundNBT>> void clonePlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
 	   cloneCapability(old.getCapability(capability),now.getCapability(capability));
+   }
+   public static <T extends INBTSerializable<CompoundNBT>> void copyPlayerCapability(FHCapability<T> capability,PlayerEntity old,PlayerEntity now){
+	   copyCapability(capability.getCapability(old),capability.getCapability(now));
+   }
+   public static <T extends INBTSerializable<CompoundNBT>> void clonePlayerCapability(FHCapability<T> capability,PlayerEntity old,PlayerEntity now){
+	   cloneCapability(capability.getCapability(old),capability.getCapability(now));
    }
    public static <T> void copyAllFields(T to, T from) {
        Class<T> clazz = (Class<T>) from.getClass();

@@ -31,6 +31,7 @@ import javax.annotation.Nonnull;
 import com.google.common.collect.Sets;
 import com.mojang.brigadier.CommandDispatcher;
 import com.teammoeg.frostedheart.FHAttributes;
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHDamageSources;
 import com.teammoeg.frostedheart.FHEffects;
@@ -71,9 +72,6 @@ import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
-import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
@@ -380,8 +378,8 @@ public class CommonEvents {
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
         FHUtils.copyPlayerCapability(DailyKitchen.WANTED_FOOD_CAPABILITY,ev.getOriginal(),ev.getPlayer());
-        FHUtils.copyPlayerCapability(EnergyCore.CAPABILITY,ev.getOriginal(),ev.getPlayer());
-        FHUtils.clonePlayerCapability(ScenarioConductor.CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.copyPlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getPlayer());
         //FHUtils.copyPlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
         //FHMain.LOGGER.info("clone");
         if (!ev.getPlayer().world.isRemote) {
@@ -837,7 +835,7 @@ public class CommonEvents {
             FHNetwork.send(currentPlayer,new FHDatapackSyncPacket());
             FHNetwork.send(currentPlayer,new FHResearchDataSyncPacket(
                             FTBTeamsAPI.getPlayerTeam((ServerPlayerEntity) event.getPlayer())));
-            serverWorld.getCapability(WorldClimate.CAPABILITY).ifPresent((cap) -> {
+            FHCapabilities.CLIMATE_DATA.getCapability(serverWorld).ifPresent((cap) -> {
                 FHNetwork.send(currentPlayer,new FHClimatePacket(cap));
             });
             //System.out.println("=x-x=");

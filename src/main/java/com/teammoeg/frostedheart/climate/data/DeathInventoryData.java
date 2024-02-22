@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.climate.data;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 
 import net.minecraft.entity.player.PlayerEntity;
@@ -107,8 +108,6 @@ public class DeathInventoryData implements INBTSerializable<CompoundNBT> {
             return cnbto;
         }
     }
-    @CapabilityInject(DeathInventoryData.class)
-    public static Capability<DeathInventoryData> CAPABILITY;
     CopyInventory inv;
 
     boolean calledClone = false;
@@ -131,10 +130,7 @@ public class DeathInventoryData implements INBTSerializable<CompoundNBT> {
      * @return An instance of ClimateData if data exists on the world, otherwise return empty.
      */
     private static LazyOptional<DeathInventoryData> getCapability(@Nullable PlayerEntity player) {
-        if (player != null) {
-            return player.getCapability(CAPABILITY);
-        }
-        return LazyOptional.empty();
+    	return FHCapabilities.DEATH_INV.getCapability(player);
     }
 
     public DeathInventoryData() {

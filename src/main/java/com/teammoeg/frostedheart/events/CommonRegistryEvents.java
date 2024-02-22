@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.events;
 import javax.annotation.Nonnull;
 
 import com.teammoeg.frostedheart.FHAttributes;
-import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.loot.AddLootModifier;
 import com.teammoeg.frostedheart.loot.ApplyDamageLootModifier;
@@ -40,7 +39,6 @@ import com.teammoeg.frostedheart.world.FHStructures;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.loot.LootConditionType;
-import net.minecraft.potion.Effect;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.gen.feature.Feature;

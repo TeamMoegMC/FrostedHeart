@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
@@ -53,8 +54,6 @@ import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 
 public class EnergyCore implements INBTSerializable<CompoundNBT> {
-    @CapabilityInject(EnergyCore.class)
-    public static Capability<EnergyCore> CAPABILITY;
     long energy;
     long cenergy;
     long penergy;
@@ -223,10 +222,7 @@ public class EnergyCore implements INBTSerializable<CompoundNBT> {
     public EnergyCore() {
     }
     public static LazyOptional<EnergyCore> getCapability(@Nullable PlayerEntity player) {
-        if (player != null) {
-            return player.getCapability(CAPABILITY);
-        }
-        return LazyOptional.empty();
+    	return FHCapabilities.ENERGY.getCapability(player);
     }
 
 	@Override

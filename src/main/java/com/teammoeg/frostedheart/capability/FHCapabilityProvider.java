@@ -1,4 +1,4 @@
-package com.teammoeg.frostedheart.base;
+package com.teammoeg.frostedheart.capability;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;

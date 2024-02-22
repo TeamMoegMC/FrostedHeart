@@ -24,6 +24,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
@@ -52,9 +53,6 @@ import net.minecraftforge.common.util.LazyOptional;
  * You should define triggers in script file and activate triggers to make it execute.
  * */
 public class ScenarioConductor extends ScenarioVM implements INBTSerializable<CompoundNBT>{
-    @CapabilityInject(ScenarioConductor.class)
-    public static Capability<ScenarioConductor> CAPABILITY;
-    
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();
@@ -335,10 +333,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 		this.currentAct = currentAct;
 	}
     public static LazyOptional<ScenarioConductor> getCapability(@Nullable PlayerEntity player) {
-        if (player != null) {
-            return player.getCapability(CAPABILITY);
-        }
-        return LazyOptional.empty();
+    	return FHCapabilities.SCENARIO.getCapability(player);
     }
 	@Override
 	public CompoundNBT serializeNBT() {

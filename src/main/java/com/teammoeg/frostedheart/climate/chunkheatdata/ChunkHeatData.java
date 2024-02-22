@@ -20,12 +20,15 @@
 package com.teammoeg.frostedheart.climate.chunkheatdata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -42,33 +45,9 @@ import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
-    /**
-     * Only used for the empty instance, this will enforce that it never leaks data
-     * New empty instances can be constructed via constructor, EMPTY instance is
-     * specifically for an immutable empty copy, representing invalid chunk data
-     */
-    private static final class Immutable extends ChunkHeatData {
-        private Immutable() {
-            super();
-        }
-
-        @Override
-        public void deserializeNBT(CompoundNBT nbt) {
-            throw new UnsupportedOperationException("Tried to modify immutable chunk data");
-        }
-
-        @Override
-        public String toString() {
-            return "ImmutableChunkData";
-        }
-    }
-
-    public static final ChunkHeatData EMPTY = new Immutable();
 
     private List<ITemperatureAdjust> adjusters = new LinkedList<>();
 
-	@CapabilityInject(ChunkHeatData.class)
-	public static Capability<ChunkHeatData> CAPABILITY;
 
     /**
      * Used on a ServerWorld context to add temperature in certain 3D region in a
@@ -197,7 +176,7 @@ public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
     }
 
     public static ChunkHeatData get(IWorld world, BlockPos pos) {
-        return get(world, new ChunkPos(pos));
+        return get(world, new ChunkPos(pos)).orElse(null);
     }
 
     /**
@@ -207,16 +186,15 @@ public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
      * If on server, will either query capability falling back to cache, or query
      * provider to generate the data.
      */
-    public static ChunkHeatData get(IWorldReader world, ChunkPos pos) {
+    public static Optional<ChunkHeatData> get(IWorldReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
         //System.out.println("no cache at"+pos);
         if (world instanceof IWorld)
             return ((IWorld) world).getChunkProvider().isChunkLoaded(pos) ? getCapability(world.getChunk(pos.asBlockPos()))
-                    .orElse(ChunkHeatData.EMPTY) : ChunkHeatData.EMPTY;
-        return world.chunkExists(pos.x, pos.z) ? getCapability(world.getChunk(pos.asBlockPos()))
-                .orElse(ChunkHeatData.EMPTY) : ChunkHeatData.EMPTY;
+                    .resolve() : Optional.empty();
+        return world.chunkExists(pos.x, pos.z) ? getCapability(world.getChunk(pos.asBlockPos())).resolve() : Optional.empty();
         //}
         //return data;
     }
@@ -228,7 +206,7 @@ public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
      * This method directly get temperature at any positions.
      */
     public static float getAdditionTemperature(IWorldReader world, BlockPos pos) {
-        return get(world, new ChunkPos(pos)).getAdditionTemperatureAtBlock(world, pos);
+        return get(world, new ChunkPos(pos)).map(t->t.getAdditionTemperatureAtBlock(world, pos)).orElse(0f);
     }
 
     /**
@@ -238,7 +216,7 @@ public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
      * This method directly get temperature adjusts at any positions.
      */
     public static Collection<ITemperatureAdjust> getAdjust(IWorldReader world, BlockPos pos) {
-        ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).getAdjusters());
+        ArrayList<ITemperatureAdjust> al = new ArrayList<>(get(world, new ChunkPos(pos)).map(t->t.getAdjusters()).orElseGet(Arrays::asList));
         al.removeIf(adj -> !adj.isEffective(pos));
         return al;
     }
@@ -247,10 +225,7 @@ public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
      * Helper method, since lazy optionals and instanceof checks together are ugly
      */
     public static LazyOptional<ChunkHeatData> getCapability(@Nullable IChunk chunk) {
-        if (chunk instanceof Chunk) {
-            return ((Chunk) chunk).getCapability(ChunkHeatData.CAPABILITY);
-        }
-        return LazyOptional.empty();
+    	return FHCapabilities.CHUNK_HEAT.getCapability(chunk);
     }
 
     /**
@@ -260,7 +235,7 @@ public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
      * This method directly get temperature at any positions.
      */
     public static float getTemperature(IWorldReader world, BlockPos pos) {
-        return get(world, new ChunkPos(pos)).getTemperatureAtBlock(world, pos);
+        return get(world, new ChunkPos(pos)).map(t->t.getTemperatureAtBlock(world, pos)).orElseGet(()->WorldTemperature.getTemperature(world, pos));
     }
     public static String toDisplaySoil(float temp) {
     	temp=Math.max(temp, -20);
@@ -306,6 +281,7 @@ public class ChunkHeatData implements INBTSerializable<CompoundNBT> {
     public static void removeTempAdjust(IWorld world, BlockPos heatPos) {
         int sourceX = heatPos.getX(), sourceZ = heatPos.getZ();
         ChunkHeatData cd = ChunkHeatData.get(world, heatPos);
+        if(cd==null)return;
         ITemperatureAdjust oadj = cd.getAdjustAt(heatPos);
         if (oadj == null) return;
         int range = oadj.getRadius();
