@@ -125,6 +125,11 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
     	if(!inited)inited=true;
 		this.player = player.getUniqueID();
 	}
+
+	public boolean isInited() {
+		return inited;
+	}
+
     public ScenarioConductor(ServerPlayerEntity player) {
 		super();
 		this.player = player.getUniqueID();

@@ -664,7 +664,9 @@ public class CommonEvents {
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
             ScenarioConductor runner=FHScenario.get(player);
-            runner.tick();
+            if (runner.isInited()) {
+                runner.tick();
+            }
             if(player.openContainer instanceof HeatStatContainer) {
             	((HeatStatContainer)player.openContainer).tick();
             }
