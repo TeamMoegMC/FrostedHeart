@@ -68,7 +68,13 @@ public class FHScenario {
 	public static void startFor(ServerPlayerEntity pe) {
 		ScenarioConductor sr = get(pe);
 		sr.init(pe);
-		sr.run(loadScenario(sr,"init"));
+		Scenario scenario = loadScenario(sr,"init");
+		if (scenario == null) {
+			FHMain.LOGGER.error("[FHScenario] Loaded scenario is null");
+		} else {
+			FHMain.LOGGER.info("[FHScenario] Loaded scenario "+scenario.name);
+		}
+		sr.run(scenario);
 	}
 	public static void addVarTrigger(PlayerEntity pe,EventTriggerType type,IVarTrigger trig) {
 		triggers.computeIfAbsent(pe,k->new HashMap<>()).computeIfAbsent(type, k->new ArrayList<>()).add(trig);
@@ -109,8 +115,10 @@ public class FHScenario {
 			for (ScenarioProvider i : scenarioProviders) {
 				try {
 					Scenario s = i.apply(paths[0],params,name);
-					if (s != null)
+					if (s != null) {
+						FHMain.LOGGER.info("Loading scenario from provider "+i.getName());
 						return s;
+					}
 				}catch(Exception e) {
 					new ScenarioExecutionException("Unexpected exception getting from provider '"+i.getName()+"' ,Exceptions should be caught within provider and return null. ",e).printStackTrace();
 				}
@@ -120,13 +128,16 @@ public class FHScenario {
 			if(!f.exists()) {
 				f=new File(scenarioPath, paths[0] + ".ks");;
 			}
-			if(f.exists())
+			if(f.exists()) {
+				FHMain.LOGGER.info("Loading scenario from "+f.getAbsolutePath());
 				return parser.parseFile(name, f);
+			}
 		} catch (Exception e) {
 			caller.sendMessage("Exception loading scenario: "+e.getMessage()+" see log for more detail");
 			e.printStackTrace();
 			
 		}
+		FHMain.LOGGER.error("Scenario not found, falling back to empty scenario");
 		return new Scenario(name);
 	}
 

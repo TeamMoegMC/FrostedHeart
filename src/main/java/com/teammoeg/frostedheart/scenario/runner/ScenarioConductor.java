@@ -202,6 +202,12 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 
 
     public void run(Scenario sp) {
+		if (sp == null) {
+			FHMain.LOGGER.error("[Scenario Conductor] Scenario to run is null");
+		} else {
+			FHMain.LOGGER.info("[Scenario Conductor] Running scenario "+sp.name);
+		}
+
 		this.setScenario(sp);
 		nodeNum=0;
 		varData.takeSnapshot();
