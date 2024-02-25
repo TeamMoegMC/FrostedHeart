@@ -19,14 +19,20 @@
 
 package com.teammoeg.frostedheart.town.house;
 
-import javax.annotation.Nonnull;
-
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
-
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.World;
+
+import javax.annotation.Nonnull;
 
 /**
  * A house in the town.
@@ -45,5 +51,16 @@ public class HouseBlock extends FHBaseBlock {
     @Override
     public boolean hasTileEntity(BlockState state) {
         return true;
+    }
+
+    //test
+    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (!worldIn.isRemote && handIn == Hand.MAIN_HAND) {
+            HouseTileEntity houseTileEntity = (HouseTileEntity) worldIn.getTileEntity(pos);
+            player.sendStatusMessage(new StringTextComponent("isRoomValid:" + (houseTileEntity.isWorkValid() ? "true" : "false")), false);
+            player.sendStatusMessage(new StringTextComponent("volume" + (houseTileEntity.volume)), false);
+            player.sendStatusMessage(new StringTextComponent("area" + (houseTileEntity.volume)), false);
+        }
+        return ActionResultType.SUCCESS;
     }
 }
