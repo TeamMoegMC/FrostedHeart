@@ -129,10 +129,10 @@ public class ScenarioVM implements IScenarioThread{
     	return new ExecuteStackElement(sp,nodeNum);
     }
 	public void sendCachedSence() {
-		getScene().sendCurrent();
+		getScene().sendCurrent(this);
 	}
     public void stopWait() {
-		getScene().stopWait();
+		getScene().stopWait(this);
 	}
 	protected void runCode() {
     	clearAfterClick=false;
@@ -147,14 +147,14 @@ public class ScenarioVM implements IScenarioThread{
     			new ScenarioExecutionException("Unexpected error when executing scenario",t).printStackTrace();
     			this.sendMessage("Execution Exception when executing scenario: "+t.getMessage()+" see logs for more detail");
     			setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
+	    		getScene().clear(this);
 	    		sendCachedSence();
     			break;
     		}
 	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
 	    		
 	    		setStatus((RunStatus.STOPPED));
-	    		getScene().clear();
+	    		getScene().clear(this);
 	    		sendCachedSence();
 	    		this.tryPopCallStack();
 	    		return;
@@ -241,20 +241,20 @@ public class ScenarioVM implements IScenarioThread{
 	}
 	public Scene getScene() {
 		if(scene==null)
-			scene=new Scene(this);
+			scene=new Scene();
     	return scene;
     }
 	public void newLine() {
-		getScene().sendNewLine();
+		getScene().sendNewLine(this);
 	}
 	protected void doParagraph() {
-		getScene().clear();
+		getScene().clear(this);
 	}
     public void paragraph(int pn) {
     	if(getScene().shouldWaitClient()) {
-    		getScene().waitClientIfNeeded();
+    		getScene().waitClientIfNeeded(this);
     		clearAfterClick=true;
-    		getScene().sendCurrent();
+    		getScene().sendCurrent(this);
     	}else doParagraph();
 	}
 	public int getClientStatus() {

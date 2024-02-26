@@ -12,6 +12,7 @@ import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -26,7 +27,6 @@ import net.minecraftforge.fml.network.PacketDistributor;
 public class Scene {
 	private transient final Map<String, ExecuteTarget> links = new HashMap<>();
 	private transient StringBuilder currentLiteral;
-	private transient final ScenarioVM parent;
 	public transient boolean isNowait;
 	private boolean isSaveNowait;
 	private transient boolean isSlient;
@@ -71,14 +71,13 @@ public class Scene {
 		log.add(new StringBuilder());
 	}
 
-	public Scene(ScenarioVM paraData) {
+	public Scene() {
 		super();
-		this.parent = paraData;
 	}
 
-	public void clear() {
+	public void clear(IScenarioThread parent) {
 		if (requireClear)
-			forcedClear();
+			forcedClear(parent);
 	}
 
 	public void paragraph() {
@@ -93,8 +92,8 @@ public class Scene {
 		triggers.clear();
 	}
 
-	public void forcedClear() {
-		sendClear();
+	public void forcedClear(IScenarioThread parent) {
+		sendClear(parent);
 		requireClear = false;
 		clearLink();
 	}
@@ -112,48 +111,48 @@ public class Scene {
 		}
 	}
 
-	private void sendScene(String text, boolean wrap, boolean reset) {
+	private void sendScene(IScenarioThread parent,String text, boolean wrap, boolean reset) {
 	
-		FHNetwork.send(PacketDistributor.PLAYER.with(() -> parent.getPlayer()), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
+		FHNetwork.send(PacketDistributor.PLAYER.with(() -> ((ServerPlayerEntity)parent.getPlayer())), new ServerSenarioScenePacket(text, wrap, isNowait, reset,parent.getStatus(),isClick));
 		isClick=true;
 	}
 	/**
 	 * sync all remaining cached text and send a 'clear current dialog' message to client
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendClear() {
+	public void sendClear(IScenarioThread parent) {
 		String tosend="";
 		if (currentLiteral != null) {
 			tosend=currentLiteral.toString();
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(tosend, false, true);
+			sendScene(parent,tosend, false, true);
 		currentLiteral = null;
 	}
 	/**
 	 * Send all current message and start a new line after that
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendNewLine() {
+	public void sendNewLine(IScenarioThread parent) {
 		String tosend="";
 		if (currentLiteral != null) {
 			tosend=currentLiteral.toString();
 			addLogLn(tosend);
 		}
 		if (!isSlient())
-			sendScene(tosend, true, false);
+			sendScene(parent,tosend, true, false);
 		currentLiteral = null;
 	}
 	/**
 	 * Send all current message
 	 * Also sync current state, so call this after all status operation
 	 * */
-	public void sendCurrent() {
+	public void sendCurrent(IScenarioThread parent) {
 		if (currentLiteral != null) {
 			addLog(currentLiteral.toString());
 			if (!isSlient())
-				sendScene(currentLiteral.toString(), false, false);
+				sendScene(parent,currentLiteral.toString(), false, false);
 		}
 
 		currentLiteral = null;
@@ -167,19 +166,19 @@ public class Scene {
 		this.isSlient = isSlient;
 	}
 
-	public void waitClientIfNeeded() {
+	public void waitClientIfNeeded(IScenarioThread parent) {
 		if (shouldWaitClient() && !isSlient)
 			parent.setStatus(RunStatus.WAITCLIENT);
 	}
 
-	public void waitClient(boolean isClick) {
+	public void waitClient(IScenarioThread parent,boolean isClick) {
 		if (!isSlient) {
 			parent.setStatus(RunStatus.WAITCLIENT);
 			this.isClick=isClick;
 		}
 	}
 
-	public void addWait(int time) {
+	public void addWait(IScenarioThread parent,int time) {
 		waiting += time;
 		parent.setStatus(RunStatus.WAITTIMER);
 	}
@@ -194,10 +193,10 @@ public class Scene {
 		return false;
 	}
 
-	public void tickTriggers(ScenarioVM runner, boolean isCurrentAct) {
+	public void tickTriggers(IScenarioThread parent, boolean isCurrentAct) {
 		TriggerTarget acttrigger = null;
 		for (TriggerTarget t : triggers) {
-			if (t.test(runner)) {
+			if (t.test(parent)) {
 				if (t.use()) {
 					if (isCurrentAct) {
 						acttrigger = t;
@@ -225,7 +224,7 @@ public class Scene {
 	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
 		triggers.add(new TriggerTarget(trig,targ));
 	}
-	public void stopWait() {
+	public void stopWait(IScenarioThread parent) {
 		if(parent.getStatus()==RunStatus.WAITTIMER) {
 			waiting=0;
 			parent.setStatus(RunStatus.RUNNING);

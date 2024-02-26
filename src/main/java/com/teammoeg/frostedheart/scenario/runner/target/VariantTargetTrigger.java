@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
+import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
@@ -32,7 +33,7 @@ public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 	boolean async=true;
 
 	@Override
-	public boolean test(ScenarioVM t) {
+	public boolean test(IScenarioThread t) {
 		return canTrigger;
 	}
 	@Override
@@ -67,4 +68,5 @@ public class VariantTargetTrigger implements IScenarioTrigger,IVarTrigger {
 		FHScenario.addVarTrigger(pe, type, this);
 		return this;
 	}
+
 }

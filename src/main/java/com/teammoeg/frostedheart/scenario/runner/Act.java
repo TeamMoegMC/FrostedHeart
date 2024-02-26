@@ -19,6 +19,7 @@
 
 package com.teammoeg.frostedheart.scenario.runner;
 
+import java.util.Collection;
 import java.util.LinkedList;
 
 import com.teammoeg.frostedheart.FHNetwork;
@@ -56,13 +57,13 @@ public class Act implements IScenarioThread{
     private final ScenarioConductor parent;
     public Act(ScenarioConductor paraData,ActNamespace name) {
 		super();
-		this.scene=new Scene(paraData);
+		this.scene=new Scene();
 		parent=paraData;
 		this.name=name;
 	}
     public Act(ScenarioConductor paraData,CompoundNBT data) {
 		super();
-		this.scene=new Scene(paraData);
+		this.scene=new Scene();
 		parent=paraData;
 		load(data);
 	}
@@ -121,6 +122,11 @@ public class Act implements IScenarioThread{
     	scene.load(nbt.getCompound("scene"));
     	setStatus((RunStatus.values()[nbt.getInt("status")]));
     	
+    }
+    public void setActState() {
+		setNodeNum(parent.getNodeNum());
+		setScenario(parent.getScenario());
+		setStatus(parent.getStatus());
     }
     public void saveActState() {
 		setNodeNum(parent.getNodeNum());
@@ -220,5 +226,16 @@ public class Act implements IScenarioThread{
 	}
 	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
 		scene.addTrigger(trig,new ActTarget(name,targ));
+	}
+	@Override
+	public void jump(IScenarioTarget acttrigger) {
+		if(acttrigger instanceof ActTarget) {
+			parent.jump(acttrigger);
+		}else
+			parent.jump(new ActTarget(this.name,acttrigger));
+	}
+	@Override
+	public Collection<? extends ExecuteStackElement> getCallStack() {
+		return this.callStack;
 	}
 }

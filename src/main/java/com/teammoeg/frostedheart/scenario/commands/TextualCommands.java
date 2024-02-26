@@ -36,19 +36,19 @@ public class TextualCommands {
 		runner.clearLink();
 	}
 	public void delay(ScenarioVM runner,@Param("t")int t) {
-		runner.getScene().addWait(t);
+		runner.getScene().addWait(runner,t);
 		runner.sendCachedSence();
 	}
 	public void er(ScenarioVM runner) {
-		runner.getScene().clear();
+		runner.getScene().clear(runner);
 		runner.sendCachedSence();
 	}
 	public void l(ScenarioVM runner) {
-		runner.getScene().waitClient(true);
+		runner.getScene().waitClient(runner,true);
 		runner.sendCachedSence();
 	}
 	public void wc(ScenarioVM runner) {
-		runner.getScene().waitClient(false);
+		runner.getScene().waitClient(runner,false);
 		runner.sendCachedSence();
 	}
 	public void wt(ScenarioVM runner) {
@@ -61,7 +61,7 @@ public class TextualCommands {
 	}
 	public void s(ScenarioVM runner) {
 		runner.stop();
-		runner.getScene().clear();
+		runner.getScene().clear(runner);
 	}
 
 }

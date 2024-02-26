@@ -203,6 +203,11 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 		run();
 	}
 
+	@Override
+	public void jump(IScenarioTarget nxt) {
+		getCurrentAct().setActState();
+		super.jump(nxt);
+	}
 	public void tick() {
 		if(!inited)return;
     	//detect triggers
@@ -246,7 +251,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 			}else {//Save current state if stopped or waiting trigger.
 				olddata.saveActState();
 			}
-			olddata.getScene().clear();
+			olddata.getScene().clear(this);
 			acts.put(old, olddata);
 			globalScope();
 		}else {
@@ -265,7 +270,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 			this.status=data.getStatus();
 			data.sendTitles(true, true);
 			if(getStatus().shouldRun) {
-				getScene().forcedClear();
+				getScene().forcedClear(this);
 				run();
 			}
 		}

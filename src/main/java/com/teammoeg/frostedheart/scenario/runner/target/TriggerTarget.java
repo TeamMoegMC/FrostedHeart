@@ -19,7 +19,7 @@ public class TriggerTarget implements IScenarioTrigger,IScenarioTarget {
 	}
 
 	@Override
-	public boolean test(ScenarioVM t) {
+	public boolean test(IScenarioThread t) {
 		return original.test(t);
 	}
 
