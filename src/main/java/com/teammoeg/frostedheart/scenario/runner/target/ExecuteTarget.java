@@ -39,19 +39,12 @@ public class ExecuteTarget extends ScenarioTarget{
 	@Override
 	public void apply(IScenarioThread runner) {
 		super.apply(runner);
-		if (label != null) {
-			Scenario scenario = runner.getScenario();
-			if (scenario == null) {
-				FHMain.LOGGER.error("Scenario is null");
-			} else if (scenario.labels == null) {
-				FHMain.LOGGER.error("Scenario labels map is null");
-			} else {
-				Integer ps = scenario.labels.get(label);
-				if (ps != null) {
-					runner.setNodeNum(ps);
-				} else {
-					FHMain.LOGGER.error("Invalid label " + label);
-				}
+		if(label!=null) {
+			Integer ps=runner.getScenario().labels.get(label);
+			if(ps!=null) {
+				runner.setNodeNum(ps);
+			}else {
+				System.out.println("Invalid label "+label );
 			}
 		}
 	}
