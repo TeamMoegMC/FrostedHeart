@@ -30,7 +30,7 @@ import com.teammoeg.frostedheart.research.clues.ClueDatas;
 import com.teammoeg.frostedheart.research.events.ResearchStatusEvent;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.evaluator.IEnvironment;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil.CompoundBuilder;
@@ -335,7 +335,7 @@ public class ResearchData implements IEnvironment {
     }
 
     public boolean isInProgress() {
-        LazyOptional<Research> r = parent.getCurrentResearch();
+        OptionalLazy<Research> r = parent.getCurrentResearch();
         if (r.isPresent()) {
             return r.resolve().get().equals(getResearch());
         }

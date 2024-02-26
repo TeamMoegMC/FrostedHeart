@@ -43,7 +43,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchSyncEndPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchSyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.research.research.ResearchCategory;
-import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
@@ -62,7 +62,7 @@ public class FHResearch {
     public static FHRegistry<Research> researches = new FHRegistry<Research>();
     public static FHRegistry<Clue> clues = new FHRegistry<Clue>();
     public static FHRegistry<Effect> effects = new FHRegistry<Effect>();
-    private static LazyOptional<List<Research>> allResearches = LazyOptional.of(() -> researches.all());
+    private static OptionalLazy<List<Research>> allResearches = OptionalLazy.of(() -> researches.all());
     public static boolean editor = false;
 
     public static void clearAll() {
@@ -73,7 +73,7 @@ public class FHResearch {
 
     //clear cache when modification applied
     public static void clearCache() {
-        allResearches = LazyOptional.of(() -> researches.all());
+        allResearches = OptionalLazy.of(() -> researches.all());
     }
 
     public static void delete(Research r) {

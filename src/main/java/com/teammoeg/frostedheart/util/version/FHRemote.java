@@ -27,7 +27,7 @@ import java.util.Scanner;
 
 import com.google.gson.JsonParser;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 
 import net.minecraftforge.fml.ModList;
@@ -153,7 +153,7 @@ public class FHRemote {
         }).start();
     }
 
-    public LazyOptional<FHVersion> fetchVersion() {
-        return LazyOptional.of(() -> this.stableVersion == null ? null : FHVersion.parse(this.stableVersion));
+    public OptionalLazy<FHVersion> fetchVersion() {
+        return OptionalLazy.of(() -> this.stableVersion == null ? null : FHVersion.parse(this.stableVersion));
     }
 }

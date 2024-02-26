@@ -43,7 +43,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.town.TeamTownData;
-import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -164,7 +164,7 @@ public class TeamResearchData {
      * @return true, if a research is selected and it is ready for research
      */
     public boolean canResearch() {
-        LazyOptional<Research> rs = getCurrentResearch();
+        OptionalLazy<Research> rs = getCurrentResearch();
         if (rs.isPresent()) {
             Research r = rs.resolve().get();
             return this.getData(r).canResearch();
@@ -290,7 +290,7 @@ public class TeamResearchData {
      * @return unused points after commit to current research.
      */
     public long doResearch(long points) {
-        LazyOptional<Research> rs = getCurrentResearch();
+        OptionalLazy<Research> rs = getCurrentResearch();
         if (rs.isPresent()) {
             Research r = rs.resolve().get();
             ResearchData rd = this.getData(r);
@@ -333,10 +333,10 @@ public class TeamResearchData {
      *
      * @return current research<br>
      */
-    public LazyOptional<Research> getCurrentResearch() {
+    public OptionalLazy<Research> getCurrentResearch() {
         if (activeResearchId == 0)
-            return LazyOptional.empty();
-        return LazyOptional.of(() -> FHResearch.getResearch(activeResearchId).get());
+            return OptionalLazy.empty();
+        return OptionalLazy.of(() -> FHResearch.getResearch(activeResearchId).get());
     }
 
     /**

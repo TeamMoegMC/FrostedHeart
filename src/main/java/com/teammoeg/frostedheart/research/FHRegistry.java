@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.OptionalLazy;
 
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -86,9 +86,9 @@ public class FHRegistry<T extends FHRegisteredItem> {
     private ArrayList<T> items = new ArrayList<>();//registered objects
     private Map<String, Integer> rnames = new HashMap<>();//registry mappings
     private ArrayList<String> rnamesl = new ArrayList<>();//reverse mappings
-    private Map<String, LazyOptional<T>> cache = new HashMap<>();//object cache
+    private Map<String, OptionalLazy<T>> cache = new HashMap<>();//object cache
 
-    private final Function<String, LazyOptional<T>> cacheGen = (n) -> LazyOptional.of(() -> getByName(n));
+    private final Function<String, OptionalLazy<T>> cacheGen = (n) -> OptionalLazy.of(() -> getByName(n));
 
     private Function<String, T> strLazyGetter = x -> lazyGet(x).orElse(null);
 
@@ -235,7 +235,7 @@ public class FHRegistry<T extends FHRegisteredItem> {
      * @param id the id<br>
      * @return returns LazyOptional for name
      */
-    public LazyOptional<T> lazyGet(String id) {
+    public OptionalLazy<T> lazyGet(String id) {
         return cache.computeIfAbsent(id, cacheGen);
     }
 

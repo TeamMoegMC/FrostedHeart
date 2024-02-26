@@ -43,7 +43,7 @@ import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.LazyOptional;
+import com.teammoeg.frostedheart.util.OptionalLazy;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
@@ -286,7 +286,7 @@ public class ResearchListeners {
 
     public static boolean commitGameLevel(ServerPlayerEntity s, int lvl) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
-        LazyOptional<Research> cur = trd.getCurrentResearch();
+        OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
             if (rs != null) {
@@ -307,7 +307,7 @@ public class ResearchListeners {
     @OnlyIn(Dist.CLIENT)
     public static int fetchGameLevel() {
         TeamResearchData trd = ClientResearchDataAPI.getData();
-        LazyOptional<Research> cur = trd.getCurrentResearch();
+        OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
             if (rs != null) {
@@ -324,7 +324,7 @@ public class ResearchListeners {
 
     public static int fetchGameLevel(ServerPlayerEntity s) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
-        LazyOptional<Research> cur = trd.getCurrentResearch();
+        OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent()) {
             Research rs = cur.orElse(null);
             if (rs != null) {
@@ -380,7 +380,7 @@ public class ResearchListeners {
 
     public static ItemStack submitItem(ServerPlayerEntity s, ItemStack i) {
         TeamResearchData trd = ResearchDataAPI.getData(s);
-        LazyOptional<Research> cur = trd.getCurrentResearch();
+        OptionalLazy<Research> cur = trd.getCurrentResearch();
         if (cur.isPresent())
             for (Clue c : cur.orElse(null).getClues())
                 if (c instanceof ItemClue)
