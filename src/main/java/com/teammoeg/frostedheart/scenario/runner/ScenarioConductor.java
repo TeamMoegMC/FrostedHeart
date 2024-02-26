@@ -61,7 +61,12 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
     private transient boolean isActsEnabled;
     private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
-    private static final ActNamespace init=new ActNamespace(null,null);
+    @Override
+	public void jump(IScenarioTarget nxt) {
+		getCurrentAct().setActState();
+		super.jump(nxt);
+	}
+	private static final ActNamespace init=new ActNamespace(null,null);
     boolean inited=false;
 
     public CompoundNBT save() {
