@@ -11,6 +11,7 @@ import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.climate.data.DeathInventoryData;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
+import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
@@ -28,6 +29,7 @@ public class FHCapabilities {
 	public static final FHCapability<ScenarioConductor> SCENARIO=register(ScenarioConductor.class);
 	public static final FHCapability<ChunkHeatData> CHUNK_HEAT=register(ChunkHeatData.class);
 	public static final FHCapability<HeatEndpoint> HEAT_EP=register(HeatEndpoint.class);
+	public static final FHCapability<WantedFoodCapability> WANTED_FOOD=register(WantedFoodCapability.class);
 	
 	public static void setup() {
 		for(FHCapability<?> cap:capabilities)

@@ -25,7 +25,6 @@ import com.teammoeg.frostedheart.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapabilityProvider;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -57,7 +56,7 @@ public class AttachCapabilityEvents {
             if (!(player instanceof FakePlayer)) {
                 event.addCapability(new ResourceLocation(FHMain.MODID, "death_inventory"), FHCapabilities.DEATH_INV.create());
                 event.addCapability(new ResourceLocation(FHMain.MODID, "scenario"       ), FHCapabilities.SCENARIO.create());
-                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"    ), new WantedFoodCapabilityProvider());
+                event.addCapability(new ResourceLocation(FHMain.MODID, "wanted_food"    ), FHCapabilities.WANTED_FOOD.create());
             }
         }
         //Common capabilities

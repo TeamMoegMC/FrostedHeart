@@ -259,7 +259,6 @@ public class FHMain {
         SurroundingTemperatureSimulator.init();
         // modify default value
         GameRules.GAME_RULES.put(GameRules.SPAWN_RADIUS, IntegerValue.create(0));
-        DailyKitchen.setupWantedFoodCapability();
 
     }
 }

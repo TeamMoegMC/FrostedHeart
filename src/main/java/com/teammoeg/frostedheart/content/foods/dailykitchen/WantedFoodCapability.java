@@ -52,9 +52,10 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class WantedFoodCapability implements IWantedFoodCapability{
+public class WantedFoodCapability implements INBTSerializable<CompoundNBT>{
 
     private Set<Item> wantedFoods = new HashSet<>();
     private int eatenTimes = 0;
@@ -71,14 +72,10 @@ public class WantedFoodCapability implements IWantedFoodCapability{
         this.wantedFoods = wantedFoods;
         this.eatenTimes = 0;
     }
-
-    @Override
     public void setWantedFoods(Set<Item> wantedFoods){
         this.wantedFoods = wantedFoods;
         resetEatenTimes();
     }
-
-    @Override
     public Set<Item> getWantedFoods() {
         return this.wantedFoods;
     }

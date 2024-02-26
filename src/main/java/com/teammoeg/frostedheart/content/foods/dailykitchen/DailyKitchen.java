@@ -43,6 +43,7 @@ import java.util.*;
 
 import javax.annotation.Nullable;
 
+import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -73,28 +74,6 @@ import top.theillusivec4.diet.api.IDietTracker;
 import top.theillusivec4.diet.common.capability.DietTrackerCapability;
 
 public class DailyKitchen {
-    @CapabilityInject(IWantedFoodCapability.class)
-    public static Capability<IWantedFoodCapability> WANTED_FOOD_CAPABILITY;
-
-    public static void setupWantedFoodCapability(){
-        CapabilityManager.INSTANCE.register(IWantedFoodCapability.class,
-                new Capability.IStorage<IWantedFoodCapability>() {
-                    @Nullable
-                    @Override
-                    public INBT writeNBT(Capability<IWantedFoodCapability> capability, IWantedFoodCapability instance, Direction side) {
-                        return instance.serializeNBT();
-                    }
-
-                    @Override
-                    public void readNBT(Capability<IWantedFoodCapability> capability, IWantedFoodCapability instance, Direction side, INBT nbt) {
-                        instance.deserializeNBT((CompoundNBT)nbt);
-                    }
-                },
-                () -> null
-        );
-    }
-
-
     /**
      * This function generates 1-3 foods that player wants to eat.It should be called once every morning(in frostedheart.events.PlayerEvents.sendForecastMessages).
      * It records how many kinds of foods the player have eaten in wantedFoodCapability(It seems that diet mod doesn't record this), eatenFoodsAmount WON'T be changed until this function is called again. So the player will get same effect in one day.
@@ -104,8 +83,9 @@ public class DailyKitchen {
         if(!dietTracker.isPresent()){
             return;
         }
-        WantedFoodCapability wantedFoodCapability = (WantedFoodCapability)player.getCapability(WANTED_FOOD_CAPABILITY).orElse(new WantedFoodCapability());
-        Set<Item> foodsEaten = DietCapability.get(player).orElse(new DietTrackerCapability.EmptyDietTracker()).getEaten();
+        WantedFoodCapability wantedFoodCapability = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
+        if(wantedFoodCapability==null)return;
+        Set<Item> foodsEaten = DietCapability.get(player).map(t->t.getEaten()).orElseGet(HashSet::new);
         /*为了避免重复，每日厨房从diet存储的数据中获取foodsEaten。
         但若diet存储的foodsEaten会在死亡时候清空的话，则此处获取的foodsEaten也会是空的。
         在runClient测试中死亡会清空包括foodsEaten在内的所有数据(在TWR环境中不应如此)，此处暂且保留。
@@ -115,7 +95,7 @@ public class DailyKitchen {
         int eatenFoodsAmount = foodsEaten.size();
         int wantedFoodsAmount = Math.min(eatenFoodsAmount / 10, 3);
         if(wantedFoodsAmount==0) return;
-
+        
         wantedFoodCapability.setEatenFoodsAmount(eatenFoodsAmount);
 
         WantedFoodsGenerator generator = new WantedFoodsGenerator(foodsEaten, eatenFoodsAmount);
@@ -128,11 +108,6 @@ public class DailyKitchen {
     public static void tryGiveBenefits(ServerPlayerEntity player, ItemStack foodItemStack){
         Benefits benefits = new Benefits(player);
         benefits.tryGive(foodItemStack);
-    }
-
-     //copy data from old capability to new capability
-    public static void copyData(LazyOptional<IWantedFoodCapability> oldCapability, LazyOptional<IWantedFoodCapability> newCapability){
-        newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> newCap.deserializeNBT(oldCap.serializeNBT())));
     }
 }
 
@@ -200,7 +175,7 @@ class Benefits {
 
     public Benefits(ServerPlayerEntity player){
         this.player = player;
-        this.capability = (WantedFoodCapability)player.getCapability(DailyKitchen.WANTED_FOOD_CAPABILITY).orElse(new WantedFoodCapability());
+        this.capability = FHCapabilities.WANTED_FOOD.getCapability(player).orElse(null);
         this.eatenFoodsAmount = capability.getEatenFoodsAmount();
         this.benefitLevel = Math.min((eatenFoodsAmount/10), 7);
         this.basicEffectDuration = Math.min(3600+150*eatenFoodsAmount, 20000);//can't be more than one day

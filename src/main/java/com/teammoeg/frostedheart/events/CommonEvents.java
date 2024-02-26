@@ -383,7 +383,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void death(PlayerEvent.Clone ev) {
-        FHUtils.copyPlayerCapability(DailyKitchen.WANTED_FOOD_CAPABILITY,ev.getOriginal(),ev.getPlayer());
+        FHUtils.copyPlayerCapability(FHCapabilities.WANTED_FOOD.capability(),ev.getOriginal(),ev.getPlayer());
         FHUtils.copyPlayerCapability(FHCapabilities.ENERGY,ev.getOriginal(),ev.getPlayer());
         FHUtils.clonePlayerCapability(FHCapabilities.SCENARIO,ev.getOriginal(),ev.getPlayer());
         //FHUtils.copyPlayerCapability(PlayerTemperatureData.CAPABILITY,ev.getOriginal(),ev.getPlayer());
