@@ -19,12 +19,12 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static com.teammoeg.frostedheart.content.foods.DailyKitchen.DailyKitchen.*;
 
 import com.teammoeg.frostedheart.FHConfig;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.WorldClimate;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
+import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -174,7 +174,7 @@ public class PlayerEvents {
             }
 
             if (serverPlayer.world.getDayTime() % 24000 == 41 && FHConfig.COMMON.enableDailyKitchen.get())
-                generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
+                DailyKitchen.generateWantedFood(serverPlayer);//This is daily kitchen thing,not forecast message.
         }
     }
 }

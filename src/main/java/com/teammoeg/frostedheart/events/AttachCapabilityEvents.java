@@ -25,7 +25,7 @@ import com.teammoeg.frostedheart.capability.CurioCapabilityProvider;
 import com.teammoeg.frostedheart.climate.ArmorTempCurios;
 import com.teammoeg.frostedheart.climate.data.ArmorTempData;
 import com.teammoeg.frostedheart.climate.data.FHDataManager;
-import com.teammoeg.frostedheart.content.foods.DailyKitchen.WantedFoodCapabilityProvider;
+import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapabilityProvider;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
