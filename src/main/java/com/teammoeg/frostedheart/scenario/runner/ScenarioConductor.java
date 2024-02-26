@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.scenario.runner;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -28,6 +29,7 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
@@ -204,6 +206,10 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 	}
 
 	@Override
+	public LinkedList<ExecuteStackElement> getCallStack() {
+		return getCurrentAct().getCallStack();
+	}
+	@Override
 	public void jump(IScenarioTarget nxt) {
 		getCurrentAct().setActState();
 		super.jump(nxt);
@@ -249,7 +255,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 				olddata.paragraph.apply(olddata);
 				olddata.setStatus(RunStatus.RUNNING);
 			}else {//Save current state if stopped or waiting trigger.
-				olddata.saveActState();
+				olddata.setActState();
 			}
 			olddata.getScene().clear(this);
 			acts.put(old, olddata);

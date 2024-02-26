@@ -42,11 +42,7 @@ public class ScenarioVM implements IScenarioThread{
 	protected Scene scene;
 	protected boolean clearAfterClick;
 
-    public void copy(ScenarioVM another) {
-    	
-    }
 	public ScenarioVM() {
-		// TODO Auto-generated constructor stub
 	}
 	@Override
 	public Scenario getScenario() {

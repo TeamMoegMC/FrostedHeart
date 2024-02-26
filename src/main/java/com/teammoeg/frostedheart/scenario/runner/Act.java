@@ -128,15 +128,8 @@ public class Act implements IScenarioThread{
 		setScenario(parent.getScenario());
 		setStatus(parent.getStatus());
     }
-    public void saveActState() {
-		setNodeNum(parent.getNodeNum());
-		setScenario(parent.getScenario());
-		setStatus(parent.getStatus());
-		callStack.clear();
-		callStack.addAll(parent.getCallStack());
-    }
 	public void newParagraph(Scenario sp,int pn) {
-		saveActState();
+		setActState();
 		paragraph.setParagraphNum(pn);	
 		paragraph.setScenario(sp);
 		
@@ -235,7 +228,7 @@ public class Act implements IScenarioThread{
 			parent.jump(new ActTarget(this.name,acttrigger));
 	}
 	@Override
-	public Collection<? extends ExecuteStackElement> getCallStack() {
+	public LinkedList<ExecuteStackElement> getCallStack() {
 		return this.callStack;
 	}
 }
