@@ -148,6 +148,7 @@ public class TemperatureUpdate {
             if (player.isCreative() || player.isSpectator())
                 return;
             PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
+            
             if (player.ticksExisted % 10 == 0) {
                 //soak in water modifier
                 if (player.isInWater()) {
@@ -279,6 +280,7 @@ public class TemperatureUpdate {
                     current = -10;
                 else if (current > 10)
                     current = 10;
+                if(data==null)return;
                 float lenvtemp = data.getEnvTemp();//get a smooth change in display
                 float lfeeltemp=data.getFeelTemp();
                 float feeltemp=current-(1 - keepwarm)*(current-envtemp);

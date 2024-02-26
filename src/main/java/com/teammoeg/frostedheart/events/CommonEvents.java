@@ -686,8 +686,8 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            ScenarioConductor runner=FHScenario.get(player);
-            if (runner.isInited()) {
+            ScenarioConductor runner=FHScenario.getNullable(player);
+            if (runner!=null&&runner.isInited()) {
                 runner.tick();
             }
             if(player.openContainer instanceof HeatStatContainer) {

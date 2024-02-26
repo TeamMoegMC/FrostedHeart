@@ -43,4 +43,9 @@ public class Rect extends Point {
     public int getW() {
         return w;
     }
+
+	@Override
+	public String toString() {
+		return "Rect [w=" + w + ", h=" + h + ", x=" + x + ", y=" + y + "]";
+	}
 }
