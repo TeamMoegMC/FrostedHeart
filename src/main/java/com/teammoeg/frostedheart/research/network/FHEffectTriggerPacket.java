@@ -53,6 +53,7 @@ public class FHEffectTriggerPacket {
             TeamResearchData trd = ResearchDataAPI.getData(context.get().getSender());
             ServerPlayerEntity spe = context.get().getSender();
             if (trd.getData(r).isCompleted()) {
+            	
                 r.grantEffects(trd, spe);
                 r.sendProgressPacket(trd.getTeam().orElse(null));
             }

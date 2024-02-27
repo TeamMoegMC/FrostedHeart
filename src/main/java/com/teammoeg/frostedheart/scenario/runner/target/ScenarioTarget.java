@@ -31,6 +31,11 @@ public abstract class ScenarioTarget implements IScenarioTarget{
 		super();
 		this.name=name;
 		cd=cdr;
+		if(name==null) {
+			sp=cdr.getScenario();
+			if(sp!=null)
+				name=sp.name;
+		}
 	}
 	public ScenarioTarget(Scenario sc) {
 		super();
