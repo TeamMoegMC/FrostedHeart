@@ -330,8 +330,7 @@ public class ScenarioExecutor<T> {
     	}
     }
     public static void main(String[] args) throws NoSuchMethodException, SecurityException {
-    	Test t=new Test();
-    	ScenarioExecutor exc=new ScenarioExecutor(ScenarioConductor.class);
+    	ScenarioExecutor<Object> exc=new ScenarioExecutor<Object>(Object.class);
     	exc.registerInst(new Test());
     	Map<String,String> mp=new HashMap<>();
     	mp.put("s", "twr_scenario:twr_logo_title.png");

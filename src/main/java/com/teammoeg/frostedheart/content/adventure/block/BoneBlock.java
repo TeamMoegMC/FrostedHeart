@@ -1,32 +1,24 @@
 package com.teammoeg.frostedheart.content.adventure.block;
 
-import com.simibubi.create.foundation.utility.VoxelShaper;
-import com.teammoeg.frostedheart.FHItems;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.MinecartItem;
 import net.minecraft.state.IntegerProperty;
 import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
-import java.util.function.BiFunction;
 
 public class BoneBlock extends FHBaseBlock {
     private static IntegerProperty BNT = IntegerProperty.create("bonetype", 0, 5);

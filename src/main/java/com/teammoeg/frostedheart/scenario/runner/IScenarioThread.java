@@ -5,7 +5,6 @@ import java.util.Collection;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
-import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 
 import net.minecraft.entity.player.PlayerEntity;
 

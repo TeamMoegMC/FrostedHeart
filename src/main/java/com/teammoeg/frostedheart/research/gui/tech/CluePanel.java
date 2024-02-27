@@ -107,7 +107,7 @@ public class CluePanel extends Panel {
         }
         contribute = new TextField(this)
                 .setMaxWidth(width)
-                .setText(new StringTextComponent("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+                .setText(GuiUtils.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
                 .setColor(TechIcons.text);
         contribute.setPos(0, offset);
         offset += contribute.height + 2;

@@ -4,7 +4,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.capability.FHCapability;
 import com.teammoeg.frostedheart.climate.WorldClimate;

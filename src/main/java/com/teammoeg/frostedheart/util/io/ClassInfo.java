@@ -53,7 +53,7 @@ public class ClassInfo implements Marshaller{
 			};
 		}else {
 			try {
-				Constructor ctor=cls.getConstructor();
+				Constructor<?> ctor=cls.getConstructor();
 				ctor.setAccessible(true);
 				factory=()->{
 					try {

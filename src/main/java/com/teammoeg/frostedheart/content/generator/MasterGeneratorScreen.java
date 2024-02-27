@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.content.generator;
 
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;

@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.content.recipes;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.Random;
 
 import net.minecraft.inventory.IInventory;

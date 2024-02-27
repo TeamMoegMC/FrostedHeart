@@ -30,14 +30,12 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 
 import com.teammoeg.frostedheart.content.generator.tool.GeneratorDriveHandler;
-import com.teammoeg.frostedheart.content.generator.tool.NeighborTypeEnum;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3i;
 
 public final class T1GeneratorTileEntity extends MasterGeneratorTileEntity<T1GeneratorTileEntity> {

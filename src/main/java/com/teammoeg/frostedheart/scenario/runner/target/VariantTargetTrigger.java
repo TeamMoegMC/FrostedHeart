@@ -23,7 +23,6 @@ import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 import net.minecraft.entity.player.PlayerEntity;
 

@@ -26,7 +26,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
@@ -39,11 +38,6 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -180,22 +174,10 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 
 
 	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
-		if(getCurrentAct().name.isAct()) {
+		//if(getCurrentAct().name.isAct()) {
 			getCurrentAct().addTrigger(trig,targ);
-		}else super.addTrigger(trig,targ);
+		//}else super.addTrigger(trig,targ);
 	}
-
-    /*public void restoreParagraph(ParagraphData paragraph) {
-		Scenario sp=paragraph.getScenario();
-		if(paragraph.getParagraphNum()==0)
-			currentQuestData.nodeNum=0;
-		else
-			currentQuestData.nodeNum=sp.paragraphs[paragraph.getParagraphNum()-1];
-		run();
-	}*/
-
-
-
     public void run(Scenario sp) {
 		this.setScenario(sp);
 		nodeNum=0;
@@ -224,7 +206,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())
-						toExecute.add(t);
+						addToQueue(t);
 					else
 						jump(t);
     			}
@@ -326,7 +308,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 		target.apply(data);
 		data.paragraph.setScenario(target.getScenario());
 		data.paragraph.setParagraphNum(0);
-		toExecute.add(new ActTarget(quest,target));
+		addToQueue(new ActTarget(quest,target));
 	}
 
 	public void endAct() {

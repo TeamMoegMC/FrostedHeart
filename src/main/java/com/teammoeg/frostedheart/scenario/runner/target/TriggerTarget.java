@@ -2,7 +2,6 @@ package com.teammoeg.frostedheart.scenario.runner.target;
 
 import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class TriggerTarget implements IScenarioTrigger,IScenarioTarget {
 	IScenarioTrigger original;

@@ -87,7 +87,7 @@ public class DietValueRecipe extends IESerializableRecipe {
     }
 
     @Override
-    protected IERecipeSerializer getIESerializer() {
+    protected IERecipeSerializer<DietValueRecipe> getIESerializer() {
         return SERIALIZER.get();
     }
 

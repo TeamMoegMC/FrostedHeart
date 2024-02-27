@@ -91,7 +91,7 @@ public class EffectItemReward extends Effect {
             if (stack.getCount() == 1)
                 tooltip.add(stack.getDisplayName());
             else
-                tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(new StringTextComponent(" x " + stack.getCount())));
+                tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(GuiUtils.str(" x " + stack.getCount())));
         }
         return tooltip;
     }

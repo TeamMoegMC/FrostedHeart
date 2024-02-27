@@ -194,7 +194,7 @@ public class FHUtils {
     }
 
     public static int getEnchantmentLevel(Enchantment enchID, CompoundNBT tags) {
-        ResourceLocation resourcelocation = Registry.ENCHANTMENT.getKey(enchID);
+        ResourceLocation resourcelocation = RegistryUtils.getRegistryName(enchID);
         ListNBT listnbt = tags.getList("Enchantments", 10);
 
         for (int i = 0; i < listnbt.size(); ++i) {

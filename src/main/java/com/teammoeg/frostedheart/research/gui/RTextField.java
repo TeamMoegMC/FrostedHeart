@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.research.gui;
 import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -146,11 +147,11 @@ public class RTextField extends Widget {
         Theme theme = getGui().getTheme();
 
         if (maxLine > 0) {
-            List<ITextProperties> ls = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt),
+            List<ITextProperties> ls = theme.listFormattedStringToWidth(GuiUtils.str("").appendSibling(txt),
                     (int) (maxWidth / scale));
             formattedText = ls.subList(0, Math.min(ls.size(), (int) (maxLine / scale))).toArray(new ITextProperties[0]);
         } else {
-            formattedText = theme.listFormattedStringToWidth(new StringTextComponent("").appendSibling(txt), (int) (maxWidth / scale))
+            formattedText = theme.listFormattedStringToWidth(GuiUtils.str("").appendSibling(txt), (int) (maxWidth / scale))
                     .toArray(new ITextProperties[0]);
         }
 
@@ -158,6 +159,6 @@ public class RTextField extends Widget {
     }
 
     public RTextField setText(String txt) {
-        return setText(new StringTextComponent(txt));
+        return setText(GuiUtils.str(txt));
     }
 }

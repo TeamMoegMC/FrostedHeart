@@ -99,9 +99,9 @@ public class EffectStats extends Effect {
         } else
             vtext = NumberFormat.getInstance().format(val);
         if (val > 0) {
-            tooltip.add(new StringTextComponent("+" + vtext));
+            tooltip.add(GuiUtils.str("+" + vtext));
         } else
-            tooltip.add(new StringTextComponent(vtext));
+            tooltip.add(GuiUtils.str(vtext));
         return tooltip;
     }
 

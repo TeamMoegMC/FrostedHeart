@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -174,10 +175,10 @@ public class SelectDialog<T> extends EditDialog {
     public TextBox searchBox;
 
     public static <R> Function<R, ITextComponent> wrap(Function<R, Object> str) {
-        return e -> new StringTextComponent(String.valueOf(str.apply(e)));
+        return e -> GuiUtils.str(String.valueOf(str.apply(e)));
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
-        this(panel, lbl, val, cb, fetcher, e -> new StringTextComponent(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
+        this(panel, lbl, val, cb, fetcher, e -> GuiUtils.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, ITextComponent> tostr) {

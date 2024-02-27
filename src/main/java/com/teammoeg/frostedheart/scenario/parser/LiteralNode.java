@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.scenario.parser;
 
-import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class LiteralNode implements Node {

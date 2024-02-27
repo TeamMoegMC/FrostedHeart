@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
 import com.teammoeg.frostedheart.content.recipes.ResearchPaperRecipe;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
@@ -80,9 +81,7 @@ public class SaunaRecipe extends IESerializableRecipe {
                 duration = JSONUtils.getInt(effectJson, "duration");
                 amplifier = JSONUtils.getInt(effectJson, "amplifier");
                 // Get Effect from effectID from Registry
-                if (Registry.EFFECTS.getOrDefault(effectID) != null) {
-                    effect = Registry.EFFECTS.getOrDefault(effectID);
-                }
+                effect = RegistryUtils.getEffect(effectID);
             }
             return new SaunaRecipe(id, Ingredient.deserialize(json.get("input")), JSONUtils.getInt(json, "time"),
                     effect, duration, amplifier);

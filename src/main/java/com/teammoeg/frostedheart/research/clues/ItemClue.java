@@ -76,7 +76,7 @@ public class ItemClue extends Clue {
         if (stack.hasNoMatchingItems())
             return null;
         return stack.getMatchingStacks()[0].getDisplayName().copyRaw()
-                .appendSibling(new StringTextComponent(" x" + stack.getCount()));
+                .appendSibling(GuiUtils.str(" x" + stack.getCount()));
     }
 
     @Override

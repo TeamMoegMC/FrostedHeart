@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterators;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ItemSearchMode;
@@ -192,7 +193,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void addMouseOverText(TooltipList list) {
             super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(new StringTextComponent(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
+            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(GuiUtils.str(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
         }
 
         @Override
@@ -259,7 +260,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             if (!mod.isEmpty()) {
-                return Registries.getId(stack.getItem(), Registry.ITEM).getNamespace().contains(mod);
+                return RegistryUtils.getRegistryName(stack.getItem()).getNamespace().contains(mod);
             }
 
             return stack.getDisplayName().getString().toLowerCase().contains(search);

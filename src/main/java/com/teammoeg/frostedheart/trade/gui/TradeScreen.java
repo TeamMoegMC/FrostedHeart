@@ -173,7 +173,7 @@ public class TradeScreen extends BaseScreen {
                 int rel = cx.relations.get(m);
                 if (rel == 0)
                     continue;
-                IFormattableTextComponent tx = new StringTextComponent(rel > 0 ? " +" + rel : " " + rel)
+                IFormattableTextComponent tx = GuiUtils.str(rel > 0 ? " +" + rel : " " + rel)
                         .mergeStyle(rel > 0 ? TextFormatting.GREEN : TextFormatting.RED);
                 list.add(m.getDesc().appendSibling(tx));
 

@@ -43,7 +43,6 @@ import net.minecraft.command.arguments.NBTTagArgument;
 import net.minecraft.command.arguments.UUIDArgument;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 
 public class ResearchCommand {
@@ -59,14 +58,14 @@ public class ResearchCommand {
 
                     Research rs = FHResearch.getResearch(rsn).get();
                     if (rs == null) {
-                        ct.getSource().sendErrorMessage(new StringTextComponent("Research not found").mergeStyle(TextFormatting.RED));
+                        ct.getSource().sendErrorMessage(GuiUtils.str("Research not found").mergeStyle(TextFormatting.RED));
                         return Command.SINGLE_SUCCESS;
                     }
                     ResearchData rd = ResearchDataAPI.getData(ct.getSource().asPlayer()).getData(rs);
                     rd.setFinished(true);
                     rd.announceCompletion();
 
-                    ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })).then(Commands.literal("all").executes(ct -> {
                     TeamResearchData trd = ResearchDataAPI.getData(ct.getSource().asPlayer());
@@ -76,19 +75,19 @@ public class ResearchCommand {
                         rd.setFinished(true);
                         rd.announceCompletion();
                     }
-                    ct.getSource().sendFeedback(new StringTextComponent("Succeed!").mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(GuiUtils.str("Succeed!").mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("transfer").then(Commands.argument("from", UUIDArgument.func_239194_a_())
                         .then(Commands.argument("to", UUIDArgument.func_239194_a_())).executes(ct -> {
                             Team team = FTBTeamsAPI.getManager().getTeamByID(UUIDArgument.func_239195_a_(ct, "to"));
                             FHResearchDataManager.INSTANCE.transfer(UUIDArgument.func_239195_a_(ct, "from"), team);
-                            ct.getSource().sendFeedback(new StringTextComponent("Transfered to " + team.getDisplayName()).mergeStyle(TextFormatting.GREEN), false);
+                            ct.getSource().sendFeedback(GuiUtils.str("Transfered to " + team.getDisplayName()).mergeStyle(TextFormatting.GREEN), false);
                             return Command.SINGLE_SUCCESS;
                         })))
                 .then(Commands.literal("edit").then(Commands.argument("enable", BoolArgumentType.bool()).executes(ct -> {
                     FHResearch.editor = ct.getArgument("enable", Boolean.class);
-                    ct.getSource().sendFeedback(new StringTextComponent("Editing mode set " + String.valueOf(FHResearch.editor)).mergeStyle(TextFormatting.GREEN), false);
+                    ct.getSource().sendFeedback(GuiUtils.str("Editing mode set " + String.valueOf(FHResearch.editor)).mergeStyle(TextFormatting.GREEN), false);
                     return Command.SINGLE_SUCCESS;
                 })))
                 .then(Commands.literal("default").executes(ct -> {

@@ -43,6 +43,7 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreTileEnti
 import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.blocks.MechCalcTileEntity;
 import com.teammoeg.frostedheart.town.house.HouseTileEntity;
+
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -53,7 +54,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class FHTileTypes {
     public static final DeferredRegister<TileEntityType<?>> REGISTER = DeferredRegister.create(
             ForgeRegistries.TILE_ENTITIES, FHMain.MODID);
-    private static final CreateRegistrate REGISTRATE = FHMain.registrate.getValue()
+    private static final CreateRegistrate REGISTRATE = FHMain.registrate.get()
         .itemGroup(() -> FHMain.itemGroup);
     public static final RegistryObject<TileEntityType<T1GeneratorTileEntity>> GENERATOR_T1 = REGISTER.register(
             "generator", makeType(T1GeneratorTileEntity::new, () -> FHMultiblocks.generator)

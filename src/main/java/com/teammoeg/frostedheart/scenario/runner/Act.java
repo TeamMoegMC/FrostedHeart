@@ -19,14 +19,12 @@
 
 package com.teammoeg.frostedheart.scenario.runner;
 
-import java.util.Collection;
 import java.util.LinkedList;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.scenario.network.ServerSenarioActPacket;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
-import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
@@ -144,7 +142,7 @@ public class Act implements IScenarioThread{
 
 
 	public void queue(IScenarioTarget target) {
-		parent.toExecute.add(new ActTarget(name,target));
+		parent.addToQueue(new ActTarget(name,target));
 	}
 	public ServerPlayerEntity getPlayer() {
 		return parent.getPlayer();

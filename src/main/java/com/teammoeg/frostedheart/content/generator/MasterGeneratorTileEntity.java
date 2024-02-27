@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
-import blusunrize.immersiveengineering.api.utils.ItemUtils;
+
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -219,9 +219,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             return findRecipe(stack) != null;
         return false;
     }
-    public GeneratorRecipe findRecipe(ItemStack input) {
+    @SuppressWarnings("resource")
+	public GeneratorRecipe findRecipe(ItemStack input) {
         for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), GeneratorRecipe.TYPE))
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
+            if (recipe.input.test(input))
                 return recipe;
         return null;
     }

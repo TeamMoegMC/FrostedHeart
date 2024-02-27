@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import com.teammoeg.frostedheart.scenario.runner.IScenarioThread;
 import com.teammoeg.frostedheart.scenario.runner.IScenarioTrigger;
-import com.teammoeg.frostedheart.scenario.runner.ScenarioVM;
 
 public class OrTrigger implements IScenarioTrigger {
 	IScenarioTrigger[] triggers;

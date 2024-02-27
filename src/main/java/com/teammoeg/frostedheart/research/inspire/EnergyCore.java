@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -205,7 +206,7 @@ public class EnergyCore implements INBTSerializable<CompoundNBT> {
     public static void reportEnergy(PlayerEntity player) {
     	
     	EnergyCore data=getCapability(player).orElse(null);
-        player.sendMessage(new StringTextComponent("Energy:" + data.energy + ",Persist Energy: " + data.penergy + ",Extra Energy: " + data.cenergy), player.getUniqueID());
+        player.sendMessage(GuiUtils.str("Energy:" + data.energy + ",Persist Energy: " + data.penergy + ",Extra Energy: " + data.cenergy), player.getUniqueID());
     }
  
     public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {

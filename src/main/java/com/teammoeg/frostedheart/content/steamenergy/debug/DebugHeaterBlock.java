@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -80,7 +81,7 @@ public class DebugHeaterBlock extends FHBaseBlock {
         if (item.getItem().equals(Item.getItemFromBlock(this))) {
             state = state.cycleValue(BlockStateProperties.LEVEL_1_8);
             world.setBlockState(pos, state);
-            player.sendStatusMessage(new StringTextComponent(String.valueOf(state.get(BlockStateProperties.LEVEL_1_8))), true);
+            player.sendStatusMessage(GuiUtils.str(String.valueOf(state.get(BlockStateProperties.LEVEL_1_8))), true);
             return ActionResultType.SUCCESS;
         }
         return superResult;

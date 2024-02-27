@@ -41,8 +41,6 @@ package com.teammoeg.frostedheart.content.foods.dailykitchen;
 
 import java.util.*;
 
-import javax.annotation.Nullable;
-
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
@@ -53,25 +51,17 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
-import top.theillusivec4.diet.common.capability.DietTrackerCapability;
 
 public class DailyKitchen {
     /**
@@ -149,7 +139,7 @@ class WantedFoodsGenerator {
         for(Item food : foodsEaten) {
             if(wantedFoodsNumber.contains(i) && (isNotBadFood(food)) && !(food instanceof ItemFluidContainer/*Don't eat thermos!*/) ){
                 wantedFoods.add(food);
-                wantedFoodsText.appendSibling(new TranslationTextComponent(food.getTranslationKey())).appendSibling(new StringTextComponent("  "));
+                wantedFoodsText.appendSibling(new TranslationTextComponent(food.getTranslationKey())).appendSibling(GuiUtils.str("  "));
             }
             i++;
         }
