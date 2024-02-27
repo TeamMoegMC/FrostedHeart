@@ -22,6 +22,9 @@ package com.teammoeg.frostedheart.research.data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -30,6 +33,7 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.research.FHResearch;
+import com.teammoeg.frostedheart.research.TeamCapability;
 import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
@@ -53,6 +57,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.Constants.NBT;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 // TODO: Auto-generated Javadoc
@@ -64,6 +69,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * This data is available for both team and player.
  *
  * @author khjxiaogu
+ * @param <INBTSerializable>
  * @date 2022/9/2
  */
 public class TeamResearchData {
@@ -95,6 +101,7 @@ public class TeamResearchData {
      */
     CompoundNBT variants = new CompoundNBT();
     private Supplier<Team> team;
+    Map<String,INBTSerializable<CompoundNBT>> data=new HashMap<>();
 
     /**
      * The crafting.<br>
@@ -115,10 +122,6 @@ public class TeamResearchData {
      * The categories.<br>
      */
     public CategoryUnlockList categories = new CategoryUnlockList();
-
-    public TeamTownData townData = new TeamTownData(this);
-
-    public GeneratorData generatorData = new GeneratorData(this);
 
     /**
      * Get client instance.
@@ -264,9 +267,14 @@ public class TeamResearchData {
             id = data.getUniqueId("uuid");
         ListNBT li = data.getList("researches", 10);
         activeResearchId = data.getInt("active");
-
-        townData.deserialize(data.getCompound("town"), updatePacket);
-        generatorData.deserialize(data.getCompound("generator"), updatePacket);
+        this.data.clear();
+        for(TeamCapability<?> tc:TeamCapability.caps) {
+        	if(data.contains(tc.getId())) {
+        		this.getData(tc).deserializeNBT(data.getCompound(tc.getId()));
+        	}
+        }
+        
+        
         for (int i = 0; i < li.size(); i++) {
             INBT e = li.get(i);
             rdata.add(new ResearchData(FHResearch.getResearch(i + 1), (CompoundNBT) e, this));
@@ -580,8 +588,12 @@ public class TeamResearchData {
         nbt.put("researches", rs);
         nbt.putInt("active", activeResearchId);
         nbt.putUniqueId("uuid", id);
-        nbt.put("town", townData.serialize(updatePacket));
-        nbt.put("generator", generatorData.serialize(updatePacket));
+        for(Entry<String, INBTSerializable<CompoundNBT>> ent:data.entrySet()) {
+        	nbt.put(ent.getKey(), ent.getValue().serializeNBT());
+        }
+        
+        //nbt.put("town", townData.serialize(updatePacket));
+        //nbt.put("generator", generatorData.serialize(updatePacket));
         // these data does not send to client
         //if (!updatePacket) {
         //nbt.put("crafting", crafting.serialize());
@@ -703,5 +715,9 @@ public class TeamResearchData {
 
 	public void setVariants(CompoundNBT variants) {
 		this.variants = variants;
+	}
+	@SuppressWarnings("unchecked")
+	public <T extends INBTSerializable<CompoundNBT>> T getData(TeamCapability<T> cap){
+		return (T) data.computeIfAbsent(cap.getId(),s->cap.create(this));
 	}
 }

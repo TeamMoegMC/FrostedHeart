@@ -76,6 +76,8 @@ import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.town.GeneratorData;
+import com.teammoeg.frostedheart.town.TeamTownData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
@@ -663,10 +665,10 @@ public class CommonEvents {
                 SchedulerQueue.tickAll(serverWorld);
                 int i = 0;
                 for (TeamResearchData trd : FHResearchDataManager.INSTANCE.getAllData()) {
-                    if (serverWorld.getDimensionKey().equals(trd.generatorData.dimension)) {
+                    if (serverWorld.getDimensionKey().equals(trd.getData(GeneratorData.CAPABILITY).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
-                                trd.townData.tick(serverWorld);
+                                trd.getData(TeamTownData.CAPABILITY).tick(serverWorld);
                             }
                         }
                     }
