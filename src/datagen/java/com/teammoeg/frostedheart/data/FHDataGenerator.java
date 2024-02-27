@@ -18,9 +18,9 @@
 
 package com.teammoeg.frostedheart.data;
 
-import com.teammoeg.frostedheart.FHMain;
-
 import blusunrize.immersiveengineering.common.blocks.multiblocks.StaticTemplateManager;
+import com.teammoeg.frostedheart.FHMain;
+import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -35,10 +35,14 @@ public class FHDataGenerator {
         ExistingFileHelper exHelper = event.getExistingFileHelper();
         StaticTemplateManager.EXISTING_HELPER = exHelper;
         if (event.includeServer()) {
+            FHMain.LOGGER.info("running FHDataGenerator.gatherData");//test
+            BlockTagsProvider blockTagsProvider = new FHBlockTagProvider(gen, exHelper);
+            gen.addProvider(blockTagsProvider);
             gen.addProvider(new FHRecipeProvider(gen));
             gen.addProvider(new FHMultiblockStatesProvider(gen, exHelper));
             gen.addProvider(new FHItemModelProvider(gen,exHelper));
-            gen.addProvider(new FHItemTagProvider(gen,exHelper));
+            gen.addProvider(new FHItemTagProvider(gen, blockTagsProvider,exHelper));
+
         }
     }
 }
