@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.entity.MobEntity;
@@ -71,7 +72,7 @@ public class DismantleInnerRecipe extends SpecialRecipe {
             if (!tags.getBoolean("inner_bounded")) {
                 ResourceLocation item = new ResourceLocation(tags.getString("inner_cover"));
                 CompoundNBT tag = tags.getCompound("inner_cover_tag");
-                Item buff = ForgeRegistries.ITEMS.getValue(item);
+                Item buff = RegistryUtils.getItem(item);
                 if (buff == null)
                     return ItemStack.EMPTY;
                 ItemStack buffitem = new ItemStack(buff);

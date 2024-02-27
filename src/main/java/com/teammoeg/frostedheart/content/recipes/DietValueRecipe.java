@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import blusunrize.immersiveengineering.api.crafting.IESerializableRecipe;
@@ -54,7 +55,7 @@ public class DietValueRecipe extends IESerializableRecipe {
         @Override
         public DietValueRecipe readFromJson(ResourceLocation id, JsonObject json) {
             Map<String, Float> m = json.get("groups").getAsJsonObject().entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getAsFloat()));
-            Item i = ForgeRegistries.ITEMS.getValue(new ResourceLocation(json.get("item").getAsString()));
+            Item i = RegistryUtils.getItem(new ResourceLocation(json.get("item").getAsString()));
             if (i == null || i == Items.AIR)
                 return null;
             return new DietValueRecipe(id, m, i);

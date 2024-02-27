@@ -29,6 +29,7 @@ import javax.annotation.Nonnull;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -57,7 +58,7 @@ public class DechantLootModifier extends LootModifier {
         public JsonObject write(DechantLootModifier instance) {
             JsonObject object = new JsonObject();
             JsonArray removed = new JsonArray();
-            instance.removed.stream().map(ForgeRegistries.ENCHANTMENTS::getKey).map(ResourceLocation::toString).forEach(removed::add);
+            instance.removed.stream().map(RegistryUtils::getRegistryName).map(ResourceLocation::toString).forEach(removed::add);
             object.add("removed", removed);
             return object;
         }
@@ -67,7 +68,7 @@ public class DechantLootModifier extends LootModifier {
 
     private DechantLootModifier(ILootCondition[] conditionsIn, Collection<ResourceLocation> pairsin) {
         super(conditionsIn);
-        pairsin.stream().map(ForgeRegistries.ENCHANTMENTS::getValue).forEach(removed::add);
+        pairsin.stream().map(RegistryUtils::getEnchantment).forEach(removed::add);
     }
 
     @Nonnull

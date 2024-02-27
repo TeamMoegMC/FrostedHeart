@@ -294,7 +294,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Collection<ItemStack> getAllItems() {
-                return ForgeRegistries.BLOCKS.getValues().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
+                return RegistryUtils.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override

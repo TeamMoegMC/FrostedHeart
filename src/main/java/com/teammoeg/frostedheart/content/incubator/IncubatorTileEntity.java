@@ -28,6 +28,7 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseTileEntity;
 import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.thermopolium.api.ThermopoliumApi;
 import com.teammoeg.thermopolium.items.StewItem;
 
@@ -141,7 +142,7 @@ public class IncubatorTileEntity extends FHBaseTileEntity implements ITickableTi
     LazyOptional<IItemHandler> invHandlerDown = registerConstantCap(new IEInventoryHandler(1, this, 3, false, true));
 
     public static Fluid getProtein() {
-        Fluid f = ForgeRegistries.FLUIDS.getValue(pr);
+        Fluid f = RegistryUtils.getFluid(pr);
         return f == Fluids.EMPTY ? Fluids.WATER : f;
     }
 

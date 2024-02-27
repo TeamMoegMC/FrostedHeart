@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.IArmorMaterial;
@@ -42,7 +43,7 @@ public enum FHArmorMaterial implements IArmorMaterial {
         return Ingredient.fromItems(FHItems.raw_hide.get());
     }),
     HAY("hay", 4, new int[]{1, 1, 1, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
-        return Ingredient.fromItems(ModList.get().isLoaded("charcoal_pit") ? ForgeRegistries.ITEMS.getValue(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT);
+        return Ingredient.fromItems(ModList.get().isLoaded("charcoal_pit") ? RegistryUtils.getItem(new ResourceLocation("charcoal_pit", "straw")) : Items.WHEAT);
     }),
     WOOL("wool", 6, new int[]{1, 2, 3, 1}, 5, SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 0.0F, 0.0F, () -> {
         return Ingredient.fromItems(Items.WHITE_WOOL);

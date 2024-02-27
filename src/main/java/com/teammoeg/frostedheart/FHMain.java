@@ -174,7 +174,7 @@ public class FHMain {
         ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
         for (Mapping<Fluid> i : miss.getAllMappings()) {
             if (i.key.equals(hw))
-                i.remap(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("thermopolium", "nail_soup")));
+                i.remap(RegistryUtils.getFluid(new ResourceLocation("thermopolium", "nail_soup")));
         }
     }
 
@@ -182,7 +182,7 @@ public class FHMain {
         for (Mapping<Block> i : miss.getAllMappings()) {
             ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
-                i.remap(ForgeRegistries.BLOCKS.getValue(rl));
+                i.remap(RegistryUtils.getBlock(rl));
         }
     }
 
@@ -190,12 +190,12 @@ public class FHMain {
         for (Mapping<Item> i : miss.getAllMappings()) {
             ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
-                i.remap(ForgeRegistries.ITEMS.getValue(rl));
+                i.remap(RegistryUtils.getItem(rl));
         }
     }
 
     public void modification(FMLLoadCompleteEvent event) {
-        for (Item i : ForgeRegistries.ITEMS.getValues()) {
+        for (Item i : RegistryUtils.getItems()) {
             if (i.isFood()) {
                 if (RegistryUtils.getRegistryName(i).getNamespace().equals("crockpot")) {
                     ((FoodAccess) i.getFood()).getEffectsSuppliers().removeIf(t -> t.getFirst().get().getPotion().isBeneficial());

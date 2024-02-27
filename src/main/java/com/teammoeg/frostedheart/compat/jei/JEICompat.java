@@ -67,6 +67,7 @@ import com.teammoeg.frostedheart.content.temperature.handstoves.FuelingRecipe;
 import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.client.Point;
 
@@ -99,7 +100,6 @@ import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 @JeiPlugin
 public class JEICompat implements IModPlugin {
@@ -313,7 +313,7 @@ public class JEICompat implements IModPlugin {
         ClientWorld world = Minecraft.getInstance().world;
         checkNotNull(world, "minecraft world");
         RecipeManager recipeManager = world.getRecipeManager();
-        CuttingCategory.matching = ForgeRegistries.ITEMS.getValues().stream()
+        CuttingCategory.matching = RegistryUtils.getItems().stream()
                 .filter(e -> e.getTags().contains(CuttingCategory.ktag)).collect(Collectors.toList());
 
         registration.addRecipes(FHUtils.filterRecipes(recipeManager,GeneratorRecipe.TYPE), GeneratorFuelCategory.UID);

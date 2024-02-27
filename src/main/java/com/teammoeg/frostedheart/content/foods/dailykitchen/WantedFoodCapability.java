@@ -43,6 +43,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.item.Item;
 import net.minecraft.nbt.CompoundNBT;
@@ -103,7 +104,7 @@ public class WantedFoodCapability implements INBTSerializable<CompoundNBT>{
     }
 
     private static StringNBT turnItemToStringNBT(Item item){
-        return StringNBT.valueOf(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(item)).toString());
+        return StringNBT.valueOf(Objects.requireNonNull(RegistryUtils.getRegistryName(item)).toString());
     }
 
     @Override
@@ -123,7 +124,7 @@ public class WantedFoodCapability implements INBTSerializable<CompoundNBT>{
 
     private static Item turnStringNBTToItem(INBT nbt){
         ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getString());
-        return ForgeRegistries.ITEMS.getValue(itemResourceLocation);
+        return RegistryUtils.getItem(itemResourceLocation);
     }
 
     @Override

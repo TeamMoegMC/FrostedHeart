@@ -44,6 +44,7 @@ import java.util.*;
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.thermopolium.data.recipes.BowlContainingRecipe;
 import net.minecraft.entity.player.PlayerEntity;
@@ -273,7 +274,7 @@ class Benefits {
         Item foodOrSoupContainer = foodItemStack.getItem();
         if(foodOrSoupContainer instanceof ItemFluidContainer){
             assert foodItemStack.getTag() != null;
-            Fluid fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(foodItemStack.getTag().getCompound("Fluid").getString("FluidName")));
+            Fluid fluid = RegistryUtils.getFluid(new ResourceLocation(foodItemStack.getTag().getCompound("Fluid").getString("FluidName")));
             BowlContainingRecipe recipe = BowlContainingRecipe.recipes.get(fluid);
             if(recipe != null){
                 tryGive(recipe.handle(fluid).getItem());

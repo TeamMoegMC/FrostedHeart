@@ -29,6 +29,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.trade.FHVillagerData;
 import com.teammoeg.frostedheart.trade.policy.snapshot.PolicySnapshot;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
@@ -67,8 +68,9 @@ public class TradePolicy extends IESerializableRecipe {
             int root = json.has("weight") ? json.get("weight").getAsInt() : 0;
             int[] expBar;
             VillagerProfession vp = VillagerProfession.NONE;
+            
             if (json.has("profession"))
-                vp = ForgeRegistries.PROFESSIONS.getValue(new ResourceLocation(json.get("profession").getAsString()));
+                vp = RegistryUtils.getProfess(new ResourceLocation(json.get("profession").getAsString()));
             if (json.has("exps"))
                 expBar = SerializeUtil.parseJsonElmList(json.get("exps"), JsonElement::getAsInt).stream().mapToInt(t -> t).toArray();
             else

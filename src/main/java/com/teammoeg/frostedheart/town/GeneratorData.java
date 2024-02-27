@@ -141,7 +141,7 @@ public class GeneratorData {
         TLevel=data.getFloat("tempLevel");
         RLevel=data.getFloat("rangeLevel");
         if (data.contains("steamFluid"))
-            fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(data.getString("steamFluid")));
+            fluid = RegistryUtils.getFluid(new ResourceLocation(data.getString("steamFluid")));
         else
             fluid = null;
         if (!update) {

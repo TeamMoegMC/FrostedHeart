@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHBlocks;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.ApiUtils;
@@ -115,7 +116,7 @@ public class IncubateRecipe extends IESerializableRecipe {
         super(ItemStack.EMPTY, TYPE, IncubatorTileEntity.food);
         isFood = true;
         List<IItemProvider> items = new ArrayList<>();
-        for (Item i : ForgeRegistries.ITEMS.getValues()) {
+        for (Item i : RegistryUtils.getItems()) {
             if (i.isFood())
                 items.add(i);
         }

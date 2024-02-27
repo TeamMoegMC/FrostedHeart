@@ -61,7 +61,7 @@ public class EffectUse extends Effect {
 
     public EffectUse(JsonObject jo) {
         super(jo);
-        blocks = SerializeUtil.parseJsonElmList(jo.get("blocks"), e -> ForgeRegistries.BLOCKS.getValue(new ResourceLocation(e.getAsString())));
+        blocks = SerializeUtil.parseJsonElmList(jo.get("blocks"), e -> RegistryUtils.getBlock(new ResourceLocation(e.getAsString())));
     }
 
     public EffectUse(PacketBuffer pb) {

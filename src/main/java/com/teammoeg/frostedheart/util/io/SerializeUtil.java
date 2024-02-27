@@ -120,10 +120,10 @@ public class SerializeUtil {
 
     public static ItemStack fromJson(JsonElement elm) {
         if (elm.isJsonPrimitive())
-            return new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation(elm.getAsString())));
+            return new ItemStack(RegistryUtils.getItem(new ResourceLocation(elm.getAsString())));
         else if (elm.isJsonObject()) {
             JsonObject jo = elm.getAsJsonObject();
-            ItemStack ret = new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation(jo.get("id").getAsString())));
+            ItemStack ret = new ItemStack(RegistryUtils.getItem(new ResourceLocation(jo.get("id").getAsString())));
             if (jo.has("count"))
                 ret.setCount(jo.get("count").getAsInt());
             if (jo.has("nbt"))

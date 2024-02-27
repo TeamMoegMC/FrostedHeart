@@ -51,6 +51,7 @@ import com.teammoeg.frostedheart.content.temperature.heatervest.HeaterVestRender
 import com.teammoeg.frostedheart.research.blocks.MechCalcRenderer;
 import com.teammoeg.frostedheart.research.gui.drawdesk.DrawDeskScreen;
 import com.teammoeg.frostedheart.trade.gui.TradeScreen;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.client.manual.ManualElementMultiblock;
@@ -176,7 +177,7 @@ public class ClientRegistryEvents {
         for (ResourceLocation location : event.getModelRegistry().keySet()) {
             // Now find all armors
             ResourceLocation item = new ResourceLocation(location.getNamespace(), location.getPath());
-            if (ForgeRegistries.ITEMS.getValue(item) instanceof ArmorItem) {
+            if (RegistryUtils.getItem(item) instanceof ArmorItem) {
                 ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(item, "inventory");
                 IBakedModel model = event.getModelRegistry().get(itemModelResourceLocation);
                 if (model == null) {

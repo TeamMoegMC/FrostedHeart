@@ -78,7 +78,7 @@ public class ResearchListeners {
 
         @Override
         public Block getObject(String s) {
-            return ForgeRegistries.BLOCKS.getValue(new ResourceLocation(s));
+            return RegistryUtils.getBlock(new ResourceLocation(s));
         }
 
         @Override
