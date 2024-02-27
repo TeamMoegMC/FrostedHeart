@@ -45,7 +45,6 @@ import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 

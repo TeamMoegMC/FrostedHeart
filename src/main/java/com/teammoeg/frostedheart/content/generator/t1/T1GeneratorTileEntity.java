@@ -22,16 +22,15 @@ package com.teammoeg.frostedheart.content.generator.t1;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import blusunrize.immersiveengineering.common.blocks.stone.AlloySmelterTileEntity;
-import blusunrize.immersiveengineering.common.blocks.stone.BlastFurnaceTileEntity;
-import blusunrize.immersiveengineering.common.util.Utils;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
-
 import com.teammoeg.frostedheart.content.generator.tool.GeneratorDriveHandler;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
+import blusunrize.immersiveengineering.common.blocks.stone.AlloySmelterTileEntity;
+import blusunrize.immersiveengineering.common.blocks.stone.BlastFurnaceTileEntity;
+import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;

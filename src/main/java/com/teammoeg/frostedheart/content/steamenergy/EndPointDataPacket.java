@@ -20,19 +20,12 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Supplier;
 
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.SpecialResearch;
-import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.trade.ClientHeatHandler;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 // send when player join

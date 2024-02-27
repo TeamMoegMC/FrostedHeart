@@ -40,7 +40,6 @@ import net.minecraft.loot.conditions.ILootCondition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.common.loot.LootModifier;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class DechantLootModifier extends LootModifier {
     public static class Serializer extends GlobalLootModifierSerializer<DechantLootModifier> {

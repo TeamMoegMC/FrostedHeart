@@ -39,7 +39,6 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class DismantleInnerRecipe extends SpecialRecipe {
     public static class Serializer extends IERecipeSerializer<DismantleInnerRecipe> {

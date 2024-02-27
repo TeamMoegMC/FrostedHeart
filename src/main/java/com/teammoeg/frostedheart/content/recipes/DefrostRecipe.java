@@ -36,7 +36,6 @@ import net.minecraft.item.crafting.ShapedRecipe;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 
 public interface DefrostRecipe extends IRecipe<IInventory> {
     public static class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {

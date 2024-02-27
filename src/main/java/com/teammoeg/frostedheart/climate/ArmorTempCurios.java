@@ -7,6 +7,7 @@ import com.google.common.collect.Multimap;
 import com.teammoeg.frostedheart.FHAttributes;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.climate.data.ArmorTempData;
+
 import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;

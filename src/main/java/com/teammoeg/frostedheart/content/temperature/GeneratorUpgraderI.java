@@ -22,8 +22,6 @@ package com.teammoeg.frostedheart.content.temperature;
 import com.teammoeg.frostedheart.FHMultiblocks;
 import com.teammoeg.frostedheart.base.item.FHBaseItem;
 import com.teammoeg.frostedheart.content.generator.t1.T1GeneratorTileEntity;
-import com.teammoeg.frostedheart.content.generator.t2.T2GeneratorTileEntity;
-import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.util.mixin.MultiBlockAccess;
 
 import blusunrize.immersiveengineering.api.utils.DirectionUtils;
@@ -40,7 +38,6 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Mirror;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext.FluidMode;

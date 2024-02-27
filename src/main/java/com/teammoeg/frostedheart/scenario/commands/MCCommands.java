@@ -25,7 +25,6 @@ import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.server.management.OpEntry;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class MCCommands {
 	public void giveItem(ScenarioVM runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {

@@ -31,7 +31,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.gen.feature.template.Template.BlockInfo;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class StructureUtils {
     static List<Block> baned = new ArrayList<>();

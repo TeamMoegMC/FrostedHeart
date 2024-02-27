@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.climate.data;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.ItemStackHelper;

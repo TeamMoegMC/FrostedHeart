@@ -53,7 +53,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class SelectDialog<T> extends EditDialog {
     public class SelectorButton extends Button {

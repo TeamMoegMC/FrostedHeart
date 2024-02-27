@@ -20,6 +20,7 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import java.util.Collection;
+
 import com.teammoeg.frostedheart.FHContainer;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.thermopolium.data.recipes.SerializeUtil;

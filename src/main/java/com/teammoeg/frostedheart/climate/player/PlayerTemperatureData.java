@@ -3,6 +3,7 @@ package com.teammoeg.frostedheart.climate.player;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
