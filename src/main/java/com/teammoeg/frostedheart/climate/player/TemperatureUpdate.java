@@ -135,6 +135,7 @@ public class TemperatureUpdate {
             if (player.isCreative() || player.isSpectator())
                 return;
             PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
+            if(data==null)return;
             if (player.ticksExisted % 10 == 0) {
                 //soak in water modifier
                 if (player.isInWater()) {

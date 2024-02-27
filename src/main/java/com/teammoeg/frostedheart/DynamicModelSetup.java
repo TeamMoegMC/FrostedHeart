@@ -46,7 +46,7 @@ public class DynamicModelSetup {
         );
     }
     public static void addListener() {
-    	if(Minecraft.getInstance()!=null&&Minecraft.getInstance().getRenderManager()!=null)
+    	if(Minecraft.getInstance()!=null&&Minecraft.getInstance().getResourceManager()!=null)
     		((IReloadableResourceManager)Minecraft.getInstance().getResourceManager()).addReloadListener(KGlyphProvider.INSTANCE);
     }
 }

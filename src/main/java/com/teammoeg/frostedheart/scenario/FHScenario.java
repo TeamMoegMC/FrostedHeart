@@ -221,7 +221,10 @@ public class FHScenario {
 		runners.values().removeIf(t -> t.isOfflined());
 
 	}*/
-
+	public static ScenarioConductor getNullable(PlayerEntity playerEntity) {
+		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
+		return ScenarioConductor.getCapability(playerEntity).orElse(null);
+	}
 	public static ScenarioConductor get(PlayerEntity playerEntity) {
 		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));

@@ -4,5 +4,5 @@ import java.util.Map;
 
 @FunctionalInterface
 public interface TypeAdapter<T,R> {
-	public T convert(R runner,String parname,Map<String, String> params);
+	public T convert(R runner,String[] parnames,Map<String, String> params);
 }

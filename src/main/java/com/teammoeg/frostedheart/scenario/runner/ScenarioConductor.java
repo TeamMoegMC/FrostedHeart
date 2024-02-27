@@ -122,7 +122,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 	}
 
     public void init(ServerPlayerEntity player) {
-    	if(!inited)inited=true;
+    	if(!isInited())inited=true;
 		this.player = player.getUniqueID();
 	}
     public ScenarioConductor(ServerPlayerEntity player) {
@@ -215,7 +215,7 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 		super.jump(nxt);
 	}
 	public void tick() {
-		if(!inited)return;
+		if(!isInited())return;
     	//detect triggers
 		if(getStatus()==RunStatus.RUNNING) {
 			run();
@@ -353,6 +353,9 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
 		load(nbt);
+	}
+	public boolean isInited() {
+		return inited;
 	}
 
 }
