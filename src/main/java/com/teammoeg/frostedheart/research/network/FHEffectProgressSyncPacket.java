@@ -55,7 +55,6 @@ public class FHEffectProgressSyncPacket {
     public void handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
             Effect e = FHResearch.effects.getById(id);
-            System.out.println("Running effect "+e+" with "+data);
             if (data)
                 e.grant(TeamResearchData.getClientInstance(), null, false);
             else

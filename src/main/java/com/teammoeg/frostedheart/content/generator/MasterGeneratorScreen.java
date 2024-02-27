@@ -114,7 +114,7 @@ public class MasterGeneratorScreen<T extends MasterGeneratorTileEntity<T>> exten
 		//upgrade arrow
 		this.blit(matrixStack, 85, 93, 6, 22, 412, 148);
 		//generator symbol
-		this.blit(matrixStack, 76, 44, 24, 48, 176+24*(tile.isWorking()?2:1), (container.getTier()-1)*48);
+		this.blit(matrixStack, 76, 44, 24, 48, 176+24*((tile.isWorking()&&tile.guiData.get(MasterGeneratorTileEntity.PROCESS)>0)?2:1), (container.getTier()-1)*48);
 		
 		//range gauge
 		matrixStack.push();
