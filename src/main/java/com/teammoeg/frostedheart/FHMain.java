@@ -148,16 +148,6 @@ public class FHMain {
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
         JsonParser gs = new JsonParser();
-        JsonObject jo = gs
-                .parse(new InputStreamReader(
-                        ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID + ".mixins.json")))
-                .getAsJsonObject();
-        JsonArray mixins = jo.get("mixins").getAsJsonArray();
-
-        if (!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone"))
-                || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))
-                || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
-            throw new RuntimeException("Unsupported projecte");
         // remove primal winter blocks not to temper rankine world
         //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
         //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
