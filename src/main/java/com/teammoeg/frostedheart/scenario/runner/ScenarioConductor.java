@@ -278,9 +278,11 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 			pauseAct();
 			this.setCurrentAct(data);
 			data.prepareForRun();
-			this.sp=data.getScenario();
-			this.nodeNum=data.getNodeNum();
-			this.status=data.getStatus();
+			if(data.getScenario()!=null) {
+				this.sp=data.getScenario();
+				this.nodeNum=data.getNodeNum();
+				this.status=data.getStatus();
+			}
 			data.sendTitles(true, true);
 			if(getStatus().shouldRun) {
 				getScene().forcedClear();

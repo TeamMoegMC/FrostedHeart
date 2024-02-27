@@ -163,7 +163,6 @@ public class Act implements IScenarioThread{
 	}
 	@Override
 	public Scenario getScenario() {
-		// TODO Auto-generated method stub
 		return sp;
 	}
 	@Override
