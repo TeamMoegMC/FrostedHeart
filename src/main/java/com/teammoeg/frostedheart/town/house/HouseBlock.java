@@ -21,6 +21,7 @@ package com.teammoeg.frostedheart.town.house;
 
 import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tileentity.TileEntity;
@@ -59,7 +60,12 @@ public class HouseBlock extends FHBaseBlock {
             HouseTileEntity houseTileEntity = (HouseTileEntity) worldIn.getTileEntity(pos);
             player.sendStatusMessage(new StringTextComponent("isRoomValid:" + (houseTileEntity.isWorkValid() ? "true" : "false")), false);
             player.sendStatusMessage(new StringTextComponent("volume" + (houseTileEntity.volume)), false);
-            player.sendStatusMessage(new StringTextComponent("area" + (houseTileEntity.volume)), false);
+            player.sendStatusMessage(new StringTextComponent("area" + (houseTileEntity.area)), false);
+            player.sendStatusMessage(new StringTextComponent("score" + houseTileEntity.getRating()), false);
+            //player.sendStatusMessage(new StringTextComponent("deco score" + houseTileEntity.score_deco), false);
+            //player.sendStatusMessage(new StringTextComponent("space score" + houseTileEntity.score_space), false);
+            //player.sendStatusMessage(new StringTextComponent("avg temperature" + houseTileEntity.temperature), false);
+            //player.sendStatusMessage(new StringTextComponent("real temperature" + ChunkHeatData.getTemperature(worldIn, pos)), false);
         }
         return ActionResultType.SUCCESS;
     }

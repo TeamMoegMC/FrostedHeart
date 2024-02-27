@@ -1,13 +1,14 @@
 package com.teammoeg.frostedheart.util;
 
+import com.teammoeg.frostedheart.FHMain;
 import net.minecraft.block.Block;
-import net.minecraft.block.LadderBlock;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import java.util.AbstractMap;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.*;
@@ -24,14 +25,17 @@ import static net.minecraft.block.PlantBlockHelper.isAir;
  */
 public class BlockScanner {
     protected Set<Long> scannedBlocks;
-    protected Set<BlockPos> scanningBlocks = new HashSet<>();
+    protected Set<BlockPos> scanningBlocks;
     protected final BlockPos startPos;
     public final World world;
     public static final Direction[] PLANE_DIRECTIONS= {Direction.SOUTH, Direction.EAST, Direction.NORTH, Direction.WEST};
+    public boolean isValid = true;//it can be changed in methods, scan should stop when this is false
 
     public BlockScanner (World world, BlockPos startPos){
         this.startPos = startPos;
+        scanningBlocks = new HashSet<>();
         scanningBlocks.add(startPos);
+        //FHMain.LOGGER.debug("HouseScanner: scanningBlocks: " + scanningBlocks);
         this.world = world;
         scannedBlocks = new HashSet<>();
     }
@@ -153,6 +157,7 @@ public class BlockScanner {
         return getBlocksAbove((useless)->true, startPos, stopAt);
     }
 
+
     public static HashSet<BlockPos> getBlocksBelow(Predicate<BlockPos> target, BlockPos startPos, Predicate<BlockPos> stopAt){
         BlockPos scanningBlock;
         scanningBlock = startPos.down();
@@ -203,7 +208,7 @@ public class BlockScanner {
      */
     public static HashSet<BlockPos> getPossibleFloor(IWorld world, BlockPos pos){
         HashSet<BlockPos> blocks = new HashSet<>();
-        blocks.addAll(getBlocksAdjacent_plane((blockPos)->blockPos.equals(pos.offset(world.getBlockState(pos).get(LadderBlock.FACING))), pos));
+        blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos));
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.up()));
         blocks.addAll(getBlocksAdjacent_plane((blockPos)->true, pos.down()));
         return blocks;
@@ -239,7 +244,7 @@ public class BlockScanner {
     /**
      * @return return the first position of the block that makes target returns true
      */
-    public BlockPos getBlockBelow(Predicate<BlockPos> target, BlockPos startPos){
+    public static BlockPos getBlockBelow(Predicate<BlockPos> target, BlockPos startPos){
         BlockPos scanningBlock;
         scanningBlock = startPos.down();
         while(scanningBlock.getY() > 0){
@@ -250,6 +255,27 @@ public class BlockScanner {
         }
         return null;
     }
+
+    public static HashSet<Long> toLongSet(Collection<BlockPos> collection){
+        HashSet<Long> longSet = new HashSet<>();
+        for(BlockPos pos : collection){
+            longSet.add(pos.toLong());
+        }
+        return longSet;
+    }
+
+    public static HashSet<BlockPos> toPosSet(Collection<Long> collection){
+        HashSet<BlockPos> posSet = new HashSet<>();
+        for(Long posLong : collection){
+            posSet.add(BlockPos.fromLong(posLong));
+        }
+        return posSet;
+    }
+    //md，blockPos没重写hashCode和equals方法，我还得把Set再去重一遍
+    public static HashSet<BlockPos> deDuplication(Collection<BlockPos> collection){
+        return toPosSet(toLongSet(collection));
+    }
+
 
     /**
      * 获取接下来要被扫描的方块。这个方法应在子类中重写，而非直接使用。
@@ -271,29 +297,26 @@ public class BlockScanner {
                         Function<BlockPos, HashSet<BlockPos>> nextScanningBlocks,
                         Predicate<BlockPos> stopAt){
         int scanTimes = 0;
-        while(!scanningBlocks.isEmpty()){
+        while(!scanningBlocks.isEmpty() && isValid){
             if(scanTimes > maxScanningTimes){
                 return false;
             }
+            scannedBlocks.addAll(toLongSet(scanningBlocks));
             HashSet<BlockPos> scanningBlocksNew = new HashSet<>();
             for(BlockPos scanningBlock : scanningBlocks){
                 if(stopAt.test(scanningBlock)) return false;
                 operation.accept(scanningBlock);
                 scanningBlocksNew.addAll(nextScanningBlocks.apply(scanningBlock));
-                scannedBlocks.add(scanningBlock.toLong());
             }
             scanningBlocks = scanningBlocksNew;
             scanTimes++;
         }
         return true;
     }
-    /**
-     * 如果你在子类中覆写了nextScanningBlocks方法，可以使用这个方法。
-     */
+
     public boolean scan(int maxScanningTimes,
                         Consumer<BlockPos> operation,
                         Predicate<BlockPos> stopAt){
-        return scan(maxScanningTimes, operation, (blockPos)->this.nextScanningBlocks(blockPos), stopAt);
+        return scan(maxScanningTimes, operation, this::nextScanningBlocks, stopAt);
     }
-    //如果有其它需求，可以在子类中覆写scan方法
 }

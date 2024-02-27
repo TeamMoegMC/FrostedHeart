@@ -29,6 +29,7 @@ public class FHTags {
     public static final class Blocks {
         public static final ITag.INamedTag<Block> ALWAYS_BREAKABLE = create("always_breakable");
         public static final Tags.IOptionalNamedTag<Block> DECORATIONS = tag("decorations");
+        public static final Tags.IOptionalNamedTag<Block> WALL_BLOCKS = tag("wall_blocks");
 
         private static ITag.INamedTag<Block> create(String id) {
             return BlockTags.makeWrapperTag(new ResourceLocation(FHMain.MODID, id).toString());

@@ -5,7 +5,9 @@ import com.teammoeg.frostedheart.FHTags;
 import net.minecraft.block.Blocks;
 import net.minecraft.data.BlockTagsProvider;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
 import java.nio.file.Path;
@@ -18,8 +20,9 @@ public class FHBlockTagProvider extends BlockTagsProvider {
 
     @Override
     protected void registerTags() {
-        FHMain.LOGGER.info("running FHBlockTagProvider.registerTags");//test
+        //FHMain.LOGGER.info("running FHBlockTagProvider.registerTags");//test
         this.getOrCreateBuilder(FHTags.Blocks.DECORATIONS).add(Blocks.FLOWER_POT, Blocks.LANTERN, Blocks.SOUL_LANTERN, Blocks.CAMPFIRE, Blocks.SOUL_CAMPFIRE, Blocks.ENCHANTING_TABLE, Blocks.ANVIL, Blocks.CHIPPED_ANVIL, Blocks.DAMAGED_ANVIL, Blocks.STONECUTTER, Blocks.GRINDSTONE);
+        this.getOrCreateBuilder(FHTags.Blocks.WALL_BLOCKS).addTag(BlockTags.DOORS).addTag(BlockTags.WALLS).addTag(Tags.Blocks.FENCES).addTag(Tags.Blocks.FENCE_GATES).addTag(Tags.Blocks.GLASS_PANES).add(Blocks.IRON_BARS);
     }
 
     @Override

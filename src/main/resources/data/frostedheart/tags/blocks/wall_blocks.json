@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:cobblestone_wall",
+    "minecraft:iron_bars"
+  ]
+}
