@@ -61,7 +61,12 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
     private transient boolean isActsEnabled;
     private transient ActNamespace lastQuest;
     private static final ActNamespace global=new ActNamespace();
-    private static final ActNamespace init=new ActNamespace(null,null);
+    @Override
+	public void jump(IScenarioTarget nxt) {
+		getCurrentAct().setActState();
+		super.jump(nxt);
+	}
+	private static final ActNamespace init=new ActNamespace(null,null);
     boolean inited=false;
 
     public CompoundNBT save() {
@@ -273,9 +278,11 @@ public class ScenarioConductor extends ScenarioVM implements INBTSerializable<Co
 			pauseAct();
 			this.setCurrentAct(data);
 			data.prepareForRun();
-			this.sp=data.getScenario();
-			this.nodeNum=data.getNodeNum();
-			this.status=data.getStatus();
+			if(data.getScenario()!=null) {
+				this.sp=data.getScenario();
+				this.nodeNum=data.getNodeNum();
+				this.status=data.getStatus();
+			}
 			data.sendTitles(true, true);
 			if(getStatus().shouldRun) {
 				getScene().forcedClear();

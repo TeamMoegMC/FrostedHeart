@@ -235,4 +235,8 @@ public class FHScenario {
 		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
 		return ScenarioConductor.getCapability(playerEntity).orElseThrow(()->new NoSuchElementException("conductor not present"));
 	}
+	public static ScenarioConductor getNullable(PlayerEntity playerEntity) {
+		//return runners.computeIfAbsent((ServerPlayerEntity) playerEntity, FHScenario::load);
+		return ScenarioConductor.getCapability(playerEntity).orElse(null);
+	}
 }

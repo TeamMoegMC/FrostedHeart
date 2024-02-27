@@ -97,6 +97,7 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -107,6 +108,7 @@ import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -256,14 +258,32 @@ public class CommonEvents {
     @SubscribeEvent
     public static void beforeCropGrow(BlockEvent.CropGrowEvent.Pre event) {
         Block growBlock = event.getState().getBlock();
-
+        BlockPos belowPos=event.getPos().down();
+        Block belowGrowBlock=event.getWorld().getBlockState(belowPos).getBlock();
         float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
         boolean bz = WorldClimate.isBlizzard(event.getWorld());
         if (bz) {
+        	BlockPos cur=event.getPos();
+
+        	/*if(!(growBlock instanceof IGrowable)) {
+	        	if(belowGrowBlock instanceof IGrowable)
+	        		cur=belowPos;
+	        	else {
+	        		event.setResult(Event.Result.DENY);
+	        		return;
+	        	}
+	        		
+        	}*/
             if (FHUtils.isBlizzardHarming(event.getWorld(), event.getPos())) {
-                event.getWorld().setBlockState(event.getPos(), Blocks.AIR.getDefaultState(), 2);
+            	FluidState curstate=event.getWorld().getFluidState(cur);
+            	if(curstate.isEmpty())
+            		event.getWorld().setBlockState(cur, Blocks.AIR.getDefaultState(), 2);
+            	else
+            		event.getWorld().setBlockState(cur, curstate.getBlockState(), 2);
             } else if (event.getWorld().getRandom().nextInt(3) == 0) {
-                event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+            	//FluidState curstate=event.getWorld().getFluidState(cur);
+            	
+                event.getWorld().setBlockState(cur,growBlock.getDefaultState(), 2);
             }
             event.setResult(Event.Result.DENY);
         } else if (growBlock instanceof FHCropBlock) {
@@ -282,8 +302,8 @@ public class CommonEvents {
                 }
                 event.setResult(Event.Result.DENY);
             }
-        } else {
-            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz) {
+        } else if(growBlock instanceof IGrowable){
+            if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE) {
                 // Set back to default state, might not be necessary
                 if ((bz || temp < 0) && event.getWorld().getRandom().nextInt(3) == 0) {
                     BlockState cbs = event.getWorld().getBlockState(event.getPos());
@@ -300,6 +320,9 @@ public class CommonEvents {
                 event.setResult(Event.Result.DENY);
             }
 
+        }else {
+        	if (temp < WorldTemperature.VANILLA_PLANT_GROW_TEMPERATURE || bz) 
+        		event.setResult(Event.Result.DENY);
         }
     }
 
@@ -663,8 +686,8 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            ScenarioConductor runner=FHScenario.get(player);
-            if (runner.isInited()) {
+            ScenarioConductor runner=FHScenario.getNullable(player);
+            if (runner!=null&&runner.isInited()) {
                 runner.tick();
             }
             if(player.openContainer instanceof HeatStatContainer) {

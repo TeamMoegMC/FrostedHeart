@@ -73,10 +73,6 @@ public class ScenarioVM implements IScenarioThread{
 	}
 	@Override
 	public void setScenario(Scenario sp) {
-		// Check if the scenario is valid
-		if (sp == null) {
-			throw new ScenarioExecutionException("Scenario is null");
-		}
 		this.sp = sp;
 	}
 	@Override

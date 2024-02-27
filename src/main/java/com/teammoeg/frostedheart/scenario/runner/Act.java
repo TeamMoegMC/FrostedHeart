@@ -122,6 +122,11 @@ public class Act implements IScenarioThread{
     	setStatus((RunStatus.values()[nbt.getInt("status")]));
     	
     }
+    public void setActState() {
+		setNodeNum(parent.getNodeNum());
+		setScenario(parent.getScenario());
+		setStatus(parent.getStatus());
+    }
     public void saveActState() {
 		setNodeNum(parent.getNodeNum());
 		setScenario(parent.getScenario());
@@ -158,7 +163,6 @@ public class Act implements IScenarioThread{
 	}
 	@Override
 	public Scenario getScenario() {
-		// TODO Auto-generated method stub
 		return sp;
 	}
 	@Override
