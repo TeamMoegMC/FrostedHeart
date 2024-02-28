@@ -33,6 +33,7 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -53,7 +54,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import top.theillusivec4.diet.api.DietCapability;
 import top.theillusivec4.diet.api.IDietTracker;
 
-public class EnergyCore implements INBTSerializable<CompoundNBT> {
+public class EnergyCore implements NBTSerializable {
     long energy;
     long cenergy;
     long penergy;

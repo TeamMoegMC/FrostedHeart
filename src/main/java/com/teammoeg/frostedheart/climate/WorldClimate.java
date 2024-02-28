@@ -40,18 +40,15 @@ import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.DayTemperatureData.HourData;
 import com.teammoeg.frostedheart.climate.network.FHClimatePacket;
 import com.teammoeg.frostedheart.events.CommonEvents;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -94,7 +91,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * @author JackyWangMislantiaJnirvana
  * @author Lyuuke
  */
-public class WorldClimate implements INBTSerializable<CompoundNBT> {
+public class WorldClimate implements NBTSerializable {
 
     public static final int DAY_CACHE_LENGTH = 8;
 

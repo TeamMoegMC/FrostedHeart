@@ -31,6 +31,7 @@ import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 
@@ -54,7 +55,7 @@ import net.minecraftforge.common.util.LazyOptional;
  * You shouldn't opearte this class from any other code except from scenario trigger and commands.
  * You should define triggers in script file and activate triggers to make it execute.
  * */
-public class ScenarioConductor extends ScenarioVM implements INBTSerializable<CompoundNBT>{
+public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     //Sence control
     private transient Act currentAct;
     public Map<ActNamespace,Act> acts=new HashMap<>();

@@ -1,5 +1,7 @@
 package com.teammoeg.frostedheart.capability;
 
+import com.teammoeg.frostedheart.util.NBTSerializable;
+
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
@@ -11,7 +13,7 @@ import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.common.util.NonNullSupplier;
 
-public class FHCapability<C extends INBTSerializable<CompoundNBT>> {
+public class FHCapability<C extends NBTSerializable> {
 	private Class<C> capClass;
 	private Capability<C> capability;
 	private NonNullSupplier<C> factory;

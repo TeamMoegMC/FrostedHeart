@@ -3,19 +3,13 @@ package com.teammoeg.frostedheart.climate.player;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.NBTSerializable;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class PlayerTemperatureData implements INBTSerializable<CompoundNBT>  {
+public class PlayerTemperatureData implements NBTSerializable  {
 	float previousTemp;
 	float bodyTemp;
 	float envTemp;

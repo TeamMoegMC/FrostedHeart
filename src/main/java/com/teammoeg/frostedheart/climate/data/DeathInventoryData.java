@@ -22,27 +22,19 @@ package com.teammoeg.frostedheart.climate.data;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
-public class DeathInventoryData implements INBTSerializable<CompoundNBT> {
+public class DeathInventoryData implements NBTSerializable {
     private static class CopyInventory {
         NonNullList<ItemStack> inv = NonNullList.withSize(9, ItemStack.EMPTY);
         NonNullList<ItemStack> armor = NonNullList.withSize(4, ItemStack.EMPTY);

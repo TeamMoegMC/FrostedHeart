@@ -15,6 +15,7 @@ import com.teammoeg.frostedheart.content.foods.dailykitchen.WantedFoodCapability
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatEndpoint;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
@@ -35,7 +36,7 @@ public class FHCapabilities {
 		for(FHCapability<?> cap:capabilities)
 			cap.setup();
 	}
-	public static <T extends INBTSerializable<CompoundNBT>> FHCapability<T> register(Class<T> capClass){
+	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass){
 		Constructor<T> ctor;
 		try {
 			try {	
@@ -62,7 +63,7 @@ public class FHCapabilities {
 		capabilities.add(cap);
 		return cap;
 	}
-	public static <T extends INBTSerializable<CompoundNBT>> FHCapability<T> register(Class<T> capClass,NonNullSupplier<T> sup){
+	public static <T extends NBTSerializable> FHCapability<T> register(Class<T> capClass,NonNullSupplier<T> sup){
 		FHCapability<T> cap=new FHCapability<>(capClass,sup);
 		capabilities.add(cap);
 		return cap;

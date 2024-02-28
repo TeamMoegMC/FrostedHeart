@@ -294,22 +294,22 @@ public class FHUtils {
 	    stack.getTag().putBoolean("inner_bounded", true);//bound lining to arm or
 	    return ArmorNBT(stack, 107, 6);
 	}
-   public static <T extends INBTSerializable<CompoundNBT>> void copyCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
+   public static <T extends NBTSerializable> void copyCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
        newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> newCap.deserializeNBT(oldCap.serializeNBT())));
    }
-   public static <T extends INBTSerializable<CompoundNBT>> void cloneCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
+   public static <T extends NBTSerializable> void cloneCapability(LazyOptional<T> oldCapability, LazyOptional<T> newCapability){
        newCapability.ifPresent((newCap) -> oldCapability.ifPresent((oldCap) -> copyAllFields(newCap,oldCap)));
    }
-   public static <T extends INBTSerializable<CompoundNBT>> void copyPlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void copyPlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
 	   copyCapability(old.getCapability(capability),now.getCapability(capability));
    }
-   public static <T extends INBTSerializable<CompoundNBT>> void clonePlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void clonePlayerCapability(Capability<T> capability,PlayerEntity old,PlayerEntity now){
 	   cloneCapability(old.getCapability(capability),now.getCapability(capability));
    }
-   public static <T extends INBTSerializable<CompoundNBT>> void copyPlayerCapability(FHCapability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void copyPlayerCapability(FHCapability<T> capability,PlayerEntity old,PlayerEntity now){
 	   copyCapability(capability.getCapability(old),capability.getCapability(now));
    }
-   public static <T extends INBTSerializable<CompoundNBT>> void clonePlayerCapability(FHCapability<T> capability,PlayerEntity old,PlayerEntity now){
+   public static <T extends NBTSerializable> void clonePlayerCapability(FHCapability<T> capability,PlayerEntity old,PlayerEntity now){
 	   cloneCapability(capability.getCapability(old),capability.getCapability(now));
    }
    public static <T> void copyAllFields(T to, T from) {
