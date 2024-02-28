@@ -72,7 +72,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHBlocks {
 	static final DeferredRegister<Block> registry=DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);
-    private static final CreateRegistrate REGISTRATE = FHMain.registrate.get()
+    private static final CreateRegistrate REGISTRATE = FHMain.registrate.getValue()
         .itemGroup(() -> FHMain.itemGroup);
 	public static <T extends Block> RegistryObject<T> register(String name,Supplier<T> block,String itemName,Function<T,Item> item){
 		RegistryObject<T> blk=registry.register(name, block);
