@@ -24,7 +24,6 @@ import com.teammoeg.frostedheart.util.NBTSerializable;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.util.INBTSerializable;
 
 /**
  * Interface to adjust temperature

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.content.temperature;
 
-import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.*;
+import static net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack.FLUID_NBT_KEY;
 
 import java.util.List;
 

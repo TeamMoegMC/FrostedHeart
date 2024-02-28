@@ -15,7 +15,7 @@ public class ClientHeatHandler {
 		if(c instanceof HeatStatContainer) {
 			((HeatStatContainer)c).data=data;
 			if(ClientUtils.mc().currentScreen instanceof MenuScreenWrapper) {
-				MenuScreenWrapper msw=(MenuScreenWrapper) ClientUtils.mc().currentScreen;
+				MenuScreenWrapper<?> msw=(MenuScreenWrapper<?>) ClientUtils.mc().currentScreen;
 				msw.getGui().refreshWidgets();
 			}
 		}

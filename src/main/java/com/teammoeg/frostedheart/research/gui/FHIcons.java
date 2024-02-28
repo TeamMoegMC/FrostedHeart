@@ -316,9 +316,7 @@ public class FHIcons {
             }*/
         }
 
-        public ItemStack getStack() {
-            return stack;
-        }
+
 
         private void init() {
         }

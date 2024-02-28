@@ -22,7 +22,6 @@ package com.teammoeg.frostedheart.data;
 import java.nio.file.Path;
 
 import com.cannolicatfish.rankine.init.RankineTags;
-import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.RegistryUtils;
@@ -36,7 +35,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraftforge.common.Tags.IOptionalNamedTag;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.fml.RegistryObject;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHItemTagProvider extends TagsProvider<Item> {
 

@@ -29,11 +29,10 @@ import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
-import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
-import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -41,7 +40,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
 /**

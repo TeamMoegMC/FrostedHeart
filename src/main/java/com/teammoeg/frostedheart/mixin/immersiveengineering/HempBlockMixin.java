@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.mixin.immersiveengineering;
 
-import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.*;
+import static blusunrize.immersiveengineering.common.blocks.plant.HempBlock.GROWTH;
 
 import java.util.Random;
 

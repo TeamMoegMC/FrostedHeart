@@ -19,12 +19,15 @@
 
 package com.teammoeg.frostedheart.content.foods.dailykitchen;
 
+import java.util.Random;
+
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.thermopolium.data.recipes.BowlContainingRecipe;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
@@ -34,8 +37,6 @@ import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
-
-import java.util.Random;
 
 class Benefits {
     private final Effect[] basicEffects = new Effect[]{Effects.STRENGTH, Effects.SPEED, Effects.HASTE};

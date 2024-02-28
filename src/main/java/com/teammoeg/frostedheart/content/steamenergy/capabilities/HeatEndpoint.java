@@ -3,11 +3,9 @@ package com.teammoeg.frostedheart.content.steamenergy.capabilities;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.INBTSerializable;
 
 public abstract class HeatEndpoint implements NBTSerializable{
     

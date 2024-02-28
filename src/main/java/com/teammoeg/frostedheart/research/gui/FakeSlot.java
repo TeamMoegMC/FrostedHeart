@@ -122,6 +122,9 @@ public class FakeSlot extends Widget {
         return false;
     }
 
+    /**
+	 * @param btn  
+	 */
     public void onClick(MouseButton btn) {
     }
 

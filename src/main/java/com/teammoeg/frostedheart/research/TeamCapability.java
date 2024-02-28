@@ -36,7 +36,7 @@ public class TeamCapability<T extends INBTSerializable<CompoundNBT>>{
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
-		TeamCapability other = (TeamCapability) obj;
+		TeamCapability<?> other = (TeamCapability<?>) obj;
 		return Objects.equals(id, other.id);
 	};
 }

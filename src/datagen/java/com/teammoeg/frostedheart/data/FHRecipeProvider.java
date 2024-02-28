@@ -22,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Scanner;
 import java.util.function.Consumer;
 
@@ -39,25 +38,19 @@ import com.teammoeg.thermopolium.THPFluids;
 import com.teammoeg.thermopolium.data.recipes.FoodValueRecipe;
 
 import blusunrize.immersiveengineering.api.IETags;
-import net.minecraft.advancements.Advancement;
-import net.minecraft.advancements.Advancement.Builder;
 import net.minecraft.block.Block;
-import net.minecraft.data.CustomRecipeBuilder;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.IFinishedRecipe;
 import net.minecraft.data.RecipeProvider;
-import net.minecraft.data.ShapelessRecipeBuilder;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class FHRecipeProvider extends RecipeProvider {
 	private final HashMap<String, Integer> PATH_COUNT = new HashMap<>();

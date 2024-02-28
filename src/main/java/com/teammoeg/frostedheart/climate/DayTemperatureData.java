@@ -205,19 +205,19 @@ public class DayTemperatureData {
         return cnbt;
     }
 
-    public void setBlizzard(int hourInDay, boolean data) {
+    public void setBlizzard(int hourInDay) {
         hourData[hourInDay].type = ClimateType.BLIZZARD;
     }
 
-    public void setCloudy(int hourInDay, boolean data) {
+    public void setCloudy(int hourInDay) {
         hourData[hourInDay].type = ClimateType.CLOUDY;
     }
 
-    public void setSnow(int hourInDay, boolean data) {
+    public void setSnow(int hourInDay) {
         hourData[hourInDay].type = ClimateType.SNOW;
     }
 
-    public void setSunny(int hourInDay, boolean data) {
+    public void setSunny(int hourInDay) {
         hourData[hourInDay].type = ClimateType.SUN;
     }
 

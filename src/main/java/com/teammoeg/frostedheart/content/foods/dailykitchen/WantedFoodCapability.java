@@ -54,8 +54,6 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.common.util.INBTSerializable;
 
 
 public class WantedFoodCapability implements NBTSerializable{

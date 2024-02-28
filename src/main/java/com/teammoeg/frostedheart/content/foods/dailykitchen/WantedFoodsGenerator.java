@@ -19,17 +19,18 @@
 
 package com.teammoeg.frostedheart.content.foods.dailykitchen;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+
 import com.teammoeg.frostedheart.util.client.GuiUtils;
+
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.fluids.capability.ItemFluidContainer;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
 
 class WantedFoodsGenerator {
     private final Random random;

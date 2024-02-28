@@ -76,7 +76,6 @@ import net.minecraft.world.gen.Heightmap.Type;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.crafting.NBTIngredient;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class FHUtils {

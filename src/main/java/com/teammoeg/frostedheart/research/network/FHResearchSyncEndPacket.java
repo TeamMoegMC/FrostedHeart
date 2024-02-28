@@ -31,9 +31,15 @@ public class FHResearchSyncEndPacket {
     public FHResearchSyncEndPacket() {
     }
 
+    /**
+	 * @param buffer  
+	 */
     public FHResearchSyncEndPacket(PacketBuffer buffer) {
     }
 
+    /**
+	 * @param buffer  
+	 */
     public void encode(PacketBuffer buffer) {
     }
 

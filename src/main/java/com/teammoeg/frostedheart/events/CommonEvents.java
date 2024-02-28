@@ -19,8 +19,18 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.entity.EntityType.*;
-import static net.minecraft.world.biome.Biome.Category.*;
+import static net.minecraft.entity.EntityType.CHICKEN;
+import static net.minecraft.entity.EntityType.COW;
+import static net.minecraft.entity.EntityType.PIG;
+import static net.minecraft.entity.EntityType.SHEEP;
+import static net.minecraft.world.biome.Biome.Category.BEACH;
+import static net.minecraft.world.biome.Biome.Category.DESERT;
+import static net.minecraft.world.biome.Biome.Category.EXTREME_HILLS;
+import static net.minecraft.world.biome.Biome.Category.NETHER;
+import static net.minecraft.world.biome.Biome.Category.OCEAN;
+import static net.minecraft.world.biome.Biome.Category.RIVER;
+import static net.minecraft.world.biome.Biome.Category.TAIGA;
+import static net.minecraft.world.biome.Biome.Category.THEEND;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;

@@ -19,7 +19,7 @@
 
 package com.teammoeg.frostedheart.events;
 
-import static net.minecraft.util.text.TextFormatting.*;
+import static net.minecraft.util.text.TextFormatting.GRAY;
 
 import java.util.List;
 

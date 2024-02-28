@@ -83,7 +83,6 @@ public class EnergyCore implements NBTSerializable {
     }
 
     public static void applySleep(ServerPlayerEntity player) {
-        float nkeep = 0;
         EnergyCore data=getCapability(player).orElse(null);
         long lsd = data.lastsleepdate;
         long csd = (player.world.getDayTime() + 12000L) / 24000L;

@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.blocks.DrawingDeskTileEntity;
 import com.teammoeg.frostedheart.research.gui.drawdesk.game.CardPos;
-import com.teammoeg.frostedheart.research.gui.drawdesk.game.ResearchGame;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.network.PacketBuffer;
@@ -97,7 +96,7 @@ public class FHDrawingDeskOperationPacket {
             ServerWorld world = Objects.requireNonNull(context.get().getSender()).getServerWorld();
             TileEntity tile = Utils.getExistingTileEntity(world, pos);
             if (tile instanceof DrawingDeskTileEntity) {
-                ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
+               // ResearchGame rg = ((DrawingDeskTileEntity) tile).getGame();
                 boolean flag = true;
                 switch (op) {
                     case 0:
