@@ -29,7 +29,7 @@ import com.teammoeg.frostedheart.base.block.FHBlockInterfaces;
 import com.teammoeg.frostedheart.town.GeneratorData;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.mixin.IOwnerChangeListener;
-import blusunrize.immersiveengineering.api.utils.ItemUtils;
+
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.blocks.multiblocks.IETemplateMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IEInventoryHandler;
@@ -186,7 +186,7 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public final Optional<GeneratorData> getData() {
-        return getTeamData().map(t -> t.generatorData).filter(t -> master().pos.equals(t.actualPos));
+        return getTeamData().map(t -> t.getData(GeneratorData.CAPABILITY)).filter(t -> master().pos.equals(t.actualPos));
     }
 
     @Nullable
@@ -219,9 +219,10 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
             return findRecipe(stack) != null;
         return false;
     }
-    public GeneratorRecipe findRecipe(ItemStack input) {
+    @SuppressWarnings("resource")
+	public GeneratorRecipe findRecipe(ItemStack input) {
         for (GeneratorRecipe recipe : FHUtils.filterRecipes(this.getWorld().getRecipeManager(), GeneratorRecipe.TYPE))
-            if (ItemUtils.stackMatchesObject(input, recipe.input))
+            if (recipe.input.test(input))
                 return recipe;
         return null;
     }
@@ -276,13 +277,13 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     }
 
     public void regist() {
-        getTeamData().ifPresent(t -> {
-        	if(!master().pos.equals(t.generatorData.actualPos))
-        		t.generatorData.onPosChange();
-        	this.setWorking(t.generatorData.isWorking);
-        	this.setOverdrive(t.generatorData.isOverdrive);
-            t.generatorData.actualPos = master().pos;
-            t.generatorData.dimension = this.world.getDimensionKey();
+    	getData().ifPresent(t -> {
+        	if(!master().pos.equals(t.actualPos))
+        		t.onPosChange();
+        	this.setWorking(t.isWorking);
+        	this.setOverdrive(t.isOverdrive);
+            t.actualPos = master().pos;
+            t.dimension = this.world.getDimensionKey();
         });
     }
 
@@ -330,9 +331,9 @@ public abstract class MasterGeneratorTileEntity<T extends MasterGeneratorTileEnt
     public void tickHeat(boolean isWorking) {
     }
     public void unregist() {
-        getTeamData().ifPresent(t -> {
-            t.generatorData.actualPos = BlockPos.ZERO;
-            t.generatorData.dimension = null;
+        getData().ifPresent(t -> {
+            t.actualPos = BlockPos.ZERO;
+            t.dimension = null;
         });
     }
 

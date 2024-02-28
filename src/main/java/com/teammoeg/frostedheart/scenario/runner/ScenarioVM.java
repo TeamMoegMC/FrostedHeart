@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,10 +15,10 @@ import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.ScenarioExecutionException;
 import com.teammoeg.frostedheart.scenario.parser.Node;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
-import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.evaluator.Evaluator;
 
@@ -94,13 +94,14 @@ public class ScenarioVM implements IScenarioThread{
 		macros.put(name.toLowerCase(), getCurrentPosition().next());
 	}
 	public void queue(IScenarioTarget questExecuteTarget) {
-		//getCurrentAct().queue(questExecuteTarget);
+		addToQueue(questExecuteTarget);
+	}
+	public final void addToQueue(IScenarioTarget questExecuteTarget) {
 		toExecute.add(questExecuteTarget);
 	}
 	public void jump(IScenarioTarget nxt) {
 		nxt.accept(this);
 		run();
-
 	}
     public void popCallStack() {
 		if(getCallStack().isEmpty()) {
@@ -112,7 +113,6 @@ public class ScenarioVM implements IScenarioThread{
 		if(!getCallStack().isEmpty()) {
 			jump(getCallStack().pollLast());
 		}
-		
 	}
 	public void addCallStack() {
 		getCallStack().add(getCurrentPosition());
@@ -132,8 +132,6 @@ public class ScenarioVM implements IScenarioThread{
 	}
 	protected void runCode() {
     	clearAfterClick=false;
-    	
-    	
     	while(isRunning()&&getScenario()!=null&&nodeNum<getScenario().pieces.size()) {
     		Node node=getScenario().pieces.get(nodeNum++);
     		try {
@@ -148,7 +146,6 @@ public class ScenarioVM implements IScenarioThread{
     			break;
     		}
 	    	if(getScenario()==null||nodeNum>=getScenario().pieces.size()) {
-	    		
 	    		setStatus((RunStatus.STOPPED));
 	    		getScene().clear(this);
 	    		sendCachedSence();
@@ -158,7 +155,6 @@ public class ScenarioVM implements IScenarioThread{
     	}
     	if(isRunning())
     		setStatus((RunStatus.STOPPED));
-		
     }
 	public boolean isRunning() {
 		return getStatus()==RunStatus.RUNNING;
@@ -168,8 +164,6 @@ public class ScenarioVM implements IScenarioThread{
     	if(getStatus().shouldPause) {
     		IScenarioTarget nxt=toExecute.pollFirst();
     		if(nxt!=null) {
-    			//globalScope();
-    			//paragraph(-1);
     			jump(nxt);
     		}
     	}
@@ -184,7 +178,6 @@ public class ScenarioVM implements IScenarioThread{
     	if(isConducting)return;
     	try {
     		isConducting=true;
-    		
     		while(isRunning()){
 	    		runCode();
 	    		runScheduled();
@@ -215,7 +208,7 @@ public class ScenarioVM implements IScenarioThread{
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())
-    					toExecute.add(t);
+    					addToQueue(t);
 					else
 						jump(t);
     			}
@@ -224,12 +217,10 @@ public class ScenarioVM implements IScenarioThread{
     	triggers.removeIf(t->!t.canUse());
     	if(getStatus()==RunStatus.WAITTIMER) {
     		if(getScene().tickWait()) {
-    			
     			run();
     			return;
     		}
     	}
-    	//Execute Queued actions
     	runScheduled();
     }
 	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {

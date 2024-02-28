@@ -33,7 +33,6 @@ import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 
 public class CluePanel extends Panel {
     public static final String sq = "\u2610";
@@ -107,7 +106,7 @@ public class CluePanel extends Panel {
         }
         contribute = new TextField(this)
                 .setMaxWidth(width)
-                .setText(new StringTextComponent("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
+                .setText(GuiUtils.str("+" + NumberFormat.getPercentInstance().format(c.getResearchContribution())))
                 .setColor(TechIcons.text);
         contribute.setPos(0, offset);
         offset += contribute.height + 2;

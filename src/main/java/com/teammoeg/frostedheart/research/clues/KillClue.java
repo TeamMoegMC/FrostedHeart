@@ -48,7 +48,7 @@ public class KillClue extends ListenerClue {
 
     public KillClue(JsonObject jo) {
         super(jo);
-        type = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(jo.get("entity").getAsString()));
+        type = RegistryUtils.getEntity(new ResourceLocation(jo.get("entity").getAsString()));
     }
 
     public KillClue(PacketBuffer pb) {

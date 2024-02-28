@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
-import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.content.recipes.InspireRecipe;
 import com.teammoeg.frostedheart.research.api.ClientResearchDataAPI;
 import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
@@ -40,7 +39,6 @@ import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.ResearchData;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.inspire.EnergyCore;
-import com.teammoeg.frostedheart.research.network.FHResearchRegistrtySyncPacket;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.OptionalLazy;
@@ -64,7 +62,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class ResearchListeners {
     public static class BlockUnlockList extends UnlockList<Block> {
@@ -78,7 +75,7 @@ public class ResearchListeners {
 
         @Override
         public Block getObject(String s) {
-            return ForgeRegistries.BLOCKS.getValue(new ResourceLocation(s));
+            return RegistryUtils.getBlock(new ResourceLocation(s));
         }
 
         @Override

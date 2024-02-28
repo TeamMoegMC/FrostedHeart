@@ -14,10 +14,10 @@ import com.teammoeg.frostedheart.scenario.runner.target.OrTrigger;
 import com.teammoeg.frostedheart.scenario.runner.target.VariantTargetTrigger;
 import com.teammoeg.frostedheart.scenario.runner.target.trigger.MovementTrigger;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -25,11 +25,10 @@ import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.server.management.OpEntry;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class MCCommands {
 	public void giveItem(ScenarioVM runner, @Param("i") String item, @Param("n") String nbt, @Param("c") int count) throws CommandSyntaxException {
-		Item i = ForgeRegistries.ITEMS.getValue(new ResourceLocation(item));
+		Item i = RegistryUtils.getItem(new ResourceLocation(item));
 		if (count == 0) count = 1;
 		ItemStack is = new ItemStack(i, count);
 		if (nbt != null)

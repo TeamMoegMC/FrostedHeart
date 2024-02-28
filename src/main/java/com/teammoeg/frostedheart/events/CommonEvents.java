@@ -76,7 +76,10 @@ import com.teammoeg.frostedheart.scenario.EventTriggerType;
 import com.teammoeg.frostedheart.scenario.FHScenario;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.scheduler.SchedulerQueue;
+import com.teammoeg.frostedheart.town.GeneratorData;
+import com.teammoeg.frostedheart.town.TeamTownData;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.world.FHFeatures;
 import com.teammoeg.frostedheart.world.FHStructureFeatures;
@@ -101,6 +104,7 @@ import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.item.ExperienceOrbEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -112,6 +116,7 @@ import net.minecraft.resources.DataPackRegistries;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -157,7 +162,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.PacketDistributor.PacketTarget;
-import net.minecraftforge.registries.ForgeRegistries;
 import se.mickelus.tetra.items.modular.IModularItem;
 import top.theillusivec4.curios.api.event.DropRulesEvent;
 import top.theillusivec4.curios.api.type.capability.ICurio.DropRule;
@@ -214,7 +218,7 @@ public class CommonEvents {
         if (!persistent.contains(FHUtils.FIRST_LOGIN_GIVE_MANUAL)) {
             persistent.putBoolean(FHUtils.FIRST_LOGIN_GIVE_MANUAL, false);
             event.getPlayer().inventory.addItemStackToInventory(
-                    new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation("ftbquests", "book"))));
+                    new ItemStack(RegistryUtils.getItem(new ResourceLocation("ftbquests", "book"))));
             event.getPlayer().inventory.armorInventory.set(3, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_HELMET)
                     .setDisplayName(new TranslationTextComponent("itemname.frostedheart.start_head"))));
             event.getPlayer().inventory.armorInventory.set(2, FHUtils.ArmorLiningNBT(new ItemStack(Items.IRON_CHESTPLATE)
@@ -283,10 +287,27 @@ public class CommonEvents {
         float temp = ChunkHeatData.getTemperature(event.getWorld(), event.getPos());
         boolean bz = WorldClimate.isBlizzard(event.getWorld());
         if (bz) {
+        	BlockPos cur=event.getPos();
+
+        	/*if(!(growBlock instanceof IGrowable)) {
+	        	if(belowGrowBlock instanceof IGrowable)
+	        		cur=belowPos;
+	        	else {
+	        		event.setResult(Event.Result.DENY);
+	        		return;
+	        	}
+	        		
+        	}*/
             if (FHUtils.isBlizzardHarming(event.getWorld(), event.getPos())) {
-                event.getWorld().setBlockState(event.getPos(), Blocks.AIR.getDefaultState(), 2);
+            	FluidState curstate=event.getWorld().getFluidState(cur);
+            	if(curstate.isEmpty())
+            		event.getWorld().setBlockState(cur, Blocks.AIR.getDefaultState(), 2);
+            	else
+            		event.getWorld().setBlockState(cur, curstate.getBlockState(), 2);
             } else if (event.getWorld().getRandom().nextInt(3) == 0) {
-                event.getWorld().setBlockState(event.getPos(), growBlock.getDefaultState(), 2);
+            	//FluidState curstate=event.getWorld().getFluidState(cur);
+            	
+                event.getWorld().setBlockState(cur,growBlock.getDefaultState(), 2);
             }
             event.setResult(Event.Result.DENY);
         } else if (growBlock instanceof FHCropBlock) {
@@ -644,10 +665,10 @@ public class CommonEvents {
                 SchedulerQueue.tickAll(serverWorld);
                 int i = 0;
                 for (TeamResearchData trd : FHResearchDataManager.INSTANCE.getAllData()) {
-                    if (serverWorld.getDimensionKey().equals(trd.generatorData.dimension)) {
+                    if (serverWorld.getDimensionKey().equals(trd.getData(GeneratorData.CAPABILITY).dimension)) {
                         if (serverWorld.getGameTime() % 20 == i % 20) {//Split town calculations to multiple seconds
                             if (trd.getTeam().map(t -> t.getOnlineMembers().size()).orElse(0) > 0) {
-                                trd.townData.tick(serverWorld);
+                                trd.getData(TeamTownData.CAPABILITY).tick(serverWorld);
                             }
                         }
                     }
@@ -688,8 +709,9 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
-            ScenarioConductor runner=FHScenario.get(player);
-            runner.tick();
+            ScenarioConductor runner=FHScenario.getNullable(player);
+            if(runner!=null&&runner.isInited())
+            	runner.tick();
             if(player.openContainer instanceof HeatStatContainer) {
             	((HeatStatContainer)player.openContainer).tick();
             }

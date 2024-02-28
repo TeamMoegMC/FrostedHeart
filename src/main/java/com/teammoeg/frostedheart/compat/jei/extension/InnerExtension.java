@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.teammoeg.frostedheart.content.recipes.InstallInnerRecipe;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import mezz.jei.api.constants.VanillaTypes;
@@ -31,7 +32,6 @@ import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.category.extensions.vanilla.crafting.ICraftingCategoryExtension;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class InnerExtension implements ICraftingCategoryExtension {
     InstallInnerRecipe inner;
@@ -49,7 +49,7 @@ public class InnerExtension implements ICraftingCategoryExtension {
     public void setIngredients(IIngredients ingredients) {
         List<ItemStack> armors = new ArrayList<>();
         ArrayList<ItemStack> armorsout = new ArrayList<>();
-        ForgeRegistries.ITEMS.getValues().stream().map(ItemStack::new).filter(i -> inner.matches(i)).forEach(e -> armors.add(e));
+        RegistryUtils.getItems().stream().map(ItemStack::new).filter(i -> inner.matches(i)).forEach(e -> armors.add(e));
         armorsout.ensureCapacity(armors.size());
         armors.forEach(e -> {
             ItemStack n = e.copy();

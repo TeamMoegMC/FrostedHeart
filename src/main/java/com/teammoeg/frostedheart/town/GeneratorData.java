@@ -21,13 +21,12 @@ package com.teammoeg.frostedheart.town;
 
 import java.util.Random;
 
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
+import com.teammoeg.frostedheart.research.TeamCapability;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHUtils;
-import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -41,11 +40,12 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
-import net.minecraftforge.registries.ForgeRegistries;
 
-public class GeneratorData {
+public class GeneratorData implements INBTSerializable<CompoundNBT>{
+	public static final TeamCapability<GeneratorData> CAPABILITY=new TeamCapability<>("generator",GeneratorData::new);
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     public int process = 0;
@@ -98,63 +98,6 @@ public class GeneratorData {
             processMax = 0;
         }
         return false;
-    }
-    public CompoundNBT serialize(boolean update) {
-        CompoundNBT result = new CompoundNBT();
-        result.putInt("process", process);
-        result.putInt("processMax", processMax);
-        result.putInt("steamProcess", steamProcess);
-        result.putInt("overdriveLevel", overdriveLevel);
-        result.putBoolean("isWorking", isWorking);
-        result.putBoolean("isOverdrive", isOverdrive);
-        result.putBoolean("isActive", isActive);
-        result.putFloat("steamLevel",steamLevel);
-        result.putFloat("powerLevel", power);
-        result.putInt("heated", heated);
-        result.putFloat("tempLevel", TLevel);
-        result.putFloat("rangeLevel",RLevel);
-        if (fluid != null)
-            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
-        if (!update) {
-            CompoundNBT inv = new CompoundNBT();
-            ItemStackHelper.saveAllItems(inv, inventory);
-            result.put("inv", inv);
-            if (currentItem != null)
-                result.put("res", currentItem.serializeNBT());
-            result.putLong("actualPos", actualPos.toLong());
-            if (dimension != null)
-                result.putString("dim", dimension.getLocation().toString());
-        }
-        return result;
-    }
-    public void deserialize(CompoundNBT data, boolean update) {
-        process = data.getInt("process");
-        processMax = data.getInt("processMax");
-        steamProcess=data.getInt("steamProcess");
-        overdriveLevel = data.getInt("overdriveLevel");
-        isWorking = data.getBoolean("isWorking");
-        isOverdrive = data.getBoolean("isOverdrive");
-        isActive = data.getBoolean("isActive");
-        steamLevel = data.getFloat("steamLevel");
-        power = data.getFloat("powerLevel");
-        heated=data.getInt("heated");
-        TLevel=data.getFloat("tempLevel");
-        RLevel=data.getFloat("rangeLevel");
-        if (data.contains("steamFluid"))
-            fluid = ForgeRegistries.FLUIDS.getValue(new ResourceLocation(data.getString("steamFluid")));
-        else
-            fluid = null;
-        if (!update) {
-            ItemStackHelper.loadAllItems(data.getCompound("inv"), inventory);
-            if (data.contains("res"))
-                currentItem = ItemStack.read(data.getCompound("res"));
-            else
-                currentItem = null;
-            actualPos = BlockPos.fromLong(data.getLong("actualPos"));
-            if (data.contains("dim")) {
-                dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(data.getString("dim")));
-            }
-        }
     }
 
     protected double getEfficiency() {
@@ -269,4 +212,64 @@ public class GeneratorData {
     public int getMaxHeated() {
         return (int) (100*Math.max(this.getMaxTemperatureLevel(), this.getMaxRangeLevel()));
     }
+
+	@Override
+	public CompoundNBT serializeNBT() {
+        CompoundNBT result = new CompoundNBT();
+        result.putInt("process", process);
+        result.putInt("processMax", processMax);
+        result.putInt("steamProcess", steamProcess);
+        result.putInt("overdriveLevel", overdriveLevel);
+        result.putBoolean("isWorking", isWorking);
+        result.putBoolean("isOverdrive", isOverdrive);
+        result.putBoolean("isActive", isActive);
+        result.putFloat("steamLevel",steamLevel);
+        result.putFloat("powerLevel", power);
+        result.putInt("heated", heated);
+        result.putFloat("tempLevel", TLevel);
+        result.putFloat("rangeLevel",RLevel);
+        if (fluid != null)
+            result.putString("steamFluid", RegistryUtils.getRegistryName(fluid).toString());
+        CompoundNBT inv = new CompoundNBT();
+        ItemStackHelper.saveAllItems(inv, inventory);
+        result.put("inv", inv);
+        if (currentItem != null)
+            result.put("res", currentItem.serializeNBT());
+        result.putLong("actualPos", actualPos.toLong());
+        if (dimension != null)
+            result.putString("dim", dimension.getLocation().toString());
+        
+        return result;
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT data) {
+        process = data.getInt("process");
+        processMax = data.getInt("processMax");
+        steamProcess=data.getInt("steamProcess");
+        overdriveLevel = data.getInt("overdriveLevel");
+        isWorking = data.getBoolean("isWorking");
+        isOverdrive = data.getBoolean("isOverdrive");
+        isActive = data.getBoolean("isActive");
+        steamLevel = data.getFloat("steamLevel");
+        power = data.getFloat("powerLevel");
+        heated=data.getInt("heated");
+        TLevel=data.getFloat("tempLevel");
+        RLevel=data.getFloat("rangeLevel");
+        if (data.contains("steamFluid"))
+            fluid = RegistryUtils.getFluid(new ResourceLocation(data.getString("steamFluid")));
+        else
+            fluid = null;
+        
+        ItemStackHelper.loadAllItems(data.getCompound("inv"), inventory);
+        if (data.contains("res"))
+            currentItem = ItemStack.read(data.getCompound("res"));
+        else
+            currentItem = null;
+        actualPos = BlockPos.fromLong(data.getLong("actualPos"));
+        if (data.contains("dim")) {
+            dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(data.getString("dim")));
+        }
+        
+	}
 }

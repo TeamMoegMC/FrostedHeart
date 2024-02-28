@@ -4,7 +4,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.capability.FHCapability;
 import com.teammoeg.frostedheart.climate.WorldClimate;
@@ -17,8 +16,6 @@ import com.teammoeg.frostedheart.research.inspire.EnergyCore;
 import com.teammoeg.frostedheart.scenario.runner.ScenarioConductor;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.NonNullSupplier;
 
 public class FHCapabilities {

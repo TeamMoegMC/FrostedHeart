@@ -25,6 +25,7 @@ import com.cannolicatfish.rankine.init.RankineTags;
 import com.google.common.collect.ImmutableList;
 import com.teammoeg.frostedheart.FHItems;
 import com.teammoeg.frostedheart.FHMain;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.TagsProvider;
@@ -98,7 +99,7 @@ public class FHItemTagProvider extends TagsProvider<Item> {
 	}
 
 	private Item item(String s) {
-		Item i = ForgeRegistries.ITEMS.getValue(mrl(s));
+		Item i = RegistryUtils.getItem(mrl(s));
 		return i.asItem();// just going to cause trouble if not exists
 	}
 

@@ -84,7 +84,6 @@ public class LayerManager extends GLLayerContent {
 				((LayerManager) ctx).close();
 			}
 	}
-	private static boolean loadedTex=true;
 	public synchronized void commitChanges(TransitionFunction t, int ticks) {
 
 		if (t != null) {

@@ -27,6 +27,7 @@ import java.util.function.Function;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;
@@ -42,7 +43,6 @@ import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -54,7 +54,7 @@ public class EditListDialog<T> extends EditDialog {
         public ButtonAddValue(Panel panel) {
             super(panel);
             setHeight(12);
-            setTitle(new StringTextComponent("+ ").appendSibling(new TranslationTextComponent("gui.add")));
+            setTitle(GuiUtils.str("+ ").appendSibling(new TranslationTextComponent("gui.add")));
         }
 
         @Override
@@ -101,7 +101,7 @@ public class EditListDialog<T> extends EditDialog {
             if (getMouseX() >= getX() + width - 19) {
                 l.translate("selectServer.delete");
             } else {
-                l.add(new StringTextComponent(read.apply(list.get(index))));
+                l.add(GuiUtils.str(read.apply(list.get(index))));
             }
         }
 
@@ -182,7 +182,7 @@ public class EditListDialog<T> extends EditDialog {
             list = new ArrayList<>(vx);
         else
             list = new ArrayList<>();
-        title = new StringTextComponent(label).mergeStyle(TextFormatting.BOLD);
+        title = GuiUtils.str(label).mergeStyle(TextFormatting.BOLD);
         this.editor = editor;
         this.def = def;
         this.read = toread;

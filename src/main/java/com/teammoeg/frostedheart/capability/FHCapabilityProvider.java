@@ -8,7 +8,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.common.util.NonNullSupplier;
 
 public class FHCapabilityProvider<C extends NBTSerializable> implements ICapabilitySerializable<CompoundNBT>{
 	LazyOptional<C> lazyCap;

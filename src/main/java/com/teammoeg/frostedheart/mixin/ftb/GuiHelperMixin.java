@@ -5,7 +5,6 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import dev.ftb.mods.ftblibrary.ui.GuiHelper;
-import net.minecraftforge.client.model.pipeline.BakedQuadBuilder;
 
 
 @Mixin(GuiHelper.class)

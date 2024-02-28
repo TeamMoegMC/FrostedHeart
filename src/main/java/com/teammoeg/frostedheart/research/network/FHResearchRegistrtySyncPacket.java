@@ -19,13 +19,9 @@
 
 package com.teammoeg.frostedheart.research.network;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.SpecialResearch;
-import com.teammoeg.frostedheart.research.research.Research;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;

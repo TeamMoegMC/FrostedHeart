@@ -80,7 +80,7 @@ public class EffectCrafting extends Effect {
         if (jo.has("item")) {
             JsonElement je = jo.get("item");
             if (je.isJsonPrimitive()) {
-                item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(je.getAsString()));
+                item = RegistryUtils.getItem(new ResourceLocation(je.getAsString()));
                 initItem();
             } else {
                 itemStack = SerializeUtil.fromJson(je);

@@ -26,7 +26,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.scenario.parser.Scenario;
 import com.teammoeg.frostedheart.scenario.runner.target.ActTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteStackElement;
@@ -34,17 +33,13 @@ import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.scenario.runner.target.ExecuteTarget;
 import com.teammoeg.frostedheart.scenario.runner.target.IScenarioTarget;
+import com.teammoeg.frostedheart.scenario.runner.target.TriggerTarget;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -123,7 +118,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 	}
 
     public void init(ServerPlayerEntity player) {
-    	if(!inited)inited=true;
+    	if(!isInited())inited=true;
 		this.player = player.getUniqueID();
 	}
     public ScenarioConductor(ServerPlayerEntity player) {
@@ -181,22 +176,10 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 
 
 	public void addTrigger(IScenarioTrigger trig,IScenarioTarget targ) {
-		if(getCurrentAct().name.isAct()) {
+		//if(getCurrentAct().name.isAct()) {
 			getCurrentAct().addTrigger(trig,targ);
-		}else super.addTrigger(trig,targ);
+		//}else super.addTrigger(trig,targ);
 	}
-
-    /*public void restoreParagraph(ParagraphData paragraph) {
-		Scenario sp=paragraph.getScenario();
-		if(paragraph.getParagraphNum()==0)
-			currentQuestData.nodeNum=0;
-		else
-			currentQuestData.nodeNum=sp.paragraphs[paragraph.getParagraphNum()-1];
-		run();
-	}*/
-
-
-
     public void run(Scenario sp) {
 		this.setScenario(sp);
 		nodeNum=0;
@@ -216,7 +199,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		super.jump(nxt);
 	}
 	public void tick() {
-		if(!inited)return;
+		if(!isInited())return;
     	//detect triggers
 		if(getStatus()==RunStatus.RUNNING) {
 			run();
@@ -225,7 +208,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
     		if(t.test(this)) {
     			if(t.use()) {
     				if(t.isAsync())
-						toExecute.add(t);
+						addToQueue(t);
 					else
 						jump(t);
     			}
@@ -327,7 +310,7 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 		target.apply(data);
 		data.paragraph.setScenario(target.getScenario());
 		data.paragraph.setParagraphNum(0);
-		toExecute.add(new ActTarget(quest,target));
+		addToQueue(new ActTarget(quest,target));
 	}
 
 	public void endAct() {
@@ -354,6 +337,9 @@ public class ScenarioConductor extends ScenarioVM implements NBTSerializable{
 	@Override
 	public void deserializeNBT(CompoundNBT nbt) {
 		load(nbt);
+	}
+	public boolean isInited() {
+		return inited;
 	}
 
 }

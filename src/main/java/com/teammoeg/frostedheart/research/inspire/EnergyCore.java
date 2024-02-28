@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 
 import com.teammoeg.frostedheart.FHCapabilities;
 import com.teammoeg.frostedheart.FHEffects;
-import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.player.PlayerTemperatureData;
 import com.teammoeg.frostedheart.content.recipes.DietGroupCodec;
@@ -34,21 +33,13 @@ import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.network.FHEnergyDataSyncPacket;
 import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
 import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.PacketDistributor;
 import top.theillusivec4.diet.api.DietCapability;
@@ -206,7 +197,7 @@ public class EnergyCore implements NBTSerializable {
     public static void reportEnergy(PlayerEntity player) {
     	
     	EnergyCore data=getCapability(player).orElse(null);
-        player.sendMessage(new StringTextComponent("Energy:" + data.energy + ",Persist Energy: " + data.penergy + ",Extra Energy: " + data.cenergy), player.getUniqueID());
+        player.sendMessage(GuiUtils.str("Energy:" + data.energy + ",Persist Energy: " + data.penergy + ",Extra Energy: " + data.cenergy), player.getUniqueID());
     }
  
     public static boolean useExtraEnergy(ServerPlayerEntity player, int val) {

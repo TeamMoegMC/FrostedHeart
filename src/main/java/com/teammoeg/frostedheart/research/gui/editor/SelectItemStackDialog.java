@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Iterators;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.config.ui.ItemSearchMode;
@@ -54,7 +55,6 @@ import dev.ftb.mods.ftblibrary.ui.WidgetLayout;
 import dev.ftb.mods.ftblibrary.ui.WidgetType;
 import dev.ftb.mods.ftblibrary.ui.input.MouseButton;
 import dev.ftb.mods.ftblibrary.util.TooltipList;
-import me.shedaniel.architectury.registry.Registries;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
@@ -65,13 +65,11 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * @author LatvianModder, khjxiaogu
@@ -192,7 +190,7 @@ public class SelectItemStackDialog extends EditDialog {
         @Override
         public void addMouseOverText(TooltipList list) {
             super.addMouseOverText(list);
-            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(new StringTextComponent(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
+            list.add(activeMode.getDisplayName().mergeStyle(TextFormatting.GRAY).appendSibling(GuiUtils.str(" [" + panelStacks.widgets.size() + "]").mergeStyle(TextFormatting.DARK_GRAY)));
         }
 
         @Override
@@ -259,7 +257,7 @@ public class SelectItemStackDialog extends EditDialog {
             }
 
             if (!mod.isEmpty()) {
-                return Registries.getId(stack.getItem(), Registry.ITEM).getNamespace().contains(mod);
+                return RegistryUtils.getRegistryName(stack.getItem()).getNamespace().contains(mod);
             }
 
             return stack.getDisplayName().getString().toLowerCase().contains(search);
@@ -293,7 +291,7 @@ public class SelectItemStackDialog extends EditDialog {
 
             @Override
             public Collection<ItemStack> getAllItems() {
-                return ForgeRegistries.BLOCKS.getValues().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
+                return RegistryUtils.getBlocks().stream().map(Block::asItem).filter(Objects::nonNull).map(ItemStack::new).collect(Collectors.toList());
             }
 
             @Override

@@ -19,7 +19,6 @@
 
 package com.teammoeg.frostedheart.climate.player;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 import com.mojang.datafixers.util.Pair;
@@ -30,13 +29,10 @@ import com.teammoeg.frostedheart.FHEffects;
 import com.teammoeg.frostedheart.FHNetwork;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
-import com.teammoeg.frostedheart.climate.data.FHDataManager;
 import com.teammoeg.frostedheart.climate.network.FHBodyDataSyncPacket;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.util.FHUtils;
 
-import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -135,6 +131,7 @@ public class TemperatureUpdate {
             if (player.isCreative() || player.isSpectator())
                 return;
             PlayerTemperatureData data= PlayerTemperatureData.getCapability(event.player).orElse(null);
+            if(data==null)return;
             if (player.ticksExisted % 10 == 0) {
                 //soak in water modifier
                 if (player.isInWater()) {
@@ -172,7 +169,7 @@ public class TemperatureUpdate {
                 //Surrounding temperature
                 Pair<Float, Float> btp = new SurroundingTemperatureSimulator(player).getBlockTemperatureAndWind(player.getPosX(), player.getPosYEye(), player.getPosZ());
                 float bt=btp.getFirst();
-                float wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
+                //int wind=btp.getSecond()+WorldTemperature.getClimateWind(world);
                 //Day-night temperature
                 float skyLight = world.getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(pos);
                 float gameTime = world.getDayTime() % 24000L;

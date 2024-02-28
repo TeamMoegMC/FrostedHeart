@@ -22,6 +22,7 @@ package com.teammoeg.frostedheart.content.recipes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
@@ -37,7 +38,6 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 import net.minecraftforge.fml.RegistryObject;
 
 public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishedRecipe {
@@ -142,7 +142,7 @@ public class ShapelessCopyDataRecipe extends ShapelessRecipe implements IFinishe
 
         json.add("ingredients", jsonarray);
         JsonObject jsonobject = new JsonObject();
-        jsonobject.addProperty("item", Registry.ITEM.getKey(this.getRecipeOutput().getItem()).toString());
+        jsonobject.addProperty("item", RegistryUtils.getRegistryName(this.getRecipeOutput().getItem()).toString());
         if (this.getRecipeOutput().getCount() > 1) {
             jsonobject.addProperty("count", this.getRecipeOutput().getCount());
         }

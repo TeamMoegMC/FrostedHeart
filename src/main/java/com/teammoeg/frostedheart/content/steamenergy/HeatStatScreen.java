@@ -20,11 +20,6 @@
 package com.teammoeg.frostedheart.content.steamenergy;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.research.FHResearch;
-import com.teammoeg.frostedheart.research.gui.tech.ResearchListPanel;
-import com.teammoeg.frostedheart.research.gui.tech.ResearchPanel;
-import com.teammoeg.frostedheart.research.gui.tech.ResearchListPanel.ResearchButton;
-import com.teammoeg.frostedheart.research.research.Research;
 
 import dev.ftb.mods.ftblibrary.icon.Color4I;
 import dev.ftb.mods.ftblibrary.icon.Icon;

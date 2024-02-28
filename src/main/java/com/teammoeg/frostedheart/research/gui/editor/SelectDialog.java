@@ -32,6 +32,7 @@ import com.teammoeg.frostedheart.research.gui.TechScrollBar;
 import com.teammoeg.frostedheart.research.research.Research;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
+import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler;
 import blusunrize.immersiveengineering.api.multiblocks.MultiblockHandler.IMultiblock;
@@ -52,7 +53,6 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class SelectDialog<T> extends EditDialog {
     public class SelectorButton extends Button {
@@ -150,7 +150,7 @@ public class SelectDialog<T> extends EditDialog {
         ).open();
     };
     public static final Editor<EntityType<?>> EDITOR_ENTITY = (p, l, v, c) -> {
-        new SelectDialog<>(p, l, v, c, ForgeRegistries.ENTITIES::getValues, EntityType::getName, e -> new String[]{e.getName().getString(), RegistryUtils.getRegistryName(e).toString()}
+        new SelectDialog<>(p, l, v, c, RegistryUtils::getEntities, EntityType::getName, e -> new String[]{e.getName().getString(), RegistryUtils.getRegistryName(e).toString()}
         ).open();
     };
     public static final Editor<String> EDITOR_ITEM_TAGS = (p, l, v, c) -> {
@@ -174,10 +174,10 @@ public class SelectDialog<T> extends EditDialog {
     public TextBox searchBox;
 
     public static <R> Function<R, ITextComponent> wrap(Function<R, Object> str) {
-        return e -> new StringTextComponent(String.valueOf(str.apply(e)));
+        return e -> GuiUtils.str(String.valueOf(str.apply(e)));
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher) {
-        this(panel, lbl, val, cb, fetcher, e -> new StringTextComponent(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
+        this(panel, lbl, val, cb, fetcher, e -> GuiUtils.str(e.toString()), e -> new String[]{e.toString()}, e -> Icon.EMPTY);
     }
     public SelectDialog(Widget panel, String lbl, T val, Consumer<T> cb, Supplier<Collection<T>> fetcher,
                         Function<T, ITextComponent> tostr) {

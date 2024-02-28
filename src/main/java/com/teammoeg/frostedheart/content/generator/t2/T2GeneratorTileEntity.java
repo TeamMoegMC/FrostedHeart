@@ -29,12 +29,8 @@ import com.teammoeg.frostedheart.FHTileTypes;
 import com.teammoeg.frostedheart.content.generator.GeneratorSteamRecipe;
 import com.teammoeg.frostedheart.content.generator.MasterGeneratorTileEntity;
 import com.teammoeg.frostedheart.content.steamenergy.HeatEnergyNetwork;
-import com.teammoeg.frostedheart.content.steamenergy.INetworkConsumer;
-import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatCapabilities;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.town.GeneratorData;
-import com.teammoeg.frostedheart.util.ReferenceValue;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 
 import net.minecraft.nbt.CompoundNBT;

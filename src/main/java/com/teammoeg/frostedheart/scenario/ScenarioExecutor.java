@@ -80,11 +80,11 @@ public class ScenarioExecutor<T> {
                 if(par!=null) {
                 	size=par.length;
                 }
-                String[] names=new String[size+1];
-                names[0]=(param[i].isNamePresent()?param[i].getName():param[i].getName().substring(4));
+                String[] names=new String[size];
+                //names[0]=(param[i].isNamePresent()?param[i].getName():param[i].get);
                 if(par!=null) {
                 	for(int j=0;j<size;j++) {
-                		names[j+1]=par[j].value();
+                		names[j]=par[j].value();
                 	}
                 }
                 Supplier<Object> def=null;
@@ -123,18 +123,17 @@ public class ScenarioExecutor<T> {
             Object[] pars = new Object[params.length + 1];
             for (int i = 0; i < params.length; i++) {
             	Object par=null;
-            	for(String name:params[i].paramName) {
-            		if(params[i].convertion==null) {
-                		par=param.get(name);
-                	}else {
-                		try {
-	                		par=params[i].convertion.convert(runner,name,param);
-	                	} catch (NumberFormatException | ClassCastException ex) {
-	                        throw new ScenarioExecutionException("Exception converting param " + Arrays.toString(params[i].paramName), ex);
-	                    }
-                	}
-            		if(par!=null)break;
+            	
+        		if(params[i].convertion==null) {
+        			par=getFirstExists(param,params[i].paramName);
+            	}else {
+            		try {
+                		par=params[i].convertion.convert(runner,params[i].paramName,param);
+                	} catch (NumberFormatException | ClassCastException ex) {
+                        throw new ScenarioExecutionException("Exception converting param " + Arrays.toString(params[i].paramName), ex);
+                    }
             	}
+            	
                 if (par != null) {
                 	pars[i+1]=par;
                 }else {
@@ -164,20 +163,20 @@ public class ScenarioExecutor<T> {
 		this.objcls = objcls;
 	}
     private static TypeAdapter<?,Object> number = (r,n,p) ->{
-    	String s=p.get(n);
+    	String s=getFirstExists(p,n);
     	if(s==null||s.isEmpty())return s;
     	return ((Double) Double.parseDouble(s));
     	
     };
     private static TypeAdapter<?,Object> integer = (r,n,p) ->{ 
-    	String s=p.get(n);
+    	String s=getFirstExists(p,n);
     	if(s==null||s.isEmpty())return s;
     	if(s.toLowerCase().startsWith("0x"))return (int)(Long.parseLong(s.substring(2),16));
     	return ((Double) Double.parseDouble(s)).intValue();
     	};
 
     private static TypeAdapter<?,Object> fnumber = (r,n,p) ->{
-    	String s=p.get(n);
+    	String s=getFirstExists(p,n);
     	if(s==null||s.isEmpty())return s;
     	return ((Double) Double.parseDouble(s)).floatValue();
     	
@@ -188,39 +187,40 @@ public class ScenarioExecutor<T> {
     }
     {
     	addTypeAdapter(BlockPos.class,(r,n,p)->new BlockPos(
-    		castParamType(r,p,int.class,n+"x"),
-    		castParamType(r,p,int.class,n+"y"),
-    		castParamType(r,p,int.class,n+"z")
+    		castParamType(r,p,int.class,s->s+"x",0,n),
+    		castParamType(r,p,int.class,s->s+"y",0,n),
+    		castParamType(r,p,int.class,s->s+"z",0,n)
     		));
     	addTypeAdapter(Vector3i.class,(r,n,p)->new Vector3i(
-    		castParamType(r,p,int.class,n+"x"),
-    		castParamType(r,p,int.class,n+"y"),
-    		castParamType(r,p,int.class,n+"z")
+    		castParamType(r,p,int.class,s->s+"x",0,n),
+    		castParamType(r,p,int.class,s->s+"y",0,n),
+    		castParamType(r,p,int.class,s->s+"z",0,n)
     		));
     	addTypeAdapter(Vector3f.class,(r,n,p)->new Vector3f(
-    		castParamType(r,p,float.class,n+"x"),
-    		castParamType(r,p,float.class,n+"y"),
-    		castParamType(r,p,float.class,n+"z")
+    		castParamType(r,p,float.class,s->s+"x",0f,n),
+    		castParamType(r,p,float.class,s->s+"y",0f,n),
+    		castParamType(r,p,float.class,s->s+"z",0f,n)
     		));
     	addTypeAdapter(Vector3d.class,(r,n,p)->new Vector3d(
-    		castParamType(r,p,double.class,n+"x"),
-    		castParamType(r,p,double.class,n+"y"),
-    		castParamType(r,p,double.class,n+"z")
+    		castParamType(r,p,double.class,s->s+"x",0d,n),
+    		castParamType(r,p,double.class,s->s+"y",0d,n),
+    		castParamType(r,p,double.class,s->s+"z",0d,n)
     		));
     	addTypeAdapter(Rect.class,(r,n,p)->new Rect(
-    		castParamType(r,p,int.class,n+"x"),
-    		castParamType(r,p,int.class,n+"y"),
-    		castParamType(r,p,int.class,-1,n+"w"),
-    		castParamType(r,p,int.class,-1,n+"h")
+    		castParamType(r,p,int.class,s->s+"x",0,n),
+    		castParamType(r,p,int.class,s->s+"y",0,n),
+    		castParamType(r,p,int.class,s->s+"w",-1,n),
+    		castParamType(r,p,int.class,s->s+"h",-1,n)
     		));
     	addTypeAdapter(Point.class,(r,n,p)->new Point(
-    		castParamType(r,p,int.class,n+"x"),
-    		castParamType(r,p,int.class,n+"y")
+    		castParamType(r,p,int.class,s->s+"x",0,n),
+    		castParamType(r,p,int.class,s->s+"y",0,n)
     		));
     	addTypeAdapter(Color4I.class,(r,n,p)->Color4I.rgba(
     		castParamType(r,p,int.class,0xFF000000,n)
     		));
     }
+
     Map<String, ScenarioMethod<T>> commands = new HashMap<>();
     public void callCommand(String name, T scenarioVM, Map<String, String> params) {
         ScenarioMethod<T> command = commands.get(name);
@@ -229,27 +229,42 @@ public class ScenarioExecutor<T> {
         }
         command.execute(scenarioVM, params);
     }
+    public static String getFirstExists(Map<String,String> params,String... pnames) {
+		for(String name:pnames) {
+			if(params.containsKey(name)) {
+				return params.get(name);
+			}
+		}
+		return null;
+    }
     public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,String... pnames) {
     	return castParamType(runner,params,partype,null,pnames);
     }
+    public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,Function<String,String> apply,V defval,String... pnames) {
+    	String[] ss=Arrays.copyOf(pnames, pnames.length);
+    	for(int i=0;i<ss.length;i++)
+    		ss[i]=apply.apply(ss[i]);
+    	return castParamType(runner,params,partype,defval,ss);
+    }
+    
     public <V> V castParamType(T runner,Map<String,String> params,Class<V> partype,V defval,String... pnames) {
     	TypeAdapter<?,T> ta=types.get(partype);
 		Object result=null;
-    	for(String pname:pnames) {
-		        if (partype.isAssignableFrom(Double.class) || partype == double.class) {
-		            result= number.convert(runner, pname, params);
-		        } else if (partype.isAssignableFrom(String.class)) {
-		            result= params.get(pname);
-		        } else if (partype.isAssignableFrom(Integer.class) || partype == int.class) {
-		            result= integer.convert(runner, pname, params);
-		        } else if (partype.isAssignableFrom(Float.class) || partype == float.class) {
-		            result= fnumber.convert(runner, pname, params);
-		        }else if(ta!=null) {
-					result= ta.convert(runner, pname, params);
-		        }else throw new ScenarioExecutionException("No matching type found for param " + Arrays.toString(pnames));
-	    	if(result!=null)
-	    		return (V) result;
-    	}
+    	
+        if (partype.isAssignableFrom(Double.class) || partype == double.class) {
+            result= number.convert(runner, pnames, params);
+        } else if (partype.isAssignableFrom(String.class)) {
+        	result=getFirstExists(params,pnames);
+        } else if (partype.isAssignableFrom(Integer.class) || partype == int.class) {
+            result= integer.convert(runner, pnames, params);
+        } else if (partype.isAssignableFrom(Float.class) || partype == float.class) {
+            result= fnumber.convert(runner, pnames, params);
+        }else if(ta!=null) {
+			result= ta.convert(runner, pnames, params);
+        }else throw new ScenarioExecutionException("No matching type found for param " + Arrays.toString(pnames));
+		if(result!=null)
+			return (V) result;
+    	
     	if(defval!=null)
     		return defval;
     	if(partype.isPrimitive()) {
@@ -309,18 +324,24 @@ public class ScenarioExecutor<T> {
         }
     }
     static class Test{
-    	public void test(ScenarioConductor sr,@Param("")BlockPos t) {
-    		System.out.println(t);
+    	public void test(ScenarioConductor sr,@Param("s")String s,@Param("s")Rect r,@Param("")Rect r1) {
+    		System.out.println(s+":"+r+":"+r1);
 
     	}
     }
     public static void main(String[] args) throws NoSuchMethodException, SecurityException {
-    	Test t=new Test();
-    	ScenarioExecutor exc=new ScenarioExecutor(ScenarioConductor.class);
+    	ScenarioExecutor<Object> exc=new ScenarioExecutor<Object>(Object.class);
     	exc.registerInst(new Test());
     	Map<String,String> mp=new HashMap<>();
-    	mp.put("x", "20");
-    	mp.put("y", "40");
+    	mp.put("s", "twr_scenario:twr_logo_title.png");
+    	mp.put("sx", "123");
+    	mp.put("sy", "234");
+    	mp.put("sw", "345");
+    	mp.put("sh", "456");
+    	mp.put("x", "999");
+    	mp.put("y", "888");
+    	mp.put("w", "777");
+    	mp.put("h", "666");
     	//mp.put("z", "60");
     	exc.callCommand("test", null, mp);
     }

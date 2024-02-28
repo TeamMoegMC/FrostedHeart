@@ -44,6 +44,7 @@ import java.util.Set;
 
 import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.NBTSerializable;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import net.minecraft.item.Item;
 import net.minecraft.nbt.CompoundNBT;
@@ -54,6 +55,8 @@ import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.common.util.INBTSerializable;
+
 
 public class WantedFoodCapability implements NBTSerializable{
 
@@ -103,7 +106,7 @@ public class WantedFoodCapability implements NBTSerializable{
     }
 
     private static StringNBT turnItemToStringNBT(Item item){
-        return StringNBT.valueOf(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(item)).toString());
+        return StringNBT.valueOf(Objects.requireNonNull(RegistryUtils.getRegistryName(item)).toString());
     }
 
     @Override
@@ -123,7 +126,7 @@ public class WantedFoodCapability implements NBTSerializable{
 
     private static Item turnStringNBTToItem(INBT nbt){
         ResourceLocation itemResourceLocation = new ResourceLocation(nbt.getString());
-        return ForgeRegistries.ITEMS.getValue(itemResourceLocation);
+        return RegistryUtils.getItem(itemResourceLocation);
     }
 
     @Override

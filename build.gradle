@@ -135,11 +135,17 @@ repositories {
     maven {
         name = "BlameJared"
         url = "https://maven.blamejared.com/"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     // JEI and TC Files
     maven {
         name = "DVS1 Maven FS"
         url = "https://dvs1.progwml6.com/files/maven"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     // Needed for JEI
     maven {
@@ -147,22 +153,30 @@ repositories {
         url = "https://maven.latmod.com/"
         content {
             includeGroup "mezz.jei"
+            excludeGroup "curse.maven"
         }
     }
 	// Location of the maven for Flywheel
     maven {
         name = "tterrag maven"
         url = "https://maven.tterrag.com/"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     // Needed for Curios API
     maven {
         name = "theillusivec4 maven"
         url = "https://maven.theillusivec4.top/"
+        content {
+			excludeGroup "curse.maven"
+		}
     }
     maven {
         url "https://maven.architectury.dev/"
         content {
         	includeGroup "me.shedaniel"
+        	excludeGroup "curse.maven"
         }
     }
     maven {
@@ -170,6 +184,7 @@ repositories {
         content {
             includeGroup "dev.ftb.mods"
             includeGroup "dev.latvian.mods"
+            excludeGroup "curse.maven"
         }
     }
 //    maven {
@@ -188,6 +203,7 @@ repositories {
             includeGroup "gloridifice.watersource"
             includeGroup "com.alcatrazescapee.primalwinter"
             includeGroup "java.moze_intel"
+            excludeGroup "curse.maven"
         }
     }
 }

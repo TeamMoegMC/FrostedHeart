@@ -19,8 +19,16 @@
 
 package com.teammoeg.frostedheart;
 
-import static com.simibubi.create.foundation.data.ModelGen.*;
-import static com.teammoeg.frostedheart.util.FHProps.*;
+import static com.simibubi.create.foundation.data.ModelGen.customItemModel;
+import static com.teammoeg.frostedheart.util.FHProps.berryBushBlocks;
+import static com.teammoeg.frostedheart.util.FHProps.cropProps;
+import static com.teammoeg.frostedheart.util.FHProps.grassProps;
+import static com.teammoeg.frostedheart.util.FHProps.metalDecoProps;
+import static com.teammoeg.frostedheart.util.FHProps.ore_gravel;
+import static com.teammoeg.frostedheart.util.FHProps.redStoneProps;
+import static com.teammoeg.frostedheart.util.FHProps.stoneDecoProps;
+import static com.teammoeg.frostedheart.util.FHProps.stoneProps;
+import static com.teammoeg.frostedheart.util.FHProps.woodenProps;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -29,14 +37,19 @@ import com.cannolicatfish.rankine.init.RankineBlocks;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
-import com.simibubi.create.foundation.block.BlockStressDefaults;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.entry.BlockEntry;
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
 import com.teammoeg.frostedheart.base.item.FHBlockItem;
 import com.teammoeg.frostedheart.base.item.FoodBlockItem;
 import com.teammoeg.frostedheart.climate.WorldTemperature;
-import com.teammoeg.frostedheart.content.adventure.block.*;
+import com.teammoeg.frostedheart.content.adventure.block.BoneBlock;
+import com.teammoeg.frostedheart.content.adventure.block.OddMark;
+import com.teammoeg.frostedheart.content.adventure.block.PackageBlock;
+import com.teammoeg.frostedheart.content.adventure.block.PebbleBlock;
+import com.teammoeg.frostedheart.content.adventure.block.SmallGarage;
+import com.teammoeg.frostedheart.content.adventure.block.WoodenBox;
+import com.teammoeg.frostedheart.content.adventure.block.bloodBlock;
 import com.teammoeg.frostedheart.content.agriculture.RyeBlock;
 import com.teammoeg.frostedheart.content.agriculture.WhiteTurnipBlock;
 import com.teammoeg.frostedheart.content.agriculture.WolfBerryBushBlock;
@@ -55,8 +68,8 @@ import com.teammoeg.frostedheart.content.steamenergy.steamcore.SteamCoreBlock;
 import com.teammoeg.frostedheart.research.blocks.DrawingDeskBlock;
 import com.teammoeg.frostedheart.research.blocks.MechCalcBlock;
 import com.teammoeg.frostedheart.town.house.HouseBlock;
+
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
@@ -64,8 +77,6 @@ import net.minecraftforge.common.ToolType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import static com.teammoeg.frostedheart.util.FHProps.*;
 
 public class FHBlocks {
 	static final DeferredRegister<Block> registry=DeferredRegister.create(ForgeRegistries.BLOCKS, FHMain.MODID);

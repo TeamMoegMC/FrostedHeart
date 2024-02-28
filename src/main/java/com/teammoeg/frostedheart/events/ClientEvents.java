@@ -76,7 +76,6 @@ import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
@@ -316,7 +315,7 @@ public class ClientEvents {
                         l += 9;
                     }
                     if (isStable) {
-                        IFormattableTextComponent itxc = new StringTextComponent("CurseForge")
+                        IFormattableTextComponent itxc = GuiUtils.str("CurseForge")
                                 .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
                                 .mergeStyle(TextFormatting.GOLD);
                         boolean needEvents = true;
@@ -334,7 +333,7 @@ public class ClientEvents {
                             ((List<IGuiEventListener>) gui.getEventListeners()).add(new GuiClickedEvent(1,
                                     (int) (gui.height / 2.0F + l), font.getStringPropertyWidth(itxc) + 1,
                                     (int) (gui.height / 2.0F + l + 9), () -> gui.handleComponentClicked(opencf)));
-                        if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
+                        /*if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
                                 .equalsIgnoreCase("zh_cn")) {
                             l += 9;
                             Style openmcbbs = Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
@@ -348,7 +347,7 @@ public class ClientEvents {
                                         (int) (gui.height / 2.0F + l + 9),
                                         () -> gui.handleComponentClicked(openmcbbs)));
                             font.drawTextWithShadow(matrixStack, itxm, 1, gui.height / 2.0F + l, 0xFFFFFF);
-                        }
+                        }*/
                     }
                 }
             });
@@ -478,13 +477,13 @@ public class ClientEvents {
                         .appendString(stableVersion.getOriginal()).mergeStyle(TextFormatting.BOLD), false);
                 if (isStable) {
                     event.getPlayer()
-                            .sendStatusMessage(new StringTextComponent("CurseForge")
+                            .sendStatusMessage(GuiUtils.str("CurseForge")
                                     .setStyle(Style.EMPTY.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,
                                             "https://www.curseforge.com/minecraft/modpacks/the-winter-rescue")))
                                     .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
                                     .mergeStyle(TextFormatting.GOLD), false);
 
-                    if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
+                    /*if (Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode()
                             .equalsIgnoreCase("zh_cn")) {
                         event.getPlayer()
                                 .sendStatusMessage(new StringTextComponent("MCBBS")
@@ -492,7 +491,7 @@ public class ClientEvents {
                                                 "https://www.mcbbs.net/thread-1227167-1-1.html")))
                                         .mergeStyle(TextFormatting.UNDERLINE).mergeStyle(TextFormatting.BOLD)
                                         .mergeStyle(TextFormatting.DARK_RED), false);
-                    }
+                    }*/
                 }
             }
         });
@@ -504,7 +503,7 @@ public class ClientEvents {
                         false);
             } else if (FHMain.lastbkf != null) {
                 event.getPlayer().sendStatusMessage(GuiUtils.translateGui("save_updated")
-                                .appendSibling(new StringTextComponent(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
+                                .appendSibling(GuiUtils.str(FHMain.lastbkf.getName()).setStyle(Style.EMPTY
                                         .setClickEvent(
                                                 new ClickEvent(ClickEvent.Action.OPEN_FILE, FHMain.lastbkf.getAbsolutePath()))
                                         .applyFormatting(TextFormatting.UNDERLINE))),

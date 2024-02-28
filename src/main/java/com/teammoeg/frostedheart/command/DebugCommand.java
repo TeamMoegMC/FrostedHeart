@@ -77,7 +77,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class DebugCommand {
     public static void register(CommandDispatcher<CommandSource> dispatcher) {
@@ -99,7 +98,7 @@ public class DebugCommand {
                                     String[] parts = line.split(",");
                                     if (parts.length == 0) break;
                                     ResourceLocation item = new ResourceLocation(parts[0]);
-                                    Item it = ForgeRegistries.ITEMS.getValue(item);
+                                    Item it = RegistryUtils.getItem(item);
 
                                     if (it == null || it == Items.AIR) {
                                         ps.println(item + "," + parts[1]);
@@ -114,7 +113,7 @@ public class DebugCommand {
                                 }
                             }
                         }
-                        for (Item ix : ForgeRegistries.ITEMS) {
+                        for (Item ix : RegistryUtils.getItems()) {
                             if (ix == null || ix == Items.AIR) continue;
                             if (items.contains(ix)) continue;
                             if (!ix.isFood()) continue;

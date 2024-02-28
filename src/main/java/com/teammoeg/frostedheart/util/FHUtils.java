@@ -67,7 +67,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
@@ -194,7 +193,7 @@ public class FHUtils {
     }
 
     public static int getEnchantmentLevel(Enchantment enchID, CompoundNBT tags) {
-        ResourceLocation resourcelocation = Registry.ENCHANTMENT.getKey(enchID);
+        ResourceLocation resourcelocation = RegistryUtils.getRegistryName(enchID);
         ListNBT listnbt = tags.getList("Enchantments", 10);
 
         for (int i = 0; i < listnbt.size(); ++i) {

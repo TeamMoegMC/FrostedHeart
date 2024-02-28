@@ -27,9 +27,7 @@ import com.teammoeg.frostedheart.research.api.ResearchDataAPI;
 import blusunrize.immersiveengineering.common.blocks.generic.MultiblockPartTileEntity;
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ActionResultType;
@@ -49,7 +47,7 @@ public class NormalGeneratorMultiBlock<T extends MultiblockPartTileEntity<? supe
         super(name, props, type);
     }
 
-    public NormalGeneratorMultiBlock(String name, RegistryObject type) {
+    public NormalGeneratorMultiBlock(String name, RegistryObject<TileEntityType<T>> type) {
         super(name, type);
     }
 

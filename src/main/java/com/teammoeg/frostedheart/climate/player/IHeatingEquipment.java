@@ -21,7 +21,6 @@ package com.teammoeg.frostedheart.climate.player;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 
 /**

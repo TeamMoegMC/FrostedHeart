@@ -25,6 +25,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHItems;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.api.crafting.IERecipeSerializer;
 import net.minecraft.inventory.IInventory;
@@ -35,7 +36,6 @@ import net.minecraft.item.crafting.ShapedRecipe;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
 
 public interface DefrostRecipe extends IRecipe<IInventory> {
     public static class Serializer<T extends DefrostRecipe> extends IERecipeSerializer<T> {
@@ -98,9 +98,7 @@ public interface DefrostRecipe extends IRecipe<IInventory> {
                 return ShapedRecipe.deserializeItem(json.getAsJsonObject());
             String s1 = json.getAsString();
             ResourceLocation resourcelocation = new ResourceLocation(s1);
-            return new ItemStack(Registry.ITEM.getOptional(resourcelocation).orElseThrow(() -> {
-                return new IllegalStateException("Item: " + s1 + " does not exist");
-            }));
+            return new ItemStack(RegistryUtils.getItemThrow(resourcelocation));
         }
 
         @Override

@@ -19,8 +19,6 @@
 
 package com.teammoeg.frostedheart.climate;
 
-import java.util.Random;
-
 import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.util.noise.INoise1D;
 
@@ -52,7 +50,7 @@ public final class VanillaClimate {
     public static final float SNOW_MELT_TEMPERATURE = 4f;
     public static final float SNOW_STACKING_TEMPERATURE = -4f;
 
-    private static final Random RANDOM = new Random(); // Used for daily temperature variations
+    //private static final Random RANDOM = new Random(); // Used for daily temperature variations
 
     public static float calculateMonthlyTemperature(int z, int y, float averageTemperature, float monthTemperatureModifier) {
         float temperatureScale = 20000;

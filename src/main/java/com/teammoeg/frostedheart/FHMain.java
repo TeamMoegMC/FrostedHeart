@@ -20,25 +20,19 @@
 package com.teammoeg.frostedheart;
 
 import java.io.File;
-import java.io.InputStreamReader;
 
 import javax.annotation.Nonnull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.repack.registrate.util.NonNullLazyValue;
 import com.teammoeg.frostedheart.climate.player.SurroundingTemperatureSimulator;
 import com.teammoeg.frostedheart.compat.CreateCompat;
 import com.teammoeg.frostedheart.compat.CuriosCompat;
 import com.teammoeg.frostedheart.compat.tetra.TetraCompat;
-import com.teammoeg.frostedheart.content.foods.dailykitchen.DailyKitchen;
-import com.teammoeg.frostedheart.events.ClientRegistryEvents;
 import com.teammoeg.frostedheart.events.FTBTeamsEvents;
 import com.teammoeg.frostedheart.events.PlayerEvents;
 import com.teammoeg.frostedheart.mixin.minecraft.FoodAccess;
@@ -81,7 +75,6 @@ import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod(FHMain.MODID)
 public class FHMain {
@@ -150,16 +143,6 @@ public class FHMain {
         ItemPredicate.register(new ResourceLocation(MODID, "blacklist"), BlackListPredicate::new);
         DeferredWorkQueue.runLater(FHRecipes::registerRecipeTypes);
         JsonParser gs = new JsonParser();
-        JsonObject jo = gs
-                .parse(new InputStreamReader(
-                        ClientRegistryEvents.class.getClassLoader().getResourceAsStream(FHMain.MODID + ".mixins.json")))
-                .getAsJsonObject();
-        JsonArray mixins = jo.get("mixins").getAsJsonArray();
-
-        if (!mixins.contains(new JsonPrimitive("projecte.MixinPhilosopherStone"))
-                || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationStone"))
-                || !mixins.contains(new JsonPrimitive("projecte.MixinTransmutationTablet")))
-            throw new RuntimeException("Unsupported projecte");
         // remove primal winter blocks not to temper rankine world
         //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.GRASS_BLOCK);
         //ModBlocks.SNOWY_TERRAIN_BLOCKS.remove(Blocks.DIRT);
@@ -175,7 +158,7 @@ public class FHMain {
         ResourceLocation hw = new ResourceLocation(MODID, "hot_water");
         for (Mapping<Fluid> i : miss.getAllMappings()) {
             if (i.key.equals(hw))
-                i.remap(ForgeRegistries.FLUIDS.getValue(new ResourceLocation("thermopolium", "nail_soup")));
+                i.remap(RegistryUtils.getFluid(new ResourceLocation("thermopolium", "nail_soup")));
         }
     }
 
@@ -183,7 +166,7 @@ public class FHMain {
         for (Mapping<Block> i : miss.getAllMappings()) {
             ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
-                i.remap(ForgeRegistries.BLOCKS.getValue(rl));
+                i.remap(RegistryUtils.getBlock(rl));
         }
     }
 
@@ -191,12 +174,12 @@ public class FHMain {
         for (Mapping<Item> i : miss.getAllMappings()) {
             ResourceLocation rl = VersionRemap.remaps.get(i.key);
             if (rl != null)
-                i.remap(ForgeRegistries.ITEMS.getValue(rl));
+                i.remap(RegistryUtils.getItem(rl));
         }
     }
 
     public void modification(FMLLoadCompleteEvent event) {
-        for (Item i : ForgeRegistries.ITEMS.getValues()) {
+        for (Item i : RegistryUtils.getItems()) {
             if (i.isFood()) {
                 if (RegistryUtils.getRegistryName(i).getNamespace().equals("crockpot")) {
                     ((FoodAccess) i.getFood()).getEffectsSuppliers().removeIf(t -> t.getFirst().get().getPotion().isBeneficial());

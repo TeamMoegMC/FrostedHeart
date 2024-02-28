@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 
+import com.teammoeg.frostedheart.research.TeamCapability;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -37,11 +38,13 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.common.util.INBTSerializable;
 
 /**
  * Town data for a whole team.
  */
-public class TeamTownData {
+public class TeamTownData implements INBTSerializable<CompoundNBT>{
+	public static final TeamCapability<TeamTownData> CAPABILITY=new TeamCapability<>("town",TeamTownData::new);
     /**
      * Resource generated from resident
      */
@@ -58,17 +61,6 @@ public class TeamTownData {
         this.team = team;
     }
 
-    public void deserialize(CompoundNBT data, boolean updatePacket) {
-        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
-            CompoundNBT nbt = (CompoundNBT) i;
-            TownWorkerData t = new TownWorkerData(nbt);
-            blocks.put(t.getPos(), t);
-        }
-        CompoundNBT rec = data.getCompound("resource");
-        for (String i : rec.keySet()) {
-            resources.put(TownResourceType.from(i), rec.getInt(i));
-        }
-    }
 
     public CompoundNBT getTownBlockData(BlockPos pos) {
         TownWorkerData twd = blocks.get(pos);
@@ -85,16 +77,15 @@ public class TeamTownData {
     public void removeTownBlock(BlockPos pos) {
         blocks.remove(pos);
     }
-
-    public CompoundNBT serialize(boolean updatePacket) {
+	@Override
+	public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
-        if (!updatePacket) {
-            ListNBT list = new ListNBT();
-            for (TownWorkerData v : blocks.values()) {
-                list.add(v.serialize());
-            }
-            nbt.put("blocks", list);
+        ListNBT list = new ListNBT();
+        for (TownWorkerData v : blocks.values()) {
+            list.add(v.serialize());
         }
+        nbt.put("blocks", list);
+        
         CompoundNBT list2 = new CompoundNBT();
         for (Entry<TownResourceType, Integer> v : resources.entrySet()) {
             if (v.getValue() != null && v.getValue() != 0)
@@ -109,7 +100,20 @@ public class TeamTownData {
         }
         nbt.put("backupResource", list2);
         return nbt;
-    }
+	}
+
+	@Override
+	public void deserializeNBT(CompoundNBT data) {
+        for (INBT i : data.getList("blocks", Constants.NBT.TAG_COMPOUND)) {
+            CompoundNBT nbt = (CompoundNBT) i;
+            TownWorkerData t = new TownWorkerData(nbt);
+            blocks.put(t.getPos(), t);
+        }
+        CompoundNBT rec = data.getCompound("resource");
+        for (String i : rec.keySet()) {
+            resources.put(TownResourceType.from(i), rec.getInt(i));
+        }
+	}
 
     /**
      * This tick only works per 20 tick.
@@ -154,4 +158,6 @@ public class TeamTownData {
         }
         itt.finishWork();
     }
+
+
 }

@@ -1,27 +1,20 @@
 package com.teammoeg.frostedheart.content.adventure.block;
 
-import com.cannolicatfish.rankine.blocks.RankineOreBlock;
+import javax.annotation.Nullable;
+
 import com.teammoeg.frostedheart.base.block.FHBaseBlock;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.IntegerProperty;
 import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
 
 public class bloodBlock extends FHBaseBlock {
     private static IntegerProperty BLDT = IntegerProperty.create("bloodtype", 0, 3);

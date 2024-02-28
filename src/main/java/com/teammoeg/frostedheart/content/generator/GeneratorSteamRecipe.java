@@ -97,7 +97,7 @@ public class GeneratorSteamRecipe extends IESerializableRecipe {
     }
 
     @Override
-    protected IERecipeSerializer getIESerializer() {
+    protected IERecipeSerializer<GeneratorSteamRecipe> getIESerializer() {
         return SERIALIZER.get();
     }
 

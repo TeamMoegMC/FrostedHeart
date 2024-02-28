@@ -40,6 +40,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
 public class ChunkHeatData implements NBTSerializable {
@@ -184,7 +185,8 @@ public class ChunkHeatData implements NBTSerializable {
      * If on server, will either query capability falling back to cache, or query
      * provider to generate the data.
      */
-    public static Optional<ChunkHeatData> get(IWorldReader world, ChunkPos pos) {
+    @SuppressWarnings("deprecation")
+	public static Optional<ChunkHeatData> get(IWorldReader world, ChunkPos pos) {
         // Query cache first, picking the correct cache for the current logical side
         //ChunkData data = ChunkDataCache.get(world).get(pos);
         //if (data == null) {
