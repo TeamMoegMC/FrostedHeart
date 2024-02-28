@@ -26,8 +26,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 
-import com.teammoeg.frostedheart.research.TeamCapability;
+import com.teammoeg.frostedheart.research.SpecialDataHolder;
+import com.teammoeg.frostedheart.research.SpecialDataType;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 
 import blusunrize.immersiveengineering.common.util.Utils;
 import net.minecraft.block.BlockState;
@@ -38,13 +40,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.common.util.INBTSerializable;
 
 /**
  * Town data for a whole team.
  */
-public class TeamTownData implements INBTSerializable<CompoundNBT>{
-	public static final TeamCapability<TeamTownData> CAPABILITY=new TeamCapability<>("town",TeamTownData::new);
+public class TeamTownData implements NBTSerializable{
+	public static final SpecialDataType<TeamTownData> CAPABILITY=new SpecialDataType<>("town",TeamTownData::new);
     /**
      * Resource generated from resident
      */
@@ -54,9 +55,9 @@ public class TeamTownData implements INBTSerializable<CompoundNBT>{
      */
     Map<TownResourceType, Integer> backupResources = new EnumMap<>(TownResourceType.class);
     Map<BlockPos, TownWorkerData> blocks = new LinkedHashMap<>();
-    TeamResearchData team;
+    SpecialDataHolder team;
 
-    public TeamTownData(TeamResearchData team) {
+    public TeamTownData(SpecialDataHolder team) {
         super();
         this.team = team;
     }

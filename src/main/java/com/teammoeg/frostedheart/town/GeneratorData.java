@@ -23,10 +23,12 @@ import java.util.Random;
 
 import com.teammoeg.frostedheart.content.generator.GeneratorRecipe;
 import com.teammoeg.frostedheart.content.steamenergy.capabilities.HeatProviderEndPoint;
-import com.teammoeg.frostedheart.research.TeamCapability;
+import com.teammoeg.frostedheart.research.SpecialDataHolder;
+import com.teammoeg.frostedheart.research.SpecialDataType;
 import com.teammoeg.frostedheart.research.data.ResearchVariant;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.RegistryUtils;
 
 import blusunrize.immersiveengineering.common.util.Utils;
@@ -40,12 +42,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemHandlerHelper;
 
-public class GeneratorData implements INBTSerializable<CompoundNBT>{
-	public static final TeamCapability<GeneratorData> CAPABILITY=new TeamCapability<>("generator",GeneratorData::new);
+public class GeneratorData implements NBTSerializable{
+	public static final SpecialDataType<GeneratorData> CAPABILITY=new SpecialDataType<>("generator",GeneratorData::new);
     public static final int INPUT_SLOT = 0;
     public static final int OUTPUT_SLOT = 1;
     public int process = 0;
@@ -63,14 +64,14 @@ public class GeneratorData implements INBTSerializable<CompoundNBT>{
     protected NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
     public ItemStack currentItem;
-    private TeamResearchData teamData;
+    private SpecialDataHolder teamData;
     public BlockPos actualPos = BlockPos.ZERO;
     public HeatProviderEndPoint ep=new HeatProviderEndPoint(200);
     public LazyOptional<HeatProviderEndPoint> epcap=LazyOptional.of(()->ep);
     public RegistryKey<World> dimension;
 
     final float heatAddInterval = 20;
-    public GeneratorData(TeamResearchData teamResearchData) {
+    public GeneratorData(SpecialDataHolder teamResearchData) {
         teamData = teamResearchData;
     }
 
@@ -101,7 +102,7 @@ public class GeneratorData implements INBTSerializable<CompoundNBT>{
     }
 
     protected double getEfficiency() {
-        return teamData.getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
+        return teamData.getData(TeamResearchData.TYPE).getVariantDouble(ResearchVariant.GENERATOR_EFFICIENCY) + 0.7;
     }
 
     public NonNullList<ItemStack> getInventory() {
@@ -201,7 +202,7 @@ public class GeneratorData implements INBTSerializable<CompoundNBT>{
     }
     protected double getHeatEfficiency() {
 
-        return 1+teamData.getVariantDouble(ResearchVariant.GENERATOR_HEAT);
+        return 1+teamData.getData(TeamResearchData.TYPE).getVariantDouble(ResearchVariant.GENERATOR_HEAT);
     }
 	public float getMaxTemperatureLevel() {
 		return 1+(isOverdrive?1:0)+steamLevel;

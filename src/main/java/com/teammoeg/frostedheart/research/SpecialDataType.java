@@ -6,22 +6,20 @@ import java.util.Set;
 import java.util.function.Function;
 
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraftforge.common.util.INBTSerializable;
-
-public class TeamCapability<T extends INBTSerializable<CompoundNBT>>{
-	public static final Set<TeamCapability<?>> caps=new HashSet<>();
+public class SpecialDataType<T extends NBTSerializable>{
+	public static final Set<SpecialDataType<?>> TYPE_REGISTRY=new HashSet<>();
 	String id;
-	Function<TeamResearchData,T> factory;
+	Function<SpecialDataHolder,T> factory;
 	
-	public TeamCapability(String id, Function<TeamResearchData, T> factory) {
+	public SpecialDataType(String id, Function<SpecialDataHolder, T> factory) {
 		super();
 		this.id = id;
 		this.factory = factory;
-		caps.add(this);
+		TYPE_REGISTRY.add(this);
 	}
-	public T create(TeamResearchData dat) {
+	public T create(SpecialDataHolder dat) {
 		return factory.apply(dat);
 	}
 	public String getId() {
@@ -36,7 +34,7 @@ public class TeamCapability<T extends INBTSerializable<CompoundNBT>>{
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
-		TeamCapability<?> other = (TeamCapability<?>) obj;
+		SpecialDataType<?> other = (SpecialDataType<?>) obj;
 		return Objects.equals(id, other.id);
 	};
 }

@@ -37,7 +37,8 @@ import com.teammoeg.frostedheart.research.ResearchListeners.BlockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.CategoryUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList;
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
-import com.teammoeg.frostedheart.research.TeamCapability;
+import com.teammoeg.frostedheart.research.SpecialDataHolder;
+import com.teammoeg.frostedheart.research.SpecialDataType;
 import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
@@ -45,6 +46,7 @@ import com.teammoeg.frostedheart.research.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 
 import dev.ftb.mods.ftbteams.data.Team;
@@ -67,11 +69,11 @@ import net.minecraftforge.fml.network.PacketDistributor;
  * This data is available for both team and player.
  *
  * @author khjxiaogu
- * @param <INBTSerializable>
  * @date 2022/9/2
  */
-public class TeamResearchData {
-    private static TeamResearchData INSTANCE = new TeamResearchData(null);
+public class TeamResearchData implements SpecialDataHolder,NBTSerializable{
+	public static SpecialDataType<TeamResearchData> TYPE=new SpecialDataType<>("research",TeamResearchData::new);
+    private static TeamResearchData INSTANCE = new TeamResearchData((Supplier<Team>)null);
     UUID id;
     String ownerName;
     /**
@@ -99,7 +101,7 @@ public class TeamResearchData {
      */
     CompoundNBT variants = new CompoundNBT();
     private Supplier<Team> team;
-    Map<String,INBTSerializable<CompoundNBT>> data=new HashMap<>();
+    
 
     /**
      * The crafting.<br>
@@ -135,7 +137,7 @@ public class TeamResearchData {
      * Reset client instance.
      */
     public static void resetClientInstance() {
-        INSTANCE = new TeamResearchData(null);
+        INSTANCE = new TeamResearchData((Supplier<Team>)null);
     }
 
     /**
@@ -148,7 +150,10 @@ public class TeamResearchData {
         INSTANCE.activeResearchId = id;
 
     }
+    public TeamResearchData(SpecialDataHolder team) {
 
+        this.id = UUID.randomUUID();
+    }
     /**
      * Instantiates a new TeamResearchData with a Supplier object.<br>
      *
@@ -266,7 +271,7 @@ public class TeamResearchData {
         ListNBT li = data.getList("researches", 10);
         activeResearchId = data.getInt("active");
         this.data.clear();
-        for(TeamCapability<?> tc:TeamCapability.caps) {
+        for(SpecialDataType<?> tc:SpecialDataType.TYPE_REGISTRY) {
         	if(data.contains(tc.getId())) {
         		this.getData(tc).deserializeNBT(data.getCompound(tc.getId()));
         	}
@@ -586,7 +591,7 @@ public class TeamResearchData {
         nbt.put("researches", rs);
         nbt.putInt("active", activeResearchId);
         nbt.putUniqueId("uuid", id);
-        for(Entry<String, INBTSerializable<CompoundNBT>> ent:data.entrySet()) {
+        for(Entry<String, NBTSerializable> ent:data.entrySet()) {
         	nbt.put(ent.getKey(), ent.getValue().serializeNBT());
         }
         
@@ -714,8 +719,10 @@ public class TeamResearchData {
 	public void setVariants(CompoundNBT variants) {
 		this.variants = variants;
 	}
+	//Special data handler
+	Map<String,NBTSerializable> data=new HashMap<>();
 	@SuppressWarnings("unchecked")
-	public <T extends INBTSerializable<CompoundNBT>> T getData(TeamCapability<T> cap){
+	public <T extends NBTSerializable> T getData(SpecialDataType<T> cap){
 		return (T) data.computeIfAbsent(cap.getId(),s->cap.create(this));
 	}
 }
