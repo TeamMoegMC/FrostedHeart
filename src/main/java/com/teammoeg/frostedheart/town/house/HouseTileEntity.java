@@ -226,14 +226,31 @@ class HouseBlockScanner extends BlockScanner{
         return world.getBlockState(pos);
     }
 
+    /**
+     * Determine whether a block is a valid floor block.
+     *
+     * A valid floor block is a block that is a normal cube, a stair, or a slab.
+     *
+     * A valid floor block must have at least 2 blocks above it.
+     *
+     * A valid floor block must not have any open air above it.
+     *
+     * @param pos the position of the block
+     * @return whether the block is a valid floor block
+     */
     boolean isValidFloor(BlockPos pos){
-        if(!isFloorBlock(pos)) return false;
+        // Determine whether the block satisfies type requirements
+        if (!isFloorBlock(pos)) return false;
         AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, this::isHouseBlock);
-        if(!information.getValue()){
+        // Determine whether the block has open air above it
+        if (!information.getValue()){
             this.isValid = false;
             //FHMain.LOGGER.debug("HouseScanner: found block open air!");
-            return false;//判断是否有露天方块
-        }else return information.getKey() >= 2;//判断距离房顶空间是否大于等于2
+            return false;
+        }  else {
+            // Determine whether the block has at least 2 blocks above it
+            return information.getKey() >= 2;
+        }
     }
 
     void addDecoration(BlockPos pos){
