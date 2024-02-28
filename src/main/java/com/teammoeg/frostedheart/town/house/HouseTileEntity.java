@@ -19,27 +19,22 @@
 
 package com.teammoeg.frostedheart.town.house;
 
-import com.teammoeg.frostedheart.FHTags;
 import com.teammoeg.frostedheart.FHTileTypes;
-import com.teammoeg.frostedheart.climate.chunkheatdata.ChunkHeatData;
 import com.teammoeg.frostedheart.town.ITownBlockTE;
 import com.teammoeg.frostedheart.town.TownWorkerType;
 import com.teammoeg.frostedheart.town.resident.Resident;
 import com.teammoeg.frostedheart.util.BlockScanner;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.Tags;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.minecraft.block.PlantBlockHelper.isAir;
+import static com.teammoeg.frostedheart.town.house.HouseBlockScanner.isHouseBlock;
 
 /**
  * A house in the town.
@@ -133,12 +128,17 @@ public class HouseTileEntity extends TileEntity implements ITownBlockTE {
         Set<BlockPos> doorPosSet = BlockScanner.getBlocksAdjacent(housePos, (pos) -> Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS));
         if (doorPosSet.isEmpty()) return false;
         for (BlockPos doorPos : doorPosSet) {
+            BlockPos floorBelowDoor = BlockScanner.getBlockBelow((pos)->!(Objects.requireNonNull(world).getBlockState(pos).isIn(BlockTags.DOORS)), doorPos);//找到门下面垫的的那个方块
             for (Direction direction : BlockScanner.PLANE_DIRECTIONS) {
                 //FHMain.LOGGER.debug("HouseScanner: creating new HouseBlockScanner");
-                BlockPos startPos = doorPos.offset(direction);
+                assert floorBelowDoor != null;
+                BlockPos startPos = floorBelowDoor.offset(direction);//找到门下方块旁边的方块
                 //FHMain.LOGGER.debug("HouseScanner: start pos 1" + startPos);
-                if (!HouseBlockScanner.isFloorBlock(Objects.requireNonNull(world), startPos)) {
-                    startPos = BlockScanner.getBlockBelow((pos) -> HouseBlockScanner.isFloorBlock(world, pos), startPos);
+                if (!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos)) {//如果门下方块旁边的方块不是合法的地板，找一下它下面的方块
+                    if(!HouseBlockScanner.isValidFloorOrLadder(Objects.requireNonNull(world), startPos.down()) || isHouseBlock(world, startPos.up(2))){//如果它下面的方块也不是合法地板（或者梯子），或者门的上半部分堵了方块，就不找了。我们默认村民不能从两格以上的高度跳下来，也不能从一格高的空间爬过去
+                        continue;
+                    }
+                    startPos = startPos.down();
                     //FHMain.LOGGER.debug("HouseScanner: start pos 2" + startPos);
                 }
                 HouseBlockScanner scanner = new HouseBlockScanner(this.world, startPos);

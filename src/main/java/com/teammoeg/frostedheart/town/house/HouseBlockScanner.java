@@ -80,14 +80,20 @@ class HouseBlockScanner extends BlockScanner {
         return isAir(state) || state.isIn(BlockTags.CLIMBABLE) || state.getShape(world, pos).isEmpty();
     }
 
-
-    boolean isWallBlock(BlockPos pos) {
-        BlockState blockState = getBlockState(pos);
+    public static boolean isWallBlock(World world, BlockPos pos) {
+        BlockState blockState = world.getBlockState(pos);
         return (blockState.isNormalCube(world, pos) || blockState.isIn(FHTags.Blocks.WALL_BLOCKS) || blockState.isIn(BlockTags.DOORS) || blockState.isIn(BlockTags.WALLS) || blockState.isIn(Tags.Blocks.GLASS_PANES) || blockState.isIn(Tags.Blocks.FENCE_GATES) || blockState.isIn(Tags.Blocks.FENCES));
+    }
+    boolean isWallBlock(BlockPos pos) {
+        return isWallBlock(this.world, pos);
     }
 
     boolean isHouseBlock(BlockPos pos) {
         return isFloorBlock(pos) || isWallBlock(pos);
+    }
+    public static boolean isHouseBlock(World world, BlockPos pos){
+        return isFloorBlock(world, pos) || isWallBlock(world, pos);
+        
     }
 
     BlockState getBlockState(BlockPos pos) {
@@ -114,6 +120,32 @@ class HouseBlockScanner extends BlockScanner {
         if (!information.getValue()) {
             this.isValid = false;
             //FHMain.LOGGER.debug("HouseScanner: found block open air!");
+            return false;
+        } else {
+            // Determine whether the block has at least 2 blocks above it
+            return information.getKey() >= 2;
+        }
+    }
+    //almost same with the one above, but public static.
+    /*public static boolean isValidFloor(World world, BlockPos pos) {
+        // Determine whether the block satisfies type requirements
+        if (!isFloorBlock(world, pos)) return false;
+        AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->isHouseBlock(world, pos1));
+        // Determine whether the block has open air above it
+        if (!information.getValue()) {
+            return false;
+        } else {
+            // Determine whether the block has at least 2 blocks above it
+            return information.getKey() >= 2;
+        }
+    }*/
+    //我真的没有在水代码，这些个函数在条件判断上都有奇妙的细微差别，让我很难代码复用
+    public static boolean isValidFloorOrLadder(World world, BlockPos pos) {
+        // Determine whether the block satisfies type requirements
+        if (!isFloorBlock(world, pos) && !world.getBlockState(pos).isIn(BlockTags.CLIMBABLE)) return false;
+        AbstractMap.SimpleEntry<Integer, Boolean> information = countBlocksAbove(pos, (pos1)->isHouseBlock(world, pos1));
+        // Determine whether the block has open air above it
+        if (!information.getValue()) {
             return false;
         } else {
             // Determine whether the block has at least 2 blocks above it
@@ -184,7 +216,7 @@ class HouseBlockScanner extends BlockScanner {
 
     /**
      * Run the house scanner.
-     *
+     * 对本scanner进行一次scan扫描地板，然后新建一个blockScanner扫描空气。
      * @return whether the house is valid
      */
     public boolean check() {
@@ -222,8 +254,9 @@ class HouseBlockScanner extends BlockScanner {
                                 if (isAirOrLadder(world, pos2)) {
                                     return false;//如果是空气则继续
                                 } else {
-                                    isOpenAir.set(false);
-                                    return true;//碰到非空气的方块的话，就把isOpenAir设置成false。由于isOpenAir初始值为true，如果这里没触发条件把它改成false的话，它就会是true
+                                    isOpenAir.set(false);//碰到非空气的方块的话，就把isOpenAir设置成false。由于isOpenAir初始值为true，如果这里没触发条件把它改成false的话，它就会是true
+                                    this.occupiedArea.add(new AbstractMap.SimpleEntry<>(pos2.getX(), pos2.getZ()));
+                                    return true;
                                 }
                             }));
                             if (isOpenAir.get()) {
@@ -242,4 +275,14 @@ class HouseBlockScanner extends BlockScanner {
 
         return this.isValid;
     }
+    /*
+    * 此方法尚存在缺陷，下面（横截面示意图）这种情况
+    块块块块
+    块块空空
+    空空空空
+    空空块块
+    块块块块
+    * 如果是玩家的话，不能从左边走到右边或者从右边走到左边（会顶头），但是blockScanner可以直接通过
+    * 考虑到这种情况应该出现得很少，并且影响不大，暂且不去修它
+    * */
 }
