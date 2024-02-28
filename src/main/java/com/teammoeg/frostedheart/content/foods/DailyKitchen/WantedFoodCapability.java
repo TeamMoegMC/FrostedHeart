@@ -82,7 +82,7 @@ public class WantedFoodCapability implements IWantedFoodCapability{
         nbt.put(key_eatenFoodsAmount, IntNBT.valueOf(this.eatenFoodsAmount));
         nbt.put(key_eatenTimes, IntNBT.valueOf((this.eatenTimes)));
 
-        //FHMain.LOGGER.info("WantedFoodCapability serialized!");
+        FHMain.LOGGER.info("WantedFoodCapability serialized!");
         return nbt;
     }
 
@@ -100,6 +100,6 @@ public class WantedFoodCapability implements IWantedFoodCapability{
         for(INBT itemNBT : list){
             wantedFoods.add(turnStringNBTToItem(itemNBT));
         }
-        //FHMain.LOGGER.info("WantedFoodCapability deserialized!");
+        FHMain.LOGGER.info("WantedFoodCapability deserialized!");
     }
 }
