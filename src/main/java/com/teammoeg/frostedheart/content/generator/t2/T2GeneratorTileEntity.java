@@ -183,7 +183,6 @@ public class T2GeneratorTileEntity extends MasterGeneratorTileEntity<T2Generator
     				ep.invalidate();
     			ep=cep;
     		}
-    		System.out.println("Getting cap");
     		return ep.cast();
     	}
 		return super.getCapability(capability, facing);

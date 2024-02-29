@@ -109,7 +109,7 @@ public class FHMain {
         remote = new FHRemote();
         if (local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal().contains("pre"))
             pre = new FHRemote.FHPreRemote();
-        System.out.println(local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
+        FHMain.LOGGER.info("TWR Version: " + local.fetchVersion().resolve().orElse(FHVersion.empty).getOriginal());
         CreateCompat.init();
 
         IEventBus mod = FMLJavaModLoadingContext.get().getModEventBus();

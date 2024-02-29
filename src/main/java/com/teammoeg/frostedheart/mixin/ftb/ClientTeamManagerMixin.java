@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.teammoeg.frostedheart.FHMain;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -74,7 +75,7 @@ public abstract class ClientTeamManagerMixin {
             if (kcp != null)
                 tosendplayer.add(kcp);
         }
-        System.out.println("sending " + tosendteam.size() + " essential teams and " + tosendplayer.size() + " essential players.");
+        FHMain.LOGGER.info("Sending " + tosendteam.size() + " essential teams and " + tosendplayer.size() + " essential players.");
         buffer.writeVarInt(teamMap.size());
 
         for (ClientTeam t : teamMap.values()) {

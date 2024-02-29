@@ -94,7 +94,7 @@ public class FHNetwork {
     }
     public static void register() {
         String VERSION = ModList.get().getModContainerById(FHMain.MODID).get().getModInfo().getVersion().toString();
-        System.out.println("[TWR Version Check] FH Network Version: " + VERSION);
+        FHMain.LOGGER.info("FH Network Version: " + VERSION);
         CHANNEL = NetworkRegistry.newSimpleChannel(FHMain.rl("network"), () -> VERSION,
                 VERSION::equals, VERSION::equals);
 

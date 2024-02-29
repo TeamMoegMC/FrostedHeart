@@ -10,6 +10,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.teammoeg.frostedheart.FHMain;
 import com.teammoeg.frostedheart.util.client.ClientUtils;
 import com.teammoeg.frostedheart.util.io.FileUtil;
 
@@ -35,7 +36,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		return data.get(code);
 	}
 	public void readFont(JsonObject jo) {
-		System.out.println("loading fonts...");
+		FHMain.LOGGER.info("loading fonts...");
 		JsonArray ja=jo.get("providers").getAsJsonArray();
 		for(int i=0;i<ja.size();i++) {
 			JsonObject cr=ja.get(i).getAsJsonObject();
@@ -124,7 +125,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 						data.putIfAbsent(n, gd);
 					}
 				}else {
-					System.out.println("error loading "+rrl);
+					FHMain.LOGGER.info("Error loading "+rrl);
 				}
 			}
 
@@ -141,7 +142,7 @@ public class KGlyphProvider extends ReloadListener<Object>{
 		try {
 			Collection<ResourceLocation> cls=rm.getAllResourceLocations("font", (p_215274_0_) -> p_215274_0_.endsWith(".json"));
 			for(ResourceLocation rl:cls) {
-				System.out.println(rl);
+				FHMain.LOGGER.info("Reloaded " + rl);
 				if(rl.getPath().contains("default"))
 				readFont(jp.parse(FileUtil.readString(
 					rm.getResource(rl).getInputStream())).getAsJsonObject());
