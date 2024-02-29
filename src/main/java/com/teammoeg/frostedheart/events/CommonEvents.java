@@ -665,7 +665,11 @@ public class CommonEvents {
             World world = event.world;
             if (!world.isRemote && world instanceof ServerWorld) {
                 ServerWorld serverWorld = (ServerWorld) world;
+
+                // Scheduled checks (e.g. town structures)
                 SchedulerQueue.tickAll(serverWorld);
+
+                // Town logic tick
                 int i = 0;
                 for (TeamDataHolder trd : SpecialDataManager.INSTANCE.getAllData()) {
                     if (serverWorld.getDimensionKey().equals(trd.getData(SpecialDataTypes.GENERATOR_DATA).dimension)) {
@@ -688,20 +692,6 @@ public class CommonEvents {
                     }
 
                 }
-                if (world.getDayTime() % 24000 == 40) {
-                    for (PlayerEntity spe : world.getPlayers()) {
-                        if (spe instanceof ServerPlayerEntity && !(spe instanceof FakePlayer)) {
-                            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) spe;
-                            long energy = EnergyCore.getEnergy(spe);
-                            if (energy > 10000)
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.full"), false);
-                            else if (energy >= 5000)
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.suit"), false);
-                            else
-                                serverPlayer.sendStatusMessage(GuiUtils.translateMessage("energy.lack"), false);
-                        }
-                    }
-                }
             }
 
         }
@@ -712,13 +702,28 @@ public class CommonEvents {
         if (event.side == LogicalSide.SERVER && event.phase == Phase.END
                 && event.player instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity) event.player;
+
+            // Scenario runner
             ScenarioConductor runner=FHScenario.getNullable(player);
-            if(runner!=null&&runner.isInited())
+            if(runner != null && runner.isInited())
             	runner.tick();
+
+            // Heat network statistics update
             if(player.openContainer instanceof HeatStatContainer) {
             	((HeatStatContainer)player.openContainer).tick();
             }
-           // System.out.println(runner.save());
+
+            // Research energy display
+            if (player.getServerWorld().getDayTime() % 24000 == 40) {
+                long energy = EnergyCore.getEnergy(player);
+                int messageNum = player.getRNG().nextInt(3);
+                if (energy > 10000)
+                    player.sendStatusMessage(GuiUtils.translateMessage("energy.full." + messageNum), false);
+                else if (energy >= 5000)
+                    player.sendStatusMessage(GuiUtils.translateMessage("energy.suit." + messageNum), false);
+                else
+                    player.sendStatusMessage(GuiUtils.translateMessage("energy.lack." + messageNum), false);
+            }
         }
     }
     @SubscribeEvent
