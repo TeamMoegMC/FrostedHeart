@@ -17,111 +17,120 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.effects;
+package com.teammoeg.frostedheart.research.research.effects;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.compat.jei.JEICompat;
-import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
+import com.teammoeg.frostedheart.util.FHUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
+import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
- * Allows the research team to use certain machines
+ * Reward the research team item rewards
  */
-public class EffectShowCategory extends Effect {
+public class EffectItemReward extends Effect {
 
-    ResourceLocation cate;
+    List<ItemStack> rewards;
 
-    EffectShowCategory() {
+    public EffectItemReward(ItemStack... stacks) {
         super();
+        rewards = new ArrayList<>();
+
+        for (ItemStack stack : stacks) {
+            rewards.add(stack);
+        }
     }
 
-    public EffectShowCategory(JsonObject jo) {
+    public EffectItemReward(JsonObject jo) {
         super(jo);
-        cate = new ResourceLocation(jo.get("category").getAsString());
+        rewards = SerializeUtil.parseJsonElmList(jo.get("rewards"), SerializeUtil::fromJson);
     }
 
-    public EffectShowCategory(PacketBuffer pb) {
+    public EffectItemReward(PacketBuffer pb) {
         super(pb);
-        cate = pb.readResourceLocation();
-
-    }
-
-    public EffectShowCategory(ResourceLocation cat) {
-        super();
-        cate = cat;
+        rewards = SerializeUtil.readList(pb, PacketBuffer::readItemStack);
     }
 
     @Override
     public String getBrief() {
-        return "JEI Category " + cate.toString();
+        if (rewards.isEmpty())
+            return "Reward nothing";
+
+        return "Reward " + rewards.get(0).getDisplayName().getString() + (rewards.size() > 1 ? " ..." : "");
     }
 
     @Override
     public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(Blocks.CRAFTING_TABLE);
+        if (rewards.size() != 0) {
+            return FHIcons.getStackIcons(rewards);
+        }
+        return FHIcons.nop();
     }
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.category");
+        return GuiUtils.translateGui("effect.item_reward");
     }
-
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
+        for (ItemStack stack : rewards) {
+            if (stack.getCount() == 1)
+                tooltip.add(stack.getDisplayName());
+            else
+                tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(GuiUtils.str(" x " + stack.getCount())));
+        }
         return tooltip;
+    }
+
+
+    public List<ItemStack> getRewards() {
+        return rewards;
     }
 
     @Override
     public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        team.categories.add(cate);
+        if (triggerPlayer == null || isload) return false;
+        for (ItemStack s : rewards) {
+            FHUtils.giveItem(triggerPlayer, s.copy());
+
+        }
         return true;
     }
 
-
     @Override
     public void init() {
-        ResearchListeners.categories.add(cate);
+
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @Override
-    public void onClick() {
-        if (cate != null)
-            JEICompat.showJEICategory(cate);
-    }
-
+    //We dont confiscate players items, that is totally unnecessary
     @Override
     public void revoke(TeamResearchData team) {
-        team.categories.remove(cate);
+
     }
 
     @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
-        jo.addProperty("category", cate.toString());
+        jo.add("rewards", SerializeUtil.toJsonList(rewards, SerializeUtil::toJson));
         return jo;
     }
 
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        buffer.writeResourceLocation(cate);
+        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeItemStack);
     }
 }

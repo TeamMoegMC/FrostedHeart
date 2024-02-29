@@ -17,113 +17,98 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.effects;
+package com.teammoeg.frostedheart.research.research.effects;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
-import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Items;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /**
- * Allows the research team to use certain machines
+ * Reward the research team executes command
  */
-public class EffectUse extends Effect {
+public class EffectExperience extends Effect {
 
-    List<Block> blocks;
+    int exp;
 
-    EffectUse() {
+    public EffectExperience(int xp) {
         super();
-        this.blocks = new ArrayList<>();
+        exp = xp;
     }
 
-    public EffectUse(Block... blocks) {
-        super();
-        this.blocks = new ArrayList<>();
-        for (Block b : blocks) {
-            this.blocks.add(b);
-        }
-    }
-
-    public EffectUse(JsonObject jo) {
+    public EffectExperience(JsonObject jo) {
         super(jo);
-        blocks = SerializeUtil.parseJsonElmList(jo.get("blocks"), e -> RegistryUtils.getBlock(new ResourceLocation(e.getAsString())));
+        exp = jo.get("experience").getAsInt();
     }
 
-    public EffectUse(PacketBuffer pb) {
+    public EffectExperience(PacketBuffer pb) {
         super(pb);
-        blocks = SerializeUtil.readList(pb, p -> p.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
-
+        exp = pb.readVarInt();
     }
 
     @Override
     public String getBrief() {
-        if (blocks.isEmpty())
-            return "Use nothing";
-        return "Use " + blocks.get(0).getTranslatedName().getString() + (blocks.size() > 1 ? " ..." : "");
+
+        return "Experience " + exp;
     }
 
     @Override
     public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(FHIcons.getIcon(blocks.toArray(new Block[0])), FHIcons.getDelegateIcon("hand"));
+        return FHIcons.getIcon(Items.EXPERIENCE_BOTTLE);
     }
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.use");
+        return GuiUtils.translateGui("effect.exp");
     }
-
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
-        for (Block b : blocks) {
-            tooltip.add(b.getTranslatedName());
-        }
-
+        tooltip.add(GuiUtils.str("+" + exp));
         return tooltip;
     }
 
     @Override
     public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        team.block.addAll(blocks);
+        if (triggerPlayer == null || isload)
+            return false;
+
+        triggerPlayer.giveExperiencePoints(getRId());
+
         return true;
     }
 
     @Override
     public void init() {
-        ResearchListeners.block.addAll(blocks);
+
     }
 
     @Override
     public void revoke(TeamResearchData team) {
-        team.block.removeAll(blocks);
+
     }
 
     @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
-        jo.add("blocks", SerializeUtil.toJsonStringList(blocks, RegistryUtils::getRegistryName));
+        jo.addProperty("experience", exp);
         return jo;
     }
 
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        SerializeUtil.writeList(buffer, blocks, (b, p) -> p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, b));
+        buffer.writeVarInt(exp);
     }
 }

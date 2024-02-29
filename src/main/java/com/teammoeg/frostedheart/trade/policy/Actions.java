@@ -22,10 +22,10 @@ package com.teammoeg.frostedheart.trade.policy;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
 import com.teammoeg.frostedheart.trade.policy.actions.AddFlagValueAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagAction;
 import com.teammoeg.frostedheart.trade.policy.actions.SetFlagValueAction;
+import com.teammoeg.frostedheart.util.io.JsonSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;
 

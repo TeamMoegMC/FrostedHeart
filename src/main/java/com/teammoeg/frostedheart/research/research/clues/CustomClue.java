@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.clues;
+package com.teammoeg.frostedheart.research.research.clues;
 
 import com.google.gson.JsonObject;
 
@@ -25,67 +25,49 @@ import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;
 
 /**
- * Clue with listener trigger
+ * Very Custom Clue trigger by code or manually.
  */
-public abstract class ListenerClue extends Clue {
-    public boolean alwaysOn;
-
-    public ListenerClue() {
+public class CustomClue extends Clue {
+    public CustomClue() {
         super();
     }
 
-    public ListenerClue(JsonObject jo) {
+    public CustomClue(JsonObject jo) {
         super(jo);
-        alwaysOn = jo.get("always").getAsBoolean();
     }
 
-    public ListenerClue(PacketBuffer pb) {
+    public CustomClue(PacketBuffer pb) {
         super(pb);
-        alwaysOn = pb.readBoolean();
     }
 
-    public ListenerClue(String name, float contribution) {
+    public CustomClue(String name, float contribution) {
         super(name, contribution);
     }
 
-    public ListenerClue(String name, String desc, String hint, float contribution) {
+    public CustomClue(String name, String desc, String hint, float contribution) {
         super(name, desc, hint, contribution);
     }
 
     @Override
     public void end(Team team) {
-        if (!alwaysOn)
-            removeListener(team);
+    }
+
+    @Override
+    public String getBrief() {
+        return "Custom " + getDescriptionString();
+    }
+
+    @Override
+    public String getId() {
+        return "custom";
     }
 
     @Override
     public void init() {
-        if (alwaysOn)
-            initListener(null);
-    }
-
-    public abstract void initListener(Team t);
-
-    public abstract void removeListener(Team t);
-
-    @Override
-    public JsonObject serialize() {
-        JsonObject jo = super.serialize();
-        jo.addProperty("always", alwaysOn);
-        return jo;
     }
 
     @Override
     public void start(Team team) {
-        if (!alwaysOn)
-            initListener(team);
-
-    }
-
-    @Override
-    public void write(PacketBuffer buffer) {
-        super.write(buffer);
-        buffer.writeBoolean(alwaysOn);
     }
 
 }

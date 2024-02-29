@@ -17,12 +17,12 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.clues;
+package com.teammoeg.frostedheart.research.research.clues;
 
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
-import com.teammoeg.frostedheart.research.JsonSerializerRegistry;
+import com.teammoeg.frostedheart.util.io.JsonSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;
 

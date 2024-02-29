@@ -17,98 +17,111 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.effects;
+package com.teammoeg.frostedheart.research.research.effects;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.compat.jei.JEICompat;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
- * Reward the research team executes command
+ * Allows the research team to use certain machines
  */
-public class EffectExperience extends Effect {
+public class EffectShowCategory extends Effect {
 
-    int exp;
+    ResourceLocation cate;
 
-    public EffectExperience(int xp) {
+    EffectShowCategory() {
         super();
-        exp = xp;
     }
 
-    public EffectExperience(JsonObject jo) {
+    public EffectShowCategory(JsonObject jo) {
         super(jo);
-        exp = jo.get("experience").getAsInt();
+        cate = new ResourceLocation(jo.get("category").getAsString());
     }
 
-    public EffectExperience(PacketBuffer pb) {
+    public EffectShowCategory(PacketBuffer pb) {
         super(pb);
-        exp = pb.readVarInt();
+        cate = pb.readResourceLocation();
+
+    }
+
+    public EffectShowCategory(ResourceLocation cat) {
+        super();
+        cate = cat;
     }
 
     @Override
     public String getBrief() {
-
-        return "Experience " + exp;
+        return "JEI Category " + cate.toString();
     }
 
     @Override
     public FHIcon getDefaultIcon() {
-        return FHIcons.getIcon(Items.EXPERIENCE_BOTTLE);
+        return FHIcons.getIcon(Blocks.CRAFTING_TABLE);
     }
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.exp");
+        return GuiUtils.translateGui("effect.category");
     }
+
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
-        tooltip.add(GuiUtils.str("+" + exp));
         return tooltip;
     }
 
     @Override
     public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        if (triggerPlayer == null || isload)
-            return false;
-
-        triggerPlayer.giveExperiencePoints(getRId());
-
+        team.categories.add(cate);
         return true;
     }
 
+
     @Override
     public void init() {
+        ResearchListeners.categories.add(cate);
+    }
 
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public void onClick() {
+        if (cate != null)
+            JEICompat.showJEICategory(cate);
     }
 
     @Override
     public void revoke(TeamResearchData team) {
-
+        team.categories.remove(cate);
     }
 
     @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
-        jo.addProperty("experience", exp);
+        jo.addProperty("category", cate.toString());
         return jo;
     }
 
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        buffer.writeVarInt(exp);
+        buffer.writeResourceLocation(cate);
     }
 }

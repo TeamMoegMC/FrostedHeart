@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research;
+package com.teammoeg.frostedheart.util.io;
 
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;

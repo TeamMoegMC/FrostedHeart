@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 import com.teammoeg.frostedheart.research.FHResearch;
 import com.teammoeg.frostedheart.research.data.FHResearchDataManager;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
-import com.teammoeg.frostedheart.research.effects.Effect;
+import com.teammoeg.frostedheart.research.research.effects.Effect;
 
 import dev.ftb.mods.ftbteams.data.Team;
 import net.minecraft.network.PacketBuffer;

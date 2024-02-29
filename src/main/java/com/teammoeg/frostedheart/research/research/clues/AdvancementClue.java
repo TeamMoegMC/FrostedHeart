@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.clues;
+package com.teammoeg.frostedheart.research.research.clues;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.FHMain;

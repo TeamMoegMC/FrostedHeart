@@ -24,6 +24,7 @@ import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.util.io.CustomSerializerRegistry;
 
 import net.minecraft.network.PacketBuffer;
 

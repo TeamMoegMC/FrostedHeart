@@ -39,13 +39,13 @@ import com.teammoeg.frostedheart.research.ResearchListeners.MultiblockUnlockList
 import com.teammoeg.frostedheart.research.ResearchListeners.RecipeUnlockList;
 import com.teammoeg.frostedheart.research.SpecialDataHolder;
 import com.teammoeg.frostedheart.research.SpecialDataType;
-import com.teammoeg.frostedheart.research.clues.Clue;
-import com.teammoeg.frostedheart.research.effects.Effect;
 import com.teammoeg.frostedheart.research.network.FHChangeActiveResearchPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchAttributeSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataSyncPacket;
 import com.teammoeg.frostedheart.research.network.FHResearchDataUpdatePacket;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.research.research.clues.Clue;
+import com.teammoeg.frostedheart.research.research.effects.Effect;
 import com.teammoeg.frostedheart.util.NBTSerializable;
 import com.teammoeg.frostedheart.util.OptionalLazy;
 

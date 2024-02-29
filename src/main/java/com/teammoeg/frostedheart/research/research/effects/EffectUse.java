@@ -17,120 +17,113 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.effects;
+package com.teammoeg.frostedheart.research.research.effects;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
+import com.teammoeg.frostedheart.research.ResearchListeners;
 import com.teammoeg.frostedheart.research.data.TeamResearchData;
 import com.teammoeg.frostedheart.research.gui.FHIcons;
 import com.teammoeg.frostedheart.research.gui.FHIcons.FHIcon;
-import com.teammoeg.frostedheart.util.FHUtils;
+import com.teammoeg.frostedheart.util.RegistryUtils;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 import com.teammoeg.frostedheart.util.io.SerializeUtil;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
- * Reward the research team item rewards
+ * Allows the research team to use certain machines
  */
-public class EffectItemReward extends Effect {
+public class EffectUse extends Effect {
 
-    List<ItemStack> rewards;
+    List<Block> blocks;
 
-    public EffectItemReward(ItemStack... stacks) {
+    EffectUse() {
         super();
-        rewards = new ArrayList<>();
+        this.blocks = new ArrayList<>();
+    }
 
-        for (ItemStack stack : stacks) {
-            rewards.add(stack);
+    public EffectUse(Block... blocks) {
+        super();
+        this.blocks = new ArrayList<>();
+        for (Block b : blocks) {
+            this.blocks.add(b);
         }
     }
 
-    public EffectItemReward(JsonObject jo) {
+    public EffectUse(JsonObject jo) {
         super(jo);
-        rewards = SerializeUtil.parseJsonElmList(jo.get("rewards"), SerializeUtil::fromJson);
+        blocks = SerializeUtil.parseJsonElmList(jo.get("blocks"), e -> RegistryUtils.getBlock(new ResourceLocation(e.getAsString())));
     }
 
-    public EffectItemReward(PacketBuffer pb) {
+    public EffectUse(PacketBuffer pb) {
         super(pb);
-        rewards = SerializeUtil.readList(pb, PacketBuffer::readItemStack);
+        blocks = SerializeUtil.readList(pb, p -> p.readRegistryIdUnsafe(ForgeRegistries.BLOCKS));
+
     }
 
     @Override
     public String getBrief() {
-        if (rewards.isEmpty())
-            return "Reward nothing";
-
-        return "Reward " + rewards.get(0).getDisplayName().getString() + (rewards.size() > 1 ? " ..." : "");
+        if (blocks.isEmpty())
+            return "Use nothing";
+        return "Use " + blocks.get(0).getTranslatedName().getString() + (blocks.size() > 1 ? " ..." : "");
     }
 
     @Override
     public FHIcon getDefaultIcon() {
-        if (rewards.size() != 0) {
-            return FHIcons.getStackIcons(rewards);
-        }
-        return FHIcons.nop();
+        return FHIcons.getIcon(FHIcons.getIcon(blocks.toArray(new Block[0])), FHIcons.getDelegateIcon("hand"));
     }
 
     @Override
     public IFormattableTextComponent getDefaultName() {
-        return GuiUtils.translateGui("effect.item_reward");
+        return GuiUtils.translateGui("effect.use");
     }
+
 
     @Override
     public List<ITextComponent> getDefaultTooltip() {
         List<ITextComponent> tooltip = new ArrayList<>();
-        for (ItemStack stack : rewards) {
-            if (stack.getCount() == 1)
-                tooltip.add(stack.getDisplayName());
-            else
-                tooltip.add(((IFormattableTextComponent) stack.getDisplayName()).appendSibling(GuiUtils.str(" x " + stack.getCount())));
+        for (Block b : blocks) {
+            tooltip.add(b.getTranslatedName());
         }
+
         return tooltip;
-    }
-
-
-    public List<ItemStack> getRewards() {
-        return rewards;
     }
 
     @Override
     public boolean grant(TeamResearchData team, PlayerEntity triggerPlayer, boolean isload) {
-        if (triggerPlayer == null || isload) return false;
-        for (ItemStack s : rewards) {
-            FHUtils.giveItem(triggerPlayer, s.copy());
-
-        }
+        team.block.addAll(blocks);
         return true;
     }
 
     @Override
     public void init() {
-
+        ResearchListeners.block.addAll(blocks);
     }
 
-    //We dont confiscate players items, that is totally unnecessary
     @Override
     public void revoke(TeamResearchData team) {
-
+        team.block.removeAll(blocks);
     }
 
     @Override
     public JsonObject serialize() {
         JsonObject jo = super.serialize();
-        jo.add("rewards", SerializeUtil.toJsonList(rewards, SerializeUtil::toJson));
+        jo.add("blocks", SerializeUtil.toJsonStringList(blocks, RegistryUtils::getRegistryName));
         return jo;
     }
 
     @Override
     public void write(PacketBuffer buffer) {
         super.write(buffer);
-        SerializeUtil.writeList2(buffer, rewards, PacketBuffer::writeItemStack);
+        SerializeUtil.writeList(buffer, blocks, (b, p) -> p.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, b));
     }
 }

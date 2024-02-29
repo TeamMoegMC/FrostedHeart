@@ -21,9 +21,9 @@ package com.teammoeg.frostedheart.research.gui.tech;
 
 import com.ibm.icu.text.NumberFormat;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.teammoeg.frostedheart.research.clues.Clue;
 import com.teammoeg.frostedheart.research.gui.TechIcons;
 import com.teammoeg.frostedheart.research.research.Research;
+import com.teammoeg.frostedheart.research.research.clues.Clue;
 import com.teammoeg.frostedheart.util.client.GuiUtils;
 
 import dev.ftb.mods.ftblibrary.ui.Panel;

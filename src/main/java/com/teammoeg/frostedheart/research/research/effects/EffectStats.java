@@ -17,7 +17,7 @@
  *
  */
 
-package com.teammoeg.frostedheart.research.effects;
+package com.teammoeg.frostedheart.research.research.effects;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
